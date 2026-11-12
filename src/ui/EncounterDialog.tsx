@@ -4,6 +4,7 @@ import {answerEncounter} from '@/game/encounters';
 import {personName} from '@/game/people';
 import {ContactActions} from './ContactActions';
 import {LeaderConversation} from './LeaderConversation';
+import {EncounterPortrait} from './council/EncounterPortrait';
 export function EncounterDialog({engine}:{engine:Engine|null}){
  const ref=useRef<HTMLDialogElement>(null),encounter=engine?.game.state.encounter;
  useEffect(()=>{if(encounter)ref.current?.showModal();else ref.current?.close();return()=>ref.current?.close();},[encounter]);
@@ -15,7 +16,7 @@ export function EncounterDialog({engine}:{engine:Engine|null}){
   <span className="encounter-eyebrow">{hostile?'Hostile encounter':'First contact'}</span>
   <h2 id="encounter-heading">{t.name}</h2>
   <p>{person?personName(person):'Your explorer'} has met {stranger?personName(stranger):'someone'} from <strong>{t.name}</strong>.</p>
-  {stranger&&person&&<LeaderConversation key={`${person.id}:${stranger.id}`} engine={engine} personId={person.id} strangerId={stranger.id}/>}
+  {stranger&&person&&<div className="encounter-talk"><EncounterPortrait engine={engine} strangerId={stranger.id}/><LeaderConversation key={`${person.id}:${stranger.id}`} engine={engine} personId={person.id} strangerId={stranger.id}/></div>}
   {stranger?.carryType&&stranger.carry>0&&<p>Visible cargo: {Math.floor(stranger.carry)} {stranger.carryType}.</p>}
   <ContactActions key={encounter.stranger} engine={engine} strangerId={encounter.stranger} personId={encounter.person} conversation={false}/>
   <div className="encounter-actions">

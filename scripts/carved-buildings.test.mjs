@@ -12,7 +12,7 @@ const HABITATS=['plains','forest','hills','desert','tundra','wetland'];
 const WATER=['+x','-x','+z','-z',undefined];
 const fp=type=>({w:BUILDINGS[type].w,d:BUILDINGS[type].d});
 const AXIS_TYPES=['palisade','stonewall','trench','moat'];
-function extraFor(type,id){return type==='grindingStone'?{waterSide:WATER[id%5],reviewWatermill:true}:type==='dock'?{waterSide:['+x','-x','+z','-z'][id%4]}:AXIS_TYPES.includes(type)?{wallAxis:['x','z','corner'][id%3]}:{};}
+function extraFor(type,id){return type==='grindingStone'||type==='watermill'?{waterSide:WATER[id%5],reviewWatermill:true}:type==='dock'||type==='aqueduct'?{waterSide:['+x','-x','+z','-z'][id%4]}:AXIS_TYPES.includes(type)?{wallAxis:['x','z','corner'][id%3]}:{};}
 function* allSpecs(ids=8){
  for(const type of CARVED_TYPES)for(const era of[0,1,2,3,5])for(const habitat of HABITATS)for(let id=1;id<=ids;id++){
   const extra=extraFor(type,id);

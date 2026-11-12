@@ -1,3 +1,4 @@
+import {journeyPermit} from './rulersRuntime';
 import {SCOUT_PROVISION_RULES,loadScoutProvisions,tickScoutProvisions,scoutReturnBudgetLow} from './scoutProvisions';
 import {hasTaskCommitment} from './workCommitments';
 import {recordCoastalReview} from './coastalStrategy';
@@ -58,7 +59,7 @@ export function tickScouts(g: Game, dt: number) {
     if (
       !isRivalTeam(t.id) ||
       !t.alive ||
-      reserveSeconds(g,t.id)<450 || g.popNow(t.id)<5 ||
+      reserveSeconds(g,t.id)<(journeyPermit(g,t.id,'explore')?.reserve??450) || g.popNow(t.id)<5 ||
       g.state.units.some((u) => u.team === t.id && u.hp > 0 && u.scout)
     )
       continue;

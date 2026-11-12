@@ -3,7 +3,7 @@ import {generateCivBuilding,villageLayers,rebuild,extend,ERA_MODES,DEFAULT_ERA_M
 import {CIV_IDS} from '../src/scene/civStyles.ts';
 import {specBounds,floatingParts,partsAtLod,structuralSignature} from '../src/scene/buildingParts.ts';
 const base={seed:41,era:2,wealth:.5,wear:.3,footprint:{w:10,d:9}};
-test('modes exist; default keeps the existing behaviour',()=>{assert.deepEqual(ERA_MODES,['morph','fixed']);assert.equal(DEFAULT_ERA_MODE,'morph');assert.equal(generateCivBuilding('aureline','house',base).eraMode,'morph');});
+test('modes exist; default is fixed: buildings keep the look they were built with',()=>{assert.deepEqual(ERA_MODES,['morph','fixed']);assert.equal(DEFAULT_ERA_MODE,'fixed');assert.equal(generateCivBuilding('aureline','house',base).eraMode,'fixed');});
 test('fixed mode: advancing the world era never changes an existing building',()=>{
  for(const c of CIV_IDS)for(const role of['house','civic','granary']){const b={...base,eraMode:'fixed',built:{era:3,wealth:.4}},a=generateCivBuilding(c,role,{...b,era:3}),z=generateCivBuilding(c,role,{...b,era:5,wealth:.9});assert.deepEqual(a,z,`${c}/${role} morphed`);assert.equal(a.builtEra,3);}
 });

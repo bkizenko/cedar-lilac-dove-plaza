@@ -6,7 +6,9 @@ import type {Game} from './sim';
 import {PRODUCTION_RECIPES,productionIssue,type ProductionRecipe} from './production';
 import {fibreGatherIssue} from './fibre';
 import {clayIssue} from './pottery';
+import {councilModel} from './rulersView';
 import {armorEquipIssue,wornArmor} from './armor';
+import {capitulationOffers} from './capitulation';
 
 export const ENGINE_READ_MODEL_RULES={maximumSources:128,maximumCacheEntries:256,cacheMilliseconds:500,maximumMeasurements:240} as const;
 export type EngineReadQuery=
@@ -15,7 +17,9 @@ export type EngineReadQuery=
  |{kind:'recipe-issues';workplaceId:number}
  |{kind:'fibre-issues';unitId:number;patchIds:number[]}
  |{kind:'clay-issues';unitId:number;depositIds:number[]}
- |{kind:'armor-choice';unitId:number};
+ |{kind:'armor-choice';unitId:number}
+ |{kind:'rulers-council'}
+ |{kind:'capitulation-offers'};
 export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
  |{kind:'building-fabric';buildingId:number;context:ReturnType<typeof fabricContext>;benefits:ReturnType<typeof eraUpgradeBenefits>;work?:{mode:EraUpgradeMode;phase:string;progress:number;duration:number;paid:boolean;paused:boolean;blockedReason?:string};choices:FabricUpgradeChoice[]}
@@ -23,13 +27,16 @@ export type EngineReadModel=
  |{kind:'recipe-issues';workplaceId:number;issues:{recipe:ProductionRecipe;issue:string|null}[]}
  |{kind:'fibre-issues';unitId:number;issues:{patchId:number;issue:string|null}[]}
  |{kind:'clay-issues';unitId:number;issues:{depositId:number;issue:string|null}[]}
- |{kind:'armor-choice';unitId:number;wornArmorId?:number;availableArmorId?:number;issue:string|null};
+ |{kind:'armor-choice';unitId:number;wornArmorId?:number;availableArmorId?:number;issue:string|null}
+ |{kind:'rulers-council';council:import('./rulersView').CouncilModel}
+ |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]};
 export type EngineReadReply={model:EngineReadModel;epoch:number;requestId:number;stateRevision:number;navigationRevision:number;cpuMilliseconds:number};
 export type EngineReadReplyFor<Q extends EngineReadQuery>=Omit<EngineReadReply,'model'>&{model:Extract<EngineReadModel,{kind:Q['kind']}>};
 const id=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0;
 export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const q=value as Record<string,unknown>,list=(v:unknown)=>Array.isArray(v)&&v.length<=ENGINE_READ_MODEL_RULES.maximumSources&&Array.from(v).every(id)&&new Set(v).size===v.length;
+ if(q.kind==='rulers-council'||q.kind==='capitulation-offers')return Object.keys(q).length===1;
  if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
  if(q.kind==='construction-status')return Object.keys(q).every(k=>['kind','buildingIds'].includes(k))&&list(q.buildingIds);
  if(q.kind==='recipe-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
@@ -41,6 +48,8 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
 /** Authoritative native read model. Routing/ownership caches never initialize on the display copy. */
 export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadModel{
  if(!isEngineReadQuery(query))throw new Error('Unsupported or malformed owner read query');
+ if(query.kind==='rulers-council')return{kind:query.kind,council:councilModel(g)};
+ if(query.kind==='capitulation-offers')return{kind:query.kind,offers:capitulationOffers(g).map(o=>({...o,defenderName:g.tribe(o.defenderTeam)?.name??'A community'}))};
  if(query.kind==='building-fabric'){
   const b=g.state.buildings.find(b=>b.id===query.buildingId&&b.team===0&&b.hp>0);if(!b)throw new Error('Original owned building is unavailable');
   // One open building, exactly five choices; no population/source cross product.

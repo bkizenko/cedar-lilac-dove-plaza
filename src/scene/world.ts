@@ -31,6 +31,10 @@ import {WildPlantLayer} from './wildPlants';
 import {wildPlantsEnabled} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
 import {TowerPlatformLayer} from './towerPlatformLayer';
+import {CarvedBuildingLayer,type CarvedInstance} from './carvedBuildingLayer';
+import {CARVED_TYPES} from './buildingStyleMap';
+import {fabricContext} from '@/game/buildingFabric';
+import {hearthHeating} from '@/game/survivalNeeds';
 import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
@@ -40,6 +44,7 @@ import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
 import {TerrainSurface,duneSandWeight} from './terrainSurface';
 import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall} from './depthWater';
+import {seaSurfaceY} from '../game/localWater';
 import {CampVisual} from './campVisual';
 import {landscapeSample,LANDSCAPE_ART_RULES,ATMOSPHERE_RULES,atmosphericDensity} from './landscapeArt';
 import {foundationProfile,terrainLaidWorkplace} from './foundations';
@@ -51,6 +56,9 @@ import {expandedGrainWorkplace} from '../game/plots';
 import {compactGrainWorkplace} from '../game/cerealRules';
 import {architectureStyle,localArchitecture} from "./architecture";
 import {TRAIL_GRID} from "@/game/trails";
+import {trailRibbons} from "@/game/trailRibbons";
+import {smoothRivers} from "@/game/channelSmoothness";
+import {buildingQuarterTurns} from "@/game/footprints";
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -129,8 +137,16 @@ export const BLD_TYPES: BldType[] = [
   "university",
   "cairn",
   "grove",
+  "well",
+  "cistern",
+  "watermill",
+  "windmill",
+  "aqueduct",
+  "canal",
 ];
 
+/** Types whose shipped look is terrain-laid or modular; Option H never replaces them. */
+const CARVED_KEEP_CURRENT=new Set<string>(['farm','pen','gate','palisade','stonewall','trench','moat','dock','warehouse','bridge','aqueduct','lumber','quarry','cornerstone','cairn','grove']);
 const _m = new THREE.Matrix4();
 const _p = new THREE.Vector3();
 const _q = new THREE.Quaternion();
@@ -204,6 +220,14 @@ export class WorldView {
     { timber: THREE.InstancedMesh; roof: THREE.InstancedMesh; extra?: THREE.InstancedMesh }
   >();
   private towerPlatforms:TowerPlatformLayer|null=null;
+  /** Option H adapter (C10 / WQ-11). 'current' is the shipped look and the default; 'carved' routes eligible
+   * finished-or-growing buildings through CarvedBuildingLayer. Terrain-laid, fort, bridge and modular
+   * buildings always keep the current renderer so footprints, collision and terrain stay exact. */
+  private renderStyle:'current'|'carved'='current';
+  private carvedLayer:CarvedBuildingLayer|null=null;
+  private carvedOwners=new Map<THREE.Object3D,import("@/game/types").Building[]>();
+  setRenderStyle(style:'current'|'carved'){this.renderStyle=style==='carved'?'carved':'current';}
+  getRenderStyle(){return this.renderStyle;}
   private contourFields: ContourFields | null = null;
   private wildPlantLayer:WildPlantLayer|null=null;
   private landContinuation:LandContinuation|null=null;
@@ -341,6 +365,7 @@ export class WorldView {
     this.scene.fog = new THREE.FogExp2("#d8c4a0", 0.0034);
 
     this.camera = new THREE.PerspectiveCamera(38, 1, 0.5, 860);
+    try{if(typeof location!=='undefined'&&new URLSearchParams(location.search).get('renderStyle')==='carved')this.renderStyle='carved';}catch{/* default stays 'current' */}
     this.mats = makeMaterials();
 
     this.hemi = new THREE.HemisphereLight("#dcebf8", "#5a6651", 0.72);
@@ -711,14 +736,43 @@ export class WorldView {
     const waterMaterial=this.makeWaterMat(),fallMaterial=makeDepthWater(this.terrainSurface!,this.timeU,true);
     this.waterMaterials=[waterMaterial,fallMaterial];
     this.water = new THREE.Mesh(wgeo, waterMaterial);
-    this.water.position.y = game.world.waterY;
+    this.water.position.y = seaSurfaceY(game.world);
     this.water.renderOrder = 1;
     this.scene.add(this.water);
     const localWater=new THREE.Group();localWater.name='local-water-bodies';this.localWater=localWater;
     localWater.position.y=game.world.waterY-game.world.baseWaterY;
     const hydrology=game.world as typeof game.world&{waterBodies?:RenderWaterBody[];waterfalls?:RenderWaterfall[]};
     addLocalWaters(localWater,hydrology.waterBodies??[],hydrology.waterfalls??[],waterMaterial,fallMaterial);this.scene.add(localWater);
+    this.buildBankRibbons(game);
     this.seasonAcc = 1;
+  }
+
+  /** GW-12/QA-013: soft shoreline ribbons on the smoothed river banks, hiding grid stair-steps.
+   * Display only: no terrain, wet/dry, pathing or save state changes. Capped so huge worlds stay cheap. */
+  private bankRibbons:THREE.Mesh|null=null;
+  private buildBankRibbons(game:Game) {
+    if(this.bankRibbons){this.scene.remove(this.bankRibbons);this.bankRibbons.geometry.dispose();(this.bankRibbons.material as THREE.Material).dispose();this.bankRibbons=null;}
+    const pos:number[]=[],idx:number[]=[],CAP=24000,half=0.45;
+    const y=(x:number,z:number)=>Math.max(game.height(x,z),game.waterAt(x,z))+0.035;
+    try{
+      for(const river of smoothRivers(game)){
+        for(const bank of [river.left,river.right]){
+          if(bank.length<2)continue;
+          for(let i=0;i<bank.length&&pos.length/3<CAP;i++){
+            const p=bank[i],q=bank[Math.min(bank.length-1,i+1)],r=bank[Math.max(0,i-1)];
+            const dx=q.x-r.x,dz=q.z-r.z,len=Math.hypot(dx,dz)||1,nx=-dz/len*half,nz=dx/len*half;
+            const base=pos.length/3;
+            pos.push(p.x-nx,y(p.x-nx,p.z-nz),p.z-nz,p.x+nx,y(p.x+nx,p.z+nz),p.z+nz);
+            if(i>0)idx.push(base-2,base-1,base,base-1,base+1,base);
+          }
+        }
+      }
+    }catch{return;}
+    if(!pos.length)return;
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);
+    const mat=new THREE.MeshBasicMaterial({color:'#d9e6e0',transparent:true,opacity:0.22,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    const mesh=new THREE.Mesh(geo,mat);mesh.name='river-bank-ribbons';mesh.renderOrder=2;mesh.frustumCulled=false;mesh.raycast=()=>{};
+    this.bankRibbons=mesh;this.scene.add(mesh);
   }
 
   private buildNature(game: Game) {
@@ -1123,6 +1177,7 @@ export class WorldView {
         }
     }
     for(const [mesh,owners]of this.towerPlatforms?.sources()||[]){mesh.computeBoundingSphere();sources.set(mesh,owners);}
+    for(const [mesh,owners]of this.carvedOwners){if(mesh instanceof THREE.InstancedMesh&&mesh.count>0){mesh.computeBoundingSphere();sources.set(mesh,owners);}}
     if(this.domesticGoats){
       this.domesticGoats.computeBoundingSphere();
       sources.set(this.domesticGoats,(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='goat').slice(0,instCap(this.domesticGoats)).map(a=>game.state.buildings.find(b=>b.id===a.pen)!));
@@ -1285,7 +1340,7 @@ export class WorldView {
     this.paintSeason(game, dt);
     if(this.localWater)this.localWater.position.y=game.world.waterY-game.world.baseWaterY;
     if (this.water)
-      this.water.position.y = game.world.waterY + Math.sin(game.state.time * 0.6) * 0.03;
+      this.water.position.y = seaSurfaceY(game.world) + Math.sin(game.state.time * 0.6) * 0.03;
   }
 
   private updateDay(game: Game, dt = 0.016) {
@@ -1477,15 +1532,19 @@ export class WorldView {
   }
 
   private syncTrails(game:Game) {
-    if(this.trailSyncAt===Math.floor(game.state.time))return;this.trailSyncAt=Math.floor(game.state.time);
-    let i=0;
-    const TRAIL_CELL=game.world.size/TRAIL_GRID;
-    for(const t of game.state.trails||[]) {
-      if(t.wear<0.55||i>=4096)continue;
-      const x=t.x??(t.cell%TRAIL_GRID+0.5)*TRAIL_CELL-(this.mapSize/2),z=t.z??(Math.floor(t.cell/TRAIL_GRID)+0.5)*TRAIL_CELL-(this.mapSize/2);
-      if(!game.exploredAt(x,z))continue;
-      _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-t.angle);_q.setFromEuler(_e);
-      _s.set(0.3+t.wear*0.2,TRAIL_CELL*0.65,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
+    // GW-12/QA-013: continuous ribbons from the saved trail cells (display only; pace and state untouched).
+    const stamp=Math.floor(game.state.time/4);
+    if(this.trailSyncAt===stamp)return;this.trailSyncAt=stamp;
+    let i=0;const CAP=4096;
+    for(const ribbon of trailRibbons(game)){
+      const pts=ribbon.points;
+      for(let k=1;k<pts.length&&i<CAP;k++){
+        const a=pts[k-1],b=pts[k],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<1e-3)continue;
+        const x=(a.x+b.x)/2,z=(a.z+b.z)/2;if(!game.exploredAt(x,z))continue;
+        const w=ribbon.widthMetres*(0.55+0.45*Math.min(1,(a.displayWear+b.displayWear)/2/0.45));
+        _p.set(x,game.height(x,z)+0.12,z);_e.set(-Math.PI/2,0,-Math.atan2(dx,dz));_q.setFromEuler(_e);
+        _s.set(w,len*1.3,1);_m.compose(_p,_q,_s);this.trailMesh.setMatrixAt(i++,_m);
+      }
     }
     this.trailMesh.count=i;this.trailMesh.instanceMatrix.needsUpdate=true;
   }
@@ -1630,6 +1689,7 @@ export class WorldView {
     if(!this.towerPlatforms)this.towerPlatforms=new TowerPlatformLayer(this.scene,this.mats);
     this.towerPlatforms.sync(game);
     this.styleHalls=game.state.buildings.filter(b=>b.type==='townhall'&&game.finished(b));
+    const carvedList:(CarvedInstance&{b:import("@/game/types").Building})[]=[];
     const grouped = new Map<BldType, typeof game.state.buildings>();
     for (const type of BLD_TYPES) grouped.set(type, []);
     for (const b of game.state.buildings) if(b.hp>0)grouped.get(b.type)?.push(b);
@@ -1647,6 +1707,12 @@ export class WorldView {
         const ys=b.plannedCost?.08:b.build>=1?1:.22+.78*Math.max(0,b.build);
         const fort=["palisade","gate","stonewall","trench","moat"].includes(type);
         const modular=type==="warehouse"||expandedGrainWorkplace(b);
+        if(this.renderStyle==='carved'&&!modular&&!b.bridge&&!fort&&CARVED_TYPES.includes(type)&&!CARVED_KEEP_CURRENT.has(type)){
+          const fab=fabricContext(b);
+          carvedList.push({worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
+            settlementSeed:b.team,lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,yaw:buildingQuarterTurns(b)*Math.PI/2,progress:ys,b});
+          continue;
+        }
         const scalable=type==="farm"||modular;
         const write=(part:'timber'|'roof'|'extra',x:number,z:number,sx:number,sz:number)=>{
           const mesh=meshes[part];if(!mesh||!mesh.geometry.getAttribute('position')?.count||counts[part]>=instCap(mesh))return;
@@ -1656,7 +1722,7 @@ export class WorldView {
           const terrainWork=type==="dock",limit=.2;
           const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(wx,wz+2)-game.height(wx,wz-2))/4))):0;
           const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(wx+2,wz)-game.height(wx-2,wz))/4))):0;
-          _e.set(pitch,type==='gate'?gateOrientation(b.gateFacing).yawRadians:fort||scalable||type==='pen'?0:st.yaw,roll);
+          _e.set(pitch,type==='gate'?gateOrientation(b.gateFacing).yawRadians:fort||scalable||type==='pen'?0:st.yaw+buildingQuarterTurns(b)*Math.PI/2,roll);
           _s.set(scalable?sx:fort||type==='pen'?1:st.sx,ys*(scalable||fort||type==='pen'?1:st.sy),scalable?sz:fort||type==='pen'?1:st.sz);
           if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
           if(part!=="timber"){
@@ -1689,12 +1755,24 @@ export class WorldView {
       }
       for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;const art=mesh.geometry.getAttribute('buildingArt')as THREE.InstancedBufferAttribute|undefined;if(art)art.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }
+    this.syncCarvedBuildings(carvedList);
     this.penFences?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.contourFields?.sync(game,this.camera.position);
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     this.syncEraDetails(game);
     this.foundations?.sync(game);
+  }
+
+  private syncCarvedBuildings(list:(CarvedInstance&{b:import("@/game/types").Building})[]){
+    if(!list.length&&!this.carvedLayer)return;
+    const layer=this.carvedLayer||(this.carvedLayer=new CarvedBuildingLayer(this.scene));
+    for(const mesh of this.carvedOwners.keys())this.buildingInstances.delete(mesh);this.carvedOwners.clear();
+    layer.sync(list,this.camera.position);
+    for(const [mesh,owners] of layer.sources()){
+      const buildings=(owners as (CarvedInstance&{b:import("@/game/types").Building})[]).map(o=>o.b);
+      this.carvedOwners.set(mesh,buildings);this.buildingInstances.set(mesh,buildings);
+    }
   }
 
   private syncEraDetails(game:Game){
@@ -1705,7 +1783,7 @@ export class WorldView {
       const n=(perType.get(b.type)||0)+1;perType.set(b.type,n);
       if(n>80||b.team!==0&&!game.exploredAt(b.x,b.z)||
         ['warehouse','farm','pen','dock','bridge','lumber','quarry','cornerstone','palisade','gate','stonewall','trench','moat','cairn','grove'].includes(b.type))continue;
-      if(!['forge','stables','keep'].includes(b.type))continue;
+      if(!['forge','stables','keep'].includes(b.type)||this.renderStyle==='carved'&&CARVED_TYPES.includes(b.type)&&!CARVED_KEEP_CURRENT.has(b.type))continue;
       const identity=this.villageStyle(game,b.team,b),era=identity.era;if(era===0)continue;
       const st=TEAM_STYLE[b.team]||TEAM_STYLE[0],yaw=st.yaw,co=Math.cos(yaw),si=Math.sin(yaw);
       const width=Math.max(2,b.w*.85),depth=Math.max(2,b.d*.85);
@@ -2788,6 +2866,7 @@ export class WorldView {
       (meshes.timber.material as THREE.Material).dispose();
       (meshes.roof.material as THREE.Material).dispose();
     }
+    this.carvedLayer?.dispose();this.carvedLayer=null;this.carvedOwners.clear();
     this.bldMeshes.clear();this.buildingInstances.clear();
     this.unitMeshes.clear();this.unitInstanceOwners.clear();
     this.haulageMeshes.clear();

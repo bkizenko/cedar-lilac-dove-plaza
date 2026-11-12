@@ -11,6 +11,8 @@ import {craftSiteReport,controlCraftSiteJob,type CraftSiteJob} from './craftSite
 import {queueConstruction,setConstructionPriority,pauseConstructionQueue,resumeConstructionQueue,editConstructionQueue} from './constructionQueue';
 import {setSitePreparationPaused} from './sitePreparation';
 import {orderConstruction} from './construction';
+import {acceptCapitulation,refuseCapitulation,type CapitulationOutcome} from './capitulation';
+import {marryHouses,fosterHouses,exchangeHostages} from './rulersRuntime';
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
  |{kind:'begin-era-upgrade';buildingId:number;mode:'rebuild'}
@@ -33,6 +35,8 @@ export type EngineDispatchCommand=
  |{kind:'set-auto-work';enabled:boolean}|{kind:'defense-horn'}|{kind:'recall'}
  |{kind:'production-control';projectId:number;action:'pause'|'resume'|'unload';unitId?:number}
  |{kind:'dairy-clean';projectId:number;unitId?:number}|{kind:'dairy-discard';projectId:number}
+ |{kind:'marry-houses';team:number}|{kind:'foster-houses';team:number}|{kind:'exchange-hostages';team:number}
+ |{kind:'accept-capitulation';frontId:number;outcome:CapitulationOutcome}|{kind:'refuse-capitulation';frontId:number}
  |{kind:'boat-stop';boatId:number}
  |{kind:'construction-priority';buildingId:number;priority:0|1|2}
  |{kind:'site-preparation-pause';buildingId:number;paused:boolean}
@@ -106,6 +110,17 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     const project=g.state.production?.projects.find(p=>p.id===command.projectId&&p.team===0);if(!project)return no('Original dairy project unavailable');
     const accepted=command.kind==='dairy-clean'?queueDairyVesselCleaning(g,project.id,command.unitId):discardDairyProject(g,project.id);return{accepted,reason:accepted?'Original held vessel updated':g.state.banner||'Dairy request refused',projectId:project.id};
    }
+   case 'marry-houses':{
+    const other=g.tribe(command.team);if(!other||command.team===0||command.team===3)return no('That society is not known');
+    const r=marryHouses(g,0,command.team);return r?{accepted:true,reason:`A marriage binds the houses (${r.why[0]})`}:no('No suitable match, or a house is too small to exchange spouses');
+   }
+   case 'foster-houses':case 'exchange-hostages':{
+    const other=g.tribe(command.team);if(!other||command.team===0||command.team===3)return no('That society is not known');
+    const fos=command.kind==='foster-houses',r=(fos?fosterHouses:exchangeHostages)(g,0,command.team);
+    return r?{accepted:true,reason:`${fos?'Children are fostered':'Hostages are exchanged'} (${r.why[0]})`}:no(fos?'No child to foster, or a house is too small, or you are at war':'No kinsman to send, or a house is too small, or you are at war');
+   }
+   case 'accept-capitulation':return acceptCapitulation(g,command.frontId,command.outcome,0);
+   case 'refuse-capitulation':{const ok=refuseCapitulation(g,command.frontId,0);return ok?{accepted:true,reason:'Terms refused; they will resist harder'}:no('No offer to refuse here');}
    case 'boat-stop':{
     const boat=g.state.boats?.find(b=>b.id===command.boatId&&b.team===0&&b.hp>0);if(!boat)return no('Original owned boat unavailable');
     const captain=g.state.units.find(u=>u.id===boat.captain&&u.hp>0&&u.team===boat.team&&u.boat?.id===boat.id&&u.boat.phase==='aboard');if(!captain)return no('Original aboard captain unavailable');
@@ -148,7 +163,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'survey-fibre':{unitId:id},'return-fibre':{unitId:id},'equip-basket':{unitId:id},'survey-clay':{unitId:id},'equip-water-vessel':{unitId:id},'swap-clothing':{unitId:id},'gather-fibre':{unitId:id,patchId:id},'gather-clay':{unitId:id,depositId:id},'equip-clothing':{unitId:id,item:v=>GARMENT_KINDS.includes(v as GarmentKind)},
   'set-auto-work':{enabled:bool},'defense-horn':{},recall:{},
   'production-control':{projectId:id,action,unitId:optionalId},'dairy-clean':{projectId:id,unitId:optionalId},'dairy-discard':{projectId:id},
-  'boat-stop':{boatId:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},
+  'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'boat-stop':{boatId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},
   'site-preparation-pause':{buildingId:id,paused:bool},'paused-plan':{buildingId:id,paused:bool},
   'queue-construction':{buildingId:id},'order-construction':{buildingId:id},
   'construction-queue-control':{unitId:id,action:v=>v==='pause'||v==='resume'||v==='up'||v==='down'||v==='remove',siteId:optionalId},

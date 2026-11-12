@@ -34,6 +34,8 @@ import {DIFFICULTIES,difficultyEffects} from '../game/difficulty';
 import {FarmingProgress} from './FarmingProgress';
 import {ConflictControls} from './ConflictControls';
 import {KnowledgePanel} from './KnowledgePanel';
+import {CouncilPanel} from './CouncilPanel';
+import {UiThemeToggle,UiThemeBoot} from './uiTheme';
 import {PaidProjects} from './PaidProjects';
 import {NeedsPanel} from './NeedsPanel';
 import {HusbandryControls} from './HusbandryControls';
@@ -209,6 +211,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
 
   return (
     <div className="hud-shell font-sans text-parchment">
+      <UiThemeBoot/>
       <div className="hud-res">
         <div className="hud-panel resource-strip">
           {engine&&<GameTooltip title={engine.game.tribe(0).name} description="Your community flag. Edit it in Camp or the village ledger."><span aria-label={`Community: ${engine.game.tribe(0).name}`}><SocietyFlag game={engine.game} team={0}/><span className="ml-1 hidden max-w-24 truncate text-xs xl:inline">{engine.game.tribe(0).name}</span></span></GameTooltip>}
@@ -966,6 +969,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
             </div>
             <GameDisclosure label="Next age requirements"><AgeReadiness hud={hud} engine={engine} onAdvance={()=>setTechOpen(false)}/></GameDisclosure>
             {engine&&<KnowledgePanel engine={engine} expanded onChooseSite={()=>setTechOpen(false)}/>}
+            {engine&&<GameDisclosure label="Council and house"><CouncilPanel engine={engine}/></GameDisclosure>}
+            <UiThemeToggle/>
             <GameDisclosure label="Buildings by age"><div className="mt-3 grid gap-2 sm:grid-cols-3">
               {AGES.map((name, age) => (
                 <div

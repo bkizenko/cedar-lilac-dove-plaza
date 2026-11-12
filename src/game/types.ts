@@ -549,6 +549,8 @@ export type GameState = {
   worldgenVersion?: number;
   wildPlantVersion?: 1;
   worldOptions?: import("./worldOptions").WorldOptions;
+  /** Rulers lane (Claude): optional; absent in old saves. See rulersRuntime.ts. */
+  rulers?: import("./rulersState").RulersState;
   tradeReports?: {team:number; time:number; offers:TradeDeal[]; observation?: {populationLow:number; populationHigh:number; buildings:number; stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>}}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];

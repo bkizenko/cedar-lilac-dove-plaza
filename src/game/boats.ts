@@ -13,6 +13,7 @@ import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {HAULAGE,beginHaulageWork,resumeHaulageProject} from './haulage';
 import {waterNavigation} from './waterTravel';
+import {driftAt} from './riverCurrents';
 export type Riverboat={id:number;team:number;dock:number;x:number;y:number;z:number;facing:number;captain?:number;hp:number;capacity:number;hullClass?:NewBoatClass;exploration?:BoatExploration;sailRig?:import('./sailingRules').SailRig};
 export const BOAT_COST={wood:BOAT_CLASSES.riverboat.wood,stone:BOAT_CLASSES.riverboat.stone,seconds:BOAT_CLASSES.riverboat.seconds,seats:BOAT_CLASSES.riverboat.seats};
 // Gameplay tuning for more thrust with diminishing gains as resistance rises.
@@ -151,13 +152,26 @@ export function riverboatAI(g:Game,u:Unit,dt:number){
  }else u.workReason='Aboard riverboat';
  return true;
 }
-export function syncRiverboats(g:Game){
+function applyBoatDrift(g:Game,b:Riverboat,dt:number){
+ if(!(dt>0))return;
+ const d=driftAt(g,b.x,b.z);if(!d.x&&!d.z)return;
+ const x=b.x+d.x*dt,z=b.z+d.z*dt;
+ if(g.height(x,z)>=g.waterAt(x,z)+.3)return;
+ const nav=waterNavigation(g,true),cell=g.world.size/nav.width,half=g.world.size/2;
+ const idx=(px:number,pz:number)=>Math.floor((pz+half)/cell)*nav.width+Math.floor((px+half)/cell);
+ const i=idx(x,z);if(i<0||i>=nav.labels.length||!nav.labels[i]||nav.labels[i]!==nav.labels[idx(b.x,b.z)])return;
+ b.x=x;b.z=z;
+}
+
+export function syncRiverboats(g:Game,dt=0){
  for(const b of g.state.boats||[]){
   const aboard=boatCrew(g,b.id).filter(u=>u.boat?.phase==='aboard');
   let captain=aboard.find(u=>u.id===b.captain&&u.team===b.team&&canRowRiverboat(g,u));
   if(!captain){captain=aboard.find(u=>u.team===b.team&&canRowRiverboat(g,u));if(captain){b.captain=captain.id;captain.order='hold';}}
   if(captain){b.x=captain.x;b.z=captain.z;b.facing=captain.facing;}
   else {delete b.captain;if(!boatCrew(g,b.id).some(u=>u.boat?.phase==='boarding'))delete b.exploration;}
+  applyBoatDrift(g,b,dt);
+  if(captain){captain.x=b.x;captain.z=b.z;}
   b.y=g.waterAt(b.x,b.z)+.16;
   let seat=0;for(let i=0;i<aboard.length;i++){
    const u=aboard[i];if(u===captain)continue;

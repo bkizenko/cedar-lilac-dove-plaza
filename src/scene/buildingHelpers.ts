@@ -15,7 +15,7 @@ export type FamilyContext={seed:number;era:number;material:BuildMaterial;climate
  /** false removes fire parts (cold hearth/forge); undefined = lit. */lit?:boolean};
 export type Generator=(ctx:FamilyContext,r:Rng)=>{parts:Part[];entry?:{x:number;z:number;width:number}};
 export type CoreFamilyId='roundhouse'|'cottage'|'longhouse'|'granary'|'storehouse'|'watermill'|'quernShelter'|'workshop'|'palisade'|'gate'|'tower'|'church'|'marketStalls'|'hearth';
-export type ExtraFamilyId='fieldPlot'|'pen'|'pier'|'bridge'|'keep'|'stables'|'college'|'quarry'|'cairn'|'grove'|'outpost'|'threshing'|'stoneWall'|'trench'|'moat';
+export type ExtraFamilyId='fieldPlot'|'pen'|'pier'|'bridge'|'keep'|'stables'|'college'|'quarry'|'cairn'|'grove'|'outpost'|'threshing'|'stoneWall'|'trench'|'moat'|'well'|'cistern'|'millHouse'|'windmill'|'aqueduct'|'canal';
 export type FamilyId=CoreFamilyId|ExtraFamilyId;
 
 /** Roof pitch in radians: snow sheds off steep thatch, arid roofs are low. */

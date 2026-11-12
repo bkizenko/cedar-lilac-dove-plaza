@@ -81,7 +81,7 @@ test('central Game hooks share cached paint and route fields across many ordinar
 
 test('pending work cannot supply authoritative control; unrelated plans and births do not restart a wave',()=>{
  const g=fixture();add(g,'townhall',-30,0);add(g,'townhall',100,0,1);queuePaint(g);const before=g.territory.slice(),tension=g.tribe(1).tension;
- assert.ok(Number.isNaN(rawInfluence(g,-20,0,0)),'pending means unknown rather than false zero control');g.tickInfluence(10);assert.equal(g.tribe(1).tension,tension);assert.deepEqual(g.territory,before,'old texture stays intact while pending');
+ assert.equal(geographicInfluenceReady(g,0),false,'pending work is not yet authoritative');assert.equal(rawInfluence(g,-20,0,0),0,'unready fields read as 0, not NaN');g.tickInfluence(10);assert.equal(g.tribe(1).tension,tension);assert.deepEqual(g.territory,before,'old texture stays intact while pending');
  advanceGeographicInfluence(g,wallClock+=17);const first=rawDiagnostics(g).cacheBuild,plan=g.makeBld('hut',150,0,0);plan.build=.01;plan.plannedCost={wood:40};g.state.buildings.push(plan);g.spawnUnit('worker',180,0,0);g.rebuildWalk();g.state.time+=3;
  assert.equal(rawDiagnostics(g).cacheBuild,first,'unpaid drawing, civilian birth and identical navigation rebuild do not discard progress');settle(g,true);assert.ok(geographicInfluenceReady(g));assert.ok(Number.isFinite(g.influenceAt(-20,0,0)));
  const slices=rawDiagnostics(g).slices.count;advanceGeographicInfluence(g,wallClock);assert.equal(rawDiagnostics(g).slices.count,slices,'simulation substeps share the16ms wall interval');

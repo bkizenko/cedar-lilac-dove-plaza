@@ -1,3 +1,4 @@
+import {journeyPermit,spendRaidClaim} from './rulersRuntime';
 import {planRivalPairRaid,dispatchPairRaid,isSocietyPeaceMessengerFor} from './rivalActivity';
 import {AGE_STAT,UNITS} from './constants';
 import {beginWeaponWork} from './warfare';
@@ -55,7 +56,9 @@ export function dispatchRivalOperation(g:Game,team:number,reserve:number){
  const t=g.tribe(team);
  if(t.lastRaid>0||rivalOperationIntent(g,team,reserve)!=='raid')return false;
  const plan=planRivalRaid(g,team,reserve);if(!plan)return false;
+ const permit=journeyPermit(g,team,'raid',plan.target.team);if(permit&&!permit.allow)return false; // rulers: a state needs a claim to strike a peaceful neighbour
  const result=dispatchPairRaid(g,team,reserve,plan.target.team);if(!result.accepted)return false;
+ if(permit)spendRaidClaim(g,team,plan.target.team);
  // Relations change only when the actual force reaches hostile territory/contact.
  t.lastRaid=360+Math.random()*180;t.recoveryUntil=g.state.time+t.lastRaid;
  // Dispatch is not contact with the player. The force may raid another

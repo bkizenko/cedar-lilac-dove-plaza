@@ -134,9 +134,15 @@ type Source={sourceX:number;sourceZ:number;bankX:number;bankZ:number};
 function bankClear(g:Game,u:Unit,x:number,z:number){
  return g.walkable(x,z)&&!g.state.buildings.some(b=>g.solidBuilding(b)&&Math.abs(x-b.x)<=b.w*.4+u.r&&Math.abs(z-b.z)<=b.d*.4+u.r);
 }
-function sourceWet(g:Game,source:Source){return g.height(source.sourceX,source.sourceZ)<=g.waterAt(source.sourceX,source.sourceZ)+.25;}
+function builtWaterWork(g:Game,x:number,z:number,team?:number){
+ return g.state.buildings.find(b=>(b.type==='well'||b.type==='cistern')&&(team===undefined||b.team===team)&&g.finished(b)&&Math.hypot(b.x-x,b.z-z)<.6)??null;
+}
+function sourceWet(g:Game,source:Source){
+ if(builtWaterWork(g,source.sourceX,source.sourceZ))return true;
+ return g.height(source.sourceX,source.sourceZ)<=g.waterAt(source.sourceX,source.sourceZ)+.25;
+}
 function sourceFor(g:Game,u:Unit,avoid?:{x:number;z:number}):Source|null{
- const sources:{x:number;z:number}[]=[];
+ const sources:{x:number;z:number;built?:true}[]=[];
  for(const river of g.world.rivers)for(let i=1;i<river.pts.length-2;i++){
   const a=river.pts[i-1],b=river.pts[i],steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.z-a.z)/8));
   for(let j=0;j<steps;j++)sources.push({x:a.x+(b.x-a.x)*j/steps,z:a.z+(b.z-a.z)*j/steps});
@@ -148,19 +154,21 @@ function sourceFor(g:Game,u:Unit,avoid?:{x:number;z:number}):Source|null{
   const stride=Math.max(1,Math.floor(body.shoreline.length/16));
   for(let i=0;i<body.shoreline.length;i+=stride){const p=body.shoreline[i];sources.push({x:body.x+(p.x-body.x)*.94,z:body.z+(p.z-body.z)*.94});}
  }
+ for(const b of g.state.buildings)if((b.type==='well'||b.type==='cistern')&&b.team===u.team&&g.finished(b))sources.push({x:b.x,z:b.z,built:true});
  const candidates:Source[]=[];
  for(const p of sources){
   if(Math.hypot(p.x-u.x,p.z-u.z)>SURVIVAL_RULES.sourceSearchMeters)continue;
-
-  if(g.height(p.x,p.z)>g.waterAt(p.x,p.z)+.25)continue;
-  for(const d of [8,16,24,32])for(let i=0;i<12;i++){
+  if(!p.built&&g.height(p.x,p.z)>g.waterAt(p.x,p.z)+.25)continue;
+  const radii=p.built?[Math.max(2.2,((g.state.buildings.find(b=>b.x===p.x&&b.z===p.z)?.w??3)/2)+1.2),3,4,6]:[8,16,24,32];
+  for(const d of radii)for(let i=0;i<12;i++){
    const a=i*Math.PI/6,x=p.x+Math.cos(a)*d,z=p.z+Math.sin(a)*d;
    if(u.team===0&&!g.exploredAt(x,z))continue;
    if(avoid&&Math.hypot(x-avoid.x,z-avoid.z)<4)continue;
    if(!bankClear(g,u,x,z)||!g.workBoard.connected(g,u.x,u.z,x,z))continue;
    // Collection is physically beside fresh water, rather than from a distant
-   // dry waypoint that happens to be close to a river's metadata.
-   const reach=Array.from({length:8},(_,j)=>{const a=j*Math.PI/4;return g.height(x+Math.cos(a)*5,z+Math.sin(a)*5)<g.waterAt(x+Math.cos(a)*5,z+Math.sin(a)*5)+.2;}).some(Boolean);
+   // dry waypoint that happens to be close to a river's metadata. Finished
+   // wells and cisterns are the source themselves.
+   const reach=p.built||Array.from({length:8},(_,j)=>{const a=j*Math.PI/4;return g.height(x+Math.cos(a)*5,z+Math.sin(a)*5)<g.waterAt(x+Math.cos(a)*5,z+Math.sin(a)*5)+.2;}).some(Boolean);
    if(reach)candidates.push({sourceX:p.x,sourceZ:p.z,bankX:x,bankZ:z});
   }
  }
