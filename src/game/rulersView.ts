@@ -2,7 +2,7 @@ import {societyIdentity} from './societyIdentity';
 /** Plain-JSON council view of a society's ruling house for the UI. Pure read of game state; safe to post across the worker. */
 import type {Game} from './sim';
 import {rulersOf} from './rulersState';
-import {ensureRulers,rulersEnabled,livingPeople,expansionOf,tiesBetween,unrestOf,claimsOf} from './rulersRuntime';
+import {expansionParties,type PartyLine,ensureRulers,rulersEnabled,livingPeople,expansionOf,tiesBetween,unrestOf,claimsOf} from './rulersRuntime';
 import {familyFeatures} from './familyScale';
 import {dossier,relationWord,traitWord} from './kinshipBridge';
 import {generateFactions,stepFactions,coalitionLoss,type FactionKind} from './houses';
@@ -21,6 +21,7 @@ export type CouncilModel={
  factions:{kind:FactionKind;power:number;loyalty:number;demand:string}[];coalitionLoss:number;
  glory:{stream:string;value:number}[];gloryScore:number;
  expansion?:{mode:string;drive:number;why:string[]};
+ parties?:PartyLine[];
  neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity;wards?:WardLine[]}[];
  log:string[];
  handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
@@ -60,7 +61,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
   polity:{form:me.civ.polity.form,law:me.civ.polity.succession,tier:me.civ.polity.tier},
   factions:factions.map(x=>({kind:x.kind,power:Math.round(x.power*100),loyalty:x.loyalty,demand:x.demand})),coalitionLoss:coalitionLoss(factions),
   glory:STREAMS.map(s=>({stream:s,value:Math.round(me.ledger[s])})),gloryScore:Math.round(score(me.ledger)),
-  expansion:exp?{mode:exp.mode,drive:exp.drive,why:exp.why}:undefined,neighbours,log:d.log.slice(-6),
+  expansion:exp?{mode:exp.mode,drive:exp.drive,why:exp.why}:undefined,parties:expansionParties(g,team),neighbours,log:d.log.slice(-6),
  };
 }
 void traitWord;void dominantTraits;

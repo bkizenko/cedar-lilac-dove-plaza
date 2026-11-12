@@ -175,6 +175,21 @@ export function expansionParty(g:Game,team:number):PartyPlan|null{
   minReserve:d.mode==='migrate'?300:600,why:sends?[...d.why,...(gate.crew<4?[gate.note]:[])]:['the society stays at home',...d.why]};
 }
 
+/** Read model of NPC founding parties on the road: the real units, where they are, what they carry. Pure read; nothing is created or moved here. */
+export type PartyLine={team:number;name:string;crew:number;x:number;z:number;destX:number;destZ:number;distance:number;carrying:string;status:string};
+export function expansionParties(g:Game,team?:number):PartyLine[]{
+ if(!rulersEnabled(g))return [];
+ const out=new Map<string,PartyLine>();
+ const units=g.state.units as unknown as {team:number;hp:number;x:number;z:number;carry:number;carryType?:string;stuckT:number;foundingJourney?:{x:number;z:number;leader:boolean;timber?:number}}[];
+ for(const u of units){const j=u.foundingJourney;if(!j||u.hp<=0||(team!==undefined&&u.team!==team))continue;
+  const key=u.team+':'+j.x+':'+j.z,cur=out.get(key),d=Math.round(Math.hypot(u.x-j.x,u.z-j.z));
+  const line=cur??{team:u.team,name:g.tribe(u.team).name,crew:0,x:u.x,z:u.z,destX:j.x,destZ:j.z,distance:d,carrying:'',status:'on the road'};
+  line.crew++;if(j.leader){line.x=u.x;line.z=u.z;line.distance=d;line.carrying=u.carry>0?`${Math.round(u.carry)} ${u.carryType??'goods'}`:'nothing';}
+  if(u.stuckT>8)line.status='struggling to find a way through';
+  out.set(key,line);}
+ return [...out.values()];
+}
+
 /** Claims and casus belli (years are dynastic years). Claims are standing grievances a house may cite; they cost nothing to hold, cost legitimacy
  * when used (cbLegitimacyCost), and press on unrest at both ends. Era gating: any claim needs the 'claims' family feature; war-grade causes
  * (tribute, holy, raid, reconquest, liberation) need a state-tier polity. No claim on a society you do not know, or on yourself. */
