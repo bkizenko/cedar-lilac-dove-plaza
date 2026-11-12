@@ -1,0 +1,98 @@
+{
+  "release": "2026-11-12T09-30-58-129Z-290b188",
+  "commit": "290b188067be2f2bc5e1d8853a36a57a6404ae9c",
+  "sourceCommit": "7eac49b",
+  "livePorts": [
+    8086,
+    8101
+  ],
+  "scopedBatch": {
+    "passed": 62,
+    "total": 62,
+    "garmentWeatherAndNativeRepair": 10,
+    "compatibility": 50,
+    "built": 2
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "native": {
+    "scope": "Finite authored existing tailor/garments/patch stock on unchanged native V18 terrain, actual owner walking and paid base work. No earned garment manufacture or building unlock claim.",
+    "ownerId": 6224,
+    "pausedProgress": 5.010000000000001,
+    "heldGarment": {
+      "item": "woolCoat",
+      "condition": 0.2,
+      "wetness": 0.3906399999999993,
+      "heatExposureSeconds": 12
+    },
+    "returnedGarment": {
+      "item": "woolCoat",
+      "condition": 0.9,
+      "wetness": 0.34919999999999624,
+      "heatExposureSeconds": 12
+    },
+    "metrics": {
+      "materialsUsed": {
+        "woolCloth": 1,
+        "cordage": 1
+      },
+      "started": 1,
+      "completed": 1,
+      "cancelled": 0,
+      "lost": 0,
+      "workSeconds": 40,
+      "conditionRestored": 0.7
+    },
+    "checks": [
+      "Paid inputs and original garment escrow; no warmth from held garment",
+      "Physical walk, paused strict reload, reclaim shared tailor slot and finish",
+      "Concurrent paid production after paused repair; repeated pause/cancel preserves newer job",
+      "Death, removed owner, ownership transfer and no refunds/duplicates",
+      "Strict slot/counter/wetness/condition consistency",
+      "Paired actual native winter: soaked garment increases cold exposure; real fuel burns for faster drying"
+    ]
+  },
+  "built": {
+    "scope": "2 desktop checks: actual earned native paused repair shown in person/tailor UI, real Resume/Pause/Cancel commands preserve original garment and paid materials, durable restore; original existing village restore. No earned textile production, building unlock, campaign or hardware FPS claim.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 2,
+    "total": 2,
+    "originalPopulation": 53,
+    "nativeEvidence": {
+      "ownerId": 6224,
+      "progress": 5.010000000000001,
+      "materialsPaidOnce": true,
+      "originalItemReturnedUnchanged": true,
+      "personAndSiteControls": true
+    },
+    "originalUnchanged": true,
+    "errors": []
+  },
+  "frozenChecklist": {
+    "version": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69387755102041
+  },
+  "rules": {
+    "repairBaseWorkSeconds": 40,
+    "restoredCondition": 0.9,
+    "minimumRepairDamage": 0.15,
+    "inputs": "one material-specific patch + one cordage, paid once",
+    "slot": "one shared real tailor production slot; paused repair releases hands and slot",
+    "wetness": "optional persistent0..1, garment-kind tuning, real rain/immersion, physical roof footprint, paid local fire drying",
+    "legacy": "old dry garments gain no invented wetness or prior repair history"
+  },
+  "incomingPreserved": "Whole Grok/Claude main landing throughb8707f7, board6535538; rulers/civic compatibility included. No exhaustive incoming campaign/graphics/performance credit.",
+  "qualificationNotes": [
+    "Initial authored fixture incorrectly removed existing pottery while retaining origin record; corrected to preserve it and validate opening before adversarial assertions.",
+    "A misplaced save-capacity check was caught/corrected before final10/10 qualification and publication.",
+    "Built Cancel query corrected to accessible name Cancel garment repair; no runtime change required."
+  ],
+  "remaining": [
+    "Dyes require finite colorant extraction/application chain",
+    "Repair of someone elses garment and broader textile specialization",
+    "Full campaign and hardware performance acceptance",
+    "W2 traded-method-v1 now agreed; next Codex workplace/learning/save implementation"
+  ]
+}

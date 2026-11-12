@@ -1,13 +1,14 @@
 import {CURD_RULES} from './curds';
 import {DAIRY_RULES} from './dairy';
 import {BREWING_RULES} from './brewing';
+import {garmentRepairRemainingWork} from './garmentRepair';
 import {BUILDINGS} from './constants';
 import {FOOD_NAMES} from './pantry';
 import{BOAT_CLASSES}from'./boatClasses';
 import{pausePracticalHelper,resumePracticalHelper}from'./practicalHelpers';
 import type{Game}from'./sim';import type{Building}from'./types';
 import{craftingBenches,craftingQueue}from'./crafting';import{WEAPONS,resumeWeaponWork}from'./warfare';import{FARM_TOOLS,resumeFarmToolWork}from'./farmTools';import{HAULAGE,resumeHaulageProject,resumeHaulageWork}from'./haulage';import{COPPER_STUDY_RULES,beginCopperStudy}from'./materialStudy';import{ITEM_NAMES,type ItemKind,PRODUCTION_RECIPES,productionSlots,productionWorkSeconds,productionRecovery,pauseProductionProject,resumeProduction,unloadProductionProject}from'./production';import{personName}from'./people';
-export type CraftSiteJob={id:string;kind:'production'|'haulage'|'weapon'|'tool'|'copper'|'helper';projectId?:number;actorId:number|null;actor:string;label:string;progress:number;required:number;paused:boolean;phase:string;reason:string;canPause:boolean;canUnload?:boolean;progressUnit?:string;details?:string;cacheLocation?:{x:number;z:number;name:string;contents:string}};
+export type CraftSiteJob={id:string;kind:'production'|'haulage'|'weapon'|'tool'|'copper'|'helper'|'garment-repair';projectId?:number;actorId:number|null;actor:string;label:string;progress:number;required:number;paused:boolean;phase:string;reason:string;canPause:boolean;canUnload?:boolean;progressUnit?:string;details?:string;cacheLocation?:{x:number;z:number;name:string;contents:string}};
 /** Inspect existing paid records without synchronizing/initializing job ledgers. */
 export function craftSiteReport(g:Game,b:Building){
  if(b.team!==0||b.hp<=0)return null;const benches=g.finished(b)?craftingBenches(b):0,slots=g.finished(b)?productionSlots(b):0;if(!benches&&!slots)return null;
@@ -15,7 +16,11 @@ export function craftSiteReport(g:Game,b:Building){
  const add=(kind:CraftSiteJob['kind'],actorId:number|null,label:string,work:{progress:number;duration:number;paused?:boolean},projectId?:number,reason?:string)=>{const u=people.find(u=>u.id===actorId),waiting=u?benchQueue.indexOf(u)>=benches:false;const paused=!!work.paused;jobs.push({id:`${kind}:${projectId??actorId}`,kind,projectId,actorId,actor:u?personName(u):'No maker assigned',label,progress:work.progress,required:work.duration,paused,phase:paused?'Paused':waiting?'Waiting for a bench':'Assigned',reason:reason||(!paused&&waiting?'All earlier crafting slots are reserved':u?.workReason)|| (paused?'Paid materials and progress are preserved':'Travel and work still required'),canPause:!paused&&!!u});};
  for(const p of g.state.haulageProjects||[]){if(p.team!==b.team||p.work.workplace!==b.id)continue;seen.add(p.id);add('haulage',p.actorId,p.work.hullOrder?`${p.work.hullOrder.mode==='service'?'Service':'Build'} ${BOAT_CLASSES[p.work.hullOrder.class].name}`:p.work.vessel?'Riverboat':HAULAGE[p.work.kind].name,p.work,p.id,p.blockedReason);}
  for(const u of people){const h=u.practicalHelper;if(h&&h.workplace===b.id){const trial=people.find(p=>p.id===h.leaderId)?.copperStudy;add('helper',u.id,'Assist copper prototype',{progress:trial?.progress||0,duration:COPPER_STUDY_RULES.workSeconds,paused:h.phase==='paused'},undefined,u.workReason);}if(u.weaponWork?.workplace===b.id)add('weapon',u.id,WEAPONS[u.weaponWork.kind].name,u.weaponWork);if(u.farmToolWork?.workplace===b.id)add('tool',u.id,`${u.farmToolWork.mode==='repair'?'Repair ':''}${FARM_TOOLS[u.farmToolWork.kind].name}`,u.farmToolWork);if(u.copperStudy?.workplace===b.id)add('copper',u.id,'Copper prototype',{...u.copperStudy,duration:COPPER_STUDY_RULES.workSeconds});if(u.haulageWork?.workplace===b.id&&(u.haulageWork.projectId===undefined||!seen.has(u.haulageWork.projectId)))add('haulage',u.id,u.haulageWork.hullOrder?`${u.haulageWork.hullOrder.mode==='service'?'Service':'Build'} ${BOAT_CLASSES[u.haulageWork.hullOrder.class].name}`:u.haulageWork.vessel?'Riverboat':HAULAGE[u.haulageWork.kind].name,u.haulageWork,u.haulageWork.projectId);}
- let occupied=0;for(const p of g.state.production?.projects||[]){if(p.team!==b.team||p.workplace!==b.id||p.phase==='complete'||p.phase==='lost')continue;const r=PRODUCTION_RECIPES[p.recipe],u=people.find(u=>u.id===p.actorId),phase=p.phase==='paused'?p.resumePhase:p.phase;if(!['returning','unloading','stored'].includes(phase))occupied++;
+ let occupied=0;
+ for(const u of people){const w=u.garmentRepair;if(!w||w.workplaceId!==b.id)continue;const paused=w.phase==='paused';if(!paused)occupied++;
+  jobs.push({id:`garment-repair:${u.id}`,kind:'garment-repair',actorId:u.id,actor:personName(u),label:`Repair ${ITEM_NAMES[w.garment.item]}`,progress:w.progress,required:w.progress+garmentRepairRemainingWork(u),paused,phase:paused?'Paused garment repair':w.phase==='traveling'?'Walking to tailor':'Repairing original garment',reason:paused?'Original garment and paid patches retained; resume to reclaim a tailor slot':u.workReason||'Owner must reach the actual tailor and repair the same garment',canPause:!paused,details:`Original ${w.sourceSlot} garment · ${Math.round(w.initialCondition*100)}% initial condition · ${Object.entries(w.paid).map(([kind,n])=>`${n} ${ITEM_NAMES[kind as ItemKind]}`).join(' · ')} · held garment gives no warmth`});
+ }
+ for(const p of g.state.production?.projects||[]){if(p.team!==b.team||p.workplace!==b.id||p.phase==='complete'||p.phase==='lost')continue;const r=PRODUCTION_RECIPES[p.recipe],u=people.find(u=>u.id===p.actorId),phase=p.phase==='paused'?p.resumePhase:p.phase;if(!['returning','unloading','stored'].includes(phase))occupied++;
   const brewing=p.brewing,brewStage=brewing?BREWING_RULES.stages[brewing.stage]:undefined,recovery=productionRecovery(p);
   const exposed=['curing','ready'].includes(phase)&&!!(p.drying||p.dairy||p.curds||brewing);
   const brewingLabel=brewing?.stage==='malt'?'Sprouting grain in held vessel':brewing?.stage==='smallBeer'?'Fermenting small beer':'Fermenting beer';
@@ -51,6 +56,7 @@ export function craftSiteReport(g:Game,b:Building){
 /** All actions use existing paid-work commands; reporting never calls these. */
 export function controlCraftSiteJob(g:Game,b:Building,job:CraftSiteJob,action:'pause'|'resume'|'unload'){
  if(b.team!==0||b.hp<=0)return false;const u=g.state.units.find(u=>u.id===job.actorId&&u.team===0&&u.hp>0);
+ if(job.kind==='garment-repair')return false; // Uses its own owner-scoped repair command.
  if(job.kind==='helper')return action==='unload'?false:!u?false:action==='pause'?pausePracticalHelper(g,u):resumePracticalHelper(g,u.id).accepted;
  if(job.kind==='production')return action==='unload'?unloadProductionProject(g,job.projectId!):action==='pause'?pauseProductionProject(g,job.projectId!):resumeProduction(g,job.projectId!);
  if(action==='unload')return false;
