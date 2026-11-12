@@ -159,12 +159,20 @@ export function npcMarriages(g:Game):[number,number][]{
 /** Expansion party plan for a rival society's next founding journey. The real crew (units) and timber (deducted from the tribe) are
  * handled by communities.ts; this only decides WHETHER and HOW BIG from the stated drivers. Null when rulers are off (old behaviour).
  * Only settle/migrate modes send families to a new hearth; stay/conquer/trade/explore/mission do not (those have their own parties). */
+/** Per-era machinery gating: how organised a polity's journeys can be. Bands send small parties slowly and have no standing provisioning,
+ * chiefdoms medium ones, states full crews. Only caps and pace move; no goods, units or terrain are created. */
+export const ERA_REACH:Record<'band'|'chiefdom'|'state',{crew:number;slow:number;organised:boolean;note:string}>={
+ band:{crew:2,slow:1.5,organised:false,note:'a band can only spare a small party, and slowly'},
+ chiefdom:{crew:3,slow:1.15,organised:true,note:'a chiefdom can spare a modest party'},
+ state:{crew:4,slow:1,organised:true,note:''},
+};
 export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;why:string[]};
 export function expansionParty(g:Game,team:number):PartyPlan|null{
  const d=expansionOf(g,team);if(!d)return null;
- const sends=d.mode==='settle'||d.mode==='migrate';
- return {allow:sends,mode:d.mode,crew:Math.max(2,Math.min(4,2+Math.round((d.drive-.8)*2))),cooldown:Math.round(Math.max(900,Math.min(3600,1800/Math.max(.5,d.drive)))),
-  minReserve:d.mode==='migrate'?300:600,why:sends?d.why:['the society stays at home',...d.why]};
+ const sends=d.mode==='settle'||d.mode==='migrate',tier=st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band',gate=ERA_REACH[tier];
+ const crew=Math.max(2,Math.min(gate.crew,2+Math.round((d.drive-.8)*2))),cooldown=Math.round(Math.max(900,Math.min(3600,gate.slow*1800/Math.max(.5,d.drive))));
+ return {allow:sends,mode:d.mode,crew,cooldown,
+  minReserve:d.mode==='migrate'?300:600,why:sends?[...d.why,...(gate.crew<4?[gate.note]:[])]:['the society stays at home',...d.why]};
 }
 
 /** Claims and casus belli (years are dynastic years). Claims are standing grievances a house may cite; they cost nothing to hold, cost legitimacy
@@ -234,8 +242,9 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
 export type JourneyPermit={allow:boolean;reserve?:number;cadence?:number;why:string[]};
 export function journeyPermit(g:Game,team:number,kind:'explore'|'trade'|'raid',target?:number):JourneyPermit|null{
  const d=expansionOf(g,team);if(!d)return null;
- if(kind==='explore')return {allow:true,reserve:d.mode==='explore'?300:450,why:d.mode==='explore'?d.why:[]};
- if(kind==='trade')return {allow:true,cadence:d.mode==='trade'?60:120,why:d.mode==='trade'?d.why:[]};
+ const org=ERA_REACH[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'].organised; // bands have no standing provisioning or market habit to speed up
+ if(kind==='explore')return {allow:true,reserve:d.mode==='explore'&&org?300:450,why:d.mode==='explore'&&org?d.why:[]};
+ if(kind==='trade')return {allow:true,cadence:d.mode==='trade'&&org?60:120,why:d.mode==='trade'&&org?d.why:[]};
  const r=ensureRulers(g),me=r?.societies[String(team)];if(!r||!me||target===undefined||g.isFoe(team,target))return {allow:true,why:['already at war']};
  if(me.civ.polity.tier!=='state')return {allow:true,why:[]};
  if(d.mode!=='conquer')return {allow:false,why:['a state needs cause and appetite to strike a peaceful neighbour']};
