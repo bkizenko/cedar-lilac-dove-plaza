@@ -1,7 +1,7 @@
 import type {Game} from './sim';
 import{handedOver}from'./communityHandoverValidation';
 import type {GameState,Unit} from './types';
-import {PRODUCTION_RECIPES,type ProductionRecipe,type ProductionProject,type ItemStock} from './production';
+import {PRODUCTION_RECIPES,productionFoodOutput,type ProductionRecipe,type ProductionProject,type ItemStock} from './production';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent} from './settlement';
 import {workRuntime} from './workRuntime';
@@ -30,7 +30,7 @@ function claim(g:Game,u:Unit,w:ProductionApprentice){const c=context(g);if(c.cla
 function finishLesson(g:Game,u:Unit,reason:string,completed=false){release(g,u,completed);u.productionApprentice=undefined;if(u.order==='hold')u.workReason=reason;}
 export function recordProductionPractice(g:Game,project:ProductionProject,_carrier:Unit,outputs:ItemStock){
  const p=project as TrackedProject;if(p.practiceRecorded||p.phase==='complete'||!validRecipe(p.recipe))return;
- p.practiceRecorded=true;const r=PRODUCTION_RECIPES[p.recipe],useful=r.food+Object.entries(outputs).reduce((sum,[kind,n])=>sum+(kind==='potsherds'?0:n||0),0),t=g.tribe(p.team);
+ p.practiceRecorded=true;const r=PRODUCTION_RECIPES[p.recipe],useful=productionFoodOutput(project)+Object.entries(outputs).reduce((sum,[kind,n])=>sum+(kind==='potsherds'?0:n||0),0),t=g.tribe(p.team);
  t.productionPractice??={};let history=t.productionPractice[p.recipe];if(!history)history=t.productionPractice[p.recipe]={batches:0,failedBatches:0,usefulOutputs:0,firstAt:g.state.time,lastAt:g.state.time,makers:[]};
  history.lastAt=g.state.time;if(useful>0){history.batches++;history.usefulOutputs+=useful;}else history.failedBatches++;
  const makers=(p.practiceWorkers||[]).filter(w=>w.work+1e-8>=r.workSeconds*PRODUCTION_PRACTICE_RULES.minimumContributionFraction);

@@ -14,7 +14,7 @@ import {productionPracticeRate,observationRequired} from './productionPractice';
 import {penPastureReport} from './penPasture';
 import {PEN_RULES} from './penGeometry';
 import {POTTERY_RULES,waterVesselCapacity} from './pottery';
-import {productionRemainingWork,PRODUCTION_RECIPES,productionSlots,productionOutputStorageIssue,productionParkingStorageIssue,floorCerealRecipes,grainBatchIssue} from './production';
+import {productionRemainingWork,productionRecovery,PRODUCTION_RECIPES,productionSlots,productionOutputStorageIssue,productionParkingStorageIssue,floorCerealRecipes,grainBatchIssue} from './production';
 import type {Game} from './sim';
 import type {Unit,Building,ResourceNode,ResKind} from './types';
 import type {HaulageProject} from './haulage';
@@ -81,7 +81,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
  for(const p of liveProduction){
   if(productionIds.has(p.id))continue;productionIds.add(p.id);
   const recipe=PRODUCTION_RECIPES[p.recipe],u=residents.find(u=>u.id===p.actorId&&u.productionProjectId===p.id),b=g.state.buildings.find(b=>b.id===p.workplace&&b.team===team&&g.finished(b)),phase=p.phase==='paused'?p.resumePhase:p.phase;
-  const practice=u?(1+Math.min(.3,(u.craftingXP||0)/1200))*(p.dairy?.recovery?1:productionPracticeRate(u,p.recipe)):1;
+  const practice=u?(1+Math.min(.3,(u.craftingXP||0)/1200))*(productionRecovery(p)||p.curds?.foodReadyAt!==undefined?1:productionPracticeRate(u,p.recipe)):1;
   const passive=phase==='curing'||phase==='ready',parked=phase==='stored',unloading=phase==='unloading',hands=phase==='returning'||unloading||passive?0:productionRemainingWork(p)/practice;
   const walkOut=u&&b&&!['returning','unloading','stored','curing'].includes(phase)?cachedWalk(u,(x,z)=>Math.abs(x-b.x)<=b.w*.5+6&&Math.abs(z-b.z)<=b.d*.5+6,Math.hypot(u.x-b.x,u.z-b.z)/productionSpeed(u)):0;
   const drops=supply,hasDrop=drops.length>0,walkBack=u&&['returning','unloading'].includes(phase)?cachedWalk(u,(x,z)=>drops.some(d=>Math.hypot(x-d.x,z-d.z)<(d.kind==='camp'?d.radius:Math.max(d.w,d.d)) +6),productionTrip(u.x,u.z,u)):b?productionTrip(b.x,b.z,u)*(!u&&passive?2:1):0;
@@ -93,7 +93,7 @@ export function measureVillageWorkload(g:Game,team=0,options:{horizonSeconds?:nu
   if(p.phase==='paused'){blocker=blocker||'Paid batch paused';if(b&&!['returning','unloading','stored'].includes(phase))blocker+=` · keeps a production slot (${heldSlots.get(b.id)||0}/${productionSlots(b)} committed)`;}
   else if(parked)blocker='Paid inputs parked at cache; resume to send a collector';else if(missing)blocker='Compatible workplace missing';else if(!hasDrop)blocker='No friendly cache for the finished batch';else if(fullCache)blocker=storageIssue;else if(!u&&!passive)blocker='No living maker assigned';else if(!u&&phase==='ready')blocker='Ready batch needs a pickup adult';else if(phase==='curing')blocker=p.blockedReason||'Weather exposure releases the adult; later pickup still needs hauling';else if(away)blocker='Assigned resident has an away or military duty';
   const blocked=parked||missing||!hasDrop||fullCache||!u&&!passive||phase==='ready'&&!u||!!away||(!passive&&!!reportedReason)||phase==='curing'&&p.drying?.lastRate===0;
-  add({id:`production:${p.id}`,label:p.dairy?.recovery?'Clean and recover dairy vessel':recipe.name,category:'Production',personSeconds:hands+walkOut+walkBack,status:p.phase==='paused'||parked?'paused':blocked?'blocked':phase==='curing'?'upcoming':'active',actorIds:u?[u.id]:[],priority:p.dairy?.recovery?200:450,blocker},blocked||passive||p.phase==='paused'||parked);
+  add({id:`production:${p.id}`,label:productionRecovery(p)?(p.curds?'Clean and recover curd tools':'Clean and recover dairy vessel'):recipe.name,category:'Production',personSeconds:hands+walkOut+walkBack,status:p.phase==='paused'||parked?'paused':blocked?'blocked':phase==='curing'?'upcoming':'active',actorIds:u?[u.id]:[],priority:productionRecovery(p)?200:450,blocker},blocked||passive||p.phase==='paused'||parked);
   if(p.phase!=='paused'&&u)productionTravellers.add(u.id);
  }
  for(const u of eligible){const w=u.housingUse;if(w){const b=g.state.buildings.find(b=>b.id===w.buildingId&&g.finished(b));add({id:`housing-use:${u.id}`,label:'Try the real home and learn its method',category:'Practical learning',personSeconds:Math.max(0,HOUSING_RULES.demonstrationSeconds-w.seconds)+(b?travel(u,b.x,b.z):0),status:w.paused?'paused':b?'active':'blocked',actorIds:w.paused?[]:[u.id],priority:350,blocker:w.paused?'Home trial paused':b?null:'The actual prototype is unavailable'},true);}}
