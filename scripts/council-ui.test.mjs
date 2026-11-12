@@ -112,3 +112,9 @@ test('rival court line names ruler, regent and heir; rival change feed fires onl
  assert.match(renderToStaticMarkup(h(DiplomacySheet,{neighbours:[{...base,court}],onAct(){}})),/data-court="1"/);
  assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:[base],onAct(){}})),/data-court/);
 });
+test('compact leader portrait drops the caption, honours size, and stays seeded (toast face)',()=>{
+ const p={leaderId:7,worldSeed:3,era:1,name:'Dara',society:'Marsh Folk',colors:{primary:'#315847',secondary:'#733d35'}};
+ const full=renderToStaticMarkup(h(LeaderPortrait,p)),small=renderToStaticMarkup(h(LeaderPortrait,{...p,compact:true,size:56}));
+ assert.match(full,/<figcaption>/);assert.doesNotMatch(small,/figcaption/);assert.match(small,/width="56" height="56"/);
+ assert.equal(renderToStaticMarkup(h(LeaderPortrait,{...p,compact:true,size:56})),small);
+});
