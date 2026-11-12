@@ -47,3 +47,7 @@ test('every kit piece and axis is reachable',()=>{
  const used=new Set(),axes=new Set();for(const c of CIV_IDS)for(let s=1;s<=12;s++){const p=gen(s,c,WONDER_FUNCTIONS[s%6]);p.pieces.forEach(x=>used.add(x.kit));axes.add(p.axis);}
  for(const k of KIT_IDS)assert.ok(used.has(k),k+' never placed');assert.equal(axes.size,AXES.length);
 });
+test('every civ wonder carries its own signature landmark, distinct per civ, within footprint',()=>{
+ const sigs=new Set();for(const c of CIV_IDS){let placed=0;for(let s=1;s<=12;s++){const p=gen(s,c,WONDER_FUNCTIONS[s%6]);if(p.pieces.some(x=>x.kit==='signature'))placed++;}assert.ok(placed>=10,`${c} signature placed ${placed}/12`);const m=pieceParts('signature',0,'M',c);assert.ok(m.length>=4);sigs.add(JSON.stringify(m.map(q=>[q.shape,q.size])));}
+ assert.equal(sigs.size,CIV_IDS.length,'each civ has a unique signature mesh');
+});
