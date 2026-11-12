@@ -27,6 +27,19 @@ async function run(){
  stage='actual checkpoint and strict restore';
  report.save=await page.evaluate(()=>window.__engine.saveNow());assert.equal(report.save.saved,true,report.save.message);
  report.restore=await page.evaluate(async()=>{const e=window.__engine,old=e.game,a=window.__autopilotOpening;await e.resumeSaved();const g=e.game;return{replaced:g!==old,paused:g.state.paused,time:g.state.time,residents:g.state.units.filter(u=>u.team===0&&u.hp>0).length,workplacePresent:g.state.buildings.some(b=>b.id===a.id&&b.type===a.type),errors:[...g.simulationErrors]};});assert.equal(report.restore.replaced,true);assert.equal(report.restore.paused,true);assert.equal(report.restore.time,opening.time);assert.equal(report.restore.residents,opening.residents);assert.equal(report.restore.workplacePresent,true);assert.deepEqual(report.restore.errors,[]);assert.deepEqual(errors,[]);report.passed=1;report.total=1;
+ if(process.env.SAVE_FAILURE==='1'){
+  stage='actual failed durable checkpoint refuses Test Lab';
+  report.failedCheckpoint=await page.evaluate(async()=>{
+   const e=window.__engine,g=e.game,original=e.originalGame;
+   const content=()=>JSON.stringify({seed:g.state.seed,time:g.state.time,tribes:g.state.tribes,units:g.state.units,buildings:g.state.buildings,livestock:g.state.livestock,production:g.state.production,armor:g.state.armor,farmToolCargo:g.state.farmToolCargo,droppedWeaponCargo:g.state.droppedWeaponCargo});
+   const slots=()=>JSON.stringify(Object.entries(localStorage).filter(([k])=>(k.startsWith('hearthwild')||k.startsWith('dawn-of-empire'))).sort(([a],[b])=>a.localeCompare(b)));
+   const before=content(),durable=slots(),setter=Storage.prototype.setItem;let writes=0,entered;
+   try{Storage.prototype.setItem=function(key,value){if((String(key).startsWith('hearthwild')||String(key).startsWith('dawn-of-empire'))){writes++;throw new DOMException('Controlled candidate storage quota failure','QuotaExceededError');}return setter.call(this,key,value);};entered=await e.startTestSession();}
+   finally{Storage.prototype.setItem=setter;}
+   return{writes,entered,sameOwner:e.game===g,sameOriginalOwner:e.originalGame===original,labEntered:e.game.testMode===true,gameplayUnchanged:content()===before,durableSlotsUnchanged:slots()===durable,paused:e.game.state.paused,errors:[...e.game.simulationErrors]};
+  });
+  const r=report.failedCheckpoint;assert.ok(r.writes>0,'Actual storage write must fail');assert.equal(r.entered,false);assert.equal(r.sameOwner,true);assert.equal(r.sameOriginalOwner,true);assert.equal(r.labEntered,false);assert.equal(r.gameplayUnchanged,true);assert.equal(r.durableSlotsUnchanged,true);assert.deepEqual(r.errors,[]);assert.deepEqual(errors,[]);report.passed=report.total=2;
+ }
 }
 try{await Promise.race([run(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('90 second wall deadline')),90000);})]);}
 catch(error){report.passed=0;report.total=1;report.failure={stage,message:error.message};process.exitCode=1;}
