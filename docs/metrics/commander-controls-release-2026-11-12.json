@@ -1,0 +1,51 @@
+{
+  "release": "2026-11-12T19-04-31-509Z-b45407b",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T19-04-31-509Z-b45407b",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T18-58-54-747Z-8ae8cd7",
+  "commit": "b45407be5d90cfd5e21f6242d26f7e7796b9dc53",
+  "retained": {
+    "linked": 1387,
+    "copied": 0,
+    "existing": 13
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 21,
+    "total": 21,
+    "nativeAndShared": 17,
+    "built": 4,
+    "groups": {
+      "commanderNativeAndUI": 13,
+      "saveStatus": 4
+    },
+    "builtEvidence": [
+      "Actual earned rank2 XP43.2 and Drillmaster readout is pure",
+      "Real release and reassignment of member6224; no XP/assets change, durable reload",
+      "Actual earned promotion selector spends one earned point and survives durable reload",
+      "Original53 unchanged file; pure owner read then eligible person12479 paid six timber first appointment, zero XP"
+    ]
+  },
+  "compiler": "PASS",
+  "productionBuild": "PASS",
+  "frozenAcceptance": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  },
+  "original53SaveSHA256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+  "remaining": [
+    "Naval owner controls in progress",
+    "Inherited replacement overcapacity remains Claude design decision; no silent roster trimming",
+    "No campaign or 100-resident performance credit"
+  ],
+  "evidence": {
+    "nativeLog": "/tmp/hearthwild-commander-native.log",
+    "typesLog": "/tmp/hearthwild-commander-types.log",
+    "buildLog": "/tmp/hearthwild-commander-build.log",
+    "builtHarness": "scripts/diagnostics/commander-controls-built.mjs",
+    "builtExecution": "audit agent actual8103 run completed 4/4 with no browser errors; all temporary profile data removed"
+  }
+}
