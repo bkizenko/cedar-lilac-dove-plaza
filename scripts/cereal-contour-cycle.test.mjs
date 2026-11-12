@@ -34,6 +34,10 @@ const report = {
     assets: ["townhall", "hut", "four warehouses"],
   },
 };
+// Runtime retains only100 finished projects. Keep observed immutable facts so
+// the full-cycle ledger still includes paid batches pruned from the live UI list.
+const productionHistory=new Map();
+function observeProduction(g){for(const p of g.state.production?.projects||[])if(p.team===0)productionHistory.set(p.id,{id:p.id,recipe:p.recipe,phase:p.phase});}
 const hash = (a) => createHash("sha256").update(new Uint8Array(a.buffer)).digest("hex");
 function terrain(g) {
   const n = g.world.segs + 1,
@@ -138,7 +142,7 @@ function drive(g, seconds, until = () => false) {
     const before = g.state.time,
       wood = g.tribe(0).wood,
       fuel = g.tribe(0).survival.fuelBurnedWood;
-    g.step(0.2);
+    g.step(0.2);observeProduction(g);
     const careLogs = wood - g.tribe(0).wood - (g.tribe(0).survival.fuelBurnedWood - fuel);
     if (careLogs > 1e-7) {
       assert.ok(Math.abs(careLogs - Math.round(careLogs)) < 1e-6, JSON.stringify({ careLogs }));
@@ -188,7 +192,7 @@ function restore(g) {
   return loaded;
 }
 function assertPaidProduction(g) {
-  const projects=g.state.production.projects.filter(p=>p.team===0),m=g.state.production.metrics;
+  observeProduction(g);const projects=[...productionHistory.values()],m=g.state.production.metrics;
   const paid=key=>projects.reduce((n,p)=>n+(PRODUCTION_RECIPES[p.recipe][key]||0),0);
   const completed=projects.filter(p=>p.phase==='complete');
   assert.ok(projects.every(p=>p.phase!=='lost'),status(g));
