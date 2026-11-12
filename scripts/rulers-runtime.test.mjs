@@ -18,3 +18,18 @@ test('rulers state round-trips through JSON',()=>{
  const g=fixture();g.state.time=RULERS_YEAR_SECONDS*3;advanceRulers(g);
  const copy=JSON.parse(JSON.stringify(g.state.rulers));assert.deepEqual(JSON.parse(JSON.stringify(copy)),copy);assert.ok(rulersOf({rulers:copy}));assert.ok(rulersOf(g.state));
 });
+
+test('marryHouses: gated by scale; then ties and trust rise with a cause chain',async()=>{
+ const {marryHouses,tiesBetween}=await import('../src/game/rulersRuntime.ts');
+ const {societyRelation}=await import('../src/game/societyRelations.ts');
+ const g=fixture();
+ assert.equal(marryHouses(g,0,1),null,'a household of five does not trade spouses');
+ for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<20;i++)g.state.units.push({...u,id:g.state.units.length+9000+i+t*100});}
+ for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);d.people[t+'-cadet']={...k,id:t+'-cadet',name:'Cadet'+t,age:20,spouse:undefined,parent:undefined,ruler:undefined};}
+ const before=societyRelation(g,0,1).trust,bond0=tiesBetween(g,0,1).bond;
+ const res=marryHouses(g,0,1);assert.ok(res,'marriage happens at kingroup scale');
+ assert.ok(res.why.length>0);assert.ok(tiesBetween(g,0,1).bond>bond0);assert.ok(societyRelation(g,0,1).trust>=before);
+ assert.ok(societyRelation(g,1,0).trust>=0);
+ assert.deepEqual(JSON.parse(JSON.stringify(g.state.rulers)),JSON.parse(JSON.stringify(g.state.rulers)));
+ assert.ok(rulersOf(g.state),'state still valid after marriage');
+});

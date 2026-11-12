@@ -24,6 +24,13 @@ function edit(g:Game,from:number,to:number){
 }
 const pairIndexes=new WeakMap<Game,{list:SocietyRelation[];length:number;byKey:Map<number,SocietyRelation>}>();
 function indexedPair(g:Game,a:number,b:number){const list=state(g).societyRelations;if(!list?.length)return undefined;let index=pairIndexes.get(g);if(!index||index.list!==list||index.length!==list.length){index={list,length:list.length,byKey:new Map(list.map(r=>[r.from*1024+r.to,r]))};pairIndexes.set(g,index);}return index.byKey.get(a*1024+b);}
+/** Diplomatic effect on one directed pair (kinship ties). Clamped to 0..1; never creates goods or moves units. */
+export function nudgeSocietyRelation(g:Game,from:number,to:number,d:{trust?:number;grievance?:number}){
+ if(!validPair(g,from,to))return false;const r=edit(g,from,to),c=(v:number)=>Math.max(0,Math.min(1,v));
+ r.trust=c(r.trust+(d.trust||0));r.grievance=c(r.grievance+(d.grievance||0));
+ if(from===0||to===0){const t=g.tribe(from===0?to:from);if(t){t.trust=r.trust;}}
+ return true;
+}
 export function societiesAreFoes(g:Game,a:number,b:number){
  if(a===b)return false;if(a===3||b===3)return true;
  // Preserve the legacy player's authoritative facade without pair-table scans

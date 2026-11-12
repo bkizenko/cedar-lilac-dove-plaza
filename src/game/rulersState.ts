@@ -10,7 +10,7 @@ import type {Tier} from './fame';
 import {familyFeatures} from './familyScale';
 
 export type SocietyRulers={civ:CivSeed;dynasty:Dynasty;ledger:Ledger;greatEmerged:number};
-export type RulersState={version:1;seed:number;year:number;societies:Record<string,SocietyRulers>;notices:Record<string,Tier>};
+export type RulersState={version:1;seed:number;year:number;societies:Record<string,SocietyRulers>;notices:Record<string,Tier>;ties?:Record<string,import('./ties').Ties>};
 
 export function initRulers(gameSeed:number,ids:string[]):RulersState{
  const cast=generateCast(gameSeed,ids.length),societies:Record<string,SocietyRulers>={};
