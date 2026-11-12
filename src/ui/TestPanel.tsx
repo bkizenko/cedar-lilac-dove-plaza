@@ -1,4 +1,5 @@
-import {hasTestLabSave, saveTestLabGame} from '../game/save';
+import {hasTestLabSave} from '../game/save';
+import {VillageSaveButton} from './VillageSaveButton';
 import{herdWaterAccounting}from'../game/penWater';
 import {supplyAccounting} from '../game/simulationEvents';
 import {workAllocationDiagnostics} from '../game/workAllocation';
@@ -25,7 +26,7 @@ export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  <fieldset><legend>Saved test run</legend>
  <p>One local save slot for the Test Lab.</p>
  <div className="test-actions">
- <button onClick={()=>setSaveStatus(saveTestLabGame(g) ? "Test Lab run saved." : "Could not save the Test Lab run. Browser storage may be full.")}>Save test run</button>
+ <VillageSaveButton engine={engine} onResult={setSaveStatus}/>
  <button disabled={!hasTestLabSave()} title="Replaces the current test run with the saved one" onClick={()=>setSaveStatus(engine.loadTestSession())}>Load test run</button>
  </div>
  {saveStatus&&<p role="status">{saveStatus}</p>}

@@ -24,11 +24,14 @@ export class KeyboardCommands {
     if (code === "Escape") {
       this.help = false;
       this.ledger = false;
-      g.state.placing = null;
-      g.state.pendingAge = false;
-      e.moveMode = false;
-      e.loggingMode = false;
-      g.clearSelect();
+      if(e.isWorkerSession)e.cancelPresentationInteraction();
+      else {
+        g.state.placing = null;
+        g.state.pendingAge = false;
+        e.moveMode = false;
+        e.loggingMode = false;
+        g.clearSelect();
+      }
       e.canvas.focus();
       e.pushHud();
       return;
@@ -81,13 +84,20 @@ export class KeyboardCommands {
             n,
             g.selectedUnits().map((u) => u.id),
           );
-          g.banner(`Group ${n} saved`, 2);
+          if(e.isWorkerSession)e.presentationNotice(`Group ${n} saved`,2);
+          else g.banner(`Group ${n} saved`, 2);
         } else {
-          g.clearSelect();
           const ids = this.groups.get(n) || [];
-          for (const u of g.state.units)
-            u.selected = u.team === 0 && u.hp > 0 && ids.includes(u.id);
-          g.banner(`Group ${n}: ${g.selectedUnits().length} people`, 2);
+          if(e.isWorkerSession){
+            const selectedUnitIds=g.state.units.filter(u=>u.team===0&&u.hp>0&&ids.includes(u.id)).map(u=>u.id);
+            e.setWorkerSelection({selectedUnitIds});
+            e.presentationNotice(`Group ${n}: ${selectedUnitIds.length} people`,2);
+          } else {
+            g.clearSelect();
+            for (const u of g.state.units)
+              u.selected = u.team === 0 && u.hp > 0 && ids.includes(u.id);
+            g.banner(`Group ${n}: ${g.selectedUnits().length} people`, 2);
+          }
         }
         e.pushHud();
       }
@@ -120,18 +130,24 @@ export class KeyboardCommands {
         const at = entities.findIndex((x) => x.id === this.cursorId);
         const next = entities[(at + (event.shiftKey ? -1 : 1) + entities.length) % entities.length];
         this.cursorId = next.id;
-        g.clearSelect();
-        next.selected = true;
-        if (next.kind === "building") g.state.selBld = next;
+        if(e.isWorkerSession)e.setWorkerSelection(next.kind==='building'?{selectedUnitIds:[],selectedBuildingId:next.id}:{selectedUnitIds:[next.id]});
+        else {
+          g.clearSelect();
+          next.selected = true;
+          if (next.kind === "building") g.state.selBld = next;
+        }
         e.view.look.set(next.x, next.y - 1.2, next.z);
         this.mode = true;
       }
     }
     if (code === "KeyJ" || code === "KeyV") {
-      g.clearSelect();
-      for (const u of g.state.units)
-        u.selected =
-          u.hp > 0 && u.team === 0 && (code === "KeyJ" ? u.type === "worker" : u.type !== "worker");
+      if(e.isWorkerSession)e.setWorkerSelection({selectedUnitIds:g.state.units.filter(u=>u.hp>0&&u.team===0&&(code==='KeyJ'?u.type==='worker':u.type!=='worker')).map(u=>u.id)});
+      else {
+        g.clearSelect();
+        for (const u of g.state.units)
+          u.selected =
+            u.hp > 0 && u.team === 0 && (code === "KeyJ" ? u.type === "worker" : u.type !== "worker");
+      }
     }
     if (code === "BracketLeft" || code === "BracketRight") {
       const s = g.state;
@@ -144,7 +160,8 @@ export class KeyboardCommands {
         this.cursorId = next.id;
         e.view.look.set(next.x, next.y - 1.2, next.z);
         this.mode = true;
-        g.banner(e.loggingMode ? "Tree · Enter to mark or unmark" : `${next.kind} · R to gather`, 2);
+        const message=e.loggingMode ? "Tree · Enter to mark or unmark" : `${next.kind} · R to gather`;
+        if(e.isWorkerSession)e.presentationNotice(message,2);else g.banner(message,2);
       }
     }
     if (["Enter", "KeyR", "KeyZ"].includes(code)) {
@@ -155,7 +172,10 @@ export class KeyboardCommands {
       if (code === "Enter") {
         if (g.state.placing) e.leftClick(e.pointer.x, e.pointer.y, event.shiftKey);
         else if (point) e.leftClick(e.pointer.x, e.pointer.y, event.shiftKey);
-      } else if (code === "KeyZ" && point) g.issueMove(point.x, point.z, true);
+      } else if (code === "KeyZ" && point) {
+        if(e.isWorkerSession)void e.dispatch({kind:'move',unitIds:g.selectedUnits().map(u=>u.id),x:point.x,z:point.z,attackMove:true}).catch(error=>e.presentationNotice(error instanceof Error?error.message:String(error),4));
+        else g.issueMove(point.x, point.z, true);
+      }
       else e.rightClick(e.pointer.x, e.pointer.y);
     }
     if (code === "Period") e.halt();
@@ -175,7 +195,10 @@ export class KeyboardCommands {
     if (code === "Equal" || code === "NumpadAdd") e.setSpeed(g.state.speed >= 2 ? 4 : 2);
     if (code === "Minus" || code === "NumpadSubtract") e.setSpeed(g.state.speed >= 4 ? 2 : 1);
     if (code === "KeyF") e.focusHome();
-    if (code === "KeyV") g.soundRecall();
+    if (code === "KeyV") {
+      if(e.isWorkerSession)void e.dispatch({kind:'recall'}).catch(error=>e.presentationNotice(error instanceof Error?error.message:String(error),4));
+      else g.soundRecall();
+    }
     if (code === "KeyM") e.toggleMute();
     if (n >= 1 && n <= 8) {
       const open = BUILD_ORDER.filter((t) => BUILDINGS[t].age <= g.tribe(0).age);

@@ -1,3 +1,4 @@
+import {presentationHearthHeating,presentationSurvivalFireActive} from './presentationSurvivalView';
 import{HOUSING_RULES}from'./housingRules';
 import{tickGarmentHeat}from'./textiles';
 import{ecologicalTemperatureOffsetAt}from'./ecologicalProvinces';
@@ -26,7 +27,7 @@ const emptyStock=(waterLiters=0):SurvivalStock=>({waterLiters,waterConsumedLiter
 const residents=(g:Game,team:number)=>g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.expedition&&!u.visit);
 const burningFires=new WeakMap<Game,Set<number>>();
 const heatingHearths=new WeakMap<Game,Set<number>>();
-export const hearthHeating=(g:Game,id:number)=>heatingHearths.get(g)?.has(id)??false;
+export const hearthHeating=(g:Game,id:number)=>presentationHearthHeating(g,id)??heatingHearths.get(g)?.has(id)??false;
 const huddles=new WeakMap<Unit,{state:GameState;fire:Building;spot:{x:number;z:number};productionId?:number}>();
 const warmingReason='Warming up by the lit hearth';
 
@@ -80,7 +81,7 @@ function sendColdResidentsToFire(g:Game,people:Unit[],fires:Building[]){
   }
  }
 }
-export const survivalFireActive=(g:Game,team=0)=>g.state.survivalVersion===1&&(burningFires.get(g)?.has(team)??false);
+export const survivalFireActive=(g:Game,team=0)=>g.state.survivalVersion===1&&(presentationSurvivalFireActive(g,team)??burningFires.get(g)?.has(team)??false);
 export function initializeSurvival(g:Game){
  burningFires.delete(g);heatingHearths.delete(g);
  g.state.survivalVersion=1;autoCheck.delete(g);

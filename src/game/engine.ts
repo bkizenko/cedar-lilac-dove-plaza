@@ -1,3 +1,9 @@
+import {SimulationCheckpointSaver} from './simulationCheckpointSave';
+import type {AuthoritativeCheckpoint} from './simulationCheckpoint';
+import {serializeStoredSave} from './storageCodec';
+import {applyEngineReadQuery,isEngineReadQuery,ENGINE_READ_MODEL_RULES,type EngineReadQuery,type EngineReadReply,type EngineReadReplyFor} from './engineReadModels';
+import {SimulationWorkerHost} from './simulationWorkerHost';
+import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,type EngineSelection} from './engineDispatch';
 import {surveyReachFish,waterReachAt} from './waterReach';
 import { compactGrainWorkplace } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
@@ -17,7 +23,7 @@ import {planBridge,bridgeHeight,type BridgeSpan} from './transport';
 import { soilQuality } from "./ecology";
 import { calendar } from "./settlement";
 import { cultivationIssue } from "./cultivation";
-import { encodeGame, decodeGame } from "./persistence";
+import { encodeGame, decodeGame,validateGameSave } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE } from "./constants";
 import { Game } from "./sim";
@@ -26,6 +32,7 @@ import { saveGame, loadRaw, hasSave, protectGame, exportGame, saveTestLabGame, l
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
 
+export type VillageSaveResult={saved:boolean;message:string;serialized?:string};
 export type VillageImportResult={applied:boolean;saved:boolean;message:string};
 
 type HudFn = (s: HudSnapshot) => void;
@@ -38,6 +45,97 @@ export function frameDeltaSeconds(timestamp:number,last:number):number {
 }
 
 export class Engine {
+  private checkpointSaver=new SimulationCheckpointSaver({checkpoint:()=>this.authoritativeCheckpoint(),currentEpoch:()=>this.dispatchEpoch,allowed:()=>this.commandReady});
+  private presentationFeedback:{message:string;expires:number}|null=null;
+  private workerHost:SimulationWorkerHost|null=null;
+  private workerBridgeTransition=false;
+  private dispatchGeneration=1;
+  private dispatchObservedState:Game['state']|undefined;
+  /** Main resets can replace state without replacing the Game identity. */
+  get dispatchEpoch(){
+    if(this.workerHost||this.workerBridgeTransition)return this.dispatchGeneration;
+    if(this.dispatchObservedState!==this.game.state){this.dispatchObservedState=this.game.state;this.dispatchGeneration++;}
+    return this.dispatchGeneration;
+  }
+  get sessionEpoch(){return this.dispatchEpoch;}
+  get commandReady(){return !this.disposed&&!this.workerBridgeTransition&&(!this.workerHost||this.workerHost.ready);}
+  private readModelRequest=0;
+  private readModelCache=new Map<string,{epoch:number;at:number;completed:boolean;promise:Promise<EngineReadReply>}>();
+  private readModelMeasurements:{kind:EngineReadQuery['kind'];cpuMilliseconds:number}[]=[];
+  /** Bounded asynchronous owner reads. Cached results are advisory; commands revalidate. */
+  readModel<Q extends EngineReadQuery>(query:Q):Promise<EngineReadReplyFor<Q>>{
+    if(!isEngineReadQuery(query))return Promise.reject(new Error('Unsupported or malformed owner read query'));
+    if(!this.commandReady)return Promise.reject(new Error('No authoritative session is ready'));
+    const captured=structuredClone(query);
+    const epoch=this.dispatchEpoch,key=JSON.stringify(captured),cached=this.readModelCache.get(key),now=performance.now();
+    if(cached&&cached.epoch===epoch&&(!cached.completed||now-cached.at<ENGINE_READ_MODEL_RULES.cacheMilliseconds))return cached.promise as Promise<EngineReadReplyFor<Q>>;
+    const requestId=++this.readModelRequest;
+    const entry={epoch,at:now,completed:false,promise:null as unknown as Promise<EngineReadReply>};
+    const task=async():Promise<EngineReadReply>=>{
+      if(this.workerHost){const result=await this.workerHost.readModel(captured);return{...result,epoch};}
+      const start=performance.now(),model=applyEngineReadQuery(this.game,captured),cpuMilliseconds=Math.max(0,performance.now()-start);
+      return{model,epoch,requestId,stateRevision:this.dispatchRevision,navigationRevision:this.game.navigationRevision(),cpuMilliseconds};
+    };
+    entry.promise=task().then(result=>{this.readModelMeasurements.push({kind:query.kind,cpuMilliseconds:result.cpuMilliseconds});if(this.readModelMeasurements.length>ENGINE_READ_MODEL_RULES.maximumMeasurements)this.readModelMeasurements.shift();return result;}).finally(()=>{entry.completed=true;entry.at=performance.now();});
+    this.readModelCache.delete(key);this.readModelCache.set(key,entry);
+    while(this.readModelCache.size>ENGINE_READ_MODEL_RULES.maximumCacheEntries)this.readModelCache.delete(this.readModelCache.keys().next().value!);
+    return entry.promise as Promise<EngineReadReplyFor<Q>>;
+  }
+  ownerReadModelReport(){return{cacheEntries:this.readModelCache.size,measurements:this.readModelMeasurements.map(m=>({...m}))};}
+  private dispatchSequence=0;
+  private dispatchRevision=0;
+  /** Captures IDs at the click; native handlers revalidate original entities. */
+  async dispatch(command:EngineDispatchCommand,selection?:EngineSelection):Promise<EngineDispatchResult>{
+    const captured=selection??{selectedUnitIds:this.game.selectedUnits().map(u=>u.id),selectedBuildingId:this.game.state.selBld?.id,selectedBoatId:this.game.selectedBoat??undefined};
+    const epoch=this.dispatchEpoch;
+    if(!this.commandReady)throw new Error('No authoritative session is ready');
+    if(this.workerHost){const result=await this.workerHost.dispatch(command,captured);this.readModelCache.clear();return{...result,epoch};}
+    const sequence=++this.dispatchSequence;
+    const outcome=applyEngineCommand(this.game,command,captured);
+    this.readModelCache.clear();
+    const result={...outcome,sequence,stateRevision:++this.dispatchRevision,epoch};
+    this.pushHud();return result;
+  }
+
+  /** Isolated Test Lab harness only. No public worker option until all UI/save bridges qualify. */
+  async startWorkerBridgeForTestLab(){
+    if(!this.originalGame||!this.game.testMode)throw new Error('Worker experiment requires an isolated Test Lab session');
+    if(this.workerHost||this.workerBridgeTransition)throw new Error('A worker session already exists');
+    const original=this.game,snapshot=encodeGame(original),context={started:original.started,awaitingStart:original.awaitingStart,testMode:original.testMode,revealMap:original.revealMap};this.autosave.invalidate();
+    this.workerBridgeTransition=true;this.dispatchGeneration++;
+    const host=new SimulationWorkerHost({onPresentation:()=>{if(this.workerHost===host)this.pushHud();},onFault:error=>console.error(error)});
+    try{
+      await host.initialize(snapshot,context);if(this.disposed)throw new Error('Engine was disposed during worker startup');
+      host.projection.setDisplaySettings(this.view.quality,this.fps);this.workerHost=host;this.game=host.game;
+      this.simAccumulator=0;this.view.rebuild(this.game);this.view.resize();
+      this.workerBridgeTransition=false;this.pushHud();return host.report;
+    }catch(error){host.dispose();this.workerHost=null;this.game=original;this.workerBridgeTransition=false;throw error;}
+  }
+  workerBridgeReport(){return this.workerHost?.report??null;}
+  get isWorkerSession(){return !!this.workerHost;}
+  presentationNotice(message:string,seconds=2){
+    if(!Number.isFinite(seconds)||seconds<0)throw new RangeError('Invalid notice duration');
+    if(this.workerHost)this.presentationFeedback={message,expires:performance.now()+seconds*1000};
+    else this.game.banner(message,seconds);this.pushHud();
+  }
+  cancelPresentationInteraction(){
+    this.moveMode=false;this.loggingMode=false;this.plotStart=null;this.plotPointerStart=null;
+    this.view.setGhost(null,0,0,0,false);this.view.setLinePreview([]);
+    if(this.workerHost)this.workerHost.select({selectedUnitIds:[]});
+    void this.dispatch({kind:'cancel-interaction'}).catch(error=>this.presentationNotice(error instanceof Error?error.message:String(error),4));
+  }
+  async authoritativeCheckpoint():Promise<AuthoritativeCheckpoint>{
+    if(!this.commandReady)throw new Error('No authoritative session is ready');
+    const sessionEpoch=this.dispatchEpoch;
+    if(this.workerHost){const result=await this.workerHost.checkpoint();return{source:'worker',sessionEpoch,serialized:result.serialized,clock:result.clock,rng:result.rng,context:result.context};}
+    const g=this.game,context={started:g.started,awaitingStart:g.awaitingStart,testMode:g.testMode,revealMap:g.revealMap};
+    const snapshot={...encodeGame(g),savedAt:Date.now(),...(g.testMode?{testLabRevealMap:g.revealMap}:{})};validateGameSave(snapshot);
+    return{source:'main',sessionEpoch,serialized:serializeStoredSave(snapshot),clock:{tick:0,time:g.state.time,paused:g.state.paused,speed:g.state.speed,stateRevision:this.dispatchRevision,appliedSequence:this.dispatchSequence},rng:null,context};
+  }
+  checkpointWorker(){if(!this.workerHost)throw new Error('No authoritative worker');return this.workerHost.checkpoint();}
+  /** Selection is local presentation plus validated digest before worker ticks. */
+  setWorkerSelection(selection:EngineSelection){if(!this.workerHost)throw new Error('No authoritative worker');this.workerHost.select(selection);}
+
   readonly profile = new RuntimeProfile();
   entityFrustumCensus(){return this.view.entityFrustumCensus(this.game);}
   setPerformanceExpanded(open:boolean){this.profile.simulationPhases.enabled=open;this.profile.personMethods.setEnabled(open,this.game);}
@@ -113,7 +211,7 @@ export class Engine {
     this.game = new Game();
     this.view = new WorldView(canvas);
     this.audio = new GameAudio();
-    this.autosave=new AutosaveController({getGame:()=>this.game,allowed:()=>!this.disposed,onMainThreadWork:work=>this.profile.recordMainThreadWork(work)});
+    this.autosave=new AutosaveController({getGame:()=>this.game,allowed:()=>!this.disposed&&!this.workerHost&&!this.workerBridgeTransition,onMainThreadWork:work=>this.profile.recordMainThreadWork(work)});
     this.profile.setAutosaveReporter(()=>this.autosave.report(),()=>this.autosave.resetMeasurements());
     this.game.quality = this.view.quality;
     this.game.onSfx = (n) => this.audio.play(n);
@@ -209,37 +307,43 @@ export class Engine {
   hasSavedGame() {
     return hasSave();
   }
-  saveNow() {
-    if (this.game.testMode) {
-      this.game.banner(saveTestLabGame(this.game) ? "Test Lab run saved" : "Could not save the Test Lab run. Browser storage may be full.", 5);
-      this.pushHud();
-      return;
-    }
-    const saved=saveGame(this.game,true),backup=saved&&protectGame(this.game);
-    this.game.banner(saved ? `Village saved · Year ${calendar(this.game).year+1}, ${calendar(this.game).month}${backup?"":" · extra copy unavailable"}` : "Save failed: local storage is unavailable or full. Export your village file.", 5);
-    this.pushHud();
+  async saveNow():Promise<VillageSaveResult>{
+    const epoch=this.dispatchEpoch,lab=this.game.testMode;
+    const result=await this.checkpointSaver.save(lab?'test-lab':'village',true);
+    if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before saving finished'};
+    let saved=result.status==='committed',message=saved?(lab?'Test Lab run saved':'Village saved'):result.reason;
+    if(saved&&!lab){const protectedCopy=await this.checkpointSaver.save('protected',true);if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before saving finished'};if(protectedCopy.status!=='committed')message+=' · extra copy unavailable';}
+    if(!this.workerHost){this.game.banner(message,5);this.pushHud();}
+    return{saved,message};
   }
-  protectVillage() {
-    this.game.banner(protectGame(this.game)?"Backup copy saved — automatic saves will not overwrite this copy":"Could not protect the village; storage may be full",4);
-    this.pushHud();
+  async protectVillage():Promise<VillageSaveResult>{
+    const epoch=this.dispatchEpoch,result=await this.checkpointSaver.save('protected',true);
+    if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before protection finished'};
+    return{saved:result.status==='committed',message:result.status==='committed'?'Protected village saved':result.reason};
   }
-  exportVillage() {this.protectVillage();exportGame(this.game);}
+  async exportVillage():Promise<VillageSaveResult>{
+    const epoch=this.dispatchEpoch;
+    // Export remains available for storage recovery; its payload comes from the owner.
+    const result=await this.checkpointSaver.save('export',true);
+    if(this.disposed||this.dispatchEpoch!==epoch)return{saved:false,message:'Village changed before export finished'};
+    return{saved:result.status==='committed',message:result.status==='committed'?'Village file prepared':result.reason,...(result.checkpoint?{serialized:result.checkpoint.serialized}:{})};
+  }
   async importVillage(file:File):Promise<VillageImportResult> {
-    const sequence=this.importSequence=(this.importSequence??0)+1,game=this.game,state=game.state;
-    const current=()=>!this.disposed&&this.importSequence===sequence&&this.game===game&&game.state===state&&!this.originalGame;
+    const sequence=this.importSequence=(this.importSequence??0)+1,game=this.game,host=this.workerHost,epoch=this.dispatchEpoch;
+    const current=()=>!this.disposed&&this.importSequence===sequence&&this.game===game&&this.workerHost===host&&this.dispatchEpoch===epoch&&!this.originalGame;
     const cancelled=():VillageImportResult=>({applied:false,saved:false,message:"Import cancelled — the active village changed."});
     if(this.disposed)return cancelled();
     this.autosave.invalidate();
-    if(this.originalGame){const message="Leave test mode before importing a village";this.game.banner(message,4);this.pushHud();return{applied:false,saved:false,message};}
+    if(this.originalGame){const message="Leave test mode before importing a village";this.presentationNotice(message,4);return{applied:false,saved:false,message};}
     let restored:Game|undefined;
     try {
       const text=await file.text();
       if(!current())return cancelled();
       restored=decodeGame(JSON.parse(text));
       if(!current())return cancelled();
-      if(game.started&&!game.awaitingStart&&!protectGame(game))throw new Error("Could not protect your current village. Download it before importing another save.");
+      if(game.started&&!game.awaitingStart){const protectedCopy=await this.protectVillage();if(!protectedCopy.saved)throw new Error("Could not protect your current village. Download it before importing another save.");}
       if(!current())return cancelled();
-      saveGame(game);
+      if(!host)saveGame(game);
       if(!current())return cancelled();
       this.restoreVillage(restored);
       const saved=saveGame(restored,true),message=saved?"Village imported; previous village kept as a protected checkpoint":"Village imported but local saving failed. Keep the original file.";
@@ -249,11 +353,13 @@ export class Engine {
       const applied=!!restored&&this.game===restored;
       if(!applied&&!current())return cancelled();
       const detail=error instanceof Error?error.message:"Invalid village backup",message=applied?`Village loaded, but could not finish: ${detail}`:detail;
-      this.game.banner(message,5);this.pushHud();
+      this.presentationNotice(message,5);
       return{applied,saved:false,message};
     }
   }
   private restoreVillage(restored:Game) {
+    this.workerHost?.dispose();this.workerHost=null;this.workerBridgeTransition=false;
+    this.dispatchGeneration++;
     this.autosave.invalidate();
     restored.onSfx=(n)=>this.audio.play(n);restored.quality=this.game.quality;restored.muted=this.game.muted;
     this.game=restored;this.profile.personMethods.attach(restored);this.simAccumulator=0;this.keyboard.groups.clear();
@@ -276,6 +382,8 @@ export class Engine {
   }
 
   restart(request?:WorldRequest,generation:18|19=18) {
+    if(this.workerHost||this.workerBridgeTransition)throw new Error('Leave the isolated worker experiment before creating a world');
+    this.dispatchGeneration++;
     const nextRequest={...request,difficulty:request?.difficulty??this.game.state.difficulty??'normal'};
     this.autosave.invalidate();
     this.simAccumulator = 0;
@@ -328,13 +436,13 @@ export class Engine {
     this.keys.clear();
     this.simAccumulator = 0;
   };
-  private onPageHide = () => {if(!this.disposed)saveGame(this.game);};
+  private onPageHide = () => {if(!this.disposed&&!this.workerHost&&!this.workerBridgeTransition)saveGame(this.game);};
 
   private onVis = () => {
     this.keys.clear();
     this.simAccumulator = 0;
     this.last = 0;
-    if (document.visibilityState === "hidden") saveGame(this.game);
+    if (document.visibilityState === "hidden"&&!this.workerHost&&!this.workerBridgeTransition) saveGame(this.game);
     if (document.visibilityState === "visible") {
       this.view.resize();
       if (this.audio.ctx?.state === "suspended") void this.audio.ctx.resume();
@@ -458,6 +566,11 @@ export class Engine {
       const dx = this.drag.x - this.drag.sx;
       const dy = this.drag.y - this.drag.sy;
       if (Math.hypot(dx, dy) > 8) {
+        if(this.workerHost){
+          const ids=e.shiftKey?this.game.selectedUnits().map(u=>u.id):[];
+          for(const u of this.game.state.units){if(u.team!==0||u.hp<=0)continue;const point=this.view.project(u.x,u.y+.6,u.z);if(!point.behind&&point.x>=Math.min(this.drag.sx,this.drag.x)&&point.x<=Math.max(this.drag.sx,this.drag.x)&&point.y>=Math.min(this.drag.sy,this.drag.y)&&point.y<=Math.max(this.drag.sy,this.drag.y)&&!ids.includes(u.id))ids.push(u.id);}
+          this.workerHost.select({selectedUnitIds:ids});this.drag=null;this.pushHud();return;
+        }
         if (!e.shiftKey && !this.loggingMode) this.game.clearSelect();
         const minx = Math.min(this.drag.sx, this.drag.x),
           maxx = Math.max(this.drag.sx, this.drag.x);
@@ -499,6 +612,16 @@ export class Engine {
   }
 
   leftClick(cx: number, cy: number, additive: boolean) {
+    if(this.workerHost){
+      const entity=this.view.pickEntity(cx,cy,this.game);
+      if(entity?.kind==='building'){this.workerHost.select({selectedUnitIds:[],selectedBuildingId:entity.id});return;}
+      if(entity&&entity.team===0){
+        const ids=additive?this.game.selectedUnits().map(u=>u.id):[];
+        this.workerHost.select({selectedUnitIds:ids.includes(entity.id)?ids.filter(id=>id!==entity.id):[...ids,entity.id]});return;
+      }
+      const point=this.view.groundAt(cx,cy);if(point&&this.game.selectedUnits().length){void this.dispatch({kind:'move',unitIds:this.game.selectedUnits().map(u=>u.id),x:point.x,z:point.z}).catch(console.error);}
+      return;
+    }
     const boatOrder=this.game.selectedBoat!==null&&!this.game.state.placing;
     const g = boatOrder ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
     if (!g) {
@@ -558,6 +681,7 @@ export class Engine {
   }
 
   rightClick(cx: number, cy: number,queue=false) {
+    if(this.workerHost){const point=this.view.groundAt(cx,cy);if(point&&this.game.selectedUnits().length)void this.dispatch({kind:'move',unitIds:this.game.selectedUnits().map(u=>u.id),x:point.x,z:point.z}).catch(console.error);return;}
     const g = this.game.selectedBoat!==null ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
     if (!g) return;
     if (this.game.state.placing) {
@@ -831,12 +955,14 @@ export class Engine {
   }
 
   setPaused(p: boolean) {
+    if(this.workerHost)return this.dispatch({kind:'pause',paused:p});
     this.game.state.paused = p;
     if(p)saveGame(this.game);
     this.pushHud();
   }
 
   setSpeed(s: number) {
+    if(this.workerHost)return this.dispatch({kind:'speed',speed:s===4||s===3?4:s===2?2:1,resume:true});
     this.game.state.speed = s === 4 || s === 3 ? 4 : s === 2 ? 2 : 1;
     this.game.state.paused = false;
     this.pushHud();
@@ -848,7 +974,7 @@ export class Engine {
   }
 
   setQuality(q: "low" | "med" | "high") {
-    this.game.quality = q;
+    if(this.workerHost)this.workerHost.projection.setDisplaySettings(q,this.fps);else this.game.quality = q;
     this.view.applyQuality(q);
     rememberGraphicsQuality(q);
   }
@@ -863,13 +989,14 @@ export class Engine {
     if (this.disposed) return;
     try {
       const frameGap=this.profile.frame(t);
+      const workerWallDt=Number.isFinite(t)&&Number.isFinite(this.last)&&this.last>0?Math.max(0,(t-this.last)/1000):0;
       const dt = frameDeltaSeconds(t,this.last);
       this.last = t;
       this.frames++;
       this.fpsAcc += frameGap/1000;
       if (this.fpsAcc >= 0.4) {
         this.fps = this.profile.frameRate(RUNTIME_PROFILE_RULES.displayRateWindowMilliseconds);
-        this.game.fps = Math.round(this.fps);
+        if(this.workerHost)this.workerHost.projection.setDisplaySettings(this.view.quality,Math.round(this.fps));else this.game.fps = Math.round(this.fps);
         this.frames = 0;
         this.fpsAcc = 0;
       }
@@ -892,7 +1019,9 @@ export class Engine {
         return;
       }
 
-      if (document.hidden) {
+      if(this.workerHost){if(!document.hidden)this.workerHost.advanceWallTime(workerWallDt);}
+      else if(this.workerBridgeTransition){/* Sole authority is transferring; main never steps. */}
+      else if (document.hidden) {
         this.simAccumulator = 0;
       } else {
         if(this.profile.personMethods.enabled)this.profile.personMethods.attach(this.game);
@@ -917,7 +1046,7 @@ export class Engine {
       this.profile.measure('scene',()=>this.view.sync(this.game, dt));
       this.profile.measure('draw',()=>this.view.render());
       this.profile.recordRenderer(this.view.latestRenderMetrics);
-      this.tuneQuality(dt);
+      if(!this.workerHost)this.tuneQuality(dt);
 
       this.hudAcc += dt;
       if (this.hudAcc > 0.12) {
@@ -936,7 +1065,7 @@ export class Engine {
       if (this.failFrames >= 2 && this.game.quality !== "low") {
         this.failFrames = 0;
         this.setQuality(this.game.quality === "high" ? "med" : "low");
-        this.game.banner("The valley eases", 1.8);
+        if(!this.workerHost)this.game.banner("The valley eases", 1.8);
       }
     }
   };
@@ -959,6 +1088,7 @@ export class Engine {
   }
 
   pushHud() {
+    if(this.workerHost){if(this.workerHost.ready){const notice=this.presentationFeedback&&this.presentationFeedback.expires>performance.now()?this.presentationFeedback.message:this.workerHost.hud.banner;this.hud({...this.workerHost.hud,fps:this.fps,banner:notice});}return;}
     try {
       const type=this.game.state.placing;
       const cost=type?buildingCost(type,this.game,0,this.plotSize,this.bridgeSpan):null;
@@ -992,9 +1122,11 @@ export class Engine {
 
   dispose() {
     if(this.disposed)return;
+    this.dispatchGeneration++;
     this.profile.personMethods.dispose();this.profile.simulationPhases.enabled=false;
     this.autosave.dispose();
-    saveGame(this.game);
+    if(!this.workerHost&&!this.workerBridgeTransition)saveGame(this.game);
+    this.workerHost?.dispose();this.workerHost=null;
     this.disposed = true;
     this.running = false;
     this.view.renderer.setAnimationLoop(null);
