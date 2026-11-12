@@ -180,3 +180,20 @@ test('lane A: a party mid-expedition survives save/load with its packed food, an
  assert.equal(packed+back.tribe(0).food,200,'packed + stores still equals the starting stock');
  assert.equal(back.state.rulers.wards.length,1,'wards survive reload');assert.ok(foodDemand(back,0)>=0);
 });
+
+test('lane A: war-weariness builds in a long war, feeds unrest and peace pressure, recovers at peace, saves round-trip, old saves untouched',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();R.ensureRulers(g);
+ assert.equal(R.wearinessOf(g,1),0);assert.equal(R.warPeaceBonus(g,1),0);
+ g.state.tribes[1].hostile=true;
+ const u0=R.unrestOf(g,1).value;
+ for(let i=0;i<12;i++)R.tireOfWar(g);
+ assert.ok(R.wearinessOf(g,1)>=90,'a dozen war years wear a society down');
+ assert.ok(R.warPeaceBonus(g,1)>1,'a tired society presses for peace');
+ const u1=R.unrestOf(g,1);assert.ok(u1.value>=u0&&u1.why.includes('the war has worn the people down'));
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'weariness survives a save round-trip');
+ const bad=JSON.parse(JSON.stringify(g.state.rulers));bad.weary={1:500};assert.equal(validRulersState(bad),false,'out-of-range weariness rejected');
+ g.state.tribes[1].hostile=false;for(let i=0;i<20;i++)R.tireOfWar(g);
+ assert.equal(R.wearinessOf(g,1),0,'peace heals');
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;R.tireOfWar(old);assert.equal(old.state.rulers,undefined);assert.equal(R.warPeaceBonus(old,1),0);
+});
