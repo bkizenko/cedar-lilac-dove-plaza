@@ -324,6 +324,21 @@ test('neighbourNews: real agreements only, player-known, newest first, old saves
  assert.equal(neighbourNews(g).some(n=>n.a===1&&n.b===2),false,'meeting both societies cannot reveal their private agreement');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourNews(old),[]);
 });
+test('neighbourNews: succession at a known court is reported publicly; unmet courts and private tallies stay out; old saves empty',async()=>{
+ const {neighbourNews}=await import('../src/game/rulersRuntime.ts');
+ const {ensureDecisions}=await import('../src/game/societyRuntime.ts');
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*2;advanceRulers(g);
+ const d=ensureDecisions(g);assert.ok(d,'decision state exists');
+ d.history['1']=[{year:2,kind:'succession',text:'Aren succeeded Bel (child, contested); 3 agreements carried (1 strained); grievances kept'}];
+ g.state.societyRelations=[];
+ assert.equal(neighbourNews(g).some(n=>n.kind==='succession'),false,'unmet court: nothing reported');
+ g.state.societyRelations=[{from:0,to:1,known:true,trust:.5,grievance:0,hostile:false,peaceUntil:0,lastContactSeconds:0}];
+ const n=neighbourNews(g).find(x=>x.kind==='succession');
+ assert.ok(n&&n.a===1&&n.time===2*RULERS_YEAR_SECONDS&&/Aren succeeded Bel, and the claim is disputed/.test(n.text));
+ assert.equal(/agreement|grievance/.test(n.text),false,'private tallies are not published');
+ assert.equal(neighbourNews(g,3*RULERS_YEAR_SECONDS).some(x=>x.kind==='succession'),false);
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourNews(old),[]);
+});
 test('lane A: citing a casus belli strains the holder (unrest), fades yearly, round-trips; old saves without cbDebt load',async()=>{
  const R=await import('../src/game/rulersRuntime.ts');const {validRulersState,rulersOf}=await import('../src/game/rulersState.ts');
  const g=fixture();g.state.time=RULERS_YEAR_SECONDS*2+1;advanceRulers(g);

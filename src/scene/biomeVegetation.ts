@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import {TREE_FORMS,treeKit,dressingKit,type TreeForm,type DressingForm} from './vegetationKit';
 import {contactShadowGeometry,radialShadowTexture,painterTreeKit,painterFarRound,painterFarNeedle,painterDressing,PAINTER_FORMS,type PainterForm,type PainterDressing} from './painterTrees';
+import {UNDERSTORY_KINDS,understoryGeometry,instanceGeometry} from './botanicalUnderstory';
+import {makeBotanicalMaterial} from './botanicalMaterial';
+import {loadTreeSet,type TreeSet} from './treeSet';
 import {makePainterFoliage,makePainterBark,makePainterGrass,makePainterProp,painterSway,type PainterSway} from './painterVegetationMaterial';
 export const VEGETATION_BIOMES=['meadow','mixed-woodland','conifer-forest','alpine','wetland','dry-scrub','arid','warm-coast'] as const;
 export type VegetationBiome=typeof VEGETATION_BIOMES[number];
@@ -122,20 +125,31 @@ const DRESSING_BLOOMS=['#f4d54a','#f7f3e8','#b98ad8','#e98a6a','#f1a7c4'];
  * or clickable harvest target. Caller supplies actual dry-ground eligibility.
  * 'painterly' adds tufts, tall grass, coloured flower heads, ferns, shrubs, outcrops and logs, wind-swayed on the GPU. */
 export class BiomeDressing {
- private scene:THREE.Scene;private batches=new Map<string,THREE.InstancedMesh>();private matrix=new THREE.Matrix4();private pos=new THREE.Vector3();private scale=new THREE.Vector3();private rotation=new THREE.Quaternion();private euler=new THREE.Euler();private color=new THREE.Color();private style:VegetationStyle;private sway:PainterSway|null=null;private shadows:THREE.InstancedMesh|null=null;private shadowMat:THREE.MeshBasicMaterial|null=null;private sunAz=new THREE.Vector2(-.6,.8);private sunElev=.8;private shadowOpacity=.34;private materials:THREE.Material[]=[];
- constructor(scene:THREE.Scene,style:VegetationStyle='classic'){this.scene=scene;this.style=style;
+ private scene:THREE.Scene;private batches=new Map<string,THREE.InstancedMesh>();private matrix=new THREE.Matrix4();private pos=new THREE.Vector3();private scale=new THREE.Vector3();private rotation=new THREE.Quaternion();private euler=new THREE.Euler();private color=new THREE.Color();private style:VegetationStyle;private sway:PainterSway|null=null;private shadows:THREE.InstancedMesh|null=null;private shadowMat:THREE.MeshBasicMaterial|null=null;private sunAz=new THREE.Vector2(-.6,.8);private sunElev=.8;private shadowOpacity=.34;private materials:THREE.Material[]=[];private botanical:Set<string>|null=null;private alias=new Map<string,string>();
+ constructor(scene:THREE.Scene,style:VegetationStyle='classic',treeSet:TreeSet=loadTreeSet()){this.scene=scene;this.style=style;
   if(style==='painterly'){
    this.sway=painterSway();const grass=makePainterGrass(this.sway),still=makePainterGrass(this.sway,false),prop=makePainterProp();this.materials.push(grass,still,prop);
    const kinds:[string,THREE.BufferGeometry,THREE.Material][]=[['grass',painterDressing('grass'),grass],['tallgrass',painterDressing('tallgrass'),grass],['flowers',painterDressing('flowers'),grass],['bloom',painterDressing('bloom'),grass],['fern',painterDressing('fern'),grass],['reeds',painterDressing('reeds'),grass],['scrub',painterDressing('scrub'),still],['shrub',painterDressing('shrub'),still],['pebbles',painterDressing('pebbles'),prop],['rocks',painterDressing('rocks'),prop],['log',painterDressing('log'),prop],['cattail',painterDressing('cattail'),grass],['agave',painterDressing('agave'),still],['drygrass',painterDressing('drygrass'),grass],['cushion',painterDressing('cushion'),still]];
+   if(treeSet==='botanical'){
+    // species-true understory: leaf-card grass and ferns, bushes grown from hawthorn skeletons, mushrooms, logs, stumps, deadwood, moss
+    const ground=makeBotanicalMaterial(this.sway,{ground:true}),still=makeBotanicalMaterial(this.sway,{ground:true,still:true});this.materials.push(ground,still);this.botanical=new Set();
+    const map:Record<string,[string,THREE.Material]>={flowers:['flowers',ground],grass:['grass',ground],tallgrass:['tallgrass',ground],drygrass:['drygrass',ground],fern:['fern',ground],bracken:['bracken',ground],reeds:['reeds',ground],bush:['bush',still],mushroom:['mushroom',still],log:['log',still],stump:['stump',still],deadwood:['deadwood',still],moss:['moss',still]};
+    for(const kind of UNDERSTORY_KINDS){const [u,mat]=map[kind];this.botanical.add(kind);this.add(kind,understoryGeometry(u as never),mat);}
+    // 'scrub' and 'shrub' draw as bushes; blooms, cattail, agave, cushion and stones keep their existing geometry
+    this.alias.set('shrub','bush');this.alias.set('scrub','bush');
+    const keep=new Set(['bloom','cattail','agave','cushion','pebbles','rocks']);
+    for(const [kind,geo,mat] of kinds){if(keep.has(kind))this.add(kind,geo,mat);else geo.dispose();}
+    return;
+   }
    for(const [kind,geo,mat] of kinds)this.add(kind,geo,mat);return;
   }
   const colors:Record<DressingForm,string>={grass:'#7e8c58',flowers:'#c9b989',reeds:'#8d8a53',scrub:'#858367',pebbles:'#89877a'};
   for(const kind of ['grass','flowers','reeds','scrub','pebbles'] as const)this.add(kind,dressingKit(kind),new THREE.MeshStandardMaterial({color:colors[kind],roughness:1,side:THREE.DoubleSide}));}
- private add(kind:string,geo:THREE.BufferGeometry,mat:THREE.Material){const mesh=new THREE.InstancedMesh(geo,mat,BIOME_VEGETATION_RULES.dressingMaxInstances.high);mesh.name=`nonblocking-${kind}`;mesh.count=0;mesh.frustumCulled=false;mesh.receiveShadow=true;mesh.raycast=()=>{};this.scene.add(mesh);this.batches.set(kind,mesh);if(this.style==='painterly')mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(BIOME_VEGETATION_RULES.dressingMaxInstances.high*3).fill(1),3);}
+ private add(kind:string,geo0:THREE.BufferGeometry,mat:THREE.Material){const geo=this.botanical?.has(kind)?instanceGeometry(geo0,BIOME_VEGETATION_RULES.dressingMaxInstances.high):geo0;const mesh=new THREE.InstancedMesh(geo,mat,BIOME_VEGETATION_RULES.dressingMaxInstances.high);mesh.name=`nonblocking-${kind}`;mesh.count=0;mesh.frustumCulled=false;mesh.receiveShadow=true;mesh.raycast=()=>{};this.scene.add(mesh);this.batches.set(kind,mesh);if(this.style==='painterly')mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(BIOME_VEGETATION_RULES.dressingMaxInstances.high*3).fill(1),3);}
  setTime(t:number){if(this.sway)this.sway.uTime.value=t;}
  private tone(point:DressingPoint,context:Partial<Pick<VegetationContext,'winter'|'autumn'|'snow'>>|undefined,kind:string){
   const c=this.color,dry=point.tone??.3,hue=point.hue??.5;
-  if(kind==='rocks'||kind==='pebbles'||kind==='log'){const t=point.rockTint&&kind!=='log'?point.rockTint:null,v=.9+hue*.2;if(t)c.setRGB(t[0]*v,t[1]*v,t[2]*v);else c.setRGB(.9+hue*.2,.9+hue*.15,.88+hue*.1);return c;}
+  if(kind==='rocks'||kind==='pebbles'||kind==='log'||kind==='mushroom'||kind==='stump'||kind==='deadwood'){const t=point.rockTint&&kind!=='log'?point.rockTint:null,v=.9+hue*.2;if(t)c.setRGB(t[0]*v,t[1]*v,t[2]*v);else c.setRGB(.9+hue*.2,.9+hue*.15,.88+hue*.1);return c;}
   c.setRGB(.9+hue*.2,.95+(1-hue)*.08,.8+hue*.15);c.lerp(new THREE.Color(1.15,.95,.62),Math.min(1,dry*.8));
   const winter=context?.winter??0,autumn=context?.autumn??0,snow=context?.snow??0;
   if(autumn>.05)c.lerp(new THREE.Color(1.1,.86,.5),Math.min(.7,autumn*.6));
@@ -147,9 +161,9 @@ export class BiomeDressing {
   const cap=BIOME_VEGETATION_RULES.dressingMaxInstances[context.quality],counts=new Map<string,number>();let total=0;
   const painterly=this.style==='painterly',off=(context.winter??0)>.5||(context.snow??0)>.3;
   for(const point of points){if(total>=cap)break;if(!context.known(point.x,point.z)||!point.steep&&!isDry(point.x,point.z)||Math.hypot(point.x-context.camera.x,point.z-context.camera.z)>BIOME_VEGETATION_RULES.dressingDistanceMetres)continue;
-   const rock=point.kind==='rocks'||point.kind==='log'||point.kind==='pebbles',fade=Math.max(0,Math.min(1,(BIOME_VEGETATION_RULES.dressingDistanceMetres-Math.hypot(point.x-context.camera.x,point.z-context.camera.z))/18));
+   const rock=point.kind==='rocks'||point.kind==='log'||point.kind==='pebbles'||point.kind==='mushroom'||point.kind==='stump'||point.kind==='deadwood'||point.kind==='moss',fade=Math.max(0,Math.min(1,(BIOME_VEGETATION_RULES.dressingDistanceMetres-Math.hypot(point.x-context.camera.x,point.z-context.camera.z))/18));
    const kinds=painterly&&point.kind==='flowers'?['flowers','bloom']:[point.kind as string];
-   for(const kind of kinds){const mesh=this.batches.get(kind);if(!mesh)continue;
+   for(const kind0 of kinds){const kind=this.alias.get(kind0)??kind0,mesh=this.batches.get(kind);if(!mesh)continue;
     const index=counts.get(kind)??0;if(index>=BIOME_VEGETATION_RULES.dressingMaxInstances.high)continue;
     const bloomHidden=kind==='bloom'&&(off||(context.autumn??0)>.55);
     const base=Math.max(.1,Math.min(point.kind==='rocks'?2.6:1.3,point.scale??1))*(painterly&&!rock?.55+.45*fade:1);
@@ -160,7 +174,10 @@ export class BiomeDressing {
     counts.set(kind,index+1);}
    total++;
   }
-  for(const [kind,mesh]of this.batches){mesh.count=counts.get(kind)??0;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}return total;
+  const snowLoad=(context.snow??0)>.15?Math.min(1,(context.snow??0)*1.05):0;
+  for(const [kind,mesh]of this.batches){mesh.count=counts.get(kind)??0;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+   if(this.botanical?.has(kind)){const st=mesh.geometry.getAttribute('iState') as THREE.InstancedBufferAttribute;for(let i=0;i<mesh.count;i++)st.setXY(i,1,snowLoad);st.needsUpdate=true;}}
+  return total;
  }
  dispose(){for(const mesh of this.batches.values()){this.scene.remove(mesh);mesh.geometry.dispose();if(!this.materials.length)(mesh.material as THREE.Material).dispose();mesh.dispose();}for(const m of this.materials)m.dispose();this.materials.length=0;this.batches.clear();}
 }
