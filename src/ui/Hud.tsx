@@ -1,3 +1,4 @@
+import {CommanderControls} from './CommanderControls';
 import {foodExperienceReport} from '@/game/foodExperience';
 import {useLifecycleAction} from './useLifecycleAction';
 import {VillageSaveButton} from './VillageSaveButton';
@@ -799,6 +800,7 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs }: { h
         {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&<GameDisclosure label="Contact & orders"><ConflictControls engine={engine}/></GameDisclosure>}
         {!selMin&&engine&&sel.kind!=='none'&&sel.kind!=='boat'&&sel.type!=='waterReach'&&(sel.kind==='building'?<ProductionControls engine={engine}/>:<GameDisclosure label="Equipment & gathering"><ProductionControls engine={engine}/></GameDisclosure>)}
         {!selMin&&engine&&sel.kind!=='none'&&<SiegeRamControls engine={engine}/>}
+        {!selMin&&engine&&((sel.kind==='unit'||sel.kind==='units')&&engine.game.selectedUnits().some(u=>u.team===0)||sel.kind==='boat'&&sel.team===0)&&<GameDisclosure label="Command"><CommanderControls engine={engine}/></GameDisclosure>}
         {!selMin && engine && sel.kind==='unit' && sel.team===0 &&
           <GameDisclosure label="Inventory & activity"><ResidentInventory game={engine.game} residents={engine.game.selectedUnits().filter(u=>u.team===0)}/></GameDisclosure>}
         {!selMin&&engine&&sel.kind==='building'&&sel.team===0&&sel.type==='warehouse'&&<GameDisclosure label="Inventory"><StorehouseInventory engine={engine}/></GameDisclosure>}
