@@ -33,3 +33,22 @@ test('marryHouses: gated by scale; then ties and trust rise with a cause chain',
  assert.deepEqual(JSON.parse(JSON.stringify(g.state.rulers)),JSON.parse(JSON.stringify(g.state.rulers)));
  assert.ok(rulersOf(g.state),'state still valid after marriage');
 });
+
+test('expansion drivers: layered push/pull/enable/brake, bounded, readable, and they move NPC expansion odds',async()=>{
+ const {assess}=await import('../src/game/expansionDrivers.ts');
+ const {expansionOf,expansionDrive,ensureRulers}=await import('../src/game/rulersRuntime.ts');
+ const calm={crowding:0,hunger:0,climate:0,cadets:0,grievance:0,openLand:.2,richNeighbour:0,weakNeighbour:0,tradePull:0,zeal:0,seafaring:0,mobility:.5,rulerDrive:40,polityPressure:30,cohesion:.6,fortified:.2,unknown:.5};
+ const base=assess(calm);assert.equal(base.mode,'stay');
+ const squeezed=assess({...calm,crowding:1,hunger:.8,climate:.8,cadets:.5,openLand:.9,seafaring:.3});
+ assert.ok(squeezed.drive>base.drive*2,'push plus open land plus means raises the drive');assert.ok(['settle','migrate'].includes(squeezed.mode));assert.ok(squeezed.why.length>=3);
+ const pushOnly=assess({...calm,crowding:1,hunger:1,climate:1,rulerDrive:0,polityPressure:0,mobility:0});
+ const both=assess({...calm,crowding:1,hunger:1,climate:1,openLand:.9,rulerDrive:70,polityPressure:60});
+ assert.ok(both.drive>pushOnly.drive,'pressure without a place or means moves less');
+ const rooted=assess({...calm,crowding:1,hunger:1,openLand:.9,cohesion:1,fortified:1,unknown:1});assert.ok(rooted.brake>.5);
+ assert.equal(assess({...calm,unknown:1,seafaring:1,openLand:.6,tradePull:.8,rulerDrive:70}).mode,'stay','pull alone: dreamers stay home');
+ const sea=assess({...calm,unknown:1,seafaring:1,openLand:.6,tradePull:.8,rulerDrive:70,crowding:.8,climate:.6,cohesion:.3});assert.ok(['explore','trade','settle'].includes(sea.mode),sea.mode);
+ for(const d of [base,squeezed,pushOnly,both,rooted,sea]){assert.ok(d.drive>=.25&&d.drive<=1.85);assert.ok(Number.isFinite(d.push+d.pull+d.enable+d.brake));}
+ const g=fixture();ensureRulers(g);
+ const d=expansionOf(g,1);assert.ok(d&&d.drive>=.25,'live game produces an assessment');assert.equal(expansionDrive(g,1),d.drive);
+ const old=new Game();old.reset(5,10,{rulersVersion:0});old.enterIsland();assert.equal(expansionDrive(old,1),1,'rulers off: unchanged behaviour');
+});

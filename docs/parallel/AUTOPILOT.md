@@ -862,3 +862,5 @@ Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus th
 - **Codex** = platform, economy, saves, integration, knowledge/tech, performance.
 - **Full utilization rule:** each agent always keeps at least 5 unstarted items in its queue. If an agent's queue drops below 5, it immediately audits its lane and adds items; Grok also tops it up every hour. If an agent has no commits for 3+ hours while work is queued, Grok reassigns its next items to whoever is active. No agent ever waits idle on another; take the next independent item.
 - **Bug intake:** any agent that finds a bug outside its lane adds a row (owner by lane, bugs before new features in that queue if they affect players) and keeps going.
+| RULERS-MARRIAGE | Claude | done | marryHouses applies signed kinship ties to society relations, population-gated | tests in rulers-runtime |
+| EXPANSION-DRIVERS | Claude | done | push/pull/enable/brake model (crowding, hunger, climate memory, cadet kin, open land, weak/rich neighbours, boats, faith, ruler drive, cohesion) drives NPC settlement odds behind rulersVersion; expansionOf() gives stated reasons for UI | tests in rulers-runtime |

@@ -1,4 +1,4 @@
-import {advanceRulers} from './rulersRuntime';
+import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {initializeSheep} from './sheep';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
@@ -5388,7 +5388,7 @@ export class Game {
       cap - pop < 3 &&
       reserve > 450 &&
       tr.wood >= 36 &&
-      Math.random() < tr.expand * (growing ? 1.4 : shrinking ? 0.2 : 0.9)
+      Math.random() < tr.expand * expansionDrive(this,team) * (growing ? 1.4 : shrinking ? 0.2 : 0.9)
     ) {
       const homeType=preferredRivalHome(this,team);
       const spot = this.findOpenSpot(hall.x, hall.z, homeType, team);

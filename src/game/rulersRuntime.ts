@@ -4,6 +4,10 @@ import type {Game} from './sim';
 import {initRulers,stepRulersYear,rulersOf,type RulersState} from './rulersState';
 import {familyStage,familyFeatures,kinshipEffectScale} from './familyScale';
 import {marry} from './dynasty';
+import {assess,type Drivers,type DriverInputs} from './expansionDrivers';
+import {expansionPressure} from './polityModel';
+import {drive as personalDrive} from './rulerGenome';
+import {reserveSeconds} from './settlement';
 import {effects,apply,noTies,type Ties,type Effect} from './ties';
 import {nudgeSocietyRelation,societyRelation} from './societyRelations';
 
@@ -18,9 +22,16 @@ export function ensureRulers(g:Game):RulersState|null{
  if(!s.rulers)s.rulers=initRulers(s.seed,s.tribes.map((_,i)=>String(i)));
  return s.rulers;
 }
+/** Bad weather accumulates into a slow climate-stress memory (0..1): droughts and floods wear a land down, good seasons restore it. */
+function sampleClimate(g:Game,r:RulersState){
+ const s=st(g),w=(s as unknown as {weather?:string}).weather,bad=w==='drought'||w==='frost'||w==='flood'||w==='storm';
+ const dt=Math.max(0,Math.min(60,s.time-(r.climateT??s.time)));
+ const c=r.climate??0;r.climate=Math.max(0,Math.min(1,c+(bad?dt/420:-dt/1400)));r.climateT=s.time;
+}
 /** Advance whole dynastic years that have elapsed. Cheap: one comparison per call. */
 export function advanceRulers(g:Game){
  const r=ensureRulers(g);if(!r)return;const s=st(g),target=Math.floor(s.time/RULERS_YEAR_SECONDS);
+ sampleClimate(g,r);
  let guard=0;
  while(r.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
@@ -53,3 +64,37 @@ export function marryHouses(g:Game,a:number,b:number):{why:string[];bond:number}
  for(const [f,t] of [[a,b],[b,a]]){nudgeSocietyRelation(g,f,t,{trust:sum('trust'),grievance:sum('grievance')});}
  return {why:es.map(e=>e.why),bond:next.bond};
 }
+
+const c01=(v:number)=>Math.max(0,Math.min(1,Number.isFinite(v)?v:0));
+/** Measure the drivers of expansion from the live game for one society. */
+export function expansionInputs(g:Game,team:number):DriverInputs|null{
+ const r=ensureRulers(g);const me=r?.societies[String(team)];if(!r||!me)return null;
+ const s=g.state,pop=Math.max(1,livingPeople(g,team)),cap=Math.max(1,g.popCap(team));
+ const hall=s.buildings.find(b=>b.team===team&&b.hp>0);
+ const near=hall?s.buildings.filter(b=>Math.hypot(b.x-hall.x,b.z-hall.z)<50).length:0;
+ const others=s.tribes.map((_,i)=>i).filter(i=>i!==team&&i!==3&&!!g.tribe(i));
+ const known=others.filter(i=>societyRelation(g,team,i).known);
+ const myPop=pop,myFortune=g.tribeFortune(team);
+ let weak=0,rich=0,fort=0;
+ for(const i of known){weak=Math.max(weak,c01((myPop-livingPeople(g,i))/myPop));rich=Math.max(rich,c01((g.tribeFortune(i)-myFortune)/3));
+  fort=Math.max(fort,c01(s.buildings.filter(b=>b.team===i&&b.hp>0&&(b.type==='barracks'||b.type==='tower')).length*.3));}
+ const boats=g.tribe(team).boatPractice,built=boats?Object.values(boats.built).reduce((t:number,n)=>t+(n||0),0):0;
+ const d=me.dynasty,cadets=Object.values(d.people).filter(p=>p.alive&&!p.spouse&&p.age>=16&&p.id!==d.rulerId).length;
+ return {
+  crowding:c01((pop/cap-.6)/.4),hunger:c01(1-reserveSeconds(g,team)/600),climate:r.climate??0,cadets:c01(cadets/(1+pop/8)),
+  grievance:c01(g.tribe(team).tension||0),openLand:c01(1-near/30),richNeighbour:rich,weakNeighbour:weak,tradePull:c01(known.length/3),
+  zeal:c01(me.civ.faith.proselytism/100),seafaring:c01(built/3),mobility:.5,rulerDrive:personalDrive(me.civ.ruler.traits),
+  polityPressure:expansionPressure(me.civ.polity),cohesion:c01(.25+.5*me.civ.polity.institutionalization/100),fortified:fort,
+  unknown:others.length?c01(1-known.length/others.length):0,
+ };
+}
+const driveCache=new WeakMap<Game,Map<number,{t:number;d:Drivers}>>();
+/** Cached (30s) assessment. Used by NPC expansion and by the UI. Returns null when rulers are off. */
+export function expansionOf(g:Game,team:number):Drivers|null{
+ if(!rulersEnabled(g))return null;
+ let m=driveCache.get(g);if(!m)driveCache.set(g,m=new Map());
+ const t=st(g).time,hit=m.get(team);if(hit&&t-hit.t<30&&t>=hit.t)return hit.d;
+ const i=expansionInputs(g,team);if(!i)return null;const d=assess(i);m.set(team,{t,d});return d;
+}
+/** Multiplier for the rival expansion roll. 1 when rulers are off, so old saves behave exactly as before. */
+export const expansionDrive=(g:Game,team:number)=>expansionOf(g,team)?.drive??1;
