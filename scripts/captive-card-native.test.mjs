@@ -23,6 +23,7 @@ test.before(()=>{
  const tp=bodyPoint(g,u,u.x,u.z),target=g.spawnUnit('worker',tp.x,tp.z,1);target.homeHall=store.id;target.order='hold';target.jobLock=true;target.carry=3;target.carryType='stone';
  const gp=bodyPoint(g,u,target.x,target.z),guard=g.spawnUnit('spearman',gp.x,gp.z,0);guard.order='hold';guard.jobLock=true;guard.carry=12;guard.carryType='food';guard.carryFood='provisions';g.tribe(0).food-=12;g.tribe(0).foodLots.provisions-=12;
  for(const t of g.state.tribes){t.hostile=false;t.thinkT=10000;}g.tribe(1).stone=17;g.tribe(1).food=1000;g.tribe(1).foodLots={provisions:1000};
+ g.state.contacts=[...new Set([...(g.state.contacts||[]),1])]; // This authored encounter is already a known society, not a first-contact UI test.
  ids={target:target.id,guard:guard.id,store:store.id};opening=encodeGame(g);validateGameSave(opening);
 });
 const fixture=()=>decodeGame(structuredClone(opening));

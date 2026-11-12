@@ -54,12 +54,15 @@ test('accepting held local surrender transfers only that village intact and pres
  const ours=g.tribe(0).wood,theirs=g.tribe(1).wood,food=g.tribe(0).food,hp=hall.hp;
  assert.equal(secureVillage(g,hall.id).accepted,true);assert.equal(integrateOccupiedVillage(g,g.state.occupations[0].id).accepted,false);
  tickOccupation(g,CONFLICT_RULES.controlHoldSeconds);const control=g.state.occupations[0];assert.equal(occupationStatus(g,control.id).accepted,true);
- assert.equal(integrateOccupiedVillage(g,control.id).accepted,true);assert.equal(control.phase,'integrated');assert.equal(hall.team,0);assert.equal(hut.team,0);assert.equal(hall.hp,hp);assert.equal(distant.team,1);
- assert.equal(resident.team,0);assert.equal(resident.name,'Nara');assert.deepEqual(resident.parents,[41,42]);assert.equal(resident.hp,19);assert.equal(resident.carry,7);assert.equal(resident.enslavedFrom,undefined);assert.equal(farResident.team,1);assert.equal(g.tribe(1).alive,true);
- assert.equal(project.team,0);assert.equal(project.id,projectId);assert.equal(project.work.progress,17);assert.equal(project.actorId,null);assert.equal(project.work.paused,true);
+ assert.equal(integrateOccupiedVillage(g,control.id).accepted,true);
+ // Handover atomically installs a new state graph; inspect its actual owners, not stale pre-commit objects.
+ const currentControl=g.state.occupations.find(o=>o.id===control.id),currentHall=g.state.buildings.find(b=>b.id===hall.id),currentHut=g.state.buildings.find(b=>b.id===hut.id),currentDistant=g.state.buildings.find(b=>b.id===distant.id),currentResident=g.state.units.find(u=>u.id===resident.id),currentFar=g.state.units.find(u=>u.id===farResident.id),currentProject=g.state.haulageProjects.find(p=>p.id===projectId);
+ assert.equal(currentControl.phase,'integrated');assert.equal(currentHall.team,0);assert.equal(currentHut.team,0);assert.equal(currentHall.hp,hp);assert.equal(currentDistant.team,1);
+ assert.equal(currentResident.team,0);assert.equal(currentResident.name,'Nara');assert.deepEqual(currentResident.parents,[41,42]);assert.equal(currentResident.hp,19);assert.equal(currentResident.carry,7);assert.equal(currentResident.enslavedFrom,undefined);assert.equal(currentFar.team,1);assert.equal(g.tribe(1).alive,true);
+ assert.equal(currentProject.team,0);assert.equal(currentProject.id,projectId);assert.equal(currentProject.work.progress,17);assert.equal(currentProject.actorId,project.actorId,'the same paid maker binding survives the atomic handover');assert.equal(currentProject.work.paused,true);
  assert.equal(g.tribe(0).wood,ours);assert.equal(g.tribe(1).wood,theirs);assert.equal(g.tribe(0).food,food);
- assert.equal(integrateOccupiedVillage(g,control.id).accepted,false,'cannot transfer twice');assert.equal(validHaulageProjects(g.state),true);
- const copy=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));assert.equal(copy.state.haulageProjects[0].team,0);assert.equal(copy.state.units.find(u=>u.id===resident.id).name,'Nara');
+ assert.equal(integrateOccupiedVillage(g,currentControl.id).accepted,false,'cannot transfer twice');assert.equal(validHaulageProjects(g.state),true);
+ const copy=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));assert.equal(copy.state.haulageProjects[0].team,0);assert.equal(copy.state.units.find(u=>u.id===currentResident.id).name,'Nara');
 });
 test('occupying troops can defend against an actively attacking worker while protecting uninvolved civilians',()=>{
  const {g,hall}=fixture(),guard=g.spawnUnit('spearman',72,50,0),worker=g.spawnUnit('worker',75,50,1);guard.selected=true;secureVillage(g,hall.id);
