@@ -22,7 +22,7 @@ import type {Game} from './sim';
 import type {Unit,Building,GameState,BldType,FoodKind} from './types';
 import {isDependent,reserveSeconds} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
-import {CAMP_RULES,supplyDrops,supplyApproach,supplyReached} from './campAnchor';
+import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import {craftingEffort} from './crafting';
 import {receiveFood,foodInventory,takeFoodLot,FOOD_KINDS} from './pantry';
 export const ITEM_KINDS=['plantFibre','cordage','basket','clay','greenware','dryWare','pottery','potsherds','flour','rawMeat','rawHide','bone','cleanHide','driedSkin','tannin','leather','skinClothes','leatherClothes','hideCoat','yarn','cloth','lightClothes','grainSheaves','roughGrain','straw','chaff','paddedArmor','rawWool','cleanWool','woolYarn','woolCloth','felt','woolCoat'] as const;
@@ -98,8 +98,8 @@ const sum=(items:ItemStock)=>Object.values(items).reduce((n,v)=>n+(v||0),0);
 const add=(items:ItemStock,key:ItemKind,n:number)=>{items[key]=(items[key]||0)+n;};
 function state(g:Game){return g.state.production??={version:1,projects:[],metrics:{consumed:{},produced:{},spoiled:{},lost:{},logsUsed:0,waterUsedLiters:0,grainUsed:0,grainLost:0,edibleFoodProduced:0,edibleFoodLost:0,foodInputsUsed:{},foodInputsLost:{},dryingExposureSeconds:0,wetExposureSeconds:0,completed:0,interrupted:0}} as ProductionState;}
 export function productionEnabled(g:Game,team:number){return g.state.buildings.some(b=>b.team===team&&['hearth','dryrack','smokehouse'].includes(b.type)&&g.finished(b));}
-/** Rules and physical facility availability are distinct. Legacy cargo is never reclassified. */
-export function animalProcessingEnabled(g:Game,team:number){return g.tribe(team)?.animalProcessingVersion===1||productionEnabled(g,team)||team===0&&(g.state.worldgenVersion??1)>=CAMP_RULES.unbuiltGeneration;}
+/** Fresh games persist their rule; missing legacy rules need a real own station, not a terrain version. */
+export function animalProcessingEnabled(g:Game,team:number){return g.tribe(team)?.animalProcessingVersion===1||productionEnabled(g,team);}
 export function activateAnimalProcessing(g:Game,team:number){const t=g.tribe(team);if(!t||t.animalProcessingVersion===1||!productionEnabled(g,team))return false;t.animalProcessingVersion=1;return true;}
 export function itemCapacity(g:Game,team:number){return PRODUCTION_RULES.baseItemCapacity+inheritedCacheCapacity(g,team)+g.state.buildings.filter(b=>b.team===team&&b.type==='warehouse'&&g.finished(b)).length*PRODUCTION_RULES.warehouseCapacity;}
 export function storedItemUnits(g:Game,team:number){return sum(g.tribe(team).items||{})+armorStoredUnits(g,team);}
