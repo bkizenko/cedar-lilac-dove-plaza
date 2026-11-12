@@ -1,0 +1,194 @@
+{
+  "release": "2026-11-12T23-35-40-519Z-18d9fc9",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T23-35-40-519Z-18d9fc9",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T22-22-00-935Z-c1d0e59",
+  "commit": "18d9fc9f9f72e6a689f0f8dace49b53f17ce39c1",
+  "retained": {
+    "linked": 1432,
+    "copied": 0,
+    "existing": 13
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 19,
+    "total": 19,
+    "nativeAndShared": 17,
+    "groups": {
+      "existingPaidMethodRecords": 5,
+      "physicalVisibilityAndProvenance": 6,
+      "actualRivalProductionAndAuthority": 2,
+      "actualForeignRecoveryLearningAndStrictCustody": 3,
+      "actualPaidWorkerFoundingProtection": 1
+    },
+    "built": {
+      "passed": 2,
+      "total": 2,
+      "scope": "Actual visible NPC-produced plate, original selected civilian canvas pickup, physical cache return and receipt provenance/durable restore. Controlled native author death or legal hostility, no natural-battle/guarded-cache-battle/all-method/full-gate credit or grants in browser.",
+      "presentation": "Private QA presentation capped near6Hz; not a gameplay/FPS claim",
+      "encountersObserved": 1,
+      "marker": {
+        "point": {
+          "x": 967.4591108010009,
+          "y": 726.4091032795924,
+          "behind": false
+        },
+        "camera": {
+          "look": [
+            -59.82689162033034,
+            26.572762104213826,
+            118.45664254196959
+          ],
+          "eye": [
+            -9.788909673605858,
+            49.976735804128445,
+            142.67690659226085
+          ],
+          "distance": 59.86181818181818
+        },
+        "actualSolidHit": true
+      },
+      "input": "actual projected canvas right-click",
+      "boundedVisibleObservationRefresh": [
+        {
+          "stage": "carried-record restore",
+          "count": 1,
+          "at": 435.7999999999838,
+          "sites": [
+            3092
+          ]
+        }
+      ],
+      "acquisition": "recovered",
+      "acquisitionScope": "recovered-ground",
+      "guardedCacheBattle": "pending; not claimed by this scoped diagnostic",
+      "physicalOwnedCacheReturn": true,
+      "custodyIsNotKnowledge": true,
+      "recordId": 3107,
+      "actorId": 3094,
+      "actualWalking": true,
+      "carriedMesh": true,
+      "inventory": true,
+      "strictDurableRestore": "Exact except explicitly verified same-visible-hall observation timestamp refresh; foreign read-purity not claimed",
+      "legacy": {
+        "population": 53,
+        "absentRecords": true,
+        "pureRead": true,
+        "strictDurableRestore": true
+      },
+      "inputUnchanged": true,
+      "metadataUnchanged": true,
+      "legacyInputUnchanged": true,
+      "errors": []
+    }
+  },
+  "compiler": "PASS final combined tree",
+  "build": "PASS frozen18d9fc9",
+  "oldAssetsNetwork": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-12T23-35-40-519Z-18d9fc9",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "frozenAcceptance": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "newGateCredit": 0
+  },
+  "actualJourney": {
+    "recordId": 3107,
+    "originalMaker": 2968,
+    "originalMakerName": "Auseae",
+    "originalTeam": 1,
+    "successfulBatches": 3,
+    "demonstratedAt": 89.2,
+    "finiteClayDugAndDelivered": 4,
+    "clayPaidForRecord": 1,
+    "authorWorkSeconds": 60,
+    "originalCollector": 3094,
+    "controlledAuthorDeath": true,
+    "recoveredAt": 435.8,
+    "ownedCacheReturnAt": 450.2,
+    "paidStudyProject": 3108,
+    "studiedAt": 499.0,
+    "usefulPaidReplicationProject": 3109,
+    "learnedAt": 529.2,
+    "personalSuccessfulBatches": 1,
+    "taughtBatches": 1
+  },
+  "preservation": {
+    "original53Sha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+    "original53Unchanged": true,
+    "liveVillagesNotMutated": true,
+    "previousReleaseRetained": true
+  },
+  "limitations": [
+    "Controlled actual author death, not a natural raid; guarded hostile-cache pickup is correctly interrupted by defense, successful guarded-cache battle remains unqualified.",
+    "Initial established NPC workshop/finite goods and three real qualifying craft orders were declared in the native opening; autonomous initial artisan training is not claimed.",
+    "Only bounded visible settlement observation timestamp refresh is allowed during foreign built restore; owner/site/witness/coordinates and all other durable fields remain exact. Read-side settlement refresh remains a separate architecture audit.",
+    "No full knowledge gate, all-method native journey, campaign or100-resident FPS credit.",
+    "Latest Claude forge visuals on main are outside this exact frozen artifact."
+  ],
+  "cleanup": {
+    "completedOwnTestWorktreesRemoved": 3,
+    "supersededRollbackRemoved": "9555f70",
+    "currentAndOnePreviousReleaseRetained": true,
+    "privateGeneratedCheckpointCopiesRemoved": true,
+    "approvedArtAndOriginalVillagesPreserved": true,
+    "private8103Stopped": true,
+    "live8101Pid": 42972,
+    "postCleanupNetwork": {
+      "passed": 5,
+      "total": 5,
+      "release": "2026-11-12T23-35-40-519Z-18d9fc9",
+      "assets": [
+        {
+          "port": 8086,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+        },
+        {
+          "port": 8086,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+        },
+        {
+          "port": 8101,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+        },
+        {
+          "port": 8101,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+        }
+      ]
+    },
+    "ordinarySuiteWithoutEarnedInputs": "Explicit diagnostic skips3, passed0; not credited to19"
+  }
+}
