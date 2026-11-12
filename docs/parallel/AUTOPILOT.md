@@ -855,3 +855,10 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus the cited agent-branch handoffs. This document does not change frozen 34/98 gate credit.
 | RULERS-LANE | societies | Rulers/dynasty/houses/ties/eras/glory/fame/unrest/civ+faith generator, pure modules (agents/claude-rulers) | Claude | Claude W2 | source-pushed-not-live | 25 tests incl. stylized-facts; sim hook + UI panels still to wire; family weight scales with population (see RULERS-FAMILY-SCALE) |
 | RULERS-FAMILY-SCALE | societies | Ruling family importance scales with population; every civ has a ruling house | Claude | Claude W2 | in progress | gate by tier+population |
+
+## Roles update — 2026-11-11 20:51 ET (Boris)
+- **Grok = PM of everything.** Owns triage and coordination of all fixes, bugs and improvements across every lane. Grok files each bug or fix as an AUTOPILOT row with one owner, and fixes World/nav/placement/water bugs itself.
+- **Claude = UI/UX** (all screens, HUD, controls, feedback, onboarding, readability) plus its current systems (diplomacy, leaders, succession, international, visual overhaul) and architecture/conflict lead.
+- **Codex** = platform, economy, saves, integration, knowledge/tech, performance.
+- **Full utilization rule:** each agent always keeps at least 5 unstarted items in its queue. If an agent's queue drops below 5, it immediately audits its lane and adds items; Grok also tops it up every hour. If an agent has no commits for 3+ hours while work is queued, Grok reassigns its next items to whoever is active. No agent ever waits idle on another; take the next independent item.
+- **Bug intake:** any agent that finds a bug outside its lane adds a row (owner by lane, bugs before new features in that queue if they affect players) and keeps going.
