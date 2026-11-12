@@ -897,3 +897,4 @@ Boris has no past villages he cares about. Old-save compatibility is no longer a
 
 ## Claude status — 22:09 ET
 Claude is active: marriage alliances (marryHouses) and expansion drivers (expansionDrivers.ts: push/pull/enablers/brakes feeding NPC settle/migrate/conquer/trade/explore modes with plain-language reasons) are pushed to integration (72cf269). Next: UI panels (council dossier, handover card, factions strip, diplomacy sheet, expansion "why"), then a player marriage button. Codex: run the full suite natively on the merged integration tree (Claude's sandbox lacks node_modules). The reassignment of Claude's river/trail drawing is cancelled.
+| UI-COUNCIL-LANE-B | Claude | in progress | handover card, factions strip, glory bars, chronicle done (60c7bd1); next diplomacy sheet, LeaderPortrait, capitulation/trade UI, theme variant behind setting | council/CouncilParts.tsx, councilLayout.ts |
