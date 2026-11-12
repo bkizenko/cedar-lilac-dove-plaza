@@ -9149,6 +9149,15 @@
       "liveCommit": "233d95a4d6cbd82312ce432e28b6443bd9134c97",
       "evidence": "docs/metrics/pack-animal-care-release-2026-11-12.json",
       "scope": "Actual pack goat identity/condition, local finite feed/water, capacity and cargo/save conservation; existing pack goats only. Horses/stables/traction remain open."
+    },
+    {
+      "id": "CODEX-KNOWLEDGE-PROVENANCE",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "b9e38de",
+      "liveCommit": "38b41033352f06dacf15aa7d22e3cdf763c5d463",
+      "evidence": "docs/metrics/knowledge-provenance-release-2026-11-12.json",
+      "scope": "Known/partly/unknown + real observed/demonstrated/taught/inherited provenance, paid successful/failed/teaching and crop receipts, physically owned free resident exact-method migration. Trading/captured techniques and full M4-03 acceptance remain open."
     }
   ],
   "status_update_policy": {
