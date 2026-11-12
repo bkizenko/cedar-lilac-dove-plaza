@@ -28,6 +28,8 @@ export type RaidIntent = "scout" | "loot" | "capture" | "destructive" | "annihil
 export type RaidPlan = {
   version: 1;
   bandId: number;
+  /** Actual successful departure cohort; paid per-actor trip ID stays bandId. */
+  objectiveBandId?: number;
   actorId: number;
   selectedIntent: RaidIntent;
   intent: RaidIntent;
@@ -272,7 +274,7 @@ function loadGoods(g: Game, u: Unit, p: RaidPlan, dt: number, foodOnly = false) 
   u.carry = amount;
   u.carryType = kind;
   u.carryFood = lot;
-  markStolenLoad(g,u,b.team,p.bandId);
+  markStolenLoad(g,u,b.team,p.objectiveBandId??p.bandId);
   witnessRaidDefense(g,u);
   p.metrics.lootTaken += amount;
   p.workSeconds = 0;
@@ -442,6 +444,7 @@ function validPlan(s: GameState, p: RaidPlan, at = s.time) {
     !keys(p, [
       "version",
       "bandId",
+      "objectiveBandId",
       "actorId",
       "selectedIntent",
       "intent",
@@ -462,6 +465,7 @@ function validPlan(s: GameState, p: RaidPlan, at = s.time) {
     ]) ||
     p.version !== 1 ||
     !id(p.bandId) ||
+    (p.objectiveBandId!==undefined&&(!id(p.objectiveBandId)||p.objectiveBandId>p.bandId)) ||
     !id(p.actorId) ||
     !intents.includes(p.intent) ||
     !intents.includes(p.selectedIntent) ||

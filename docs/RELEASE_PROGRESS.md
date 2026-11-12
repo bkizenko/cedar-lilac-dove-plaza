@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: 2d31e94d62e3ed5cc1ef32993fe7251d4c7c8de9 published as 2026-11-12T14-10-08-201Z-2d31e94 on8086/8101.55/55scoped incoming village/Council/audio checks; inherited prior verified37/98 unchanged. Full suite/performance target not claimed; Worker parked; later main source pending.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: 95978dd48cfac8667b738d3e93b4a3a277e6b6f1 published as 2026-11-12T14-53-46-940Z-95978dd on8086/8101.13/13 scoped actual raid outcome and Camp prestige checks; includes food2424c08; inherited37/98 unchanged. Later main source pending; Worker parked.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 

@@ -1,7 +1,9 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {waterNavigation,requestWaterNavigation,tickWaterNavigationPreparation,waterNavigationPreparationStatus,WATER_NAVIGATION_RULES} from '../src/game/waterTravel.ts';
+import {Game} from '../src/game/sim.ts';
 import {referenceWaterNavigation} from './helpers/water-navigation-reference.mjs';
 class Fixture{
+ solidBuilding(b){return Game.prototype.solidBuilding.call(this,b);}
  constructor(n=48){this.width=n;this.rev=1;this.world={size:96,waterY:.4,baseWaterY:.4,heights:new Float32Array(n*n),waterfalls:[]};this.state={time:0,walkDirty:false,buildings:[],excavations:[]};this.walk=new Uint8Array(n*n);this.heightCalls=0;for(let z=0;z<n;z++)for(let x=0;x<n;x++){const at=z*n+x,h=(x>n*.45&&x<n*.55)?-2:(z>n*.8?8:3);this.world.heights[at]=h;this.walk[at]=h>.52?1:0;}}
  index(x,z){const n=this.width,s=this.world.size;return Math.max(0,Math.min(n-1,Math.floor((z+s/2)/s*n)))*n+Math.max(0,Math.min(n-1,Math.floor((x+s/2)/s*n)));}
  height(x,z){this.heightCalls++;return this.world.heights[this.index(x,z)]-(this.state.excavations.length&&Math.abs(x)<8&&Math.abs(z)<8?4:0);}

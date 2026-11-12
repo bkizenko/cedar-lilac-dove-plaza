@@ -122,7 +122,7 @@ export function dispatchExistingCampRaid(g:Game){
     sent.push(u);
    }
    if(!sent.length)continue;
-   for(const u of sent)if(u.seaRaid?.plan)u.seaRaid.plan.initialBand=sent.length;
+   for(const u of sent)if(u.seaRaid?.plan){u.seaRaid.plan.initialBand=sent.length;if(sent.length>1)u.seaRaid.plan.objectiveBandId=sent[0].seaRaid!.plan!.bandId;}
    const ready=raidReadiness(g);g.state.raidWave++;
    g.state.raidCampaign={active:true,adults:ready.adults,buildings:ready.buildings,loss:0,
     people:g.state.units.filter(p=>p.team===0&&p.hp>0&&!isDependent(g,p)).map(p=>p.id),
@@ -339,7 +339,7 @@ export function seaRaidAI(g:Game,u:Unit,dt:number){
    if(!stolenMarkRoom(g,u)){u.workReason="Waiting for stolen cargo provenance capacity";return true;}
    if(g.attackDistance(u,ruin)>u.r+1.8){u.tx=ruin.x;u.tz=ruin.z;g.steer(u,dt);return true;}
    const kind=(['food','wood','stone','copper','iron'] as const).find(k=>(ruin.raidLoot![k]||0)>0)!;
-   const amount=Math.min(raid.plan?8:12,ruin.raidLoot![kind]!);if(raid.plan)raid.plan.metrics.lootTaken+=amount;ruin.raidLoot![kind]!-=amount;u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;markStolenLoad(g,u,ruin.team,raid.plan?.bandId);noteRaidCarried(g,u,ruin.team,kind,amount);raid.phase='retreat';return true;
+   const amount=Math.min(raid.plan?8:12,ruin.raidLoot![kind]!);if(raid.plan)raid.plan.metrics.lootTaken+=amount;ruin.raidLoot![kind]!-=amount;u.carry=amount;u.carryType=kind;u.carryFood=kind==='food'?'provisions':undefined;markStolenLoad(g,u,ruin.team,raid.plan?.objectiveBandId??raid.plan?.bandId);noteRaidCarried(g,u,ruin.team,kind,amount);raid.phase='retreat';return true;
   }
  }
  if(g.state.time>=raid.thinkAt){
