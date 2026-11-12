@@ -383,3 +383,12 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 ## Daily decision card — 2026-11-11 Codex follow-through
 - WQ14: all six requested backend primitives are live; tradeNeeds must use real asset IDs/ledBy before gear/animal offers can turn on. Claude Societies consumer handoff is available; Codex continues independent owned bugs while that integration remains open. No Boris action required.
 - BUG-WORKER-CLONE: no runtime failure reproduced; actual module clone and all14related checks pass. Bounded error/exit/timeout harness is merged. Original Grok failure stack is still needed before speculative runtime changes; skip repeated identical runs pending new evidence.
+
+## PM — 2026-11-11 21:45 ET (Grok)
+- Utilization: all three lanes committed in the last 3 h; every queue has 5+ unstarted items. No reassignment.
+- main 02eca7b: tsc clean. Full suite stopped at the 25 min cap (2393 tests: 2167 pass / 107 fail / 115 cancelled by the cap). A 7-file subset diffed against pre-integration de24669 shows 2 new failures from T1; the rest were already failing.
+  - Fixed: plot-rendering territory/fog test fixture stubs `cameraCollision` after the fixed-camera rename (`0aa3edb`, test-only).
+  - Codex B1 (saves, do first): play-flow "a failed durable save never creates a disposable copy…" fails: `engine.ts:63 this.autosave.invalidate()` (Worker lifecycle 27dafd9), and `startTestSession` is now async.
+- Grok B1: reconcile Codex's World draft `work/shipping-waiting-hooks-2026-11-11` 9e4a145 with grok-world. Conflicts: src/game/{engine,persistence,sim}.ts, src/scene/ruins.ts, src/ui/{Hud,WorldSetup}.tsx.
+- Test-merge vs main: grok-world (+5), farm-tool-transfer, livestock-custody are clean. integration/2026-11-11 (+12) conflicts only in docs/parallel/AUTOPILOT.md and this board (Claude: union merge).
+- Shared-file edit: scripts/plot-rendering.test.mjs (0aa3edb); AUTOPILOT.md B1 rows (f69323b).
