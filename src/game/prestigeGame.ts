@@ -48,9 +48,9 @@ export function prestigeTerritoryProgress(g:Game){
 }
 /** Simulation cadence only. One shared budget covers setup indexing AND physical
  * land sampling. Uses painted ownership and explored cells, never paints land. */
-export function tickPrestigeEvidence(g:Game){
+export function tickPrestigeEvidence(g:Game,territoryReady=true){
  let c=caches.get(g);if(!c||c.state!==g.state||c.world!==g.world||c.territory!==g.territory||c.size!==g.world.size){c={state:g.state,world:g.world,territory:g.territory,size:g.world.size,nextReview:g.state.time};caches.set(g,c);}
- if(!c.job&&g.state.time>=c.nextReview)c.job=beginLand(g);
+ if(!c.job&&g.state.time>=c.nextReview){if(!territoryReady){c.lastWork=0;return;}c.job=beginLand(g);}
  c.lastWork=0;const job=c.job;if(!job)return;job.lastWork=0;
  while(job.lastWork<PRESTIGE_GAME_RULES.cellsPerTick){
   if(job.phase==='land'){
@@ -110,7 +110,7 @@ function rivalObservation(g:Game,viewer:number,subject:number,source=g.state.str
 export function gamePrestigeView(g:Game,viewer=0,subject=0):GamePrestigeView{
  if(viewer!==0||subject!==0)return reportedPrestigeView(g,viewer,subject);
  const c=caches.get(g),valid=c?.state===g.state&&c.world===g.world&&c.territory===g.territory&&c.size===g.world.size;
- return{...ownPrestigeView(0,collectOwnPrestige(g)),communityName:g.tribe(0).name,territoryMeasuredAt:valid?c.land?.measuredAt??null:null,territoryUpdating:valid?!!c.job:true};
+ return{...ownPrestigeView(0,collectOwnPrestige(g)),communityName:g.tribe(0).name,territoryMeasuredAt:valid?c.land?.measuredAt??null:null,territoryUpdating:valid?!!c.job||!c.land||g.state.time>=c.nextReview:true};
 }
 
 function reportedPrestigeView(g:Game,viewer:number,subject:number,source?:NonNullable<Game['state']['structureReports']>):GamePrestigeView{

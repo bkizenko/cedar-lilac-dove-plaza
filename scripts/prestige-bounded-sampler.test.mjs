@@ -49,3 +49,7 @@ test('availability and stale refresh are explicit; state/world/grid replacements
 test('foreign, contested, submerged and steep cells never earn useful-land or node bonuses',()=>{
  const {g}=fixture(2);g.territory.set([1,254,0,0]);g.height=(x,z)=>z>0?(x<0?-2:2+Math.abs(x)*2):2;g.state.iron=[{x:-25,z:-25,amount:1},{x:25,z:-25,amount:1},{x:-25,z:25,amount:1},{x:25,z:25,amount:1}];finish(g);assert.equal(facts(g).usableArea,0);assert.equal(facts(g).resourcesAndChokepoints,0);
 });
+
+test('unfinished influence paint remains unavailable rather than publishing a false measured zero',()=>{
+ const {g,counts}=fixture();tickPrestigeEvidence(g,false);const p=prestigeTerritoryProgress(g);assert.equal(p.available,false);assert.equal(p.totalWork,0);assert.equal(counts.height,0);assert.equal(facts(g).usableArea,undefined);finish(g);assert.equal(facts(g).usableArea,10000);
+});
