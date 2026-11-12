@@ -11,7 +11,7 @@ import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from '.
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
 import {combatMusicMood} from './combatMusic';
-import {gamePrestigeView,tickPrestigeEvidence} from './prestigeGame';
+import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
 import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
 import{hasConstructionWork}from'./constructionTargets';
@@ -6324,7 +6324,7 @@ export class Game {
       })),
       prestige: Math.round(prestigeView.total??0),
       prestigeBreakdown: prestigeView,
-      prestigeRivals: this.state.tribes.filter(tr=>tr.id!==0&&tr.id!==3).map(tr=>this.prestigeBreakdown(0,tr.id)),
+      prestigeRivals: gamePrestigeRivals(this),
       stockCap: this.stockCap(0),
       port: this.hasBld(0, "dock"),
       night: this.isNight(),

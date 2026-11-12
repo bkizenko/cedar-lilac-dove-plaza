@@ -58,9 +58,9 @@ export function collectOwnPrestige(g:Game):PrestigeFacts{
 }
 /** Public retained reports only; no live foreign entity/stock lookup. Report
  * custody honors actual community handover without silently revealing originals. */
-function rivalObservation(g:Game,viewer:number,subject:number):PrestigeObservation[]{
+function rivalObservation(g:Game,viewer:number,subject:number,source=g.state.structureReports||[]):PrestigeObservation[]{
  const reports=new Map<number,NonNullable<Game['state']['structureReports']>[number]>();
- for(const p of g.state.structureReports||[])if(informationOwner(p,p.observer)===viewer&&p.site.team===subject&&p.active&&p.observedAt<=g.state.time&&p.observedAt>=0&&p.site.hp>0){const old=reports.get(p.site.id);if(!old||old.observedAt<p.observedAt)reports.set(p.site.id,p);}
+ for(const p of source)if(informationOwner(p,p.observer)===viewer&&p.site.team===subject&&p.active&&p.observedAt<=g.state.time&&p.observedAt>=0&&p.site.hp>0){const old=reports.get(p.site.id);if(!old||old.observedAt<p.observedAt)reports.set(p.site.id,p);}
  const ownedReports=[...reports.values()];if(!ownedReports.length)return[];
  const groups=new Map<string,number[]>();for(const p of ownedReports){const weight=CIVIC_PRESTIGE_RULES.landmarkValue[p.site.type as keyof typeof CIVIC_PRESTIGE_RULES.landmarkValue];if(!weight)continue;const values=groups.get(p.site.type)||[];values.push(weight*clamp(p.site.hp/Math.max(1,p.site.maxHp)));groups.set(p.site.type,values);}
  // A non-landmark report establishes contact, not zero foreign civic works.
@@ -68,7 +68,18 @@ function rivalObservation(g:Game,viewer:number,subject:number):PrestigeObservati
  return[{observer:viewer,subject,observedAt:Math.min(...ownedReports.map(p=>p.observedAt)),components}];
 }
 export function gamePrestigeView(g:Game,viewer=0,subject=0):GamePrestigeView{
- if(viewer!==0||subject!==0){const view=observedPrestigeView(viewer,subject,g.state.time,rivalObservation(g,viewer,subject));return{...view,...(view.knowledge==='observed'?{communityName:g.tribe(subject)?.name}:{}),territoryMeasuredAt:null,territoryUpdating:false};}
+ if(viewer!==0||subject!==0)return reportedPrestigeView(g,viewer,subject);
  const c=caches.get(g),valid=c?.state===g.state&&c.world===g.world;
  return{...ownPrestigeView(0,collectOwnPrestige(g)),communityName:g.tribe(0).name,territoryMeasuredAt:valid?c.land?.measuredAt??null:null,territoryUpdating:valid?!!c.job:true};
+}
+
+function reportedPrestigeView(g:Game,viewer:number,subject:number,source?:NonNullable<Game['state']['structureReports']>):GamePrestigeView{
+ const view=observedPrestigeView(viewer,subject,g.state.time,rivalObservation(g,viewer,subject,source));
+ return{...view,...(view.knowledge==='observed'?{communityName:g.tribe(subject)?.name}:{}),territoryMeasuredAt:null,territoryUpdating:false};
+}
+/** One pass over retained reports for the whole HUD, not one per rival. */
+export function gamePrestigeRivals(g:Game,viewer=0){
+ const bySubject=new Map<number,NonNullable<Game['state']['structureReports']>>();
+ for(const report of g.state.structureReports||[]){if(informationOwner(report,report.observer)!==viewer)continue;const list=bySubject.get(report.site.team)||[];list.push(report);bySubject.set(report.site.team,list);}
+ return g.state.tribes.filter(t=>t.id!==viewer&&t.id!==3).map(t=>reportedPrestigeView(g,viewer,t.id,bySubject.get(t.id)||[]));
 }

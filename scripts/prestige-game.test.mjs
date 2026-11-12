@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
-import {collectOwnPrestige,gamePrestigeView,tickPrestigeEvidence,PRESTIGE_GAME_RULES} from '../src/game/prestigeGame.ts';
+import {collectOwnPrestige,gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence,PRESTIGE_GAME_RULES} from '../src/game/prestigeGame.ts';
 import {scorePrestige} from '../src/game/prestigeScore.ts';
 import {readyFoodStock} from '../src/game/pantry.ts';
 import {foodDemand} from '../src/game/settlement.ts';
@@ -51,4 +51,9 @@ test('real boat-practice delivery evidence earns distinct methods while built hu
 
 test('food security days match the actual simulation clock rather than a second invented calendar',()=>{
  const g=fixture(),day=PRESTIGE_GAME_RULES.calendarDaySeconds;g.state.time=0;const start=g.clockState().day;g.state.time=day;assert.equal(g.clockState().day,start+1);g.state.time=day*32;assert.equal(g.clockState().day,start+32);assert.equal(day,56.25);
+});
+
+test('HUD rival facts traverse retained reports once for all subjects and match separate authorized queries',()=>{
+ const g=fixture();let iterations=0;g.state.structureReports=new Proxy([],{get(target,key,receiver){if(key===Symbol.iterator)iterations++;return Reflect.get(target,key,receiver);}});
+ const views=gamePrestigeRivals(g);assert.equal(iterations,1);for(const v of views)assert.deepEqual(v,gamePrestigeView(g,0,v.subject));
 });
