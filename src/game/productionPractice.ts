@@ -1,4 +1,5 @@
 import type {Game} from './sim';
+import {capturedMethodSourcesForPerson,type CapturedMethodSource} from './capturedKnowledge';
 import{handedOver}from'./communityHandoverValidation';
 import type {GameState,Unit} from './types';
 import {PRODUCTION_RECIPES,productionFoodOutput,type ProductionRecipe,type ProductionProject,type ItemStock} from './production';
@@ -7,11 +8,19 @@ import {isDependent} from './settlement';
 import {workRuntime} from './workRuntime';
 
 export const PRODUCTION_PRACTICE_RULES={mentorSuccessfulBatches:3,ownRatePerBatch:.025,taughtRatePerBatch:.0125,maximumRateBonus:.2,minimumContributionFraction:.25,observationFraction:.5,maximumObservationSeconds:30,maximumContributors:32} as const;
-export type ProductionSkill={successfulBatches:number;taughtBatches:number;observedSeconds:number;lastTaughtAt?:number;lastTeacherId?:number};
+export type ProductionSkill={successfulBatches:number;taughtBatches:number;observedSeconds:number;lastTaughtAt?:number;lastTeacherId?:number;methodSources?:CapturedMethodSource[]};
 export type ProductionDemonstration={batches:number;failedBatches:number;usefulOutputs:number;firstAt:number;lastAt:number;lastSuccessfulAt?:number;lastFailedAt?:number;makers:number[]};
 export type ProductionApprentice={version:1;projectId:number;teacherId:number;workplace:number;recipe:ProductionRecipe;phase:'traveling'|'watching'|'waiting'|'paused';observedSeconds:number;lastProgress:number;started:number};
 const validRecipe=(r:string):r is ProductionRecipe=>Object.hasOwn(PRODUCTION_RECIPES,r);
 const active=(p:ProductionProject)=>!['complete','lost'].includes(p.phase);
+const freeWorker=(g:Game,u:Unit)=>u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&u.enslavedFrom===undefined&&!isDependent(g,u);
+const methodSourceKey=(source:CapturedMethodSource)=>`${source.originMakerId}:${source.sourceTeam}:${source.capturedAt}:${source.integratedAt}`;
+/** A source follows an actually delivered lesson, never custody or ownership alone. */
+function retainMethodSources(skill:ProductionSkill,sources:CapturedMethodSource[],at:number){
+ if(!sources.length)return;const bySource=new Map((skill.methodSources||[]).map(source=>[methodSourceKey(source),{...source}]));
+ for(const source of sources)bySource.set(methodSourceKey(source),{...source,learnedAt:at});
+ skill.methodSources=[...bySource.values()].sort((a,b)=>b.learnedAt-a.learnedAt||a.originMakerId-b.originMakerId||a.sourceTeam-b.sourceTeam||a.capturedAt-b.capturedAt||a.integratedAt-b.integratedAt).slice(0,8);
+}
 export function productionPracticeRate(u:Unit,recipe:string){
  if(!validRecipe(recipe))return 1;const skill=u.productionSkills?.[recipe];
  return 1+Math.min(PRODUCTION_PRACTICE_RULES.maximumRateBonus,(skill?.successfulBatches||0)*PRODUCTION_PRACTICE_RULES.ownRatePerBatch+(skill?.taughtBatches||0)*PRODUCTION_PRACTICE_RULES.taughtRatePerBatch);
@@ -34,17 +43,17 @@ export function recordProductionPractice(g:Game,project:ProductionProject,_carri
  t.productionPractice??={};let history=t.productionPractice[p.recipe];if(!history)history=t.productionPractice[p.recipe]={batches:0,failedBatches:0,usefulOutputs:0,firstAt:g.state.time,lastAt:g.state.time,makers:[]};
  history.lastAt=g.state.time;if(useful>0){history.batches++;history.usefulOutputs+=useful;history.lastSuccessfulAt=g.state.time;}else{history.failedBatches++;history.lastFailedAt=g.state.time;}
  const makers=(p.practiceWorkers||[]).filter(w=>w.work+1e-8>=r.workSeconds*PRODUCTION_PRACTICE_RULES.minimumContributionFraction);
- for(const maker of makers){if(!history.makers.includes(maker.id)&&history.makers.length<16)history.makers.push(maker.id);const u=g.state.units.find(u=>u.id===maker.id&&u.team===p.team&&u.hp>0);if(!u||!useful)continue;u.productionSkills??={};const skill=u.productionSkills[p.recipe]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};skill.successfulBatches++;}
- for(const u of g.state.units){const w=u.productionApprentice;if(!w||w.projectId!==p.id)continue;const qualified=useful>0&&u.hp>0&&u.team===p.team&&w.phase!=='paused'&&makers.some(m=>m.id===w.teacherId)&&w.observedSeconds+1e-8>=observationRequired(p.recipe);
-  if(qualified){u.productionSkills??={};const skill=u.productionSkills[p.recipe]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};skill.taughtBatches++;skill.observedSeconds+=w.observedSeconds;skill.lastTaughtAt=g.state.time;skill.lastTeacherId=w.teacherId;}
+ for(const maker of makers){if(!history.makers.includes(maker.id)&&history.makers.length<16)history.makers.push(maker.id);const u=g.state.units.find(u=>u.id===maker.id&&u.team===p.team&&freeWorker(g,u));if(!u||!useful)continue;u.productionSkills??={};const skill=u.productionSkills[p.recipe]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};skill.successfulBatches++;}
+ for(const u of g.state.units){const w=u.productionApprentice;if(!w||w.projectId!==p.id)continue;const teacher=g.state.units.find(person=>person.id===w.teacherId&&person.team===p.team&&freeWorker(g,person)),qualified=useful>0&&freeWorker(g,u)&&u.team===p.team&&!!teacher&&w.phase!=='paused'&&makers.some(m=>m.id===w.teacherId)&&w.observedSeconds+1e-8>=observationRequired(p.recipe);
+  if(qualified){u.productionSkills??={};const skill=u.productionSkills[p.recipe]??={successfulBatches:0,taughtBatches:0,observedSeconds:0};skill.taughtBatches++;skill.observedSeconds+=w.observedSeconds;skill.lastTaughtAt=g.state.time;skill.lastTeacherId=w.teacherId;retainMethodSources(skill,capturedMethodSourcesForPerson(g.state,teacher!,p.recipe).filter(source=>source.learnedAt<=w.started),g.state.time);}
   finishLesson(g,u,qualified?`Learned ${r.name.toLowerCase()} from actual observed work and delivered output`:'The batch did not complete a demonstrated lesson',qualified);
  }
 }
 export const observationRequired=(recipe:ProductionRecipe)=>Math.min(PRODUCTION_PRACTICE_RULES.maximumObservationSeconds,PRODUCTION_RECIPES[recipe].workSeconds*PRODUCTION_PRACTICE_RULES.observationFraction);
-function learnerAvailable(g:Game,u:Unit){return u.team===0&&u.hp>0&&u.type==='worker'&&!u.prisoner&&!u.militia&&!isDependent(g,u)&&!u.emergency&&!u.recalled&&!u.resting&&!u.shelterId&&!u.buildOrder&&!u.boat&&!u.scout&&!u.envoy&&!u.visit&&!u.expedition&&!u.foundingJourney&&!u.tributeJourney&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u)&&['idle','hold','gather'].includes(u.order);}
+function learnerAvailable(g:Game,u:Unit){return u.team===0&&freeWorker(g,u)&&!u.emergency&&!u.recalled&&!u.resting&&!u.shelterId&&!u.buildOrder&&!u.boat&&!u.scout&&!u.envoy&&!u.visit&&!u.expedition&&!u.foundingJourney&&!u.tributeJourney&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u)&&['idle','hold','gather'].includes(u.order);}
 export function productionLessonIssue(g:Game,projectId:number){
  const p=g.state.production?.projects.find(p=>p.id===projectId&&p.team===0);if(!p||p.phase!=='working'||p.actorId===null)return 'Choose a batch with an adult currently doing hands-on work';
- const teacher=g.state.units.find(u=>u.id===p.actorId&&u.hp>0),site=g.state.buildings.find(b=>b.id===p.workplace&&g.finished(b)&&b.team===0);
+ const teacher=g.state.units.find(u=>u.id===p.actorId&&u.team===p.team&&freeWorker(g,u)),site=g.state.buildings.find(b=>b.id===p.workplace&&g.finished(b)&&b.team===0);
  if(!teacher||!site)return 'The working teacher and original workplace must remain available';
  if((teacher.productionSkills?.[p.recipe]?.successfulBatches||0)<PRODUCTION_PRACTICE_RULES.mentorSuccessfulBatches)return `This maker needs ${PRODUCTION_PRACTICE_RULES.mentorSuccessfulBatches} actually successful batches of this exact method before mentoring`;
  if(g.state.units.some(u=>u.hp>0&&u.productionApprentice?.projectId===p.id&&!['waiting','paused'].includes(u.productionApprentice.phase)))return 'One learner is already watching this batch';
@@ -57,9 +66,9 @@ export function beginProductionLesson(g:Game,projectId:number){const issue=produ
  if(!claim(g,u,w))return{accepted:false,reason:'The learner already owns another reserved activity'};u.productionApprentice=w;u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);return{accepted:true,reason:`${u.name||'One resident'} is walking to learn alongside ${teacher.name||'the maker'}; useful output must actually be delivered`};
 }
 export function pauseProductionLesson(g:Game,u:Unit){const w=u.productionApprentice;if(!w||w.phase==='waiting')return false;release(g,u);w.phase='paused';return true;}
-export function resumeProductionLesson(g:Game,unitId:number){const u=g.state.units.find(u=>u.id===unitId&&u.team===0),w=u?.productionApprentice;if(!u||!w||w.phase!=='paused')return{accepted:false,reason:'No paused lesson belongs to this resident'};const p=g.state.production?.projects.find(p=>p.id===w.projectId&&active(p));if(!p||p.team!==u.team||!g.state.units.some(teacher=>teacher.id===w.teacherId&&teacher.hp>0&&teacher.team===u.team)||!g.state.buildings.some(site=>site.id===w.workplace&&site.team===u.team&&g.finished(site))||!learnerAvailable(g,u))return{accepted:false,reason:'Finish current work; the original paid batch must still be active'};if(!claim(g,u,w))return{accepted:false,reason:'The learner already owns active work'};w.phase='traveling';w.lastProgress=p.progress;u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);return{accepted:true,reason:'The same lesson resumed without granting knowledge or buying another batch'};}
-export function productionApprenticeAI(g:Game,u:Unit,dt:number){const w=u.productionApprentice;if(!w||w.phase==='paused'||w.phase==='waiting')return false;const p=g.state.production?.projects.find(p=>p.id===w.projectId),teacher=g.state.units.find(actor=>actor.id===w.teacherId&&actor.hp>0&&actor.team===u.team),site=g.state.buildings.find(b=>b.id===w.workplace&&g.finished(b)&&b.team===u.team);
- if(!p||!active(p)){finishLesson(g,u,'The original batch is no longer available');return false;}if(p.team!==u.team||!teacher||!site){pauseProductionLesson(g,u);u.workReason='Lesson paused; teacher, paid batch and workplace must share ownership';return false;}
+export function resumeProductionLesson(g:Game,unitId:number){const u=g.state.units.find(u=>u.id===unitId&&u.team===0),w=u?.productionApprentice;if(!u||!w||w.phase!=='paused')return{accepted:false,reason:'No paused lesson belongs to this resident'};const p=g.state.production?.projects.find(p=>p.id===w.projectId&&active(p));if(!p||p.team!==u.team||!g.state.units.some(teacher=>teacher.id===w.teacherId&&teacher.team===u.team&&freeWorker(g,teacher))||!g.state.buildings.some(site=>site.id===w.workplace&&site.team===u.team&&g.finished(site))||!learnerAvailable(g,u))return{accepted:false,reason:'Finish current work; the original paid batch must still be active'};if(!claim(g,u,w))return{accepted:false,reason:'The learner already owns active work'};w.phase='traveling';w.lastProgress=p.progress;u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);return{accepted:true,reason:'The same lesson resumed without granting knowledge or buying another batch'};}
+export function productionApprenticeAI(g:Game,u:Unit,dt:number){const w=u.productionApprentice;if(!w||w.phase==='paused'||w.phase==='waiting')return false;const p=g.state.production?.projects.find(p=>p.id===w.projectId),teacher=g.state.units.find(actor=>actor.id===w.teacherId&&actor.team===u.team&&freeWorker(g,actor)),site=g.state.buildings.find(b=>b.id===w.workplace&&g.finished(b)&&b.team===u.team);
+ if(!p||!active(p)){finishLesson(g,u,'The original batch is no longer available');return false;}if(p.team!==u.team||!freeWorker(g,u)||!teacher||!site){pauseProductionLesson(g,u);u.workReason='Lesson paused; teacher, paid batch and workplace must share ownership';return false;}
  if(!claim(g,u,w)){u.workReason='Lesson waiting for shared actor ownership';return true;}
  u.order='hold';const spot=g.interactionSpot(u,site);if(!spot){u.workReason='No reachable position to observe the working site';return true;}u.tx=spot.x;u.tz=spot.z;
  if(!g.buildingWorkReached(u,site)){w.phase='traveling';w.lastProgress=p.progress;u.workReason='Walking to observe the actual working maker';g.steer(u,dt);return true;}
