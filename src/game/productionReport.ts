@@ -1,6 +1,6 @@
 import{rawCerealField,CEREAL_RULES}from'./cerealRules';
 import {fieldTerrain} from './fieldTerrain';
-import {plotArea} from './plots';
+import {plotArea,fieldCrewSlots} from './plots';
 import type {Game} from './sim';
 import type {Building} from './types';
 import {calendar,farmHarvestEstimate} from './settlement';
@@ -28,7 +28,7 @@ export function fieldProductionReport(g:Game,b:Building){
     projected:harvest*edible,
     potential:potential*edible,
     workSeconds:fallow?0:Math.ceil(work*plotArea(b)),
-    workerSlots:Math.min(12,Math.ceil(3*plotArea(b))),
+    workerSlots:fieldCrewSlots(b),
   };
 }
 

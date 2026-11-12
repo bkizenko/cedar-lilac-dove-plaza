@@ -11,7 +11,8 @@ import {beginRendererFrame,rendererFrameMetrics,type RendererFrameMetrics} from 
 import{HullFleet}from'./hullFleet';
 import {hasBuildingCraftsmanship,buildingCraftsmanship,makeCraftsmanshipAttribute,bindCraftsmanship} from './buildingCraftsmanship';
 import {disposeBuildingSurfaceTextures} from './buildingSurfaces';
-import {TerrainCameraClearance,type CameraGround} from './cameraClearance';
+import type {CameraGround} from './cameraClearance';
+import {FixedOrbitCameraCollision} from './fixedOrbitCollision';
 import {survivalFireActive} from '@/game/survivalNeeds';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
@@ -181,7 +182,7 @@ export class WorldView {
   look = new THREE.Vector3(0, 1.2, 0);
   private cameraGround:CameraGround|null=null;
   private cameraGroundRevision:(()=>number)|null=null;
-  private cameraClearance=new TerrainCameraClearance();
+  private cameraCollision=new FixedOrbitCameraCollision();
   yaw = 1.12;
   pitch = 0.38;
   dist = 58;
@@ -578,7 +579,7 @@ export class WorldView {
     this.buildTerrain(game);
     if(game.world.landContinuation&&this.terrainSurface)this.landContinuation=new LandContinuation(this.scene,game,this.terrainSurface,this.mats.ground as THREE.MeshStandardMaterial);
     this.cameraGround={size:game.world.size,height:(x,z)=>Math.max(game.height(x,z),game.waterAt(x,z))};
-    this.cameraGroundRevision=()=>game.navigationRevision();this.cameraClearance.invalidate();
+    this.cameraGroundRevision=()=>game.navigationRevision();this.cameraCollision.invalidate();
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size,this.terrainSurface?.banks,this.terrainSurface?.bankCuts);
     if(game.world.bankTerrain&&this.terrain){this.bankLayer=new BankTerrainLayer(this.terrain,game,geometry=>{if(game.world.ecology){const a=biomeSurfaceAttributes(game.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}});this.scene.add(this.bankLayer.mesh);}
     if(game.state.excavations?.length)this.ensureExcavationLayer(game);
@@ -1061,8 +1062,10 @@ export class WorldView {
       this.look.z + Math.cos(this.yaw) * Math.cos(this.pitch) * this.dist,
     );
     if(this.cameraGround){
-      const clear=this.cameraClearance.resolve(this.cameraGround,this.look,this.tmpCam,this.cameraGroundRevision?.()??0,dt);
-      this.look.y=clear.focusY;this.tmpCam.set(clear.x,clear.y,clear.z);
+      this.cameraCollision??=new FixedOrbitCameraCollision();
+      const collision=this.cameraCollision.resolve(this.cameraGround,{x:this.look.x,z:this.look.z,distance:this.dist,yaw:this.yaw,pitch:this.pitch},this.cameraGroundRevision?.()??0);
+      if(!collision.pose)return;
+      const safe=collision.pose;this.look.set(safe.x,safe.focusY,safe.z);this.dist=safe.distance;this.yaw=safe.yaw;this.pitch=safe.pitch;this.tmpCam.set(safe.eye.x,safe.eye.y,safe.eye.z);
     }
     this.camera.position.copy(this.tmpCam);
     this.camera.lookAt(this.look.x, this.look.y + 1.2, this.look.z);

@@ -167,15 +167,8 @@ export function buildingGeos(): Record<BldType, BldGeo> {
   }
   soil.setAttribute('color', new THREE.Float32BufferAttribute(soilColors, 3));
   const farmTimber = [soil];
-  // Short boundary stakes avoid the appearance of a raised livestock pen.
-  for (const x of [-3.6, 3.6]) for (const z of [-3.6, 0, 3.6]) {
-    const stake = box(.09, .42, .09, x, .02, z);
-    const colors = new Float32Array(stake.attributes.position.count * 3);
-    const c = new THREE.Color('#96744c');
-    for (let i = 0; i < colors.length; i += 3) colors.set([c.r,c.g,c.b], i);
-    stake.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    farmTimber.push(stake);
-  }
+  // Only the ground surface stretches to plot dimensions. Decorative stakes
+  // merged here would turn into metre-wide posts on a large cultivated field.
   const farmExtra: THREE.BufferGeometry[] = [];
   for (let row = 0; row < 5; row++) for (let stalk = 0; stalk < 6; stalk++) {
     const x = -2.5 + row * 1.25 + .09 * Math.sin(stalk * 2 + row);

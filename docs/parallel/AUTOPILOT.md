@@ -745,7 +745,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | ARMOR-A4 | incentive | Readable equipment UI and visible torso/helmet/shield geometry | Codex | Codex W6 | not started | Codex drives including UI; Claude reviews look |
 | ARMOR-HIDE-SHIELD-HELM | incentive | Hide armor, shields, helmets after their inputs exist | Codex | Codex W6 | not started | metal helmets after Codex W4 |
 | CANAL-BREACH-FIX | incentive | Merge-induced canal-breach test failure on integration cbffbc8 | Grok | Grok T1 | not started | scripts/canal-breach.test.mjs: breach.length actual 8 expected 9 |
-| CURD-UI-CONFLICT | incentive | Worker vs curd conflicts in CraftSiteQueue.tsx and ProductionControls.tsx | Claude | Claude T1 | not started | keep both behaviors; not the stale 58e57f6 tip |
+| CURD-UI-CONFLICT | incentive | Worker vs curd conflicts in CraftSiteQueue.tsx and ProductionControls.tsx | Claude | Claude T1 | done: merged on integration/2026-11-11 64f1af0 | curd + async dispatch both kept; tsc 0 new real errors; curd/dairy/canal-breach/rulers 45/45; UI worker tests need real deps (native check by Codex) |
 | CURRENT-POWER-HOOK | incentive | currentPowerKw drives mill rates | Grok | Grok T4 | source-pushed-not-live | query exists in riverCurrents.ts; not hooked to recipes |
 | DRIFT-AT-HOOK | incentive | driftAt applies to boats | Grok | Grok T7 | source-pushed-not-live |  |
 | ERA-DEFAULT-FIXED | incentive | Flip DEFAULT_ERA_MODE to fixed | Claude | Claude T3 | not started | decided 11 Nov 18:08 ET |
@@ -791,14 +791,14 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | INC-WILD-DOMESTIC | incentive | Find, capture, tame, drive, house wild animals; pen area sets capacity | Codex | Codex W1 | source-pushed-not-live | sheep/goats partial; broader species open |
 | INC-WILDFIRE | incentive | Player and rival fires/disasters with causes, mitigation, recoverable loss | Grok | Grok W7 | not started | wildfire/flood; building fire is INC-BUILDING-FIRE |
 | INC-WONDERS | incentive | Six wonder grammars as seeded 3D paid construction with function/prestige | Claude | Claude W1 | source-pushed-not-live | wonderKit 9992fe9; earthworks labour is Grok W15 |
-| PR-1-INTEGRATION | incentive | Normal-merge PR #1: World W7, Societies, Experience, clean Codex branches | Codex | Codex T1 | not started | https://github.com/bkizenko/cedar-lilac-dove-plaza/pull/1 head cbffbc8; after Claude T1–T2 |
+| PR-1-INTEGRATION | incentive | Normal-merge PR #1: World W7, Societies, Experience, clean Codex branches | Codex | Codex T1 | done/live | Normal whole-branch merges landed339d9b8; release2026-11-12T01-58-40-150Z-339d9b8 on8086/8101;24/24focused+1/1built native53save/queue/restore;tsc+buildPASS; no gate credit |
 | SCENIC-START-HOOK | incentive | scenicStartReport feeds new-game town-hall pick | Grok | Grok T7 | source-pushed-not-live | 59f0e24 |
 | SIEGE-S1 | incentive | Staffed timber ram: paid build, crew, reachable gate/wall, recovery | Claude | Claude W2 | source-pushed-not-live | rivalSiege.ts 0d1713a |
 | SIEGE-S2 | incentive | Projectile siege engine: ammo, crew, reload, range, collision | Claude | Claude N3 | not started | after S1 is live |
 | SIEGE-S3 | incentive | Societies choose siege from observed defenses; surrender/occupation alternatives | Claude | Claude W2 | source-pushed-not-live |  |
 | WONDER-EARTHWORKS | incentive | Wonder cuts as ordinary excavation labour | Grok | Grok W15 | source-pushed-not-live | wonderEarthworks.ts on agents/grok-world; wire into live wonder jobs |
 | CP-1 | completion-plan | Phase 1 Speed: profile hot paths, Worker, p95 <33ms Low @ 100 residents | Codex | Codex N3 | not started | Worker parked (C2); unpark after N3 |
-| CP-2 | completion-plan | Phase 2 Integrate behind switches: societies, experience, world, hooks | Codex | Codex T1 | not started | PR #1 is the vehicle |
+| CP-2 | completion-plan | Phase 2 Integrate behind switches: societies, experience, world, hooks | Codex | Codex T1 | live-partial | Whole Societies/Experience/World +curd landed/live339d9b8; remaining named hook rows stay open;25/25batch checks, tsc+buildPASS |
 | CP-3 | completion-plan | Phase 3 See the real game: desktop three.js screenshots vs concept art | Claude | Claude W1 | not started | Claude self-reviews against concept art; pre-approved |
 | CP-4 | completion-plan | Phase 4 Systems fill in parallel lanes | Grok | Grok L3 | not started | work is the three queues; Grok tracks fill as PM |
 | CP-5 | completion-plan | Phase 5 Visual overhaul: biomeTerrain, civ packs, wonderKit, postfx | Claude | Claude W1 | source-pushed-not-live |  |
@@ -853,6 +853,8 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | **Total** | **569** | 98 | 196 | 264 | 3 | 8 |
 
 Generated 11 November 2026, America/New_York, from origin/main `9bd490b` plus the cited agent-branch handoffs. This document does not change frozen 34/98 gate credit.
+| RULERS-LANE | societies | Rulers/dynasty/houses/ties/eras/glory/fame/unrest/civ+faith generator, pure modules (agents/claude-rulers) | Claude | Claude W2 | source-pushed-not-live | 25 tests incl. stylized-facts; sim hook + UI panels still to wire; family weight scales with population (see RULERS-FAMILY-SCALE) |
+| RULERS-FAMILY-SCALE | societies | Ruling family importance scales with population; every civ has a ruling house | Claude | Claude W2 | in progress | gate by tier+population |
 
 ## Roles update — 2026-11-11 20:51 ET (Boris)
 - **Grok = PM of everything.** Owns triage and coordination of all fixes, bugs and improvements across every lane. Grok files each bug or fix as an AUTOPILOT row with one owner, and fixes World/nav/placement/water bugs itself.

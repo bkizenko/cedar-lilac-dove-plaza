@@ -11,7 +11,7 @@ import {prisonerIndependentNeeds} from './captivity';
 import {reserveTreeWorker} from './workAllocation';
 import {rivalOperationIntent} from './rivalOperations';
 import {difficulty} from './difficulty';
-import {expansionCost,plotArea} from './plots';
+import {expansionCost,plotArea,fieldCrewSlots} from './plots';
 import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
 import {rivalWorkRangeContext,rivalMaterialPriority,rivalMaterialTargets,type RivalMaterialKind,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
@@ -328,7 +328,7 @@ export class WorkBoard {
           continue;
         }
         if (b.type === "farm" && farmAvailable(g, b))
-          add(b, "food", Math.min(12,Math.ceil(3*plotArea(b))), phase === 2 ? 500 : reserve<90 ? 100 : 210);
+          add(b, "food", fieldCrewSlots(b), phase === 2 ? 500 : reserve<90 ? 100 : 210);
         if (b.type === "dock" && fishingGrounds(g,b).length) add(b, "food", 2, foodUrgency+65);
         if(b.type==="quarry"&&quarryAvailable(g,b))add(b,"stone",2,Math.max(25,100-t.stone*.35));
         if (preservationAvailable(g, b)) add(b, "food", 1, phase === 2 ? 105 : 85);

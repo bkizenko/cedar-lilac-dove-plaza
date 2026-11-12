@@ -1,0 +1,3441 @@
+{
+  "baseline": "1a90ade plus approved rest/frontage changes; no NPC feature integration",
+  "scope": "Private authorized mature-village simulation only; source save unchanged and not published",
+  "privateInputSha256": "04c7ead2973223a52a6e6783c71bc7866cb890672b94aa6d2c1508c0d4e00347",
+  "qualification": {
+    "pairedProcesses": 12,
+    "comparisons": [
+      "placement",
+      "shore",
+      "search"
+    ],
+    "order": "A B B A per comparison; sequential fresh low-priority processes",
+    "warmUpdates": 20,
+    "measuredUpdates": 180,
+    "quantumSeconds": 0.03333333333333333,
+    "speed": 4,
+    "completeInitialEncodedStateSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+    "completeFinalEncodedStateSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+    "randomCallsDuringUpdates": 33475
+  },
+  "comparisons": {
+    "placement": {
+      "baseline": {
+        "meanMs": 33.14195745277775,
+        "pooledP95Ms": 48.32545899999968,
+        "maxMs": 136.1919170000001,
+        "step24MeanMs": 123.50620850000018,
+        "step85MeanMs": 118.91535449999992
+      },
+      "candidate": {
+        "meanMs": 32.44647220833334,
+        "pooledP95Ms": 47.881875000000036,
+        "maxMs": 121.66200000000026,
+        "step24MeanMs": 105.5708545,
+        "step85MeanMs": 113.13622900000018
+      },
+      "meanReductionPercent": 2.098503823847375,
+      "runs": [
+        {
+          "run": 0,
+          "decodeMs": 1703.486625,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 46.12047299999999,
+            "p50Ms": 31.095416999999998,
+            "p95Ms": 103.31145899999956,
+            "p99Ms": 216.61129200000005,
+            "maxMs": 216.61129200000005,
+            "over16_67ms": 20,
+            "over33_33ms": 8,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 33.06162895555549,
+            "p50Ms": 30.302208000000064,
+            "p95Ms": 47.177582999999686,
+            "p99Ms": 109.33420899999965,
+            "maxMs": 136.1919170000001,
+            "over16_67ms": 180,
+            "over33_33ms": 54,
+            "over50ms": 7,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 5951.386124999999,
+          "measuredCpuMs": 7578.079,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A1",
+          "variant": "baseline"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1630.188958,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 44.80468329999989,
+            "p50Ms": 30.38824999999997,
+            "p95Ms": 100.63333299999977,
+            "p99Ms": 218.91887500000007,
+            "maxMs": 218.91887500000007,
+            "over16_67ms": 20,
+            "over33_33ms": 7,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 32.268034927777805,
+            "p50Ms": 30.041041999999834,
+            "p95Ms": 47.41449999999986,
+            "p99Ms": 103.81841699999995,
+            "maxMs": 104.61045800000011,
+            "over16_67ms": 180,
+            "over33_33ms": 48,
+            "over50ms": 8,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 5808.5239169999995,
+          "measuredCpuMs": 7493.469,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B1",
+          "variant": "placement"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1640.3487499999999,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 45.13270215,
+            "p50Ms": 30.478500000000167,
+            "p95Ms": 99.77216700000008,
+            "p99Ms": 220.89350000000013,
+            "maxMs": 220.89350000000013,
+            "over16_67ms": 20,
+            "over33_33ms": 7,
+            "over50ms": 3,
+            "over100ms": 1
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 32.62490948888888,
+            "p50Ms": 30.27166699999998,
+            "p95Ms": 48.07537500000035,
+            "p99Ms": 107.32329200000004,
+            "maxMs": 121.66200000000026,
+            "over16_67ms": 180,
+            "over33_33ms": 55,
+            "over50ms": 7,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 5872.746208,
+          "measuredCpuMs": 7506.019,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B2",
+          "variant": "placement"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1622.7932500000002,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 46.18037105000003,
+            "p50Ms": 32.169958999999835,
+            "p95Ms": 105.58387499999981,
+            "p99Ms": 210.936334,
+            "maxMs": 210.936334,
+            "over16_67ms": 20,
+            "over33_33ms": 9,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 33.22228595000001,
+            "p50Ms": 30.746250000000146,
+            "p95Ms": 49.8529580000004,
+            "p99Ms": 110.82050000000027,
+            "maxMs": 128.4965000000002,
+            "over16_67ms": 180,
+            "over33_33ms": 56,
+            "over50ms": 9,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 5980.296875,
+          "measuredCpuMs": 7573.277,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A2",
+          "variant": "baseline"
+        }
+      ]
+    },
+    "shore": {
+      "baseline": {
+        "meanMs": 32.417869424999985,
+        "pooledP95Ms": 47.35158300000057,
+        "maxMs": 112.73933299999999,
+        "step24MeanMs": 110.03122899999994,
+        "step85MeanMs": 103.98079199999984
+      },
+      "candidate": {
+        "meanMs": 33.59517878888887,
+        "pooledP95Ms": 49.94225000000006,
+        "maxMs": 179.90737500000068,
+        "step24MeanMs": 95.82910399999992,
+        "step85MeanMs": 125.80745800000022
+      },
+      "meanReductionPercent": -3.6316679188699963,
+      "runs": [
+        {
+          "run": 0,
+          "decodeMs": 1685.510542,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 45.21473749999997,
+            "p50Ms": 31.672459000000345,
+            "p95Ms": 97.08183299999973,
+            "p99Ms": 219.5742499999999,
+            "maxMs": 219.5742499999999,
+            "over16_67ms": 20,
+            "over33_33ms": 8,
+            "over50ms": 3,
+            "over100ms": 1
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 32.52183698333335,
+            "p50Ms": 29.95874999999978,
+            "p95Ms": 47.53875000000062,
+            "p99Ms": 106.5350840000001,
+            "maxMs": 112.73933299999999,
+            "over16_67ms": 180,
+            "over33_33ms": 49,
+            "over50ms": 7,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 5854.214667,
+          "measuredCpuMs": 7443.276,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A1",
+          "variant": "baseline"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1625.6987089999998,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 46.68374159999994,
+            "p50Ms": 32.37183300000015,
+            "p95Ms": 104.14183299999968,
+            "p99Ms": 220.1466660000001,
+            "maxMs": 220.1466660000001,
+            "over16_67ms": 20,
+            "over33_33ms": 8,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 33.162171722222205,
+            "p50Ms": 30.683500000000095,
+            "p95Ms": 48.86775000000034,
+            "p99Ms": 97.00641700000006,
+            "maxMs": 123.0399580000003,
+            "over16_67ms": 180,
+            "over33_33ms": 55,
+            "over50ms": 8,
+            "over100ms": 1
+          },
+          "measuredWindowMs": 5969.448624999999,
+          "measuredCpuMs": 7537.571,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B1",
+          "variant": "shore"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1632.433584,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 46.132045899999966,
+            "p50Ms": 32.73204200000009,
+            "p95Ms": 104.22674999999981,
+            "p99Ms": 220.4827090000001,
+            "maxMs": 220.4827090000001,
+            "over16_67ms": 20,
+            "over33_33ms": 8,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 34.02818585555555,
+            "p50Ms": 30.72533299999941,
+            "p95Ms": 52.58066699999972,
+            "p99Ms": 128.57495800000015,
+            "maxMs": 179.90737500000068,
+            "over16_67ms": 180,
+            "over33_33ms": 62,
+            "over50ms": 10,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 6125.334333000001,
+          "measuredCpuMs": 7682.2,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B2",
+          "variant": "shore"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1663.3083749999998,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 45.93610420000001,
+            "p50Ms": 30.79879200000005,
+            "p95Ms": 103.075875,
+            "p99Ms": 216.73104200000012,
+            "maxMs": 216.73104200000012,
+            "over16_67ms": 20,
+            "over33_33ms": 8,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 32.31390186666661,
+            "p50Ms": 30.094334000000345,
+            "p95Ms": 46.35412499999984,
+            "p99Ms": 101.42649999999958,
+            "maxMs": 107.32312499999989,
+            "over16_67ms": 180,
+            "over33_33ms": 52,
+            "over50ms": 7,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 5816.7765,
+          "measuredCpuMs": 7385.632,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A2",
+          "variant": "baseline"
+        }
+      ]
+    },
+    "search": {
+      "baseline": {
+        "meanMs": 33.66401713611113,
+        "pooledP95Ms": 49.59641600000032,
+        "maxMs": 175.76900000000023,
+        "step24MeanMs": 108.33583299999987,
+        "step85MeanMs": 111.040708
+      },
+      "candidate": {
+        "meanMs": 32.439710063888896,
+        "pooledP95Ms": 46.80554200000006,
+        "maxMs": 103.67470800000001,
+        "step24MeanMs": 101.83391650000021,
+        "step85MeanMs": 99.61179149999953
+      },
+      "meanReductionPercent": 3.6368418756207443,
+      "runs": [
+        {
+          "run": 0,
+          "decodeMs": 1664.262208,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 51.10297075000003,
+            "p50Ms": 33.69233299999996,
+            "p95Ms": 116.29487499999959,
+            "p99Ms": 220.42291700000033,
+            "maxMs": 220.42291700000033,
+            "over16_67ms": 20,
+            "over33_33ms": 10,
+            "over50ms": 4,
+            "over100ms": 3
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 33.3390900611111,
+            "p50Ms": 30.184250000000247,
+            "p95Ms": 47.184416999999485,
+            "p99Ms": 108.93412499999977,
+            "maxMs": 175.76900000000023,
+            "over16_67ms": 180,
+            "over33_33ms": 54,
+            "over50ms": 7,
+            "over100ms": 3
+          },
+          "measuredWindowMs": 6001.345499999999,
+          "measuredCpuMs": 7524.821,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A1",
+          "variant": "baseline"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1666.426833,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 45.04889375000003,
+            "p50Ms": 31.374249999999847,
+            "p95Ms": 102.43025000000034,
+            "p99Ms": 212.52533300000027,
+            "maxMs": 212.52533300000027,
+            "over16_67ms": 20,
+            "over33_33ms": 7,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 32.191910405555596,
+            "p50Ms": 29.725666000000274,
+            "p95Ms": 45.131209000000126,
+            "p99Ms": 98.87299999999959,
+            "maxMs": 103.67470800000001,
+            "over16_67ms": 180,
+            "over33_33ms": 51,
+            "over50ms": 7,
+            "over100ms": 1
+          },
+          "measuredWindowMs": 5794.844958999999,
+          "measuredCpuMs": 7461.529,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B1",
+          "variant": "search"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1662.434042,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 45.748147799999984,
+            "p50Ms": 31.690957999999682,
+            "p95Ms": 100.76224999999977,
+            "p99Ms": 220.1902080000002,
+            "maxMs": 220.1902080000002,
+            "over16_67ms": 20,
+            "over33_33ms": 7,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 32.6875097222222,
+            "p50Ms": 30.317167000000154,
+            "p95Ms": 47.455041999999594,
+            "p99Ms": 99.99312500000042,
+            "maxMs": 100.35058299999946,
+            "over16_67ms": 180,
+            "over33_33ms": 57,
+            "over50ms": 8,
+            "over100ms": 1
+          },
+          "measuredWindowMs": 5884.067333999999,
+          "measuredCpuMs": 7565.48,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "B2",
+          "variant": "search"
+        },
+        {
+          "run": 0,
+          "decodeMs": 1676.736,
+          "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+          "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+          "randomCallsDuringWorldUpdates": 33475,
+          "randomCallsIncludingDecode": 35332,
+          "initialSavedCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "finalCounts": {
+            "units": 245,
+            "buildings": 408
+          },
+          "inputQuantumSeconds": 0.03333333333333333,
+          "speed": 4,
+          "warm": {
+            "samples": 20,
+            "meanMs": 45.84839175000011,
+            "p50Ms": 31.510333000000173,
+            "p95Ms": 101.77312500000016,
+            "p99Ms": 223.42099999999982,
+            "maxMs": 223.42099999999982,
+            "over16_67ms": 20,
+            "over33_33ms": 9,
+            "over50ms": 3,
+            "over100ms": 2
+          },
+          "measured": {
+            "samples": 180,
+            "meanMs": 33.98894421111115,
+            "p50Ms": 30.975541999999223,
+            "p95Ms": 51.836874999999964,
+            "p99Ms": 107.73754099999996,
+            "maxMs": 118.28812500000004,
+            "over16_67ms": 180,
+            "over33_33ms": 62,
+            "over50ms": 11,
+            "over100ms": 2
+          },
+          "measuredWindowMs": 6118.299374999999,
+          "measuredCpuMs": 7704.789,
+          "advancedSimulationSeconds": 26.666666666642413,
+          "simulationErrors": 0,
+          "slot": "A2",
+          "variant": "baseline"
+        }
+      ]
+    }
+  },
+  "focusedBoundsTests": {
+    "cases": 5,
+    "placementOracleComparisons": 3240,
+    "coastalOrderedOracleFixtures": 16
+  },
+  "compatibility": {
+    "totalCases": 25,
+    "newCases": 5,
+    "existingCases": 20,
+    "passed": 25
+  },
+  "broadphaseCandidate": {
+    "implemented": true,
+    "timed": true,
+    "focusedCases": 6,
+    "seededFullSearchComparisons": 120,
+    "separateFromDistanceBounds": true,
+    "approvedForShipping": false,
+    "outcome": "Rejected: no material benefit in same-state A1/B1 pair; four-run pooled comparison invalid due to cooperative wall-budget state classes",
+    "pairedRuns": [
+      {
+        "run": 0,
+        "decodeMs": 1919.4244999999999,
+        "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+        "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+        "randomCallsDuringWorldUpdates": 33475,
+        "randomCallsIncludingDecode": 35332,
+        "initialSavedCounts": {
+          "units": 245,
+          "buildings": 408
+        },
+        "finalCounts": {
+          "units": 245,
+          "buildings": 408
+        },
+        "inputQuantumSeconds": 0.03333333333333333,
+        "speed": 4,
+        "warm": {
+          "samples": 20,
+          "meanMs": 52.15178530000005,
+          "p50Ms": 34.700209000000086,
+          "p95Ms": 115.79308300000002,
+          "p99Ms": 248.60287500000004,
+          "maxMs": 248.60287500000004,
+          "over16_67ms": 20,
+          "over33_33ms": 15,
+          "over50ms": 3,
+          "over100ms": 2
+        },
+        "measured": {
+          "samples": 180,
+          "meanMs": 34.024600461111106,
+          "p50Ms": 31.388292000000547,
+          "p95Ms": 48.10270800000035,
+          "p99Ms": 116.99716699999999,
+          "maxMs": 130.28012500000023,
+          "over16_67ms": 180,
+          "over33_33ms": 62,
+          "over50ms": 8,
+          "over100ms": 2
+        },
+        "measuredWindowMs": 6124.71475,
+        "measuredCpuMs": 7735.17,
+        "advancedSimulationSeconds": 26.666666666642413,
+        "simulationErrors": 0,
+        "slot": "A1",
+        "variant": "combined"
+      },
+      {
+        "run": 0,
+        "decodeMs": 1645.3781250000002,
+        "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+        "finalEncodedSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+        "randomCallsDuringWorldUpdates": 33475,
+        "randomCallsIncludingDecode": 35332,
+        "initialSavedCounts": {
+          "units": 245,
+          "buildings": 408
+        },
+        "finalCounts": {
+          "units": 245,
+          "buildings": 408
+        },
+        "inputQuantumSeconds": 0.03333333333333333,
+        "speed": 4,
+        "warm": {
+          "samples": 20,
+          "meanMs": 49.0601939,
+          "p50Ms": 35.1965409999998,
+          "p95Ms": 85.80591700000014,
+          "p99Ms": 215.8137079999999,
+          "maxMs": 215.8137079999999,
+          "over16_67ms": 20,
+          "over33_33ms": 14,
+          "over50ms": 3,
+          "over100ms": 1
+        },
+        "measured": {
+          "samples": 180,
+          "meanMs": 34.317895333333354,
+          "p50Ms": 31.54658399999971,
+          "p95Ms": 51.652333,
+          "p99Ms": 117.2825829999997,
+          "maxMs": 132.29749999999967,
+          "over16_67ms": 180,
+          "over33_33ms": 59,
+          "over50ms": 12,
+          "over100ms": 3
+        },
+        "measuredWindowMs": 6177.489917000001,
+        "measuredCpuMs": 7828.696,
+        "advancedSimulationSeconds": 26.666666666642413,
+        "simulationErrors": 0,
+        "slot": "B1",
+        "variant": "broadphase"
+      },
+      {
+        "run": 0,
+        "decodeMs": 1625.4077499999999,
+        "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+        "finalEncodedSha256": "c03757550b56a62f3c63c921720583c85c6cc7c6999a79f48e3fba32bfbf9676",
+        "randomCallsDuringWorldUpdates": 34191,
+        "randomCallsIncludingDecode": 36048,
+        "initialSavedCounts": {
+          "units": 245,
+          "buildings": 408
+        },
+        "finalCounts": {
+          "units": 245,
+          "buildings": 408
+        },
+        "inputQuantumSeconds": 0.03333333333333333,
+        "speed": 4,
+        "warm": {
+          "samples": 20,
+          "meanMs": 57.13409799999995,
+          "p50Ms": 40.40816700000005,
+          "p95Ms": 113.75183399999969,
+          "p99Ms": 215.5627089999998,
+          "maxMs": 215.5627089999998,
+          "over16_67ms": 20,
+          "over33_33ms": 17,
+          "over50ms": 5,
+          "over100ms": 2
+        },
+        "measured": {
+          "samples": 180,
+          "meanMs": 34.031675238888894,
+          "p50Ms": 31.379707999999482,
+          "p95Ms": 49.56520900000032,
+          "p99Ms": 118.15829100000019,
+          "maxMs": 128.97654200000034,
+          "over16_67ms": 180,
+          "over33_33ms": 61,
+          "over50ms": 8,
+          "over100ms": 2
+        },
+        "measuredWindowMs": 6125.994166999999,
+        "measuredCpuMs": 7679.485,
+        "advancedSimulationSeconds": 26.666666666642413,
+        "simulationErrors": 0,
+        "slot": "B2",
+        "variant": "broadphase"
+      },
+      {
+        "run": 0,
+        "decodeMs": 1891.5675,
+        "initialEncodedSha256": "3776a52d1435b6b59e521593e688151b26b13d0030b32efb1896e391cb080b36",
+        "finalEncodedSha256": "c03757550b56a62f3c63c921720583c85c6cc7c6999a79f48e3fba32bfbf9676",
+        "randomCallsDuringWorldUpdates": 34191,
+        "randomCallsIncludingDecode": 36048,
+        "initialSavedCounts": {
+          "units": 245,
+          "buildings": 408
+        },
+        "finalCounts": {
+          "units": 245,
+          "buildings": 408
+        },
+        "inputQuantumSeconds": 0.03333333333333333,
+        "speed": 4,
+        "warm": {
+          "samples": 20,
+          "meanMs": 56.51074160000003,
+          "p50Ms": 39.15620900000022,
+          "p95Ms": 135.8187499999999,
+          "p99Ms": 246.62591599999996,
+          "maxMs": 246.62591599999996,
+          "over16_67ms": 20,
+          "over33_33ms": 19,
+          "over50ms": 5,
+          "over100ms": 2
+        },
+        "measured": {
+          "samples": 180,
+          "meanMs": 43.19975974444444,
+          "p50Ms": 37.89720800000032,
+          "p95Ms": 71.27750000000015,
+          "p99Ms": 151.92433299999993,
+          "maxMs": 168.25724999999875,
+          "over16_67ms": 180,
+          "over33_33ms": 122,
+          "over50ms": 35,
+          "over100ms": 5
+        },
+        "measuredWindowMs": 7776.3084579999995,
+        "measuredCpuMs": 9317.983,
+        "advancedSimulationSeconds": 26.666666666642413,
+        "simulationErrors": 0,
+        "slot": "A2",
+        "variant": "combined"
+      }
+    ],
+    "sameStatePair": {
+      "baselineMeanMs": 34.024600461111106,
+      "candidateMeanMs": 34.317895333333354,
+      "baselineSettlementUpdate85Ms": 130.28012500000023,
+      "candidateSettlementUpdate85Ms": 132.29749999999967
+    },
+    "stateClasses": [
+      {
+        "slots": [
+          "A1",
+          "B1"
+        ],
+        "finalStateSha256": "9430afc0d60ffee2fbe3ab18ed2638c9f3f0aaf6c2d9b5b22a5f3410fbb03870",
+        "updateRngCalls": 33475
+      },
+      {
+        "slots": [
+          "B2",
+          "A2"
+        ],
+        "finalStateSha256": "c03757550b56a62f3c63c921720583c85c6cc7c6999a79f48e3fba32bfbf9676",
+        "updateRngCalls": 34191
+      }
+    ]
+  },
+  "notes": [
+    "No browser FPS or stall-elimination claim.",
+    "Shore-only whole-update mean worsened despite improving targeted coastal spike.",
+    "Assignment-only delta is small/noisy and excluded.",
+    "Timestamp-based first marked-profile attribution rejected because Inspector and process clocks use different offsets.",
+    "Accurate attribution uses uniquely named outer measured-step callers, not hot-function wrappers.",
+    "Broadphase comparison has two wall-budget-sensitive state classes, each seen in both baseline and candidate; no pooled speedup claim or shipping recommendation."
+  ],
+  "accurateBaselineSlowProfile": {
+    "scope": "Unique named outer step callers, profiler stack attribution, no hot source wrappers; inclusive wall samples overlap",
+    "attributedSampledMs": 5942.79,
+    "slowestSteps": [
+      {
+        "absoluteStep": 24,
+        "wallMs": 116.17999999999984,
+        "inclusiveSampledMs": [
+          {
+            "function": "measuredStep024",
+            "file": "",
+            "ms": 113.16600000000001
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 113.16600000000001
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 113.16600000000001
+          },
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 111.70800000000001
+          },
+          {
+            "function": "reviewCoastalTrade",
+            "file": "src/game/coastalTrade.ts",
+            "ms": 48.958000000000006
+          },
+          {
+            "function": "reviewCoastalCommissioning",
+            "file": "src/game/coastalCommission.ts",
+            "ms": 47.458000000000006
+          },
+          {
+            "function": "",
+            "file": "src/game/coastalCommission.ts",
+            "ms": 45.166000000000004
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 43.62500000000001
+          },
+          {
+            "function": "observedCoastalLandings",
+            "file": "src/game/coastalStrategy.ts",
+            "ms": 42.126000000000005
+          },
+          {
+            "function": "consider",
+            "file": "src/game/coastalStrategy.ts",
+            "ms": 37.417
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 31.54
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 19.374000000000002
+          },
+          {
+            "function": "riverboatWaterPoint",
+            "file": "src/game/boats.ts",
+            "ms": 15.667
+          },
+          {
+            "function": "knows",
+            "file": "src/game/coastalStrategy.ts",
+            "ms": 12.626
+          },
+          {
+            "function": "steer",
+            "file": "src/game/sim.ts",
+            "ms": 6.667
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 6.083
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 6.083
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 6.083
+          },
+          {
+            "function": "",
+            "file": "src/game/coastalStrategy.ts",
+            "ms": 5.167
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 4.958
+          },
+          {
+            "function": "fishingGrounds",
+            "file": "src/game/fishing.ts",
+            "ms": 4.2490000000000006
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 3.5829999999999997
+          },
+          {
+            "function": "findPath",
+            "file": "src/game/navigation.ts",
+            "ms": 3.084
+          },
+          {
+            "function": "haulageWorkAI",
+            "file": "src/game/haulage.ts",
+            "ms": 3.084
+          }
+        ]
+      },
+      {
+        "absoluteStep": 85,
+        "wallMs": 108.6795830000001,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 105.25
+          },
+          {
+            "function": "measuredStep085",
+            "file": "",
+            "ms": 105.25
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 105.25
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 105.25
+          },
+          {
+            "function": "tickCommunities",
+            "file": "src/game/communities.ts",
+            "ms": 78.333
+          },
+          {
+            "function": "settlementSite",
+            "file": "src/game/communities.ts",
+            "ms": 74.75
+          },
+          {
+            "function": "findOpenSpot",
+            "file": "src/game/sim.ts",
+            "ms": 64.834
+          },
+          {
+            "function": "placementValid",
+            "file": "src/game/sim.ts",
+            "ms": 60.625
+          },
+          {
+            "function": "placementIssue",
+            "file": "src/game/sim.ts",
+            "ms": 44.0
+          },
+          {
+            "function": "",
+            "file": "src/game/communities.ts",
+            "ms": 7.583
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 7.541
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 6.001
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 6.001
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 6.001
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 6.001
+          },
+          {
+            "function": "excavationConstructionIssue",
+            "file": "src/game/excavation.ts",
+            "ms": 5.916
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 4.4990000000000006
+          },
+          {
+            "function": "emergencyResponse",
+            "file": "src/game/defense.ts",
+            "ms": 4.417
+          },
+          {
+            "function": "dryFoundation",
+            "file": "src/game/sim.ts",
+            "ms": 3.083
+          },
+          {
+            "function": "",
+            "file": "src/game/sim.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "prisonerIndependentNeeds",
+            "file": "src/game/captivity.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 2.9989999999999997
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 1.542
+          }
+        ]
+      },
+      {
+        "absoluteStep": 25,
+        "wallMs": 70.21433399999978,
+        "inclusiveSampledMs": [
+          {
+            "function": "measuredStep025",
+            "file": "",
+            "ms": 69.25
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 69.25
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 69.25
+          },
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 67.917
+          },
+          {
+            "function": "placementValid",
+            "file": "src/game/sim.ts",
+            "ms": 24.958000000000002
+          },
+          {
+            "function": "findOpenSpot",
+            "file": "src/game/sim.ts",
+            "ms": 24.958000000000002
+          },
+          {
+            "function": "rivalTick",
+            "file": "src/game/sim.ts",
+            "ms": 24.958000000000002
+          },
+          {
+            "function": "placementIssue",
+            "file": "src/game/sim.ts",
+            "ms": 22.124
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 16.583
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 13.583
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 9.042
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 9.042
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 7.542
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 7.542
+          },
+          {
+            "function": "",
+            "file": "src/game/sim.ts",
+            "ms": 5.167
+          },
+          {
+            "function": "cornerstoneAt",
+            "file": "src/game/sim.ts",
+            "ms": 5.125
+          },
+          {
+            "function": "emergencyResponse",
+            "file": "src/game/defense.ts",
+            "ms": 4.542
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "defenseNeighbors",
+            "file": "src/game/defenseNeighbors.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 2.958
+          },
+          {
+            "function": "cooperativeInfluenceWater",
+            "file": "src/game/influenceWater.ts",
+            "ms": 2.167
+          },
+          {
+            "function": "calendar",
+            "file": "src/game/settlement.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "rivalMaterialPriority",
+            "file": "src/game/rivalDevelopment.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "tickWildlife",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          }
+        ]
+      },
+      {
+        "absoluteStep": 186,
+        "wallMs": 63.34554200000093,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 60.375
+          },
+          {
+            "function": "measuredStep186",
+            "file": "",
+            "ms": 60.375
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 60.375
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 60.375
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 25.707000000000004
+          },
+          {
+            "function": "rivalTick",
+            "file": "src/game/sim.ts",
+            "ms": 24.208000000000002
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 19.625000000000004
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 16.583
+          },
+          {
+            "function": "rebalanceRivalLabor",
+            "file": "src/game/rivalDevelopment.ts",
+            "ms": 15.166
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 9.042
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 9.042
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 9.042
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 9.041
+          },
+          {
+            "function": "placementIssue",
+            "file": "src/game/sim.ts",
+            "ms": 7.542
+          },
+          {
+            "function": "placementValid",
+            "file": "src/game/sim.ts",
+            "ms": 7.542
+          },
+          {
+            "function": "findOpenSpot",
+            "file": "src/game/sim.ts",
+            "ms": 7.542
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 7.5
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 6.083
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 4.541
+          },
+          {
+            "function": "huntable",
+            "file": "src/game/hunting.ts",
+            "ms": 3.083
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "voyage",
+            "file": "src/game/coastalTrade.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "coastalIndependentNeeds",
+            "file": "src/game/coastalTrade.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "blockedResource",
+            "file": "src/game/settlement.ts",
+            "ms": 3.041
+          }
+        ]
+      },
+      {
+        "absoluteStep": 91,
+        "wallMs": 61.87062500000047,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 60.291
+          },
+          {
+            "function": "measuredStep091",
+            "file": "",
+            "ms": 60.291
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 60.291
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 60.291
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 33.459
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 25.376
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 22.709000000000003
+          },
+          {
+            "function": "rebalanceRivalLabor",
+            "file": "src/game/rivalDevelopment.ts",
+            "ms": 18.208000000000002
+          },
+          {
+            "function": "rivalTick",
+            "file": "src/game/sim.ts",
+            "ms": 18.208000000000002
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 12.125
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 7.6240000000000006
+          },
+          {
+            "function": "blockedResource",
+            "file": "src/game/settlement.ts",
+            "ms": 4.584
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 4.583
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 4.583
+          },
+          {
+            "function": "cornerstoneAt",
+            "file": "src/game/sim.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "pace",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "buildField",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "startField",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "",
+            "file": "src/game/scouting.ts",
+            "ms": 3.0
+          }
+        ]
+      },
+      {
+        "absoluteStep": 138,
+        "wallMs": 58.242583999999624,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 55.667
+          },
+          {
+            "function": "measuredStep138",
+            "file": "",
+            "ms": 55.667
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 55.667
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 55.667
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 27.040999999999997
+          },
+          {
+            "function": "placementIssue",
+            "file": "src/game/sim.ts",
+            "ms": 15.042
+          },
+          {
+            "function": "placementValid",
+            "file": "src/game/sim.ts",
+            "ms": 15.042
+          },
+          {
+            "function": "findOpenSpot",
+            "file": "src/game/sim.ts",
+            "ms": 15.042
+          },
+          {
+            "function": "rivalTick",
+            "file": "src/game/sim.ts",
+            "ms": 15.042
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 13.499
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 6.0
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 6.0
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 4.583
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 4.458
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "preservationAvailable",
+            "file": "src/game/pantry.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "strengthAt",
+            "file": "src/game/influenceField.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "paintField",
+            "file": "src/game/influenceField.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "",
+            "file": "src/game/rivalDevelopment.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "rivalKnows",
+            "file": "src/game/rivalDevelopment.ts",
+            "ms": 1.542
+          }
+        ]
+      },
+      {
+        "absoluteStep": 59,
+        "wallMs": 58.133334000000104,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 55.58400000000001
+          },
+          {
+            "function": "measuredStep059",
+            "file": "",
+            "ms": 55.58400000000001
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 55.58400000000001
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 55.58400000000001
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 37.625
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 28.0
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 18.125
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 15.125
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 6.0
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 6.0
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 5.958
+          },
+          {
+            "function": "blockedResource",
+            "file": "src/game/settlement.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "defenseNeighbors",
+            "file": "src/game/defenseNeighbors.ts",
+            "ms": 3.083
+          },
+          {
+            "function": "emergencyResponse",
+            "file": "src/game/defense.ts",
+            "ms": 3.083
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 2.958
+          },
+          {
+            "function": "husbandryAI",
+            "file": "src/game/husbandry.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "hasTaskCommitment",
+            "file": "src/game/workCommitments.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "available",
+            "file": "src/game/haulage.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "safe",
+            "file": "src/game/haulage.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "",
+            "file": "src/game/haulage.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "shareLocalTransport",
+            "file": "src/game/haulage.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "voyage",
+            "file": "src/game/coastalTrade.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "coastalIndependentNeeds",
+            "file": "src/game/coastalTrade.ts",
+            "ms": 1.5
+          }
+        ]
+      },
+      {
+        "absoluteStep": 98,
+        "wallMs": 52.43512499999997,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 49.834
+          },
+          {
+            "function": "measuredStep098",
+            "file": "",
+            "ms": 49.834
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 49.834
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 49.834
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 31.709000000000007
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 25.709000000000003
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 21.167
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 10.625
+          },
+          {
+            "function": "cornerstoneAt",
+            "file": "src/game/sim.ts",
+            "ms": 4.584
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "riverboatAI",
+            "file": "src/game/boats.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "demobilizationAI",
+            "file": "src/game/demobilization.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "consumeAndSpoilFood",
+            "file": "src/game/pantry.ts",
+            "ms": 1.541
+          },
+          {
+            "function": "tickPeople",
+            "file": "src/game/sim.ts",
+            "ms": 1.541
+          },
+          {
+            "function": "buildField",
+            "file": "src/game/influenceField.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "startField",
+            "file": "src/game/influenceField.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "available",
+            "file": "src/game/haulage.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "safe",
+            "file": "src/game/haulage.ts",
+            "ms": 1.5
+          }
+        ]
+      },
+      {
+        "absoluteStep": 60,
+        "wallMs": 50.35466700000052,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 48.166
+          },
+          {
+            "function": "measuredStep060",
+            "file": "",
+            "ms": 48.166
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 48.166
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 48.166
+          },
+          {
+            "function": "rivalTick",
+            "file": "src/game/sim.ts",
+            "ms": 16.625
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 15.126
+          },
+          {
+            "function": "placementIssue",
+            "file": "src/game/sim.ts",
+            "ms": 12.001
+          },
+          {
+            "function": "placementValid",
+            "file": "src/game/sim.ts",
+            "ms": 12.001
+          },
+          {
+            "function": "findOpenSpot",
+            "file": "src/game/sim.ts",
+            "ms": 12.001
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 7.5009999999999994
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 5.9990000000000006
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 5.9990000000000006
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 5.9990000000000006
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 4.499
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "steer",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "stockCap",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "fieldTerrain",
+            "file": "src/game/fieldTerrain.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "farmHarvestEstimate",
+            "file": "src/game/settlement.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "",
+            "file": "src/game/rivalDevelopment.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "rivalDevelopmentPlan",
+            "file": "src/game/rivalDevelopment.ts",
+            "ms": 1.542
+          }
+        ]
+      },
+      {
+        "absoluteStep": 130,
+        "wallMs": 48.64149999999972,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 48.95900000000001
+          },
+          {
+            "function": "measuredStep130",
+            "file": "",
+            "ms": 48.95900000000001
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 48.95900000000001
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 48.95900000000001
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 31.416
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 20.875
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 17.916999999999998
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 14.917
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 8.959
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 7.5
+          },
+          {
+            "function": "blockedResource",
+            "file": "src/game/settlement.ts",
+            "ms": 7.3759999999999994
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 6.0
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 5.959
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "",
+            "file": "src/game/scouting.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "scoutAI",
+            "file": "src/game/scouting.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "supplyDrops",
+            "file": "src/game/campAnchor.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "startField",
+            "file": "src/game/influenceField.ts",
+            "ms": 2.625
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 2.625
+          },
+          {
+            "function": "buildField",
+            "file": "src/game/influenceField.ts",
+            "ms": 2.167
+          },
+          {
+            "function": "civilian",
+            "file": "src/game/haulage.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "safe",
+            "file": "src/game/haulage.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "",
+            "file": "src/game/haulage.ts",
+            "ms": 1.5
+          }
+        ]
+      }
+    ]
+  },
+  "sourceManifests": {
+    "combined": "0137194e5e0326df61dbe0f3bcc2f8d1a3c82e3323b8737d17e671ebbe4f5a23",
+    "placement": "b82a93a7689ffd07970e0cccc2d08838df43eb4f30c3014ba678a53b1502606f",
+    "shore": "f3cf01a1e13c00c1c2426ccb599e4a129ef21315fb83f97efcc5fab8f0b1d062",
+    "search": "00602725239df9a95a791e4a388f9b95f51b468669fcba6667e7ba3b1b5daaa1",
+    "broadphase": "8e263885aaf75a3d47edf4ced5303214719ff9f9ada20d1cf91d5d7adf7b09b7"
+  },
+  "accurateCandidateSlowProfile": {
+    "scope": "Unique named outer step callers, profiler stack attribution, no hot source wrappers; inclusive wall samples overlap",
+    "attributedSampledMs": 5815.582,
+    "slowestSteps": [
+      {
+        "absoluteStep": 24,
+        "wallMs": 105.424125,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 103.708
+          },
+          {
+            "function": "measuredStep024",
+            "file": "",
+            "ms": 103.708
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 103.708
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 103.708
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 46.16700000000001
+          },
+          {
+            "function": "reviewCoastalCommissioning",
+            "file": "src/game/coastalCommission.ts",
+            "ms": 38.208
+          },
+          {
+            "function": "reviewCoastalTrade",
+            "file": "src/game/coastalTrade.ts",
+            "ms": 38.208
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 34.708000000000006
+          },
+          {
+            "function": "",
+            "file": "src/game/coastalCommission.ts",
+            "ms": 34.5
+          },
+          {
+            "function": "observedCoastalLandings",
+            "file": "src/game/coastalStrategy.ts",
+            "ms": 30.75
+          },
+          {
+            "function": "consider",
+            "file": "src/game/coastalStrategy.ts",
+            "ms": 24.373999999999995
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 19.166
+          },
+          {
+            "function": "riverboatWaterPoint",
+            "file": "src/game/boats.ts",
+            "ms": 15.916
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 9.833
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 9.084
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 8.5
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 6.125
+          },
+          {
+            "function": "knows",
+            "file": "src/game/coastalStrategy.ts",
+            "ms": 5.25
+          },
+          {
+            "function": "",
+            "file": "src/game/coastalStrategy.ts",
+            "ms": 5.042
+          },
+          {
+            "function": "",
+            "file": "src/game/haulage.ts",
+            "ms": 4.916
+          },
+          {
+            "function": "",
+            "file": "src/game/boats.ts",
+            "ms": 4.375
+          },
+          {
+            "function": "steer",
+            "file": "src/game/sim.ts",
+            "ms": 3.3339999999999996
+          },
+          {
+            "function": "beginHaulageWork",
+            "file": "src/game/haulage.ts",
+            "ms": 3.0829999999999997
+          },
+          {
+            "function": "beginRiverboat",
+            "file": "src/game/boats.ts",
+            "ms": 3.0829999999999997
+          }
+        ]
+      },
+      {
+        "absoluteStep": 85,
+        "wallMs": 103.02149999999983,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 99.208
+          },
+          {
+            "function": "measuredStep085",
+            "file": "",
+            "ms": 99.208
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 99.208
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 99.208
+          },
+          {
+            "function": "tickCommunities",
+            "file": "src/game/communities.ts",
+            "ms": 67.666
+          },
+          {
+            "function": "settlementSite",
+            "file": "src/game/communities.ts",
+            "ms": 65.958
+          },
+          {
+            "function": "findOpenSpot",
+            "file": "src/game/sim.ts",
+            "ms": 56.498999999999995
+          },
+          {
+            "function": "placementIssue",
+            "file": "src/game/sim.ts",
+            "ms": 55.416
+          },
+          {
+            "function": "placementValid",
+            "file": "src/game/sim.ts",
+            "ms": 55.416
+          },
+          {
+            "function": "excavationConstructionIssue",
+            "file": "src/game/excavation.ts",
+            "ms": 16.543
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 14.916
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 12.083
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 9.083
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 9.083
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 8.959
+          },
+          {
+            "function": "",
+            "file": "src/game/communities.ts",
+            "ms": 7.667
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 7.5
+          },
+          {
+            "function": "voyage",
+            "file": "src/game/coastalTrade.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "coastalIndependentNeeds",
+            "file": "src/game/coastalTrade.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 4.459
+          },
+          {
+            "function": "preservationAvailable",
+            "file": "src/game/pantry.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "stockCap",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "dryFoundation",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "",
+            "file": "src/game/sim.ts",
+            "ms": 1.625
+          }
+        ]
+      },
+      {
+        "absoluteStep": 25,
+        "wallMs": 65.40612499999997,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 62.458
+          },
+          {
+            "function": "measuredStep025",
+            "file": "",
+            "ms": 62.458
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 62.458
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 62.458
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 24.209000000000003
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 17.668
+          },
+          {
+            "function": "rivalTick",
+            "file": "src/game/sim.ts",
+            "ms": 17.458000000000002
+          },
+          {
+            "function": "placementValid",
+            "file": "src/game/sim.ts",
+            "ms": 16.75
+          },
+          {
+            "function": "findOpenSpot",
+            "file": "src/game/sim.ts",
+            "ms": 16.75
+          },
+          {
+            "function": "placementIssue",
+            "file": "src/game/sim.ts",
+            "ms": 13.667
+          },
+          {
+            "function": "cornerstoneAt",
+            "file": "src/game/sim.ts",
+            "ms": 10.542
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 4.417
+          },
+          {
+            "function": "canStep",
+            "file": "src/game/sim.ts",
+            "ms": 4.126
+          },
+          {
+            "function": "",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "stockCap",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "separate",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 2.208
+          },
+          {
+            "function": "startField",
+            "file": "src/game/influenceField.ts",
+            "ms": 2.0
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 2.0
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "",
+            "file": "src/game/scouting.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "scoutAI",
+            "file": "src/game/scouting.ts",
+            "ms": 1.542
+          }
+        ]
+      },
+      {
+        "absoluteStep": 91,
+        "wallMs": 62.252542000000176,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 58.37500000000001
+          },
+          {
+            "function": "measuredStep091",
+            "file": "",
+            "ms": 58.37500000000001
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 58.37500000000001
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 58.37500000000001
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 29.709000000000003
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 25.250000000000004
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 20.625
+          },
+          {
+            "function": "rivalTick",
+            "file": "src/game/sim.ts",
+            "ms": 19.542
+          },
+          {
+            "function": "rebalanceRivalLabor",
+            "file": "src/game/rivalDevelopment.ts",
+            "ms": 18.167
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 13.376
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 11.542
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 11.542
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 8.625
+          },
+          {
+            "function": "blockedResource",
+            "file": "src/game/settlement.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 3.084
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 3.084
+          },
+          {
+            "function": "",
+            "file": "src/game/sim.ts",
+            "ms": 3.082
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "preservationAvailable",
+            "file": "src/game/pantry.ts",
+            "ms": 2.959
+          },
+          {
+            "function": "predisposition",
+            "file": "src/game/people.ts",
+            "ms": 2.667
+          },
+          {
+            "function": "sameTypedValues",
+            "file": "src/game/terrainWalkCache.ts",
+            "ms": 1.625
+          },
+          {
+            "function": "labelNavigation",
+            "file": "src/game/settlement.ts",
+            "ms": 1.625
+          },
+          {
+            "function": "",
+            "file": "src/game/scouting.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "scoutAI",
+            "file": "src/game/scouting.ts",
+            "ms": 1.542
+          }
+        ]
+      },
+      {
+        "absoluteStep": 186,
+        "wallMs": 60.12695800000074,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 56.459
+          },
+          {
+            "function": "measuredStep186",
+            "file": "",
+            "ms": 56.459
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 56.459
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 56.459
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 27.208
+          },
+          {
+            "function": "rivalTick",
+            "file": "src/game/sim.ts",
+            "ms": 20.667
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 19.542
+          },
+          {
+            "function": "rebalanceRivalLabor",
+            "file": "src/game/rivalDevelopment.ts",
+            "ms": 16.542
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 16.166
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 12.0
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 7.625
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 6.1259999999999994
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 6.084
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 6.084
+          },
+          {
+            "function": "buildField",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "startField",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "preservationAvailable",
+            "file": "src/game/pantry.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "emergencyResponse",
+            "file": "src/game/defense.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "cornerstoneAt",
+            "file": "src/game/sim.ts",
+            "ms": 2.959
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 2.666
+          },
+          {
+            "function": "placementIssue",
+            "file": "src/game/sim.ts",
+            "ms": 2.625
+          },
+          {
+            "function": "placementValid",
+            "file": "src/game/sim.ts",
+            "ms": 2.625
+          }
+        ]
+      },
+      {
+        "absoluteStep": 59,
+        "wallMs": 56.25129099999958,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 54.916
+          },
+          {
+            "function": "measuredStep059",
+            "file": "",
+            "ms": 54.916
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 54.916
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 54.916
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 35.291000000000004
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 24.832
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 14.125
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 9.667
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 6.416
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 6.416
+          },
+          {
+            "function": "blockedResource",
+            "file": "src/game/settlement.ts",
+            "ms": 5.625
+          },
+          {
+            "function": "emergencyResponse",
+            "file": "src/game/defense.ts",
+            "ms": 4.542
+          },
+          {
+            "function": "stockCap",
+            "file": "src/game/sim.ts",
+            "ms": 4.541
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 4.541
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 4.541
+          },
+          {
+            "function": "steer",
+            "file": "src/game/sim.ts",
+            "ms": 4.459
+          },
+          {
+            "function": "",
+            "file": "src/game/defense.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "",
+            "file": "src/game/haulage.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "shareLocalTransport",
+            "file": "src/game/haulage.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "preservationAvailable",
+            "file": "src/game/pantry.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "cornerstoneAt",
+            "file": "src/game/sim.ts",
+            "ms": 2.958
+          },
+          {
+            "function": "tickPeople",
+            "file": "src/game/sim.ts",
+            "ms": 2.958
+          },
+          {
+            "function": "sameTypedValues",
+            "file": "src/game/terrainWalkCache.ts",
+            "ms": 2.625
+          }
+        ]
+      },
+      {
+        "absoluteStep": 138,
+        "wallMs": 52.193999999999505,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 49.581999999999994
+          },
+          {
+            "function": "measuredStep138",
+            "file": "",
+            "ms": 49.581999999999994
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 49.581999999999994
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 49.581999999999994
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 23.959
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 11.959
+          },
+          {
+            "function": "findOpenSpot",
+            "file": "src/game/sim.ts",
+            "ms": 9.081999999999999
+          },
+          {
+            "function": "rivalTick",
+            "file": "src/game/sim.ts",
+            "ms": 9.081999999999999
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 8.999
+          },
+          {
+            "function": "placementValid",
+            "file": "src/game/sim.ts",
+            "ms": 7.541
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 6.0
+          },
+          {
+            "function": "placementIssue",
+            "file": "src/game/sim.ts",
+            "ms": 6.0
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 4.582
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "strengthAt",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "paintField",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 2.959
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 2.959
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 2.959
+          },
+          {
+            "function": "preservationAvailable",
+            "file": "src/game/pantry.ts",
+            "ms": 2.958
+          },
+          {
+            "function": "walkable",
+            "file": "src/game/sim.ts",
+            "ms": 1.541
+          },
+          {
+            "function": "",
+            "file": "src/game/scouting.ts",
+            "ms": 1.541
+          }
+        ]
+      },
+      {
+        "absoluteStep": 98,
+        "wallMs": 51.28150000000005,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 49.833000000000006
+          },
+          {
+            "function": "measuredStep098",
+            "file": "",
+            "ms": 49.833000000000006
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 49.833000000000006
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 49.833000000000006
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 36.208000000000006
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 30.208000000000006
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 19.750000000000004
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 13.625
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 9.084
+          },
+          {
+            "function": "blockedResource",
+            "file": "src/game/settlement.ts",
+            "ms": 7.584
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 7.542
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 7.542
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 7.541
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 4.542
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "cornerstoneAt",
+            "file": "src/game/sim.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "buildField",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "startField",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.041
+          },
+          {
+            "function": "scoutIndependentNeeds",
+            "file": "src/game/scoutProvisions.ts",
+            "ms": 1.666
+          },
+          {
+            "function": "",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "surveyFishingWater",
+            "file": "src/game/fishing.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "fishingGrounds",
+            "file": "src/game/fishing.ts",
+            "ms": 1.542
+          }
+        ]
+      },
+      {
+        "absoluteStep": 99,
+        "wallMs": 50.5722080000005,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 49.542
+          },
+          {
+            "function": "measuredStep099",
+            "file": "",
+            "ms": 49.542
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 49.542
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 49.542
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 34.417
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 25.374999999999996
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 19.416999999999998
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 14.959
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "blockedResource",
+            "file": "src/game/settlement.ts",
+            "ms": 4.5
+          },
+          {
+            "function": "walkable",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "supplyApproach",
+            "file": "src/game/campAnchor.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "huntable",
+            "file": "src/game/hunting.ts",
+            "ms": 2.958
+          },
+          {
+            "function": "hasBld",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "gatherMul",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "campBonus",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "separate",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "practicalHelperAI",
+            "file": "src/game/practicalHelpers.ts",
+            "ms": 1.541
+          },
+          {
+            "function": "sampleHeight",
+            "file": "src/game/worldgen.ts",
+            "ms": 1.5
+          },
+          {
+            "function": "height",
+            "file": "src/game/sim.ts",
+            "ms": 1.5
+          }
+        ]
+      },
+      {
+        "absoluteStep": 130,
+        "wallMs": 48.01591699999972,
+        "inclusiveSampledMs": [
+          {
+            "function": "step",
+            "file": "src/game/sim.ts",
+            "ms": 48.166000000000004
+          },
+          {
+            "function": "measuredStep130",
+            "file": "",
+            "ms": 48.166000000000004
+          },
+          {
+            "function": "",
+            "file": "",
+            "ms": 48.166000000000004
+          },
+          {
+            "function": "(root)",
+            "file": "",
+            "ms": 48.166000000000004
+          },
+          {
+            "function": "workerAI",
+            "file": "src/game/sim.ts",
+            "ms": 33.167
+          },
+          {
+            "function": "assign",
+            "file": "src/game/settlement.ts",
+            "ms": 25.626000000000005
+          },
+          {
+            "function": "refresh",
+            "file": "src/game/settlement.ts",
+            "ms": 18.209000000000003
+          },
+          {
+            "function": "add",
+            "file": "src/game/settlement.ts",
+            "ms": 10.667
+          },
+          {
+            "function": "reserveSeconds",
+            "file": "src/game/settlement.ts",
+            "ms": 7.542
+          },
+          {
+            "function": "blockedResource",
+            "file": "src/game/settlement.ts",
+            "ms": 4.542
+          },
+          {
+            "function": "routineRest",
+            "file": "src/game/journeys.ts",
+            "ms": 4.541
+          },
+          {
+            "function": "foodDemand",
+            "file": "src/game/settlement.ts",
+            "ms": 4.458
+          },
+          {
+            "function": "huntable",
+            "file": "src/game/hunting.ts",
+            "ms": 3.042
+          },
+          {
+            "function": "buildField",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "startField",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "advanceGeographicInfluence",
+            "file": "src/game/influenceField.ts",
+            "ms": 3.0
+          },
+          {
+            "function": "foodWorkTarget",
+            "file": "src/game/settlement.ts",
+            "ms": 2.916
+          },
+          {
+            "function": "",
+            "file": "src/game/settlement.ts",
+            "ms": 2.875
+          },
+          {
+            "function": "preservationAvailable",
+            "file": "src/game/pantry.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "findPath",
+            "file": "src/game/navigation.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "steer",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "tickWildlife",
+            "file": "src/game/sim.ts",
+            "ms": 1.542
+          },
+          {
+            "function": "walkable",
+            "file": "src/game/sim.ts",
+            "ms": 1.541
+          },
+          {
+            "function": "interactionSpot",
+            "file": "src/game/sim.ts",
+            "ms": 1.541
+          }
+        ]
+      }
+    ]
+  }
+}

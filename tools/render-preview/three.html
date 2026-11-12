@@ -1,0 +1,82 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>H render (three.js)</title>
+<style>html,body{margin:0;background:#000}#wrap{position:relative}canvas{display:block}#ui{position:absolute;left:0;top:0}</style>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body><div id="wrap"><div id="glhost"></div><canvas id="ui"></canvas></div>
+<script type="module">
+// REAL three.js (repo node_modules, 0.185.1) renderer for the same scene data
+// the stand-in renderer.html consumes. The building material mirrors
+// src/scene/carvedBuildingLayer.ts createCarvedMaterial(): MeshStandardMaterial,
+// vertex colours (sRGB -> linear), shared 256² grain map blended by the per-vertex
+// `grain` attribute, flat shading. Lights follow the scene rig (CARVED_LIGHT_RIG
+// for --rig=adapter). Optional GTAO via three/addons. Written without being
+// executed in its authoring environment (no node_modules there).
+import * as THREE from 'three';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+let GTAOPass=null;try{({GTAOPass}=await import('three/addons/postprocessing/GTAOPass.js'));}catch(e){console.warn('GTAOPass unavailable',e);}
+
+const dec=(s,T)=>{const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return new T(u.buffer);};
+const s2l=c=>c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4);
+
+function carvedMaterial(grainTex,flat){
+ const m=new THREE.MeshStandardMaterial({vertexColors:true,map:grainTex,roughness:.86,metalness:0,flatShading:flat});
+ m.onBeforeCompile=sh=>{
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float grain;\nvarying float vGrain;').replace('#include <begin_vertex>','#include <begin_vertex>\nvGrain=grain;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vGrain;').replace('#include <map_fragment>','#ifdef USE_MAP\n vec4 sampledDiffuseColor=texture2D(map,vMapUv);\n diffuseColor.rgb*=mix(vec3(1.0),sampledDiffuseColor.rgb,clamp(vGrain,0.,1.));\n#endif');
+ };
+ m.customProgramCacheKey=()=>'carved-h-grain-v1'+(flat?'f':'s');
+ return m;
+}
+
+window.renderSceneThree=async function(S,opt={}){
+ const W=S.width,H=S.height,dpr=S.pixelRatio||2;
+ const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+ renderer.setPixelRatio(dpr);renderer.setSize(W,H);document.getElementById('glhost').appendChild(renderer.domElement);
+ renderer.outputColorSpace=THREE.SRGBColorSpace;
+ renderer.toneMapping={neutral:THREE.NeutralToneMapping,aces:THREE.ACESFilmicToneMapping,agx:THREE.AgXToneMapping,none:THREE.NoToneMapping}[opt.tone||'neutral'];
+ renderer.toneMappingExposure=S.rig.exposure??1;
+ renderer.shadowMap.enabled=!!S.rig.shadows;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ const scene=new THREE.Scene();scene.background=new THREE.Color(S.background||'#e2b884');
+ if(S.rig.fogNearMetres<5000)scene.fog=new THREE.Fog(S.rig.fog,S.rig.fogNearMetres,S.rig.fogFarMetres);
+ // grain texture (same pixels as the adapter's carvedGrainTexture)
+ const gt=new THREE.DataTexture(dec(S.grain.pixels,Uint8Array),S.grain.size,S.grain.size,THREE.RGBAFormat);
+ gt.wrapS=gt.wrapT=THREE.RepeatWrapping;gt.colorSpace=THREE.NoColorSpace;gt.magFilter=THREE.LinearFilter;gt.minFilter=THREE.LinearMipmapLinearFilter;gt.generateMipmaps=true;gt.anisotropy=8;gt.needsUpdate=true;
+ const matFlat=carvedMaterial(gt,true),matSmooth=carvedMaterial(gt,false);
+ const water=new THREE.MeshStandardMaterial({color:new THREE.Color('#7a8f99'),roughness:.35,metalness:0,transparent:true,opacity:.92});
+ for(const m of S.meshes){
+  const g=new THREE.BufferGeometry(),col=dec(m.col,Float32Array),lin=new Float32Array(col.length);for(let i=0;i<lin.length;i++)lin[i]=s2l(Math.min(1,Math.max(0,col[i])));
+  g.setAttribute('position',new THREE.BufferAttribute(dec(m.pos,Float32Array),3));g.setAttribute('normal',new THREE.BufferAttribute(dec(m.nrm,Float32Array),3));
+  g.setAttribute('uv',new THREE.BufferAttribute(dec(m.uv,Float32Array),2));g.setAttribute('color',new THREE.BufferAttribute(lin,3));
+  const gr=dec(m.grain,Float32Array);g.setAttribute('grain',new THREE.BufferAttribute(gr.map(v=>Math.max(0,v)),1));
+  if(m.idx)g.setIndex(new THREE.BufferAttribute(dec(m.idx,Uint32Array),1));
+  const mesh=new THREE.Mesh(g,m.water?water:(m.flat===false?matSmooth:matFlat));
+  mesh.castShadow=m.cast!==false&&!m.water;mesh.receiveShadow=true;scene.add(mesh);
+ }
+ const R=S.rig,C=S.camera,aspect=W/H;
+ const hemi=new THREE.HemisphereLight(R.hemiSky,R.hemiGround,R.hemiIntensity);scene.add(hemi);
+ const sun=new THREE.DirectionalLight(R.sun,R.sunIntensity),sd=new THREE.Vector3(...R.sunDir).normalize(),sc=S.shadow||{center:C.target,radius:120};
+ sun.position.set(sc.center[0]+sd.x*400,sc.center[1]+sd.y*400,sc.center[2]+sd.z*400);sun.target.position.set(...sc.center);scene.add(sun,sun.target);
+ sun.castShadow=!!R.shadows;sun.shadow.mapSize.set(4096,4096);Object.assign(sun.shadow.camera,{left:-sc.radius,right:sc.radius,top:sc.radius,bottom:-sc.radius,near:1,far:900});sun.shadow.camera.updateProjectionMatrix();
+ sun.shadow.bias=-.0004;sun.shadow.normalBias=.03;sun.shadow.radius=3;
+ const bd=R.bounceDir||[-sd.x,.3,-sd.z],bounce=new THREE.DirectionalLight(R.bounce,R.bounceIntensity);bounce.position.set(bd[0]*100,bd[1]*100,bd[2]*100);scene.add(bounce);
+ let cam;if(C.ortho)cam=new THREE.OrthographicCamera(-C.ortho*aspect,C.ortho*aspect,C.ortho,-C.ortho,C.near||1,C.far||2000);else cam=new THREE.PerspectiveCamera(C.fov,aspect,C.near||1,C.far||2000);
+ cam.position.set(...C.eye);cam.lookAt(...C.target);cam.updateProjectionMatrix();
+ // composer: MSAA render target -> optional GTAO -> OutputPass (tone map + sRGB)
+ const rt=new THREE.WebGLRenderTarget(W*dpr,H*dpr,{type:THREE.HalfFloatType,samples:4});
+ const composer=new EffectComposer(renderer,rt);composer.setPixelRatio(dpr);composer.setSize(W,H);
+ composer.addPass(new RenderPass(scene,cam));
+ let ao=false;if(GTAOPass&&opt.ao!==false){try{const p=new GTAOPass(scene,cam,W*dpr,H*dpr);p.updateGtaoMaterial?.({radius:C.ortho?1.2:2.0,distanceExponent:1,thickness:1,scale:1});p.blendIntensity=.85;composer.addPass(p);ao=true;}catch(e){console.warn('GTAO failed',e);}}
+ composer.addPass(new OutputPass());
+ composer.render();
+ // labels (same overlay rules as renderer.html)
+ const ui=document.getElementById('ui');ui.width=W*dpr;ui.height=H*dpr;ui.style.width=W+'px';ui.style.height=H+'px';const c2=ui.getContext('2d');c2.scale(dpr,dpr);
+ for(const L of S.labels||[]){let x,y;if(L.world){const v=new THREE.Vector3(...L.world).project(cam);if(v.z>1)continue;x=(v.x*.5+.5)*W;y=(1-(v.y*.5+.5))*H;}else{x=L.x;y=L.y;}
+  c2.font=`${L.weight||600} ${L.size||11}px ui-sans-serif, DejaVu Sans, sans-serif`;c2.textAlign=L.align||'center';c2.textBaseline='middle';
+  if(L.box!==false){const w=c2.measureText(L.text).width+8,h=(L.size||11)+6,bx=c2.textAlign==='center'?x-w/2:c2.textAlign==='left'?x-4:x-w+4;c2.fillStyle=L.bg||'rgba(52,30,12,.72)';c2.fillRect(bx,y-h/2,w,h);}
+  c2.fillStyle=L.color||'#fbeedb';c2.fillText(L.text,x,y);}
+ return {ok:true,three:THREE.REVISION,ao,tone:opt.tone||'neutral',info:renderer.info.render};
+};
+window.threeReady=true;
+</script></body></html>
