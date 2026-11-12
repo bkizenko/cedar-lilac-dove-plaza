@@ -93,3 +93,11 @@ test('fosterage and hostages: real wards, tie effects, term end, war breaks the 
  const {nudgeSocietyRelation}=await import('../src/game/societyRelations.ts');
  g.tribe(1).hostile=true;settleWards(g);assert.equal(wardsOf(g,0).length,0,'war ends every pledge');
 });
+
+test('npcMarriages: only rivals, only on cadence, only when scale and acquaintance allow; old saves untouched',async()=>{
+ const {npcMarriages}=await import('../src/game/rulersRuntime.ts');
+ const {ensureRulers}=await import('../src/game/rulersRuntime.ts');const g=fixture();ensureRulers(g);g.state.rulers.year=4;
+ const w=npcMarriages(g);assert.ok(w.every(([a,b])=>a!==0&&b!==0),'player never auto-wed');
+ g.state.rulers.year=5;assert.deepEqual(npcMarriages(g),[]);
+ delete g.state.worldOptions.rulersVersion;delete g.state.rulers;g.state.time=0;assert.deepEqual(npcMarriages(g),[]);
+});

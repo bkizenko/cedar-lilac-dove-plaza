@@ -144,3 +144,13 @@ export function settleWards(g:Game){
  }
  if(done.length)st(g).rulers={...st(g).rulers!,wards:keep};
 }
+
+/** Rival societies wed each other: every 4th dynastic year each non-player society tries the nearest-numbered peaceful, mutually known neighbour
+ * (marryHouses enforces scale gates, free adults, and applies real ties). Never touches the player's house. Returns the pairs wed (for tests/log). */
+export function npcMarriages(g:Game):[number,number][]{
+ const r=ensureRulers(g);if(!r||r.year%4!==0)return [];
+ const ids=g.state.tribes.map((_,i)=>i).filter(i=>i!==0&&i!==3&&!!g.tribe(i)),out:[number,number][]=[];
+ for(const a of ids){const b=ids.find(x=>x>a&&!societyRelation(g,a,x).hostile&&societyRelation(g,a,x).known&&societyRelation(g,x,a).known);
+  if(b!==undefined&&marryHouses(g,a,b))out.push([a,b]);}
+ return out;
+}
