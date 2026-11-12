@@ -60,7 +60,7 @@ export type Commander={
  id:number;team:number;unitId:number;name:string;kind:CommanderKind;
  traits:string[];promotions:string[];xp:number;level:number;promotionPoints:number;
  status:CommanderStatus;memberIds:number[];boatIds:number[];
- appointedAt:number;lastSeen?:{x:number;z:number};capturedBy?:number;fellAt?:number;replacedBy?:number;replaces?:number;
+ appointedAt:number;lastSeen?:{x:number;z:number};capturedBy?:number;capturedAt?:number;fellAt?:number;/** Rival commanders only: the player saw the loss (captor, or a player unit/building within sight of where the commander was last seen). Only then may it be reported. */seenByPlayer?:boolean;replacedBy?:number;replaces?:number;
  /** Last observed sum of member + own combat experience, so XP follows only new experience. */xpMark:number;
 };
 export type CommandersState={version:1;roster:Commander[];rivals:boolean;lastRivalReview?:number};
@@ -86,6 +86,12 @@ export const nextLevelXp=(c:Commander)=>c.level>=R.maximumLevel?null:R.levelXp[c
 const levelFor=(xp:number)=>{let l=1;for(let i=1;i<R.levelXp.length;i++)if(xp>=R.levelXp[i])l=i+1;return Math.min(l,R.maximumLevel);};
 
 const unitById=(g:Game,id:number)=>g.state.units.find(u=>u.id===id);
+/** Public-fact test for rival news: the player captured them, or had eyes (a living unit or a building) near where they were last seen. */
+const SIGHT=45;
+function playerSaw(g:Game,c:Commander,captor?:number):boolean{
+ if(c.team===0)return true;if(captor===0)return true;const p=c.lastSeen;if(!p)return false;
+ return g.state.units.some(u=>u.team===0&&u.hp>0&&Math.hypot(u.x-p.x,u.z-p.z)<=SIGHT)||g.state.buildings.some(b=>b.team===0&&b.hp>0&&Math.hypot(b.x-p.x,b.z-p.z)<=SIGHT);
+}
 const own=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>0&&!isDependent(g,u)&&(!u.prisoner||u.prisoner.phase==='released')&&!u.emergency&&!u.recalled;
 export function commandSlots(g:Game,team:number){
  const posts=g.state.buildings.filter(b=>b.team===team&&b.hp>0&&g.finished(b)&&(b.type==='barracks'||b.type==='keep')).length;
@@ -217,10 +223,10 @@ export function tickCommanders(g:Game,dt:number){
  for(const c of s.roster){
   if(!isLive(c))continue;
   const u=byId.get(c.unitId);
-  if(!u||u.hp<=0){c.status='fallen';c.fellAt=g.state.time;c.memberIds=[];c.boatIds=[];changed=true;continue;}
+  if(!u||u.hp<=0){c.seenByPlayer=playerSaw(g,c,undefined);c.status='fallen';c.fellAt=g.state.time;c.memberIds=[];c.boatIds=[];changed=true;continue;}
   c.lastSeen={x:u.x,z:u.z};
   const held=!!u.prisoner&&u.prisoner.phase!=='released';
-  if(held&&c.status==='serving'){c.status='captured';c.capturedBy=u.prisoner!.captorTeam;changed=true;}
+  if(held&&c.status==='serving'){c.status='captured';c.capturedBy=u.prisoner!.captorTeam;c.capturedAt=g.state.time;c.seenByPlayer=playerSaw(g,c,c.capturedBy);changed=true;}
   else if(!held&&c.status==='captured'){c.capturedBy=undefined;if(c.replacedBy!==undefined){c.status='retired';c.memberIds=[];c.boatIds=[];}else c.status='serving';changed=true;}
   if(c.status!=='serving')continue;
   const before=c.memberIds.length;c.memberIds=c.memberIds.filter(id=>{const m=byId.get(id);return !!m&&m.hp>0&&m.team===c.team&&!m.prisoner;});
@@ -288,7 +294,8 @@ export function validCommanders(s:any){
   if(!Array.isArray(c.memberIds)||!Array.isArray(c.boatIds)||c.memberIds.length>R.maximumCapacity||c.boatIds.length>R.maximumFleetCapacity||c.memberIds.some((m:any)=>!id(m))||c.boatIds.some((m:any)=>!id(m))||!isLive(c)&&(c.memberIds.length||c.boatIds.length))return false;
   if(c.kind==='army'&&c.boatIds.length||c.kind==='fleet'&&c.memberIds.length)return false;
   if(isLive(c)){if(units.has(c.unitId))return false;units.add(c.unitId);perTeam.set(c.team,(perTeam.get(c.team)||0)+1);}
-  for(const k of ['capturedBy','fellAt','replacedBy','replaces'] as const)if(c[k]!==undefined&&!Number.isFinite(c[k]))return false;
+  if(c.seenByPlayer!==undefined&&typeof c.seenByPlayer!=='boolean')return false;
+  for(const k of ['capturedBy','capturedAt','fellAt','replacedBy','replaces'] as const)if(c[k]!==undefined&&!Number.isFinite(c[k]))return false;
   if(c.lastSeen!==undefined&&(!c.lastSeen||!Number.isFinite(c.lastSeen.x)||!Number.isFinite(c.lastSeen.z)))return false;
  }
  const seenMembers=new Set<number>();
