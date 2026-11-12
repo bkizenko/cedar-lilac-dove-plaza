@@ -1,3 +1,4 @@
+import {wildOrderIssue} from './wildCraft';
 import{resetCommandExecution}from'./commandExecution';
 import{fibreOrderIssue}from'./fibre';
 import{productionOwnershipIssue}from'./productionOwnership';
@@ -21,7 +22,7 @@ export function commandDiagnostics(g:Game):Diagnostics {
 export function acceptWorkerCommand(g:Game,u:Unit,kind:string){
   const reason=u.prisoner?'This person is in custody or returning from release; use prisoner actions':u.hp<=0?'This resident is incapacitated':
     isDependent(g,u)?'Children remain supported by the village':
-    u.boat?.phase==='aboard'?'Disembark before assigning land work':productionOwnershipIssue(g,u)||fibreOrderIssue(u);
+    u.boat?.phase==='aboard'?'Disembark before assigning land work':productionOwnershipIssue(g,u)||wildOrderIssue(g,u)||fibreOrderIssue(u);
   let d=diagnostics.get(g);
   if(!d){d={attempted:0,accepted:0,rejected:0,outcomes:[]};diagnostics.set(g,d);}
   d.attempted++;if(reason)d.rejected++;else d.accepted++;

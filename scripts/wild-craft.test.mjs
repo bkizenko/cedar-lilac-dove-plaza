@@ -1,10 +1,10 @@
 import test from'node:test';import assert from'node:assert/strict';
 import {Game}from'../src/game/sim.ts';import {encodeGame,decodeGame}from'../src/game/persistence.ts';import{campAnchor}from'../src/game/campAnchor.ts';
-import{collectWildBatch,enableWildCraft,beginWildWork,cancelWildWork,wildIssue,wildStock,tickWildCraft,wildCraftFeedback,wildSpoilRate,validWildCraftState,WILD_RECIPES,BUTCHERY_PARTS,huntMethodFor,trapKindFor,WILD_RULES}from'../src/game/wildCraft.ts';
+import{collectWildBatch,resumeWildWork,enableWildCraft,beginWildWork,cancelWildWork,wildIssue,wildStock,tickWildCraft,wildCraftFeedback,wildSpoilRate,validWildCraftState,WILD_RECIPES,BUTCHERY_PARTS,huntMethodFor,trapKindFor,WILD_RULES}from'../src/game/wildCraft.ts';
 import{CARCASS_MEAT}from'../src/game/hunting.ts';import{foodInventory}from'../src/game/pantry.ts';
 function fixture(){const g=new Game();g.reset(1,14,{size:1040,layout:'pangaea'});g.enterIsland();g.state.autoWorkEnabled=false;g.state.weather='clear';g.state.weatherT=10000;g.state.raidT=10000;g.state.visitorTimer=900;g.state.wildlife=[];for(const t of g.state.tribes)t.thinkT=10000;Object.assign(g.tribe(0),{wood:120,stone:70,food:1000,foodLots:{provisions:1000},items:{}});g.tribe(0).survival.waterLiters=1000;for(const u of g.state.units.filter(u=>u.team===0)){u.order='hold';u.jobLock=true;}return g;}
 function drive(g,seconds,until=()=>false){const end=g.state.time+seconds;while(g.state.time<end&&!until()){const before=g.state.time;g.state.paused=false;g.step(.2);assert.ok(g.state.time>before);}assert.deepEqual(g.simulationErrors,[]);}
-function site(g,type){const home=campAnchor(g,0);for(let radius=10;radius<=44;radius+=4)for(let i=0;i<24;i++){const x=home.x+Math.cos(i*Math.PI/12)*radius,z=home.z+Math.sin(i*Math.PI/12)*radius;if(g.placementIssue(type,x,z))continue;assert.equal(g.placeBuilding(type,x,z),true,g.state.banner);const b=g.state.buildings.at(-1),u=g.state.units.find(u=>u.team===0);g.clearSelect();g.selectEntity(u);g.orderConstruction(b);drive(g,200,()=>g.finished(b));assert.ok(g.finished(b));g.clearSelect();for(const v of g.state.units.filter(u=>u.team===0)){v.order='hold';v.jobLock=true;}return b;}throw Error('no site '+type);}
+function site(g,type){const home=campAnchor(g,0);for(let radius=10;radius<=44;radius+=4)for(let i=0;i<24;i++){const x=home.x+Math.cos(i*Math.PI/12)*radius,z=home.z+Math.sin(i*Math.PI/12)*radius;if(g.placementIssue(type,x,z))continue;assert.equal(g.placeBuilding(type,x,z),true,g.state.banner);const b=g.state.buildings.at(-1),u=g.state.units.find(u=>u.team===0);g.clearSelect();g.selectEntity(u);g.orderConstruction(b);drive(g,200,()=>g.finished(b));assert.ok(g.finished(b));g.clearSelect();for(const v of g.state.units.filter(u=>u.team===0)){g.interruptMission(v);v.order='hold';v.jobLock=true;}return b;}throw Error('no site '+type);}
 const free=g=>g.state.units.find(x=>x.team===0&&x.type==='worker'&&x.carry<=0&&x.wildWorkId===undefined&&x.hp>0);
 const worker=(g,n=0)=>g.state.units.filter(u=>u.team===0&&u.type==='worker')[n];
 function carcass(g,species,dx=4){const c=campAnchor(g,0),x=c.x+dx,z=c.z+3;const a={id:g.id(),species,x,z,y:g.height(x,z),hp:0,maxHp:6,facing:0,vx:0,vz:0,wanderT:10000,fly:0,scale:1,carcass:{meat:CARCASS_MEAT[species],diedAt:g.state.time,prepared:true,preparationWork:2}};g.state.wildlife.push(a);return a;}
@@ -36,7 +36,7 @@ test('hide chain needs seen/taught method, real stations and weather; one scrape
  assert.match(wildIssue(g,0,'soakHide'),/seen or been taught|Needs a finished/);
  t.productionPractice={fleshHide:PP};
  const tanner=site(g,'tanner'),rack=site(g,'dryrack');
- const u=worker(g);assert.equal(beginWildWork(g,u.id,'soakHide').accepted,true);
+ const u=worker(g);{const started=beginWildWork(g,u.id,'soakHide');assert.equal(started.accepted,true,started.reason);}
  drive(g,600,()=>u.wildWorkId===undefined);assert.equal(t.items.cleanHide,0,'hide is paid at the cache, not created');assert.equal(wildStock(g,0).soakedHide>0.5,true);
  wildStock(g,0).brain=1;{const f=free(g);assert.equal(beginWildWork(g,f.id,'brainTan').accepted,true);drive(g,700,()=>f.wildWorkId===undefined);}
  assert.ok(wildStock(g,0).tannedHide>0.5);assert.equal(wildStock(g,0).brain||0,0);
@@ -92,8 +92,8 @@ test('determinism, save round-trip with live jobs, strict validation, and old sa
  const old=fixture();assert.equal(old.state.wildCraft,undefined);const o=decodeGame(encodeGame(old));assert.equal(o.state.wildCraft,undefined);assert.equal(validWildCraftState({units:o.state.units}),true);
  drive(o,20);assert.equal(o.state.wildCraft,undefined,'an old save never grows the field');
 });
-test('cancelling a job returns every paid input to the cache',()=>{
- const g=fixture();enableWildCraft(g);site(g,'tanner');g.tribe(0).productionPractice={fleshHide:PP};const t=g.tribe(0);t.items={cleanHide:1};const u=worker(g);
- beginWildWork(g,u.id,'soakHide');drive(g,5);assert.equal(t.items.cleanHide,0);const held=t.survival.waterLiters;assert.equal(cancelWildWork(g,u.id),true);
- assert.equal(t.items.cleanHide,1);assert.equal(t.survival.waterLiters,held+2);assert.equal(g.state.wildCraft.projects.length,0);assert.equal(u.wildWorkId,undefined);
+test('unfetched cache escrow cancels in place; remote cancellation retains paid inputs until actual Resume and delivery',()=>{
+ const g=fixture();enableWildCraft(g);site(g,'tanner');g.tribe(0).productionPractice={fleshHide:PP};const t=g.tribe(0);t.items={cleanHide:1};const u=worker(g),water=t.survival.waterLiters;
+ {const started=beginWildWork(g,u.id,'soakHide');assert.equal(started.accepted,true,started.reason);}assert.equal(t.items.cleanHide,0);assert.equal(cancelWildWork(g,u.id),true,'inputs never left the actual cache');assert.equal(t.items.cleanHide,1);assert.equal(t.survival.waterLiters,water);assert.equal(g.state.wildCraft.projects.length,0);
+ {const started=beginWildWork(g,u.id,'soakHide');assert.equal(started.accepted,true,started.reason);}const p=g.state.wildCraft.projects[0];drive(g,120,()=>p.phase==='work'&&p.progress>1);assert.equal(p.phase,'work');const held=structuredClone(p.held),after=t.survival.waterLiters;assert.equal(cancelWildWork(g,u.id),false,'cannot teleport inputs from the distant tannery');assert.equal(p.paused,true);assert.deepEqual(p.held,held);assert.equal(t.items.cleanHide,0);assert.equal(t.survival.waterLiters,after);assert.equal(resumeWildWork(g,u.id),true);drive(g,300,()=>u.wildWorkId===undefined);assert.equal(u.wildWorkId,undefined);assert.equal(g.state.wildCraft.projects.length,0);assert.ok(wildStock(g,0).soakedHide>0);assert.equal(t.items.cleanHide,0);
 });

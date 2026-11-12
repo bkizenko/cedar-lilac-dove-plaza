@@ -1,3 +1,14 @@
+import {bindWildCraftLoad} from './carriedLoad';
+import {hasTaskCommitment} from './workCommitments';
+import {isDependent} from './settlement';
+import {supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
+import {clearCargoApproach} from './farmToolCargo';
+import {connectedForUnit} from './waterTravel';
+import {releaseTreeWorker} from './workAllocation';
+import {workRuntime} from './workRuntime';
+import type {JobCoordinator} from './jobCoordinator';
+import {ITEM_KINDS,productionSlots} from './production';
+import {FOOD_KINDS} from './foodKinds';
 /** Wild-craft: Dawn-of-Man-grade hunting, butchery, hide, meat/fruit and feedback chains.
  * Opt-in per game (`state.wildCraft` present). Every output is debited from a physical
  * source first: a carcass's finite parts, a station-held input, or a ledger good. Times are
@@ -5,7 +16,7 @@
  * run any of this. Reuses: climateAt, advanceDrying, hasDeliveredMethod, receiveFood,
  * takeFoodLot, tribe items/wood/water, predisposition, steer/interactionSpot. */
 import type {Game} from './sim';
-import type {Building,BldType,Critter,CritterKind,FoodKind,Unit} from './types';
+import type {Building,BldType,Critter,CritterKind,FoodKind,Unit,GameState} from './types';
 import {climateAt} from './ecology';
 import {advanceDrying,emptyDryingExposure,validDryingExposure,dryingConditions,PRESERVATION_RULES,type DryingExposure} from './foodPreservation';
 import {hasDeliveredMethod} from './inheritedKnowledge';
@@ -73,7 +84,7 @@ export const WILD_RECIPES:Record<WildRecipeId,WildRecipe>={
 };
 export const WILD_RECIPE_IDS=Object.keys(WILD_RECIPES) as WildRecipeId[];
 
-export type WildProject={id:number;team:number;recipe:WildRecipeId;actorId:number;phase:'fetch'|'go'|'work'|'dry'|'ready'|'collect'|'back';progress:number;startedAt:number;
+export type WildProject={paused?:true;cache?:{kind:'camp'|'building';id?:number;x:number;z:number};packet?:{x:number;z:number};id:number;team:number;recipe:WildRecipeId;actorId:number;phase:'fetch'|'go'|'work'|'dry'|'ready'|'collect'|'back';progress:number;startedAt:number;
  stationId?:number;critterId?:number;x?:number;z?:number;trapKind?:'snare'|'pitfall';trailIndex?:number;trailWait?:number;
  held:{items:Partial<Record<ItemKind,number>>;goods:GoodStock;food:Partial<Record<FoodKind,number>>;wood:number;water:number};carried:{goods:GoodStock;items:Partial<Record<ItemKind,number>>;food:Partial<Record<FoodKind,number>>};exposure?:DryingExposure};
 export type Wound={since:number;trail:{x:number;z:number}[];bleed:number};
@@ -95,7 +106,7 @@ function station(g:Game,id:number|undefined,team:number,type:BldType){const b=g.
 export function stationsFor(g:Game,team:number,type:BldType){return g.state.buildings.filter(b=>b.team===team&&b.type===type&&b.hp>0&&g.finished(b));}
 /** Real capacity: two loaded batches per station, as the existing drying rack/smokehouse. */
 export const WILD_STATION_SLOTS=2;
-const slotsInUse=(w:WildCraftState,id:number)=>w.projects.filter(p=>p.stationId===id&&['go','work','dry','ready','collect'].includes(p.phase)).length;
+const slotsInUse=(w:WildCraftState,id:number)=>w.projects.filter(p=>p.stationId===id&&!['back'].includes(p.phase)).length;
 const slotsHeld=(w:WildCraftState,id:number)=>w.projects.filter(p=>p.stationId===id&&['work','dry','ready','collect'].includes(p.phase)).length;
 
 export type WildIssue=string|null;
@@ -103,9 +114,31 @@ function recipeKnown(g:Game,team:number,r:WildRecipe){
  const w=g.state.wildCraft!;if(!r.gate)return true;
  return hasDeliveredMethod(g,team,r.gate)||(w.practice[String(team)]?.[r.id]||0)>0;
 }
+const wildKey=(id:number)=>`wild-craft:${id}`;
+function wildBodyPacket(p:WildProject){return !p.packet&&(Object.values(p.held.items).some(n=>(n||0)>0)||Object.values(p.held.goods).some(n=>(n||0)>0)||Object.values(p.held.food).some(n=>(n||0)>0)||p.held.wood>0||p.held.water>0||Object.values(p.carried.goods).some(n=>(n||0)>0)||Object.values(p.carried.items).some(n=>(n||0)>0)||Object.values(p.carried.food).some(n=>(n||0)>0));}
+function wildAdult(g:Game,u:Unit,own=false){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)&&!u.emergency&&!u.recalled&&!u.boat&&!u.resting&&!u.shelterId&&!u.expedition&&!u.visit&&!u.trade&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u,own?'wildWorkId':undefined);}
+function sameWildCache(h:NonNullable<WildProject['cache']>,d:SupplyDrop){return Math.hypot(h.x-d.x,h.z-d.z)<.01&&(d.kind==='camp'?h.kind==='camp':h.kind==='building'&&h.id===d.id);}
+function actualWildCache(g:Game,u:Unit){return supplyDrops(g,u.team).find(d=>{const spot=supplyApproach(g,u,d);return spot&&supplyReached(g,u,d,spot);});}
+function wildReservations(g:Game,p:WildProject){const b=p.stationId===undefined?undefined:g.state.buildings.find(b=>b.id===p.stationId&&b.team===p.team&&g.finished(b));return b&&p.phase!=='back'?[{key:`production:${b.id}:slots`,amount:1,capacity:productionSlots(b)}]:[];}
+/** Pure checks before interrupting unrelated tree ownership. JS admission is
+ * synchronous; no executor can fill a checked slot between this and commit. */
+function wildPreflight(g:Game,p:WildProject,jobs=workRuntime(g)){
+ const id=wildKey(p.id),actor=p.paused||p.actorId===0?undefined:jobs.activeJob(p.actorId);if(actor&&actor.id!==id&&actor.kind!=='gather:wood')return false;
+ return wildReservations(g,p).every(r=>jobs.reservations.used(r.key,id)+r.amount<=r.capacity);
+}
+function claimWild(g:Game,p:WildProject,jobs=workRuntime(g)){
+ if(!wildPreflight(g,p,jobs))return false;const id=wildKey(p.id),fresh=!jobs.job(id),claims=wildReservations(g,p);
+ if(fresh)jobs.propose({id,kind:'wild-craft',owner:p.team,actors:[],target:p.stationId??p.critterId??null});if(!jobs.amend(id,p.paused||p.actorId===0?[]:[p.actorId],claims)){if(fresh){jobs.finish(id,true);jobs.forget(id);}return false;}if(p.actorId>0){const u=g.state.units.find(u=>u.id===p.actorId),owned=g.state.wildCraft?.projects.find(q=>q.id===p.id)??p;if(u)bindWildCraftLoad(u,owned);}jobs.transition(id,p.paused?'reserved':p.phase==='work'||p.phase==='dry'?'working':p.phase==='back'?'returning':'traveling',p.progress);return true;
+}
+function releaseWild(g:Game,p:WildProject){const jobs=workRuntime(g),id=wildKey(p.id);jobs.finish(id);jobs.forget(id);}
+export function rebuildWildCraftOwnership(g:Game,jobs:JobCoordinator){for(const p of g.state.wildCraft?.projects||[])claimWild(g,p,jobs);}
+export function pauseWildWork(g:Game,u:Unit){const p=g.state.wildCraft?.projects.find(p=>p.id===u.wildWorkId&&p.actorId===u.id);if(!p)return false;p.paused=true;u.wildWorkPaused=!wildBodyPacket(p)?true:undefined;claimWild(g,p);return true;}
+export function resumeWildWork(g:Game,unitId:number){const u=g.state.units.find(u=>u.id===unitId),p=g.state.wildCraft?.projects.find(p=>p.id===u?.wildWorkId&&p.actorId===unitId);if(!u||!p?.paused||!wildAdult(g,u,true))return false;const job=workRuntime(g).activeJob(u.id);if(job&&job.id!==wildKey(p.id)&&job.kind!=='gather:wood')return false;if(!wildPreflight(g,{...p,paused:undefined}))return false;g.interruptMission(u);releaseTreeWorker(g,u);delete p.paused;if(!claimWild(g,p)){p.paused=true;return false;}delete u.wildWorkPaused;if(p.phase==='work')p.phase='go';u.order='move';u.node=null;g.invalidateRoute(u);return true;}
+/** A dead holder remains the physical location of its finite paid packet until recovered. */
+export function wildBodyMustRemain(u:Unit){return u.hp<=0&&u.wildWorkId!==undefined;}
 /** Why a recipe cannot start now (null = can start). Inputs are checked, not yet debited. */
 export function wildIssue(g:Game,team:number,id:WildRecipeId,opts:{stationId?:number;critterId?:number}={}):WildIssue{
- const w=g.state.wildCraft;if(!w)return 'Wild-craft is not enabled';const r=WILD_RECIPES[id],t=g.tribe(team);
+ const w=g.state.wildCraft;if(!w)return 'Wild-craft is not enabled';if(!Object.hasOwn(WILD_RECIPES,id)||!g.tribe(team)?.alive)return 'Choose an actual recipe and living village';const r=WILD_RECIPES[id],t=g.tribe(team);
  if(w.projects.length>=WILD_RULES.maxProjects)return 'Too many open jobs';
  if(!recipeKnown(g,team,r))return `Nobody here has seen or been taught ${r.name.toLowerCase()}`;
  if(r.station!=='carcass'&&r.station!=='field'&&r.station!=='trail'){
@@ -113,7 +146,8 @@ export function wildIssue(g:Game,team:number,id:WildRecipeId,opts:{stationId?:nu
   const id2=opts.stationId,pick=id2!==undefined?sts.find(b=>b.id===id2):sts.find(b=>slotsInUse(w,b.id)<WILD_STATION_SLOTS);
   if(!pick)return `All ${r.station} slots are busy`;if(slotsInUse(w,pick.id)>=WILD_STATION_SLOTS)return `${r.station} slots are full`;
  }
- const stock=wildStock(g,team);
+ if((id==='setSnare'||id==='digPitfall')&&w.traps.length+w.projects.filter(p=>p.trapKind).length>=WILD_RULES.maxTraps)return 'Trap capacity is fully reserved';
+ const stock=w.stock[String(team)]||{};
  for(const[k,n]of Object.entries(r.goods||{}))if((stock[k as WildGood]||0)<n!)return `Need ${n} ${k} in store`;
  for(const[k,n]of Object.entries(r.items||{}))if(((t.items||{})[k as ItemKind]||0)<n!)return `Need ${n} ${k} at the camp cache`;
  for(const[k,n]of Object.entries(r.foodIn||{}))if(foodInventory(t)[k as FoodKind]+1e-9<n!)return `Need ${n} ${k} in store`;
@@ -130,7 +164,8 @@ export function partsLeft(g:Game,c:HuntableCritter){
 
 /** Start a job: the actor is committed and the inputs are claimed (debited) from the cache at once; the actor then walks to the camp, carries them to the station and works. Cancelling refunds them. */
 export function beginWildWork(g:Game,unitId:number,id:WildRecipeId,opts:{stationId?:number;critterId?:number;x?:number;z?:number}={}):{accepted:boolean;reason:string}{
- const w=g.state.wildCraft,u=g.state.units.find(u=>u.id===unitId&&u.hp>0);if(!w||!u)return {accepted:false,reason:'No such resident'};
+ const w=g.state.wildCraft,u=g.state.units.find(u=>u.id===unitId&&u.hp>0);if(!w||!u||!Object.hasOwn(WILD_RECIPES,id))return {accepted:false,reason:'No such resident or recipe'};
+ if(!wildAdult(g,u))return {accepted:false,reason:'Need a healthy free adult without another committed duty'};
  if(u.wildWorkId!==undefined)return {accepted:false,reason:'Already on a wild-craft job'};
  if(u.carry>0||Object.values(u.itemCargo||{}).some(n=>(n||0)>0))return {accepted:false,reason:'Hands are full'};
  const r=WILD_RECIPES[id];
@@ -139,13 +174,15 @@ export function beginWildWork(g:Game,unitId:number,id:WildRecipeId,opts:{station
  if(r.station==='field'&&(opts.x===undefined||opts.z===undefined||!g.walkable(opts.x,opts.z)))return {accepted:false,reason:'Needs walkable ground'};
  const issue=wildIssue(g,u.team,id,{...opts,stationId:sid});if(issue)return {accepted:false,reason:issue};
  if(id==='trackWounded'&&!(opts.critterId!==undefined&&w.wounds[opts.critterId]))return {accepted:false,reason:'No blood trail'};
- const p:WildProject={id:w.nextId++,team:u.team,recipe:id,actorId:u.id,phase:r.station==='carcass'||r.station==='field'||r.station==='trail'?(Object.keys({...r.items,...r.goods}).length||r.wood?'fetch':'go'):'fetch',progress:0,startedAt:g.state.time,
+ const drop=supplyDrops(g,u.team).map(drop=>({drop,spot:supplyApproach(g,u,drop)})).find(d=>d.spot);if(!drop)return{accepted:false,reason:'No reachable actual supply cache'};
+ const p:WildProject={id:w.nextId,team:u.team,recipe:id,actorId:u.id,phase:r.station==='carcass'||r.station==='field'||r.station==='trail'?(Object.keys({...r.items,...r.goods}).length||r.wood?'fetch':'go'):'fetch',progress:0,startedAt:g.state.time,
   ...(sid!==undefined?{stationId:sid}:{}),...(opts.critterId!==undefined?{critterId:opts.critterId}:{}),...(opts.x!==undefined?{x:opts.x,z:opts.z}:{}),
   ...(id==='setSnare'?{trapKind:'snare' as const}:id==='digPitfall'?{trapKind:'pitfall' as const}:{}),
   held:{items:{},goods:{},food:{},wood:0,water:0},carried:{goods:{},items:{},food:{}},...(r.drying?{exposure:emptyDryingExposure()}:{})};
  // Dressing and tracking begin at the carcass/trail with nothing to fetch.
  if(id==='dressParts'||id==='trackWounded'){p.phase='go';}
- if(p.phase==='fetch')debitInputs(g,p);
+ if(p.phase==='fetch'){p.cache={kind:drop.drop.kind==='camp'?'camp':'building',...(drop.drop.kind==='camp'?{}:{id:drop.drop.id}),x:drop.drop.x,z:drop.drop.z};p.packet={x:drop.drop.x,z:drop.drop.z};}
+ if(!wildPreflight(g,p))return{accepted:false,reason:'Actor or real workplace slot is already reserved'};releaseTreeWorker(g,u);if(!claimWild(g,p))return{accepted:false,reason:'Actor or real workplace slot is already reserved'};g.interruptMission(u);w.nextId++;if(p.phase==='fetch')debitInputs(g,p);
  w.projects.push(p);u.wildWorkId=p.id;u.order='move';u.node=null;u.workReason=`${r.icon} ${r.name}`;g.workBoard.invalidateTasks();
  return {accepted:true,reason:''};
 }
@@ -159,14 +196,17 @@ function debitInputs(g:Game,p:WildProject){
 }
 /** Cancelling returns every held input to the cache; nothing is lost or invented. */
 export function cancelWildWork(g:Game,unitId:number){
- const w=g.state.wildCraft,u=g.state.units.find(u=>u.id===unitId);if(!w||!u||u.wildWorkId===undefined)return false;
- const p=w.projects.find(p=>p.id===u.wildWorkId);if(p)refund(g,p);dropProject(g,u,p);return true;
+ const w=g.state.wildCraft,u=g.state.units.find(u=>u.id===unitId);if(!w||!u||u.wildWorkId===undefined)return false;const p=w.projects.find(p=>p.id===u.wildWorkId);if(!p)return false;
+ const escrow=p.phase==='fetch'&&p.cache&&supplyDrops(g,p.team).some(d=>sameWildCache(p.cache!,d)),here=actualWildCache(g,u),packetHere=here&&(!p.packet||Math.hypot(p.packet.x-u.x,p.packet.z-u.z)<1.8);
+ if(!escrow&&!packetHere){pauseWildWork(g,u);u.workReason='Paid packet retained at its real place; resume and return it before canceling';return false;}
+ if(p.phase==='back')credit(g,p);else refund(g,p);dropProject(g,u,p);return true;
 }
+
 function refund(g:Game,p:WildProject){
  const t=g.tribe(p.team),stock=wildStock(g,p.team);t.items??={};
- for(const[k,n]of Object.entries(p.held.goods))stock[k as WildGood]=(stock[k as WildGood]||0)+n!;
- for(const[k,n]of Object.entries(p.held.items))t.items[k as ItemKind]=(t.items[k as ItemKind]||0)+n!;
- for(const[k,n]of Object.entries(p.held.food))receiveFood(g,p.team,n!,k as FoodKind);
+ for(const[k,n]of Object.entries(p.held.goods)){stock[k as WildGood]=(stock[k as WildGood]||0)+n!;bump(g.state.wildCraft!.metrics.consumed,k,-n!);}
+ for(const[k,n]of Object.entries(p.held.items)){t.items[k as ItemKind]=(t.items[k as ItemKind]||0)+n!;bump(g.state.wildCraft!.metrics.consumed,k,-n!);}
+ for(const[k,n]of Object.entries(p.held.food)){const lots=foodInventory(t);lots[k as FoodKind]+=n!;t.food+=n!;t.foodLots=lots;bump(g.state.wildCraft!.metrics.consumed,k,-n!);}
  t.wood+=p.held.wood;if(t.survival)t.survival.waterLiters+=p.held.water;
  p.held={items:{},goods:{},food:{},wood:0,water:0};
  for(const[k,n]of Object.entries(p.carried.goods))stock[k as WildGood]=(stock[k as WildGood]||0)+n!;
@@ -175,8 +215,8 @@ function refund(g:Game,p:WildProject){
  p.carried={goods:{},items:{},food:{}};
 }
 function dropProject(g:Game,u:Unit|undefined,p?:WildProject){
- const w=g.state.wildCraft!;if(p)w.projects=w.projects.filter(q=>q!==p);
- if(u){delete u.wildWorkId;u.order='idle';u.workReason='Finished wild-craft job';g.invalidateRoute?.(u);}
+ const w=g.state.wildCraft!;if(p){releaseWild(g,p);w.projects=w.projects.filter(q=>q!==p);}
+ if(u){const other=hasTaskCommitment(u,'wildWorkId');delete u.wildWorkId;delete u.wildWorkPaused;if(!other){u.order='idle';u.workReason='Finished wild-craft job';g.invalidateRoute?.(u);}}
  g.workBoard.invalidateTasks();
 }
 const walkTo=(g:Game,u:Unit,x:number,z:number,dt:number,why:string)=>{const s=g.nearestWalk(u,x,z);u.tx=s.x;u.tz=s.z;u.workReason=why;g.steer(u,dt);};
@@ -187,26 +227,25 @@ const workRate=(u:Unit)=>.6+predisposition(u).strength*.4;
 export function wildCraftAI(g:Game,u:Unit,dt:number):boolean{
  const w=g.state.wildCraft;if(!w||u.wildWorkId===undefined)return false;
  const p=w.projects.find(p=>p.id===u.wildWorkId&&p.actorId===u.id);
- if(!p){delete u.wildWorkId;return false;}
+ if(!p){delete u.wildWorkId;delete u.wildWorkPaused;return false;}if(p.paused)return false;if(!claimWild(g,p)){u.workReason='Wild-craft actor or workplace is reserved';return true;}
  const r=WILD_RECIPES[p.recipe],camp=g.campOf(p.team);
  if(p.recipe==='trackWounded')return trackAI(g,u,p,dt);
  if(p.phase==='fetch'){
-  if(!near(u,camp.x,camp.z,6)){walkTo(g,u,camp.x,camp.z,dt,`${r.icon} Collecting inputs at camp`);return true;}
-  p.phase='go';return true;
+  const cache=p.cache&&supplyDrops(g,p.team).find(d=>sameWildCache(p.cache!,d)),spot=cache&&supplyApproach(g,u,cache);if(!cache||!spot){u.workReason='Original paid cache needs a real reachable entrance';return true;}if(!supplyReached(g,u,cache,spot)){u.tx=spot.x;u.tz=spot.z;g.steer(u,dt);return true;}p.packet=undefined;p.phase='go';return true;
  }
  const b=p.stationId!==undefined?g.state.buildings.find(b=>b.id===p.stationId&&b.team===p.team&&b.hp>0):undefined;
- if(r.station!=='carcass'&&r.station!=='field'&&!b){refund(g,p);dropProject(g,u,p);return true;}
+ if(r.station!=='carcass'&&r.station!=='field'&&!b){pauseWildWork(g,u);u.workReason='Original workplace lost; same paid packet retained without refund';return true;}
  if(p.phase==='go'){
-  if(r.station==='carcass'){const c=critter(g,p.critterId);if(!c||!partsLeft(g,c)){refund(g,p);dropProject(g,u,p);return true;}if(!near(u,c.x,c.z,1.8)){walkTo(g,u,c.x,c.z,dt,`${r.icon} Walking to the carcass`);return true;}p.phase='work';return true;}
+  if(r.station==='carcass'){const c=critter(g,p.critterId);if(!c||!partsLeft(g,c)){pauseWildWork(g,u);u.workReason='Original carcass unavailable; retained work needs a direct decision';return true;}if(!near(u,c.x,c.z,1.8)){walkTo(g,u,c.x,c.z,dt,`${r.icon} Walking to the carcass`);return true;}p.phase='work';return true;}
   if(r.station==='field'){const x=p.x??u.x,z=p.z??u.z;if(!near(u,x,z,1.5)){walkTo(g,u,x,z,dt,`${r.icon} Going to the set site`);return true;}p.phase='work';return true;}
   if(!g.buildingWorkReached(u,b!)){const s=g.interactionSpot(u,b!);if(!s){u.workReason='No reachable workplace entrance';return true;}u.tx=s.x;u.tz=s.z;u.workReason=`${r.icon} Carrying inputs to the ${r.station}`;g.steer(u,dt);return true;}
-  if(slotsHeld(w,b!.id)>=WILD_STATION_SLOTS){u.workReason=`${r.icon} Waiting for a free slot`;return true;}
-  p.phase='work';return true;
+  if(slotsHeld(w,b!.id)>Math.min(WILD_STATION_SLOTS,productionSlots(b!))){u.workReason=`${r.icon} Waiting for a free slot`;return true;}
+  p.packet={x:u.x,z:u.z};p.phase='work';return true;
  }
  if(p.phase==='work'){
-  u.stride+=dt*6;p.progress+=dt*workRate(u);u.workReason=`${r.icon} ${r.name} · ${Math.min(100,Math.floor(p.progress/Math.max(1,r.workSeconds)*100))}%`;
+  if(b&&!g.buildingWorkReached(u,b)){p.phase='go';return true;}u.stride+=dt*6;p.progress=Math.min(r.workSeconds,p.progress+dt*workRate(u));u.workReason=`${r.icon} ${r.name} · ${Math.min(100,Math.floor(p.progress/Math.max(1,r.workSeconds)*100))}%`;
   if(p.progress<r.workSeconds)return true;
-  if(p.exposure){p.phase='dry';p.actorId=0;delete u.wildWorkId;u.order='idle';u.workReason=`${r.icon} Loaded the rack`;g.workBoard.invalidateTasks();return false;}
+  if(p.exposure){p.phase='dry';p.actorId=0;delete u.wildWorkId;delete u.wildWorkPaused;claimWild(g,p);u.order='idle';u.workReason=`${r.icon} Loaded the rack`;g.workBoard.invalidateTasks();return false;}
   return finishWork(g,u,p);
  }
  if(p.phase==='collect'){
@@ -214,7 +253,7 @@ export function wildCraftAI(g:Game,u:Unit,dt:number):boolean{
   return finishWork(g,u,p);
  }
  // phase 'back': carry outputs to the camp cache, then credit.
- if(!near(u,camp.x,camp.z,6)){walkTo(g,u,camp.x,camp.z,dt,`${r.icon} Carrying the result home`);return true;}
+ const drop=supplyDrops(g,p.team).map(drop=>({drop,spot:supplyApproach(g,u,drop)})).find(d=>d.spot);if(!drop?.spot){u.workReason='No reachable actual cache for finished wild goods';return true;}if(!supplyReached(g,u,drop.drop,drop.spot)){u.tx=drop.spot.x;u.tz=drop.spot.z;g.steer(u,dt);return true;}
  credit(g,p);dropProject(g,u,p);return true;
 }
 function wasteHeld(g:Game,p:WildProject){const m=g.state.wildCraft!.metrics;for(const grp of[p.held.goods,p.held.items,p.held.food])for(const[k,n]of Object.entries(grp))bump(m.lost,k,n!);p.held={items:{},goods:{},food:{},wood:0,water:0};g.addFloater?.(g.campOf(p.team).x,2,g.campOf(p.team).z,'ruined by wet weather','#c98');}
@@ -224,9 +263,9 @@ function finishWork(g:Game,u:Unit,p:WildProject){
   const c=critter(g,p.critterId),left=c&&partsLeft(g,c);if(!c||!left){dropProject(g,u,p);return true;}
   const room=Math.max(0,6-Object.values(p.carried.goods).reduce((n,v)=>n+(v||0),0));
   let cap=room;for(const k of['fat','sinew','brain','horn'] as const){const take=Math.min(left[k],cap);left[k]-=take;cap-=take;if(take>0)p.carried.goods[k]=(p.carried.goods[k]||0)+take;}
-  p.phase='back';u.workReason='🔪 Carrying parts home';return true;
+  p.packet=undefined;p.phase='back';u.workReason='🔪 Carrying parts home';return true;
  }
- if(p.trapKind){const kind=p.trapKind;if(w.traps.length>=WILD_RULES.maxTraps){refund(g,p);dropProject(g,u,p);return true;}
+ if(p.trapKind){const kind=p.trapKind;if(w.traps.length>=WILD_RULES.maxTraps){pauseWildWork(g,u);u.workReason='Trap capacity full; paid materials retained, no remote refund';return true;}
   w.traps.push({id:w.nextId++,team:p.team,kind,x:p.x??u.x,z:p.z??u.z,placedAt:g.state.time,uses:kind==='snare'?WILD_RULES.snareUses:1e6,catches:0,nextCheck:g.state.time+WILD_RULES.trapCheckSeconds,setBy:u.id});
   bump(w.metrics.consumed,'trapMaterials',Object.values(p.held.items).reduce((n,v)=>n+(v||0),0)+p.held.wood);p.held={items:{},goods:{},food:{},wood:0,water:0};
   w.metrics.completed++;dropProject(g,u,p);return true;}
@@ -235,7 +274,7 @@ function finishWork(g:Game,u:Unit,p:WildProject){
  for(const[k,n]of Object.entries(r.outItems||{}))p.carried.items[k as ItemKind]=(p.carried.items[k as ItemKind]||0)+n!;
  for(const[k,n]of Object.entries(r.outFood||{}))p.carried.food[k as FoodKind]=(p.carried.food[k as FoodKind]||0)+n!;
  for(const[k,n]of Object.entries(r.retain||{}))p.carried.items[k as ItemKind]=(p.carried.items[k as ItemKind]||0)+n!;
-  p.held={items:{},goods:{},food:{},wood:0,water:0};p.phase='back';u.workReason=`${r.icon} Carrying the result home`;
+  p.held={items:{},goods:{},food:{},wood:0,water:0};p.packet=undefined;p.phase='back';u.workReason=`${r.icon} Carrying the result home`;
  return true;
 }
 function credit(g:Game,p:WildProject){
@@ -250,9 +289,9 @@ function credit(g:Game,p:WildProject){
 /** Follow a wound's blood trail point by point, then take the carcass through the ordinary hunting flow. */
 function trackAI(g:Game,u:Unit,p:WildProject,dt:number){
  const w=g.state.wildCraft!,c=critter(g,p.critterId),wound=w.wounds[p.critterId!];
- const end=()=>{w.projects=w.projects.filter(q=>q!==p);delete u.wildWorkId;u.order='idle';g.workBoard.invalidateTasks();return true;};
+ const end=()=>{releaseWild(g,p);w.projects=w.projects.filter(q=>q!==p);delete u.wildWorkId;u.order='idle';g.workBoard.invalidateTasks();return true;};
  if(!c){return end();}
- if(c.hp<=0&&carcassAvailable(g,c)){w.projects=w.projects.filter(q=>q!==p);delete u.wildWorkId;u.order='gather';u.node=c as any;u.workReason='🩸 Found the kill';return true;}
+ if(c.hp<=0&&carcassAvailable(g,c)){releaseWild(g,p);w.projects=w.projects.filter(q=>q!==p);delete u.wildWorkId;u.order='gather';u.node=c as any;u.workReason='🩸 Found the kill';return true;}
  if(c.hp<=0)return end();
  const trail=wound?.trail||[];const i=p.trailIndex??0;
  if(i<trail.length){const pt=trail[i];if(near(u,pt.x,pt.z,2.2))p.trailIndex=i+1;else walkTo(g,u,pt.x,pt.z,dt,'🩸 Following the blood trail');return true;}
@@ -268,7 +307,7 @@ export function killWildAnimal(g:Game,c:Critter,team:number){
 
 /** Spoilage, bleeding, traps. Deterministic: no random numbers, only ids and time. */
 export function tickWildCraft(g:Game,dt:number){
- const w=g.state.wildCraft;if(!w||dt<=0)return;
+ const w=g.state.wildCraft;if(!w||dt<=0)return;for(const p of w.projects){const u=g.state.units.find(u=>u.id===p.actorId);if(u&&u.hp<=0&&!p.paused){p.packet??={x:u.x,z:u.z};pauseWildWork(g,u);}}
  // 1. ledger spoilage by weather at the camp: whole units rot when the accumulated expected loss reaches one, so counts stay integers and conserved
  for(const team of g.state.tribes){const stock=w.stock[String(team.id)];if(!stock)continue;const camp=g.campOf(team.id),rot=(w.rot??={})[String(team.id)]??={};
   for(const k of WILD_GOODS){const n=stock[k]||0;if(n<=0){delete rot[k];continue;}
@@ -288,9 +327,9 @@ export function tickWildCraft(g:Game,dt:number){
  for(const id of Object.keys(w.wounds)){const c=g.state.wildlife.find(c=>String(c.id)===id);if(!c)delete w.wounds[id];}
  // 2b. loaded racks dry on their own; the actor is free
  for(const p of [...w.projects]){if(p.phase!=='dry')continue;const b=g.state.buildings.find(b=>b.id===p.stationId&&b.hp>0);const r=WILD_RECIPES[p.recipe];
-  if(!b){refund(g,p);w.projects=w.projects.filter(q=>q!==p);continue;}
+  if(!b){wasteHeld(g,p);releaseWild(g,p);w.projects=w.projects.filter(q=>q!==p);continue;}
   const res=advanceDrying(g,b,p.exposure!,dt,r.drying);
-  if(res.lost){wasteHeld(g,p);w.projects=w.projects.filter(q=>q!==p);continue;}
+  if(res.lost){wasteHeld(g,p);releaseWild(g,p);w.projects=w.projects.filter(q=>q!==p);continue;}
   if(res.ready)p.phase='ready';}
  // 3. traps catch real wildlife passing within the trap's radius
  for(const trap of w.traps){
@@ -300,7 +339,7 @@ export function tickWildCraft(g:Game,dt:number){
    if(c.hp<=0||c.species==='bird')continue;if(trap.kind==='snare'?!snareCatches(c.species):SMALL.has(c.species))continue;
    if(Math.hypot(c.x-trap.x,c.z-trap.z)>r)continue;
    if(hash01(trap.id,c.id,Math.floor(g.state.time/WILD_RULES.trapCheckSeconds))>=(trap.kind==='snare'?.5:.7))continue;
-   c.x=trap.x;c.z=trap.z;killWildAnimal(g,c,trap.team);(c as HuntableCritter).carcass!.diedAt=g.state.time;trap.catches++;trap.uses--;w.metrics.trapCatches++;
+   killWildAnimal(g,c,trap.team);(c as HuntableCritter).carcass!.diedAt=g.state.time;trap.catches++;trap.uses--;w.metrics.trapCatches++;
    if(trap.team===0)g.addFloater(trap.x,g.height(trap.x,trap.z)+1.5,trap.z,`${HUNT_METHOD_ICON[trap.kind]} caught ${c.species}`,'#efe4b0');break;
   }
  }
@@ -313,16 +352,17 @@ function hash01(a:number,b:number,c:number){let n=Math.imul(a^0x9e3779b9,0x85ebc
 
 /** A free adult carries a finished (dry) batch home from its rack. */
 export function collectWildBatch(g:Game,unitId:number,projectId?:number):{accepted:boolean;reason:string}{
- const w=g.state.wildCraft,u=g.state.units.find(u=>u.id===unitId&&u.hp>0);if(!w||!u)return {accepted:false,reason:'No such resident'};
- if(u.wildWorkId!==undefined||u.carry>0)return {accepted:false,reason:'Busy or hands full'};
- const p=w.projects.find(p=>p.team===u.team&&p.phase==='ready'&&p.actorId===0&&(projectId===undefined||p.id===projectId));if(!p)return {accepted:false,reason:'Nothing is dry yet'};
- p.actorId=u.id;p.phase='collect';u.wildWorkId=p.id;u.order='move';u.node=null;u.workReason=`${WILD_RECIPES[p.recipe].icon} Collecting the dry batch`;g.workBoard.invalidateTasks();return {accepted:true,reason:''};
+ const w=g.state.wildCraft,u=g.state.units.find(u=>u.id===unitId&&u.hp>0);if(!w||!u||!wildAdult(g,u)||u.wildWorkId!==undefined)return{accepted:false,reason:'Need a free adult without another paid duty or cargo'};
+ const p=w.projects.find(p=>p.team===u.team&&(p.phase==='ready'&&p.actorId===0||p.paused&&g.state.units.some(old=>old.id===p.actorId&&old.hp<=0))&&(projectId===undefined||p.id===projectId));if(!p)return{accepted:false,reason:'Nothing ready or physically recoverable'};
+ const old=g.state.units.find(old=>old.id===p.actorId),recover=!!old&&old.hp<=0;if(recover&&(!p.packet||!clearCargoApproach(g,u,p.packet)))return{accepted:false,reason:'Reach the same retained packet at its actual location'};
+ const next={...p,actorId:u.id,paused:undefined,phase:recover?(p.phase==='fetch'?'go':p.phase==='work'?'go':p.phase):'collect'} as WildProject;
+ if(!wildPreflight(g,next))return{accepted:false,reason:'Adult or workplace is already reserved'};releaseTreeWorker(g,u);if(!claimWild(g,next))return{accepted:false,reason:'Adult or workplace is already reserved'};g.interruptMission(u);if(old){delete old.wildWorkId;delete old.wildWorkPaused;}Object.assign(p,next);if(recover&&p.phase!=='go')p.packet=undefined;u.wildWorkId=p.id;delete u.wildWorkPaused;u.order='move';u.node=null;g.invalidateRoute(u);g.workBoard.invalidateTasks();return{accepted:true,reason:''};
 }
 /** Light director: when auto work is on, one idle adult with an obvious finished-station job takes it. Throttled, deterministic. */
 function directWild(g:Game,team:number){
  const w=g.state.wildCraft!;if(g.state.autoWorkEnabled===false)return;
  if(w.lastDirector!==undefined&&g.state.time-w.lastDirector<5)return;w.lastDirector=g.state.time;
- const idle=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&u.order==='idle'&&u.wildWorkId===undefined&&u.carry<=0&&!u.productionProjectId&&!u.husbandryWork&&!u.expedition&&!u.shelterId&&!u.boat&&!u.prisoner).sort((a,b)=>a.id-b.id);
+ const idle=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&u.order==='idle'&&u.wildWorkId===undefined&&wildAdult(g,u)&&u.carry<=0&&!u.productionProjectId&&!u.husbandryWork&&!u.expedition&&!u.shelterId&&!u.boat&&!u.prisoner).sort((a,b)=>a.id-b.id);
  if(!idle.length)return;
  const t=g.tribe(team),stock=wildStock(g,team);
  const order:WildRecipeId[]=['softenHide','frameDry','brainTan','barkTan','soakHide','twistSinew','renderFat','dryBerries'];
@@ -358,26 +398,36 @@ export function wildCraftFeedback(g:Game,team:number):WildFeedbackRow[]{
 }
 
 /** Strict save validation: finite, bounded, no unknown keys; absent = legacy (no wild-craft). */
-export function validWildCraftState(s:{wildCraft?:unknown;units:{wildWorkId?:number}[]}):boolean{
- const v=s.wildCraft as WildCraftState|undefined;
- if(v===undefined)return !s.units.some(u=>u.wildWorkId!==undefined);
- if(!v||v.version!==1||typeof v.nextId!=='number'||!Number.isInteger(v.nextId)||v.nextId<1)return false;
- const num=(n:unknown,max=1e9)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max;
- const goodOk=(g:unknown)=>!!g&&typeof g==='object'&&!Array.isArray(g)&&Object.entries(g as object).every(([k,n])=>(WILD_GOODS as readonly string[]).includes(k)&&num(n,WILD_RULES.maxGood));
- if(!v.stock||typeof v.stock!=='object'||!Object.values(v.stock).every(goodOk))return false;
- if(v.rot!==undefined&&(typeof v.rot!=='object'||!Object.values(v.rot).every(goodOk)))return false;
- if(!v.parts||typeof v.parts!=='object'||!Object.values(v.parts).every(p=>p&&['fat','sinew','brain','horn'].every(k=>num((p as any)[k],20))&&Object.keys(p).length===4))return false;
- if(!v.wounds||typeof v.wounds!=='object'||!Object.values(v.wounds).every(x=>x&&num(x.since)&&num(x.bleed,1e4)&&Array.isArray(x.trail)&&x.trail.length<=WILD_RULES.maxTrail&&x.trail.every(t=>Number.isFinite(t.x)&&Number.isFinite(t.z))))return false;
- if(!Array.isArray(v.traps)||v.traps.length>WILD_RULES.maxTraps||!v.traps.every(t=>t&&(t.kind==='snare'||t.kind==='pitfall')&&[t.x,t.z].every(Number.isFinite)&&num(t.placedAt)&&num(t.catches,1e6)&&num(t.uses,1e7)&&t.id<v.nextId&&num(t.nextCheck)))return false;
+export function validWildCraftState(s:{wildCraft?:unknown;units:Unit[]}&Partial<Omit<GameState,'wildCraft'|'units'>>):boolean{
+ const v=s.wildCraft as WildCraftState|undefined;if(v===undefined)return s.units.every(u=>u.wildWorkId===undefined&&u.wildWorkPaused===undefined);
+ const obj=(o:unknown):o is Record<string,unknown>=>!!o&&typeof o==='object'&&!Array.isArray(o),num=(n:unknown,max=1e12)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max,id=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>0,ref=(n:unknown)=>id(n)&&(s.nextId===undefined||Number(n)<s.nextId),when=(n:unknown)=>num(n,s.time??1e12),team=(n:unknown)=>Number.isSafeInteger(n)&&Number(n)>=0&&Number(n)<64&&(!s.tribes||s.tribes.some(t=>t.id===n)),keys=(o:unknown,allowed:readonly string[])=>obj(o)&&Object.keys(o).every(k=>allowed.includes(k));
+ const point=(o:unknown)=>obj(o)&&keys(o,['x','z'])&&['x','z'].every(k=>typeof o[k]==='number'&&Number.isFinite(o[k])&&Math.abs(o[k] as number)<=(s.worldOptions?.size??1040)/2);
+ const stock=(o:unknown,allowed:readonly string[],caps?:Record<string,number>)=>obj(o)&&Object.entries(o).every(([k,n])=>allowed.includes(k)&&num(n,caps?caps[k]??0:WILD_RULES.maxGood));
+ const goods=(o:unknown)=>stock(o,WILD_GOODS),items=(o:unknown,caps?:Record<string,number>)=>stock(o,ITEM_KINDS,caps),food=(o:unknown,caps?:Record<string,number>)=>stock(o,FOOD_KINDS,caps);
+ if(!keys(v,['version','nextId','parts','wounds','traps','projects','stock','rot','practice','metrics','lastDirector'])||v.version!==1||!id(v.nextId)||v.nextId>1e9||v.lastDirector!==undefined&&!when(v.lastDirector))return false;
+ const teams=(o:unknown,check:(o:unknown)=>boolean)=>obj(o)&&Object.keys(o).length<=64&&Object.entries(o).every(([k,n])=>String(Number(k))===k&&team(Number(k))&&check(n));
+ if(!teams(v.stock,goods)||v.rot!==undefined&&!teams(v.rot,o=>goods(o)&&Object.values(o as GoodStock).every(n=>num(n,1))))return false;
+ if(!obj(v.parts)||Object.keys(v.parts).length>10000)return false;
+ for(const[k,p]of Object.entries(v.parts)){const c=s.wildlife?.find(c=>String(c.id)===k);if(!id(Number(k))||!keys(p,['fat','sinew','brain','horn'])||Object.keys(p).length!==4||s.wildlife&&(!c||c.hp>0||!c.carcass?.prepared))return false;for(const good of['fat','sinew','brain','horn']as const)if(!num(p[good],c?BUTCHERY_PARTS[c.species][good]:20))return false;}
+ if(!obj(v.wounds)||Object.keys(v.wounds).length>10000)return false;for(const[k,w]of Object.entries(v.wounds)){if(!id(Number(k))||!keys(w,['since','trail','bleed'])||!when(w.since)||!num(w.bleed,1e4)||!Array.isArray(w.trail)||w.trail.length>WILD_RULES.maxTrail||!w.trail.every(point)||s.wildlife&&!s.wildlife.some(c=>String(c.id)===k))return false;}
+ const ids=new Set<number>(),actors=new Set<number>();if(!Array.isArray(v.traps)||v.traps.length>WILD_RULES.maxTraps)return false;
+ for(const t of v.traps){if(!keys(t,['id','team','kind','x','z','placedAt','uses','catches','nextCheck','setBy'])||!id(t.id)||t.id>=v.nextId||ids.has(t.id)||!team(t.team)||!['snare','pitfall'].includes(t.kind)||!point({x:t.x,z:t.z})||!when(t.placedAt)||!num(t.uses,t.kind==='snare'?WILD_RULES.snareUses:1e6)||!Number.isInteger(t.uses)||!num(t.catches,1e6)||!Number.isInteger(t.catches)||!num(t.nextCheck,(s.time??1e12)+WILD_RULES.trapCheckSeconds)||!ref(t.setBy))return false;ids.add(t.id);}
  if(!Array.isArray(v.projects)||v.projects.length>WILD_RULES.maxProjects)return false;
- for(const p of v.projects){
-  if(!p||!(p.recipe in WILD_RECIPES)||!['fetch','go','work','dry','ready','collect','back'].includes(p.phase)||p.id>=v.nextId||!num(p.progress,1e6)||!num(p.startedAt)||!Number.isInteger(p.actorId))return false;
-  if(!p.held||!goodOk(p.held.goods)||!p.carried||!goodOk(p.carried.goods))return false;
-  if(p.exposure!==undefined&&!validDryingExposure(p.exposure,WILD_RECIPES[p.recipe].drying||PRESERVATION_RULES.airDrySeconds))return false;
-  const idle=p.phase==='dry'||p.phase==='ready';if(idle?p.actorId!==0:s.units.find((u:any)=>u.id===p.actorId&&u.wildWorkId===p.id)===undefined)return false;
+ for(const p of v.projects){if(!keys(p,['id','team','recipe','actorId','phase','progress','startedAt','stationId','critterId','x','z','trapKind','trailIndex','trailWait','held','carried','exposure','paused','cache','packet'])||!id(p.id)||p.id>=v.nextId||ids.has(p.id)||!Object.hasOwn(WILD_RECIPES,p.recipe)||!team(p.team)||!['fetch','go','work','dry','ready','collect','back'].includes(p.phase)||!when(p.startedAt)||p.paused!==undefined&&p.paused!==true)return false;ids.add(p.id);const r=WILD_RECIPES[p.recipe];if(!num(p.progress,r.workSeconds)||!Number.isInteger(p.actorId)||p.actorId<0)return false;
+  const passive=['dry','ready'].includes(p.phase),u=s.units.find(u=>u.id===p.actorId);if(passive?p.actorId!==0||p.paused!==undefined:!u||u.team!==p.team||u.wildWorkId!==p.id||actors.has(u.id)||u.wildWorkPaused!==(p.paused&&!wildBodyPacket(p)?true:undefined))return false;if(u)actors.add(u.id);
+  if(!keys(p.held,['items','goods','food','wood','water'])||!keys(p.carried,['items','goods','food'])||!items(p.held.items,r.items as Record<string,number>||{})||!stock(p.held.goods,WILD_GOODS,r.goods as Record<string,number>||{})||!food(p.held.food,r.foodIn as Record<string,number>||{})||!num(p.held.wood,r.wood||0)||!num(p.held.water,r.water||0)||!items(p.carried.items,{...r.outItems,...r.retain})||!food(p.carried.food,r.outFood as Record<string,number>||{}))return false;
+  if(p.recipe==='dressParts'){const c=s.wildlife?.find(c=>c.id===p.critterId),caps=c?BUTCHERY_PARTS[c.species]:{fat:8,sinew:4,brain:1,horn:2};if(!stock(p.carried.goods,WILD_GOODS,caps)||Object.values(p.carried.goods).reduce((n,v)=>n+(v||0),0)>6)return false;}else if(!stock(p.carried.goods,WILD_GOODS,r.outGoods as Record<string,number>||{}))return false;
+  const carried=Object.values(p.carried.goods).some(n=>(n||0)>0)||Object.values(p.carried.items).some(n=>(n||0)>0)||Object.values(p.carried.food).some(n=>(n||0)>0);if(carried&&p.phase!=='back')return false;
+  if(p.packet!==undefined&&!point(p.packet)||p.cache!==undefined&&(!keys(p.cache,['kind','id','x','z'])||!['camp','building'].includes(p.cache.kind)||!point({x:p.cache.x,z:p.cache.z})||p.cache.kind==='building'&&!ref(p.cache.id)||p.cache.kind==='camp'&&p.cache.id!==undefined)||p.phase==='fetch'&&!p.cache)return false;
+  if(typeof r.station==='string'&&!['carcass','field','trail'].includes(r.station)){const b=s.buildings?.find(b=>b.id===p.stationId);if(!ref(p.stationId)||s.buildings&&(!b&&!p.paused||b&&(b.team!==p.team||b.type!==r.station||b.build<1)))return false;}else if(p.stationId!==undefined)return false;
+  if(['carcass','trail'].includes(r.station)){if(!ref(p.critterId)||s.wildlife&&!s.wildlife.some(c=>c.id===p.critterId)&&!p.paused)return false;}else if(p.critterId!==undefined)return false;
+  if(r.station==='field'&&(!point({x:p.x,z:p.z})||p.trapKind!==(p.recipe==='setSnare'?'snare':'pitfall'))||p.trailIndex!==undefined&&(!Number.isInteger(p.trailIndex)||!num(p.trailIndex,WILD_RULES.maxTrail))||p.trailWait!==undefined&&!num(p.trailWait,21))return false;
+  if(r.drying?p.exposure===undefined||!validDryingExposure(p.exposure,r.drying):p.exposure!==undefined)return false;
  }
- for(const u of s.units)if(u.wildWorkId!==undefined&&!v.projects.some(p=>p.id===u.wildWorkId))return false;
- if(!v.practice||typeof v.practice!=='object')return false;
- const m=v.metrics;if(!m||![m.trapCatches,m.bledOut,m.completed].every(n=>num(n,1e9)))return false;
- return ['produced','spoiled','lost','consumed'].every(k=>{const o=(m as any)[k];return o&&typeof o==='object'&&Object.values(o).every(n=>num(n,1e12));});
+ if(s.units.some(u=>u.wildWorkId===undefined?u.wildWorkPaused!==undefined:!v.projects.some(p=>p.id===u.wildWorkId&&p.actorId===u.id)))return false;
+ if(!teams(v.practice,o=>obj(o)&&Object.entries(o).every(([k,n])=>Object.hasOwn(WILD_RECIPES,k)&&Number.isInteger(n)&&num(n,1e9))))return false;
+ const m=v.metrics;if(!keys(m,['produced','spoiled','lost','consumed','trapCatches','bledOut','completed'])||![m.trapCatches,m.bledOut,m.completed].every(n=>Number.isInteger(n)&&num(n,1e9)))return false;
+ const metricKeys=[...WILD_GOODS,...ITEM_KINDS,...FOOD_KINDS,'parts','trapMaterials'];return ['produced','spoiled','lost','consumed'].every(k=>stock(m[k as keyof WildMetrics],metricKeys));
 }
+
+export function wildOrderIssue(g:Game,u:Unit){const p=g.state.wildCraft?.projects.find(p=>p.id===u.wildWorkId&&p.actorId===u.id);return p&&!p.packet&&(Object.values(p.held.items).some(n=>(n||0)>0)||Object.values(p.held.goods).some(n=>(n||0)>0)||Object.values(p.held.food).some(n=>(n||0)>0)||p.held.wood>0||p.held.water>0||Object.values(p.carried.goods).some(n=>(n||0)>0)||Object.values(p.carried.items).some(n=>(n||0)>0)||Object.values(p.carried.food).some(n=>(n||0)>0))?'This resident carries a real wild-craft packet; resume and return it before other work. Move orders remain available.':null;}

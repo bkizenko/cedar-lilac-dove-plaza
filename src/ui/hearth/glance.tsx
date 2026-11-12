@@ -33,7 +33,7 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
   ...(hud.age>=1||hud.copper>0?[{k:'copper' as const,value:hud.copper,stock:hud.copper,days:null,fill:null,level:'unknown' as const,trackTrend:true,tip:'Copper in stores.'}]:[]),
   ...(hud.age>=2||hud.iron>0?[{k:'iron' as const,value:hud.iron,stock:hud.iron,days:null,fill:null,level:'unknown' as const,trackTrend:true,tip:'Iron in stores.'}]:[]),
  ];
- for(const c of cells){if(!c.trackTrend)continue;let t=trackers.current.get(c.k);if(!t){t=new TrendTracker(simulationDaySeconds);trackers.current.set(c.k,t);}t.push(hud.time,c.stock);}
+ for(const c of cells){if(!c.trackTrend)continue;let t=trackers.current.get(c.k);if(!t){t=new TrendTracker(simulationDaySeconds);trackers.current.set(c.k,t);}t.push(hud.time,c.stock,game?.state);}
  return <div className="hw-top-left">
   {engine&&<button type="button" className="hw-flag" aria-label={`Council of ${engine.game.tribe(0).name}`} onClick={()=>onOpen('council')}><SocietyFlag game={engine.game} team={0}/><span>{engine.game.tribe(0).name}</span></button>}
   <ul className="hw-res hw-supply" aria-label="Village stores">{cells.map(c=>{

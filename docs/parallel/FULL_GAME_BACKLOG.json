@@ -9297,6 +9297,24 @@
       "liveCommit": "2128ed737f8bdfa3ed5d8ae73427b59f5467a012",
       "evidence": "docs/metrics/people-terrain-controls-release-2026-11-12.json",
       "scope": "Whole peoplev2/surface geology/Hearth selection integration, bounded unused rig cache and excavation geology continuity; actual civilian and military commander controls, compact hit floor, physical paid appointment and earned promotion.35/35 scoped; old53 unchanged. Full visual fidelity/100-person performance/campaign remain open. WildCraft activation OFF pending separate custody qualification."
+    },
+    {
+      "id": "CODEX-RETAINED-TEXT-DISK",
+      "owner": "Codex Platform",
+      "state": "live",
+      "sourceCommit": "bad0a05",
+      "liveCommit": "aa99f1337afc7438f32ef6d48acba75e053e6c31",
+      "evidence": "docs/metrics/retained-text-release-2026-11-12.json",
+      "scope": "Lossless old text asset packing, transparent same URL/decoded bytes, identity/gzip/cache/HEAD compatibility, forward retention.17/17 scoped. Recent client/rollback raw builds, art/audio and saved villages unchanged. Physical saving lower than logical because unselected hardlinks remain."
+    },
+    {
+      "id": "CODEX-WILD-PAID-CUSTODY",
+      "owner": "Codex integration / Claude wild-craft",
+      "state": "live-partial",
+      "sourceCommit": "b27a1cfbc6867681ff0c0a9095d9ba33f2e11268",
+      "liveCommit": "3f1b219290d7530563a78722e05778fb4eb324a0",
+      "evidence": "docs/metrics/wild-safety-release-2026-11-12.json",
+      "scope": "Optional wild paid packet, actor/shared station, interruption/return/controlled death recovery and strict saves; full station refusal preserves real tree ownership.18/18 scoped. Existing53 remains featureOFF. Public UI2/toggle/complete WILD and broad acceptance still open."
     }
   ],
   "status_update_policy": {
