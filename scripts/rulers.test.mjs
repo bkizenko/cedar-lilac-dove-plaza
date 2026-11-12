@@ -111,3 +111,47 @@ test('rulers state: old saves load, JSON round-trips, 200 years stay valid',()=>
  assert.ok(gens.some(g=>g>=1),'some succession happened');
  assert.deepEqual(stepRulersYear(initRulers(42,['a','b','c','d'])),stepRulersYear(initRulers(42,['a','b','c','d'])));
 });
+
+import {generateHouse,houseShift,generateFactions,stepFactions,coalitionLoss,factionPleasure} from '../src/game/houses.ts';
+import {effects,apply,noTies,implications,decay,bondLabel} from '../src/game/ties.ts';
+import {stageFor,allowed,MACHINERY,STAGES} from '../src/game/eras.ts';
+const ctx={rankGap:0,sameFaith:true,culturalGap:.2,aRulerHonor:60,bRulerHonor:60,atWar:false};
+test('marriage strengthens ties now, adds claims later, and repudiation reverses it',()=>{
+ let t=apply(noTies(),effects('marriage',ctx));
+ assert.ok(t.trust>0&&t.bond>0&&t.claimOnA>0);
+ const after=apply(t,effects('repudiate',ctx));
+ assert.ok(after.grievance>t.grievance&&after.bond<t.bond&&after.trust<t.trust);
+ assert.equal(implications(apply(noTies(),effects('spouseKilled',ctx))).vendettaRisk,false);
+ let v=noTies();for(let i=0;i<3;i++)v=apply(v,effects('spouseKilled',ctx));assert.equal(implications(v).vendettaRisk,true);
+ assert.ok(decay(t,true,10).bond>decay(t,false,10).bond);
+ assert.equal(bondLabel(70),'blood-bound');
+});
+test('marriage during war lowers grievance; a lesser bride gift insults',()=>{
+ const t=apply(noTies(),effects('marriage',{...ctx,atWar:true}));assert.ok(effects('marriage',{...ctx,atWar:true}).some(x=>x.ledger==='grievance'&&x.delta<0));
+ assert.ok(effects('giftBride',{...ctx,rankGap:-1}).some(x=>x.ledger==='grievance'&&x.delta>0));
+});
+test('houses bias members mildly; factions follow ruler personality',()=>{
+ const h=generateHouse(3,'Varn');assert.ok(Object.keys(houseShift(h)).length>=2);
+ const p=generatePolity(11,eco());const fs=generateFactions(11,p);
+ assert.ok(Math.abs(fs.reduce((s,f)=>s+f.power,0)-1)<.03);
+ const pious={...generateRuler(1).traits,piety:95,cruelty:5};
+ assert.ok(factionPleasure('priests',pious)>0.5);
+ let f=fs;for(let i=0;i<30;i++)f=stepFactions(f,{...pious,mercy:5,boldness:5},{});
+ assert.ok(coalitionLoss(f)>=0&&coalitionLoss(f)<=100);
+});
+test('eras: complexity is gated and monotonic; nothing anachronistic early',()=>{
+ assert.equal(stageFor('band',.05,false,false,false),'forager');
+ assert.equal(allowed('forager').has('claim'),false);assert.equal(allowed('chiefdom').has('claim'),false);
+ assert.equal(allowed('earlyState').has('claim'),true);assert.equal(allowed('forager').has('marriage'),false);
+ for(let i=1;i<STAGES.length;i++)assert.ok(allowed(STAGES[i]).size>=allowed(STAGES[i-1]).size);
+ for(const s of STAGES)assert.ok(MACHINERY[s].rule.length>0);
+});
+
+import {handover} from '../src/game/playerLine.ts';
+test('player handover explains what changed when the ruler changes',()=>{
+ const a={...generateRuler(1),traits:{...generateRuler(1).traits,piety:90,boldness:20}},b={...generateRuler(2),traits:{...generateRuler(2).traits,piety:10,boldness:85}};
+ const fs=generateFactions(5,generatePolity(5,eco()));
+ const h=handover(a,b,fs,true);
+ assert.ok(h.traitShifts.length>=1&&h.headline.includes(b.name));
+ assert.ok(handover(a,b,fs,false).headline.includes('weaker claim'));
+});
