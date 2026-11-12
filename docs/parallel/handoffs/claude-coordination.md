@@ -1,5 +1,11 @@
 # Claude coordination board
 
+## Current authority — Boris, 12 November 2026
+
+Grok is project manager; Claude is architect and design/conflict-resolution lead; Codex builds platform, economy, saves, knowledge/tech and integration. **All three may read, edit, commit, push and normally merge any repository file. No Codex approval is required**, including core source, AGENTS files, canonical backlog and status documents. File claims coordinate simultaneous edits; they do not restrict access. Follow AUTOPILOT.md and preserve saves, tests and both sides of shared behavior.
+
+Any older “Codex sign-off”, “Codex-only” or “single-writer” wording below is historical and superseded by this instruction and EXECUTION_CONTRACT.md. Each session authenticates to GitHub independently. On 12 November, this machine’s configured GitHub credential was verified to have repository pull, push, maintain and admin access; that does not verify another machine/session’s login. Never copy credentials into the repository or chat.
+
 Updated 11 November 2026, 15:35 ET. Maintained by the Claude coordinator. Codex's coordinator integrates; this board is Claude's side of the contract in [EXECUTION_CONTRACT.md](../EXECUTION_CONTRACT.md). Read [CURRENT_STATUS.md](../CURRENT_STATUS.md) first for what is live.
 
 ## BLUF
@@ -21,7 +27,7 @@ Each worker maintains its own handoff: `docs/parallel/handoffs/claude-societies.
 
 ## Claimed files (Claude)
 
-Societies: `src/game/seaExploration.ts` (new), `scripts/rival-sea-exploration.test.mjs` (new), edits to `coastalCommission.ts`, `coastalTrade.ts`, `rivalDevelopment.ts`, `scoutProvisions.ts`, `workCommitments.ts`. Shared-file edit needing Codex sign-off: `src/game/types.ts` (optional fields only).
+Societies: `src/game/seaExploration.ts` (new), `scripts/rival-sea-exploration.test.mjs` (new), edits to `coastalCommission.ts`, `coastalTrade.ts`, `rivalDevelopment.ts`, `scoutProvisions.ts`, `workCommitments.ts`. Shared-file coordination: `src/game/types.ts` (optional fields only); no Codex sign-off required.
 
 Experience: `src/scene/buildingFamilies.ts`, `buildingParts.ts`, `buildingStyleMap.ts`, `carvedPalette.ts`, `carvedTerrace.ts` (all new), `scripts/carved-buildings.test.mjs` (new), new shared UI components/tokens. Any `src/scene/world.ts` change is flag-guarded and defaults to current graphics.
 
@@ -77,7 +83,7 @@ Found by reading every user message in [chat-context](../chat-context/README.md)
 ## Backlog and to-do status updates
 
 - Claude workers record per-item status (in progress / source pushed / ready / merged) in their lane handoff with backlog IDs from FULL_GAME_BACKLOG.json.
-- FULL_GAME_BACKLOG.json and CURRENT_STATUS.md stay single-writer (Codex coordinator) to avoid conflicting JSON edits; Codex flips status when it merges a batch, citing the merge commit. Claude does not edit them directly unless Codex delegates.
+- Any agent may update FULL_GAME_BACKLOG.json and CURRENT_STATUS.md. Coordinate simultaneous edits on the board, preserve other agents’ rows, and cite actual merge/live evidence before marking work completed. Grok sequences execution; no Codex delegation is required.
 - This board's gap table (G1–G12) is the intake list until Codex copies accepted rows into the backlog.
 
 ## Standardization rules for all lanes (to avoid merge hell)
@@ -427,3 +433,4 @@ Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
 
 - Codex W1 source claim AUD-WORKING-HERD-RETURN: real queued working-animal return, ordinary cargo delivered first, physical handler/animal arrival in actual pen, same identity/condition/reproductive/care counters and observed-or-paid harness preserved; refit existing harness through actual labor without duplicate material fee. Shared new packPasture.ts plus types/commitment/sim/persistence/husbandry/pack and compact pen controls. No World terrain/nav changes or Claude visual overhaul. Paid unrelated work is not silently discarded.
 - 01:50 ET Claude: shipped lane C less-blocky Sandrill house (eroded strata drums, talus skirt, domed cap; legacy grammar kept) (d20bac1) / now on Mekhari roof/walls, Sandrill civic, vegetation, Tigrane vault / blocked: none. civ tests 35/35, tsc baseline-only, SwiftShader checked
+- 01:50 ET Claude: shipped lane C less-blocky Sandrill house (eroded strata drums, talus skirt, domed cap; legacy grammar kept) (40102b9, on integration/2026-11-11) / now on Mekhari roof/walls, Sandrill civic, vegetation, Tigrane vault / blocked: none
