@@ -1,3 +1,4 @@
+import {NavalControls} from './NavalControls';
 import {SailRigControls} from './SailRigControls';
 import {abandonSailRig} from '../game/boatSailing';
 import{useState}from'react';
@@ -15,7 +16,8 @@ export function BoatControls({engine,dock}:{engine:Engine;dock?:number}) {
     (dock!==undefined?b.dock===dock:b.id===g.selectedBoat||rides.has(b.id)||selected.some(u=>Math.hypot(u.x-b.x,u.z-b.z)<24)));
   const run=(fn:()=>unknown)=>{fn();engine.pushHud();};
   const personalCanoes=dock===undefined&&selected.length>0&&selected.every(u=>u.haulage==='canoe'&&!u.boat&&!u.prisoner);
-  if(dock===undefined&&!boats.length&&!personalCanoes)return null;
+  const paidNaval=g.state.naval?.projects.some(p=>p.team===0)||g.state.naval?.commissions.some(p=>p.team===0);
+  if(dock===undefined&&!boats.length&&!personalCanoes&&!paidNaval)return null;
   const hullIssue=dock===undefined?null:boatConstructionIssue(g,kind,dock);
   const orphaned=dock===undefined?[]:(g.state.haulageProjects??[]).filter(p=>p.team===0&&p.work.workplace===dock&&p.work.hullOrder?.mode==='service'&&!g.state.boats?.some(b=>b.id===p.work.hullOrder!.boatId&&b.team===0&&b.hp>0));
   const controls=<div className="craft-options">
@@ -48,6 +50,7 @@ export function BoatControls({engine,dock}:{engine:Engine;dock?:number}) {
           {!!crew.length&&<details><summary>Passengers</summary><ul className="boat-passengers">{crew.map(u=><li key={u.id}>{u.name||'Resident'}{u.id===b.captain?' · Helm':u.boat?.phase==='boarding'?' · Boarding':u.boat?.phase==='landing'?' · Landing':''}</li>)}</ul></details>}
         </section>;
       })}
+      <NavalControls engine={engine} dockId={dock} boatId={g.selectedBoat??boats[0]?.id}/>
     </div>;
   return dock!==undefined?<details className="craft-group" open><summary>Riverboats</summary>{controls}</details>:controls;
 }
