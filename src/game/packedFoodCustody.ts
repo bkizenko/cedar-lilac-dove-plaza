@@ -11,7 +11,7 @@ export type PackedFoodCatalogue<K extends string=FoodKind>={kinds:readonly K[];n
 export type PackedFoodValidation={time:number;worldHalf:number;teamCount:number;nextId:number};
 export type PackedFoodWithdrawal<K extends string=FoodKind>={units:number;nourishment:number;legacyUnits:number;lots:PackedFoodLot<K>[]};
 const R=PACKED_FOOD_RULES;
-const finite=(n:unknown,max=R.maximumUnits):n is number=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max;
+const finite=(n:unknown,max:number=R.maximumUnits):n is number=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max;
 const key=<K extends string>(lot:PackedFoodLot<K>)=>JSON.stringify([lot.kind,lot.origin.team,lot.origin.anchorKind,lot.origin.buildingId??null,lot.origin.x,lot.origin.z,lot.origin.loadedAt]);
 const clone=<K extends string>(lot:PackedFoodLot<K>):PackedFoodLot<K>=>({...lot,origin:{...lot.origin}});
 function factor<K extends string>(c:PackedFoodCatalogue<K>,kind:K){const n=c.nourishment[kind]??1;if(!Number.isFinite(n)||n<0)throw new RangeError('Invalid food nourishment');return n;}
