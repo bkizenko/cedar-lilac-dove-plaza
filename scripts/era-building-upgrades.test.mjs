@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {acceptPrisonerSurrender} from '../src/game/captivity.ts';
+import {answerEncounter} from '../src/game/encounters.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {beginEraUpgrade,beginHousingUpgrade} from '../src/game/housing.ts';
 import {ERA_UPGRADE_RULES,fabricContext,eraUpgradeIssue,reservedBuildingFootprint,validFabricState,commitEraUpgrade} from '../src/game/buildingFabric.ts';
@@ -16,7 +17,7 @@ function fixture(){
  const hall=g.makeBld('townhall',0,40,0),b=g.makeBld('hearth',20,40,0);g.state.buildings.push(hall,b);
  const u=g.spawnUnit('worker',8,40,0);u.order='hold';g.vision.fill(2);g.territory.fill(255);g.rebuildWalk();g.state.paused=false;return{g,b,u,hall};
 }
-function drive(g,seconds,done){const end=g.state.time+seconds,wall=Date.now();while(g.state.time<end&&!done()){assert.ok(Date.now()-wall<25000,'bounded fixture wall time');g.step(.1);assert.deepEqual(g.simulationErrors,[]);}assert.ok(done(),JSON.stringify({time:g.state.time,projects:g.state.buildings.filter(b=>b.renovation).map(b=>b.renovation),people:g.state.units.map(u=>({x:u.x,z:u.z,order:u.order,reason:u.workReason}))}));}
+function drive(g,seconds,done){const end=g.state.time+seconds,wall=Date.now();while(g.state.time<end&&!done()){assert.ok(Date.now()-wall<25000,'bounded fixture wall time');const before=g.state.time;g.step(.1);assert.deepEqual(g.simulationErrors,[]);assert.ok(g.state.time>before,JSON.stringify({paused:g.state.paused,ended:g.state.ended,time:g.state.time,people:g.state.units.map(u=>({id:u.id,hp:u.hp,team:u.team,order:u.order,reason:u.workReason}))}));}assert.ok(done(),JSON.stringify({time:g.state.time,projects:g.state.buildings.filter(b=>b.renovation).map(b=>b.renovation),people:g.state.units.map(u=>({x:u.x,z:u.z,order:u.order,reason:u.workReason}))}));}
 test('paid rebuild uses physical cache packets and labour, grants repairable durability without healing, and survives strict save',()=>{
  const{g,b}=fixture();const hp=b.hp=70,max=b.maxHp,wood=g.tribe(0).wood;g.tribe(0).age=1;
  assert.equal(beginEraUpgrade(g,b.id,'rebuild').accepted,true);assert.equal(b.renovation.paid,false);const project=b.renovation;assert.equal(g.tribe(0).wood,wood);assert.equal(b.maxHp,max);assert.equal(b.hp,hp);
@@ -63,9 +64,26 @@ test('a paid builder death drops the exact physical packet and strict save retai
  assert.deepEqual(b.renovation.packet,packet);assert.equal(b.renovation.parcel.x,position.x);assert.equal(b.renovation.parcel.z,position.z);assert.deepEqual(b.renovation.quote,quote);assert.equal(b.maxHp,max);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
 test('capturing a paid carrier cannot transfer remote inputs or complete the original owner’s upgrade',()=>{
- const{g,b,u}=fixture();g.tribe(1).hostile=false;const guard=g.spawnUnit('spearman',10,42,1);guard.order='hold';
+ const{g,b,u}=fixture();
+ // Authored neutral party starts away from the worker. The guard approaches
+ // only after payment through ordinary move intent, never a body-position edit.
+ g.agreeTruce(1);const guard=g.spawnUnit('spearman',35,46,1);guard.order='hold';
+ const resident=g.spawnUnit('worker',-18,50,0);resident.order='hold';resident.jobLock=true;
  assert.equal(beginEraUpgrade(g,b.id,'extend','north').accepted,true);
- drive(g,120,()=>!!u.housingCargo);const packet=structuredClone(u.housingCargo.materials),max=b.maxHp,position={x:u.x,z:u.z};
+ drive(g,120,()=>!!u.housingCargo);
+ const end=g.state.time+40,wall=Date.now();let observed=0;
+ while(g.state.time<end&&(!u.housingCargo||Math.hypot(guard.x-u.x,guard.z-u.z)>5)){
+  assert.ok(Date.now()-wall<15000,'bounded physical guard approach');
+  guard.order='move';guard.tx=u.x+2;guard.tz=u.z+2;
+  const before=g.state.time;g.step(.1);assert.deepEqual(g.simulationErrors,[]);
+  if(g.state.encounter){assert.equal(g.state.encounter.team,1);answerEncounter(g,'observe');observed++;}
+  assert.ok(g.state.time>before,JSON.stringify({ended:g.state.ended,paused:g.state.paused}));
+ }
+ assert.ok(u.housingCargo&&Math.hypot(guard.x-u.x,guard.z-u.z)<=5,JSON.stringify({time:g.state.time,guard:{x:guard.x,z:guard.z,reason:guard.workReason},carrier:{x:u.x,z:u.z,order:u.order,reason:u.workReason,cargo:u.housingCargo},project:b.renovation}));
+ // Surrender needs an available stationary guard; finish the ordinary move intent.
+ guard.order='hold';g.invalidateRoute(guard);
+ assert.ok(observed>0,'the real first-contact modal was answered through its observe API');
+ const packet=structuredClone(u.housingCargo.materials),max=b.maxHp,position={x:u.x,z:u.z};
  const capture=acceptPrisonerSurrender(g,u,1);assert.equal(capture.accepted,true,capture.reason);assert.equal(u.team,1);assert.equal(u.constructionQueue,undefined);g.step(.1);assert.equal(b.renovation.actorId,null);assert.equal(b.renovation.packetTeam,0);assert.deepEqual(b.renovation.packet,packet);assert.equal(b.renovation.parcel.kind,'ground');
  assert.equal(b.renovation.parcel.x,position.x);assert.equal(b.renovation.parcel.z,position.z);assert.equal(u.housingCargo,undefined);assert.equal(b.maxHp,max);assert.equal(b.fabric.upgrades.length,0);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });

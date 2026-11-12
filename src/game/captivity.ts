@@ -158,7 +158,9 @@ function clearPrisonerGuard(g:Game,u:PrisonerUnit){const guard=g.state.units.fin
 export function releasePrisoner(g:Game,id:number,escaped=false){
  const u=g.state.units.find(u=>u.id===id&&u.hp>0) as PrisonerUnit|undefined;if(!u?.prisoner||u.prisoner.phase==='released')return false;
  const p=u.prisoner;clearPrisonerGuard(g,u);interruptForTeamTransfer(g,u);u.team=p.originTeam;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.homeHall=p.originHomeHall;if(g.tribe(p.originTeam))g.tribe(p.originTeam).alive=true;
- p.phase='released';u.recalled=true;u.repatriating=true;u.order='return';u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.workReason='Released prisoner — returning home with belongings';
+ // Rival repatriation may earn goodwill on arrival; player returns use the same
+ // released-prisoner executor without a foreign diplomatic-return marker.
+ p.phase='released';u.recalled=true;u.repatriating=isRivalTeam(u.team)?true:undefined;u.order='return';u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.workReason='Released prisoner — returning home with belongings';
  recordConflict(g,escaped?'prisoner_escape':'prisoner_release',p.captorTeam,1,{actorId:u.id});g.workBoard.reset();return true;
 }
 /** Must run before generic worker/escort AI. Captives never become automatic labor. */
