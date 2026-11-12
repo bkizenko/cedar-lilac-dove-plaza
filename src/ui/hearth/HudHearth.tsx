@@ -13,16 +13,20 @@ import {GateRotationControl} from '../GateRotationControl';
 import {TradeBlock} from '../Hud';
 import {UiThemeBoot} from '../uiTheme';
 import {StartupHint} from './StartupHint';
+import {AlertPins,useGlanceAlerts} from './glance';
+import {HelpScreen} from './helpScreen';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
 import './hearth.css';
+import './glance.css';
 
 /** The Hearth interface: calm parchment-and-wood chrome, big icons and numbers, a contextual command card and a small number of full screens. */
 export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const lifecycle=useLifecycleAction(engine);
- const [screen,setScreen]=useState<null|{k:'village'|'council'|'ages'|'menu'|'trade';tab?:string}>(null);
+ const [screen,setScreen]=useState<null|{k:'village'|'council'|'ages'|'menu'|'trade'|'help';tab?:string}>(null);
  const [tray,setTray]=useState(false),[tab,setTab]=useState('Village'),[map,setMap]=useState(false),[test,setTest]=useState(false),[hidden,setHidden]=useState(false),[trade,setTrade]=useState<number|null>(null);
  const founding=hud.founding;
+ const alerts=useGlanceAlerts(hud.started&&!hud.awaitingStart?engine:null);
  useEffect(()=>{if(hud.placing)setTray(false);},[hud.placing]);
  if(!hud.started||hud.awaitingStart)return null;
  if(hidden)return <button type="button" className="hw hw-restore" onClick={()=>setHidden(false)}>Show interface</button>;
@@ -35,10 +39,11 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const sel=hud.selection.kind!=='none';
  return <div className="hw" data-hw="hearth">
   <UiThemeBoot/>
-  {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})}/>}
+  {!founding&&!screen&&<AlertPins engine={engine} alerts={alerts}/>}
+  {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})} onOpenHelp={()=>setScreen({k:'help'})}/>}
   <header className="hw-top"><ResourceBar hud={hud} engine={engine} onOpen={k=>setScreen(k==='council'?{k:'council'}:{k:'village',tab:'stores'})}/><TimeCard hud={hud} engine={engine} onAges={()=>setScreen({k:'ages'})} onMenu={()=>setScreen({k:'menu'})}/></header>
   {!founding&&<Rail hud={hud} engine={engine} workOpen={screen?.k==='village'&&screen.tab==='work'} onWork={()=>setScreen({k:'village',tab:'work'})}/>}
-  <NotesStack hud={hud} engine={engine} onOpen={open} hidden={false}/>
+  <NotesStack hud={hud} engine={engine} onOpen={open} hidden={false} alerts={alerts}/>
   {hud.paused&&!hud.ended&&<div className="hw-paused" role="status"><Pause size={22}/>Paused</div>}
 
   <div className="hw-bottom">
@@ -62,6 +67,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {screen?.k==='village'&&engine&&<VillageScreen hud={hud} engine={engine} initial={screen.tab} onClose={close} onKnowledge={()=>setScreen({k:'ages'})} onOffer={t=>setTrade(t)}/>}
   {screen?.k==='council'&&engine&&<CouncilScreen engine={engine} initial={screen.tab} onClose={close}/>}
   {screen?.k==='ages'&&<AgesScreen hud={hud} engine={engine} onClose={close}/>}
+  {screen?.k==='help'&&<HelpScreen onClose={close}/>}
   {screen?.k==='menu'&&<MenuScreen hud={hud} engine={engine} lifecycle={lifecycle as never} onClose={close} onTest={()=>setTest(true)} onHide={()=>setHidden(true)}/>}
   {trade!==null&&engine&&<Screen title={`Trade · ${engine.game.tribe(trade)?.name??''}`} icon={<Handshake size={32}/>} onClose={()=>setTrade(null)}><div className="hw-legacy">{knownSettlement(engine.game,trade)?<TradeProposal key={trade} engine={engine} team={trade} expanded/>:<p>Find their settlement before sending a shipment.</p>}</div></Screen>}
 
