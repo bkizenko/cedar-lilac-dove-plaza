@@ -18,7 +18,7 @@ export function PrestigeReadout({view,rivals=[]}:{view?:GamePrestigeView;rivals?
   {view?.territoryUpdating&&<p className="text-xs text-parchment-dim">Land survey updating</p>}
   {!!rivals.length&&<details><summary className="text-xs">Other communities</summary><ul className="mt-2 space-y-1 text-xs" aria-label="Observed community prestige">
    {rivals.map(r=><li key={r.subject} className="flex justify-between gap-3" title={r.knowledge==='unknown'?'No returned observations':'Partial dated observations only; total and private stores remain unknown'}>
-    <span>{r.knowledge==='unknown'?'Unknown community':r.communityName||`Community ${r.subject}`}{r.knowledge==='observed'&&r.observedAt!==null&&<small className="ml-2 text-parchment-dim">{observationDate(r.observedAt)}</small>}</span>
+    <span>{r.knowledge==='unknown'&&!r.identityKnown?'Unknown community':r.communityName||`Community ${r.subject}`}{r.knowledge==='observed'&&r.observedAt!==null&&<small className="ml-2 text-parchment-dim">{observationDate(r.observedAt)}</small>}</span>
     <span>{r.knowledge==='unknown'?'—':`${Math.round(r.knownSubtotal)}+ observed`}</span>
    </li>)}
   </ul></details>}

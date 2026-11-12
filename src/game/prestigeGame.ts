@@ -11,7 +11,7 @@ import {ownPrestigeView,observedPrestigeView,usefulTradeCount,type PrestigeFacts
 /** Food reserves use the actual simulation day counter, not visual daylight. */
 export const PRESTIGE_GAME_RULES={version:1,calendarDaySeconds:simulationDaySeconds,territoryReviewSeconds:15,cellsPerTick:256,maximumUsefulGrade:.6,qualityAreaSquareMetres:1000} as const;
 export type PrestigeTerritorySnapshot={measuredAt:number;usableArea:number;resourcesAndChokepoints:number};
-export type GamePrestigeView=PrestigeView&{territoryMeasuredAt:number|null;territoryUpdating:boolean;communityName?:string};
+export type GamePrestigeView=PrestigeView&{territoryMeasuredAt:number|null;territoryUpdating:boolean;communityName?:string;identityKnown?:boolean};
 type Node={x:number;z:number;amount:number;maxAmt?:number};
 type Phase='land'|'nodes'|'trails'|'buildings';
 type Job={territory:Uint8Array;size:number;n:number;cell:number;next:number;phase:Phase;kind:number;started:number;area:number;resources:number;useful:Set<number>;bonuses:Map<number,{nodes:number;trail:number;crossing:number}>;nodeLists:{nodes:Node[];length:number;weight:number}[];trails:Game['state']['trails'];trailLength:number;buildings:Game['state']['buildings'];buildingLength:number;lastWork:number;totalWork:number};
@@ -115,7 +115,8 @@ export function gamePrestigeView(g:Game,viewer=0,subject=0):GamePrestigeView{
 
 function reportedPrestigeView(g:Game,viewer:number,subject:number,source?:NonNullable<Game['state']['structureReports']>):GamePrestigeView{
  const view=observedPrestigeView(viewer,subject,g.state.time,rivalObservation(g,viewer,subject,source));
- return{...view,...(view.knowledge==='observed'?{communityName:g.tribe(subject)?.name}:{}),territoryMeasuredAt:null,territoryUpdating:false};
+ const identityKnown=view.knowledge==='observed'||viewer===0&&!!g.state.contacts?.includes(subject);
+ return{...view,identityKnown,...(identityKnown?{communityName:g.tribe(subject)?.name}:{}),territoryMeasuredAt:null,territoryUpdating:false};
 }
 /** One pass over retained reports for the whole HUD, not one per rival. */
 export function gamePrestigeRivals(g:Game,viewer=0){

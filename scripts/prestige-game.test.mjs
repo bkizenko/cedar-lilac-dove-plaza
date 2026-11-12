@@ -30,6 +30,7 @@ test('actual retained landmark report exposes a dated partial rival component wh
  // An archived report need not have a matching live structure: its witness
  // observed this historical site, not an omniscient current building lookup.
  const b={id:g.id(),x:20,y:2,z:20,w:6,d:6};
+ g.state.contacts=[1];const contact=gamePrestigeView(g,0,1);assert.equal(contact.identityKnown,true);assert.equal(contact.communityName,rival.name);assert.equal(contact.total,null);assert.equal(contact.knowledge,'unknown');assert.equal(gamePrestigeView(g,2,1).identityKnown,false);
  g.state.structureReports=[{version:1,observer:0,witnessId:g.state.units.find(u=>u.team===0).id,observedAt:20,receivedAt:25,active:true,site:{id:b.id,type:'temple',team:1,x:b.x,y:b.y,z:b.z,w:b.w,d:b.d,hp:100,maxHp:200},defenders:0,defensePower:0}];
  const state=JSON.stringify(g.state),before=gamePrestigeView(g,0,1);assert.equal(before.knowledge,'observed');assert.equal(before.observedAt,20);assert.equal(before.total,null);assert.equal(before.components.find(r=>r.component==='foodSecurity').points,null);assert.ok(before.knownSubtotal>0);assert.equal(JSON.stringify(g.state),state);
  rival.food=1e9;rival.wood=1e9;rival.productionPractice={};g.state.buildings.push(g.makeBld('temple',b.x+20,b.z+20,1));assert.deepEqual(gamePrestigeView(g,0,1),before,'private authority cannot update a dated report');

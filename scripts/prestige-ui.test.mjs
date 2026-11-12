@@ -19,4 +19,5 @@ test('unknown rivals hide even an injected name and total; observed rivals show 
  const observed={...observedPrestigeView(0,2,1000,[{observer:0,subject:2,observedAt:500,components:{civicWorks:20}}]),communityName:'Arana',total:887766,territoryMeasuredAt:null,territoryUpdating:false};
  const props={view:owner(),rivals:[unknown,observed]},before=JSON.stringify(props),html=renderToStaticMarkup(React.createElement(PrestigeReadout,props));
  assert.match(html,/Unknown community/);assert.doesNotMatch(html,/SecretName|998877|887766/);assert.match(html,/Arana/);assert.match(html,/Summer/);assert.match(html,/Year 1/);assert.match(html,/observed/);assert.equal(JSON.stringify(props),before);
+ const named=renderToStaticMarkup(React.createElement(PrestigeReadout,{view:owner(),rivals:[{...unknown,identityKnown:true,communityName:'Known visitor home'}]}));assert.match(named,/Known visitor home/);assert.doesNotMatch(named,/998877/);
 });
