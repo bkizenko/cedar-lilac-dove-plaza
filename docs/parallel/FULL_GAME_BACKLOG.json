@@ -147,7 +147,7 @@
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 815,
-        "section": "Active execution order and complete scope crosswalk — 2026-10-14"
+        "section": "Active execution order and complete scope crosswalk \u2014 2026-10-14"
       }
     },
     {
@@ -156,12 +156,12 @@
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 7,
-        "section": "Latest additions — progress, knowledge and contour farming"
+        "section": "Latest additions \u2014 progress, knowledge and contour farming"
       }
     },
     {
       "id": "ORGANIC-KNOWLEDGE",
-      "requirement": "Needs/observations/samples→paid experiments→demonstration→adoption supersedes Astra17 timed points/exclusive tree; save migrations qualified first.",
+      "requirement": "Needs/observations/samples\u2192paid experiments\u2192demonstration\u2192adoption supersedes Astra17 timed points/exclusive tree; save migrations qualified first.",
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 834,
@@ -174,7 +174,7 @@
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 15,
-        "section": "Latest refinement — natural conflict and richer surfaces"
+        "section": "Latest refinement \u2014 natural conflict and richer surfaces"
       }
     },
     {
@@ -210,7 +210,7 @@
       "source": {
         "path": "docs/QA_BACKLOG_2026-11-03.md",
         "line": 76,
-        "section": "Latest user corrections — shared boats, useful trade and observable societies"
+        "section": "Latest user corrections \u2014 shared boats, useful trade and observable societies"
       }
     },
     {
@@ -285,7 +285,7 @@
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 821,
-        "section": "Active execution order and complete scope crosswalk — 2026-10-14"
+        "section": "Active execution order and complete scope crosswalk \u2014 2026-10-14"
       }
     },
     {
@@ -321,7 +321,7 @@
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 822,
-        "section": "Active execution order and complete scope crosswalk — 2026-10-14"
+        "section": "Active execution order and complete scope crosswalk \u2014 2026-10-14"
       }
     },
     {
@@ -344,7 +344,7 @@
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 823,
-        "section": "Active execution order and complete scope crosswalk — 2026-10-14"
+        "section": "Active execution order and complete scope crosswalk \u2014 2026-10-14"
       }
     },
     {
@@ -414,7 +414,7 @@
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 824,
-        "section": "Active execution order and complete scope crosswalk — 2026-10-14"
+        "section": "Active execution order and complete scope crosswalk \u2014 2026-10-14"
       }
     },
     {
@@ -450,7 +450,7 @@
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 825,
-        "section": "Active execution order and complete scope crosswalk — 2026-10-14"
+        "section": "Active execution order and complete scope crosswalk \u2014 2026-10-14"
       }
     },
     {
@@ -589,11 +589,11 @@
         "24",
         "25"
       ],
-      "verbatim": "| 6. Presentation, difficulty and release gates | Final acceptance across 1–120 | 03, 09, 12, 13, 18, 22, 23, 24, 25 |",
+      "verbatim": "| 6. Presentation, difficulty and release gates | Final acceptance across 1\u2013120 | 03, 09, 12, 13, 18, 22, 23, 24, 25 |",
       "source": {
         "path": "docs/FUTURE_IMPLEMENTATION.md",
         "line": 826,
-        "section": "Active execution order and complete scope crosswalk — 2026-10-14"
+        "section": "Active execution order and complete scope crosswalk \u2014 2026-10-14"
       }
     }
   ],
@@ -624,7 +624,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 7,
-        "section": "01 — Audit and freeze contracts"
+        "section": "01 \u2014 Audit and freeze contracts"
       },
       "active_provider_owners": [
         "C",
@@ -655,7 +655,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 18,
-        "section": "02 — Keyboard world commands"
+        "section": "02 \u2014 Keyboard world commands"
       },
       "active_provider_owners": [
         "A"
@@ -684,7 +684,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 29,
-        "section": "03 — Acoustic adaptive score"
+        "section": "03 \u2014 Acoustic adaptive score"
       },
       "active_provider_owners": [
         "A"
@@ -713,7 +713,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 40,
-        "section": "04 — Reliable save and resume"
+        "section": "04 \u2014 Reliable save and resume"
       },
       "active_provider_owners": [
         "C"
@@ -743,7 +743,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 51,
-        "section": "05 — Fixed simulation cadence"
+        "section": "05 \u2014 Fixed simulation cadence"
       },
       "active_provider_owners": [
         "C",
@@ -773,7 +773,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 62,
-        "section": "06 — Route around obstacles"
+        "section": "06 \u2014 Route around obstacles"
       },
       "active_provider_owners": [
         "W"
@@ -803,7 +803,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 73,
-        "section": "07 — RTS selection and combat orders"
+        "section": "07 \u2014 RTS selection and combat orders"
       },
       "active_provider_owners": [
         "A"
@@ -833,7 +833,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 84,
-        "section": "08 — Vertical slice integration gate"
+        "section": "08 \u2014 Vertical slice integration gate"
       },
       "active_provider_owners": [
         "C",
@@ -864,7 +864,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 95,
-        "section": "09 — Spatial query budget"
+        "section": "09 \u2014 Spatial query budget"
       },
       "active_provider_owners": [
         "C",
@@ -895,7 +895,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 106,
-        "section": "10 — Construction and repair refinement"
+        "section": "10 \u2014 Construction and repair refinement"
       },
       "active_provider_owners": [
         "W",
@@ -925,7 +925,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 117,
-        "section": "11 — Survival economy and priorities"
+        "section": "11 \u2014 Survival economy and priorities"
       },
       "active_provider_owners": [
         "C"
@@ -954,7 +954,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 128,
-        "section": "12 — Death and job animation"
+        "section": "12 \u2014 Death and job animation"
       },
       "active_provider_owners": [
         "A"
@@ -983,7 +983,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 139,
-        "section": "13 — Shared character rig"
+        "section": "13 \u2014 Shared character rig"
       },
       "active_provider_owners": [
         "A"
@@ -1013,7 +1013,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 150,
-        "section": "14 — Defenses and gate navigation"
+        "section": "14 \u2014 Defenses and gate navigation"
       },
       "active_provider_owners": [
         "W",
@@ -1043,7 +1043,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 161,
-        "section": "15 — Soft counters and formations"
+        "section": "15 \u2014 Soft counters and formations"
       },
       "active_provider_owners": [
         "A"
@@ -1072,7 +1072,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 172,
-        "section": "16 — Strategic tribe director"
+        "section": "16 \u2014 Strategic tribe director"
       },
       "active_provider_owners": [
         "A"
@@ -1101,7 +1101,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 183,
-        "section": "17 — Prehistoric technology graph"
+        "section": "17 \u2014 Prehistoric technology graph"
       },
       "active_provider_owners": [
         "C"
@@ -1131,7 +1131,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 194,
-        "section": "18 — Cohesive environment pack pass"
+        "section": "18 \u2014 Cohesive environment pack pass"
       },
       "active_provider_owners": [
         "A",
@@ -1162,7 +1162,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 205,
-        "section": "19 — Wildlife and seasonal habitat"
+        "section": "19 \u2014 Wildlife and seasonal habitat"
       },
       "active_provider_owners": [
         "W",
@@ -1194,7 +1194,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 216,
-        "section": "20 — Fog and scouting audit"
+        "section": "20 \u2014 Fog and scouting audit"
       },
       "active_provider_owners": [
         "W",
@@ -1224,7 +1224,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 227,
-        "section": "21 — HUD and teaching pass"
+        "section": "21 \u2014 HUD and teaching pass"
       },
       "active_provider_owners": [
         "A"
@@ -1253,7 +1253,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 238,
-        "section": "22 — Natural SFX and environment mix"
+        "section": "22 \u2014 Natural SFX and environment mix"
       },
       "active_provider_owners": [
         "A"
@@ -1282,7 +1282,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 249,
-        "section": "23 — Save migration and deterministic replay"
+        "section": "23 \u2014 Save migration and deterministic replay"
       },
       "active_provider_owners": [
         "C"
@@ -1314,7 +1314,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 260,
-        "section": "24 — Performance and balance gate"
+        "section": "24 \u2014 Performance and balance gate"
       },
       "active_provider_owners": [
         "C",
@@ -1345,7 +1345,7 @@
       "source": {
         "path": "ASTRA_BACKLOG.md",
         "line": 271,
-        "section": "25 — Playable alpha packaging"
+        "section": "25 \u2014 Playable alpha packaging"
       },
       "active_provider_owners": [
         "C"
@@ -1406,10 +1406,10 @@
       "title": "Uneven finite mineral deposits and persistent ore grade.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "3. ~~Uneven finite mineral deposits and persistent ore grade.~~ — implemented and regression-tested",
+      "original_line": "3. ~~Uneven finite mineral deposits and persistent ore grade.~~ \u2014 implemented and regression-tested",
       "historical_batch": 4,
       "suggested_owners": [
         "W",
@@ -1620,10 +1620,10 @@
       "title": "Sleep/rest with chosen night shifts and fatigue.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— seasonal 16–18-hour adult work windows now include lamplit hours; fatigue recovery, off-shift sleep and explicit night-work exceptions are implemented. Explicit Rest resumes automatically; Auto work releases old holds. Ordinary rain permits work; storms still require shelter. See the canonical handoff for current regression evidence.",
+        "verbatim_annotation": "\u2014 seasonal 16\u201318-hour adult work windows now include lamplit hours; fatigue recovery, off-shift sleep and explicit night-work exceptions are implemented. Explicit Rest resumes automatically; Auto work releases old holds. Ordinary rain permits work; storms still require shelter. See the canonical handoff for current regression evidence.",
         "unstruck_convention": null
       },
-      "original_line": "12. ~~Sleep/rest with chosen night shifts and fatigue.~~ — seasonal 16–18-hour adult work windows now include lamplit hours; fatigue recovery, off-shift sleep and explicit night-work exceptions are implemented. Explicit Rest resumes automatically; Auto work releases old holds. Ordinary rain permits work; storms still require shelter. See the canonical handoff for current regression evidence.",
+      "original_line": "12. ~~Sleep/rest with chosen night shifts and fatigue.~~ \u2014 seasonal 16\u201318-hour adult work windows now include lamplit hours; fatigue recovery, off-shift sleep and explicit night-work exceptions are implemented. Explicit Rest resumes automatically; Auto work releases old holds. Ordinary rain permits work; storms still require shelter. See the canonical handoff for current regression evidence.",
       "historical_batch": 1,
       "suggested_owners": [
         "C"
@@ -1718,10 +1718,10 @@
       "title": "Seasonal food reserve forecasts and preservation losses.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "16. ~~Seasonal food reserve forecasts and preservation losses.~~ — implemented and regression-tested",
+      "original_line": "16. ~~Seasonal food reserve forecasts and preservation losses.~~ \u2014 implemented and regression-tested",
       "historical_batch": 1,
       "suggested_owners": [
         "C"
@@ -1830,10 +1830,10 @@
       "title": "Fitting generated names and distinct personal traits.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "21. ~~Fitting generated names and distinct personal traits.~~ — implemented and regression-tested",
+      "original_line": "21. ~~Fitting generated names and distinct personal traits.~~ \u2014 implemented and regression-tested",
       "historical_batch": 4,
       "suggested_owners": [
         "C",
@@ -1854,10 +1854,10 @@
       "title": "Birth, childhood, adult work and old age on a playable timescale.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "22. ~~Birth, childhood, adult work and old age on a playable timescale.~~ — implemented and regression-tested",
+      "original_line": "22. ~~Birth, childhood, adult work and old age on a playable timescale.~~ \u2014 implemented and regression-tested",
       "historical_batch": 1,
       "suggested_owners": [
         "C"
@@ -1898,10 +1898,10 @@
       "title": "Arrivals of families or groups, not only isolated migrants.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "24. ~~Arrivals of families or groups, not only isolated migrants.~~ — implemented and regression-tested",
+      "original_line": "24. ~~Arrivals of families or groups, not only isolated migrants.~~ \u2014 implemented and regression-tested",
       "historical_batch": 1,
       "suggested_owners": [
         "C"
@@ -2014,10 +2014,10 @@
       "title": "Individual life notices and a durable community history.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "29. ~~Individual life notices and a durable community history.~~ — implemented and regression-tested",
+      "original_line": "29. ~~Individual life notices and a durable community history.~~ \u2014 implemented and regression-tested",
       "historical_batch": 4,
       "suggested_owners": [
         "C",
@@ -2062,10 +2062,10 @@
       "title": "Unknown resource locations revealed through actual scouting.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "31. ~~Unknown resource locations revealed through actual scouting.~~ — implemented and regression-tested",
+      "original_line": "31. ~~Unknown resource locations revealed through actual scouting.~~ \u2014 implemented and regression-tested",
       "historical_batch": 1,
       "suggested_owners": [
         "C",
@@ -2294,7 +2294,7 @@
       ],
       "current_delivery": {
         "state": "partial-published",
-        "deliveredSlice": "Finite sheep fleece→paid shearing/carry/wash/spin/weave-or-felt/sew→owned wool coat.",
+        "deliveredSlice": "Finite sheep fleece\u2192paid shearing/carry/wash/spin/weave-or-felt/sew\u2192owned wool coat.",
         "remaining": "Milk/cheese/preserved dairy (dairy source only, not this published batch); transport, traction, horses and other species products.",
         "sourceCommit": "5f1b5e9c4398107b39ca207159bb6451a6922b8f",
         "liveCommit": "5f1b5e9c4398107b39ca207159bb6451a6922b8f",
@@ -2366,10 +2366,10 @@
       "title": "Sowing, tending and time-limited harvest labor.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "42. ~~Sowing, tending and time-limited harvest labor.~~ — implemented and regression-tested",
+      "original_line": "42. ~~Sowing, tending and time-limited harvest labor.~~ \u2014 implemented and regression-tested",
       "historical_batch": 1,
       "suggested_owners": [
         "C",
@@ -2736,10 +2736,10 @@
       "title": "Resource quality influencing yield, labor or equipment performance.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "58. ~~Resource quality influencing yield, labor or equipment performance.~~ — implemented and regression-tested",
+      "original_line": "58. ~~Resource quality influencing yield, labor or equipment performance.~~ \u2014 implemented and regression-tested",
       "historical_batch": 5,
       "suggested_owners": [
         "C"
@@ -2904,10 +2904,10 @@
       "title": "Palisades and gates",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— physical construction, collision, safe automatic/manual gates and save regression checks; watchposts/later tower progression and rival perimeter planning remain partial. Stone walls, trenches and Medieval flooded moats now have construction/crossing foundations.",
+        "verbatim_annotation": "\u2014 physical construction, collision, safe automatic/manual gates and save regression checks; watchposts/later tower progression and rival perimeter planning remain partial. Stone walls, trenches and Medieval flooded moats now have construction/crossing foundations.",
         "unstruck_convention": null
       },
-      "original_line": "65. ~~Palisades and gates~~ — physical construction, collision, safe automatic/manual gates and save regression checks; watchposts/later tower progression and rival perimeter planning remain partial. Stone walls, trenches and Medieval flooded moats now have construction/crossing foundations.",
+      "original_line": "65. ~~Palisades and gates~~ \u2014 physical construction, collision, safe automatic/manual gates and save regression checks; watchposts/later tower progression and rival perimeter planning remain partial. Stone walls, trenches and Medieval flooded moats now have construction/crossing foundations.",
       "historical_batch": 2,
       "suggested_owners": [
         "W",
@@ -3002,10 +3002,10 @@
       "title": "Dismantling/salvage that conserves materials.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "69. ~~Dismantling/salvage that conserves materials.~~ — implemented and regression-tested",
+      "original_line": "69. ~~Dismantling/salvage that conserves materials.~~ \u2014 implemented and regression-tested",
       "historical_batch": 1,
       "suggested_owners": [
         "W",
@@ -3292,10 +3292,10 @@
       "title": "Envoys travel and meet; dated meeting reports appear on arrival, while people and cargo return physically.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested; report-at-arrival is the user's chosen behavior",
+        "verbatim_annotation": "\u2014 implemented and regression-tested; report-at-arrival is the user's chosen behavior",
         "unstruck_convention": null
       },
-      "original_line": "81. ~~Envoys travel and meet; dated meeting reports appear on arrival, while people and cargo return physically.~~ — implemented and regression-tested; report-at-arrival is the user's chosen behavior",
+      "original_line": "81. ~~Envoys travel and meet; dated meeting reports appear on arrival, while people and cargo return physically.~~ \u2014 implemented and regression-tested; report-at-arrival is the user's chosen behavior",
       "historical_batch": 2,
       "suggested_owners": [
         "A",
@@ -3316,10 +3316,10 @@
       "title": "No live remote view of inventories or intentions.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "82. ~~No live remote view of inventories or intentions.~~ — implemented and regression-tested",
+      "original_line": "82. ~~No live remote view of inventories or intentions.~~ \u2014 implemented and regression-tested",
       "historical_batch": 2,
       "suggested_owners": [
         "A",
@@ -3532,10 +3532,10 @@
       "title": "Trails develop through repeated passage; unused paths fade.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— implemented and regression-tested",
+        "verbatim_annotation": "\u2014 implemented and regression-tested",
         "unstruck_convention": null
       },
-      "original_line": "91. ~~Trails develop through repeated passage; unused paths fade.~~ — implemented and regression-tested",
+      "original_line": "91. ~~Trails develop through repeated passage; unused paths fade.~~ \u2014 implemented and regression-tested",
       "historical_batch": 4,
       "suggested_owners": [
         "W",
@@ -3816,10 +3816,10 @@
       "title": "Observe an armed raid or attack before relations turn hostile.",
       "original_doc_status": {
         "struck_through": true,
-        "verbatim_annotation": "— local arrival/attack recognition is regression-tested; remote orders do not immediately declare war",
+        "verbatim_annotation": "\u2014 local arrival/attack recognition is regression-tested; remote orders do not immediately declare war",
         "unstruck_convention": null
       },
-      "original_line": "102. ~~Observe an armed raid or attack before relations turn hostile.~~ — local arrival/attack recognition is regression-tested; remote orders do not immediately declare war",
+      "original_line": "102. ~~Observe an armed raid or attack before relations turn hostile.~~ \u2014 local arrival/attack recognition is regression-tested; remote orders do not immediately declare war",
       "historical_batch": 2,
       "suggested_owners": [
         "A",
@@ -4838,7 +4838,7 @@
         "source": {
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 49,
-          "section": "Coast and land–water transitions"
+          "section": "Coast and land\u2013water transitions"
         },
         "active_provider_owners": [
           "W",
@@ -4857,7 +4857,7 @@
         "source": {
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 50,
-          "section": "Coast and land–water transitions"
+          "section": "Coast and land\u2013water transitions"
         },
         "active_provider_owners": [
           "W",
@@ -4876,7 +4876,7 @@
         "source": {
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 51,
-          "section": "Coast and land–water transitions"
+          "section": "Coast and land\u2013water transitions"
         },
         "active_provider_owners": [
           "W",
@@ -4895,7 +4895,7 @@
         "source": {
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 52,
-          "section": "Coast and land–water transitions"
+          "section": "Coast and land\u2013water transitions"
         },
         "active_provider_owners": [
           "W",
@@ -4914,7 +4914,7 @@
         "source": {
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 53,
-          "section": "Coast and land–water transitions"
+          "section": "Coast and land\u2013water transitions"
         },
         "active_provider_owners": [
           "W",
@@ -4933,7 +4933,7 @@
         "source": {
           "path": "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
           "line": 54,
-          "section": "Coast and land–water transitions"
+          "section": "Coast and land\u2013water transitions"
         },
         "active_provider_owners": [
           "W",
@@ -5763,7 +5763,7 @@
     },
     {
       "id": "QA-051",
-      "original_line": "- Calibrate farming by cropped area, crop-specific seed and net yield, person-hours by operation, soil depth and texture, moisture and flood exposure, and edible output after processing and storage losses. A default 8.2 × 8.2 m field is 67.24 m², about 0.0166 modern acres. On the Winchester sample's 385 kg/ha net wheat benchmark that area yields about 2.6 kg before post-harvest losses. At 3,320 kcal/kg and an illustrative 2,300 kcal/day, one cropped acre provides about 225 person-days of wheat energy, with no allowance for spoilage, fallow or a varied diet. Walter of Henley gives a benchmark of 2.5 person-days per acre to reap and bind, separate from land preparation, sowing, weeding, threshing and hauling. Retain a declared simulation scale for game units rather than interpreting 260 abstract yield units as kilograms. References: [Winchester manorial yield study](https://www.bahs.org.uk/AGHR/VOLUMES/AGHR38.pdf), [Walter of Henley](https://medieval.ucdavis.edu/120D/Walter.html), [FAO grain energy conversion](https://www.fao.org/4/y9422e/y9422e04.htm), [NIST area conversion](https://pages.nist.gov/fipy/en/4.0/generated/fipy.tools.dimensions.physicalField.html).",
+      "original_line": "- Calibrate farming by cropped area, crop-specific seed and net yield, person-hours by operation, soil depth and texture, moisture and flood exposure, and edible output after processing and storage losses. A default 8.2 \u00d7 8.2 m field is 67.24 m\u00b2, about 0.0166 modern acres. On the Winchester sample's 385 kg/ha net wheat benchmark that area yields about 2.6 kg before post-harvest losses. At 3,320 kcal/kg and an illustrative 2,300 kcal/day, one cropped acre provides about 225 person-days of wheat energy, with no allowance for spoilage, fallow or a varied diet. Walter of Henley gives a benchmark of 2.5 person-days per acre to reap and bind, separate from land preparation, sowing, weeding, threshing and hauling. Retain a declared simulation scale for game units rather than interpreting 260 abstract yield units as kilograms. References: [Winchester manorial yield study](https://www.bahs.org.uk/AGHR/VOLUMES/AGHR38.pdf), [Walter of Henley](https://medieval.ucdavis.edu/120D/Walter.html), [FAO grain energy conversion](https://www.fao.org/4/y9422e/y9422e04.htm), [NIST area conversion](https://pages.nist.gov/fipy/en/4.0/generated/fipy.tools.dimensions.physicalField.html).",
       "original_doc_status": "Preserve verbatim scope/status; no completion inferred",
       "source": {
         "path": "docs/QA_BACKLOG_2026-11-03.md",
@@ -5858,12 +5858,12 @@
     },
     {
       "id": "BOAT-SHARED",
-      "original_line": "- [ ] **BOAT-SHARED: remove permanently equipped canoe behavior.** Source currently has two contracts: completed legacy canoe work sets `u.haulage='canoe'` (`haulage.ts`), while `boats.ts` already has shared hull IDs, dock ownership, boarding and real disembarkation that clears boat/haulage state. Reconcile these into a physical hull left moored at a dock/valid landing and reusable by another crew. A person ashore must regain ordinary walking/work without a canoe attached. Any portage is a separate explicit task with hull weight and carriers. Migrate old equipped canoes once without duplicating paid hulls, refunding their materials, moving residents, dropping cargo or leaving an afloat resident stranded. Verify dock→board→sail→land→ordinary work→different crew→same hull, including save/reload and a missing dock.",
+      "original_line": "- [ ] **BOAT-SHARED: remove permanently equipped canoe behavior.** Source currently has two contracts: completed legacy canoe work sets `u.haulage='canoe'` (`haulage.ts`), while `boats.ts` already has shared hull IDs, dock ownership, boarding and real disembarkation that clears boat/haulage state. Reconcile these into a physical hull left moored at a dock/valid landing and reusable by another crew. A person ashore must regain ordinary walking/work without a canoe attached. Any portage is a separate explicit task with hull weight and carriers. Migrate old equipped canoes once without duplicating paid hulls, refunding their materials, moving residents, dropping cargo or leaving an afloat resident stranded. Verify dock\u2192board\u2192sail\u2192land\u2192ordinary work\u2192different crew\u2192same hull, including save/reload and a missing dock.",
       "original_doc_status": "unchecked",
       "source": {
         "path": "docs/QA_BACKLOG_2026-11-03.md",
         "line": 70,
-        "section": "Latest user corrections — shared boats, useful trade and observable societies"
+        "section": "Latest user corrections \u2014 shared boats, useful trade and observable societies"
       },
       "suggested_owners": [
         "A",
@@ -5882,7 +5882,7 @@
       "source": {
         "path": "docs/QA_BACKLOG_2026-11-03.md",
         "line": 71,
-        "section": "Latest user corrections — shared boats, useful trade and observable societies"
+        "section": "Latest user corrections \u2014 shared boats, useful trade and observable societies"
       },
       "suggested_owners": [
         "C",
@@ -5896,12 +5896,12 @@
     },
     {
       "id": "TRADE-LABOR",
-      "original_line": "- [ ] **TRADE-LABOR: negotiate finite work arrangements.** Propose visiting craftspeople, temporary hired crews, reciprocal seasonal work and voluntary resettlement as different contracts. Specify which existing named people agree, their home/host, task, term, compensation, tools, meals, shelter, safety, travel and return/integration conditions. Conserve identities and exclude unavailable committed people. Do not sell a resource labeled “people,” spawn free workers, silently transfer a whole population, or equate a labor contract with existing captivity mechanics. Detailed mechanics remain planned.",
+      "original_line": "- [ ] **TRADE-LABOR: negotiate finite work arrangements.** Propose visiting craftspeople, temporary hired crews, reciprocal seasonal work and voluntary resettlement as different contracts. Specify which existing named people agree, their home/host, task, term, compensation, tools, meals, shelter, safety, travel and return/integration conditions. Conserve identities and exclude unavailable committed people. Do not sell a resource labeled \u201cpeople,\u201d spawn free workers, silently transfer a whole population, or equate a labor contract with existing captivity mechanics. Detailed mechanics remain planned.",
       "original_doc_status": "unchecked",
       "source": {
         "path": "docs/QA_BACKLOG_2026-11-03.md",
         "line": 72,
-        "section": "Latest user corrections — shared boats, useful trade and observable societies"
+        "section": "Latest user corrections \u2014 shared boats, useful trade and observable societies"
       },
       "suggested_owners": [
         "C",
@@ -5919,7 +5919,7 @@
       "source": {
         "path": "docs/QA_BACKLOG_2026-11-03.md",
         "line": 73,
-        "section": "Latest user corrections — shared boats, useful trade and observable societies"
+        "section": "Latest user corrections \u2014 shared boats, useful trade and observable societies"
       },
       "suggested_owners": [
         "C",
@@ -5939,7 +5939,7 @@
       "source": {
         "path": "docs/QA_BACKLOG_2026-11-03.md",
         "line": 74,
-        "section": "Latest user corrections — shared boats, useful trade and observable societies"
+        "section": "Latest user corrections \u2014 shared boats, useful trade and observable societies"
       },
       "suggested_owners": [
         "C",
@@ -6939,7 +6939,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 130,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -6960,7 +6960,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 131,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -6981,7 +6981,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 132,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7002,7 +7002,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 133,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7021,7 +7021,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 134,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7038,7 +7038,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 135,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7059,7 +7059,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 130,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7080,7 +7080,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 131,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7101,7 +7101,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 132,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7122,7 +7122,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 133,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7141,7 +7141,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 134,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7158,7 +7158,7 @@
       "source": {
         "path": "docs/REQUEST_AUDIT.md",
         "line": 135,
-        "section": "New requests — 2026-11-11 (pending implementation/acceptance)"
+        "section": "New requests \u2014 2026-11-11 (pending implementation/acceptance)"
       },
       "master_gap": "Not explicitly itemized in master body; related broad scope does not replace this detail.",
       "suggested_owners": [
@@ -7258,7 +7258,7 @@
       "master_gap": "Not explicitly restated in master body.",
       "source": {
         "path": "user conversation",
-        "section": "November10 seasonal report screenshots19:00–19:03"
+        "section": "November10 seasonal report screenshots19:00\u201319:03"
       },
       "suggested_owners": [
         "C",
@@ -7737,7 +7737,7 @@
         "evidence": [
           "v18c4b-published"
         ],
-        "remainingNotes": "PublishedC4b: dry nine-point tree roots, safe nondepressed native founders/foundations, actual freshwater and useful civilization networks; four paid native mountain-quarry construction/mining/carry/reload/home-credit journeys across four relief characters. CurrentNormalV18 winter passes physical water, fuel, shelter, defense and strict continuation. Version1–17 whole-world fingerprints preserved. This is not an FPS or full biome-transition/gallery claim."
+        "remainingNotes": "PublishedC4b: dry nine-point tree roots, safe nondepressed native founders/foundations, actual freshwater and useful civilization networks; four paid native mountain-quarry construction/mining/carry/reload/home-credit journeys across four relief characters. CurrentNormalV18 winter passes physical water, fuel, shelter, defense and strict continuation. Version1\u201317 whole-world fingerprints preserved. This is not an FPS or full biome-transition/gallery claim."
       },
       {
         "id": "M1-19",
@@ -8617,7 +8617,7 @@
         "evidence": [
           "finalMatureProfileNov2"
         ],
-        "remainingNotes": "Actual final-source M1/8GiB foreground browser profile with245→273 people reports full-frame gaps, CPU stages including navigation, whole-render counts, JS memory and background-save CPU/latency. LegacyV7 world, short growing cohort, no GPU timing or fast-forward target claim."
+        "remainingNotes": "Actual final-source M1/8GiB foreground browser profile with245\u2192273 people reports full-frame gaps, CPU stages including navigation, whole-render counts, JS memory and background-save CPU/latency. LegacyV7 world, short growing cohort, no GPU timing or fast-forward target claim."
       },
       {
         "id": "M5-08",
@@ -8860,7 +8860,7 @@
       "proposedID": "CHAT-G15-TRADE-DIVERSITY",
       "boardID": "G15",
       "owner": "A-Societies offers/caravans + C-Economy prices/market effects + A-Experience trade visuals",
-      "source": "docs/parallel/handoffs/claude-coordination.md — New user requests16:04ET; remote ba143b7",
+      "source": "docs/parallel/handoffs/claude-coordination.md \u2014 New user requests16:04ET; remote ba143b7",
       "messageTimestamp": "2026-11-11T16:04:00-05:00 (reported by Claude coordination board)",
       "requirement": "Broader physically held trade in tools, armor, weapons, resources, animals and artifacts; risk-sensitive escorted caravans; markets measurably increase visit frequency and improve price spread.",
       "state": "pending-refinement-of-existing-trade-scope",
@@ -8870,7 +8870,7 @@
       "proposedID": "CHAT-G16-DEEPWATER-STORMS",
       "boardID": "G16",
       "owner": "A-Societies voyage response + C-Platform weather/hull/sail effects + W-World depth/extents",
-      "source": "docs/parallel/handoffs/claude-coordination.md — New user requests16:04ET; remote ba143b7",
+      "source": "docs/parallel/handoffs/claude-coordination.md \u2014 New user requests16:04ET; remote ba143b7",
       "messageTimestamp": "2026-11-11T16:04:00-05:00 (reported by Claude coordination board)",
       "requirement": "Occasional real deep-water storms delay, damage or endanger actual player/NPC voyages; shelter/turn-back responses use observed conditions and preserve exact cargo/crew accounting.",
       "state": "pending-refinement-of-existing-weather-naval-scope",
