@@ -18,13 +18,57 @@ test('productive farms can be planted on gentle upland slopes',()=>{const g=fixt
 test('actual harvesting accumulates pressure rather than only changing a display',()=>{const g=fixture(),u=g.state.units[0],n=g.state.forage[0];Object.assign(n,{x:u.x,z:u.z,amount:10,pressure:0});Object.assign(u,{order:'gather',node:n,job:'food',gatherT:1000,carry:0});g.workerAI(u,.1);assert.ok(n.pressure>0);});
 test('unknown tribe identities never leak through the HUD dots',()=>{const g=fixture();g.vision.fill(0);assert.deepEqual(g.snapshot().tribes.map(t=>t.id),[0]);});
 test('a line of loaded carriers unloads through a shared crowded frontage',()=>{const g=fixture();g.state.forage=[];g.state.wildlife=[];g.state.trees=[];g.state.stones=[];const first=g.state.units[0];g.state.units=[];for(let i=0;i<10;i++){const u=i?g.spawnUnit('worker',-20+i*1.1,48,0):first;Object.assign(u,{x:-20+i*1.1,z:48,y:4,order:'return',node:null,carry:8,carryType:'wood'});if(!g.state.units.includes(u))g.state.units.push(u);}const stock=g.tribe(0).wood;for(let i=0;i<900;i++){g.state.time+=.1;g.navBudget=10;for(const u of g.state.units)g.workerAI(u,.1);g.separate(.1);}assert.equal(g.state.units.reduce((n,u)=>n+u.carry,0),0);assert.equal(g.tribe(0).wood,stock+80);});
-test('hunters take moving prey and bring actual food home',()=>{const g=fixture(),u=g.state.units[0];g.state.forage=[];g.state.fish=[];g.state.trees=[];g.state.stones=[];const prey={...g.state.wildlife.find(c=>c.species==='goat'),id:g.id(),species:'goat',x:12,z:38,y:4,hp:2,maxHp:2,vx:0,vz:0,wanderT:10};g.state.wildlife=[prey];Object.assign(u,{x:0,z:48,y:4});g.vision.fill(2);u.selected=true;g.tribe(0).food=10;const food=g.tribe(0).food;g.assignJob('hunt');for(let i=0;i<1800;i++){g.state.time+=1/30;g.navBudget=10;g.workerAI(u,1/30);g.tickWildlife(1/30);assert.ok(Math.hypot(prey.vx,prey.vz)<=2.51);}assert.equal(prey.hp,0);assert.ok(g.tribe(0).food>food,'the catch must be delivered');});
+test('hunters hit moving prey with actual projectiles and bring finite raw meat home',async()=>{
+ const {HUNTING_WEAPONS,HUNTING_FLIGHT_RULES,CARCASS_MEAT}=await import('../src/game/hunting.ts');
+ const g=fixture(),u=g.state.units[0];g.state.forage=[];g.state.fish=[];g.state.trees=[];g.state.stones=[];
+ const prey={...g.state.wildlife.find(c=>c.species==='goat'),id:g.id(),species:'goat',x:12,z:38,y:4,hp:2,maxHp:2,vx:0,vz:0,wanderT:10};
+ g.state.wildlife=[prey];Object.assign(u,{x:0,z:48,y:4});g.vision.fill(2);u.selected=true;g.tribe(0).food=10;
+ assert.equal(g.tribe(0).animalProcessingVersion,1,'fresh-world raw processing stays enabled');
+ const food=g.tribe(0).food,raw=g.tribe(0).items?.rawMeat||0,launched=new Set();let moving=false;
+ g.assignJob('hunt');
+ for(let i=0;i<1800;i++){
+  g.state.time+=1/30;g.navBudget=10;g.workerAI(u,1/30);
+  for(const p of g.state.projectiles){
+   if(p.wildlifeTargetId!==prey.id||launched.has(p))continue;launched.add(p);
+   assert.equal(p.huntingWeapon,'stone');assert.equal(p.attackerId,u.id);assert.equal(p.target,null,'fixed flight never homes on a target pointer');
+   assert.ok(Math.hypot(prey.x-p.x,prey.y+.4-p.y,prey.z-p.z)<=HUNTING_WEAPONS.stone.range+1e-9);
+   assert.ok(Math.abs(Math.hypot(p.huntingVelocity.x,p.huntingVelocity.y,p.huntingVelocity.z)-HUNTING_WEAPONS.stone.speed)<1e-9);
+   assert.ok(p.life>0&&p.life<=HUNTING_FLIGHT_RULES.maxFlightSeconds);
+  }
+  // Match Game.step: move wildlife, then sweep fixed-flight projectiles against
+  // those actual moving bodies and the same physical obstacle collection.
+  const obstacles=g.tickWildlife(1/30);g.updateProjectiles(1/30,true,obstacles);
+  assert.ok(Math.hypot(prey.vx,prey.vz)<=2.51);if(prey.hp>0&&Math.hypot(prey.vx,prey.vz)>.01)moving=true;
+  assert.ok(g.state.projectiles.length<=HUNTING_FLIGHT_RULES.maxProjectiles);
+ }
+ assert.ok(moving,'the hunter must catch prey that actually moved');assert.ok(launched.size>=2,'two finite stone hits are required');assert.equal(prey.hp,0);
+ assert.ok((g.tribe(0).items?.rawMeat||0)>raw,'the catch must physically reach raw storage');
+ assert.ok(g.tribe(0).food<=food,'uncooked raw meat never creates edible food; ordinary trip provisions may consume existing food');
+ assert.equal(g.state.simulationEvents?.totals['food_received:0:food']||0,0,'no ready-food delivery is fabricated');
+ const carried=u.rawHuntMeat?u.carry:0;assert.ok(Math.abs(prey.carcass.meat+carried+(g.tribe(0).items.rawMeat-raw)-CARCASS_MEAT.goat)<1e-6,'the finite carcass is only on its body, carrier or cache');
+});
 test('rivals do not arbitrarily kill people or halls when stores dip',()=>{const g=fixture();const hall=g.makeBld('townhall',80,38,1);g.state.buildings.push(hall);g.state.units=[];for(let i=0;i<5;i++)g.spawnUnit('worker',80+i*2,48,1);g.tribe(1).food=0;g.tribe(1).wood=0;const hp=hall.hp;const random=Math.random;try{Math.random=()=>0;for(let i=0;i<10;i++){g.tribe(1).thinkT=0;g.rivalTick(1,.1);}}finally{Math.random=random;}assert.equal(g.popNow(1),5);assert.equal(hall.hp,hp);});
 test('delivery frontage never selects a sub-cell point inside a neighboring hut',()=>{const g=fixture(),u=g.state.units[0];g.state.buildings=[];const hall=g.makeBld('townhall',-179.0248,-248.4618,0),store=g.makeBld('warehouse',-186,-248,0);g.state.buildings.push(hall,store,g.makeBld('hut',-174,-244,0),g.makeBld('hut',-178,-242,0),g.makeBld('hut',-187.85,-240.24,0),g.makeBld('hut',-166.90,-250.45,0),g.makeBld('barracks',-169.02,-256.46,0));g.rebuildWalk();Object.assign(u,{x:-172,z:-240,y:4,carry:8,carryType:'wood',order:'return',node:null});const spot=g.interactionSpot(u,hall);if(spot)assert.ok(g.canStep(u,spot.x,spot.z));drive(g,u,180);assert.equal(u.carry,0);});
 test('unseen societies cannot place overlapping structures through player fog',()=>{const g=fixture();g.vision.fill(0);const store=g.makeBld('warehouse',80,38,1);g.state.buildings.push(store);assert.match(g.placementIssue('warehouse',80,38,1),/building/);assert.match(g.placementIssue('hut',80,38,2),/building/);});
 test('a loaded citizen walks out of a blocked start cell without teleporting cargo',()=>{const g=fixture(),u=g.state.units[0];Object.assign(u,{x:0,z:38,y:4,order:'return',node:null,carry:8,carryType:'wood'});assert.equal(g.walkable(u.x,u.z),false);const x=u.x,z=u.z;g.navBudget=10;g.workerAI(u,.1);assert.ok(Math.hypot(u.x-x,u.z-z)<=u.speed*.12);drive(g,u);assert.equal(u.carry,0);});
 test('larger pillage yields are finite transfers from real enemy reserves',()=>{const g=fixture(),b=g.makeBld('warehouse',80,38,1);Object.assign(g.tribe(1),{food:400,wood:200,stone:80});const before=['food','wood','stone'].map(k=>g.tribe(0)[k]+g.tribe(1)[k]);const food=g.tribe(0).food;g.lootBuilding(0,b);assert.equal(g.tribe(0).food,food);assert.equal(b.raidLoot.food,140);assert.deepEqual(['food','wood','stone'].map(k=>g.tribe(0)[k]+g.tribe(1)[k]+(b.raidLoot[k]||0)),before);});
-test('a local trader negotiates a small surplus without exporting winter necessities',async()=>{const {quoteShipment}=await import('../src/game/barter.ts');const g=fixture();g.state.buildings.push(g.makeBld('townhall',80,38,1));g.vision.fill(1);Object.assign(g.tribe(0),{food:300});Object.assign(g.tribe(1),{food:0,wood:28,hostile:false,tradeCd:0});const q=quoteShipment(g,1,'food','wood',30);assert.ok(q.deal);assert.equal(q.deal.getAmt,4);assert.match(q.reason,/smaller/);g.tribe(1).wood=24;assert.equal(quoteShipment(g,1,'food','wood',30).deal,null);});
+test('a local trader negotiates a small surplus without exporting winter necessities',async()=>{
+ const {quoteShipment,localSettlementHall}=await import('../src/game/barter.ts');
+ const {refreshSettlementSites}=await import('../src/game/settlementKnowledge.ts');
+ const {TRADE_PRICING}=await import('../src/game/tradePricing.ts');const {predisposition}=await import('../src/game/people.ts');
+ const g=fixture(),trader=g.state.units[0],hall=g.makeBld('townhall',80,38,1);g.state.buildings.push(hall);g.rebuildWalk();
+ // A declared physical meeting, with the finite proposal withdrawn before the
+ // query. Explored fog alone is not current settlement/stock knowledge.
+ Object.assign(trader,{x:66,z:38,y:4,carry:30,carryType:'food',carryFood:'provisions',order:'hold'});g.vision.fill(0);
+ Object.assign(g.tribe(0),{food:270,foodLots:{provisions:270}});Object.assign(g.tribe(1),{food:0,wood:28,hostile:false,tradeCd:0,trust:0,tension:0});g.state.agePicks[2]='army';
+ assert.equal(localSettlementHall(g,trader,1),hall);refreshSettlementSites(g);const before=JSON.stringify(g.state);
+ const q=quoteShipment(g,1,'food','wood',30,trader);assert.ok(q.deal,q.reason);assert.equal(q.deal.getAmt,4);assert.equal(g.tribe(1).wood-q.deal.getAmt,24);
+ // Both declared stocks put scarcity at its same upper bound, so it cancels.
+ const fullQuote=Math.floor(30*TRADE_PRICING.baseTerms*predisposition(trader).trading/TRADE_PRICING.worth.wood);
+ assert.equal(q.deal.giveAmt,Math.ceil(30*4/fullQuote),'partial fill retains the quoted unit price with integer rounding');assert.ok(q.deal.giveAmt<=trader.carry);assert.match(q.reason,/Partial shipment/);
+ assert.equal(JSON.stringify(g.state),before,'quoting neither spends cargo nor moves stock');assert.equal(g.tribe(0).food+trader.carry,300);
+ g.tribe(1).wood=24;const atReserve=JSON.stringify(g.state);assert.equal(quoteShipment(g,1,'food','wood',30,trader).deal,null);assert.equal(JSON.stringify(g.state),atReserve);
+});
 
 test('prosperity milestones keep the evolving settlement playable',()=>{const g=fixture();g.tribe(0).age=5;g.state.raidWave=4;for(let i=0;i<30;i++){const u=g.spawnUnit('worker',15+i,48,0);u.militia=true;}g.checkVictory();assert.equal(g.state.ended,null);});
 test('rival growth reserves include children maturing before the next harvest',async()=>{const {growthFoodNeed}=await import('../src/game/pantry.ts');const g=fixture();g.state.units=[];for(let i=0;i<6;i++){const u=g.spawnUnit('worker',0,48,1);u.maturesAt=g.state.time+1;}const maturing=growthFoodNeed(g,1);for(const u of g.state.units)u.maturesAt=g.state.time+360;assert.ok(growthFoodNeed(g,1)<maturing);assert.ok(maturing>200);});
