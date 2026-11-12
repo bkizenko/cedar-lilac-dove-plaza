@@ -1,3 +1,4 @@
+import {useLifecycleAction} from './useLifecycleAction';
 import { DIFFICULTIES, difficultyEffects, type Difficulty } from "../game/difficulty";
 import { useState } from "react";
 import type { Engine } from "../game/engine";
@@ -6,7 +7,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
   const [layout, setLayout] = useState<WorldRequest["layout"]>("random");
   const [size, setSize] = useState<WorldOptions["size"]>(1560);
   const [preset, setPreset] = useState<Difficulty>(engine.game.state.difficulty ?? "normal");
-  const [busy, setBusy] = useState(false);
+  const lifecycle=useLifecycleAction(engine),busy=lifecycle.busy;
   const [previewRiverbanks, setPreviewRiverbanks] = useState(false);
   return (
     <div className="world-setup">
@@ -63,19 +64,14 @@ export function WorldSetup({ engine }: { engine: Engine }) {
       <button
         type="button"
         disabled={busy}
-        onClick={() => {
-          setBusy(true);
-          requestAnimationFrame(() => {
-            try {
-              engine.configureNewWorld({ layout, size, difficulty: preset },previewRiverbanks);
-            } finally {
-              setBusy(false);
-            }
-          });
-        }}
+        onClick={() => void lifecycle.run(async()=>{
+          await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
+          return await engine.configureNewWorld({layout,size,difficulty:preset},previewRiverbanks);
+        })}
       >
         {busy ? "Generating…" : "New world"}
       </button>
+      {lifecycle.error&&<p role="status" className="text-xs">{lifecycle.error}</p>}
       <span>
         {engine.game.world.options?.layout ?? "Classic island"} ·{" "}
         {Math.round(engine.game.world.size)} m across
