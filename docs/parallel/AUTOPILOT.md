@@ -444,9 +444,9 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CAT-52 | catalogue | Knapping, woodworking and hide-working. | Codex | Codex W4 | not started |  |
 | CAT-53 | catalogue | Warm/light garments through tanning and weaving. | Codex | Codex W4 | not started |  |
 | CAT-54 | catalogue | Pottery/containers and improved storage. | Codex | Codex W4 | not started |  |
-| CAT-55 | catalogue | Charcoal/fuel and kiln/smelting inputs. | Codex | Codex W4 | not started |  |
-| CAT-56 | catalogue | Copper/tin/bronze/iron material chains without circular age gates. | Codex | Codex W4 | not started |  |
-| CAT-57 | catalogue | Tool/weapon recipes, durability and outfitting priorities. | Codex | Codex W4 | not started |  |
+| CAT-55 | catalogue | Charcoal/fuel and kiln/smelting inputs. | Codex | Codex W4 | live-partial | 2051c07 / 2026-11-12T10-44-36-919Z-2051c07: paid timber/closed charring/cooling and delivered charcoal; cache-loaded copper trial with original fuel/custody/helper work, native used/worn tool.108/108 unique scoped,tsc/buildPASS; ore refining/alloys/full tool catalogue remain open. docs/metrics/charcoal-copper-release-2026-11-12.json |
+| CAT-56 | catalogue | Copper/tin/bronze/iron material chains without circular age gates. | Codex | Codex W4 | live-partial | 2051c07 / 2026-11-12T10-44-36-919Z-2051c07: paid timber/closed charring/cooling and delivered charcoal; cache-loaded copper trial with original fuel/custody/helper work, native used/worn tool.108/108 unique scoped,tsc/buildPASS; ore refining/alloys/full tool catalogue remain open. docs/metrics/charcoal-copper-release-2026-11-12.json |
+| CAT-57 | catalogue | Tool/weapon recipes, durability and outfitting priorities. | Codex | Codex W4 | live-partial | 2051c07 / 2026-11-12T10-44-36-919Z-2051c07: paid timber/closed charring/cooling and delivered charcoal; cache-loaded copper trial with original fuel/custody/helper work, native used/worn tool.108/108 unique scoped,tsc/buildPASS; ore refining/alloys/full tool catalogue remain open. docs/metrics/charcoal-copper-release-2026-11-12.json |
 | CAT-58 | catalogue | Resource quality influencing yield, labor or equipment performance. | Codex | — (done) | done/live | historical source-struck: resource quality |
 | CAT-59 | catalogue | Useful workshops and upgrade branches, each with real worker tasks. | Codex | Codex W4 | not started | workshops / upgrade branches |
 | CAT-6 | catalogue | Grassland grazing, woodland wild food and upland extraction strategies. | Grok | Grok W7 | not started |  |

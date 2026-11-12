@@ -1,0 +1,92 @@
+{
+  "at": "2026-11-12T10:48:35.249069+00:00",
+  "release": "2026-11-12T10-44-36-919Z-2051c07",
+  "commit": "2051c074bebdb52101fccd7ffc6315dc2164020f",
+  "sourceCommit": "fad8d44b9cd0f94592f17efae728b34a29044a4a",
+  "ports": [
+    8086,
+    8101
+  ],
+  "executedBatch": {
+    "passed": 108,
+    "total": 108,
+    "uniqueNativeAndShared": 105,
+    "runs": [
+      {
+        "log": "hearthwild-charcoal-integrated-tests.log",
+        "passed": 100,
+        "failed": 0
+      },
+      {
+        "log": "hearthwild-charcoal-edge-tests.log",
+        "passed": 4,
+        "failed": 0
+      },
+      {
+        "log": "hearthwild-charcoal-latest-tests.log",
+        "passed": 29,
+        "failed": 0
+      }
+    ],
+    "duplicatesExcluded": true,
+    "built": {
+      "passed": 3,
+      "total": 3,
+      "scope": "actual built native earned clamp phase/progress/custody, real charcoal-paid copper resume and durable reload, original53-person restore. No ore smelting, historical yield, campaign or FPS claim.",
+      "originalPopulation": 53,
+      "originalUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "passed after latest main merge",
+  "build": "passed after latest main merge",
+  "fullChecklist": {
+    "id": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percentage": 34.69387755102041,
+    "newGateCredit": 0
+  },
+  "parameters": {
+    "charcoal": {
+      "logs": 8,
+      "preparationWorkSeconds": 40,
+      "carbonizeSeconds": 120,
+      "coolingSeconds": 30,
+      "outputUnits": 2
+    },
+    "copperPrototype": {
+      "workableCopper": 8,
+      "fuelAlternative": {
+        "logs": 4,
+        "charcoal": 2
+      },
+      "workSeconds": 90
+    }
+  },
+  "scope": [
+    "Native original worker cuts actual standing timber, carries paid clamp load, prepares it, leaves the closed batch through charring/cooling, then physically collects and delivers charcoal",
+    "Real cache loading for new copper trials; original paid copper/fuel and work survive interruption/save/resume, charcoal choice never silently changes or charges twice",
+    "Original actor ownership, actual bench/helper work and one empty equipment slot; no replacement or repair of another owned tool; resulting copper tool actually sows native ground and wears",
+    "Allocated materials/work/loss are measured; death removes pending output and records held inputs lost once; legacy states get no invented charcoal receipt",
+    "Native compact queue shows real passive clocks and original materials, owner query/command resume, original53-person import/save/restore unchanged",
+    "Whole main through ed90377/9585754 retained, including Grok canals/rotation/powered mills/multi-field fertility and Claude vegetation/ward ledger; productionAI mechanical merge retained both charcoal passive cycle and mill power multiplier"
+  ],
+  "evidenceLimits": [
+    "Native scenario declares completed legal hearth/workshop/field and eight workable copper as authored infrastructure/input endowments; no building construction or ore extraction credit claimed",
+    "All quantities and clocks are tunable abstract gameplay values, not historical measured yield/time",
+    "Copper and iron stocks remain existing workable-metal abstractions; ore refining/tin/bronze/bloomery and broader metallurgy remain open",
+    "Covered clamp is a paid hearth activity and queue, not a newly modeled 3D clamp building; visuals remain Claude-owned",
+    "No full campaign, universal FPS, complete crafting catalogue or whole knowledge/metallurgy gate claim; sim Worker remains parked"
+  ],
+  "historicalProcessReference": {
+    "title": "FAO: Logistics of charcoal production",
+    "url": "https://www.fao.org/4/X5328e/x5328e02.htm",
+    "usedFor": "Controlled air and closed cooling before unloading; no numeric game tuning attributed to source"
+  },
+  "savedVillage": {
+    "originalPopulation": 53,
+    "unchanged": true,
+    "screenshotsRetained": 0
+  }
+}
