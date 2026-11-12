@@ -154,6 +154,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   coastalCommissionId?:number;
   seaExplorationId?:number;
   tradeNeedsId?:number;
+  cargoRecoveryId?:number;
+  tradeCargoPending?:true;
   fibreWork?:import('./fibre').FibreWork;
   basket?:import('./fibre').OwnedBasket;
   clayWork?:import('./pottery').ClayWork;

@@ -1,3 +1,4 @@
+import {cargoBodyMustRemain,tickStolenCargo} from './stolenCargo';
 import {initializeSheep} from './sheep';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
@@ -5878,7 +5879,8 @@ export class Game {
         reconcileWaterCargoEvidence(this);
         reconcileArmorHolders(this);
         reconcileSiegeRams(this);
-        this.state.units = this.state.units.filter((u) => u.hp > 0);
+        tickStolenCargo(this,0);
+        this.state.units = this.state.units.filter((u) => u.hp > 0||cargoBodyMustRemain(u));
         this.checkVictory();
       } catch (err) {
         endPrisonerGuardQueries(this);endBuildingQueries(this);endDefenseNeighbors(this);

@@ -1,3 +1,4 @@
+import {restoreCargoRecoveryCommitments} from './stolenCargo';
 import {validSailingState,reconcileSailRigProjects} from './boatSailing';
 import {validFleece} from './sheep';
 import {validSiegeRamState,reconcileSiegeRams} from './siegeRam';
@@ -715,6 +716,7 @@ export function decodeGame(raw:unknown):Game {
   } as GameState;
   // Existing actual own stations are legacy adoption evidence, never a phantom building.
   for(const t of g.state.tribes)if(t.animalProcessingVersion===undefined)activateAnimalProcessing(g,t.id);
+  restoreCargoRecoveryCommitments(g.state);
   syncHaulageProjects(g);relinkHousingViews(g);
   initializeCultivation(g,s.cultivationVersion===undefined);
   g.vision.set(d.vision);
