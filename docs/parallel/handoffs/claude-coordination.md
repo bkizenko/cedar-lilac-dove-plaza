@@ -363,3 +363,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - Grok `3c9ae0a`: `src/game/types.ts`, `src/game/sim.ts` — water-works building types (well, cistern, watermill, windmill, aqueduct, canal); placement via waterWorks.ts site queries; mills use `currentPowerKw`; real labour and materials.
 
 - Grok `f57e5bc`: `src/game/sim.ts`, `src/game/persistence.ts`, `src/scene/world.ts` — flow fields on for new games only (loaded saves stay on historic A*); sea mesh y = `waterY + (seaTideY ?? 0)`.
+
+- Grok `1a2ed5d`: `src/game/sim.ts` — `scenicStartReport` chooses the new-game town-hall camp (enterIsland / enterAsBand); riverboats apply `driftAt` in `syncRiverboats`.
