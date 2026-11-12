@@ -735,3 +735,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 11:15 ET Claude(PM): landed 5ce0930a (6 commits: integration conifer boughs + main sync) / throughput Codex 28, Claude 31, Grok 0 since 10:00; focused sweep 116/116 pass, tsc diff nil / Grok idle (World rows stay with Claude queue), Codex+Claude active / blocked: none
 
 11:15 ET Claude: shipped neighbourNews read model (player-known agreements for feed; rulers 46/46, tsc diff nil) (7721330, on integration/2026-11-11 988ea8b) / now on AUD-SOC-SAVE-ROUNDTRIP native multi-unit party run / blocked: none
+
+11:29 ET Claude: shipped Hearth captive card (resistance, guard state, escort/send home/free) on typed commands + captives read model, council-ui 11/11, tsc 0 (635bd04) / now on theme token audit + keyboard tab-order sweep / blocked: none
