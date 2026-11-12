@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: b03d0c120dfab0ce4a5d576b6874625788d30eec published as 2026-11-12T17-06-38-450Z-b03d0c1 on8086/8101.37/39 scoped captive/readout/return/save checks (94.87%);2unchanged visitor failures also fail priorlive01603e2. Includes all prior qualified releases;37/98 unchanged. New canonicalnaval/commander/influence/geology source notlive; no fullcampaign/performancecredit; Worker parked.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
+Verified baseline: dc2d7a91cd15a81b81126e48853d40cd09ef5370 published as 2026-11-12T17-21-22-575Z-dc2d7a9 on8086/8101.37/39 scoped captive/readout/return/save checks (94.87%);2unchanged visitor failures also fail priorlive01603e2. Includes all prior qualified releases;37/98 unchanged. New canonicalnaval/commander/influence/geology source notlive; no fullcampaign/performancecredit; Worker parked.. Unverified integration earns no credit. Partial/unverified/pending gates earn zero; source files and test definitions alone are not passed evidence.
 
 ## Milestone counts
 
