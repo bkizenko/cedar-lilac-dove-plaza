@@ -38,7 +38,7 @@ test('seed trial priority uses a free second adult rather than stealing the firs
 });
 test('a five-person camp must pay, walk and test a copper prototype before producing additional real tool sets',()=>{
  const g=fixture(),t=g.tribe(0);Object.assign(t,{copper:16,wood:20});
- assert.equal(runKnowledgeAction(g,'copper_trial').accepted,true);let maker=g.state.units.find(u=>u.copperStudy);assert.equal(t.copper,8);assert.equal(t.wood,16);assert.equal(t.copperExperiment,undefined);
+ assert.equal(runKnowledgeAction(g,'copper_trial').accepted,true);let maker=g.state.units.find(u=>u.copperStudy);assert.equal(t.copper,16,'assignment alone cannot load remote copper');assert.equal(t.wood,20);for(let i=0;i<600&&maker.copperStudy.phase==='loading';i++)work(g,maker,copperStudyAI,.1);assert.equal(maker.copperStudy.phase,'carrying','actual cache arrival loads the paid samples');assert.equal(t.copper,8);assert.equal(t.wood,16);assert.equal(t.copperExperiment,undefined);
  const progress=maker.copperStudy.progress;work(g,maker,copperStudyAI,.1);assert.equal(maker.copperStudy.progress,progress,'walking is not experimental output');
  work(g,maker,copperStudyAI,180);assert.equal(t.copperExperiment,true);assert.equal(topic(g,'copper').metrics.prototypeEstablished,1);assert.equal(topic(g,'copper').metrics.equippedResidents,1);assert.equal(t.age,0);
  assert.equal(runKnowledgeAction(g,'copper_tools').accepted,true);const second=g.state.units.find(u=>u.farmToolWork?.kind==='copperTools');assert.notEqual(second.id,maker.id);assert.equal(topic(g,'copper').metrics.equippedResidents,1);assert.equal(t.copper,4);assert.equal(t.wood,13);
