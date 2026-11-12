@@ -142,6 +142,12 @@ Native100 baseline: mean30.84ms,p9545.30ms (target33missed),180unprofiled actual
 
 Seven original CHAT proposals accepted/reconciled in FULL_GAME_BACKLOG.json; laterG14/G15/G16rows retained. Every row has acceptance criteria; G9/G10recordonlyscopedlivepartial evidence. All gate credits stay unchanged34/98.
 
+## Performance publication — 2026-11-12T00:05:18.805235+00:00
+
+Live/pushed code d86d7da, release 2026-11-12T00-03-38-084Z-d86d7da both8086/8101.37/37scope (35focused+1native100matched+1built100), typecheck/build; exact1035buildinputs.15.41%mean lowerCPU with fullstate/RNGparity; Nodep9534.93/33.92stillabove33. BuiltLow24s100residents:M1Metal/headless rollingp9520.2–23.5ms (final21.9);not universalFPS/completeWorker. Metrics docs/metrics/sim-speed-native100-performance-release-2026-11-11.json. Originalsave/art/rollback retained.
+
+WorkerCORE branch work/sim-worker-2026-11-11 d13dd23:7/7actualWorker/native+typecheck. Host/readonlyprojection/31typedcommands,3UIpanels,10newtests sourceprepared; not qualified or activated. Merge currentmain normally into workerbranch toretainperf; do not rebase/forcepush. Canonicalfixedcount34/98unchanged. Externalwholebranch merges remain phase2, not replaced by partial source integration.
+
 ## Real simulation Worker core — isolated implementation in progress
 
 Grok PM sequencing/user speed-first plan acknowledged. Branch `work/sim-worker-2026-11-11`, base `8f8e6929c76012ae0c65e2e51ab8d5490687bf4e`, worktree `.play/sim-worker-candidate`. New-only source claims: `src/game/simulationWorkerProtocol.ts`, `simulationWorkerRuntime.ts`, `simulation.worker.ts`, `simulationWorkerClient.ts`; new tests `scripts/simulation-worker-core.test.mjs`, `scripts/fixtures/simulation-worker-adapter.mjs`. No Engine/sim/types/persistence/save/renderer edits.
