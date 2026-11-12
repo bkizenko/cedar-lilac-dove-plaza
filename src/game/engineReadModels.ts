@@ -1,3 +1,5 @@
+import {personName} from './people';
+import {captiveGuardCoverage} from './captivity';
 import {armorRepairIssue} from './armorRepair';
 import {copperStudyIssue} from './materialStudy';
 import {teachingOffers,TRADED_TEACHING_RULES} from './tradedTeaching';
@@ -37,7 +39,8 @@ export type EngineReadQuery=
  |{kind:'society-civic'}
  |{kind:'combat-doctrine'}
  |{kind:'combat-matchup';attackerId:number;targetId:number}
- |{kind:'capitulation-offers'};
+ |{kind:'capitulation-offers'}
+ |{kind:'captives'};
 export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
  |{kind:'traded-teaching-offers';teacherId:number;offers:ReturnType<typeof teachingOffers>;learner:{id:number;good:ResKind}|null;issue:string|null}
@@ -55,7 +58,8 @@ export type EngineReadModel=
  |{kind:'society-civic';civic:CivicModel}
  |{kind:'combat-doctrine';combat:CombatModel}
  |{kind:'combat-matchup';attackerId:number;targetId:number;multiplier:number;reasons:string[]}
- |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]};
+ |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]}
+ |{kind:'captives';captives:{id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean}[]};
 export type EngineReadReply={model:EngineReadModel;epoch:number;requestId:number;stateRevision:number;navigationRevision:number;cpuMilliseconds:number};
 export type EngineReadReplyFor<Q extends EngineReadQuery>=Omit<EngineReadReply,'model'>&{model:Extract<EngineReadModel,{kind:Q['kind']}>};
 const id=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0;
@@ -63,7 +67,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const q=value as Record<string,unknown>,list=(v:unknown)=>Array.isArray(v)&&v.length<=ENGINE_READ_MODEL_RULES.maximumSources&&Array.from(v).every(id)&&new Set(v).size===v.length;
  if(q.kind==='combat-matchup')return Object.keys(q).every(k=>['kind','attackerId','targetId'].includes(k))&&id(q.attackerId)&&id(q.targetId);
- if(q.kind==='rulers-council'||q.kind==='society-decisions'||q.kind==='society-civic'||q.kind==='combat-doctrine'||q.kind==='capitulation-offers')return Object.keys(q).length===1;
+ if(q.kind==='rulers-council'||q.kind==='society-decisions'||q.kind==='society-civic'||q.kind==='combat-doctrine'||q.kind==='capitulation-offers'||q.kind==='captives')return Object.keys(q).length===1;
  if(q.kind==='traded-teaching-offers')return Object.keys(q).every(k=>['kind','teacherId','learnerIds'].includes(k))&&id(q.teacherId)&&list(q.learnerIds);
  if(q.kind==='copper-study-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
  if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
@@ -94,6 +98,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
  if(query.kind==='combat-matchup')return{kind:query.kind,attackerId:query.attackerId,targetId:query.targetId,...matchupModel(g,query.attackerId,query.targetId)};
  if(query.kind==='society-decisions')return{kind:query.kind,societies:societyDecisionsModel(g)};
  if(query.kind==='society-civic')return{kind:query.kind,civic:civicModel(g)};
+ if(query.kind==='captives'){const guards=captiveGuardCoverage(g);return{kind:query.kind,captives:g.state.units.filter(u=>u.team===0&&u.hp>0&&u.enslavedFrom!==undefined).map(u=>({id:u.id,name:personName(u),fromTeam:u.enslavedFrom!,fromName:g.tribe(u.enslavedFrom!)?.name||'a former settlement',resistance:Math.round(u.captivityUnrest||0),guarded:guards.has(u.id),canEscort:!!u.recalled}))};}
  if(query.kind==='capitulation-offers')return{kind:query.kind,offers:capitulationOffers(g).map(o=>({...o,defenderName:g.tribe(o.defenderTeam)?.name??'A community'}))};
  if(query.kind==='building-fabric'){
   const b=g.state.buildings.find(b=>b.id===query.buildingId&&b.team===0&&b.hp>0);if(!b)throw new Error('Original owned building is unavailable');
