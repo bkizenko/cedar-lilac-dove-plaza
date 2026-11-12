@@ -1,3 +1,4 @@
+import {validMethodRecords,reconcileMethodRecords} from './methodRecords';
 import {validDraftCarts} from './draftCart';
 import {bindCopperSmeltLoad,bindIronSmeltLoad} from './carriedLoad';
 import {validCraftingPractice} from "./crafting";
@@ -103,6 +104,7 @@ export function encodeGame(g: Game) {
   tickArmorRepairs(g);
   reconcileArmorHolders(g);
   reconcileFarmToolCargo(g);
+  reconcileMethodRecords(g);
   reconcileWeaponCargo(g);
   reconcileSiegeRams(g);
   syncRiverboats(g);
@@ -202,7 +204,7 @@ function validateGamePayload(raw: unknown) {
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s)||!validPenBeddingState(s))fail();
-  if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
+  if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validMethodRecords(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
   if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s)||!validTerrainInfluence(s)||!validCommanders(s)||!validNaval(s))fail();
   if(!validBoatPractice(s)||!validSailingState(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();

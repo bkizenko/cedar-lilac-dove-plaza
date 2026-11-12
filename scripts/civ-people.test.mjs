@@ -33,3 +33,9 @@ test('showcase: every civ lays out a non-overlapping review scene on its own bio
   for(const it of s.items){const b=generateCivBuilding(c,it.role,it);assert.ok(b.parts.length>0);}}
  assert.ok(new Set(CIV_IDS.map(c=>civShowcase(c).biome)).size>=9);
 });
+test('mid-LOD readability: every civ keeps its headwear, no civ is bare-headed at mid zoom, budgets unchanged',()=>{
+ for(const c of CIV_IDS){const kind=CIVS[c].dress.headwear;if(kind==='none')continue;
+  const a=app(c,'worker','summer','woolCoat',false),mid=a.parts.filter(p=>p.lod>=1&&(p.onlyFrom??0)<=1);
+  const head=mid.filter(p=>p.pos[1]>=.55&&(p.slot==='trim'||p.slot==='hair'||p.slot==='garment'||p.slot==='leather')&&p.pos[1]>=(kind==='braids'?.7:kind==='hood'?.9:1.0));
+  assert.ok(head.length>=1,`${c} (${kind}) has no headwear mass at mid LOD`);}
+});

@@ -4,6 +4,16 @@ import type{EngineDispatchCommand}from'../game/engineDispatch';
 import type{CommanderControlsModel}from'../game/commanderControls';
 import{useOwnerReadModels}from'./useOwnerReadModels';
 import{useLifecycleAction}from'./useLifecycleAction';
+import{commandersOf}from'../game/commanders';
+/** One plain line when a replacement could not take every member: the overflow is released to ordinary free status; nothing is lost or created. */
+export function replacementOverflowNotice(before:{members:number;boats:number;kind:'army'|'fleet'},after:{members:number;boats:number}|undefined):string{
+ if(!after)return '';
+ const lost=before.kind==='army'?before.members-after.members:before.boats-after.boats;
+ if(lost<=0)return '';
+ const unit=before.kind==='army'?(lost===1?'person':'people'):(lost===1?'hull':'hulls');
+ return `The new command holds only what its rank allows: ${lost} ${unit} returned to ordinary, unassigned duty. No goods or people were lost.`;
+}
+
 const button='min-h-9 rounded border border-bronze/40 px-2 py-1 text-xs disabled:opacity-50';
 /** Compact owner information; commands always revalidate in the native engine. */
 export function CommanderControlSheet({model,run,busy=false}:{model:CommanderControlsModel;run:(c:EngineDispatchCommand)=>void;busy?:boolean}){
@@ -24,6 +34,7 @@ export function CommanderControlSheet({model,run,busy=false}:{model:CommanderCon
 export function CommanderControls({engine}:{engine:Engine}){
  const g=engine.game,people=g.selectedUnits().filter(u=>u.team===0&&u.hp>0).slice(0,32),selectedBoat=g.state.boats?.find(b=>b.id===g.selectedBoat&&b.team===0&&b.hp>0),unitIds=people.map(u=>u.id);if(!unitIds.length&&selectedBoat?.captain)unitIds.push(selectedBoat.captain);
  const boatIds=[...new Set([...people.flatMap(u=>u.boat?[u.boat.id]:[]),...(selectedBoat?[selectedBoat.id]:[])])].slice(0,32),query={kind:'commander-controls' as const,unitIds,boatIds},read=useOwnerReadModels(engine,[query])(query),action=useLifecycleAction(engine),[feedback,setFeedback]=useState('');
- const epoch=engine.dispatchEpoch;const run=(command:EngineDispatchCommand)=>{if(engine.disposed||engine.dispatchEpoch!==epoch)return;void action.run(()=>engine.dispatch(command,{selectedUnitIds:unitIds,selectedBoatId:selectedBoat?.id}),reply=>{if(reply.epoch!==epoch||engine.dispatchEpoch!==epoch)return;setFeedback(reply.reason);engine.pushHud();});};
+ const epoch=engine.dispatchEpoch;const run=(command:EngineDispatchCommand)=>{if(engine.disposed||engine.dispatchEpoch!==epoch)return;
+  const old=command.kind==='commander-order'&&command.action==='replace'&&command.replacesId!==undefined?commandersOf(g,0).find(c=>c.id===command.replacesId):undefined,beforeRaw=old?{members:old.memberIds.length,boats:old.boatIds.length,kind:old.kind}:undefined;void action.run(()=>engine.dispatch(command,{selectedUnitIds:unitIds,selectedBoatId:selectedBoat?.id}),reply=>{if(reply.epoch!==epoch||engine.dispatchEpoch!==epoch)return;{const fresh=beforeRaw&&reply.accepted?commandersOf(g,0).find(c=>c.replaces===old?.id):undefined,note=beforeRaw?replacementOverflowNotice(beforeRaw,fresh&&{members:fresh.memberIds.length,boats:fresh.boatIds.length}):'';setFeedback(note?`${reply.reason} ${note}`:reply.reason);}engine.pushHud();});};
  return <>{read.model?<CommanderControlSheet model={read.model} run={run} busy={action.busy}/>:<p className="text-xs">{read.issue}</p>}{(feedback||action.error)&&<p role="status" className="text-xs text-parchment-dim">{action.error||feedback}</p>}</>;
 }
