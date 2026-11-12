@@ -1,0 +1,80 @@
+{
+  "commit": "74c87910a1aaf35b570b7f342e92dbc8ce0fb0de",
+  "release": "2026-11-12T13-45-25-912Z-74c8791",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "canonicalHeadAtPublication": "ba2f2e221ec1dec047703e9fabe44270719b98d1",
+  "publication": "Exact reviewed ancestor already normal-merged into main; later incoming source on main deliberately remains pending next release.",
+  "scopedChecks": {
+    "passed": 104,
+    "total": 104,
+    "uniqueNativeAndShared": 97,
+    "nativeGroups": {
+      "commandDominationCustody": 35,
+      "societyCombatRulers": 51,
+      "societyCombatUIReadModels": 11
+    },
+    "built": {
+      "passed": 7,
+      "total": 7,
+      "execution": "Five controls/payment/physical-return checks completed in the control run; two command-readout/original-save checks passed in the focused remainder after following Menu > Tools. Unique acceptance cases, not a claim every intermediate harness attempt passed.",
+      "terms": [
+        "tribute",
+        "puppet",
+        "autonomy"
+      ],
+      "actualPaidLogs": 20,
+      "returnedCarrier": {
+        "carry": 0,
+        "x": 135.632543225887,
+        "z": -172.82666344055133,
+        "paid": 0,
+        "phase": "released",
+        "team": 1
+      },
+      "commandReadout": "Command measurements\n\nEligibility: 0 assessed \u00b7 0 eligible \u00b7 0 refused. Eligibility is not execution.\n\nActual dispatch: 1 issued \u00b7 1 completed milestones \u00b7 0 tracked. 0.00 blocked command-seconds \u00b7 0.00 normal waiting command-seconds; simultaneous commands are counted separately.\n\nOwnership requests: 0 \u00b7 0 explicit handovers succeeded \u00b7 0 denied \u00b7 0 unexpected executor replacements. Reservation failures: 0.\n\nResident 6223 \u00b7 move \u00b7 completed: execution 0.133 s after issue \u00b7 useful work not observed \u00b7 0.00 s blocked \u00b7 destination reached\n\nCurrent native session; new world and reload reset measurements. Saved work is never re-issued by telemetry. Motion, useful work and completion are distinct. Gathering completes one delivered-load milestone, not a lifetime job. Ordinary resource work, new structures and paid production are supported. Fields, planting, hunting, store tending and other domain commands are untraced. Latest128 traces retained.",
+      "originalPopulation": 53,
+      "originalUnchanged": true,
+      "pageErrors": [],
+      "notificationContrast": {
+        "color": "rgb(248, 239, 217)",
+        "background": "rgb(44, 34, 24)"
+      }
+    }
+  },
+  "nativeQualification": {
+    "dominationCases": 6,
+    "finalRepeatPassed": 6,
+    "scope": "Ordinary Game.step on unmodified generated native terrain; finite authored pre-existing connected outposts, two professional guards and four subject residents. Original generated actors/resources retained. Actual occupation, two recurring physical installments for each term, loaded-carrier release, garrison withdrawal, custody escort/release, strict saved returns and finite possessions. Ordinary unrelated forestry is measured, not disabled, for conservation accounting."
+  },
+  "checks": {
+    "typescript": "PASS",
+    "productionBuild": "PASS",
+    "fullSuiteRun": false,
+    "reviewScreenshot": "Reviewed and deleted"
+  },
+  "newVerifiedGates": [
+    "M0-10",
+    "M3-12",
+    "M3-13"
+  ],
+  "limits": [
+    "Built controls author hall visibility only; no natural-observation or earned-army/campaign qualification. Native tests separately execute physical occupation and delivery.",
+    "M0 telemetry supports move, ordinary resource work, new construction and paid production; fields, planting, hunting, store tending and other domains are explicitly untraced. Measurements reset on new world/reload. Passive waiting is separate from blocked work.",
+    "Sim Worker remains parked. No100-resident frame-time acceptance or full-game completion claim.",
+    "New society/combat layers use their existing version options on new games; legacy saves keep their settings.",
+    "Newer main-source changes after this reviewed ancestor are not represented as live."
+  ],
+  "preservation": {
+    "originalVillageSha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+    "userBrowserStorageTouched": false,
+    "rollback": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T12-39-37-682Z-004ffee",
+    "previousHashedAssetsRetained": {
+      "linked": 1321,
+      "copied": 0,
+      "existing": 12
+    }
+  }
+}
