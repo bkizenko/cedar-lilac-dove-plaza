@@ -1031,6 +1031,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 10:00 | Claude | 61 (since 09:00 ET, all on main) | 61 | mapgen v2.1 (deltas, fords, archipelagos), village grammar for walls/gate/dock/quarry/cairn/grove/aqueduct/warehouse | shipping and landing; integration lag 0; raid-outcome-prestige now merged (Codex fixed validator) |
 | 11-12 10:00 | Grok | 0 | 0 | 0 | out (4th+ hour); World rows with Claude queue |
 | 11-12 10:00 | Total | 95 | main == integration content; sweep 106/109 pass, 0 fail, 3 skip | ~4 | no stale agent branches ahead of main except old 18-29-commit held ones |
+| 11-12 12:00 | Codex | 28 (since 11:00 ET, all on main) | 28 | 2 (NPC bounded paid copper chain via real kiln/fuel; modern captive controls + honest baseline visitor failures) | active, on target; W4 tin/bronze/iron still open |
+| 11-12 12:00 | Claude | 44 (since 11:00 ET, integration) | 9 via PM landing 12:15 (captive card, neighbourNews, lane D merge fixes, loader alias) | 2-3 (captive card UI, terrain-aware influence/commanders/ports data, geology layer) | active; no board lines missed |
+| 11-12 12:00 | Grok | 0 | 0 | 0 | out; World rows stay with Claude queue |
+| 11-12 12:00 | Total | ~72 | integration 0 ahead of main after landing | ~5 | sweep 127/127, tsc diff nil; work/shipping-waiting-hooks-2026-11-11 still conflicts (engine/sim/types/persistence/Hud), not landed; open rows ~2 not-started by grep, ~162 done-marked |
 
 | 11-12 11:00 | Codex | 28 (since 10:00 ET, all branches) | 28 | 3 (casus-belli known-pair grievance readout + strict saved-claim admission; V20 published-generator compat; toolmaking/breakaway safety live) | on target; QA-037 toolmaking follow-ups next |
 | 11-12 11:00 | Claude | 31 (since 10:00 ET, all branches) | 25 | 2 (casus belli in Hearth neighbour cards + Diplomacy sheet; conifer drooping-skirt boughs) | shipping and landing; lane D audit rows added |
