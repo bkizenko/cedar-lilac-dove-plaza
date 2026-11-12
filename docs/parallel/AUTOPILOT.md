@@ -1053,6 +1053,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 14:00 | Claude | 26 (since 13:07 ET, all branches) | 26 via PM landing | 3 (expansion party provisions, Hearth save-trust readout, winter roof snow caps) | shipping and landing; throughput rows 12:00–13:00 skipped by PM, resumed here |
 | 11-12 14:00 | Grok | 0 | 0 | 0 | out (hours 10+); World rows with Claude/PM queue; no board lines to miss |
 | 11-12 14:00 | Total | 49 | integration lag 0 after 14:15 PM landing | ~6 | focused sweep 115 tests 0 fail (roof-snow needs `three` installed in sandbox); tsc diff nil vs main |
+| 11-12 15:00 | Codex | 58 (since 14:00 ET, all branches) | 58 | 3 (naval owner controls qualified live; live physical method-record chain: paid cordage tablet -> physical return -> paid study/replication; guarded original-person resumption) | active, on target; W2 record visibility/pickup source in, native qualification pending root slot |
+| 11-12 15:00 | Claude | 55 (since 14:00 ET, all branches) | integration 5 landed by PM 15:1x | 3 (Hearth UI/UX floor + selection card + commander/hull panels; opt-in wild-craft v1; surface geology / mid-LOD headwear) | shipping and landing; lanes A-D all posted <1h |
+| 11-12 15:00 | Grok | 0 | 0 | 0 | out (hours 15+); World rows with Claude/PM queue; no board lines to miss |
+| 11-12 15:00 | Total | 113 | integration lag 0 after 15:1x landing | ~6 | focused sweep 132 tests: 128 pass, 1 fail (method-record-visibility needs `three`, absent in sandbox, passes in Codex native), 3 skip; tsc: peopleKit TS2367 fixed, no new errors; rows ~735 total, ~210 done/live; idle agents: Grok only |
 
 ## Process improvements
 
