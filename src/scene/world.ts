@@ -53,6 +53,8 @@ import {compactGrainWorkplace} from '../game/cerealRules';
 import {architectureStyle,localArchitecture} from "./architecture";
 import {TRAIL_GRID} from "@/game/trails";
 import {trailRibbons} from "@/game/trailRibbons";
+import {smoothRivers} from "@/game/channelSmoothness";
+import {buildingQuarterTurns} from "@/game/footprints";
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -709,7 +711,36 @@ export class WorldView {
     localWater.position.y=game.world.waterY-game.world.baseWaterY;
     const hydrology=game.world as typeof game.world&{waterBodies?:RenderWaterBody[];waterfalls?:RenderWaterfall[]};
     addLocalWaters(localWater,hydrology.waterBodies??[],hydrology.waterfalls??[],waterMaterial,fallMaterial);this.scene.add(localWater);
+    this.buildBankRibbons(game);
     this.seasonAcc = 1;
+  }
+
+  /** GW-12/QA-013: soft shoreline ribbons on the smoothed river banks, hiding grid stair-steps.
+   * Display only: no terrain, wet/dry, pathing or save state changes. Capped so huge worlds stay cheap. */
+  private bankRibbons:THREE.Mesh|null=null;
+  private buildBankRibbons(game:Game) {
+    if(this.bankRibbons){this.scene.remove(this.bankRibbons);this.bankRibbons.geometry.dispose();(this.bankRibbons.material as THREE.Material).dispose();this.bankRibbons=null;}
+    const pos:number[]=[],idx:number[]=[],CAP=24000,half=0.45;
+    const y=(x:number,z:number)=>Math.max(game.height(x,z),game.waterAt(x,z))+0.035;
+    try{
+      for(const river of smoothRivers(game)){
+        for(const bank of [river.left,river.right]){
+          if(bank.length<2)continue;
+          for(let i=0;i<bank.length&&pos.length/3<CAP;i++){
+            const p=bank[i],q=bank[Math.min(bank.length-1,i+1)],r=bank[Math.max(0,i-1)];
+            const dx=q.x-r.x,dz=q.z-r.z,len=Math.hypot(dx,dz)||1,nx=-dz/len*half,nz=dx/len*half;
+            const base=pos.length/3;
+            pos.push(p.x-nx,y(p.x-nx,p.z-nz),p.z-nz,p.x+nx,y(p.x+nx,p.z+nz),p.z+nz);
+            if(i>0)idx.push(base-2,base-1,base,base-1,base+1,base);
+          }
+        }
+      }
+    }catch{return;}
+    if(!pos.length)return;
+    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);
+    const mat=new THREE.MeshBasicMaterial({color:'#d9e6e0',transparent:true,opacity:0.22,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    const mesh=new THREE.Mesh(geo,mat);mesh.name='river-bank-ribbons';mesh.renderOrder=2;mesh.frustumCulled=false;mesh.raycast=()=>{};
+    this.bankRibbons=mesh;this.scene.add(mesh);
   }
 
   private buildNature(game: Game) {
@@ -1612,7 +1643,7 @@ export class WorldView {
           const terrainWork=type==="dock",limit=.2;
           const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(wx,wz+2)-game.height(wx,wz-2))/4))):0;
           const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(wx+2,wz)-game.height(wx-2,wz))/4))):0;
-          _e.set(pitch,type==='gate'?gateOrientation(b.gateFacing).yawRadians:fort||scalable||type==='pen'?0:st.yaw,roll);
+          _e.set(pitch,type==='gate'?gateOrientation(b.gateFacing).yawRadians:fort||scalable||type==='pen'?0:st.yaw+buildingQuarterTurns(b)*Math.PI/2,roll);
           _s.set(scalable?sx:fort||type==='pen'?1:st.sx,ys*(scalable||fort||type==='pen'?1:st.sy),scalable?sz:fort||type==='pen'?1:st.sz);
           if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
           if(part!=="timber"){
