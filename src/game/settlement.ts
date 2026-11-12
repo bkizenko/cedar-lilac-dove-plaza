@@ -1,3 +1,4 @@
+import {navalIndependentFood} from './navalFleet';
 import {recordDraftTractionWork} from './draftTraction';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
 import{hasConstructionWork}from'./constructionTargets';
@@ -51,7 +52,7 @@ export function isDependent(g: Game, u: Unit) {
 export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
   let mouths = 0;
   for (const u of g.state.units) {
-    if (!(u.team === team && u.hp > 0 && !u.expedition && !scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u))) continue;
+    if (!(u.team === team && u.hp > 0 && !u.expedition && !navalIndependentFood(g,u)&&!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u))) continue;
     // Keep the original left-to-right sum; only the temporary filtered array goes away.
     mouths = mouths + (isDependent(g, u) ? 0.5 : 1) * predisposition(u).appetite *
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1);

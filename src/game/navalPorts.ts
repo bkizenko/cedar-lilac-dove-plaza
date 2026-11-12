@@ -1,5 +1,6 @@
 import type {Game} from './sim';
-import type {Building,Unit} from './types';
+import type {Building,Unit,FoodKind} from './types';
+import {FOOD_KINDS,foodInventory,takeFoodLot} from './pantry';
 import {isDependent} from './settlement';
 import {boatClass} from './boatClasses';
 import {hasTaskCommitment} from './workCommitments';
@@ -12,7 +13,7 @@ import {PORT_WORK_SPECS,PORT_TIERS,PORT_WORK_IDS,designStrength,shipDesign,tierF
  */
 export type PortRecord={dockId:number;team:number;works:Partial<Record<PortWork,{builtAt:number}>>};
 export type PortProject={id:number;dockId:number;team:number;work:PortWork;builderId:number;progress:number;paid:{wood:number;stone:number;cordage:number};phase:'building'|'paused'};
-export type Vessel={boatId:number;team:number;design:string;commissionedAt:number;stores:{food:number;missiles:number};atSeaSeconds:number;lastDockId?:number;captures:number;rams:number};
+export type Vessel={boatId:number;team:number;design:string;commissionedAt:number;stores:{food:number;missiles:number;foodLots?:Partial<Record<FoodKind,number>>};atSeaSeconds:number;lastDockId?:number;captures:number;rams:number};
 export type VesselCommission={id:number;dockId:number;team:number;design:string;builderId:number;progress:number;paid:{wood:number;stone:number;cordage:number;copper:number};phase:'building'|'paused'};
 export type Boarding={id:number;attackerBoat:number;targetBoat:number;startedAt:number;seconds:number};
 export type NavalEvent={at:number;kind:'ram'|'boarding'|'capture'|'blockade'|'lifted'|'starved'|'sunk';team:number;other?:number;text:string};
@@ -57,6 +58,7 @@ export function portWorkIssue(g:Game,dockId:number,work:PortWork,builderId:numbe
  const rec=portRecord(g,dockId);if(rec?.works[work])return `${spec.name} is already built here`;
  for(const need of spec.requires)if(!rec?.works[need])return `${PORT_WORK_SPECS[need].name} must be built first`;
  const s=st(g).naval;if(s?.projects.some(p=>p.dockId===dockId&&p.work===work)||s?.projects.some(p=>p.builderId===builderId))return 'That work or builder is already committed';
+ if(!rec&&(s?.ports.length??0)>=R.maximumPorts)return 'Too many ports recorded';
  if((s?.projects.length??0)>=R.maximumProjects)return 'Too many port works are under way';
  const t=g.tribe(team),cost=spec;if(t.wood<cost.wood||t.stone<cost.stone||(t.items?.cordage||0)<cost.cordage)return `Needs ${cost.wood} timber, ${cost.stone} stone${cost.cordage?` and ${cost.cordage} cordage`:''} in store`;
  return null;
@@ -65,16 +67,33 @@ export function beginPortWork(g:Game,dockId:number,work:PortWork,builderId:numbe
  const issue=portWorkIssue(g,dockId,work,builderId,team);if(issue)return no(issue);
  const spec=PORT_WORK_SPECS[work],t=g.tribe(team),u=g.state.units.find(u=>u.id===builderId)!,s=ensureNaval(g);
  t.wood-=spec.wood;t.stone-=spec.stone;if(spec.cordage)(t.items??={}).cordage=(t.items?.cordage||0)-spec.cordage;
- if(!portRecord(g,dockId)){if(s.ports.length>=R.maximumPorts)return no('Too many ports recorded');s.ports.push({dockId,team,works:{}});}
+ if(!portRecord(g,dockId))s.ports.push({dockId,team,works:{}});
  const p:PortProject={id:g.id(),dockId,team,work,builderId,progress:0,paid:{wood:spec.wood,stone:spec.stone,cordage:spec.cordage},phase:'building'};
- s.projects.push(p);(u as Unit&{portWorkId?:number}).portWorkId=p.id;g.interruptMission?.(u);u.order='hold';u.node=null;u.target=null;
+ g.interruptMission(u);s.projects.push(p);(u as Unit&{portWorkId?:number}).portWorkId=p.id;u.order='hold';u.node=null;u.target=null;
  return {accepted:true,reason:`${spec.name} begun; materials set aside and the builder is walking to the dock`,id:p.id};
 }
-export function resumePortWork(g:Game,projectId:number,builderId:number):NavalOutcome{
+export function resumePortWork(g:Game,projectId:number,builderId:number,team=0):NavalOutcome{
  const p=st(g).naval?.projects.find(p=>p.id===projectId),u=g.state.units.find(u=>u.id===builderId);
- if(!p||p.phase!=='paused')return no('No paused port work with that id');
+ if(!p||p.phase!=='paused'||p.team!==team)return no('No paused port work of your society with that id');
+ const dock=dockOf(g,p.dockId);if(!dock||dock.team!==team)return no('The original dock is no longer available');
  if(!freeBuilder(g,u,p.team))return no('The new builder must be a free, healthy adult on land');
- p.builderId=builderId;p.phase='building';(u as Unit&{portWorkId?:number}).portWorkId=p.id;return {accepted:true,reason:'Work resumes',id:p.id};
+ pauseNavalProject(g,p);g.interruptMission(u!);p.builderId=builderId;p.phase='building';(u as Unit&{portWorkId?:number}).portWorkId=p.id;u!.order='hold';u!.node=null;u!.target=null;return {accepted:true,reason:'Work resumes',id:p.id};
+}
+/** Pausing keeps the same paid project/progress and releases only its matching actor. */
+export function pauseNavalProject(g:Game,p:PortProject|VesselCommission){
+ p.phase='paused';const u=g.state.units.find(u=>u.id===p.builderId) as (Unit&{portWorkId?:number})|undefined;
+ if(u?.portWorkId===p.id){delete u.portWorkId;u.order='hold';u.node=null;u.target=null;}
+}
+export function pauseNavalWork(g:Game,u:Unit){
+ const id=(u as Unit&{portWorkId?:number}).portWorkId;if(id===undefined)return;
+ const s=navalState(g),p=s?.projects.find(p=>p.id===id&&p.builderId===u.id)??s?.commissions.find(p=>p.id===id&&p.builderId===u.id);
+ if(p)pauseNavalProject(g,p);else delete (u as Unit&{portWorkId?:number}).portWorkId;
+}
+/** The world naval tick is this actor's sole work/movement executor. */
+export function navalWorkerCommitted(g:Game,u:Unit){
+ const id=(u as Unit&{portWorkId?:number}).portWorkId;if(id===undefined)return false;
+ const s=navalState(g),p=s?.projects.find(p=>p.id===id&&p.builderId===u.id)??s?.commissions.find(p=>p.id===id&&p.builderId===u.id);
+ if(!p||p.phase!=='building'||p.team!==u.team||u.boat||u.prisoner||u.emergency||u.recalled){pauseNavalWork(g,u);return false;}return true;
 }
 function walkToDock(g:Game,u:Unit,dock:Building,dt:number){
  const spot=g.interactionSpot(u,dock);if(!spot)return false;
@@ -86,10 +105,10 @@ export function tickNavalPorts(g:Game,dt:number){
  const s=st(g).naval;if(!s||!(dt>0))return;
  for(const p of s.projects.slice()){
   const dock=dockOf(g,p.dockId);
-  if(!dock){s.projects=s.projects.filter(x=>x!==p);continue;}
+  if(!dock||dock.team!==p.team){pauseNavalProject(g,p);continue;}
   const u=g.state.units.find(u=>u.id===p.builderId);
   if(p.phase==='paused')continue;
-  if(!u||u.hp<=0||u.team!==p.team||u.prisoner||(u as Unit&{portWorkId?:number}).portWorkId!==p.id){p.phase='paused';continue;}
+  if(!u||u.hp<=0||u.team!==p.team||u.prisoner||u.boat||u.emergency||u.recalled||(u as Unit&{portWorkId?:number}).portWorkId!==p.id){pauseNavalProject(g,p);continue;}
   if(walkToDock(g,u,dock,dt)){p.progress+=dt;u.order='hold';}
   if(p.progress>=PORT_WORK_SPECS[p.work].workSeconds){
    const rec=portRecord(g,p.dockId)??(()=>{const r:PortRecord={dockId:p.dockId,team:p.team,works:{}};s.ports.push(r);return r;})();
@@ -149,6 +168,7 @@ export function tickBlockades(g:Game,dt:number){
 export const stowCapacity=(g:Game,boatId:number)=>{const b=g.state.boats?.find(b=>b.id===boatId);return b?{food:b.capacity*R.foodCapacityPerSeat,missiles:R.missileCapacity}:{food:0,missiles:0};};
 /** Load rations and missiles from the society's real stores at its own harbour. Everything loaded leaves the stores. */
 export function resupplyVessel(g:Game,boatId:number,want:{food?:number;missileLoads?:number}={},team=0):NavalOutcome{
+ if(want.food!==undefined&&(!Number.isFinite(want.food)||want.food<0)||want.missileLoads!==undefined&&(!Number.isFinite(want.missileLoads)||want.missileLoads<0))return no('Supply quantities must be finite and nonnegative');
  const v=vesselOf(g,boatId),b=g.state.boats?.find(b=>b.id===boatId&&b.hp>0);
  if(!v||!b||v.team!==team||b.team!==team)return no('Not one of your commissioned hulls');
  const dock=g.state.buildings.find(d=>d.team===team&&d.type==='dock'&&d.hp>0&&g.finished(d)&&dist(d,b)<=R.harbourMeters);
@@ -157,7 +177,9 @@ export function resupplyVessel(g:Game,boatId:number,want:{food?:number;missileLo
  const t=g.tribe(team),cap=stowCapacity(g,boatId);
  const food=Math.max(0,Math.min(want.food??cap.food-v.stores.food,cap.food-v.stores.food,t.food-1)),loads=Math.max(0,Math.min(want.missileLoads??Math.ceil((cap.missiles-v.stores.missiles)/R.missilesPerWood),Math.ceil((cap.missiles-v.stores.missiles)/R.missilesPerWood),t.wood));
  if(!(food>0)&&!(loads>0))return no('Nothing to load, or the stores cannot spare it');
- t.food-=food;t.wood-=loads*R.woodPerMissileLoad;v.stores.food=Math.min(cap.food,v.stores.food+food);v.stores.missiles=Math.min(cap.missiles,v.stores.missiles+loads*R.missilesPerWood);v.lastDockId=dock.id;v.atSeaSeconds=0;
+ const lots=foodInventory(t),aboardLots=v.stores.foodLots??{provisions:v.stores.food};let left=food;
+ for(const kind of FOOD_KINDS){const amount=Math.min(left,lots[kind]);if(amount>0){takeFoodLot(g,team,kind,amount);aboardLots[kind]=(aboardLots[kind]??0)+amount;left-=amount;}}
+ v.stores.foodLots=aboardLots;t.wood-=loads*R.woodPerMissileLoad;v.stores.food=Math.min(cap.food,v.stores.food+food);v.stores.missiles=Math.min(cap.missiles,v.stores.missiles+loads*R.missilesPerWood);v.lastDockId=dock.id;v.atSeaSeconds=0;
  return {accepted:true,reason:`Loaded ${Math.round(food)} food and ${loads*R.missilesPerWood} missiles from the stores`};
 }
 /** Speed multiplier a supply-starved hull suffers; 1 otherwise. Read by boat movement. */
@@ -177,8 +199,9 @@ export function validNaval(s:any){
  const seen=new Set<number>(),builders=new Set<number>();
  for(const p of v.projects){if(!p||!id(p.id)||seen.has(p.id)||!id(p.dockId)||!team(p.team)||!PORT_WORK_IDS.includes(p.work)||!id(p.builderId)||builders.has(p.builderId)&&p.phase==='building'||!fin(p.progress,1e6)||!['building','paused'].includes(p.phase)||!costOk(p.paid,['wood','stone','cordage'])||p.progress>PORT_WORK_SPECS[p.work as PortWork].workSeconds+1e-6)return false;seen.add(p.id);if(p.phase==='building')builders.add(p.builderId);}
  const boats=new Set<number>();
- for(const x of v.vessels){if(!x||!id(x.boatId)||boats.has(x.boatId)||!team(x.team)||!shipDesign(x.design)||!fin(x.commissionedAt)||!x.stores||!fin(x.stores.food,1e6)||!fin(x.stores.missiles,1e6)||!fin(x.atSeaSeconds)||!Number.isInteger(x.captures)||x.captures<0||!Number.isInteger(x.rams)||x.rams<0)return false;boats.add(x.boatId);if(x.lastDockId!==undefined&&!id(x.lastDockId))return false;}
- for(const c of v.commissions){if(!c||!id(c.id)||seen.has(c.id)||!id(c.dockId)||!team(c.team)||!shipDesign(c.design)||!id(c.builderId)||!fin(c.progress,1e6)||!['building','paused'].includes(c.phase)||!costOk(c.paid,['wood','stone','cordage','copper'])||c.progress>shipDesign(c.design)!.workSeconds+1e-6)return false;seen.add(c.id);}
+ const validLots=(stores:any)=>stores.foodLots===undefined||stores.foodLots&&typeof stores.foodLots==='object'&&!Array.isArray(stores.foodLots)&&Object.entries(stores.foodLots).every(([k,n])=>FOOD_KINDS.includes(k as FoodKind)&&fin(n,1e6))&&Math.abs(Object.values<number>(stores.foodLots).reduce((n,v)=>n+v,0)-stores.food)<1e-6;
+ for(const x of v.vessels){if(!x||!id(x.boatId)||boats.has(x.boatId)||!team(x.team)||!shipDesign(x.design)||!fin(x.commissionedAt)||!x.stores||!fin(x.stores.food,1e6)||!fin(x.stores.missiles,1e6)||!validLots(x.stores)||!fin(x.atSeaSeconds)||!Number.isInteger(x.captures)||x.captures<0||!Number.isInteger(x.rams)||x.rams<0)return false;boats.add(x.boatId);if(x.lastDockId!==undefined&&!id(x.lastDockId))return false;}
+ for(const c of v.commissions){if(!c||!id(c.id)||seen.has(c.id)||!id(c.dockId)||!team(c.team)||!shipDesign(c.design)||!id(c.builderId)||builders.has(c.builderId)&&c.phase==='building'||!fin(c.progress,1e6)||!['building','paused'].includes(c.phase)||!costOk(c.paid,['wood','stone','cordage','copper'])||c.progress>shipDesign(c.design)!.workSeconds+1e-6)return false;seen.add(c.id);if(c.phase==='building')builders.add(c.builderId);}
  const act=new Set<number>();
  for(const b of v.boardings){if(!b||!id(b.id)||!id(b.attackerBoat)||!id(b.targetBoat)||b.attackerBoat===b.targetBoat||!fin(b.startedAt)||!fin(b.seconds,1e6)||act.has(b.attackerBoat))return false;act.add(b.attackerBoat);}
  for(const e of v.events){if(!e||!fin(e.at)||!['ram','boarding','capture','blockade','lifted','starved','sunk'].includes(e.kind)||!team(e.team)||e.other!==undefined&&!team(e.other)||typeof e.text!=='string'||e.text.length>160)return false;}
