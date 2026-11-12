@@ -68,4 +68,6 @@ test('council read model and marry command: JSON-safe, gated, and the UI action 
  for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);d.people[t+'-cadet']={...k,id:t+'-cadet',name:'Cadet'+t,age:20,spouse:undefined,parent:undefined,ruler:undefined};}
  const b0=tiesBetween(g,0,1).bond,r=applyEngineCommand(g,{kind:'marry-houses',team:1});
  assert.equal(r.accepted,true,r.reason);assert.ok(tiesBetween(g,0,1).bond>b0);
+ const c2=JSON.parse(JSON.stringify(applyEngineReadQuery(g,{kind:'rulers-council'}))).council;
+ if(c2.showSuccession){assert.ok(c2.handover&&typeof c2.handover.law==='string'&&c2.handover.rulerAge>0,'handover card data');assert.ok(c2.handover.heir||c2.handover.extinct||c2.handover.regent);}else assert.equal(c2.handover,undefined);
 });
