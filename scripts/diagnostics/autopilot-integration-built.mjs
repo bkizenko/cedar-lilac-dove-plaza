@@ -2,12 +2,11 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
-import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
 const target=new URL(process.env.BASE_URL||'http://127.0.0.1:8103');
 assert.ok(['127.0.0.1','localhost','[::1]'].includes(target.hostname));
 assert.equal(target.port,'8103','Only disposable candidate port8103 is allowed');
-const fixture=process.argv[2]||fileURLToPath(new URL('../../../native100-speed-baseline.json-private-fixture.json',import.meta.url));
+const fixture=process.argv[2];assert.ok(fixture,'Provide an existing private native village export with a finished production workplace');
 const bytes=readFileSync(fixture),sha=b=>createHash('sha256').update(b).digest('hex'),originalChecksum=sha(bytes),data=JSON.parse(bytes.toString('utf8'));
 assert.ok(data.state&&Array.isArray(data.state.buildings),'Strict native save input required');
 data.state.paused=true; // Paused import copy only; original private bytes are never written.
