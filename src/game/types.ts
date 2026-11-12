@@ -512,6 +512,7 @@ export type GameState = {
   excavations?:import('./excavation').TerrainCut[];
   excavationDepth?:number;
   canalWorks?:import('./canalBreach').CanalWork[];
+  aqueductWorks?: import('./waterLineWorks').AqueductWorksPlan[];
   societyRelations?:import('./societyRelations').SocietyRelation[];
   rivalMissions?:import('./rivalActivity').RivalMission[];
   coastalVoyages?:import('./coastalTrade').CoastalVoyage[];
