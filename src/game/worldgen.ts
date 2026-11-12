@@ -21,6 +21,7 @@ import {geography,type LandFeature} from './geography';
 import {landforms} from './landforms';
 import type {WorldRequest,WorldOptions} from './worldOptions';
 import {generateMapWorld} from './mapgen/index';
+import {generateMapWorld as generatePublishedV20} from './mapgenV20/index';
 import {rivalCountForArea} from "./factions";
 import { MAP, WATER_Y } from "./constants";
 import { fbm, mulberry32 } from "./rng";
@@ -139,7 +140,8 @@ function node(
  * geography or an unsafe camp just to make a seed succeed. Old versions keep
  * their byte-for-byte generation path. */
 export function generateWorld(seed:number,version=1,request:WorldRequest={}):WorldData{
- if(version>=20)return prepareOwnedWaterWorld(generateMapWorld(seed,request),true);
+ if(version===20)return prepareOwnedWaterWorld(generatePublishedV20(seed,request),true);
+ if(version>=21)return prepareOwnedWaterWorld(generateMapWorld(seed,request),true);
  if(version<15)return generateWorldCandidate(seed,version,request);
  const rejectedReasons:string[]=[],random=mulberry32(seed^0x157f4a31);
  for(let attempt=0;attempt<16;attempt++){

@@ -375,7 +375,7 @@ export class Engine {
 
   async configureNewWorld(request:WorldRequest,previewRiverbanks=false):Promise<boolean>{
     if(this.originalGame&&!this.game.testMode)return false;
-    return this.restart(request,previewRiverbanks&&this.game.testMode?19:20);
+    return this.restart(request,previewRiverbanks&&this.game.testMode?19:21);
   }
 
   enterIsland() {
@@ -447,7 +447,7 @@ export class Engine {
       this.lastLifecycle={operation:'restore',mode:next.host?'worker':'main'};this.presentationNotice('Village restored · P to resume',4);
     }catch(error){if(this.currentLifecycle(t))this.presentationNotice(error instanceof Error?error.message:'Cannot restore save',4);throw error;}finally{if(!applied)next?.host?.dispose();this.finishLifecycle(t);}
   }
-  async restart(request?:WorldRequest,generation:18|19|20=20):Promise<boolean>{
+  async restart(request?:WorldRequest,generation:18|19|20|21=21):Promise<boolean>{
     const t=this.beginLifecycle();let applied=false;
     try{await this.pauseLifecycleOwner(t);
       if(t.game.started&&!t.game.awaitingStart){const saved=await this.checkpointService.save(t.game.testMode?'test-lab':'protected',true);if(!this.currentLifecycle(t))return false;if(saved.status!=='committed')throw new Error('Could not protect this village. Export it before starting another world.');}
