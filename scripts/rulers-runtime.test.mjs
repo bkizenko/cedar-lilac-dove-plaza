@@ -292,7 +292,8 @@ test('neighbourNews: real agreements only, player-known, newest first, old saves
  const news=neighbourNews(g);assert.ok(news.length>=1&&news[0].time>=news[news.length-1].time);
  assert.ok(news.some(n=>n.a===0||n.b===0),'player is party to the pact');
  assert.equal(neighbourNews(g,150).every(n=>n.time>=150),true);
- const unseen=news.some(n=>n.a===1&&n.b===2);
- assert.equal(unseen,ag?neighbourNews(g).some(n=>n.a===1&&n.b===2):false);
+ assert.ok(ag,'real third-party pact exists in owner state');
+ const {societyRelation}=await import('../src/game/societyRelations.ts');societyRelation(g,0,1).known=true;societyRelation(g,0,2).known=true;
+ assert.equal(neighbourNews(g).some(n=>n.a===1&&n.b===2),false,'meeting both societies cannot reveal their private agreement');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourNews(old),[]);
 });

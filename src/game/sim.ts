@@ -1921,7 +1921,7 @@ export class Game {
 
   issueAttack(target: Unit | Building) {
     if (target.hp <= 0 || (target.team !== 0 && !this.visibleAt(target.x, target.z))) return;
-    if(target.kind==='unit')target.contactSurrender=undefined;
+    if(target.kind==='unit'){target.contactSurrender=undefined;if(target.repatriating)target.repatriating=undefined;}
     for (const u of this.selectedUnits().filter(u=>!u.prisoner)) { this.interruptMission(u);u.attackDestination = null; u.pillage = -1; }
     const selected = this.selectedUnits().filter(u=>!u.prisoner);
     const anyMil = selected.some((u) => u.type !== "worker" && u.type !== "leader");
