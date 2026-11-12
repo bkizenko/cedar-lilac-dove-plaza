@@ -4,7 +4,7 @@
 
 Updated 2026-11-12T00:55:57.075993+00:00. Read this before historical handoffs.
 
-- Latest LIVE integration: **339d9b8**, release **2026-11-12T01-58-40-150Z-339d9b8** on8086/8101. Whole Societies/Experience/World branches, resolved curd and fixed camera.24/24focused +1/1built native53 import/render/workshop queue/owner query/save/restore; tsc/buildPASS. Runtime built from7f46af6; later commits are diagnostics/docs only. Villages/prior release retained. Frozen acceptance stays34/98.
+- Latest LIVE economy/custody release: **bd1667a**, release **2026-11-12T02-26-11-652Z-bd1667a** on8086/8101. Preserves dead trader cargo/recovery claims; physical armor/tool/weapon/animal custody and burden; legacy hunting compatibility.56/56focused+1/1built native53 import/render/workshop owner-query/save/restore; tsc/buildPASS; old villages/prior release retained. Gear/animal trade consumer remains open/off, C6 source unqualified. Frozen acceptance stays34/98.
 - AUTOPILOT.md on origin/main governs: Worker parked; Codex T2 WQ14 active. Grok owns World wiring; Claude owns UI/visuals/diplomacy. Anyone may edit shared files under temporary collision claims.
 
 ## Historical pre-integration evidence (superseded where AUTOPILOT differs)
