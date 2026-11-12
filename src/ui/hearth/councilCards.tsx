@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react';
-import {Crown,Skull,Unlock,Home,Shield,Users,Swords,TriangleAlert,Scroll,Hourglass} from 'lucide-react';
+import {Crown,Skull,Unlock,Home,Shield,Users,Swords,TriangleAlert,Scroll,Hourglass,Handshake} from 'lucide-react';
 import type {Engine} from '../../game/engine';
 import type {CouncilModel} from '../../game/rulersView';
 import {societyIdentity} from '../../game/societyIdentity';
@@ -53,6 +53,12 @@ export function FameFeed({log}:{log:string[]}){
  const items=[...log].reverse().map(l=>l.replace(/^\d+:\s*/,''));
  if(!items.length)return <p className="hw-empty">Nothing has happened to the house yet.</p>;
  return <ol className="hw-fame" aria-label="Chronicle">{items.map((l,i)=><li key={i} className={cx(i===0&&'is-new',i>4&&'is-old')}>{i===0&&<Scroll size={20}/>}<span>{l}</span></li>)}</ol>;
+}
+
+/** Neighbour news: agreements the player is party to, in plain lines under the chronicle. Nothing the player could not know. */
+export function NeighbourNewsFeed({news,nameOf}:{news:{time:number;kind:string;with:number;text:string}[];nameOf:(team:number)=>string}){
+ if(!news.length)return null;
+ return <section className="hw-news" aria-label="Neighbour news"><h3 className="hw-row-label"><Handshake size={18}/>Neighbour news</h3><ul className="hw-fame">{news.map((n,i)=><li key={i} className={cx(i===0&&'is-new')}><span><b>{nameOf(n.with)}</b> · {n.text.replace(/^\d+:\s*/,'')}</span></li>)}</ul></section>;
 }
 
 const mood=(n:number)=>n<35?'bad':n>65?'good':'mid';
