@@ -40,7 +40,7 @@ const server = http.createServer((q, r) => {
 });
 await new Promise(res => server.listen(0, '127.0.0.1', res));
 const base = `http://127.0.0.1:${server.address().port}`;
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
 
 async function renderOne(name, outPath, tone = flags.tone || 'neutral') {
   const scene = await SCENES[name]({ rig: flags.rig || (flags.terrain === 'carved' ? 'tuned' : 'golden'), terrain: flags.terrain || 'natural' }), W = scene.width || 800, H = scene.height || 500;

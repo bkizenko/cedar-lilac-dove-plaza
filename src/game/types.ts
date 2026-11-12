@@ -488,6 +488,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  captiveDealings?:import('./captiveDealings').CaptiveDealingsState;
   droppedWeaponCargo?:import('./weaponCargo').DroppedWeaponCargo[];
   armor?:import('./armor').ArmorState;
   siegeRams?:import('./siegeRam').SiegeRamState;

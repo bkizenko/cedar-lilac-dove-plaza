@@ -25,3 +25,8 @@ test('classic palette restores the original tokens and the toggle renders both c
  const css=readFileSync(new URL('../src/styles.css',import.meta.url),'utf8');assert.match(css,/:root\[data-hw-ui="classic"\]\{[^}]*--color-ink:#1a1610/);
  const html=renderToStaticMarkup(h(UiThemeToggle));assert.match(html,/Field/);assert.match(html,/Classic/);assert.match(html,/aria-pressed="true"/);
 });
+test('action feedback list marks accepted and refused outcomes by glyph and tone, not colour alone',async()=>{
+ const {FeedbackList}=await import('../src/ui/council/useActionFeedback.tsx');
+ const html=renderToStaticMarkup(h(FeedbackList,{items:[{id:2,ok:false,text:'They refuse'},{id:1,ok:true,text:'Marriage arranged'}]}));
+ assert.match(html,/aria-live="polite"/);assert.match(html,/data-ok="false"[^>]*>.*✕.*They refuse/);assert.match(html,/data-ok="true"[^>]*>.*✓.*Marriage arranged/);
+});
