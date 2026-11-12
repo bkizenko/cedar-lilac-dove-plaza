@@ -14,6 +14,7 @@ import {PRODUCTION_RECIPES,productionIssue,type ProductionRecipe} from './produc
 import {fibreGatherIssue} from './fibre';
 import {clayIssue} from './pottery';
 import {councilModel} from './rulersView';
+import {civicModel,type CivicModel} from './societyCivicRuntime';
 import {societyDecisionsModel,type SocietyDecisionsModel} from './societyView';
 import {combatModel,matchupModel,type CombatModel} from './combatView';
 import {armorEquipIssue,wornArmor} from './armor';
@@ -33,6 +34,7 @@ export type EngineReadQuery=
  |{kind:'armor-choice';unitId:number}
  |{kind:'rulers-council'}
  |{kind:'society-decisions'}
+ |{kind:'society-civic'}
  |{kind:'combat-doctrine'}
  |{kind:'combat-matchup';attackerId:number;targetId:number}
  |{kind:'capitulation-offers'};
@@ -50,6 +52,7 @@ export type EngineReadModel=
  |{kind:'armor-choice';unitId:number;wornArmorId?:number;availableArmorId?:number;issue:string|null}
  |{kind:'rulers-council';council:import('./rulersView').CouncilModel}
  |{kind:'society-decisions';societies:SocietyDecisionsModel}
+ |{kind:'society-civic';civic:CivicModel}
  |{kind:'combat-doctrine';combat:CombatModel}
  |{kind:'combat-matchup';attackerId:number;targetId:number;multiplier:number;reasons:string[]}
  |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]};
@@ -60,7 +63,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const q=value as Record<string,unknown>,list=(v:unknown)=>Array.isArray(v)&&v.length<=ENGINE_READ_MODEL_RULES.maximumSources&&Array.from(v).every(id)&&new Set(v).size===v.length;
  if(q.kind==='combat-matchup')return Object.keys(q).every(k=>['kind','attackerId','targetId'].includes(k))&&id(q.attackerId)&&id(q.targetId);
- if(q.kind==='rulers-council'||q.kind==='society-decisions'||q.kind==='combat-doctrine'||q.kind==='capitulation-offers')return Object.keys(q).length===1;
+ if(q.kind==='rulers-council'||q.kind==='society-decisions'||q.kind==='society-civic'||q.kind==='combat-doctrine'||q.kind==='capitulation-offers')return Object.keys(q).length===1;
  if(q.kind==='traded-teaching-offers')return Object.keys(q).every(k=>['kind','teacherId','learnerIds'].includes(k))&&id(q.teacherId)&&list(q.learnerIds);
  if(q.kind==='copper-study-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
  if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
@@ -90,6 +93,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
  if(query.kind==='combat-doctrine')return{kind:query.kind,combat:combatModel(g)};
  if(query.kind==='combat-matchup')return{kind:query.kind,attackerId:query.attackerId,targetId:query.targetId,...matchupModel(g,query.attackerId,query.targetId)};
  if(query.kind==='society-decisions')return{kind:query.kind,societies:societyDecisionsModel(g)};
+ if(query.kind==='society-civic')return{kind:query.kind,civic:civicModel(g)};
  if(query.kind==='capitulation-offers')return{kind:query.kind,offers:capitulationOffers(g).map(o=>({...o,defenderName:g.tribe(o.defenderTeam)?.name??'A community'}))};
  if(query.kind==='building-fabric'){
   const b=g.state.buildings.find(b=>b.id===query.buildingId&&b.team===0&&b.hp>0);if(!b)throw new Error('Original owned building is unavailable');

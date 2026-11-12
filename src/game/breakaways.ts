@@ -8,7 +8,7 @@ export const STAGES=['loyal','restive','autonomous','breakaway'] as const;
 export type Stage=typeof STAGES[number];
 export type Resolution='reintegrated'|'recognised'|'tributary';
 export type Choice='concede'|'tribute'|'coerce'|'recognise'|'wait';
-export type Breakaway={hall:number;parent:number;since:number;stage:Stage;pressure:number;distance:number;reasons:string[];choice?:Choice;choiceAt?:number;conflictUntil?:number;relief?:number;resolution?:Resolution;resolvedAt?:number};
+export type Breakaway={hall:number;parent:number;since:number;stage:Stage;pressure:number;distance:number;reasons:string[];choice?:Choice;choiceAt?:number;conflictUntil?:number;relief?:number;newTeam?:number;resolution?:Resolution;resolvedAt?:number};
 export type SettlementView={hall:number;parent:number;distance:number;ageSeconds:number;residents:number;selfSufficiency:number;localGrievance:number};
 export type Option={kind:Choice;score:number;cost:{food:number;wood:number;people:number};risk:number;reasons:string[]};
 export const BREAKAWAY_RULES={version:1,nearMeters:120,farMeters:600,up:[.35,.55,.75],downMargin:.1,reviewSeconds:120,minResidents:4,conflictSeconds:480,concedeFood:60,concedeWood:30,coerceFighters:3} as const;
@@ -55,6 +55,6 @@ export function coerceSucceeds(seed:number,hall:number,epoch:number,parentPower:
  return {ok:makeRng(hash32('coerce',seed,hall,epoch))()<chance,chance:Math.round(chance*100)/100};
 }
 export function validBreakaway(b:unknown):b is Breakaway{
- const x=b as Breakaway;return !!x&&Number.isInteger(x.hall)&&Number.isInteger(x.parent)&&(STAGES as readonly string[]).includes(x.stage)&&Number.isFinite(x.since)&&Number.isFinite(x.pressure)&&x.pressure>=0&&x.pressure<=1&&Number.isFinite(x.distance)&&Array.isArray(x.reasons)&&(x.relief===undefined||Number.isFinite(x.relief))&&
+ const x=b as Breakaway;return !!x&&Number.isInteger(x.hall)&&Number.isInteger(x.parent)&&(STAGES as readonly string[]).includes(x.stage)&&Number.isFinite(x.since)&&Number.isFinite(x.pressure)&&x.pressure>=0&&x.pressure<=1&&Number.isFinite(x.distance)&&Array.isArray(x.reasons)&&(x.relief===undefined||Number.isFinite(x.relief))&&(x.newTeam===undefined||Number.isInteger(x.newTeam))&&
   (x.resolution===undefined||['reintegrated','recognised','tributary'].includes(x.resolution))&&(x.choice===undefined||['concede','tribute','coerce','recognise','wait'].includes(x.choice));
 }

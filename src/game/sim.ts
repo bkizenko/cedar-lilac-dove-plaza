@@ -9,6 +9,7 @@ import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRe
 import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {buildSkins} from './skinState';
 import {reviewSociety} from './societyRuntime';
+import {noteArrivals} from './societyCivicRuntime';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
 import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
@@ -3420,6 +3421,7 @@ export class Game {
         roll < 0.4
           ? "Someone leaves " + (from?.name || "a village") + " and joins you"
           : "Refugees from " + (from?.name || "a failing village") + " ask to stay";
+      noteArrivals(this,0,1,roll >= 0.4); // community identity (M2-11): who actually arrived
     } else {
       // Arrivals begin on a reachable dry approach, never in deep water across the map.
       const arrivals:{x:number;z:number}[]=[];
@@ -3436,6 +3438,7 @@ export class Game {
         u.homeHall=hall.id;u.recalled=true;u.stationOnArrival=false;u.order="move";u.workReason="Walking to the welcoming village hearth";
       }
       if(group>1)label=`A group of ${group} wanderers is walking toward your village`;
+      noteArrivals(this,0,Math.max(0,group),false);
 
       if(!label.startsWith("A group")) label = roll < 0.85 ? "A wanderer from the sea stays" : "Someone walking the shore asks to stay";
     }

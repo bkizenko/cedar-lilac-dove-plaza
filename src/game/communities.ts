@@ -154,7 +154,7 @@ export function tickCommunities(g: Game, dt: number) {
     if (!site) continue;
     t.wood -= timber;
     t.lastSettlement = g.state.time;
-    if (expansion) noteSettlement(g, t.id);
+    if (expansion) noteSettlement(g, t.id, crew.length);
     for (let i = 0; i < crew.length; i++) {
       const u = crew[i];
       u.foundingJourney = { ...site, leader: i === 0, timber };
