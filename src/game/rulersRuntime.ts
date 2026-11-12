@@ -170,14 +170,15 @@ export const ERA_REACH:Record<'band'|'chiefdom'|'state',{crew:number;slow:number
  chiefdom:{crew:3,slow:1.15,organised:true,note:'a chiefdom can spare a modest party'},
  state:{crew:4,slow:1,organised:true,note:''},
 };
-export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;why:string[]};
+export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;rations:number;why:string[]};
 export function expansionParty(g:Game,team:number,raw=false):PartyPlan|null{
  const d=expansionOf(g,team);if(!d)return null;
  const sends=d.mode==='settle'||d.mode==='migrate',tier=st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band',gate=ERA_REACH[tier];
  const crew=Math.max(2,Math.min(gate.crew,2+Math.round((d.drive-.8)*2))),cooldown=Math.round(Math.max(900,Math.min(3600,gate.slow*1800/Math.max(.5,d.drive))));
  const council=raw?null:settleGate(g,team); // society decision layer: a founding party leaves only under a settle plan
  const allow=sends&&(council?council.allow:true);
- return {allow,mode:d.mode,crew,cooldown,
+ // Standing provisioning exists only where the polity is organised: the leader carries 3 provisions per head, taken from the home pantry, never conjured.
+ return {allow,mode:d.mode,crew,cooldown,rations:gate.organised?crew*3:0,
   minReserve:d.mode==='migrate'?300:600,why:allow?[...d.why,...(gate.crew<4?[gate.note]:[])]:sends&&council?[council.why,...d.why]:['the society stays at home',...d.why]};
 }
 
@@ -186,11 +187,11 @@ export type PartyLine={team:number;name:string;crew:number;x:number;z:number;des
 export function expansionParties(g:Game,team?:number):PartyLine[]{
  if(!rulersEnabled(g))return [];
  const out=new Map<string,PartyLine>();
- const units=g.state.units as unknown as {team:number;hp:number;x:number;z:number;carry:number;carryType?:string;stuckT:number;foundingJourney?:{x:number;z:number;leader:boolean;timber?:number}}[];
+ const units=g.state.units as unknown as {team:number;hp:number;x:number;z:number;carry:number;carryType?:string;stuckT:number;foundingJourney?:{x:number;z:number;leader:boolean;timber?:number;rations?:number}}[];
  for(const u of units){const j=u.foundingJourney;if(!j||u.hp<=0||(team!==undefined&&u.team!==team))continue;
   const key=u.team+':'+j.x+':'+j.z,cur=out.get(key),d=Math.round(Math.hypot(u.x-j.x,u.z-j.z));
   const line=cur??{team:u.team,name:g.tribe(u.team).name,crew:0,x:u.x,z:u.z,destX:j.x,destZ:j.z,distance:d,carrying:'',status:'on the road'};
-  line.crew++;if(j.leader){line.x=u.x;line.z=u.z;line.distance=d;line.carrying=u.carry>0?`${Math.round(u.carry)} ${u.carryType??'goods'}`:'nothing';}
+  line.crew++;if(j.leader){line.x=u.x;line.z=u.z;line.distance=d;const goods=u.carry>0?`${Math.round(u.carry)} ${u.carryType??'goods'}`:'nothing',ra=j.rations?`${Math.round(j.rations)} provisions`:'';line.carrying=ra?(u.carry>0?goods+' and '+ra:ra):goods;}
   if(u.stuckT>8)line.status='struggling to find a way through';
   out.set(key,line);}
  return [...out.values()];

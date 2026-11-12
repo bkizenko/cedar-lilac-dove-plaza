@@ -237,6 +237,22 @@ test('expansion parties: read model shows real founding units, supplies and posi
  delete g.state.worldOptions.rulersVersion;assert.deepEqual(expansionParties(g),[]);
 });
 
+test('expansion party provisions: organised eras carry real pantry stores, returned on turn-back, never conjured; band carries none; save validator accepts them',async()=>{
+ const {expansionParty,expansionParties}=await import('../src/game/rulersRuntime.ts');
+ const {foundingJourneyAI}=await import('../src/game/communities.ts');
+ const g=fixture();const t=g.tribe(1);
+ const plan=expansionParty(g,1,true);if(plan){assert.equal(plan.rations,['chiefdom','state'].includes(g.state.rulers.societies['1'].civ.polity.tier)?plan.crew*3:0);}
+ const us=g.state.units.filter(u=>u.team===1&&u.hp>0).slice(0,2);assert.ok(us.length>=2);
+ t.foodLots={...(t.foodLots||{}),provisions:30};t.food=Math.max(t.food,30);
+ const {takeFoodLot}=await import('../src/game/pantry.ts');
+ const food0=t.food;assert.ok(takeFoodLot(g,1,'provisions',6));assert.equal(t.food,food0-6,'leaving costs the pantry');
+ const dx=us[0].x+40,dz=us[0].z+10;us.forEach((u,i)=>{u.foundingJourney={x:dx,z:dz,leader:i===0,timber:20,...(i===0?{rations:6}:{})};});
+ us[0].carry=20;us[0].carryType='wood';
+ assert.match(expansionParties(g,1)[0].carrying,/20 wood and 6 provisions/);
+ us[0].stuckT=17;foundingJourneyAI(g,us[0],.1);
+ assert.equal(t.food,food0,'turned back: the same provisions come home, none gained or lost');assert.equal(us[0].foundingJourney,undefined);
+});
+
 test('lane A: domestic pressure executor overthrows a house after sustained uprising, through heir(); counter saved; old saves untouched',async()=>{
  const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
  const g=fixture();R.ensureRulers(g);const t=1,id='1';

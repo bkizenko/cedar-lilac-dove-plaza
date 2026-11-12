@@ -289,7 +289,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   procurement?: { minimum: number };
   homeHall?: number;
   parents?: number[];
-  foundingJourney?: {x:number;z:number;leader:boolean;timber?:number};
+  foundingJourney?: {x:number;z:number;leader:boolean;timber?:number;rations?:number};
   expedition?: {food:number;returning:boolean;forage:number};
   scout?: {legs:number;returning:boolean;preparing?:true};
   scoutProvisions?: import('./scoutProvisions').ScoutProvisions;
