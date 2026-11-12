@@ -119,14 +119,21 @@ function wildBodyPacket(p:WildProject){return !p.packet&&(Object.values(p.held.i
 function wildAdult(g:Game,u:Unit,own=false){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!isDependent(g,u)&&!u.emergency&&!u.recalled&&!u.boat&&!u.resting&&!u.shelterId&&!u.expedition&&!u.visit&&!u.trade&&!u.envoy&&!u.foundingJourney&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u,own?'wildWorkId':undefined);}
 function sameWildCache(h:NonNullable<WildProject['cache']>,d:SupplyDrop){return Math.hypot(h.x-d.x,h.z-d.z)<.01&&(d.kind==='camp'?h.kind==='camp':h.kind==='building'&&h.id===d.id);}
 function actualWildCache(g:Game,u:Unit){return supplyDrops(g,u.team).find(d=>{const spot=supplyApproach(g,u,d);return spot&&supplyReached(g,u,d,spot);});}
+function wildReservations(g:Game,p:WildProject){const b=p.stationId===undefined?undefined:g.state.buildings.find(b=>b.id===p.stationId&&b.team===p.team&&g.finished(b));return b&&p.phase!=='back'?[{key:`production:${b.id}:slots`,amount:1,capacity:productionSlots(b)}]:[];}
+/** Pure checks before interrupting unrelated tree ownership. JS admission is
+ * synchronous; no executor can fill a checked slot between this and commit. */
+function wildPreflight(g:Game,p:WildProject,jobs=workRuntime(g)){
+ const id=wildKey(p.id),actor=p.paused||p.actorId===0?undefined:jobs.activeJob(p.actorId);if(actor&&actor.id!==id&&actor.kind!=='gather:wood')return false;
+ return wildReservations(g,p).every(r=>jobs.reservations.used(r.key,id)+r.amount<=r.capacity);
+}
 function claimWild(g:Game,p:WildProject,jobs=workRuntime(g)){
- const id=wildKey(p.id),b=p.stationId===undefined?undefined:g.state.buildings.find(b=>b.id===p.stationId&&b.team===p.team&&g.finished(b)),claims=b&&p.phase!=='back'?[{key:`production:${b.id}:slots`,amount:1,capacity:productionSlots(b)}]:[];
- if(!jobs.job(id))jobs.propose({id,kind:'wild-craft',owner:p.team,actors:[],target:p.stationId??p.critterId??null});if(!jobs.amend(id,p.paused||p.actorId===0?[]:[p.actorId],claims))return false;if(p.actorId>0){const u=g.state.units.find(u=>u.id===p.actorId),owned=g.state.wildCraft?.projects.find(q=>q.id===p.id)??p;if(u)bindWildCraftLoad(u,owned);}jobs.transition(id,p.paused?'reserved':p.phase==='work'||p.phase==='dry'?'working':p.phase==='back'?'returning':'traveling',p.progress);return true;
+ if(!wildPreflight(g,p,jobs))return false;const id=wildKey(p.id),fresh=!jobs.job(id),claims=wildReservations(g,p);
+ if(fresh)jobs.propose({id,kind:'wild-craft',owner:p.team,actors:[],target:p.stationId??p.critterId??null});if(!jobs.amend(id,p.paused||p.actorId===0?[]:[p.actorId],claims)){if(fresh){jobs.finish(id,true);jobs.forget(id);}return false;}if(p.actorId>0){const u=g.state.units.find(u=>u.id===p.actorId),owned=g.state.wildCraft?.projects.find(q=>q.id===p.id)??p;if(u)bindWildCraftLoad(u,owned);}jobs.transition(id,p.paused?'reserved':p.phase==='work'||p.phase==='dry'?'working':p.phase==='back'?'returning':'traveling',p.progress);return true;
 }
 function releaseWild(g:Game,p:WildProject){const jobs=workRuntime(g),id=wildKey(p.id);jobs.finish(id);jobs.forget(id);}
 export function rebuildWildCraftOwnership(g:Game,jobs:JobCoordinator){for(const p of g.state.wildCraft?.projects||[])claimWild(g,p,jobs);}
 export function pauseWildWork(g:Game,u:Unit){const p=g.state.wildCraft?.projects.find(p=>p.id===u.wildWorkId&&p.actorId===u.id);if(!p)return false;p.paused=true;u.wildWorkPaused=!wildBodyPacket(p)?true:undefined;claimWild(g,p);return true;}
-export function resumeWildWork(g:Game,unitId:number){const u=g.state.units.find(u=>u.id===unitId),p=g.state.wildCraft?.projects.find(p=>p.id===u?.wildWorkId&&p.actorId===unitId);if(!u||!p?.paused||!wildAdult(g,u,true))return false;const job=workRuntime(g).activeJob(u.id);if(job&&job.id!==wildKey(p.id)&&job.kind!=='gather:wood')return false;g.interruptMission(u);releaseTreeWorker(g,u);delete p.paused;if(!claimWild(g,p)){p.paused=true;return false;}delete u.wildWorkPaused;if(p.phase==='work')p.phase='go';u.order='move';u.node=null;g.invalidateRoute(u);return true;}
+export function resumeWildWork(g:Game,unitId:number){const u=g.state.units.find(u=>u.id===unitId),p=g.state.wildCraft?.projects.find(p=>p.id===u?.wildWorkId&&p.actorId===unitId);if(!u||!p?.paused||!wildAdult(g,u,true))return false;const job=workRuntime(g).activeJob(u.id);if(job&&job.id!==wildKey(p.id)&&job.kind!=='gather:wood')return false;if(!wildPreflight(g,{...p,paused:undefined}))return false;g.interruptMission(u);releaseTreeWorker(g,u);delete p.paused;if(!claimWild(g,p)){p.paused=true;return false;}delete u.wildWorkPaused;if(p.phase==='work')p.phase='go';u.order='move';u.node=null;g.invalidateRoute(u);return true;}
 /** A dead holder remains the physical location of its finite paid packet until recovered. */
 export function wildBodyMustRemain(u:Unit){return u.hp<=0&&u.wildWorkId!==undefined;}
 /** Why a recipe cannot start now (null = can start). Inputs are checked, not yet debited. */
@@ -140,7 +147,7 @@ export function wildIssue(g:Game,team:number,id:WildRecipeId,opts:{stationId?:nu
   if(!pick)return `All ${r.station} slots are busy`;if(slotsInUse(w,pick.id)>=WILD_STATION_SLOTS)return `${r.station} slots are full`;
  }
  if((id==='setSnare'||id==='digPitfall')&&w.traps.length+w.projects.filter(p=>p.trapKind).length>=WILD_RULES.maxTraps)return 'Trap capacity is fully reserved';
- const stock=wildStock(g,team);
+ const stock=w.stock[String(team)]||{};
  for(const[k,n]of Object.entries(r.goods||{}))if((stock[k as WildGood]||0)<n!)return `Need ${n} ${k} in store`;
  for(const[k,n]of Object.entries(r.items||{}))if(((t.items||{})[k as ItemKind]||0)<n!)return `Need ${n} ${k} at the camp cache`;
  for(const[k,n]of Object.entries(r.foodIn||{}))if(foodInventory(t)[k as FoodKind]+1e-9<n!)return `Need ${n} ${k} in store`;
@@ -175,7 +182,7 @@ export function beginWildWork(g:Game,unitId:number,id:WildRecipeId,opts:{station
  // Dressing and tracking begin at the carcass/trail with nothing to fetch.
  if(id==='dressParts'||id==='trackWounded'){p.phase='go';}
  if(p.phase==='fetch'){p.cache={kind:drop.drop.kind==='camp'?'camp':'building',...(drop.drop.kind==='camp'?{}:{id:drop.drop.id}),x:drop.drop.x,z:drop.drop.z};p.packet={x:drop.drop.x,z:drop.drop.z};}
- releaseTreeWorker(g,u);if(!claimWild(g,p))return{accepted:false,reason:'Actor or real workplace slot is already reserved'};g.interruptMission(u);w.nextId++;if(p.phase==='fetch')debitInputs(g,p);
+ if(!wildPreflight(g,p))return{accepted:false,reason:'Actor or real workplace slot is already reserved'};releaseTreeWorker(g,u);if(!claimWild(g,p))return{accepted:false,reason:'Actor or real workplace slot is already reserved'};g.interruptMission(u);w.nextId++;if(p.phase==='fetch')debitInputs(g,p);
  w.projects.push(p);u.wildWorkId=p.id;u.order='move';u.node=null;u.workReason=`${r.icon} ${r.name}`;g.workBoard.invalidateTasks();
  return {accepted:true,reason:''};
 }
@@ -349,7 +356,7 @@ export function collectWildBatch(g:Game,unitId:number,projectId?:number):{accept
  const p=w.projects.find(p=>p.team===u.team&&(p.phase==='ready'&&p.actorId===0||p.paused&&g.state.units.some(old=>old.id===p.actorId&&old.hp<=0))&&(projectId===undefined||p.id===projectId));if(!p)return{accepted:false,reason:'Nothing ready or physically recoverable'};
  const old=g.state.units.find(old=>old.id===p.actorId),recover=!!old&&old.hp<=0;if(recover&&(!p.packet||!clearCargoApproach(g,u,p.packet)))return{accepted:false,reason:'Reach the same retained packet at its actual location'};
  const next={...p,actorId:u.id,paused:undefined,phase:recover?(p.phase==='fetch'?'go':p.phase==='work'?'go':p.phase):'collect'} as WildProject;
- releaseTreeWorker(g,u);if(!claimWild(g,next))return{accepted:false,reason:'Adult or workplace is already reserved'};g.interruptMission(u);if(old){delete old.wildWorkId;delete old.wildWorkPaused;}Object.assign(p,next);if(recover&&p.phase!=='go')p.packet=undefined;u.wildWorkId=p.id;delete u.wildWorkPaused;u.order='move';u.node=null;g.invalidateRoute(u);g.workBoard.invalidateTasks();return{accepted:true,reason:''};
+ if(!wildPreflight(g,next))return{accepted:false,reason:'Adult or workplace is already reserved'};releaseTreeWorker(g,u);if(!claimWild(g,next))return{accepted:false,reason:'Adult or workplace is already reserved'};g.interruptMission(u);if(old){delete old.wildWorkId;delete old.wildWorkPaused;}Object.assign(p,next);if(recover&&p.phase!=='go')p.packet=undefined;u.wildWorkId=p.id;delete u.wildWorkPaused;u.order='move';u.node=null;g.invalidateRoute(u);g.workBoard.invalidateTasks();return{accepted:true,reason:''};
 }
 /** Light director: when auto work is on, one idle adult with an obvious finished-station job takes it. Throttled, deterministic. */
 function directWild(g:Game,team:number){
