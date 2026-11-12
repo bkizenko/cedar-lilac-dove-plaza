@@ -22,6 +22,7 @@ import {PenFenceLayer} from './penFenceLayer';
 import {WaterVesselLayer} from './waterVesselLayer';
 import {WornGarmentLayer} from './wornGarments';
 import {WornArmorLayer} from './wornArmor';
+import {PeopleAdapter} from './peopleAdapter';
 import {unitFeedbackVisible,pointerNearPerson} from '../game/unitFeedback';
 import {admitVisibleUnits} from './unitRenderAdmission';
 import {ensureInstanceCapacity} from './instanceCapacity';
@@ -259,6 +260,8 @@ export class WorldView {
   private penFences:PenFenceLayer|null=null;
   private wornGarments:WornGarmentLayer|null=null;
   private wornArmor:WornArmorLayer|null=null;
+  /** Shared character rig (ASTRA-13); the legacy merged unit meshes stay as the archived set and as invisible picking proxies. */
+  people:PeopleAdapter|null=null;
   private siegeRamLayer:SiegeRamLayer|null=null;
   private waterVessels:WaterVesselLayer|null=null;
   private baskets:BasketLayer|null=null;
@@ -1011,6 +1014,7 @@ export class WorldView {
     this.penFences=new PenFenceLayer(this.scene,this.mats.timber.clone());
     this.wornGarments=new WornGarmentLayer(this.scene);
     this.wornArmor=new WornArmorLayer(this.scene);
+    this.people=new PeopleAdapter(this.scene);
     this.siegeRamLayer=new SiegeRamLayer(this.scene);
     this.waterVessels=new WaterVesselLayer(this.scene);
     this.baskets=new BasketLayer(this.scene);
@@ -1931,6 +1935,9 @@ export class WorldView {
     for (const u of game.state.units) {
       if (u.hp > 0) grouped.get(u.type)?.push(u);
     }
+    const rigPeople=this.people;
+    if(rigPeople){const living:typeof game.state.units=[];for(const list of grouped.values())for(const u of list)living.push(u);rigPeople.begin(game,this.camera.position,this.quality,this.shadowsEnabled,living);
+     for(const m of this.unitMeshes.values())(m.material as THREE.Material).visible=!rigPeople.active;}
     const foodWork = new Map<number,{recipe:string;siteId:number}>();
     for(const project of game.state.production?.projects||[]){
       if(project.phase!=='working'||project.actorId===null||project.blockedReason)continue;
@@ -1991,8 +1998,8 @@ export class WorldView {
         );
         _m.compose(_p, _q, _s);
         mesh.setMatrixAt(i, _m);
-        this.wornGarments?.write(game,u,_m);
-        this.wornArmor?.write(game,u,_m);
+        const garmentCondition=u.garment?.condition??0,rigDrew=rigPeople?.active&&rigPeople.write(u,[_s.x,(u.type==="leader"?(afloat?1.3:1.65)*1.18:(afloat?1.3:1.65))*(u.stature||1)*st.sy,_s.z],afloat?bob:0,site?Math.atan2(site.x-u.x,site.z-u.z):u.facing,garmentCondition>0?.64+.36*Math.min(1,garmentCondition):1);
+        if(!rigDrew){this.wornGarments?.write(game,u,_m);this.wornArmor?.write(game,u,_m);}
         this.waterVessels?.write(game,u,_m);
         this.baskets?.write(game,u,_m);
         const tool=(u as FarmToolUnit).farmTool;
@@ -2017,6 +2024,7 @@ export class WorldView {
       mesh.instanceMatrix.needsUpdate = true;
       if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     }
+    rigPeople?.end(game);
     this.wornGarments?.endFrame();
     this.wornArmor?.writeGround(game,this.camera);
     this.wornArmor?.endFrame();
@@ -2795,6 +2803,7 @@ export class WorldView {
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
     this.wornArmor?.dispose();this.wornArmor=null;
+    this.people?.dispose();this.people=null;
     this.siegeRamLayer?.dispose();this.siegeRamLayer=null;
     this.housingPackets?.dispose();this.housingPackets=null;
     this.waterVessels?.dispose();this.waterVessels=null;
