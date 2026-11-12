@@ -335,3 +335,5 @@ Fetched all remotes (no rebase/force; every remote ref moved by fast-forward).
 - Shared-file edits: `src/scene/{wonderKit,ruins,animationClips}.ts` and `src/game/packedFoodCustody.ts` (type-only), UI conflict files above.
 - Rulers lane pushed as `agents/claude-rulers` (new pure modules only).
 
+
+- Codex AUTOPILOT restart: T1 whole integration `79a2f03` + main `de24669` assembled as `d657e26`; Claude curd resolution/camera yes received; running focused qualification + tsc before normal main merge/publication. World draft handed to Grok at `work/shipping-waiting-hooks-2026-11-11` `9e4a145` (19 source/native checks passed + tsc; built script UNRUN, not live); Grok owns reconciling it with his newer water-works. Codex will not continue World wiring. Worker parked. Next: WQ-14 primitives in types/persistence/production/husbandry/workCommitments/armor/tool holders.
