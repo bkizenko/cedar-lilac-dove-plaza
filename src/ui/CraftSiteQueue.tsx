@@ -1,3 +1,5 @@
+import{methodRecordTitle}from'../game/methodRecordRules';
+import{methodRecords}from'../game/methodRecords';
 import{CHARCOAL_RULES}from'../game/charcoal';
 import{Hammer,Pause,Play,Package,ChevronDown}from'lucide-react';
 import{GameTooltip}from'./GameTooltip';
@@ -52,11 +54,13 @@ export function CraftSiteQueue({engine}:{engine:Engine}){
  <div className="grid gap-2" style={{gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,170px),1fr))'}}>{report.jobs.map(job=>{
  const copper=job.kind==='copper'?g.state.units.find(u=>u.id===job.actorId)?.copperStudy:undefined,copperUnpaid=copper?.version===1&&!copper.paid;
  const phase=copper?.version===1?(copper.paused?'Paused · ':'')+(copper.phase==='loading'?'Awaiting materials at storage · unpaid':copper.phase==='carrying'?'Carrying paid materials to bench':'Testing copper at bench'):job.phase,reason=copperUnpaid&&copper?.paused?'Unpaid trial paused; no materials withdrawn':copper?g.state.units.find(u=>u.id===job.actorId)?.workReason||job.reason:job.reason;
+ const project=job.kind==='production'?g.state.production?.projects.find(p=>p.id===job.projectId):undefined,recordWork=project?.methodRecordWork,recorded=recordWork?.kind==='author'?recordWork.source.recipe:recordWork?methodRecords(g).find(r=>r.id===recordWork.recordId)?.source.recipe:undefined;
+ const label=recorded?(recordWork?.kind==='author'?`Fire an incised ${methodRecordTitle(recorded).toLowerCase()} method record`:recordWork?.kind==='study'?`Study a physical ${methodRecordTitle(recorded).toLowerCase()} method record`:`${job.label} · recorded ${methodRecordTitle(recorded).toLowerCase()} method`):job.label;
  const percent=Math.min(100,Math.floor(job.progress/Math.max(.001,job.required)*100));
- return <article className="min-w-0 space-y-1 rounded-md border border-parchment/15 p-2" key={job.id} aria-label={job.label}>
-  <div className="flex items-start gap-2"><Hammer size={16} className="mt-0.5 shrink-0 text-bronze" aria-hidden="true"/><strong className="min-w-0 flex-1 font-medium">{job.label}</strong><span className="text-parchment-dim">{percent}%</span></div>
+ return <article className="min-w-0 space-y-1 rounded-md border border-parchment/15 p-2" key={job.id} aria-label={label}>
+  <div className="flex items-start gap-2"><Hammer size={16} className="mt-0.5 shrink-0 text-bronze" aria-hidden="true"/><strong className="min-w-0 flex-1 font-medium">{label}</strong><span className="text-parchment-dim">{percent}%</span></div>
   <GameTooltip title={phase} description={`${job.actor} · ${reason}`}><span tabIndex={0} className="block max-w-full truncate text-parchment-dim">{phase}</span></GameTooltip>
-  <progress className="h-1.5 w-full" aria-label={`${job.label} work progress`} value={Math.min(job.required,job.progress)} max={job.required}/>
+  <progress className="h-1.5 w-full" aria-label={`${label} work progress`} value={Math.min(job.required,job.progress)} max={job.required}/>
   <p className="truncate text-parchment-dim">{job.actor}</p>
   <div className="flex flex-wrap items-center gap-2">
    {(job.paused||job.canPause)&&<GameTooltip title={copperUnpaid?(job.paused?'Resume trial':'Pause trial'):job.paused?'Resume paid work':'Pause paid work'} description={copperUnpaid?'No inputs withdrawn; resume the journey to storage.':job.kind==='armor-repair'?'Same armor remains carried with its paid repair progress. Pausing releases the tailor slot and hands.':job.kind==='garment-repair'?'Original garment and paid repair progress stay with the owner. Pausing releases the tailor slot and hands.':'Paid materials and completed work remain with this batch.'}><button type="button" aria-label={copperUnpaid?(job.paused?'Resume trial':'Pause trial'):job.paused?'Resume paid work':'Pause paid work'} className="flex items-center gap-1 rounded border border-bronze/40 px-2 py-1" disabled={!!g.state.ended} onClick={()=>run(job)}>{job.paused?<Play size={11} aria-hidden="true"/>:<Pause size={11} aria-hidden="true"/>}{job.paused?'Resume':'Pause'}</button></GameTooltip>}

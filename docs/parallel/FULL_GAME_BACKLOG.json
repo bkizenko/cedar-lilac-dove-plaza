@@ -9333,6 +9333,15 @@
       "liveCommit": "9555f7028b0636e04b6f5f6176313ca3361c44cd",
       "evidence": "docs/metrics/voice-people-release-2026-11-12.json",
       "scope": "Known diplomatic tone/read privacy and near-only body refinements;34native/shared+4built. Authored contact-only story; no full conversation, campaign, performance or gate credit."
+    },
+    {
+      "id": "CODEX-PRACTICAL-METHOD-CATALOG",
+      "owner": "Codex W2",
+      "state": "live-partial",
+      "sourceCommit": "c1d0e59a537071cd1e6cd66dfe63bce2bf4dc5ec",
+      "liveCommit": "c1d0e59a537071cd1e6cd66dfe63bce2bf4dc5ec",
+      "evidence": "docs/metrics/method-catalog-release-2026-11-12.json",
+      "scope": "Ten production-method catalog; real qualification/record custody/paid study and useful-output mastery. Pottery earned journey includes real failure without mastery and paid retry.18/18scoped; old53/cordage preserved; broader knowledge gate remains open."
     }
   ],
   "status_update_policy": {

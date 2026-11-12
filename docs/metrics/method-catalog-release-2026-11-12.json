@@ -1,0 +1,136 @@
+{
+  "release": "2026-11-12T22-22-00-935Z-c1d0e59",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T22-22-00-935Z-c1d0e59",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T21-54-40-640Z-9555f70",
+  "commit": "c1d0e59a537071cd1e6cd66dfe63bce2bf4dc5ec",
+  "retained": {
+    "linked": 1426,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "methods": [
+    "twistCordage",
+    "weaveBasket",
+    "formClay",
+    "fireClay",
+    "makeCharcoal",
+    "smeltCopper",
+    "spinWool",
+    "weaveWool",
+    "sewWoolCoat",
+    "weaveCloth"
+  ],
+  "scopedChecks": {
+    "passed": 18,
+    "total": 18,
+    "nativeAndShared": 16,
+    "uniqueNativeGroups": {
+      "existingActualCordageAndPaidCustody": 5,
+      "existingPhysicalPickupAndVisibility": 4,
+      "actualPotteryRecordAndStrictSave": 2,
+      "catalogReadModelsQueueInventoryAndPersonalReceipt": 5
+    },
+    "built": {
+      "passed": 2,
+      "total": 2,
+      "scope": "Actual earned Pottery firing record custody, exact-method queue Resume and paid replication; legacy Cordage absence/read purity and strict durable restore. Private ~6Hz real frame presentation only, no goods/body/vision grants or FPS credit.",
+      "exactMethod": {
+        "recordId": 6372,
+        "readerId": 6223,
+        "paidStudy": 6373,
+        "failedReplication": 6374,
+        "successfulRetry": 6375,
+        "recipe": "fireClay",
+        "sameSource": true,
+        "noSecondStudyCharge": true
+      },
+      "legacy": {
+        "population": 53,
+        "pureRead": true,
+        "noInventedRecords": true
+      },
+      "inputsUnchanged": true,
+      "errors": []
+    },
+    "counting": "Prior failed fixture assumptions about loose pots were corrected to actual firing loss/holder accounting; a genuine false-mastery bug was fixed before publication. Repeated affected cases count once. Existing actual cordage journey rerun after final UI/core merge is one of the five legacy scopes, not extra credit."
+  },
+  "typecheck": "PASS final c1d0e59",
+  "productionBuild": "PASS exact frozen c1d0e59",
+  "compatibilityRecheck": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-12T22-22-00-935Z-c1d0e59",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "nativeEarnedChain": {
+    "recipe": "fireClay",
+    "makerId": 6224,
+    "qualifiedSuccessfulDeliveries": 3,
+    "makerLastSuccessfulAt": 131.4,
+    "physicalRecordId": 6372,
+    "paidStudyProject": 6373,
+    "readerId": 6223,
+    "pausedStudyProgress": 1.0003333333333333,
+    "failedReplicationProject": 6374,
+    "failedActualOutput": {
+      "pottery": 0,
+      "potsherds": 4
+    },
+    "failedReplicationGrantsMastery": false,
+    "successfulPaidRetryProject": 6375,
+    "successfulPhysicalDeliveryAt": 318.99999999999,
+    "readerSuccessfulBatches": 1,
+    "readerTaughtBatches": 1,
+    "practiceRate": 1.0375,
+    "totalProducedPottery": 15,
+    "totalProducedPotsherds": 5,
+    "finiteDryWareConsumed": 20,
+    "terrainUnchanged": true,
+    "executionResourcePositionProgressOrRngGrants": false
+  },
+  "original53Sha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+  "compatibility": [
+    "Existing record version1 and legacy authorCordageRecord/studyCordageRecord identifiers retained.",
+    "Old records without personal timestamps remain valid; new successful useful deliveries retain exact personal timestamps.",
+    "Unknown/unsupported method sources and saved replication bound to a different record method are rejected.",
+    "Existing adoption/material/workplace/route/fuel/water/prerequisite checks remain authoritative.",
+    "Read-only Knowledge adds qualified or owned methods, keeps one empty-camp prompt, and does not hide ninth/tenth owned assets."
+  ],
+  "remaining": [
+    "Full replay for every catalog method is not claimed; new complete native/built journey is pottery, plus preserved legacy cordage.",
+    "Toolmaking uses its separate executor and is not in this production-method catalog.",
+    "Foreign artifact trade/capture, broader institutions/migration/boat learners and full M4-03 campaign acceptance remain open.",
+    "No100-resident FPS/performance or complete-game credit."
+  ],
+  "frozenAcceptance": {
+    "baselineId": "hearthwild-first-release-gates-v1",
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  }
+}
