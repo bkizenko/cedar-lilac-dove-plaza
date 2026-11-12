@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: c4805690eccb7d9adeb43cac4d59ebf7d3f578c2 published as 2026-11-12T21-42-15-876Z-c480569 on8086/8101.94/94 unique scoped checks (88native/shared+6actualbuilt), compiler/buildPASS: compact supply/priority/Help, fog-safe minimap, clickable world pins, witness-safe commander news, paid wild-work controls and explicit fresh-world experimental opt-in. New optional crafts preserve urgent ordinary meal priority. Original53 unchanged/off; same paid inputs/progress and physical outputs persist. Compressed old asset forwarding5/5 separately rechecked. Frozen37/98 unchanged; full campaign/performance/WILD remain open. Newer canonical diplomatic-voice source is outside this frozen artifact. Partial/unverified gates earn zero.
+Verified baseline: 9555f7028b0636e04b6f5f6176313ca3361c44cd published as 2026-11-12T21-54-40-640Z-9555f70 on8086/8101.38/38 scoped checks (34native/shared+4actualbuilt), compiler/buildPASS: known-ruler diplomatic greeting/manner and hypothetical refusal/gift tone in Hearth and archived Diplomacy; near-only rounded hands/shoulders, middle/far source unchanged. Original53 optional rulers/voice remain absent and durable; linked shaders, all three rig LODs, stable repeated paused resources, picking and archived style preserve physical state. Contact-only story fixture is authored, not earned diplomacy. Includes prior c480 compact UI/food-safe hunting consumers. Old asset forwarding5/5 rechecked separately;37/98 frozen, no full dialogue/campaign/FPS credit. Partial/unverified gates earn zero.
 
 ## Milestone counts
 
