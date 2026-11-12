@@ -1,3 +1,4 @@
+import{validPenBeddingState,reconcilePenBedding,initializePenBeddingTracking}from'./penBedding';
 import {validCopperStudies} from './materialStudy';
 import {validTradedTeaching} from './tradedTeaching';
 import {validArmorRepairs,tickArmorRepairs} from './armorRepair';
@@ -87,6 +88,7 @@ import {setFlowFieldsEnabled} from './flowFields';
 type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
 export function encodeGame(g: Game) {
+  reconcilePenBedding(g);
   reconcileSitePreparationWorkers(g);
   reconcileSailRigProjects(g);
   tickArmorRepairs(g);
@@ -164,7 +166,7 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions?.randomLayout!==undefined&&(![14,15,16,17,18,19].includes(s.worldgenVersion)||s.worldOptions.randomLayout!==true))fail();
   if(s.worldOptions?.openingSiteVersion!==undefined&&(![14,15,16,17,18,19].includes(s.worldgenVersion)||s.worldOptions.openingSiteVersion!==2))fail();
   if(s.worldOptions?.riverProfileVersion!==undefined&&s.worldOptions.riverProfileVersion!==2)fail();
-  if(s.worldOptions?.rulersVersion!==undefined&&s.worldOptions.rulersVersion!==1)failRulers();
+  if(s.worldOptions?.rulersVersion!==undefined&&s.worldOptions.rulersVersion!==1&&s.worldOptions.rulersVersion!==2)failRulers();
   if(s.rulers!==undefined&&!validRulersState(s.rulers))failRulers();
   if(s.worldOptions?.tideVersion!==undefined&&s.worldOptions.tideVersion!==1&&s.worldOptions.tideVersion!==2)fail();
   if(s.worldOptions?.landformLabelVersion!==undefined&&s.worldOptions.landformLabelVersion!==2)fail();
@@ -186,7 +188,7 @@ function validateGamePayload(raw: unknown) {
   if(!validFiniteCamps(s)||!validRaidIntents(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
-  if(!validPenWaterState(s))fail();
+  if(!validPenWaterState(s)||!validPenBeddingState(s))fail();
   if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
   if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s))fail();
   if(!validBoatPractice(s)||!validSailingState(s))fail();
@@ -448,7 +450,7 @@ function validateGamePayload(raw: unknown) {
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
     if(u.tributeJourney!==undefined){const m=u.tributeJourney;if(!obj(m)||!rivalTeam(u.team)||!['pickup','deliver','return'].includes(m.phase)||!num(m.amount)||m.amount<0||m.amount>20||(m.phase==='deliver'&&(u.carryType!=='wood'||u.carry<m.amount)))fail();}
-    if(u.husbandryWork!==undefined){const w=u.husbandryWork;if(!obj(w)||(w.stable!==undefined&&(!Number.isSafeInteger(w.stable)||w.stable<1||w.stable>=s.nextId||w.action!=='pack'||s.buildings.some((b:any)=>b.id===w.stable&&b.type!=='stables')))||!Number.isSafeInteger(w.pen)||w.pen<1||!num(w.progress)||w.progress<0||w.progress>1e8||!["care","slaughter","pack","shear"].includes(w.action)||!["pen","fetch","feed","deliver","waterFetch","waterDeliver","waterReturn"].includes(w.phase)||(w.animal!==undefined&&(!Number.isSafeInteger(w.animal)||w.animal<1))||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
+    if(u.husbandryWork!==undefined){const w=u.husbandryWork;if(!obj(w)||(w.stable!==undefined&&(!Number.isSafeInteger(w.stable)||w.stable<1||w.stable>=s.nextId||w.action!=='pack'||s.buildings.some((b:any)=>b.id===w.stable&&b.type!=='stables')))||!Number.isSafeInteger(w.pen)||w.pen<1||!num(w.progress)||w.progress<0||w.progress>1e8||!["care","slaughter","pack","shear"].includes(w.action)||!["pen","fetch","feed","deliver","waterFetch","waterDeliver","waterReturn","beddingFetch","beddingDeliver","beddingLay","beddingReturn"].includes(w.phase)||(w.animal!==undefined&&(!Number.isSafeInteger(w.animal)||w.animal<1))||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
     if(u.tamingWork!==undefined){const w=u.tamingWork;if(w?.penGateReached!==undefined&&(w.pen===undefined||typeof w.penGateReached!=='boolean'))fail();if(!obj(w)||(w.pen!==undefined&&(!Number.isSafeInteger(w.pen)||w.pen<1))||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>(w.pen!==undefined?herdRules(s.wildlife.find((a:any)=>a.id===w.animal)?.species??s.livestock?.find((a:any)=>a.id===w.animal)?.species??'cattle').tamingSeconds:60)||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
     if(u.caravanRoute!==undefined&&(!Number.isSafeInteger(u.caravanRoute)||!s.routes.some((r:any)=>r.id===u.caravanRoute&&r.caravan)))fail();
     if(u.boat!==undefined){
@@ -608,7 +610,7 @@ function validateGamePayload(raw: unknown) {
   for(const b of s.buildings)if(b.pasture!==undefined){const p=b.pasture;if(p&&['initialFeed','feedDelivered','feedConsumed'].every(k=>p[k]!==undefined)&&Math.abs(p.initialFeed+p.feedDelivered-p.feedConsumed-p.feed)>1e-7*Math.max(1,p.initialFeed+p.feedDelivered))fail();for(const k of ['initialFeed','feedDelivered','feedConsumed','grazedFood'])if(p?.[k]!==undefined&&(!num(p[k])||p[k]<0||p[k]>1e12))fail();if(b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p.feed)||p.feed<0||p.feed>penFeedCapacity(b)+1e-6||!num(p.care)||p.care<0||p.care>1)fail();}
   for(const u of s.units){
     if(u.husbandryWork?.animal!==undefined){const w=u.husbandryWork,a=s.livestock?.find((a:any)=>a.id===w.animal);if(a&&(w.action==='pack'&&(!['goat','horse','cattle'].includes(a.species)||isDraftSpecies(a.species)&&!a.packHarness&&w.stable===undefined||(!isDraftSpecies(a.species)||!!a.packHarness)&&w.stable!==undefined)||w.action==='shear'&&a.species!=='sheep'))fail();}
-    for(const w of [u.husbandryWork,u.tamingWork?.pen!==undefined?u.tamingWork:undefined])if(w&&!s.buildings.some((b:any)=>b.id===w.pen&&b.type==='pen'&&b.team===u.team)&&!(w===u.husbandryWork&&w.phase==='waterReturn'&&(w.waterLiters??0)>0&&w.releaseAfterWater===true))fail();
+    for(const w of [u.husbandryWork,u.tamingWork?.pen!==undefined?u.tamingWork:undefined])if(w&&!s.buildings.some((b:any)=>b.id===w.pen&&b.type==='pen'&&b.team===u.team)&&!(w===u.husbandryWork&&w.phase==='waterReturn'&&(w.waterLiters??0)>0&&w.releaseAfterWater===true)&&!(w===u.husbandryWork&&w.phase==='beddingReturn'&&(w.beddingUnits??0)>0&&w.releaseAfterBedding===true))fail();
   }
   for (const r of s.routes) {
     if (!obj(r)) fail();
@@ -772,5 +774,6 @@ export function decodeGame(raw:unknown):Game {
   discountTownhallPlans(g);
   discountQuarryPlans(g);
   setFlowFieldsEnabled(g,false);
+  initializePenBeddingTracking(g);
   return g;
 }

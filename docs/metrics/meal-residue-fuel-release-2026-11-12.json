@@ -1,0 +1,41 @@
+{
+  "commit": "cac9bec80270125eac3404de9214ccabf875cfca",
+  "release": "2026-11-12T12-27-08-466Z-cac9bec",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 32,
+    "total": 32,
+    "nativeAndShared": 30,
+    "built": {
+      "passed": 2,
+      "total": 2,
+      "scope": "Built merged release renders, imports original village and durably restores identical state; no full campaign, performance or visual-style acceptance claim.",
+      "mealResidues": {
+        "chaffPaid": 8,
+        "logsPaid": 0,
+        "paidBatchRestored": true
+      },
+      "population": 53,
+      "originalUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "integrationThrough": "bfc1f3e",
+  "scopeLimits": [
+    "Cooking and baking only; smoking, brewing, kiln and charcoal feedstock retain wood",
+    "Authored finite inputs on native terrain, not an earned harvest claim",
+    "Mixed reserve eligibility uses a declared animal count; real native goat bedding separately qualified",
+    "No full campaign or performance acceptance"
+  ],
+  "fullReleaseGates": {
+    "passed": 34,
+    "total": 98,
+    "unchanged": true,
+    "auditStatus": "Prior verified baseline, fresh whole-gate audit in progress"
+  }
+}

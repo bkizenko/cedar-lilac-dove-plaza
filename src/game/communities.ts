@@ -4,6 +4,7 @@ import type { Unit } from "./types";
 import { isDependent, reserveSeconds } from "./settlement";
 import { soilQuality } from "./ecology";
 import { expansionParty } from './rulersRuntime';
+import { noteSettlement } from './societyRuntime';
 export function lifeEvent(g: Game, team: number, text: string, x?: number, z?: number) {
   const history = (g.state.lifeHistory ??= []);
   history.push({ team, text, time: g.state.time });
@@ -153,6 +154,7 @@ export function tickCommunities(g: Game, dt: number) {
     if (!site) continue;
     t.wood -= timber;
     t.lastSettlement = g.state.time;
+    if (expansion) noteSettlement(g, t.id);
     for (let i = 0; i < crew.length; i++) {
       const u = crew[i];
       u.foundingJourney = { ...site, leader: i === 0, timber };
@@ -188,6 +190,7 @@ export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
     return true;
   }
   if (u.stuckT > 16) {
+    if (mission.leader) lifeEvent(g, u.team, g.tribe(u.team).name + "'s founding party turned back, unable to find a way through" + (u.carry > 0 ? "; the timber comes home" : ""), u.x, u.z);
     u.foundingJourney = undefined;
     u.order = u.carry > 0 ? "return" : "idle";
     return true;

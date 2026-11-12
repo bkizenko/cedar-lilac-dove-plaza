@@ -1,3 +1,6 @@
+import {acceptsMealResidues,productionFuelAvailable,productionFuelLabel} from './mealFuel';
+import {burnResidueFuel} from './residueFuel';
+import {recordPenBeddingCargoReturn} from './penBedding';
 import {packedItemStorageUnits,packedItemLiters,packedFoodLiters,itemPackedLiters,seedReserveLiters,INVENTORY_VOLUME_RULES} from './inventoryVolume';
 import {emitProductionDelivery} from './productionDelivery';
 import {bindCharcoalLoad} from './carriedLoad';
@@ -131,10 +134,17 @@ export function productionSlots(b:Pick<Building,'type'|'w'|'d'>){
 export function cerealReservedMaterials(g:Game,team:number,exceptProject?:number){if(!g.state.cerealProcessing)return 0;let total=0;for(const p of g.state.production?.projects||[]){if(p.team!==team||p.id===exceptProject||!live(p)||!isCerealRecipe(p.recipe))continue;const r=PRODUCTION_RECIPES[p.recipe],phase=p.phase==='paused'?p.resumePhase:p.phase,parked=['stored','collecting'].includes(phase)?paidInputStorageUnits(p):0;total+=Math.max(0,packedItemStorageUnits(r.outputs)-parked);}return total;}
 /** Covered capacity is still reserved for paid work. Delivered harvest can
  * exceed it at a village that has a real storehouse, where it is exposed. */
-export function exposedHarvestByKind(g:Game,team:number){
+/** Real delivered overflow: loose residues yield covered space to food first.
+ * Future output reservations do not expose goods that physically fit today.
+ * This derives location without deleting, duplicating or converting stock. */
+export function exposedMaterialByKind(g:Game,team:number){
  const stock=g.tribe(team).items||{},outside:ItemStock={};
- let liters=Math.max(0,storedItemUnits(g,team)+cachedProductionUnits(g,team)+cerealReservedMaterials(g,team)-itemCapacity(g,team))*INVENTORY_VOLUME_RULES.litersPerStorageUnit;
- for(const kind of ['grainSheaves','roughGrain','flour','rawMeat'] as const){const n=Math.min(stock[kind]||0,liters/itemPackedLiters(kind));if(n>0)outside[kind]=n;liters=Math.max(0,liters-itemPackedLiters(kind,n));}return outside;
+ let liters=Math.max(0,storedItemUnits(g,team)+cachedProductionUnits(g,team)-itemCapacity(g,team))*INVENTORY_VOLUME_RULES.litersPerStorageUnit;
+ for(const kind of ['chaff','straw','grainSheaves','roughGrain','flour','rawMeat'] as const){const n=Math.min(stock[kind]||0,liters/itemPackedLiters(kind));if(n>0)outside[kind]=n;liters=Math.max(0,liters-itemPackedLiters(kind,n));}return outside;
+}
+export function exposedHarvestByKind(g:Game,team:number){
+ const outside=exposedMaterialByKind(g,team);
+ delete outside.chaff;delete outside.straw;return outside;
 }
 /** Quantity facade for urgency scoring. Exposure itself is allocated by packed volume. */
 export function exposedHarvestUnits(g:Game,team:number){return sum(exposedHarvestByKind(g,team));}
@@ -210,7 +220,7 @@ export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,
  for(const[k,n]of Object.entries(r.foodInputs))if(foodInventory(t)[k as FoodKind]+1e-9<n!)return `Need ${n} actual ${k} delivered to the food cache`;
  if(r.inputs.greenMalt&&(t.itemFreshness?.greenMalt!==undefined&&g.state.time-t.itemFreshness.greenMalt>=BREWING_RULES.maltLifetimeSeconds))return 'The sprouted malt has spoiled; prepare a fresh grain batch';
  if(r.grain&&foodInventory(t).grain+1e-9<r.grain)return (stock.grainSheaves||0)>0||(stock.roughGrain||0)>0?`Need ${r.grain} clean grain: thresh the sheaves, then winnow out the chaff before grinding`:`Need ${r.grain} actual grain delivered to the food cache`;
- if(t.wood<r.wood)return `Need ${r.wood} delivered log for this batch`;
+ if(!productionFuelAvailable(g,b.team,recipe,r.wood))return `Need ${productionFuelLabel(recipe,r.wood,true)} delivered for this batch`;
  if((t.survival?.waterLiters||0)<r.water)return `Need ${r.water} litres of collected water`;
  const used=storedItemUnits(g,b.team)+cachedProductionUnits(g,b.team)+cerealReservedMaterials(g,b.team);
  if(!isCerealRecipe(recipe)&&!canLeaveFlourOutside(g,b.team,recipe)&&used-packedItemStorageUnits(r.inputs)+recipeOutputStorageUnits(r)>Math.max(itemCapacity(g,b.team),isCerealRecipe(recipe)||!sum(r.outputs)||nonExpandingItemBatch(recipe)?used:0)+INVENTORY_VOLUME_RULES.comparisonEpsilonUnits)return 'Material storage is full; use or make room for the finished goods';
@@ -230,7 +240,7 @@ export function beginProduction(g:Game,recipe:ProductionRecipe,workplace:number,
  for(const[k,n]of Object.entries(r.foodInputs)){if(!takeFoodLot(g,b.team,k as FoodKind,n!)){releaseProductionOwnership(g,{...p,phase:'lost'});return false;}s.metrics.foodInputsUsed??={};s.metrics.foodInputsUsed[k as FoodKind]=(s.metrics.foodInputsUsed[k as FoodKind]||0)+n!;}
  if(r.grain&&!takeFoodLot(g,b.team,'grain',r.grain)){releaseProductionOwnership(g,{...p,phase:'lost'});return false;}
  if(isCerealRecipe(recipe))cerealLedger(g);
- s.metrics.grainUsed=(s.metrics.grainUsed||0)+r.grain;for(const[k,n]of Object.entries(r.inputs)){stock[k as ItemKind]=(stock[k as ItemKind]||0)-n;add(s.metrics.consumed,k as ItemKind,n);}t.wood-=r.wood;if(t.survival)t.survival.waterLiters-=r.water;s.metrics.logsUsed+=r.wood;s.metrics.waterUsedLiters+=r.water;
+ s.metrics.grainUsed=(s.metrics.grainUsed||0)+r.grain;for(const[k,n]of Object.entries(r.inputs)){stock[k as ItemKind]=(stock[k as ItemKind]||0)-n;add(s.metrics.consumed,k as ItemKind,n);}const chaffBefore=stock.chaff||0,strawBefore=stock.straw||0,residueHeat=acceptsMealResidues(recipe)?burnResidueFuel(g,b.team,r.wood):0,logs=Math.max(0,r.wood-residueHeat);t.wood=Math.max(0,t.wood-logs);if(chaffBefore>(stock.chaff||0))add(s.metrics.consumed,'chaff',chaffBefore-(stock.chaff||0));if(strawBefore>(stock.straw||0))add(s.metrics.consumed,'straw',strawBefore-(stock.straw||0));if(t.survival)t.survival.waterLiters-=r.water;s.metrics.logsUsed+=logs;s.metrics.waterUsedLiters+=r.water;
  if(r.preservation==='charcoal'){p.charcoal=newCharcoalBatch();bindCharcoalLoad(u,p);}
  if(r.preservation==='brewing'){const stage=recipe==='sproutGrain'?'malt':recipe==='brewSmallBeer'?'smallBeer':'beer',origin=t.potteryOrigins?.find(o=>o.count>0);p.brewing=newBrewBatch(stage,origin?{...origin.origin}:undefined);if(origin)origin.count--;if(r.inputs.greenMalt)p.brewing.inputAgeSeconds=Math.max(0,g.state.time-(t.itemFreshness?.greenMalt??g.state.time));}
  if(r.preservation==='curds'){const origins=[];for(let i=0;i<CURD_RULES.vessels;i++){const origin=t.potteryOrigins?.find(o=>o.count>0);origins.push(origin?{...origin.origin}:null);if(origin)origin.count--;}p.curds=newCurdBatch(origins);}if(r.preservation==='dairy'){p.dairy=newDairyBatch();const origin=t.potteryOrigins?.find(o=>o.count>0);if(origin){origin.count--;p.dairy.vesselOrigin={...origin.origin};}}if(r.outputs.basket)p.basketOrigin=basketOrigin(g,b.team,b.id);if(dryingRecipe(r))p.drying=emptyDryingExposure();if(r.outputs.pottery)p.pottery={version:1,origin:potteryOrigin(g,b.team,b.id),broken:(p.id+g.state.seed)%16===0?4:r.workplace==='hearth'?1:(p.id+g.state.seed)%4===0?1:0};
@@ -334,7 +344,8 @@ export function availableThreshingFloor(g:Game,u:Unit){
  }
 }
 export function deliverProductionCargo(g:Game,u:Unit,floor?:Building){
- if(floor ? floor.team!==u.team||floor.type!=='threshingFloor'||!g.finished(floor)||!g.buildingWorkReached(u,floor) : !atCache(g,u))return false;const stock=items(g,u.team),incoming=sum(u.itemCargo||{})+(u.rawHuntMeat?u.carry:0);if(incoming>0&&storedItemUnits(g,u.team)+(packedItemStorageUnits(u.itemCargo||{})+(u.rawHuntMeat?itemPackedLiters('rawMeat',u.carry)/INVENTORY_VOLUME_RULES.litersPerStorageUnit:0))+cachedProductionUnits(g,u.team)+cerealReservedMaterials(g,u.team)>itemCapacity(g,u.team)+INVENTORY_VOLUME_RULES.comparisonEpsilonUnits&&!canLeaveHarvestOutside(g,u)&&!canLeaveLooseMaterialsOutside(g,u)){u.workReason='Material cache full; keeping the carried materials';return false;}recordCerealDelivery(g,u);if((u.itemCargo?.grainSheaves||0)>0)recordBasketDelivery(g,u,'food',u.itemCargo!.grainSheaves!);const fibre=u.itemCargo?.plantFibre||0;for(const[k,n]of Object.entries(u.itemCargo||{})){
+ if(floor&&(u.husbandryWork?.beddingUnits||0)>0)return false;
+ if(floor ? floor.team!==u.team||floor.type!=='threshingFloor'||!g.finished(floor)||!g.buildingWorkReached(u,floor) : !atCache(g,u))return false;const stock=items(g,u.team),incoming=sum(u.itemCargo||{})+(u.rawHuntMeat?u.carry:0);if(incoming>0&&storedItemUnits(g,u.team)+(packedItemStorageUnits(u.itemCargo||{})+(u.rawHuntMeat?itemPackedLiters('rawMeat',u.carry)/INVENTORY_VOLUME_RULES.litersPerStorageUnit:0))+cachedProductionUnits(g,u.team)+cerealReservedMaterials(g,u.team)>itemCapacity(g,u.team)+INVENTORY_VOLUME_RULES.comparisonEpsilonUnits&&!canLeaveHarvestOutside(g,u)&&!canLeaveLooseMaterialsOutside(g,u)){u.workReason='Material cache full; keeping the carried materials';return false;}recordPenBeddingCargoReturn(g,u,u.itemCargo?.straw||0);recordCerealDelivery(g,u);if((u.itemCargo?.grainSheaves||0)>0)recordBasketDelivery(g,u,'food',u.itemCargo!.grainSheaves!);const fibre=u.itemCargo?.plantFibre||0;for(const[k,n]of Object.entries(u.itemCargo||{})){
  if(k==='grainSheaves'||k==='roughGrain')mixStoredCerealAge(g.tribe(u.team),k,stock[k]||0,n!,g.state.time);
  add(stock,k as ItemKind,n!);
 }if(fibre){recordBasketDelivery(g,u,'fibre',fibre);recordFibreDelivery(g,u,fibre);}u.itemCargo=undefined;if(u.rawHuntMeat&&u.carryType==='food'&&u.carryFood==='meat'){add(stock,'rawMeat',u.carry);u.carry=0;u.carryType=null;u.carryFood=undefined;u.rawHuntMeat=undefined;}return true;}

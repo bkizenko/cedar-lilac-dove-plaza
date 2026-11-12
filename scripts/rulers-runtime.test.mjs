@@ -4,7 +4,7 @@ import {rulerOf,advanceRulers,RULERS_YEAR_SECONDS} from '../src/game/rulersRunti
 import {rulersOf} from '../src/game/rulersState.ts';
 function fixture(){const g=new Game();g.reset(123456,10);g.enterIsland();return g;}
 test('new games carry rulers; dynastic years advance with sim time; every society has a ruling house',()=>{
- const g=fixture();assert.equal(g.state.worldOptions?.rulersVersion,1);
+ const g=fixture();assert.equal(g.state.worldOptions?.rulersVersion,2);
  g.state.time=RULERS_YEAR_SECONDS*5+1;advanceRulers(g);
  const r=rulersOf(g.state);assert.ok(r,'rulers state valid');assert.equal(r.year,5);
  for(let i=0;i<g.state.tribes.length;i++){const o=rulerOf(g,i);assert.ok(o&&o.name&&o.house,'society '+i);}
@@ -107,7 +107,7 @@ test('lane A: yearly step settles wards and weds rivals; expansion party plan fo
  const g=fixture();
  // expansion party plan: null when rulers off, otherwise a stated, bounded plan
  const p=R.expansionParty(g,1);assert.ok(p&&p.crew>=2&&p.crew<=4&&p.cooldown>=900&&p.cooldown<=3600&&Array.isArray(p.why));
- assert.equal(p.allow,p.mode==='settle'||p.mode==='migrate');
+ assert.equal(R.expansionParty(g,1,true).allow,p.mode==='settle'||p.mode==='migrate');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.equal(R.expansionParty(old,1),null);
  // wards settle inside the yearly step: a foster child aged to 16 goes home with no manual call
  for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<45;i++)g.state.units.push({...u,id:g.state.units.length+9500+i+t*100});}
@@ -222,4 +222,17 @@ test('era gating: bands send small slow parties and get no organised explore/tra
  set('band');assert.equal(R.journeyPermit(g,1,'explore').reserve,450);assert.equal(R.journeyPermit(g,1,'trade').cadence,120);
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;
  assert.equal(R.expansionParty(old,1),null);assert.equal(R.journeyPermit(old,1,'explore'),null);
+});
+
+test('expansion parties: read model shows real founding units, supplies and position; empty when rulers off',async()=>{
+ const {expansionParties}=await import('../src/game/rulersRuntime.ts');
+ const {councilModel}=await import('../src/game/rulersView.ts');
+ const g=fixture();assert.deepEqual(expansionParties(g),[]);
+ const us=g.state.units.filter(u=>u.team===1&&u.hp>0).slice(0,3);assert.ok(us.length>=2);
+ const dx=us[0].x+40,dz=us[0].z+10;us.forEach((u,i)=>{u.foundingJourney={x:dx,z:dz,leader:i===0,timber:20};if(i===0){u.carry=20;u.carryType='wood';}});
+ const ps=expansionParties(g,1);assert.equal(ps.length,1);assert.equal(ps[0].crew,us.length);assert.equal(ps[0].carrying,'20 wood');assert.ok(ps[0].distance>0);
+ assert.deepEqual(JSON.parse(JSON.stringify(councilModel(g,1).parties)),ps);
+ const before=g.state.units.length;expansionParties(g);assert.equal(g.state.units.length,before,'pure read');
+ us[0].stuckT=9;assert.match(expansionParties(g,1)[0].status,/struggling/);
+ delete g.state.worldOptions.rulersVersion;assert.deepEqual(expansionParties(g),[]);
 });

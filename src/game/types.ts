@@ -258,7 +258,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   packAnimal?: import('./packAnimalState').PackAnimal;
   packPastureOrder?:{version:1;pen:number;animal:number;requestedAt:number;phase:'queued'|'unloading'|'returning';reason?:string};
   tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
-  husbandryWork?: {stable?:number;pen:number;progress:number;action:"care"|"slaughter"|"pack"|"shear";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn";waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
+  husbandryWork?: {stable?:number;pen:number;progress:number;action:"care"|"slaughter"|"pack"|"shear";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn"|"beddingFetch"|"beddingDeliver"|"beddingLay"|"beddingReturn";beddingUnits?:number;beddingProgress?:number;releaseAfterBedding?:true;waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
   seaRaidReturn?: import("./seaRaiderReturn").SeaRaiderReturn;
@@ -360,6 +360,7 @@ export type Building = {
   lootTeam?: number;
   storeCare?: number;
   goatSearch?:import('./animalOrders').GoatSearchOrder;
+  penBedding?:import('./penBedding').PenBedding;
   penWater?:import('./penWater').PenWater;
   pasture?: {condition:number;feed:number;care:number;initialFeed?:number;feedDelivered?:number;feedConsumed?:number;grazedFood?:number};
   fertility?: number;
@@ -492,6 +493,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  penBedding?:import('./penBedding').PenBeddingLedger;
   copperTrials?:import('./materialStudy').CopperTrials;
   teachingOffers?:import('./tradedTeaching').TeachingOffer[];
   armorMaintenance?:import('./armorRepair').ArmorMaintenance;

@@ -1,0 +1,39 @@
+{
+  "commit": "e5f5bdd6ee8bcf1545c0a7e2e8336cd6447e7147",
+  "builtSource": "0df57ca2f095849b642cf16a06329d58df90abbb",
+  "integratedBranch": "integration/2026-11-11",
+  "integratedThrough": "b45ef0b",
+  "release": "2026-11-12T12-18-32-314Z-e5f5bdd",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 68,
+    "total": 68,
+    "storageNative": 10,
+    "integrationAndSaveChecks": 57,
+    "built": {
+      "passed": 1,
+      "total": 1,
+      "scope": "Built merged release renders, imports original village and durably restores identical state; no full campaign, performance or visual-style acceptance claim.",
+      "population": 53,
+      "originalUnchanged": true,
+      "errors": []
+    }
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "fullReleaseGates": {
+    "passed": 34,
+    "total": 98,
+    "unchanged": true
+  },
+  "scopeLimits": [
+    "No full suite run",
+    "No full campaign or performance acceptance",
+    "Rulers changes retain rulersVersion option",
+    "Later integration commit6aa5c2a arrived during frozen release and remains next batch"
+  ],
+  "visualReview": "Built original53 village renders with visible world/HUD; temporary screenshot deleted."
+}

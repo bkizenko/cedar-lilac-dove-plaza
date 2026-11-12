@@ -6,6 +6,7 @@ import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './traded
 import {armorRepairAI,pauseArmorRepair,tickArmorRepairs} from './armorRepair';
 import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRepair';
 import {advanceRulers,expansionDrive} from './rulersRuntime';
+import {reviewSociety} from './societyRuntime';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
 import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
@@ -409,7 +410,7 @@ export class Game {
     this.state.seed = s;
     this.state.worldgenVersion=worldgenVersion;
     this.state.autoWorkEnabled=worldgenVersion>=CAMP_RULES.unbuiltGeneration?false:true;
-    if(this.world.options)this.state.worldOptions=request?.rulersVersion===0?this.world.options:{...this.world.options,rulersVersion:1}; // new games carry the rulers lane
+    if(this.world.options)this.state.worldOptions=request?.rulersVersion===0?this.world.options:{...this.world.options,rulersVersion:request?.rulersVersion===1?1:2}; // new games carry the rulers lane; 2 adds the society decision layer
     this.started = true;
     this.awaitingStart = true;
     this.state.paused = true;
@@ -5361,6 +5362,7 @@ export class Game {
       return;
     }
     if(!hall)return;
+    reviewSociety(this,team); // society decision layer (rulersVersion 2): plans, posture, intel; no-op otherwise
     tr.thinkT -= dt;
     if (tr.thinkT > 0) return;
     tr.thinkT = (1.6 + Math.random())*difficulty(this).decisionInterval;

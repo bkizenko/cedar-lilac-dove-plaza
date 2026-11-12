@@ -11,6 +11,7 @@ import {SeasonReport} from './SeasonReport';
 import { ResidentInventory } from './ResidentInventory';
 import { VillageAlerts } from './VillageAlerts';
 import { RulerEventToast } from './RulerEventToast';
+import { WorkDeliveryCue } from './WorkDeliveryCue';
 import { VillageHistory } from './VillageHistory';
 import {HousingControls} from './HousingControls';
 import {EraUpgradeControls} from './EraUpgradeControls';
@@ -415,6 +416,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
       <div className="hud-banner">
         {engine && <VillageAlerts engine={engine}/>}
         {engine && <RulerEventToast engine={engine}/>}
+        {engine && <WorkDeliveryCue engine={engine}/>}
         {engine&&<SeasonReport game={engine.game} hidden={!!hud.placing}/>}
         {hud.placing ? (
           <div className="hud-toast hud-placement" role="status">
