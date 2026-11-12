@@ -10,6 +10,7 @@ import {cottage,longhouse,quernShelter,roofFor,roundhouse} from './villageHomes'
 import {cistern,hearth,threshing,well,workshop} from './villageWorks';
 import {church,college,keep,tower} from './villageCivic';
 import {granary,marketStalls,stables} from './villageTrade';
+import {gate,palisade,stoneWall as stoneWallCell} from './villageDefence';
 export type VillageDef={reference:string;generate:Generator};
 const TAU=Math.PI*2;
 
@@ -155,6 +156,9 @@ const windmill:Generator=(ctx,r)=>{
 };
 
 export const VILLAGE_FAMILIES:Partial<Record<FamilyId,VillageDef>>={
+  palisade:{reference:'Iron Age and Slavic gorod stockades (Trelleborg, Biskupin): hewn logs of uneven height with sharpened tips, lashed inner rails, outer earth bank and a plank wall-walk with ladder; corner cells ring a watch post',generate:palisade},
+  gate:{reference:'Timber stockade gatehouses (Trelleborg, motte-and-bailey gates): hewn-log towers with hoarded gallery and slits, lintel walkway with rail and lantern, strapped double plank leaves with drop bar or a raised portcullis, flanking stockade logs',generate:gate},
+  stoneWall:{reference:'Roman and medieval curtain walls (Hadrian, Conwy, Carcassonne): battered footing, staggered courses, buttress piers, weep spouts, coping, merlons and arrow slits, round corner tower with conical cap',generate:stoneWallCell},
   roundhouse:{reference:'Iron Age roundhouse reconstructions (Butser Ancient Farm, Castell Henllys): wattle-and-daub drum on a stone kerb, layered conical thatch with smoke-hole cap, gabled porch',generate:roundhouse},
   cottage:{reference:'English cruck/box-frame cottages, Germanic Fachwerk houses, Pueblo-style mud houses with vigas: stone plinth, framed or coursed walls, gabled or flat roof, end chimney, outshot, jettied upper storey',generate:cottage},
   longhouse:{reference:'Norse/Saxon long halls (Lofotr, West Stow, Trelleborg): bowed timber walls with buttress posts, steep hipped roof, smoke louvres, carved porch with shield, banner pole',generate:longhouse},
