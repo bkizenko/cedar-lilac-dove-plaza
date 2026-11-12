@@ -18,6 +18,10 @@ import {knowledgeReport,runKnowledgeAction} from '../src/game/knowledge.ts';
 // Inputs are genuinely earned producer checkpoints, never synthetic records or
 // retagged player examples. Initial player infrastructure/goods are declared in
 // rival-method-records-native.test.mjs before its first simulation step.
+// The normal suite has no externally earned checkpoints. Explicit native runs
+// supply all three inputs; absent inputs are reported as skipped, never passed.
+const nativeInputsReady=['RIVAL_METHOD_RECORD_NATIVE_SAVE','RIVAL_METHOD_RECORD_AUTHOR_MID_SAVE','RIVAL_METHOD_RECORD_METADATA'].every(key=>!!process.env[key]);
+const nativeTest=(name,fn)=>test(name,{skip:nativeInputsReady?false:'Requires genuine earned NPC checkpoints from rival-method-records-native.test.mjs'},fn);
 const read=key=>{assert.ok(process.env[key],`${key} must name a genuine NPC producer checkpoint`);return JSON.parse(readFileSync(process.env[key],'utf8'));};
 const save=(key,g)=>{if(process.env[key]){assert.ok(isAbsolute(process.env[key]));writeFileSync(process.env[key],JSON.stringify(encodeGame(g)));}};
 const terrain=g=>createHash('sha256').update(JSON.stringify({h:Array.from(g.world.heights),r:g.world.rivers,f:g.world.features})).digest('hex');
@@ -29,7 +33,7 @@ function scout(g,u,r){if(!g.visibleAt(r.holder.x,r.holder.z)){let point;if(r.hol
 function rejectPure(g,fn){const before=physical(g);assert.equal(fn().accepted,false);assert.equal(physical(g),before,'refusal preserves all physical state and retained paid work');}
 let acquiredSave,learnedSave;
 
-test('genuine foreign author death permits neutral ground recovery with walking, exclusive reservation, midwalk reload, home return and paid useful learning',()=>{
+nativeTest('genuine foreign author death permits neutral ground recovery with walking, exclusive reservation, midwalk reload, home return and paid useful learning',()=>{
  let{g,r,u}=fixture('RIVAL_METHOD_RECORD_AUTHOR_MID_SAVE');const id=u.id,rid=r.id,source=structuredClone(r.source),hash=terrain(g),carrier=g.state.units.find(v=>v.id===r.holder.unitId);assert.equal(r.holder.kind,'carrier');assert.ok(carrier);carrier.hp=0; // Explicit controlled death, never a natural battle claim.
  drive(g,3,()=>g.state.production.projects.find(p=>p.id===r.authorProjectId).phase==='lost');reconcileMethodRecords(g);assert.equal(r.holder.kind,'ground');assert.equal(g.isFoe(0,r.source.team),false);scout(g,u,r);g.clearSelect();g.selectEntity(u);save('FOREIGN_METHOD_RECORD_PRE_PICKUP_SAVE',g);
  const holder=structuredClone(r.holder),at={x:u.x,z:u.z},command={kind:'method-record-pickup',recordId:rid,unitId:id};rejectPure(g,()=>applyEngineCommand(g,command,{selectedUnitIds:[]}));let a=applyEngineCommand(g,command,{selectedUnitIds:[id]});assert.equal(a.accepted,true,a.reason);assert.deepEqual(r.holder,holder);assert.equal(r.team,r.source.team);assert.deepEqual({x:u.x,z:u.z},at);assert.equal(workRuntime(g).activeJob(id).kind,'method-record-pickup');
@@ -41,13 +45,13 @@ test('genuine foreign author death permits neutral ground recovery with walking,
  const fibre=g.tribe(0).items.plantFibre,cordage=g.tribe(0).items.cordage||0;assert.equal(beginProduction(g,'twistCordage',workshop.id,id,false,{...work,kind:'replicate'}),true);p=g.state.production.projects.at(-1);assert.equal(g.tribe(0).items.plantFibre,fibre-4);drive(g,240,()=>p.phase==='complete');assert.equal(g.tribe(0).items.cordage,cordage+4);assert.equal(u.productionSkills.twistCordage.successfulBatches,1);assert.equal(u.productionSkills.twistCordage.taughtBatches,1);assert.equal(r.studies[0].replicationProjectId,p.id);assert.deepEqual(r.source,source);assert.equal(methodRecords(g).filter(v=>v.id===rid).length,1);assert.equal(terrain(g),hash);learnedSave=structuredClone(encodeGame(g));assert.doesNotThrow(()=>decodeGame(learnedSave));save('FOREIGN_METHOD_RECORD_LEARNED_SAVE',g);
 });
 
-test('friendly/hidden stores and living carriers refuse atomically; guarded hostile cache admission yields to real local defense without ownership transfer',()=>{
+nativeTest('friendly/hidden stores and living carriers refuse atomically; guarded hostile cache admission yields to real local defense without ownership transfer',()=>{
  let{g,r,u}=fixture();assert.equal(g.isFoe(0,r.source.team),false);rejectPure(g,()=>beginMethodRecordPickup(g,u.id,r.id));assert.equal(declareSocietyHostility(g,0,r.source.team),true);const visible=g.visibleAt;g.visibleAt=()=>false;rejectPure(g,()=>beginMethodRecordPickup(g,u.id,r.id));g.visibleAt=visible;
  ({g,r,u}=fixture('RIVAL_METHOD_RECORD_AUTHOR_MID_SAVE'));assert.equal(r.holder.kind,'carrier');rejectPure(g,()=>beginMethodRecordPickup(g,u.id,r.id));
  ({g,r,u}=fixture());scout(g,u,r);assert.equal(declareSocietyHostility(g,0,r.source.team),true);const holder=structuredClone(r.holder),source=structuredClone(r.source),rid=r.id,id=u.id,a=applyEngineCommand(g,{kind:'method-record-pickup',unitId:id,recordId:rid},{selectedUnitIds:[id]});assert.equal(a.accepted,true,a.reason);assert.deepEqual(r.holder,holder);drive(g,20,()=>!!u.emergency&&Math.hypot(u.x-holder.x,u.z-holder.z)>2);assert.equal(r.team,source.team);assert.deepEqual(r.holder,holder);assert.deepEqual(r.source,source);assert.equal(r.acquisitions,undefined);assert.equal(u.methodRecordPickupId,undefined,'actual local alarm immediately cancels pending pickup');assert.equal(workRuntime(g).activeJob(id),undefined,'actual alarm releases the asset and actor claim');save('FOREIGN_METHOD_RECORD_GUARDED_INTERRUPT_SAVE',g);g=decodeGame(encodeGame(g));u=g.state.units.find(v=>v.id===id);r=methodRecords(g).find(v=>v.id===rid);workRuntime(g);assert.equal(u.methodRecordPickupId,undefined,'physical emergency cancels pending pickup on restore');assert.equal(workRuntime(g).activeJob(id),undefined);assert.deepEqual(r.holder,holder);assert.equal(r.team,source.team);assert.equal(r.acquisitions,undefined);assert.ok(u.emergency);assert.match(u.workReason,/Record pickup stopped/);
 });
 
-test('strict genuine custody receipts reject impossible times, teams, handover links and oversize histories while legacy absence remains valid',()=>{
+nativeTest('strict genuine custody receipts reject impossible times, teams, handover links and oversize histories while legacy absence remains valid',()=>{
  assert.ok(acquiredSave&&learnedSave,'actual foreign journey must complete first');for(const change of[
   r=>r.acquisitions[0].at=-1,
   (r,s)=>r.acquisitions[0].at=s.time+1,
