@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
-import {collectOwnPrestige,gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence,PRESTIGE_GAME_RULES} from '../src/game/prestigeGame.ts';
+import {collectOwnPrestige,gamePrestigeView,gamePrestigeRivals,prestigeTerritoryProgress,tickPrestigeEvidence,PRESTIGE_GAME_RULES} from '../src/game/prestigeGame.ts';
 import {scorePrestige} from '../src/game/prestigeScore.ts';
 import {readyFoodStock} from '../src/game/pantry.ts';
 import {foodDemand} from '../src/game/settlement.ts';
@@ -19,7 +19,8 @@ test('real Game owner score uses ready nourishment, body health and successful d
 test('score reads do not paint territory, refresh memories or mutate state; bounded simulation cache is explicit and old saves need no new field',()=>{
  const g=fixture(),state=JSON.stringify(g.state),territory=g.territory.slice();for(let i=0;i<3;i++){const v=g.prestigeBreakdown();assert.equal(v.territoryMeasuredAt,null);assert.equal(v.components.find(r=>r.component==='usableArea').available,false);assert.equal(g.prestige(),Math.round(v.total));}
  assert.equal(JSON.stringify(g.state),state);assert.deepEqual(g.territory,territory);
- for(let i=0;i<Math.ceil(g.territory.length/PRESTIGE_GAME_RULES.cellsPerTick);i++)tickPrestigeEvidence(g);
+ for(let i=0;i<4096;i++){tickPrestigeEvidence(g);const progress=prestigeTerritoryProgress(g);if(progress.available&&!progress.phase)break;}
+ assert.equal(prestigeTerritoryProgress(g).available,true,'bounded indexing and terrain sampling must both finish');
  const v=g.prestigeBreakdown();assert.equal(v.territoryMeasuredAt,g.state.time);assert.equal(v.territoryUpdating,false);assert.equal(v.components.find(r=>r.component==='usableArea').available,true);assert.equal(JSON.stringify(g.state),state);assert.deepEqual(g.territory,territory);
  const hud=g.snapshot();assert.equal(hud.prestige,g.prestige());assert.equal(hud.prestigeBreakdown.total,g.prestigeBreakdown().total);assert.ok(hud.prestigeRivals.every(r=>r.total===null));
  const loaded=decodeGame(encodeGame(g));assert.equal(loaded.prestigeBreakdown().territoryMeasuredAt,null,'cache is rebuilt, never fabricated in old save payload');
