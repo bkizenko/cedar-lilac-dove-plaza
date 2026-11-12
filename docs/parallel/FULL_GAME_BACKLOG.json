@@ -9315,6 +9315,15 @@
       "liveCommit": "3f1b219290d7530563a78722e05778fb4eb324a0",
       "evidence": "docs/metrics/wild-safety-release-2026-11-12.json",
       "scope": "Optional wild paid packet, actor/shared station, interruption/return/controlled death recovery and strict saves; full station refusal preserves real tree ownership.18/18 scoped. Existing53 remains featureOFF. Public UI2/toggle/complete WILD and broad acceptance still open."
+    },
+    {
+      "id": "CODEX-UI2-WILD-CONSUMERS",
+      "owner": "Codex integration / Claude UI and wild-craft",
+      "state": "live-partial",
+      "sourceCommit": "c4805690eccb7d9adeb43cac4d59ebf7d3f578c2",
+      "liveCommit": "c4805690eccb7d9adeb43cac4d59ebf7d3f578c2",
+      "evidence": "docs/metrics/ui2-wild-consumers-release-2026-11-12.json",
+      "scope": "Compact glance/Help/fog-safe overlays and actual pin clicks; owner paid-work controls and default-off fresh-world hunting choice; existing urgent meal policy preserved before optional craft admissions.94/94 scoped, no full campaign/performance/WILD/gate credit."
     }
   ],
   "status_update_policy": {

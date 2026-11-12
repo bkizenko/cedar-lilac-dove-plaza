@@ -1,0 +1,216 @@
+{
+  "release": "2026-11-12T21-42-15-876Z-c480569",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T21-42-15-876Z-c480569",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T20-53-37-323Z-3f1b219",
+  "commit": "c4805690eccb7d9adeb43cac4d59ebf7d3f578c2",
+  "retained": {
+    "linked": 1415,
+    "copied": 0,
+    "existing": 12
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 94,
+    "total": 94,
+    "nativeAndShared": 88,
+    "uniqueNativeGroups": {
+      "glanceReadsModelsRenderedHudHelpAndExistingUi": 70,
+      "wildConsumers": 3,
+      "commanders": 10,
+      "rivalCommanderWitnessPrivacy": 1,
+      "saveLifecycle": 2,
+      "urgentMealPriority": 2
+    },
+    "built": {
+      "passed": 6,
+      "total": 6,
+      "ui": {
+        "passed": 2,
+        "total": 2,
+        "scope": "Actual original53 desktop supply/store/help controls; known-only minimap layers, actual blocked-person pin/camera/panning, read purity and durable restore. No invented needs/foes/vision, no gameplay grants or FPS/full-gate credit.",
+        "supplyHelp": {
+          "ready": 0,
+          "water": 94,
+          "pop": 53,
+          "cap": 78,
+          "actualStoresTab": true,
+          "actualHelpGroups": 6,
+          "pureRead": true,
+          "strictDurable": true
+        },
+        "mapTarget": {
+          "id": 12697,
+          "type": "farm",
+          "x": -220,
+          "z": -370
+        },
+        "actualZoomWheelEvents": 14,
+        "mapObservation": {
+          "expectedMapClickWorld": {
+            "id": 12697,
+            "type": "farm",
+            "x": -220,
+            "z": -370
+          },
+          "look": {
+            "x": -219.99971897482015,
+            "z": -370.00008782036866,
+            "distance": 18.04918416964336
+          },
+          "pinClass": "hw-pin k-full is-edge",
+          "transform": "translate(1368px, 198.5px)",
+          "pinHost": {
+            "width": 1440,
+            "height": 1000
+          },
+          "chip": {
+            "x": 1331.5,
+            "y": 361
+          },
+          "overlays": [
+            {
+              "label": "Territory",
+              "pressed": "true"
+            },
+            {
+              "label": "Resources",
+              "pressed": "true"
+            },
+            {
+              "label": "Water",
+              "pressed": "true"
+            }
+          ]
+        },
+        "actualPinFocus": {
+          "look": {
+            "x": -235.9505026384665,
+            "z": -402.6300933233974,
+            "distance": 18.04918416964336
+          },
+          "camera": {
+            "x": -220.86334392753994,
+            "y": 13.596183048938592,
+            "z": -395.32734142312387
+          },
+          "person": {
+            "x": -235.9505026384665,
+            "y": 5.151371184213099,
+            "z": -402.6300933233974
+          },
+          "projected": {
+            "x": 720,
+            "y": 540.6331942588471,
+            "behind": false
+          },
+          "requested": {
+            "x": -235.9505026384665,
+            "z": -402.6300933233974
+          },
+          "onScreen": true
+        },
+        "mapPin": {
+          "overlay": {
+            "drawn": 642,
+            "leaked": 0
+          },
+          "actualBlockedPerson": 12515,
+          "actualCount": 3,
+          "offscreenArrow": true,
+          "chipFocus": true,
+          "pureRead": true,
+          "strictDurable": true
+        },
+        "originalUnchanged": true,
+        "errors": []
+      },
+      "wildConsumers": {
+        "passed": 4,
+        "total": 4,
+        "paidSite": {
+          "project": 3,
+          "actor": 6224,
+          "retainedProgress": 1.0049311600106439,
+          "cordageDelivered": 2,
+          "noSecondCharge": true,
+          "realButtons": true,
+          "durable": true
+        },
+        "bodyReturn": {
+          "exactCordage": 2,
+          "completedAt": 153.2,
+          "noNewInputs": true,
+          "durable": true
+        },
+        "legacy": {
+          "population": 53,
+          "featureStillAbsent": true,
+          "durable": true
+        },
+        "optIn": {
+          "uncheckedByDefault": true,
+          "oldVillageUnaffectedUntilNewWorld": true,
+          "explicitFreshWorldOnly": true,
+          "noOutputsGranted": true,
+          "durable": true
+        },
+        "inputsUnchanged": true,
+        "errors": []
+      }
+    },
+    "counting": "Unique affected scopes across executed selectors; failed harness/copy assumptions corrected and affected cases rerun. Same cases repeated on final artifact count once; not one complete full-suite run."
+  },
+  "typecheck": "PASS final merged source c480569",
+  "build": "PASS exact frozen c480569 artifact",
+  "compatibilityRecheck": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-12T21-42-15-876Z-c480569",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "original53Sha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+  "importantChanges": [
+    "Supply days use actual household water demand; trends reset with imported village identity.",
+    "Compact priority alerts, Help and fog-masked minimap overlays; real alert chips avoid bounded measured HUD rectangles and physically focus the actual resident.",
+    "Witness-safe rival commander replacement news.",
+    "Owner paid wild-work Pause/Resume controls retain the same inputs/progress and reject stale render epochs.",
+    "Explicit unchecked fresh-world-only experimental wild-craft choice; old villages remain off.",
+    "New discretionary wild work cannot take the last cook/hearth ahead of existing payable urgent meals; edible fat remains available when ordinary meal inputs are absent."
+  ],
+  "limits": [
+    "No full campaign, 100-resident performance/FPS or complete WILD gate credit.",
+    "Wild-craft remains experimental and opt-in only on fresh worlds; broader rivals/trade and natural combat loss remain open.",
+    "In-world influence gradient and society proposals remain open; minimap privacy/overlay checks do not qualify full territory mechanics.",
+    "Newer canonical diplomatic voice source is outside this frozen playable artifact."
+  ],
+  "frozenAcceptance": {
+    "baselineId": "hearthwild-first-release-gates-v1",
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  }
+}
