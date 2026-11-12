@@ -1,0 +1,156 @@
+{
+  "sourceCommit": "5161127",
+  "mergeLiveCommit": "46217d49627cf02971332eaa4bc3a3938915ba6a",
+  "release": "2026-11-12T06-12-38-542Z-46217d4",
+  "scope": "Paid wooden ard at real workshop; existing trained horse required; physical spring row work earns individual practice, wears tool, and accelerates labor only. Real finite repair, asset-cargo condition and strict saves.",
+  "batch": {
+    "passed": 28,
+    "total": 28,
+    "distinctFocused": 25,
+    "builtTraction": 2,
+    "builtExistingVillage": 1
+  },
+  "focusedEvidence": {
+    "previousRegression": "16 unaffected distinct passes plus six maintenance checks rerun successfully after fixture waits for actual completed construction crew release",
+    "newTraction": "Three cases: pure eligibility/practice/welfare; shared bench paid repair; native original terrain crafting, paused reload, real field journey and productive work, labor-only comparison, remaining-work cap, seasonal wear restrictions, conserved cargo and strict practice metadata"
+  },
+  "typecheck": "pass",
+  "build": "pass",
+  "built": {
+    "scope": "Two built traction checks on declared trained native horse opening: owned ard render and actual planting/practice/tool wear; real workshop recipe UI and strict horse/tool/practice reload. Actual paid ard crafting earned in source fixture; no earned capture/training, pen/stable, campaign, performance, screenshots or animal fabrication claim.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 2,
+    "total": 2,
+    "horseId": 6353,
+    "handlerId": 6223,
+    "originalHash": "938562bbf3067e3a28ee4ad05bae86a8bc0a8362db6779ab184f8e2d665d6b5d",
+    "tractionRequired": true,
+    "scene": {
+      "pack": 1,
+      "expectedPack": 1,
+      "position": [
+        164.30670166015625,
+        2.689244270324707,
+        -216.4785614013672
+      ],
+      "expected": [
+        164.3067027225937,
+        -216.47855702978836
+      ],
+      "vertices": 1386,
+      "bounds": {
+        "min": [
+          -0.4950000047683716,
+          1.3411045607369942e-09,
+          -0.8824514746665955
+        ],
+        "max": [
+          0.4950000047683716,
+          2.049999952316284,
+          1.1325000524520874
+        ]
+      },
+      "wild": 0,
+      "wildOwned": 0,
+      "validWild": true,
+      "domestic": 0,
+      "expectedDomestic": 0,
+      "uniqueCustody": true,
+      "drawCalls": 51,
+      "errors": []
+    },
+    "ard": {
+      "count": 1,
+      "expected": 1,
+      "owners": [
+        6223
+      ],
+      "handlerOwns": true,
+      "sameHorseTransform": true,
+      "vertices": 396,
+      "bounds": {
+        "min": [
+          -0.5099999904632568,
+          0.019999999552965164,
+          -2.359999895095825
+        ],
+        "max": [
+          0.5099999904632568,
+          1.159999966621399,
+          0.2549999952316284
+        ]
+      },
+      "before": {
+        "practice": 0.2,
+        "condition": 0.9997777777777778,
+        "planted": 0.006222222222222222,
+        "fieldId": 6360
+      },
+      "spring": true
+    },
+    "traction": {
+      "before": {
+        "practice": 0.2,
+        "condition": 0.9997777777777778,
+        "planted": 0.006222222222222222,
+        "time": 48.40000000000015
+      },
+      "after": {
+        "practice": 0.4,
+        "condition": 0.9995555555555555,
+        "planted": 0.012449973991769548,
+        "time": 48.60000000000015
+      },
+      "sameHorse": 6353
+    },
+    "workshop": {
+      "id": 6359,
+      "selectedThroughNativeInput": true,
+      "visibleArdRecipe": true
+    },
+    "saved": {
+      "identical": true,
+      "farmTool": "woodenArd",
+      "condition": 0.9995555555555555,
+      "practice": 0.4,
+      "id": 6353,
+      "species": "horse",
+      "haulage": "pack",
+      "duplicates": 0,
+      "errors": []
+    },
+    "originalUnchanged": true,
+    "errors": []
+  },
+  "existingVillage": {
+    "passed": 1,
+    "total": 1,
+    "originalFileUnchanged": true
+  },
+  "parameters": {
+    "wood": 10,
+    "stone": 2,
+    "baseWorkSeconds": 60,
+    "startingHealthyLaborMultiplier": 1.4,
+    "maximumHealthyRepairedLaborMultiplier": 2.2,
+    "practiceSecondsToMaximum": 120,
+    "lifeWorkSeconds": 900,
+    "repair": {
+      "wood": 3,
+      "stone": 1,
+      "baseWorkSeconds": 30
+    }
+  },
+  "acceptanceLimits": [
+    "Native traction opening declares a trained existing horse; capture/stable training independently qualified in previous455cd37 batch",
+    "Built recipe selection uses native input on the presently resolved object; moving-camera mouse pixel timing is not credited",
+    "No whole-campaign, performance or historical-calibration claim",
+    "Draft carts, riding, broader stock and complete M3-06 remain open"
+  ],
+  "frozenGates": {
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69387755102041,
+    "newCredit": 0
+  }
+}
