@@ -141,9 +141,10 @@ function drive(g, seconds, until = () => false) {
     g.state.paused = false;
     const before = g.state.time,
       wood = g.tribe(0).wood,
-      fuel = g.tribe(0).survival.fuelBurnedWood;
+      fuel = g.tribe(0).survival.fuelBurnedWood,
+      processingLogs = g.state.production?.metrics.logsUsed||0;
     g.step(0.2);observeProduction(g);
-    const careLogs = wood - g.tribe(0).wood - (g.tribe(0).survival.fuelBurnedWood - fuel);
+    const careLogs = wood - g.tribe(0).wood - (g.tribe(0).survival.fuelBurnedWood - fuel) - ((g.state.production?.metrics.logsUsed||0)-processingLogs);
     if (careLogs > 1e-7) {
       assert.ok(Math.abs(careLogs - Math.round(careLogs)) < 1e-6, JSON.stringify({ careLogs }));
       report.preservationLogs = (report.preservationLogs || 0) + Math.round(careLogs);
@@ -159,7 +160,7 @@ function untilTime(g, time) {
 function build(g, type, x, z) {
   const t = g.tribe(0),
     wood = t.wood,
-    stone = t.stone,careBefore=report.preservationLogs||0,fuelBefore=t.survival.fuelBurnedWood;
+    stone = t.stone,careBefore=report.preservationLogs||0,fuelBefore=t.survival.fuelBurnedWood,processingBefore=g.state.production?.metrics.logsUsed||0;
   assert.equal(g.placeBuilding(type, x, z), true, g.state.banner);
   const b = g.state.buildings.find((b) => b.type === type&&b.x===x&&b.z===z);
   assert.equal(b.build, 0);
@@ -168,7 +169,7 @@ function build(g, type, x, z) {
   g.orderConstruction(b);
   drive(g, 180, () => g.finished(b));
   assert.ok(g.finished(b), status(g));
-  assert.ok(Math.abs(t.wood-(wood-BUILDINGS[type].wood-((report.preservationLogs||0)-careBefore)-(t.survival.fuelBurnedWood-fuelBefore)))<1e-6);report.paidBuildings??={wood:0,stone:0};report.paidBuildings.wood+=BUILDINGS[type].wood;report.paidBuildings.stone+=BUILDINGS[type].stone;
+  assert.ok(Math.abs(t.wood-(wood-BUILDINGS[type].wood-((report.preservationLogs||0)-careBefore)-(t.survival.fuelBurnedWood-fuelBefore)-((g.state.production?.metrics.logsUsed||0)-processingBefore)))<1e-6);report.paidBuildings??={wood:0,stone:0};report.paidBuildings.wood+=BUILDINGS[type].wood;report.paidBuildings.stone+=BUILDINGS[type].stone;
   assert.equal(t.stone, stone - BUILDINGS[type].stone);
   return b;
 }
