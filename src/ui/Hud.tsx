@@ -2,6 +2,7 @@ import {CommanderControls} from './CommanderControls';
 import {foodExperienceReport} from '@/game/foodExperience';
 import {useLifecycleAction} from './useLifecycleAction';
 import {VillageSaveButton} from './VillageSaveButton';
+import {WaterEngineeringControls} from './WaterEngineeringControls';
 import {SiegeRamControls} from './SiegeRamControls';
 import {SocietyFlag} from './SocietyFlag';
 import {SocietyIdentityEditor} from './SocietyIdentityEditor';
@@ -19,7 +20,6 @@ import {EraUpgradeControls} from './EraUpgradeControls';
 import {housingAdoptionIssue,HOUSING_RULES} from '../game/housing';
 import{BuildingMaintenanceControls}from'./BuildingMaintenanceControls';
 import {WorldSetup} from './WorldSetup';
-import {WaterEngineeringControls} from './WaterEngineeringControls';
 import {VillageFileTransfer} from './VillageFileTransfer';
 import{FarmToolRepairControls}from'./FarmToolRepairControls';
 import {GameTooltip} from './GameTooltip';
@@ -296,6 +296,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <VillageFileTransfer engine={engine}/>
           {lifecycle.error&&<p role="status" className="text-xs">{lifecycle.error}</p>}
           {engine&&<details className="hud-water-engineering"><summary className="px-2 py-2 cursor-pointer">Water engineering</summary><WaterEngineeringControls engine={engine}/></details>}
+          {engine?.game.world.options&&<details><summary className="px-2 py-2 cursor-pointer">World systems</summary><label className="block px-2 py-2"><input type="checkbox" checked={engine.game.world.options.flowFieldVersion===1} onChange={e=>engine.setWorldFeature('flow',e.target.checked)}/> Shared routes</label><label className="block px-2 py-2"><input type="checkbox" checked={engine.game.world.options.tideVersion===2} onChange={e=>engine.setWorldFeature('tides',e.target.checked)}/> Sea tides</label></details>}
           {engine&&<details className="hud-world-setup"><summary className="px-2 py-2 cursor-pointer">New world</summary><WorldSetup engine={engine}/></details>}
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}>Defense horn · arm the village</button>
           <button className="px-2 py-2" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}>Recall horn · V</button>

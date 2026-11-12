@@ -74,7 +74,7 @@ export function ruinSpec(source:RuinSource,opt:RuinOptions):RuinSpec{
    keepCut.push(seg);}
  });
  // Drop anything the collapse left hanging (any LOD), until stable; it falls too.
- let cur=keepCut;for(let g=0;g<60;g++){const fl=floatingParts({family:'',variantKey:'',footprint:src.footprint,parts:cur,notes:{reference:''}});if(!fl.length)break;for(const i of fl){const b=partBounds(cur[i]);falls.push({x:(b.minX+b.maxX)/2,z:(b.minZ+b.maxZ)/2,vol:vol(cur[i]),mat:STONE_MAT.includes(cur[i].mat)?'stone':'timber',thick:1,yaw:0});}cur=cur.filter((_,i)=>!fl.includes(i));}
+ let cur=keepCut;for(let g=0;g<60;g++){const fl=floatingParts({family:'',variantKey:'',footprint:src.footprint,parts:cur,notes:{reference:"Transient collapse-support calculation"}});if(!fl.length)break;for(const i of fl){const b=partBounds(cur[i]);falls.push({x:(b.minX+b.maxX)/2,z:(b.minZ+b.maxZ)/2,vol:vol(cur[i]),mat:STONE_MAT.includes(cur[i].mat)?'stone':'timber',thick:1,yaw:0});}cur=cur.filter((_,i)=>!fl.includes(i));}
  for(const p of cur){standing.push(parts.length);parts.push(p);}
  const hw=src.footprint.w/2-.05,hd=src.footprint.d/2-.05,inFp=(x:number,z:number,s:number)=>Math.abs(x)+s/2<=hw&&Math.abs(z)+s/2<=hd;
  // Rubble: stone that fell lies beside where it fell; never more stone than fell.
