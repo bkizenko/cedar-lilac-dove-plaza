@@ -33,6 +33,7 @@ import {ProductionControls} from './ProductionControls';
 import {StorehouseInventory} from './StorehouseInventory';
 import {GateRotationControl} from './GateRotationControl';
 import {WorkloadPanel} from './WorkloadPanel';
+import {WildCraftPanel} from './WildCraftPanel';
 import {NomadicCampControl} from './NomadicCampControl';
 import {PerformanceReadout} from './PerformanceReadout';
 import {DIFFICULTIES,difficultyEffects} from '../game/difficulty';
@@ -227,7 +228,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         {statusPane&&engine&&!founding&&<div className="hud-status-drawer hud-panel" aria-label="Village details">
           <header><span>Village</span><button aria-label="Close village details" onClick={()=>setStatusPane(null)}><X size={14}/></button></header>
           <nav aria-label="Village detail tabs">{([['stores','Stores'],['work','Work'],['food','Food'],['craft','Craft'],['camp','Camp']] as const).map(([key,label])=><button key={key} aria-pressed={statusPane===key} onClick={()=>setStatusPane(key)}>{label}</button>)}</nav>
-          {statusPane==='stores'&&<><div className="resource-details"><FoodStoreReadout stock={hud} items={engine.game.tribe(0).items} experience={foodExperienceReport(engine.game.tribe(0),engine.game.state.time)}/>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div><NeedsPanel engine={engine} expanded/></>}{statusPane==='work'&&<WorkloadPanel engine={engine}/>} {statusPane==='food'&&<FarmingProgress engine={engine} onKnowledge={()=>{setStatusPane(null);setTechOpen(true);}}/>}{statusPane==='craft'&&<CraftingAndBuildings engine={engine}/>} {statusPane==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/></>}
+          {statusPane==='stores'&&<><div className="resource-details"><FoodStoreReadout stock={hud} items={engine.game.tribe(0).items} experience={foodExperienceReport(engine.game.tribe(0),engine.game.state.time)}/>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}</div><NeedsPanel engine={engine} expanded/></>}{statusPane==='work'&&<><WorkloadPanel engine={engine}/><WildCraftPanel engine={engine}/></>} {statusPane==='food'&&<FarmingProgress engine={engine} onKnowledge={()=>{setStatusPane(null);setTechOpen(true);}}/>}{statusPane==='craft'&&<CraftingAndBuildings engine={engine}/>} {statusPane==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/></>}
         </div>}
         {!founding&&<div className="quick-actions compact-actions" aria-label="Village commands">
           <GameTooltip title="Village" description="Open residents, priorities and settlement details (L)."><button aria-label="Village" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}}}><Users/></button></GameTooltip>

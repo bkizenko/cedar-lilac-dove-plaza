@@ -21,6 +21,7 @@ import {clayIssue} from './pottery';
 import {councilModel} from './rulersView';
 import {civicModel,type CivicModel} from './societyCivicRuntime';
 import {societyDecisionsModel,type SocietyDecisionsModel} from './societyView';
+import {wildCraftModel,type WildCraftModel} from './wildCraftView';
 import {combatModel,matchupModel,type CombatModel} from './combatView';
 import {armorEquipIssue,wornArmor} from './armor';
 import {capitulationOffers} from './capitulation';
@@ -44,6 +45,7 @@ export type EngineReadQuery=
  |{kind:'society-decisions'}
  |{kind:'society-civic'}
  |{kind:'combat-doctrine'}
+ |{kind:'wild-craft'}
  |{kind:'combat-matchup';attackerId:number;targetId:number}
  |{kind:'capitulation-offers'}
  |{kind:'captives'};
@@ -66,6 +68,7 @@ export type EngineReadModel=
  |{kind:'society-decisions';societies:SocietyDecisionsModel}
  |{kind:'society-civic';civic:CivicModel}
  |{kind:'combat-doctrine';combat:CombatModel}
+ |{kind:'wild-craft';wild:WildCraftModel}
  |{kind:'combat-matchup';attackerId:number;targetId:number;multiplier:number;reasons:string[]}
  |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]}
  |{kind:'captives';captives:{id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean;custody?:'escorting'|'custody';food?:number;waterLiters?:number}[]};
@@ -78,7 +81,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(q.kind==='naval-controls')return Object.keys(q).every(k=>['kind','dockId','boatId','builderId'].includes(k))&&['dockId','boatId','builderId'].every(k=>q[k]===undefined||id(q[k]));
  if(q.kind==='commander-controls')return Object.keys(q).every(k=>['kind','unitIds','boatIds'].includes(k))&&Array.isArray(q.unitIds)&&Array.isArray(q.boatIds)&&list(q.unitIds)&&list(q.boatIds)&&q.unitIds.length<=32&&q.boatIds.length<=32;
  if(q.kind==='combat-matchup')return Object.keys(q).every(k=>['kind','attackerId','targetId'].includes(k))&&id(q.attackerId)&&id(q.targetId);
- if(q.kind==='rulers-council'||q.kind==='society-decisions'||q.kind==='society-civic'||q.kind==='combat-doctrine'||q.kind==='capitulation-offers'||q.kind==='captives')return Object.keys(q).length===1;
+ if(q.kind==='rulers-council'||q.kind==='society-decisions'||q.kind==='society-civic'||q.kind==='combat-doctrine'||q.kind==='wild-craft'||q.kind==='capitulation-offers'||q.kind==='captives')return Object.keys(q).length===1;
  if(q.kind==='traded-teaching-offers')return Object.keys(q).every(k=>['kind','teacherId','learnerIds'].includes(k))&&id(q.teacherId)&&list(q.learnerIds);
  if(q.kind==='copper-study-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
  if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
@@ -109,6 +112,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
  if(query.kind==='commander-controls')return{kind:query.kind,...commanderControlsModel(g,query.unitIds,query.boatIds)};
  if(query.kind==='rulers-council')return{kind:query.kind,council:councilModel(g)};
  if(query.kind==='combat-doctrine')return{kind:query.kind,combat:combatModel(g)};
+ if(query.kind==='wild-craft')return{kind:query.kind,wild:wildCraftModel(g)};
  if(query.kind==='combat-matchup')return{kind:query.kind,attackerId:query.attackerId,targetId:query.targetId,...matchupModel(g,query.attackerId,query.targetId)};
  if(query.kind==='society-decisions')return{kind:query.kind,societies:societyDecisionsModel(g)};
  if(query.kind==='society-civic')return{kind:query.kind,civic:civicModel(g)};

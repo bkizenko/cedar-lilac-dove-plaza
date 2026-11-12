@@ -20,6 +20,7 @@ import {FoodStoreReadout} from '../FoodStoreReadout';
 import {PrestigeReadout} from '../PrestigeReadout';
 import {NeedsPanel} from '../NeedsPanel';
 import {WorkloadPanel} from '../WorkloadPanel';
+import {WildCraftPanel} from '../WildCraftPanel';
 import {FarmingProgress} from '../FarmingProgress';
 import {CraftingAndBuildings} from '../CraftingAndBuildings';
 import {NomadicCampControl} from '../NomadicCampControl';
@@ -141,7 +142,7 @@ export function VillageScreen({hud,engine,onClose,initial,onKnowledge,onOffer}:{
  return <Screen title="Village" icon={<Users size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab} wide>
   <div className="hw-legacy">
    {tab==='stores'&&<><FoodStoreReadout stock={hud} items={engine.game.tribe(0).items} experience={foodExperienceReport(engine.game.tribe(0),engine.game.state.time)}/>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}<NeedsPanel engine={engine} expanded/></>}
-   {tab==='work'&&<WorkloadPanel engine={engine}/>}
+   {tab==='work'&&<><WorkloadPanel engine={engine}/><WildCraftPanel engine={engine}/></>}
    {tab==='food'&&<FarmingProgress engine={engine} onKnowledge={onKnowledge}/>}
    {tab==='craft'&&<CraftingAndBuildings engine={engine}/>}
    {tab==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/><PrestigeReadout view={hud.prestigeBreakdown} rivals={hud.prestigeRivals}/></>}
