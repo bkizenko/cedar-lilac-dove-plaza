@@ -14,6 +14,7 @@ import {PRODUCTION_RECIPES,productionIssue,type ProductionRecipe} from './produc
 import {fibreGatherIssue} from './fibre';
 import {clayIssue} from './pottery';
 import {councilModel} from './rulersView';
+import {societyDecisionsModel,type SocietyDecisionsModel} from './societyView';
 import {armorEquipIssue,wornArmor} from './armor';
 import {capitulationOffers} from './capitulation';
 
@@ -30,6 +31,7 @@ export type EngineReadQuery=
  |{kind:'armor-repair-issue';unitId:number;workplaceId?:number}
  |{kind:'armor-choice';unitId:number}
  |{kind:'rulers-council'}
+ |{kind:'society-decisions'}
  |{kind:'capitulation-offers'};
 export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
@@ -44,6 +46,7 @@ export type EngineReadModel=
  |{kind:'armor-repair-issue';unitId:number;issue:string|null}
  |{kind:'armor-choice';unitId:number;wornArmorId?:number;availableArmorId?:number;issue:string|null}
  |{kind:'rulers-council';council:import('./rulersView').CouncilModel}
+ |{kind:'society-decisions';societies:SocietyDecisionsModel}
  |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]};
 export type EngineReadReply={model:EngineReadModel;epoch:number;requestId:number;stateRevision:number;navigationRevision:number;cpuMilliseconds:number};
 export type EngineReadReplyFor<Q extends EngineReadQuery>=Omit<EngineReadReply,'model'>&{model:Extract<EngineReadModel,{kind:Q['kind']}>};
@@ -51,7 +54,7 @@ const id=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&
 export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const q=value as Record<string,unknown>,list=(v:unknown)=>Array.isArray(v)&&v.length<=ENGINE_READ_MODEL_RULES.maximumSources&&Array.from(v).every(id)&&new Set(v).size===v.length;
- if(q.kind==='rulers-council'||q.kind==='capitulation-offers')return Object.keys(q).length===1;
+ if(q.kind==='rulers-council'||q.kind==='society-decisions'||q.kind==='capitulation-offers')return Object.keys(q).length===1;
  if(q.kind==='traded-teaching-offers')return Object.keys(q).every(k=>['kind','teacherId','learnerIds'].includes(k))&&id(q.teacherId)&&list(q.learnerIds);
  if(q.kind==='copper-study-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
  if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
@@ -78,6 +81,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
   return{kind:query.kind,teacherId:query.teacherId,offers:teachingOffers(g,query.teacherId),learner:learner?{id:learner.id,good:learner.carryType!}:null,issue:learner?null:!carriers.length?'Bring your adult carrying payment within 26 metres of this artisan':'Nearby payment carriers must finish their current duty before learning'};
  }
  if(query.kind==='rulers-council')return{kind:query.kind,council:councilModel(g)};
+ if(query.kind==='society-decisions')return{kind:query.kind,societies:societyDecisionsModel(g)};
  if(query.kind==='capitulation-offers')return{kind:query.kind,offers:capitulationOffers(g).map(o=>({...o,defenderName:g.tribe(o.defenderTeam)?.name??'A community'}))};
  if(query.kind==='building-fabric'){
   const b=g.state.buildings.find(b=>b.id===query.buildingId&&b.team===0&&b.hp>0);if(!b)throw new Error('Original owned building is unavailable');
