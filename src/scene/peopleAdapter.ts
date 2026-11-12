@@ -20,19 +20,26 @@ import {SEASONS} from './cultureGrammar';
 import {CIV_IDS,type CivId} from './civStyles';
 import {cultureForCiv,cultureForSkin} from './civPeople';
 import {skinOfTeam} from '../game/skinState';
+import {lookForSkin,roleOf,LOOKS} from './peopleLook';
 import {CharacterRigLayer,type PeopleSet,type PeopleWorld} from './characterRigLayer';
 import type {ProjectLike,UnitLike} from './characterAnim';
-import type {RigGear} from './characterRig';
+import {bodyClassFor,type RigGear} from './characterRig';
 
 export function readPeopleSet():PeopleSet{
- try{const q=typeof location!=='undefined'?new URLSearchParams(location.search).get('people'):null;if(q==='legacy'||q==='rig')return q;}catch{/* fall through */}
- try{const s=typeof localStorage!=='undefined'?localStorage.getItem('hearthwild.people'):null;if(s==='legacy'||s==='rig')return s;}catch{/* fall through */}
+ try{const q=typeof location!=='undefined'?new URLSearchParams(location.search).get('people'):null;if(q==='legacy'||q==='rig')return q;if(q==='rig1')return 'rig';}catch{/* fall through */}
+ try{const s=typeof localStorage!=='undefined'?localStorage.getItem('hearthwild.people'):null;if(s==='legacy'||s==='rig')return s;if(s==='rig1')return 'rig';}catch{/* fall through */}
  return 'rig';
 }
+/** ?people=rig1 (or localStorage 'hearthwild.people'='rig1') keeps the first rig's culture-colour look instead of the people-v2 identities. */
+export function readRigV1():boolean{
+ try{if(typeof location!=='undefined'&&new URLSearchParams(location.search).get('people')==='rig1')return true;}catch{/* fall through */}
+ try{return typeof localStorage!=='undefined'&&localStorage.getItem('hearthwild.people')==='rig1';}catch{return false;}
+}
+const lookOf=(skin:ReturnType<typeof skinOfTeam>,civ:CivId)=>skin?lookForSkin(skin):LOOKS[civ];
 /** Distinct civs for distinct teams (5 is coprime with 14), stable per world seed. */
 export const civForTeam=(seed:number,team:number):CivId=>CIV_IDS[(hashSeed(seed,'people-civ')+team*5)%CIV_IDS.length];
 export class PeopleAdapter{
- set:PeopleSet;layer:CharacterRigLayer|null=null;private failed=false;private scene:THREE.Scene;private game:Game|null=null;private projects=new Map<number,ProjectLike>();private alive=new Set<number>();
+ v1=readRigV1();set:PeopleSet;layer:CharacterRigLayer|null=null;private failed=false;private scene:THREE.Scene;private game:Game|null=null;private projects=new Map<number,ProjectLike>();private alive=new Set<number>();
  private cultures=new Map<string,ReturnType<typeof cultureForCiv>>();private world:PeopleWorld|null=null;private errors=0;
  constructor(scene:THREE.Scene,set:PeopleSet=readPeopleSet()){this.scene=scene;this.set=set;if(set==='rig'){try{this.layer=new CharacterRigLayer(scene);}catch(e){this.fail(e);}}}
  get active(){return this.set==='rig'&&!!this.layer&&!this.failed;}
@@ -46,7 +53,9 @@ export class PeopleAdapter{
  private build(game:Game):PeopleWorld{
   const g=game;
   return {time:g.state.time,season:SEASONS[calendar(g).phase]??'summer',era:g.state.age||1,
-   identity:team=>({culture:this.culture(g,team),teamColor:(TEAM_STYLE[team]||TEAM_STYLE[0]).unit,affiliation:armorAffiliationColor(g,team)}),
+   identity:team=>({culture:this.culture(g,team),teamColor:(TEAM_STYLE[team]||TEAM_STYLE[0]).unit,affiliation:armorAffiliationColor(g,team),...(this.v1?{}:{look:lookOf(skinOfTeam(g.state,team),civForTeam(g.state.seed,team))})}),
+   roleOf:u=>{const unit=u as unknown as Unit;const recipe=this.projects.get(u.id)?.recipe;
+    return roleOf({type:unit.type,bodyClass:bodyClassFor(u as unknown as UnitLike,g.state.time),farming:!!unit.farmTool,hunting:unit.searchJob==='hunt',recipe,scouting:!!unit.scoutProvisions,trading:unit.caravanRoute!==undefined||!!unit.tradeCargoPending});},
    gearOf:u=>{const unit=u as unknown as Unit,gear:RigGear={};if(unit.garment)gear.garment={item:unit.garment.item,condition:unit.garment.condition};const a=wornArmor(g,unit);if(a)gear.armor={kind:a.kind,condition:a.condition};return gear;},
    projectFor:u=>this.projects.get(u.id),
    farmFor:u=>{const n=(u as unknown as Unit).node as {type?:string;crop?:{ripened?:boolean;planted?:number;tended?:number}}|null;return n&&n.type==='farm'?(n.crop??{}):null;},
