@@ -1,3 +1,5 @@
+import {witnessRaidDefense,noteRaidDefenseAttempt,noteRaidDefenseCapture} from './warPrestige';
+import {markStolenLoad,stolenMarkRoom} from './stolenCargo';
 import type { Game } from "./sim";
 import type { Unit, Building, GameState, FoodKind } from "./types";
 import { difficulty } from "./difficulty";
@@ -26,6 +28,8 @@ export type RaidIntent = "scout" | "loot" | "capture" | "destructive" | "annihil
 export type RaidPlan = {
   version: 1;
   bandId: number;
+  /** Actual successful departure cohort; paid per-actor trip ID stays bandId. */
+  objectiveBandId?: number;
   actorId: number;
   selectedIntent: RaidIntent;
   intent: RaidIntent;
@@ -55,6 +59,7 @@ export type RaidIntentHistory = {
   time: number;
   outcome: "returned" | "lost" | "stranded";
   cargo: number;
+  deliveredCaptives?: number;
   plan: RaidPlan;
 };
 const intents = ["scout", "loot", "capture", "destructive", "annihilation"] as const;
@@ -185,7 +190,7 @@ function observe(g: Game, u: Unit, p: RaidPlan) {
   }
 }
 export function observeRaidIntent(g: Game, u: Unit) {
-  if (u.seaRaid?.plan) observe(g, u, u.seaRaid.plan);
+  if (u.seaRaid?.plan) {observe(g, u, u.seaRaid.plan);witnessRaidDefense(g,u);}
 }
 function withdraw(u: Unit, p: RaidPlan, reason: string) {
   if (u.seaRaid!.phase !== "retreat") p.metrics.withdrawals++;
@@ -236,6 +241,7 @@ function loadGoods(g: Game, u: Unit, p: RaidPlan, dt: number, foodOnly = false) 
     return true;
   }
   u.order = "hold";
+  noteRaidDefenseAttempt(g,u,b.team);
   p.workSeconds += dt;
   p.metrics.lootWorkSeconds += dt;
   u.workReason = "Taking supplies";
@@ -255,6 +261,7 @@ function loadGoods(g: Game, u: Unit, p: RaidPlan, dt: number, foodOnly = false) 
     withdraw(u, p, p.reason);
     return true;
   }
+  if(!stolenMarkRoom(g,u)){u.workReason="Waiting for stolen cargo provenance capacity";return true;}
   let amount = Math.min(quota, carryingCapacity(u, kind), t[kind]);
   let lot: FoodKind | undefined;
   if (kind === "food") {
@@ -267,6 +274,8 @@ function loadGoods(g: Game, u: Unit, p: RaidPlan, dt: number, foodOnly = false) 
   u.carry = amount;
   u.carryType = kind;
   u.carryFood = lot;
+  markStolenLoad(g,u,b.team,p.objectiveBandId??p.bandId);
+  witnessRaidDefense(g,u);
   p.metrics.lootTaken += amount;
   p.workSeconds = 0;
   if (!foodOnly) withdraw(u, p, "Leaving with supplies");
@@ -306,6 +315,7 @@ export function limitedRaidAI(g: Game, u: Unit, dt: number) {
   const p = u.seaRaid?.plan;
   if (!p) return false;
   observe(g, u, p);
+  witnessRaidDefense(g,u);
   if (p.intent === "destructive" || p.intent === "annihilation") return false;
   u.target = null;
   if (p.intent === "scout") {
@@ -373,8 +383,10 @@ export function limitedRaidAI(g: Game, u: Unit, dt: number) {
           return true;
         }
         u.order = "hold";
+        noteRaidDefenseAttempt(g,u,victim.team);
         const result = acceptPrisonerSurrender(g, victim, u.team);
         if (result.accepted) {
+          noteRaidDefenseCapture(g,u,victim);
           if (u.carryType === "food") provisionPrisoner(g, victim.id, u.id);
           if (victim.carryType === "food") provisionPrisoner(g, victim.id, victim.id);
           p.metrics.captives++;
@@ -398,7 +410,8 @@ export function finishRaidPlan(g: Game, u: Unit, outcome: "returned" | "lost" | 
   const list = (g.state.raidIntentHistory ??= []);
   if (list.some((r) => r.actorId === u.id && r.plan.bandId === p.bandId && r.outcome === outcome))
     return;
-  list.push({ actorId: u.id, time: g.state.time, outcome, cargo: u.carry, plan: copyRaidPlan(p) });
+  const deliveredCaptives=outcome==='returned'&&u.escortId&&g.state.units.some(v=>v.id===u.escortId&&v.prisoner?.phase==='custody'&&v.prisoner.captorTeam===3)?1:0;
+  list.push({ actorId: u.id, time: g.state.time, outcome, cargo: u.carry, ...(deliveredCaptives?{deliveredCaptives}:{}),plan: copyRaidPlan(p) });
   if (list.length > RAID_INTENT_RULES.maximumHistory)
     list.splice(0, list.length - RAID_INTENT_RULES.maximumHistory);
 }
@@ -431,6 +444,7 @@ function validPlan(s: GameState, p: RaidPlan, at = s.time) {
     !keys(p, [
       "version",
       "bandId",
+      "objectiveBandId",
       "actorId",
       "selectedIntent",
       "intent",
@@ -451,6 +465,7 @@ function validPlan(s: GameState, p: RaidPlan, at = s.time) {
     ]) ||
     p.version !== 1 ||
     !id(p.bandId) ||
+    (p.objectiveBandId!==undefined&&(!id(p.objectiveBandId)||p.objectiveBandId>p.bandId)) ||
     !id(p.actorId) ||
     !intents.includes(p.intent) ||
     !intents.includes(p.selectedIntent) ||
@@ -516,7 +531,7 @@ export function validRaidIntents(s: GameState) {
       const key = `${r?.actorId}:${r?.plan?.bandId}:${r?.outcome}`;
       if (
         !r ||
-        !keys(r, ["actorId", "time", "outcome", "cargo", "plan"]) ||
+        !keys(r, ["actorId", "time", "outcome", "cargo", "deliveredCaptives", "plan"]) ||
         !Number.isSafeInteger(r.actorId) ||
         r.actorId <= 0 ||
         r.actorId >= s.nextId ||
@@ -526,6 +541,7 @@ export function validRaidIntents(s: GameState) {
         r.time < r.plan.selectedAt ||
         !["returned", "lost", "stranded"].includes(r.outcome) ||
         !finite(r.cargo, 24) ||
+        (r.deliveredCaptives!==undefined&&(r.deliveredCaptives!==1||r.outcome!=="returned"||r.plan.metrics.captives<1)) ||
         !validPlan(s, r.plan, r.time) ||
         seen.has(key)
       )
