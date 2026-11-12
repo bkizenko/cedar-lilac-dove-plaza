@@ -208,3 +208,29 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
  const why:string[]=[];if(wars)why.push('at war');if(against>0)why.push('claims press on the house');if(hunger>.5)why.push('food is short');
  return {value:v,stage:stageOf(v),why};
 }
+
+/** Permit for the other three journeys the drivers steer. These reuse the real parties that already exist (scouts with provisions, barter
+ * caravans with their cargo, raid forces); the drivers only decide WHETHER and how eagerly, so nothing is spawned, teleported or handed out.
+ *  explore: the 'explore' mode lowers the food reserve a scout needs (450->300 s); a society that is pressed to leave or fight keeps it at 450.
+ *  trade:   the 'trade' mode reviews barter twice as often (60 s, not 120 s); 'stay' keeps the old pace.
+ *  raid:    bands and below raid as before. A state-tier polity needs cause to strike a peaceful, known neighbour: it must be in 'conquer'
+ *           mode AND hold a 'raid' claim. With no claim the first review grants one (a visible grievance, 12 years) and the strike waits a
+ *           review; the strike cites the claim, spending it. Already-hostile targets need no cause. Null (old behaviour) when rulers are off. */
+export type JourneyPermit={allow:boolean;reserve?:number;cadence?:number;why:string[]};
+export function journeyPermit(g:Game,team:number,kind:'explore'|'trade'|'raid',target?:number):JourneyPermit|null{
+ const d=expansionOf(g,team);if(!d)return null;
+ if(kind==='explore')return {allow:true,reserve:d.mode==='explore'?300:450,why:d.mode==='explore'?d.why:[]};
+ if(kind==='trade')return {allow:true,cadence:d.mode==='trade'?60:120,why:d.mode==='trade'?d.why:[]};
+ const r=ensureRulers(g),me=r?.societies[String(team)];if(!r||!me||target===undefined||g.isFoe(team,target))return {allow:true,why:['already at war']};
+ if(me.civ.polity.tier!=='state')return {allow:true,why:[]};
+ if(d.mode!=='conquer')return {allow:false,why:['a state needs cause and appetite to strike a peaceful neighbour']};
+ if(!societyRelation(g,team,target).known)return {allow:false,why:['the target is not known']};
+ const has=claimsOf(g,team).some(c=>Number(c.holder)===team&&Number(c.target)===target&&c.kind==='raid');
+ if(has)return {allow:true,why:['a standing claim justifies the strike',...d.why]};
+ grantClaim(g,team,target,'raid',55,12);
+ return {allow:false,why:['the house presses a claim before it strikes']};
+}
+/** Called when a permitted raid actually leaves: a state's strike spends its claim and pays the legitimacy cost as grievance at home. */
+export function spendRaidClaim(g:Game,team:number,target:number){
+ const c=citeClaim(g,team,target,'raid');if(c)nudgeSocietyRelation(g,target,team,{trust:0,grievance:.01*c.cost});return c;
+}

@@ -131,3 +131,27 @@ test('lane A: yearly step settles wards and weds rivals; expansion party plan fo
  const bad=JSON.parse(JSON.stringify(g.state.rulers));bad.claims=[{holder:1}];assert.equal(validRulersState(bad),false,'malformed claims rejected');
  const u=R.unrestOf(g,1);assert.ok(u&&u.value>=0&&u.value<=100&&u.stage);assert.equal(R.unrestOf(old,1),null);
 });
+
+test('lane A: journeyPermit steers explore/trade/raid parties from the drivers; states need a raid claim; old saves unchanged',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();
+ const ex=R.journeyPermit(g,1,'explore');assert.ok(ex&&ex.allow&&[300,450].includes(ex.reserve));
+ const tr=R.journeyPermit(g,1,'trade');assert.ok(tr&&[60,120].includes(tr.cadence));
+ // a peaceful, known target; make the striker a state in conquer mode by pinning the cached drive
+ const a=1,b=2;g.state.rulers.societies[String(a)].civ.polity.tier='state';
+ const d=R.expansionOf(g,a);d.mode='conquer'; // the cached Drivers object is what journeyPermit reads
+ const {societyRelation,nudgeSocietyRelation}=await import('../src/game/societyRelations.ts');
+ nudgeSocietyRelation(g,a,b,{trust:.2,grievance:0});
+ if(!g.isFoe(a,b)&&societyRelation(g,a,b).known){
+  const first=R.journeyPermit(g,a,'raid',b);
+  assert.equal(first.allow,false,'no claim: the strike waits');
+  const second=R.journeyPermit(g,a,'raid',b);
+  if(R.claimsOf(g,a).some(c=>c.kind==='raid')){assert.equal(second.allow,true,'claim stands: the strike may go');
+   const spent=R.spendRaidClaim(g,a,b);assert.ok(spent&&spent.cost>=0);assert.ok(!R.claimsOf(g,a).some(c=>c.kind==='raid'&&c.target===String(b)),'strike spends the claim');}
+  assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'claims save round-trip');
+ }
+ d.mode='stay';g.state.rulers.societies[String(a)].civ.polity.tier='state';
+ if(!g.isFoe(a,b))assert.equal(R.journeyPermit(g,a,'raid',b).allow,false,'a state in stay mode does not strike a peaceful neighbour');
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;
+ for(const k of ['explore','trade','raid'])assert.equal(R.journeyPermit(old,1,k,2),null,'old saves: null permit');
+});
