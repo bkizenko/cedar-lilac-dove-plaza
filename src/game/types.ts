@@ -35,7 +35,7 @@ export type BldType =
   | "palisade" | "gate" | "stonewall" | "trench" | "moat";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
-export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk" | "bread" | "driedMeat" | "driedFish" | "smokedMeat" | "smokedFish" | "cookedFish" | "porridge" | "fermentedMilk";
+export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk" | "bread" | "driedMeat" | "driedFish" | "smokedMeat" | "smokedFish" | "cookedFish" | "porridge" | "fermentedMilk" | "freshCurd" | "whey";
 export type CropKind = "grain" | "pulses" | "tubers";
 export type Order =
   | "idle"

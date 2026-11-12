@@ -1,3 +1,4 @@
+import {CURD_RULES} from './curds';
 import {DAIRY_RULES} from './dairy';
 import{FOOD_KINDS}from'./foodKinds';
 export{FOOD_KINDS}from'./foodKinds';
@@ -33,9 +34,9 @@ export function storehouses(g: Game, team: number) {
   return g.state.buildings.filter(b => b.team === team && b.type === "warehouse" && g.finished(b));
 }
 /** Game-balance nourishment knob; physical food counts and recorded eaten units remain separate. */
-export const FOOD_NOURISHMENT:Partial<Record<FoodKind,number>>={bread:1.2};
+export const FOOD_NOURISHMENT:Partial<Record<FoodKind,number>>={bread:1.2,freshCurd:CURD_RULES.curdNourishment,whey:CURD_RULES.wheyNourishment};
 
-export const FOOD_NAMES:Record<FoodKind,string>={provisions:'provisions',berries:'berries',fish:'fresh fish',meat:'cooked meat',grain:'grain',pulses:'pulses',tubers:'tubers',milk:'milk',bread:'bread',driedMeat:'dried meat',driedFish:'dried fish',smokedMeat:'smoked meat',smokedFish:'smoked fish',cookedFish:'cooked fish',porridge:'porridge',fermentedMilk:'fermented milk'};
+export const FOOD_NAMES:Record<FoodKind,string>={provisions:'provisions',berries:'berries',fish:'fresh fish',meat:'cooked meat',grain:'grain',pulses:'pulses',tubers:'tubers',milk:'milk',bread:'bread',driedMeat:'dried meat',driedFish:'dried fish',smokedMeat:'smoked meat',smokedFish:'smoked fish',cookedFish:'cooked fish',porridge:'porridge',fermentedMilk:'fermented milk',freshCurd:'fresh cultured curd',whey:'acid whey'};
 /** The existing food total remains the save/trade facade; lots refine its contents. */
 export function foodInventory(t:Tribe) {
   const lots=Object.fromEntries(FOOD_KINDS.map(k=>[k,Math.max(0,t.foodLots?.[k]||0)])) as Record<FoodKind,number>;
@@ -44,6 +45,7 @@ export function foodInventory(t:Tribe) {
   else lots.provisions+=Math.max(0,t.food-total);
   return lots;
 }
+const weightedFoodKinds=FOOD_KINDS.filter(kind=>(FOOD_NOURISHMENT[kind]??1)!==1);
 const playerReadyKinds = FOOD_KINDS.filter(kind => kind !== 'grain' && kind !== 'fish');
 function nourishmentOf(lots: Record<FoodKind,number>, kinds: readonly FoodKind[]) {
   return kinds.reduce((total, kind) => total + lots[kind] * (FOOD_NOURISHMENT[kind] ?? 1), 0);
@@ -54,7 +56,7 @@ export function readyFoodStock(tribe: Tribe) {
 }
 export function readyNourishment(tribe: Tribe, team: number) {
   const lots = tribe.foodLots;
-  if (!lots?.bread && (team !== 0 || (!lots?.fish && !lots?.grain))) return tribe.food;
+  if (!weightedFoodKinds.some(kind=>(lots?.[kind]||0)>0) && (team !== 0 || (!lots?.fish && !lots?.grain))) return tribe.food;
   return nourishmentOf(foodInventory(tribe), team === 0 ? playerReadyKinds : FOOD_KINDS);
 }
 /** Remove one identified edible lot and the legacy food facade together, once. */
@@ -79,7 +81,7 @@ function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:b
   const climate=Math.max(.12,Math.min(2.8,Math.pow(2,(temperature-12)/12)*(.65+humidity*.7)));
   const protectedRate=(1-indoor)+(indoor-prepared)*.25+prepared*.05;
   const knowledge=(team===0&&g.state.agePicks[0]==="econ"?.35:1)*(team===0&&hasTradition(g,"winter-stores")?.75:1);
-  const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013,milk:.00065,bread:.00018,driedMeat:.000045,driedFish:.000045,smokedMeat:.000065,smokedFish:.000065,cookedFish:.0004,porridge:.0005,fermentedMilk:DAIRY_RULES.spoilPerSecond};
+  const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013,milk:.00065,bread:.00018,driedMeat:.000045,driedFish:.000045,smokedMeat:.000065,smokedFish:.000065,cookedFish:.0004,porridge:.0005,fermentedMilk:DAIRY_RULES.spoilPerSecond,freshCurd:CURD_RULES.curdSpoilPerSecond,whey:CURD_RULES.wheySpoilPerSecond};
   const outside=includeOverflow?Math.max(0,food-g.stockCap(team))/Math.max(1,food):0;
   return Object.fromEntries(FOOD_KINDS.map(k=>[k,(base[k]*protectedRate+outside*.0005)*climate*knowledge*(team===0?difficulty(g).spoil:1)])) as Record<FoodKind,number>;
 }
