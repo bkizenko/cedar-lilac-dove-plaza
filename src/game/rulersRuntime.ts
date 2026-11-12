@@ -3,7 +3,8 @@
 import type {Game} from './sim';
 import {initRulers,stepRulersYear,rulersOf,type RulersState,type Ward} from './rulersState';
 import {familyStage,familyFeatures,kinshipEffectScale} from './familyScale';
-import {marry} from './dynasty';
+import {marry,heir} from './dynasty';
+import {hash32,makeRng} from './rulerCore';
 import {assess,type Drivers,type DriverInputs} from './expansionDrivers';
 import {expansionPressure} from './polityModel';
 import {drive as personalDrive} from './rulerGenome';
@@ -35,7 +36,7 @@ export function advanceRulers(g:Game){
  const r=ensureRulers(g);if(!r)return;const s=st(g),target=Math.floor(s.time/RULERS_YEAR_SECONDS);
  sampleClimate(g,r);
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);if(decisionsEnabled(g))yearlySocieties(g);}
+ while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);domesticPressure(g);if(decisionsEnabled(g))yearlySocieties(g);}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -279,4 +280,30 @@ export function journeyPermit(g:Game,team:number,kind:'explore'|'trade'|'raid',t
 export function spendRaidClaim(g:Game,team:number,target:number){
  noteRaid(g,team,target);
  const c=citeClaim(g,team,target,'raid');if(c)nudgeSocietyRelation(g,target,team,{trust:0,grievance:.01*c.cost});return c;
+}
+
+/** Domestic-pressure executor. Unrest has teeth: a house that sits at 'uprising' or 'civilWar' for UPRISING_YEARS dynastic years in a row is
+ * overthrown. The ruler is set aside through the same heir() law succession uses (never killed, never teleported: they stay in the house as
+ * kin), the new ruler is flagged illegitimate and the log says why. 'plots' and below only warn (log once on entry). The counter resets
+ * after a fall or when pressure drops below 'uprising'. Stored in rulers.unrestYears (optional, so old saves load). Off when rulers are off. */
+export const UPRISING_YEARS=3;
+export function domesticPressure(g:Game):string[]{
+ const r=rulersOf(st(g));if(!r)return [];
+ const years={...(r.unrestYears??{})},societies={...r.societies},falls:string[]=[];
+ for(const id of Object.keys(societies)){
+  const t=Number(id);if(!Number.isInteger(t)||t===3||!g.tribe(t))continue;
+  const u=unrestOf(g,t);if(!u)continue;
+  const hot=u.stage==='uprising'||u.stage==='civilWar';
+  const n=hot?(years[id]??0)+1:0;years[id]=n;
+  if(n<UPRISING_YEARS)continue;
+  const sr=societies[id],d=sr.dynasty,old=d.people[d.rulerId];
+  const next=old&&heir(d,sr.civ.polity.succession,makeRng(hash32('overthrow',r.seed,r.year,id)));
+  if(!old||!next)continue; // no one to raise: the house limps on and the pressure stays
+  const note=`${r.year}: ${old.name} is overthrown after ${n} years of ${u.stage==='civilWar'?'civil war':'uprising'} (${u.why.join(', ')||'unrest'}); ${next.name} takes the seat`;
+  societies[id]={...sr,dynasty:{...d,rulerId:next.id,regent:undefined,generation:d.generation+1,log:[...d.log,note].slice(-40),
+   people:{...d.people,[next.id]:{...next,legit:false,claimStrength:Math.min(next.claimStrength,40)}}}};
+  years[id]=0;falls.push(note);
+ }
+ st(g).rulers={...r,societies,unrestYears:years};
+ return falls;
 }

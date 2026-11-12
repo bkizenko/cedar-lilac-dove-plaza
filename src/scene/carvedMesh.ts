@@ -9,7 +9,7 @@
  * orienting each triangle away from the part centroid. Triangle counts equal
  * partTriangles() exactly (tested). */
 import {hashSeed,partsAtLod,partTriangles,rotatePoint,seededRandom,SPHERE_SEGMENTS,type BuildingSpec,type LodTier,type Part} from './buildingParts';
-import {CARVED_GRAIN,CARVED_MATERIALS,hexToRgb,type CarvedMaterialId} from './carvedPalette';
+import {CARVED_GRAIN,carvedSwatch,getCarvedPalette,hexToRgb,type CarvedMaterialId} from './carvedPalette';
 
 type V3=[number,number,number];
 export type CarvedMeshData={positions:Float32Array;normals:Float32Array;uvs:Float32Array;colors:Float32Array;grain:Float32Array;triangles:number;
@@ -61,17 +61,20 @@ const cross=(a:V3,b:V3):V3=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a
 const dot=(a:V3,b:V3)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 
 const NO_AO:ReadonlySet<CarvedMaterialId>=new Set(['fire','water','cloth']);
-const rgbCache=new Map<CarvedMaterialId,V3>();
-const swatchRgb=(m:CarvedMaterialId)=>{let c=rgbCache.get(m);if(!c){c=hexToRgb(CARVED_MATERIALS[m].hex);rgbCache.set(m,c);}return c;};
+const rgbCache=new Map<string,V3>();
+const swatchRgb=(m:CarvedMaterialId)=>{const k=getCarvedPalette()+m;let c=rgbCache.get(k);if(!c){c=hexToRgb(carvedSwatch(m).hex);rgbCache.set(k,c);}return c;};
 
 /** Build the merged carved mesh for one building spec at one LOD tier. */
-export function buildCarvedMesh(spec:BuildingSpec,tier:LodTier):CarvedMeshData{
- const parts=partsAtLod(spec,tier),triangles=parts.reduce((s,p)=>s+partTriangles(p),0),vc=triangles*3;
+export type MeshSelect={select?:(p:Part)=>boolean;origin?:readonly [number,number,number]};
+/** `select` limits the parts (the layer builds the static shell without animated parts, and each rotor group alone);
+ * `origin` is subtracted from every position so a rotor mesh turns about its own pivot. */
+export function buildCarvedMesh(spec:BuildingSpec,tier:LodTier,opt:MeshSelect={}):CarvedMeshData{
+ const o=opt.origin??[0,0,0],parts=opt.select?partsAtLod(spec,tier).filter(opt.select):partsAtLod(spec,tier),triangles=parts.reduce((s,p)=>s+partTriangles(p),0),vc=triangles*3;
  const positions=new Float32Array(vc*3),normals=new Float32Array(vc*3),uvs=new Float32Array(vc*2),colors=new Float32Array(vc*3),grain=new Float32Array(vc);
  const bounds={minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity,minZ:Infinity,maxZ:-Infinity};
  const r=seededRandom(hashSeed(spec.variantKey,tier));let v=0;
  for(const p of parts){
-  const tris=shapeTriangles(p),c=centroidOf(p),[w,h,d]=p.size,base=swatchRgb(p.mat),tone=1+(r()-.5)*.08,offU=r(),offV=r(),gs=CARVED_MATERIALS[p.mat].grain;
+  const tris=shapeTriangles(p),c=centroidOf(p),[w,h,d]=p.size,base=swatchRgb(p.mat),tone=1+(r()-.5)*.08,offU=r(),offV=r(),gs=carvedSwatch(p.mat).grain;
   for(const tri of tris){
    let [a,b,e]=tri;let nrm=cross(sub(b,a),sub(e,a));
    const mid:V3=[(a[0]+b[0]+e[0])/3,(a[1]+b[1]+e[1])/3,(a[2]+b[2]+e[2])/3];
@@ -85,7 +88,7 @@ export function buildCarvedMesh(spec:BuildingSpec,tier:LodTier):CarvedMeshData{
     if(ay>=ax&&ay>=az){[u,vv]=w>=d?[q[0],q[2]]:[q[2],q[0]];}
     else if(ax>=az){[u,vv]=d>=h?[q[2],q[1]]:[q[1],q[2]];}
     else{[u,vv]=w>=h?[q[0],q[1]]:[q[1],q[0]];}
-    const wp=p.rot?rotatePoint(q,p.rot):q,x=wp[0]+p.pos[0],y=wp[1]+p.pos[1],z=wp[2]+p.pos[2];
+    const wp=p.rot?rotatePoint(q,p.rot):q,x=wp[0]+p.pos[0]-o[0],y=wp[1]+p.pos[1]-o[1],z=wp[2]+p.pos[2]-o[2];
     positions[v*3]=x;positions[v*3+1]=y;positions[v*3+2]=z;
     normals[v*3]=wn[0];normals[v*3+1]=wn[1];normals[v*3+2]=wn[2];
     uvs[v*2]=u/CARVED_GRAIN.tileMetres+offU;uvs[v*2+1]=vv/CARVED_GRAIN.tileMetres+offV;

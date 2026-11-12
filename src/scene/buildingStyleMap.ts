@@ -7,7 +7,7 @@
  * variant index) so instancing stays possible: a village of 60 houses draws a
  * handful of distinct cottages, not 60 unique meshes. */
 import {hashSeed,type BuildingSpec} from './buildingParts';
-import {generateFamily,type BuildMaterial,type Climate,type FamilyContext,type FamilyId,type Trade,type Tradition,type WallAxis} from './buildingFamilies';
+import {generateFamily,getBuildingGrammar,type BuildMaterial,type Climate,type FamilyContext,type FamilyId,type Trade,type Tradition,type WallAxis} from './buildingFamilies';
 
 export type Habitat='plains'|'forest'|'hills'|'desert'|'tundra'|'wetland';
 export type CarvedBuildingInput={worldSeed:number;type:string;id:number;era:number;habitat?:Habitat;footprint:{w:number;d:number};
@@ -123,7 +123,7 @@ export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|nul
  const wealth=tier<0?spread:Math.min(1,tier*.4+spread*.2);
  const tradition=traditionFor(input.worldSeed,input.settlementSeed);
  const fw=Math.round(input.footprint.w*100)/100,fd=Math.round(input.footprint.d*100)/100;
- const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier].join('|');
+ const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier,getBuildingGrammar()].join('|');
  const ctx:FamilyContext={seed:hashSeed(input.worldSeed,key),era,material,climate,wealth,tradition,footprint:{w:fw,d:fd},
   ...(map.trade?{trade:map.trade}:{}),...(map.scale?{scale:map.scale}:{}),...(input.waterSide&&(input.reviewWatermill||input.type!=='grindingStone')?{waterSide:input.waterSide}:{}),...(input.wallAxis?{wallAxis:input.wallAxis}:{}),...(input.lit===false?{lit:false}:{})};
  return {key,family:map.family,ctx};
