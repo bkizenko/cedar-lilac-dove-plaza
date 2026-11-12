@@ -76,8 +76,8 @@ export function headwearParts(kind:Dress['headwear'],item:GarmentId,rich=0,v=0):
   case 'cap':return [P('garment','sphere',[.29,.16,.29],[0,1.1,.02],1),...(rich>=1?[P('trim','cylinder',[.295,.025,.295],[0,1.062,.02],0,undefined,8)]:[]),...(rich>=2?[P('trim','sphere',[.05,.05,.05],[0,1.19,.02],0)]:[])];
   case 'hood':return hood?[P('garment','sphere',[.34,.34,.36],[0,.94,0],1),P('garment','cone',[.22,.2,.22],[0,.82,-.16],0,[.9,0,0],6),...(rich>=1?[P('trim','cylinder',[.31,.025,.31],[0,.8,.0],0,undefined,8)]:[])]:[P('garment','cylinder',[.3,.09,.3],[0,1.07,.02],1,undefined,8)];
   case 'brim':return [P('leather','cylinder',[.5,.02,.5],[0,1.12,.02],1,undefined,10),P('leather','cylinder',[.24,.09,.24],[0,1.12,.02],1,undefined,8),...(rich>=1?[P('trim','cylinder',[.245,.025,.245],[0,1.13,.02],0,undefined,8)]:[]),...(rich>=2?[P('trim','box',[.02,.14,.05],[side*.13,1.2,.0],0,[0,0,side*.5])]:[])];
-  case 'band':return [P('trim','cylinder',[.29,.03,.29],[0,1.1,.02],0,undefined,8),...(rich>=2?[P('trim','box',[.045,.06,.02],[0,1.12,.15],0,[0,0,Math.PI/4])]:[])];
-  case 'braids':return [-1,1].flatMap(sd=>[P('hair','cylinder',[.05,.32,.05],[sd*.08,.74,-.13],0,undefined,5),...(rich>=1?[P('trim','cylinder',[.065,.03,.065],[sd*.08,.6,-.13],0,undefined,5)]:[])]);
+  case 'band':return [P('trim','cylinder',[.3,.035,.3],[0,1.1,.02],1,undefined,8),...(rich>=2?[P('trim','box',[.045,.06,.02],[0,1.12,.15],0,[0,0,Math.PI/4])]:[])];
+  case 'braids':return [-1,1].flatMap(sd=>[P('hair','cylinder',[.05,.32,.05],[sd*.08,.74,-.13],1,undefined,5),...(rich>=1?[P('trim','cylinder',[.065,.03,.065],[sd*.08,.6,-.13],0,undefined,5)]:[])]);
   default:return [];}
 }
 /** Insignia and banners are cut from the owned garment's cloth (a sash, shoulder cloth, chest patch, a leader's standard);
