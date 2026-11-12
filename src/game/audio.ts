@@ -1,5 +1,5 @@
 import { peacefulMusic, AcousticScore } from "./music";
-import { ProceduralAudio, type WorldAudio } from "./proceduralAudio";
+import { ProceduralAudio, proceduralMusicOn, type WorldAudio } from "./proceduralAudio";
 import { LEGACY_SFX, loadSettings, saveSettings, type AudioSettings, type Bus } from "../scene/audioMix";
 export class GameAudio {
   ctx: AudioContext | null = null;
@@ -39,12 +39,12 @@ export class GameAudio {
     this.score.unlock();
     this.proc.attach(this.ctx, this.master, this.seed);
     this.proc.setSettings(this.settings);
-    if (this.proc.active) this.score.setMuted(true);
+    if (this.proc.active && proceduralMusicOn()) this.score.setMuted(true);
   }
 
   setMuted(m: boolean) {
     this.muted = m;
-    this.score.setMuted(m || this.proc.active);
+    this.score.setMuted(m || (this.proc.active && proceduralMusicOn()));
     this.settings = { ...this.settings, muted: m };
     saveSettings(typeof localStorage === "undefined" ? null : localStorage, this.settings);
     this.proc.setSettings(this.settings);
@@ -234,7 +234,7 @@ export class GameAudio {
     paused = false,
     season = "Spring",
   ) {
-    if (this.proc.active) return;
+    if (this.proc.active && proceduralMusicOn()) return;
     const battle = mood !== "peace";
     const stage = battle ? "battle" : peacefulMusic(age,season,this.score.calm);
     const duck = (season === "Winter" ? 0.5 : season === "Autumn" ? 0.62 : 0.7) * (population > 30 || age > 3 ? 0.9 : 1);

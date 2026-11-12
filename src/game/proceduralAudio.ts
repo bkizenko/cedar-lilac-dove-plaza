@@ -47,7 +47,7 @@ export class ProceduralAudio{
   this.smoother.step(mix,dt);const t=ctx.currentTime;
   for(const l of SCORE_LAYERS)this.layerGain.get(l)!.gain.setTargetAtTime(this.smoother.gains[l]*.5,t,.25);
   this.brightness=this.smoother.brightness;for(const f of this.filterByLayer.values())f.frequency.setTargetAtTime(700+this.brightness*4200,t,.5);
-  if(this.settings.music>0&&!this.settings.muted)this.scheduleScore(mix.scale,mix.danger);
+  if(proceduralMusicOn()&&this.settings.music>0&&!this.settings.muted)this.scheduleScore(mix.scale,mix.danger);
   smoothEnv(this.env,envMix(w.env),dt);this.updateBeds(t);
   if(!this.settings.muted&&this.settings.ambience>0)for(const e of envEvents(this.env,dt,this.rng)){
    const rec=envRecipe(e.kind,w.biome,w.env.hour,this.rng);
@@ -140,3 +140,6 @@ export class ProceduralAudio{
  }
  dispose(){this.active=false;for(const b of this.beds.values())b.gain.disconnect();this.beds.clear();this.layerGain.clear();this.filterByLayer.clear();this.buses=null;this.ctx=null;}
 }
+
+/** Procedural music is OPT-IN (localStorage hearthwild.proceduralMusic=1). The project rule is licensed recorded music with no oscillator score (AUTOPILOT W3); procedural ambience and SFX stay on. */
+export function proceduralMusicOn():boolean{try{return typeof localStorage!=='undefined'&&localStorage.getItem('hearthwild.proceduralMusic')==='1';}catch{return false;}}
