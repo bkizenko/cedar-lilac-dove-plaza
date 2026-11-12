@@ -22,5 +22,5 @@ export function WildCraftPanel({engine}:{engine:Engine}){
  const action=useLifecycleAction(engine),[feedback,setFeedback]=useState(''),epoch=engine.dispatchEpoch;
  const read=useOwnerReadModels(engine,[Q]),m=read(Q).model?.wild;
  if(!m?.enabled)return null;
- return <section aria-label="Wild craft" className="space-y-2"><h3>Hunting and hides</h3><WildCraftSheet rows={m.rows} busy={action.busy} onControl={(projectId,paused)=>{void action.run(()=>engine.dispatch({kind:'wild-work-control',projectId,paused}),r=>{if(engine.dispatchEpoch===epoch)setFeedback(r.reason);});}}/>{(feedback||action.error)&&<p role="status" className="text-xs">{action.error||feedback}</p>}</section>;
+ return <section aria-label="Wild craft" className="space-y-2"><h3>Hunting and hides</h3><WildCraftSheet rows={m.rows} busy={action.busy} onControl={(projectId,paused)=>{if(engine.disposed||engine.dispatchEpoch!==epoch)return;void action.run(()=>engine.dispatch({kind:'wild-work-control',projectId,paused}),r=>{if(r.epoch===epoch&&engine.dispatchEpoch===epoch)setFeedback(r.reason);});}}/>{(feedback||action.error)&&<p role="status" className="text-xs">{action.error||feedback}</p>}</section>;
 }
