@@ -10,7 +10,8 @@ export class MethodRecordLayer {
  private geometry=cargoGeo('stone');
  private owners:MethodRecord[]=[];
  private disposed=false;
- constructor(private scene:THREE.Scene,material:THREE.Material){this.mesh=new THREE.InstancedMesh(this.geometry,material,64);this.mesh.name='owned-physical-method-records';this.mesh.count=0;this.mesh.visible=false;this.mesh.frustumCulled=false;this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(this.mesh);}
+ private scene:THREE.Scene;
+ constructor(scene:THREE.Scene,material:THREE.Material){this.scene=scene;this.mesh=new THREE.InstancedMesh(this.geometry,material,64);this.mesh.name='owned-physical-method-records';this.mesh.count=0;this.mesh.visible=false;this.mesh.frustumCulled=false;this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);scene.add(this.mesh);}
  sync(g:Game,quality:'low'|'med'|'high'='low',shadows=false){
   if(this.disposed)return;this.owners=[];const matrix=new THREE.Matrix4(),rotation=new THREE.Quaternion(),scale=new THREE.Vector3(.65,.28,.65),position=new THREE.Vector3(),slots=new Map<string,number>();
   for(const r of methodRecords(g))if(r.team===0&&r.holder.kind!=='carrier'&&g.visibleAt(r.holder.x,r.holder.z))this.owners.push(r);
