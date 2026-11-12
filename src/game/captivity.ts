@@ -182,7 +182,8 @@ export function prisonerAI(g:Game,person:Unit,dt:number){
   if(Math.hypot(u.x-traveling.x,u.z-traveling.z)>PRISONER_RULES.escortSeparationMeters){u.tx=traveling.x;u.tz=traveling.z;u.order='move';g.steer(u,dt);u.workReason='Regrouping with prisoner before continuing';return true;}
   const drop=g.nearestDrop(u.x,u.z,u.team),spot=drop?supplyApproach(g,u,drop):null;
   if(!drop||!spot){u.order='hold';u.workReason='Prisoner escort needs a reachable friendly camp or store';return true;}
-  u.tx=spot.x;u.tz=spot.z;if(!supplyReached(g,u,drop,spot)){u.order='move';g.steer(u,dt);}else u.order='hold';u.workReason='Escorting prisoners to custody';return true;
+  // Homebound custody is a deliberate return journey, including the existing bounded long-route fallback.
+  u.tx=spot.x;u.tz=spot.z;if(!supplyReached(g,u,drop,spot)){u.order='return';g.steer(u,dt);}else u.order='hold';u.workReason='Escorting prisoners to custody';return true;
  }
  const p=u.prisoner;if(u.hp<=0)return true;
  if(p.phase==='released'){
@@ -209,7 +210,7 @@ export function prisonerAI(g:Game,person:Unit,dt:number){
  if(!drop||!spot){u.order='hold';u.workReason='Prisoner waiting for a reachable custody site';return true;}
  if(supplyReached(g,u,drop,spot)){p.phase='custody';u.order='hold';u.node=null;u.target=null;recordConflict(g,'prisoner_custody',p.captorTeam,1,{actorId:u.id});return true;}
  if(Math.hypot(guard.x-u.x,guard.z-u.z)>PRISONER_RULES.escortSeparationMeters){u.order='hold';u.workReason='Waiting for prisoner escort to catch up';return true;}
- u.tx=spot.x;u.tz=spot.z;u.order='move';g.steer(u,dt);u.workReason='Walking under escort to custody';return true;
+ u.tx=spot.x;u.tz=spot.z;u.order='return';g.steer(u,dt);u.workReason='Walking under escort to custody';return true;
 }
 
 /** Validate optional new custody saves without reinterpreting enslavedFrom saves. */

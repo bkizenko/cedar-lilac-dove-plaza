@@ -20,6 +20,11 @@ function fixture(){
 test('legacy villages load without inventing any captured method history',()=>{
  const copy=decodeGame(structuredClone(legacy));assert.equal(copy.state.captiveDealings,undefined);assert.equal(validCapturedKnowledgeState(copy.state,validRecipe),true);assert.deepEqual(capturedRecipeSources(copy.state,0,[recipe]),[]);
 });
+test('optional new evidence does not tighten legacy integration records',()=>{
+ const raw=structuredClone(legacy),person=raw.state.units.find(u=>u.team===0);raw.state.time=100;
+ raw.state.captiveDealings={version:1,custodySince:[],interrogations:[],intel:[],ransoms:[],integrations:[{unitId:person.id,originTeam:0,captorTeam:0,at:60}]};
+ assert.equal(validCapturedKnowledgeState(raw.state,validRecipe),true);assert.doesNotThrow(()=>decodeGame(raw));
+});
 test('known personal methods are copied at capture and cannot change through later local experience',()=>{
  const {s,teacher,methods}=fixture(),before=JSON.stringify(methods);teacher.productionSkills[recipe].successfulBatches=14;
  assert.equal(JSON.stringify(methods),before);assert.equal(methods.recipes[0].successfulBatches,3);
@@ -48,7 +53,7 @@ test('strict saves reject forged chronology, counters, source identity, duplicat
  for(const change of changes){const f=fixture();change(f);assert.equal(validCapturedKnowledgeState(f.s,validRecipe),false);assert.throws(()=>decodeGame(f.raw));}
 });
 test('unfree people cannot expose method sources; a learned history travels with a later free migrant',()=>{
- const {s,teacher,learner}=fixture();teacher.prisoner={originTeam:1,captorTeam:0,phase:'custody',food:0,waterLiters:0,unguardedSeconds:0};learner.enslavedFrom=1;
+ const {s,teacher,learner}=fixture();learner.militia=true;assert.equal(capturedRecipeSources(s,0,[recipe]).length,1,'temporary duty does not erase learned history');delete learner.militia;teacher.prisoner={originTeam:1,captorTeam:0,phase:'custody',food:0,waterLiters:0,unguardedSeconds:0};learner.enslavedFrom=1;
  assert.deepEqual(capturedRecipeSources(s,0,[recipe]),[]);delete learner.enslavedFrom;learner.team=2;
  assert.equal(capturedRecipeSources(s,2,[recipe]).length,1);assert.equal(capturedRecipeSources(s,0,[recipe]).length,0);
 });
