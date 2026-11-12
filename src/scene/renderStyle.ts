@@ -1,9 +1,7 @@
-/** Render style resolution for the Option H adapter. Consumes Codex's
- * persisted preference contract in src/game/graphics.ts ('current' default,
- * 'optionH' opt-in; key hearthwild:render-style) rather than defining a
- * second one. Adds only a non-persisted review override `?render=h` /
- * `?render=current` for side-by-side review. Nothing here switches a running
- * renderer; the scene reads the result when it builds. */
+/** Render-style resolution consumes the stable graphics.ts preference contract:
+ * approved 'village' default, explicit legacy 'current' and opt-in 'optionH',
+ * stored under hearthwild:render-style-v2. Query aliases are temporary review
+ * overrides and never rewrite the viewer's saved preference. */
 import {GRAPHICS_RULES,isRenderStyle,loadRenderStyle as loadStoredRenderStyle,type RenderStyle} from '../game/graphics';
 export type {RenderStyle};
 export const DEFAULT_RENDER_STYLE:RenderStyle=GRAPHICS_RULES.defaultRenderStyle;
