@@ -15,14 +15,14 @@ const tools=(g:Game)=>g.state.farmToolCargo?.tools||[];
 const live=(g:Game,id:number)=>g.state.units.find(u=>u.id===id&&u.hp>0&&!u.prisoner);
 const held=(g:Game,u:Unit)=>tools(g).find(t=>t.holder.kind==='carrier'&&t.holder.unitId===u.id);
 const close=(a:{x:number;z:number},b:{x:number;z:number})=>Math.hypot(a.x-b.x,a.z-b.z)<=R.transferMetres;
-function clearApproach(g:Game,u:Unit,p:{x:number;z:number}){
+export function clearCargoApproach(g:Game,u:Unit,p:{x:number;z:number}){
  if(!close(u,p)||!connectedForUnit(g,u,p.x,p.z))return false;
  const n=Math.max(1,Math.ceil(Math.hypot(u.x-p.x,u.z-p.z)/.4));let probe=u;
  for(let i=1;i<=n;i++){const x=u.x+(p.x-u.x)*i/n,z=u.z+(p.z-u.z)*i/n;if(!g.canStep(probe,x,z))return false;probe={...u,x,z,y:g.travelHeight(x,z)};}return true;
 }
-const cacheHolder=(d:SupplyDrop,team:number):FarmToolHolder=>({kind:'cache',team,x:d.x,z:d.z,...(d.kind==='camp'?{}:{buildingId:d.id})});
-const sameCache=(h:Extract<FarmToolHolder,{kind:'cache'}>,d:SupplyDrop)=>Math.hypot(h.x-d.x,h.z-d.z)<.01&&(d.kind==='camp'?h.buildingId===undefined:h.buildingId===d.id);
-function reachedCache(g:Game,u:Unit,team:number){return supplyDrops(g,team).find(d=>{const p=supplyApproach(g,u,d);return p&&supplyReached(g,u,d,p);});}
+export const cargoCacheHolder=(d:SupplyDrop,team:number):FarmToolHolder=>({kind:'cache',team,x:d.x,z:d.z,...(d.kind==='camp'?{}:{buildingId:d.id})});
+export const sameCargoCache=(h:Extract<FarmToolHolder,{kind:'cache'}>,d:SupplyDrop)=>Math.hypot(h.x-d.x,h.z-d.z)<.01&&(d.kind==='camp'?h.buildingId===undefined:h.buildingId===d.id);
+export function reachedCargoCache(g:Game,u:Unit,team:number){return supplyDrops(g,team).find(d=>{const p=supplyApproach(g,u,d);return p&&supplyReached(g,u,d,p);});}
 function root(g:Game){return g.state.farmToolCargo??={version:1,tools:[]};}
 function carried(t:FarmToolCargo,u:Unit){t.holder={kind:'carrier',unitId:u.id,x:u.x,z:u.z};t.team=u.team;u.farmToolCargoId=t.id;}
 function remove(g:Game,t:FarmToolCargo){const s=g.state.farmToolCargo!;s.tools.splice(s.tools.indexOf(t),1);}
@@ -37,7 +37,7 @@ export function takeFarmTool(g:Game,sourceId:number,carrierId:number){
  if(carrier.farmToolWork)return no('This carrier retains a paid tool project');
  if(carrier.farmToolCargoId!==undefined||held(g,carrier))return no('This carrier already holds a tool');
  if(tools(g).length>=R.maximumRecords)return no('Tool record capacity full; original equipment retained');
- if(!clearApproach(g,carrier,source))return no('Walk the carrier to the actual tool holder');
+ if(!clearCargoApproach(g,carrier,source))return no('Walk the carrier to the actual tool holder');
  const t:FarmToolCargo={id:g.id(),kind:source.farmTool,condition:farmToolCondition(source),team:carrier.team,originalOwnerTeam:source.team,holder:{kind:'carrier',unitId:carrier.id,x:carrier.x,z:carrier.z}};
  root(g).tools.push(t);delete source.farmTool;delete source.farmToolCondition;carried(t,carrier);
  return{accepted:true as const,toolId:t.id,reason:'Existing farming tool moved into the carrier’s custody'};
@@ -45,22 +45,22 @@ export function takeFarmTool(g:Game,sourceId:number,carrierId:number){
 export function pickupFarmTool(g:Game,carrierId:number,toolId:number){
  const u=live(g,carrierId),t=tools(g).find(t=>t.id===toolId);
  if(!u||!t||u.farmToolWork||u.farmToolCargoId!==undefined||held(g,u)||t.holder.kind==='carrier')return no('Need a free carrier and an actual stored or dropped tool');
- if(t.holder.kind==='cache'){const h=t.holder;if(h.team!==u.team||!supplyDrops(g,h.team).some(d=>sameCache(h,d)&&(()=>{const p=supplyApproach(g,u,d);return p&&supplyReached(g,u,d,p);})()))return no('Reach the tool’s actual owned cache');}
- else if(!clearApproach(g,u,t.holder))return no('Walk to the dropped tool');
+ if(t.holder.kind==='cache'){const h=t.holder;if(h.team!==u.team||!supplyDrops(g,h.team).some(d=>sameCargoCache(h,d)&&(()=>{const p=supplyApproach(g,u,d);return p&&supplyReached(g,u,d,p);})()))return no('Reach the tool’s actual owned cache');}
+ else if(!clearCargoApproach(g,u,t.holder))return no('Walk to the dropped tool');
  carried(t,u);return{accepted:true as const,toolId:t.id,reason:'Existing tool picked up with its original condition'};
 }
 export function depositFarmTool(g:Game,carrierId:number,targetTeam?:number){
  const u=live(g,carrierId),t=u&&held(g,u);if(!u||!t||u.farmToolCargoId!==t.id)return no('No actual carried tool');
  const team=targetTeam??u.team;if(!Number.isSafeInteger(team)||team<0||!g.state.tribes[team]?.alive)return no('Choose an existing receiving village');
- const drop=reachedCache(g,u,team);if(!drop)return no('Physically reach the receiving village’s actual cache');
- t.holder=cacheHolder(drop,team);t.team=team;delete u.farmToolCargoId;
+ const drop=reachedCargoCache(g,u,team);if(!drop)return no('Physically reach the receiving village’s actual cache');
+ t.holder=cargoCacheHolder(drop,team);t.team=team;delete u.farmToolCargoId;
  return{accepted:true as const,toolId:t.id,reason:'The same tool deposited at the receiving cache'};
 }
 export function equipCarriedFarmTool(g:Game,carrierId:number,receiverId:number){
  const u=live(g,carrierId),receiver=live(g,receiverId),t=u&&held(g,u);
  if(!u||!receiver||!t||u.farmToolCargoId!==t.id)return no('Need an actual carried tool and living receiver');
  if(receiver.type!=='worker'||receiver.militia||isDependent(g,receiver)||receiver.farmTool||receiver.farmToolWork||receiver.copperStudy)return no('Receiver must be a farmer with no tool or paid tool project');
- if(!clearApproach(g,u,receiver))return no('Walk the actual tool to the receiver');
+ if(!clearCargoApproach(g,u,receiver))return no('Walk the actual tool to the receiver');
  receiver.farmTool=t.kind;receiver.farmToolCondition=t.condition;delete u.farmToolCargoId;remove(g,t);
  return{accepted:true as const,reason:'Existing tool equipped without repairing or crafting it'};
 }
@@ -72,7 +72,7 @@ export function reconcileFarmToolCargo(g:Game){
   if(t.holder.kind==='carrier'){const h=t.holder,u=g.state.units.find(u=>u.id===h.unitId);
    if(u&&u.hp>0){h.x=u.x;h.z=u.z;t.team=u.team;continue;}
    t.holder={kind:'ground',x:u?.x??h.x,z:u?.z??h.z};if(u?.farmToolCargoId===t.id)delete u.farmToolCargoId;
-  }else if(t.holder.kind==='cache'){const h=t.holder;if(!supplyDrops(g,h.team).some(d=>sameCache(h,d)))t.holder={kind:'ground',x:h.x,z:h.z};}
+  }else if(t.holder.kind==='cache'){const h=t.holder;if(!supplyDrops(g,h.team).some(d=>sameCargoCache(h,d)))t.holder={kind:'ground',x:h.x,z:h.z};}
  }
  for(const u of g.state.units){
   if(u.hp>0||!u.farmTool||tools(g).length>=R.maximumRecords)continue;
