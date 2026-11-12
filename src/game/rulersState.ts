@@ -9,6 +9,7 @@ import {rollGreatPerson} from './greatPersons';
 import type {Tier} from './fame';
 import {familyFeatures} from './familyScale';
 import {validDecisionState} from './societyState';
+import {cbLegitimacyCost} from './unrest';
 
 export type SocietyRulers={civ:CivSeed;dynasty:Dynasty;ledger:Ledger;greatEmerged:number};
 export type Ward={kind:'foster'|'hostage';person:string;from:string;to:string;since:number};
@@ -42,7 +43,7 @@ export function validRulersState(x:unknown):x is RulersState{
   if(validatePolity(sr.civ.polity).length||validateRuler(sr.civ.ruler).length||validateLedger(sr.ledger).length)return false;
   if(validateDynasty(sr.dynasty).length&&sr.dynasty.people[sr.dynasty.rulerId]?.alive)return false;
  }
- if(s.claims!==undefined&&(!Array.isArray(s.claims)||s.claims.some(c=>!c||typeof c.holder!=='string'||typeof c.target!=='string'||!Number.isFinite(c.strength)||!Number.isFinite(c.expiresTick))))return false;
+ if(s.claims!==undefined&&(!Array.isArray(s.claims)||s.claims.some(c=>!c||typeof c.holder!=='string'||typeof c.target!=='string'||c.holder===c.target||!Object.hasOwn(s.societies,c.holder)||!Object.hasOwn(s.societies,c.target)||!Number.isFinite(cbLegitimacyCost(c.kind))||!Number.isFinite(c.strength)||c.strength<0||c.strength>100||!Number.isFinite(c.expiresTick)||c.expiresTick<0)))return false;
  if(s.weary!==undefined&&(!s.weary||typeof s.weary!=='object'||Array.isArray(s.weary)||Object.values(s.weary).some(v=>!Number.isFinite(v)||v<0||v>100)))return false;
  if(s.unrestYears!==undefined&&(!s.unrestYears||typeof s.unrestYears!=='object'||Array.isArray(s.unrestYears)||Object.values(s.unrestYears).some(v=>!Number.isInteger(v)||v<0||v>1000)))return false;
  if(s.wards!==undefined&&(!Array.isArray(s.wards)||s.wards.some(w=>!w||(w.kind!=='foster'&&w.kind!=='hostage')||typeof w.person!=='string'||typeof w.from!=='string'||typeof w.to!=='string'||!Number.isFinite(w.since))))return false;

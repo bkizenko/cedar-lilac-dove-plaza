@@ -1,0 +1,12 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {writeFileSync} from 'node:fs';import {Game} from '../src/game/sim.ts';import {ensureRulers} from '../src/game/rulersRuntime.ts';import {councilModel} from '../src/game/rulersView.ts';import {encodeGame,decodeGame,validateGameSave} from '../src/game/persistence.ts';
+// An authored prior-diplomacy fixture, not evidence of earned contact or war.
+// Generated terrain, bodies and stocks are untouched. Only initial known history
+// and its standing/expired claim records are authored for readout/save coverage.
+test('standing claims round-trip but malformed imported claims are rejected before replacing a village',()=>{
+ const g=new Game();g.reset(42,21,{size:1040,preset:'river-valley'});g.enterIsland();g.state.paused=true;const before=JSON.stringify({tribes:g.state.tribes,units:g.state.units});const r=ensureRulers(g);
+ g.state.societyRelations=[{from:0,to:1,known:true,trust:.5,grievance:.2,hostile:false,peaceUntil:0,lastContactSeconds:0},{from:1,to:0,known:true,trust:.5,grievance:.2,hostile:false,peaceUntil:0,lastContactSeconds:0}];
+ r.claims=[{holder:'0',target:'1',kind:'raid',strength:55,expiresTick:r.year+12},{holder:'1',target:'0',kind:'tribute',strength:40,expiresTick:r.year+2},{holder:'0',target:'1',kind:'claim',strength:30,expiresTick:r.year},{holder:'1',target:'2',kind:'holy',strength:99,expiresTick:r.year+44}];
+ assert.equal(JSON.stringify({tribes:g.state.tribes,units:g.state.units}),before);const save=JSON.parse(JSON.stringify(encodeGame(g)));validateGameSave(save);const back=decodeGame(structuredClone(save));assert.deepEqual(back.state.rulers.claims,r.claims);const n=councilModel(back).neighbours;assert.equal(n.length,1);assert.equal(n[0].team,1);assert.equal(n[0].casus.length,2);assert.deepEqual(n[0].casus.map(c=>[c.kind,c.cost,c.endsIn]),[['raid',14,12],['tribute',10,2]]);
+ for(const change of[{kind:'made-up'},{holder:'999'},{target:'999'},{holder:'__proto__'},{target:'0'},{strength:101},{strength:-1},{expiresTick:-1}]){const bad=structuredClone(save);Object.assign(bad.state.rulers.claims[0],change);assert.throws(()=>decodeGame(bad),/save|ruler/i,JSON.stringify(change));}assert.deepEqual(g.state.rulers.claims,r.claims);
+ if(process.env.CASUS_NATIVE_SAVE){writeFileSync(process.env.CASUS_NATIVE_SAVE,JSON.stringify(save));console.log(JSON.stringify({authoredPriorHistoryOnly:true,file:process.env.CASUS_NATIVE_SAVE,knownNeighbour:back.tribe(1).name,claims:n[0].casus}));}
+});
