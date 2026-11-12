@@ -35,7 +35,7 @@ export type BldType =
   | "palisade" | "gate" | "stonewall" | "trench" | "moat";
 
 export type ResKind = "food" | "wood" | "stone" | "copper" | "iron";
-export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk" | "bread" | "driedMeat" | "driedFish" | "smokedMeat" | "smokedFish" | "cookedFish" | "porridge" | "fermentedMilk" | "freshCurd" | "whey";
+export type FoodKind = "provisions" | "berries" | "fish" | "meat" | "grain" | "pulses" | "tubers" | "milk" | "bread" | "driedMeat" | "driedFish" | "smokedMeat" | "smokedFish" | "cookedFish" | "porridge" | "fermentedMilk" | "freshCurd" | "whey" | "smallBeer" | "beer";
 export type CropKind = "grain" | "pulses" | "tubers";
 export type Order =
   | "idle"
@@ -423,7 +423,7 @@ export type Tribe = {
   basketOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
   potteryOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
   items?:import('./production').ItemStock;
-  itemFreshness?:Partial<Record<'flour'|'rawHide'|'cleanHide'|import('./cerealRules').StoredCerealKind,number>>;
+  itemFreshness?:Partial<Record<'flour'|'rawHide'|'cleanHide'|'greenMalt'|import('./cerealRules').StoredCerealKind,number>>;
   survival?:import('./survivalNeeds').SurvivalStock;
   seeds?: number;
   boatPractice?:import('./boatPractice').BoatPractice;
