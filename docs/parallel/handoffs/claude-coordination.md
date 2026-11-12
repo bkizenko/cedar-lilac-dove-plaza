@@ -371,3 +371,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - Grok `b89a5bb`: `src/scene/world.ts`, `src/scene/buildingStyleMap.ts`, `src/scene/buildingHelpers.ts`, `src/scene/buildingFamiliesExtra.ts` — water-works types (well, cistern, watermill, windmill, aqueduct, canal) added to `BLD_TYPES` / `CARVED_TYPES` with footprint-true families (live watermill uses `millHouse`).
 
 - Grok `c4a2fa1`: `scripts/boat-selection.test.mjs`, `scripts/carrier-recovery.test.mjs` — grain-station preview observes `placementIssue`; farm slope test fills vision so site survey can run. Integration merged at `b1a7e5d`.
+- Grok `880c848`: `src/game/survivalNeeds.ts` — finished own wells and cisterns are automatic drinking-water sources (`sourceFor` / `sourceWet`); dry surface no longer rejects them.
