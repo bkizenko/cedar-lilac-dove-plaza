@@ -29,7 +29,7 @@ type Mapping={family:FamilyId;trade?:Trade;scale?:'small'|'large'};
 /** Variants per family: distinct geometries kept resident per era/material bucket. */
 export const VARIANTS_PER_FAMILY:Record<FamilyId,number>={roundhouse:4,cottage:5,longhouse:3,granary:4,storehouse:3,watermill:3,quernShelter:2,
  workshop:3,palisade:3,gate:2,tower:3,church:3,marketStalls:3,hearth:3,
- fieldPlot:4,pen:3,pier:3,bridge:3,keep:3,stables:3,college:3,quarry:3,cairn:3,grove:4,outpost:3,threshing:3,stoneWall:3,trench:3,moat:3};
+ fieldPlot:4,pen:3,pier:3,bridge:3,keep:3,stables:3,college:3,quarry:3,cairn:3,grove:4,outpost:3,threshing:3,stoneWall:3,trench:3,moat:3,well:3,cistern:3,millHouse:3,windmill:3,aqueduct:3,canal:3};
 
 /** Stable building type -> family. Every BldType is mapped (batch 2 added farm,
  * pen, dock, bridge, keep, stables, university, quarry, cairn, grove,
@@ -74,10 +74,16 @@ export function familyForType(type:string,era:number,climate:Climate,waterSide?:
   case 'stonewall':return {family:'stoneWall'};
   case 'trench':return {family:'trench'};
   case 'moat':return {family:'moat'};
+  case 'well':return {family:'well'};
+  case 'cistern':return {family:'cistern'};
+  case 'watermill':return {family:'millHouse'};
+  case 'windmill':return {family:'windmill'};
+  case 'aqueduct':return {family:'aqueduct'};
+  case 'canal':return {family:'canal'};
   default:return null;
  }
 }
-export const CARVED_TYPES=['hut','house','townhall','barracks','warehouse','grindingStone','workshop','forge','kiln','potter','fibreWorkshop','tailor','tanner','butcher','dryrack','lumber','smokehouse','oven','palisade','gate','watchtower','temple','market','hearth','farm','pen','dock','bridge','keep','stables','university','quarry','cairn','grove','cornerstone','threshingFloor','stonewall','trench','moat'] as const;
+export const CARVED_TYPES=['hut','house','townhall','barracks','warehouse','grindingStone','workshop','forge','kiln','potter','fibreWorkshop','tailor','tanner','butcher','dryrack','lumber','smokehouse','oven','palisade','gate','watchtower','temple','market','hearth','farm','pen','dock','bridge','keep','stables','university','quarry','cairn','grove','cornerstone','threshingFloor','stonewall','trench','moat','well','cistern','watermill','windmill','aqueduct','canal'] as const;
 
 export function climateFor(habitat:Habitat='plains'):Climate{
  return habitat==='hills'||habitat==='tundra'?'cold':habitat==='forest'||habitat==='wetland'?'wet':habitat==='desert'?'arid':'temperate';
