@@ -748,3 +748,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 11:40 ET Claude(PM): landed e001abd (19 commits: integration lane B captive card + neighbourNews + casus-integration) / sweep 111 tests 108 pass 0 fail, tsc diff nil / Codex+Claude active, Grok silent (known) / blocked: none
 
 11:43 ET Claude: shipped biome dressing forms cattail/agave/dry-grass/cushion in wetland/arid/alpine tables (painterly only, classic kept; veg+scene+carved+painter 25/25, tsc 0) (c455e7b) / now on Option H world.ts adapter + hearth lighting / blocked: none
+11:43 ET Claude: shipped biome dressing forms cattail/agave/dry-grass/cushion in wetland/arid/alpine tables (painterly only, classic kept; veg+scene+carved+painter 25/25, tsc 0) (c455e7b, on integration) / now on Option H world.ts adapter + hearth lighting / blocked: none
