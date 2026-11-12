@@ -174,8 +174,10 @@ function build(g, type, x, z) {
   return b;
 }
 function gather(g, b, people = g.state.units.filter((u) => u.team === 0)) {
-  people=people.map(p=>g.state.units.find(u=>u.id===p.id)).filter(u=>u&&!u.productionProjectId);
-  if(!people.length) people=g.state.units.filter(u=>u.team===0&&!u.productionProjectId&&!u.buildOrder).slice(0,1);
+  // A direct player order selects the requested real adults even when a paid
+  // job is active; the native command gateway owns safe pause/unload admission.
+  people=people.map(p=>g.state.units.find(u=>u.id===p.id)).filter(u=>u&&u.hp>0);
+  assert.ok(people.length,status(g));
   g.clearSelect();
   for (const u of people) u.selected = true;
   g.issueGather(b);
