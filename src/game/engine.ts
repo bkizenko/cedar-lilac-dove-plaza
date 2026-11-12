@@ -5,6 +5,7 @@ import {parseStoredSave,serializeStoredSave} from './storageCodec';
 import {applyEngineReadQuery,isEngineReadQuery,ENGINE_READ_MODEL_RULES,type EngineReadQuery,type EngineReadReply,type EngineReadReplyFor} from './engineReadModels';
 import {SimulationWorkerHost} from './simulationWorkerHost';
 import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,type EngineSelection} from './engineDispatch';
+import {commissionWaterEngineering,previewWaterEngineering,type WaterEngineeringKind,type WaterEngineeringPoint} from './waterEngineering';
 import {surveyReachFish,waterReachAt} from './waterReach';
 import { compactGrainWorkplace } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
@@ -177,6 +178,32 @@ export class Engine {
   checkpointWorker(){if(!this.workerHost)throw new Error('No authoritative worker');return this.workerHost.checkpoint();}
   /** Selection is local presentation plus validated digest before worker ticks. */
   setWorkerSelection(selection:EngineSelection){if(!this.workerHost)throw new Error('No authoritative worker');this.workerHost.select(selection);}
+
+  private waterDraft:{state:Game['state'];kind:WaterEngineeringKind;source:WaterEngineeringPoint|null;target:WaterEngineeringPoint|null;plan:ReturnType<typeof previewWaterEngineering>|null}|null=null;
+  /** Grok World T3: canal/aqueduct tool. Two world clicks; preview and commit share one planner. */
+  beginWaterEngineering(kind:WaterEngineeringKind){
+    this.game.state.placing=null;this.loggingMode=false;this.moveMode=false;
+    this.waterDraft={state:this.game.state,kind,source:null,target:null,plan:null};this.updateGhost();this.pushHud();
+  }
+  cancelWaterEngineering(){this.waterDraft=null;this.pushHud();}
+  waterEngineeringStatus(){
+    if(this.waterDraft&&this.waterDraft.state!==this.game.state)this.waterDraft=null;
+    const d=this.waterDraft,p=d?.plan,issue=p?.issues[0]??null;
+    return{kind:d?.kind??null,source:d?.source??null,issue,canCommit:!!p&&!issue,
+      summary:!d?'Choose a water project.':!d.source?'Click the water source.':!d.target?'Click the destination.':issue??`${Math.round(p!.lengthMetres)} m · ${p!.stages.length} digs · ${Math.round(p!.workSeconds)} work-s${d.kind==='aqueduct'?' · channel earthworks only':''}`};
+  }
+  chooseWaterEngineeringPoint(point:WaterEngineeringPoint){
+    const d=this.waterDraft;if(!d||d.state!==this.game.state)return false;
+    if(!Number.isFinite(point.x)||!Number.isFinite(point.z)||Math.abs(point.x)>this.game.world.size/2||Math.abs(point.z)>this.game.world.size/2||!this.game.exploredAt(point.x,point.z)){this.game.banner('Explore the project site first',3);this.pushHud();return false;}
+    if(!d.source||d.target){d.source={...point};d.target=null;d.plan=null;}
+    else{d.target={...point};d.plan=previewWaterEngineering(this.game,d.kind,d.source,d.target);}
+    this.pushHud();return true;
+  }
+  commitWaterEngineering(){
+    const d=this.waterDraft;if(!d?.source||!d.target||d.state!==this.game.state)return{ok:false,reason:'Choose the source and destination first'};
+    const result=commissionWaterEngineering(this.game,d.kind,d.source,d.target);
+    if(result.ok)this.waterDraft=null;else d.plan=previewWaterEngineering(this.game,d.kind,d.source,d.target);this.pushHud();return result;
+  }
 
   readonly profile = new RuntimeProfile();
   entityFrustumCensus(){return this.view.entityFrustumCensus(this.game);}
@@ -457,6 +484,7 @@ export class Engine {
   };
 
   private onKeyDown = (e: KeyboardEvent) => {
+    if(e.code==='Escape'&&this.waterDraft)this.cancelWaterEngineering();
     const target=e.target as HTMLElement|null;
     if(e.code==='KeyR'&&this.game.state.placing==='gate'&&!e.metaKey&&!e.ctrlKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
       e.preventDefault();if(!e.repeat)this.setGateFacing(rotateGateFacing(this.gateFacing,e.shiftKey?-1:1));return;
@@ -496,6 +524,7 @@ export class Engine {
       return;
     }
     if (e.button === 0) {
+      if(this.waterDraft){this.drag=null;return;}
       if (this.game.state.placing) {
         this.plotPointerStart={x:p.x,y:p.y};
         this.plotStart=(scalablePlot(this.game.state.placing)||this.game.state.placing==="bridge"||linearStructure(this.game.state.placing))?this.view.groundAt(p.x,p.y):null;
@@ -552,6 +581,7 @@ export class Engine {
     const p = this.canvasXY(e);
     this.pointer.x = p.x;
     this.pointer.y = p.y;
+    if(e.button===0&&this.waterDraft){this.leftClick(p.x,p.y,false);this.drag=null;return;}
     if (this.rotDrag && e.button === 2) {
       const moved = Math.hypot(e.clientX - this.rotDrag.sx, e.clientY - this.rotDrag.sy);
       this.rotDrag = null;
@@ -629,6 +659,7 @@ export class Engine {
       const point=this.view.groundAt(cx,cy);if(point&&this.game.selectedUnits().length){void this.dispatch({kind:'move',unitIds:this.game.selectedUnits().map(u=>u.id),x:point.x,z:point.z}).catch(console.error);}
       return;
     }
+    if(this.waterDraft){const point=this.view.groundAt(cx,cy);if(point)this.chooseWaterEngineeringPoint(point);return;}
     const boatOrder=this.game.selectedBoat!==null&&!this.game.state.placing;
     const g = boatOrder ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
     if (!g) {
@@ -789,7 +820,7 @@ export class Engine {
   pauseHome(id:number,paused:boolean){const accepted=setHousingPaused(this.game,id,paused);this.pushHud();return accepted;}
 
   setPlacing(type: BldType | null) {
-    this.nextFieldPreviewAt=0;
+    this.nextFieldPreviewAt=0;this.waterDraft=null;
     this.bridgeSpan=undefined;this.plotStart=null;this.plotPointerStart=null;this.plotSize=undefined;this.plotWidth=1;this.plotDepth=1;
     if(type==='gate')this.gateFacingExplicit=false;
     this.loggingMode = false;
