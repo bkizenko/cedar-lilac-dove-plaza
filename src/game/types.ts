@@ -168,6 +168,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   sitePreparationId?:number;
   productionProjectId?:number;
   productionSkills?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionSkill>>;
+  tradedTeaching?:import('./tradedTeaching').TradedTeachingOrder;
   productionApprentice?:import('./productionPractice').ProductionApprentice;
   weaponCargo?:import('./weaponCargo').WeaponCargo;
   armorCargoId?:number;
@@ -490,6 +491,7 @@ export type Particle = {
 };
 
 export type GameState = {
+  teachingOffers?:import('./tradedTeaching').TeachingOffer[];
   garmentMaintenance?:import('./garmentRepair').GarmentMaintenance;
   captiveDealings?:import('./captiveDealings').CaptiveDealingsState;
   droppedWeaponCargo?:import('./weaponCargo').DroppedWeaponCargo[];
