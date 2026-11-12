@@ -83,6 +83,24 @@
       "externalIntegration": "WHOLE normal3branch merges behindoptions remain phase2 afterphase1",
       "fixedGateCreditDelta": 0,
       "evidence": "docs/metrics/sim-speed-native100-performance-release-2026-11-11.json"
+    },
+    "latest_integration_handoff": {
+      "at": "2026-11-12T00:55:57.075993+00:00",
+      "execution_lead": "Grok",
+      "conflict_resolution_owner": "Claude",
+      "worker_source_head": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "review_branches_pushed": 5,
+      "whole_branch_pair_checks": 26,
+      "textually_clean": 25,
+      "conflict_files": [
+        "src/ui/CraftSiteQueue.tsx",
+        "src/ui/ProductionControls.tsx"
+      ],
+      "worker_native100_p95_ms": 67.74387500000012,
+      "worker_target_met": false,
+      "worker_active_by_default": false,
+      "gate_credit_added": 0,
+      "details": "docs/parallel/GROK_CLAUDE_MERGE_HANDOFF_2026-11-11.md"
     }
   },
   "counts": {
@@ -8833,6 +8851,90 @@
       "messageTimestamp": "2026-11-11T16:04:00-05:00 (reported by Claude coordination board)",
       "requirement": "Occasional real deep-water storms delay, damage or endanger actual player/NPC voyages; shelter/turn-back responses use observed conditions and preserve exact cargo/crew accounting.",
       "state": "pending-refinement-of-existing-weather-naval-scope",
+      "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-CIV-ARCHITECTURE",
+      "boardID": "CHAT-CIV-ARCHITECTURE",
+      "owner": "claude-experience",
+      "source": "Boris chat 2026-11-11 17:15-17:54 ET",
+      "messageTimestamp": "2026-11-11T17:54-05:00",
+      "userIntent": "Each civ has distinct architecture, materials, people, armor and insignia across biomes and ages (14 invented civs, inspired by world cultures); every building individually imperfect.",
+      "proposedRequirement": "Each civ has distinct architecture, materials, people, armor and insignia across biomes and ages (14 invented civs, inspired by world cultures); every building individually imperfect.",
+      "missingFromFullHandoff": true,
+      "state": "pending (proposed by Claude architect; Codex reconciles)",
+      "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-NATURAL-TERRAIN",
+      "boardID": "CHAT-NATURAL-TERRAIN",
+      "owner": "claude-experience",
+      "source": "Boris chat 2026-11-11 17:15-17:54 ET",
+      "messageTimestamp": "2026-11-11T17:54-05:00",
+      "userIntent": "Terrain is natural per biome (grass, dirt, rock, sand, snow, savanna, canyon); only the warm golden-hour grade from Option H is kept; carved-wood terrain dropped.",
+      "proposedRequirement": "Terrain is natural per biome (grass, dirt, rock, sand, snow, savanna, canyon); only the warm golden-hour grade from Option H is kept; carved-wood terrain dropped.",
+      "missingFromFullHandoff": true,
+      "state": "pending (proposed by Claude architect; Codex reconciles)",
+      "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-WONDERS-UNIQUE",
+      "boardID": "CHAT-WONDERS-UNIQUE",
+      "owner": "claude-experience",
+      "source": "Boris chat 2026-11-11 17:15-17:54 ET",
+      "messageTimestamp": "2026-11-11T17:54-05:00",
+      "userIntent": "Wonders are unique every game and per civ, assembled from hand-authored kit pieces by seeded grammar; presets (seed+civ+options) saveable.",
+      "proposedRequirement": "Wonders are unique every game and per civ, assembled from hand-authored kit pieces by seeded grammar; presets (seed+civ+options) saveable.",
+      "missingFromFullHandoff": true,
+      "state": "pending (proposed by Claude architect; Codex reconciles)",
+      "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-ERA-FIXED",
+      "boardID": "CHAT-ERA-FIXED",
+      "owner": "claude-experience",
+      "source": "Boris chat 2026-11-11 17:15-17:54 ET",
+      "messageTimestamp": "2026-11-11T17:54-05:00",
+      "userIntent": "Buildings do not morph by era; look fixed at build time; newer buildings use newer methods; upgrades only via rebuild/extension.",
+      "proposedRequirement": "Buildings do not morph by era; look fixed at build time; newer buildings use newer methods; upgrades only via rebuild/extension.",
+      "missingFromFullHandoff": true,
+      "state": "pending (proposed by Claude architect; Codex reconciles)",
+      "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-CONQUEST-PUPPET",
+      "boardID": "CHAT-CONQUEST-PUPPET",
+      "owner": "claude-societies",
+      "source": "Boris chat 2026-11-11 17:15-17:54 ET",
+      "messageTimestamp": "2026-11-11T17:54-05:00",
+      "userIntent": "Conquest vs puppeting vs annexing vs raze, tribute/domination, captives, alliances, raider camps settling, siege (international dynamics overhaul).",
+      "proposedRequirement": "Conquest vs puppeting vs annexing vs raze, tribute/domination, captives, alliances, raider camps settling, siege (international dynamics overhaul).",
+      "missingFromFullHandoff": true,
+      "state": "pending (proposed by Claude architect; Codex reconciles)",
+      "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-KNOWLEDGE-TECH-CLARITY",
+      "boardID": "CHAT-KNOWLEDGE-TECH-CLARITY",
+      "owner": "codex",
+      "source": "Boris chat 2026-11-11 17:15-17:54 ET",
+      "messageTimestamp": "2026-11-11T17:54-05:00",
+      "userIntent": "Knowledge/tech system is janky and unclear: show provenance (observed/taught/traded/captured) and known/partly/unknown states with clear unlock requirements.",
+      "proposedRequirement": "Knowledge/tech system is janky and unclear: show provenance (observed/taught/traded/captured) and known/partly/unknown states with clear unlock requirements.",
+      "missingFromFullHandoff": true,
+      "state": "pending (proposed by Claude architect; Codex reconciles)",
+      "gateCreditDelta": 0
+    },
+    {
+      "proposedID": "CHAT-SIM-SPEED",
+      "boardID": "CHAT-SIM-SPEED",
+      "owner": "codex",
+      "source": "Boris chat 2026-11-11 17:15-17:54 ET",
+      "messageTimestamp": "2026-11-11T17:54-05:00",
+      "userIntent": "Sim step ~60 ms mean / ~96 ms p95; reduce via hot-path cuts and Web Worker; target p95 <33 ms Low at 100 residents on 8 GB Mac.",
+      "proposedRequirement": "Sim step ~60 ms mean / ~96 ms p95; reduce via hot-path cuts and Web Worker; target p95 <33 ms Low at 100 residents on 8 GB Mac.",
+      "missingFromFullHandoff": true,
+      "state": "pending (proposed by Claude architect; Codex reconciles)",
       "gateCreditDelta": 0
     }
   ],

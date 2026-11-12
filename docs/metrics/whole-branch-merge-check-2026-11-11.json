@@ -1,0 +1,383 @@
+{
+  "at": "2026-11-12T00:54:39.436020+00:00",
+  "scope": "Whole-branch Git merge-tree only. Synthetic merge objects are unreferenced, not actual integration/published commits. No refs/worktree changed and no conflict resolved. Textual cleanliness is not semantic/type/native/built acceptance. Claude owns conflicts; Grok leads execution.",
+  "heads": {
+    "main": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+    "work/sim-worker-2026-11-11": "0cf5c18573547e97534c80c17f1e8761e9903304",
+    "work/codex-held-source-2026-11-11": "b774971ec6b979f429b33ced21b11003136d42d2",
+    "work/codex-fixed-camera-2026-11-11": "b86507f695a12ca3697227aec84568ef67944532",
+    "work/codex-curd-2026-11-11": "be545903543718845548ef0705339a666d4ce22c",
+    "work/codex-food-custody-prototype-2026-11-11": "26fe69bd6369e6cb3792490a96ac0606aadeddac",
+    "origin/agents/claude-societies": "e69b8f8b475bed70f772cceb923d9802df97b7cb",
+    "origin/agents/claude-experience": "9992fe9a389415894aef62e226486fa7a33a28b8",
+    "origin/agents/grok-world": "e10f70617eac7a487703aa1b6a28df0bcc25fbe8",
+    "origin/agents/claude-experience-render": "00b20f48cd9b4fb4a91510cc26106b233381fdd6",
+    "origin/agents/claude-livestock": "8a0308a1f433e371506a61909b6168e7fa624c1c",
+    "origin/agents/grok-prestige": "8a0308a1f433e371506a61909b6168e7fa624c1c",
+    "origin/agents/grok-simple": "fbe77a07a418cc33b1754fa2623b8e718b629cdb",
+    "origin/agents/claude-coordination": "e706962fb6f443e398ab24ad6e89d890c085e8ff"
+  },
+  "pairChecks": [
+    {
+      "left": "main",
+      "right": "work/sim-worker-2026-11-11",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "f985e5f773255baab0504949d0a80dabe6621f84",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "work/codex-held-source-2026-11-11",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "b774971ec6b979f429b33ced21b11003136d42d2",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "f9a4617dded083d7799896d21aaf7d5d3ebc2e8d",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "work/codex-fixed-camera-2026-11-11",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "b86507f695a12ca3697227aec84568ef67944532",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "401082853d7fa57112c863dc79a371c091c9210c",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "work/codex-curd-2026-11-11",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "be545903543718845548ef0705339a666d4ce22c",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "593c0aa25156a95fc0ff9a3e953557d26c347557",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "work/codex-food-custody-prototype-2026-11-11",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "26fe69bd6369e6cb3792490a96ac0606aadeddac",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "349d02ee24e3e8ffc86dae2ef1ad6122567ce127",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "origin/agents/claude-societies",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "e69b8f8b475bed70f772cceb923d9802df97b7cb",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "e47029a6ba694b7fda25c59454b6930d92233dc1",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "origin/agents/claude-experience",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "9992fe9a389415894aef62e226486fa7a33a28b8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "380075cc539c82883b7ac1ba45e6cecba95774ef",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "origin/agents/grok-world",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "e10f70617eac7a487703aa1b6a28df0bcc25fbe8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "915bc39a240b6a773612af25377a45c8c1237371",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "origin/agents/claude-experience-render",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "00b20f48cd9b4fb4a91510cc26106b233381fdd6",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "0fb5a6bdfba363e574765b93f747d965d0662736",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "origin/agents/claude-livestock",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "8a0308a1f433e371506a61909b6168e7fa624c1c",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "288601e3d296e3760738748adf3e2d294772dbaa",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "origin/agents/grok-prestige",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "8a0308a1f433e371506a61909b6168e7fa624c1c",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "288601e3d296e3760738748adf3e2d294772dbaa",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "origin/agents/grok-simple",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "fbe77a07a418cc33b1754fa2623b8e718b629cdb",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "288601e3d296e3760738748adf3e2d294772dbaa",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "main",
+      "right": "origin/agents/claude-coordination",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "e706962fb6f443e398ab24ad6e89d890c085e8ff",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "5bc32ff861526309ddb5a2f622b659917a9b4169",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "work/sim-worker-2026-11-11",
+      "right": "work/codex-held-source-2026-11-11",
+      "leftHead": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "rightHead": "b774971ec6b979f429b33ced21b11003136d42d2",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "1e6d901ddf25a5cd2b1a4fb90ac13f83bb673c21",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "work/sim-worker-2026-11-11",
+      "right": "work/codex-fixed-camera-2026-11-11",
+      "leftHead": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "rightHead": "b86507f695a12ca3697227aec84568ef67944532",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "e7df8a1891cb478afa551ecc1b43e63f8b1b3d71",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "work/sim-worker-2026-11-11",
+      "right": "work/codex-curd-2026-11-11",
+      "leftHead": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "rightHead": "be545903543718845548ef0705339a666d4ce22c",
+      "exit": 1,
+      "textualMergeClean": false,
+      "resultTree": "da4cbab793c7b1487ad8ce73f5c61ac747d7d3a4",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in src/ui/CraftSiteQueue.tsx",
+        "CONFLICT (content): Merge conflict in src/ui/ProductionControls.tsx"
+      ],
+      "stderr": ""
+    },
+    {
+      "left": "work/sim-worker-2026-11-11",
+      "right": "work/codex-food-custody-prototype-2026-11-11",
+      "leftHead": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "rightHead": "26fe69bd6369e6cb3792490a96ac0606aadeddac",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "91d2327895aea3a4642fce225f560333b8026cef",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "work/sim-worker-2026-11-11",
+      "right": "origin/agents/claude-societies",
+      "leftHead": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "rightHead": "e69b8f8b475bed70f772cceb923d9802df97b7cb",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "4b572f5edf6c2d9ef31f1154c8eb349d77d793fb",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "work/sim-worker-2026-11-11",
+      "right": "origin/agents/claude-experience",
+      "leftHead": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "rightHead": "9992fe9a389415894aef62e226486fa7a33a28b8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "7e347d7854c257cb83db9ebfeb12e5b8a32589fc",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "work/sim-worker-2026-11-11",
+      "right": "origin/agents/grok-world",
+      "leftHead": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "rightHead": "e10f70617eac7a487703aa1b6a28df0bcc25fbe8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "6cb93833979eba6773ce476950e8476672753c6c",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "work/codex-held-source-2026-11-11",
+      "right": "origin/agents/claude-societies",
+      "leftHead": "b774971ec6b979f429b33ced21b11003136d42d2",
+      "rightHead": "e69b8f8b475bed70f772cceb923d9802df97b7cb",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "ca303bf5e098fec1f302acc40c42e301ea31eb35",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "work/codex-held-source-2026-11-11",
+      "right": "origin/agents/claude-experience",
+      "leftHead": "b774971ec6b979f429b33ced21b11003136d42d2",
+      "rightHead": "9992fe9a389415894aef62e226486fa7a33a28b8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "5e3ec51dc145d72c13421051584c8b957a35ae65",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "work/codex-held-source-2026-11-11",
+      "right": "origin/agents/grok-world",
+      "leftHead": "b774971ec6b979f429b33ced21b11003136d42d2",
+      "rightHead": "e10f70617eac7a487703aa1b6a28df0bcc25fbe8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "e2397654aa5b412afb0f8f8db6cc8938aa0ed6af",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "origin/agents/claude-societies",
+      "right": "origin/agents/claude-experience",
+      "leftHead": "e69b8f8b475bed70f772cceb923d9802df97b7cb",
+      "rightHead": "9992fe9a389415894aef62e226486fa7a33a28b8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "c8c985c9790853a092bfb79dfa0ea5185fdc9132",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "origin/agents/claude-societies",
+      "right": "origin/agents/grok-world",
+      "leftHead": "e69b8f8b475bed70f772cceb923d9802df97b7cb",
+      "rightHead": "e10f70617eac7a487703aa1b6a28df0bcc25fbe8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "cab8c213757b06f1a7eaab735cc7f1588a00388c",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "origin/agents/claude-experience",
+      "right": "origin/agents/grok-world",
+      "leftHead": "9992fe9a389415894aef62e226486fa7a33a28b8",
+      "rightHead": "e10f70617eac7a487703aa1b6a28df0bcc25fbe8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "057ba85baaa77e0633d7035f7bfad7f54c6c821a",
+      "conflicts": [],
+      "stderr": ""
+    }
+  ],
+  "sequentialChecks": [
+    {
+      "left": "virtual integration so far",
+      "right": "work/sim-worker-2026-11-11",
+      "leftHead": "c619d08f3262e954bcf2ec1190fc75e51c9bcbc1",
+      "rightHead": "0cf5c18573547e97534c80c17f1e8761e9903304",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "f985e5f773255baab0504949d0a80dabe6621f84",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "virtual integration so far",
+      "right": "origin/agents/claude-societies",
+      "leftHead": "fdf5621c774a86cb61024bbc66f250c2e8b04136",
+      "rightHead": "e69b8f8b475bed70f772cceb923d9802df97b7cb",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "4b572f5edf6c2d9ef31f1154c8eb349d77d793fb",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "virtual integration so far",
+      "right": "origin/agents/claude-experience",
+      "leftHead": "82999e62c0886564be50419a19b59545864b4c51",
+      "rightHead": "9992fe9a389415894aef62e226486fa7a33a28b8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "027a28d0119a58575cd3e0efb71bd429ddd69628",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "virtual integration so far",
+      "right": "origin/agents/grok-world",
+      "leftHead": "bbfd44f24fd89b6f7ca8ca920b769408e210494b",
+      "rightHead": "e10f70617eac7a487703aa1b6a28df0bcc25fbe8",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "b6ad1b812d4cb2aadc60fefcfceb661877f92516",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "virtual integration so far",
+      "right": "work/codex-fixed-camera-2026-11-11",
+      "leftHead": "00ca823e6f7346c97b9dfafa0a9593bccc1b79f3",
+      "rightHead": "b86507f695a12ca3697227aec84568ef67944532",
+      "exit": 0,
+      "textualMergeClean": true,
+      "resultTree": "60b026e912f4e99031ad97144eb2938d1a4186f4",
+      "conflicts": [],
+      "stderr": ""
+    },
+    {
+      "left": "virtual integration so far",
+      "right": "work/codex-curd-2026-11-11",
+      "leftHead": "820f1b283fd2e8a9613dd8a873b29736c0cabf20",
+      "rightHead": "be545903543718845548ef0705339a666d4ce22c",
+      "exit": 1,
+      "textualMergeClean": false,
+      "resultTree": "165465b065b12abc1ce9503c60c0fe1bf8bb2718",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in src/ui/CraftSiteQueue.tsx",
+        "CONFLICT (content): Merge conflict in src/ui/ProductionControls.tsx"
+      ],
+      "stderr": ""
+    }
+  ],
+  "sequenceHaltedAtFirstConflict": true
+}
