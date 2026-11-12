@@ -3,6 +3,7 @@ import type {Engine} from '../game/engine';
 import {useOwnerReadModels} from './useOwnerReadModels';
 import {CouncilPanelClassic} from './council/CouncilPanelClassic';
 import {HandoverCard,FameFeed,FactionsStrip,GloryBars,Card} from './council/CouncilParts';
+import {CapitulationTerms} from './council/CapitulationTerms';
 import {DiplomacySheet} from './council/DiplomacySheet';
 import {useCouncilLayout} from './council/councilLayout';
 const QUERY={kind:'rulers-council'} as const;
@@ -15,10 +16,11 @@ export function CouncilPanel({engine}:{engine:Engine}){
  const [feedback,setFeedback]=useState('');
  if(layout==='classic')return <><LayoutToggle layout={layout} set={setLayout}/><CouncilPanelClassic engine={engine}/></>;
  if(!c)return <p className="text-xs text-parchment-dim">{res.issue}</p>;
- if(!c.enabled)return <p className="text-xs text-parchment-dim">This village predates ruling houses.</p>;
+ if(!c.enabled)return <><CapitulationTerms engine={engine}/><p className="text-xs text-parchment-dim">This village predates ruling houses.</p></>;
  const marry=async(team:number,kind:'marry-houses'|'foster-houses'|'exchange-hostages'='marry-houses')=>{try{const r=await engine.dispatch({kind,team});setFeedback(r.reason);}catch(e){setFeedback(e instanceof Error?e.message:'Unavailable');}};
  return <section aria-label="Council" className="mt-2 space-y-2 text-xs">
   <LayoutToggle layout={layout} set={setLayout}/>
+  <CapitulationTerms engine={engine}/>
   <p className="text-parchment-dim">{STAGE_NOTE[c.stage]}</p>
   {c.ruler&&<Card label="Ruler" title={c.house?`House ${c.house.name} · generation ${c.house.generation+1}`:'Ruler'}>
    <h5 className="text-sm font-semibold text-parchment">{c.ruler.name}, {c.ruler.age}</h5>

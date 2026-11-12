@@ -14,3 +14,9 @@ test('leader portrait is deterministic and stays unknown without a recorded rela
  const a=renderToStaticMarkup(h(LeaderPortrait,p)),b=renderToStaticMarkup(h(LeaderPortrait,p));assert.equal(a,b);assert.match(a,/know little of their mind/);assert.match(renderToStaticMarkup(h(LeaderPortrait,{...p,relation:60})),/known friend/);
 });
 test('council parts render empty-safe',()=>{assert.equal(renderToStaticMarkup(h(FameFeed,{log:[]})),'');assert.equal(renderToStaticMarkup(h(GloryBars,{glory:[],score:0})),'');assert.equal(renderToStaticMarkup(h(FactionsStrip,{factions:[],coalitionLoss:0})),'');assert.ok(renderToStaticMarkup(h(HandoverCard,{h:{law:'tanistry',rulerAge:60,yearlyRisk:12,extinct:false,others:[]}})).includes('Handover'));});
+test('capitulation terms are valid engine commands and offers query is accepted',async()=>{
+ const {isEngineDispatchCommand}=await import('../src/game/engineDispatch.ts');const {isEngineReadQuery}=await import('../src/game/engineReadModels.ts');const {TERMS}=await import('../src/ui/council/CapitulationTerms.tsx');
+ assert.ok(isEngineReadQuery({kind:'capitulation-offers'}));assert.equal(isEngineReadQuery({kind:'capitulation-offers',x:1}),false);
+ for(const t of TERMS)assert.ok(isEngineDispatchCommand({kind:'accept-capitulation',frontId:3,outcome:t.id}),t.id);
+ assert.equal(isEngineDispatchCommand({kind:'accept-capitulation',frontId:3,outcome:'nope'}),false);assert.ok(isEngineDispatchCommand({kind:'refuse-capitulation',frontId:3}));
+});
