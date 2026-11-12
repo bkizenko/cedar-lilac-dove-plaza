@@ -2,6 +2,7 @@ import type {Game} from './sim';
 import type {Unit} from './types';
 import {carcassAvailable,type HuntableCritter} from './hunting';
 import {personName} from './people';
+import {SITE_ICON,SITE_NAME,siteGood} from './wildStores';
 import {WILD_RECIPES,WILD_RECIPE_IDS,WILD_STATION_SLOTS,BUTCHERY_PARTS,HUNT_METHOD_ICON,wildIssue,beginWildWork,collectWildBatch,stationsFor,wildAdult,wildCraftEnabled,type WildRecipeId} from './wildCraft';
 /** Typed owner commands and a read model for starting wild-craft work and collecting a finished batch.
  * Nothing here changes a rule: every refusal comes from wildIssue/beginWildWork/collectWildBatch, and the
@@ -9,13 +10,13 @@ import {WILD_RECIPES,WILD_RECIPE_IDS,WILD_STATION_SLOTS,BUTCHERY_PARTS,HUNT_METH
 export type WildBeginCommand={kind:'wild-begin';recipe:string;unitId?:number;stationId?:number;critterId?:number;x?:number;z?:number};
 export type WildCollectCommand={kind:'wild-collect';unitId?:number;projectId?:number};
 export type WildPlanRecipe={id:WildRecipeId;icon:string;name:string;station:string;issue:string|null;stations:{id:number;free:number}[]};
-export type WildPlan={enabled:boolean;hands:string[];recipes:WildPlanRecipe[];carcasses:{id:number;icon:string;species:string;parts:number}[];trails:{id:number;icon:string;species:string}[];ready:{projectId:number;icon:string;name:string}[]};
+export type WildPlan={enabled:boolean;hands:string[];recipes:WildPlanRecipe[];carcasses:{id:number;icon:string;species:string;parts:number}[];trails:{id:number;icon:string;species:string}[];ready:{projectId:number;icon:string;name:string}[];sites:{id:number;kind:string;icon:string;name:string;left:number;cap:number;x:number;z:number;recipe:string}[];pens:{id:number;x:number;z:number;icon:string;issue:string|null}[]};
 /** Recipes started from a building (not a carcass, trail or free ground). */
 const STATION_RECIPES=WILD_RECIPE_IDS.filter(id=>!['carcass','field','trail'].includes(WILD_RECIPES[id].station));
 const freeHands=(g:Game)=>g.state.units.filter(u=>u.team===0&&wildAdult(g,u)&&u.wildWorkId===undefined);
 const CARCASS_RADIUS=60;
 export function wildPlan(g:Game):WildPlan{
- const w=g.state.wildCraft;if(!w)return{enabled:false,hands:[],recipes:[],carcasses:[],trails:[],ready:[]};
+ const w=g.state.wildCraft;if(!w)return{enabled:false,hands:[],recipes:[],carcasses:[],trails:[],ready:[],sites:[],pens:[]};
  const camp=g.campOf(0),used=(id:number)=>w.projects.filter(p=>p.stationId===id&&p.phase!=='back').length;
  const recipes=STATION_RECIPES.map(id=>{const r=WILD_RECIPES[id];return{id,icon:r.icon,name:r.name,station:r.station,issue:wildIssue(g,0,id),stations:stationsFor(g,0,r.station as never).map(b=>({id:b.id,free:Math.max(0,WILD_STATION_SLOTS-used(b.id))}))};});
  const carcasses:WildPlan['carcasses']=[];
@@ -25,7 +26,9 @@ export function wildPlan(g:Game):WildPlan{
  const trails:WildPlan['trails']=[];
  for(const[id,wd]of Object.entries(w.wounds)){const c=g.state.wildlife.find(c=>String(c.id)===id);if(c&&c.hp>0&&wd.trail.length>=2&&g.visibleAt(c.x,c.z)&&!w.projects.some(p=>p.critterId===c.id))trails.push({id:c.id,icon:'🩸',species:c.species});}
  const ready=w.projects.filter(p=>p.team===0&&p.phase==='ready'&&p.actorId===0).map(p=>({projectId:p.id,icon:WILD_RECIPES[p.recipe].icon,name:WILD_RECIPES[p.recipe].name}));
- return{enabled:true,hands:freeHands(g).slice(0,8).map(personName),recipes,carcasses:carcasses.slice(0,6),trails:trails.slice(0,4),ready};
+ const sites=(w.sites||[]).filter(x=>g.exploredAt(x.x,x.z)).map(x=>({id:x.id,kind:x.kind,icon:SITE_ICON[x.kind],name:SITE_NAME[x.kind],left:Math.floor(x.left),cap:x.cap,x:x.x,z:x.z,recipe:siteGood(x.kind)==='hay'?'cutHay':'gatherSalt'}));
+ const hayIssue=wildIssue(g,0,'forkHay'),pens=g.state.buildings.filter(b=>b.type==='pen'&&b.team===0&&b.hp>0&&g.finished(b)).slice(0,4).map(b=>({id:b.id,x:b.x,z:b.z,icon:'🐄',issue:hayIssue}));
+ return{enabled:true,sites,pens,hands:freeHands(g).slice(0,8).map(personName),recipes,carcasses:carcasses.slice(0,6),trails:trails.slice(0,4),ready};
 }
 /** Hands in order of preference: explicitly named, then selected, then idle, then nearest to the work. */
 function candidates(g:Game,explicit:number|undefined,selected:readonly number[],at:{x:number;z:number}):Unit[]{
