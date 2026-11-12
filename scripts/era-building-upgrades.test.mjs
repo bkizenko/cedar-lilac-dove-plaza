@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
+import {acceptPrisonerSurrender} from '../src/game/captivity.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {beginEraUpgrade,beginHousingUpgrade} from '../src/game/housing.ts';
 import {ERA_UPGRADE_RULES,fabricContext,eraUpgradeIssue,reservedBuildingFootprint,validFabricState,commitEraUpgrade} from '../src/game/buildingFabric.ts';
@@ -62,8 +63,9 @@ test('a paid builder death drops the exact physical packet and strict save retai
  assert.deepEqual(b.renovation.packet,packet);assert.equal(b.renovation.parcel.x,position.x);assert.equal(b.renovation.parcel.z,position.z);assert.deepEqual(b.renovation.quote,quote);assert.equal(b.maxHp,max);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
 test('capturing a paid carrier cannot transfer remote inputs or complete the original owner’s upgrade',()=>{
- const{g,b,u}=fixture();assert.equal(beginEraUpgrade(g,b.id,'extend','north').accepted,true);
+ const{g,b,u}=fixture();g.tribe(1).hostile=false;const guard=g.spawnUnit('spearman',10,42,1);guard.order='hold';
+ assert.equal(beginEraUpgrade(g,b.id,'extend','north').accepted,true);
  drive(g,120,()=>!!u.housingCargo);const packet=structuredClone(u.housingCargo.materials),max=b.maxHp,position={x:u.x,z:u.z};
- u.team=1;g.step(.1);assert.equal(b.renovation.actorId,null);assert.equal(b.renovation.packetTeam,0);assert.deepEqual(b.renovation.packet,packet);assert.equal(b.renovation.parcel.kind,'ground');
+ const capture=acceptPrisonerSurrender(g,u,1);assert.equal(capture.accepted,true,capture.reason);assert.equal(u.team,1);assert.equal(u.constructionQueue,undefined);g.step(.1);assert.equal(b.renovation.actorId,null);assert.equal(b.renovation.packetTeam,0);assert.deepEqual(b.renovation.packet,packet);assert.equal(b.renovation.parcel.kind,'ground');
  assert.equal(b.renovation.parcel.x,position.x);assert.equal(b.renovation.parcel.z,position.z);assert.equal(u.housingCargo,undefined);assert.equal(b.maxHp,max);assert.equal(b.fabric.upgrades.length,0);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
