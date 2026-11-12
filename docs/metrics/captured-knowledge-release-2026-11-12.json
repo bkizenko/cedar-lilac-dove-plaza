@@ -1,0 +1,206 @@
+{
+  "sourceCommit": "e2bca5b",
+  "liveCommit": "45421a4260fd281ca1144f60af9dc84994746ea5",
+  "release": "2026-11-12T08-25-45-060Z-45421a4",
+  "scope": "Captured artisan personal methods are frozen before surrender, retained through actual custody and free integration, and copied to local learners only after real observation and useful paid delivery. Optional strict saves, compact source identities and measured counts; homeward custody uses existing bounded return routing; missing influence paint field no longer throws.",
+  "batch": {
+    "passed": 53,
+    "total": 53,
+    "distinctFocused": 48,
+    "nativeCapturedLearning": 1,
+    "builtCapturedLearning": 1,
+    "builtExistingVillage": 1,
+    "builtIncomingCouncilAndCarvedCompatibility": 2
+  },
+  "focusedEvidence": {
+    "capturedValidation": 6,
+    "productionPractice": 4,
+    "knowledgeProvenance": 4,
+    "captiveDealings": 7,
+    "incomingArchitectureCouncilBarracksCivAndInfluence": 27
+  },
+  "native": {
+    "scenario": "Original V18 seed42 pangaea1040 terrain and people, finite authored legal hearth/housing/troops/material stocks; three prior exact firing successes are a declared artisan opening, not earned by this test. Real movement/capture/provision/guarding/600s custody/free integration and paid observation/delivery follow. Adversarial metadata probes are isolated from productive work. No terrain flattening, body teleport, collision shrink or invented result.",
+    "recipe": "fireClayHand",
+    "baseWorkSeconds": 90,
+    "minimumObservedSeconds": 30,
+    "minimumCustodySeconds": 600,
+    "teacherId": 6232,
+    "teacherName": "Shehratzam",
+    "learnerId": 6223,
+    "capturedSnapshot": {
+      "version": 1,
+      "sourceTeam": 1,
+      "capturedAt": 226.79999999999566,
+      "recipes": [
+        {
+          "recipe": "fireClayHand",
+          "successfulBatches": 3,
+          "taughtBatches": 0
+        }
+      ]
+    },
+    "lessonReceipt": {
+      "version": 1,
+      "kind": "captured",
+      "originMakerId": 6232,
+      "sourceTeam": 1,
+      "capturedAt": 226.79999999999566,
+      "integratedAt": 1022.2000000000954,
+      "learnedAt": 1185.0000000001316,
+      "successfulBatchesAtCapture": 3,
+      "taughtBatchesAtCapture": 0
+    },
+    "actualFiringHistory": {
+      "batches": 1,
+      "failedBatches": 1,
+      "usefulOutputs": 3,
+      "firstAt": 1106.4000000001145,
+      "lastAt": 1185.0000000001316,
+      "makers": [
+        6232
+      ],
+      "lastFailedAt": 1106.4000000001145,
+      "lastSuccessfulAt": 1185.0000000001316
+    },
+    "teacherSuccessfulBatchesFinal": 4,
+    "learnerSkill": {
+      "successfulBatches": 0,
+      "taughtBatches": 1,
+      "observedSeconds": 29.999999999999925,
+      "lastTaughtAt": 1185.0000000001316,
+      "lastTeacherId": 6232,
+      "methodSources": [
+        {
+          "version": 1,
+          "kind": "captured",
+          "originMakerId": 6232,
+          "sourceTeam": 1,
+          "capturedAt": 226.79999999999566,
+          "integratedAt": 1022.2000000000954,
+          "learnedAt": 1185.0000000001316,
+          "successfulBatchesAtCapture": 3,
+          "taughtBatchesAtCapture": 0
+        }
+      ]
+    },
+    "terrainHashUnchanged": true,
+    "strictReloadPassed": true
+  },
+  "typecheck": "pass",
+  "build": "pass",
+  "built": {
+    "scope": "One desktop built check on unchanged source-earned native captured-artisan learning: visible Captured pottery provenance, actual artisan/society/date details, no read-driven grants or state changes, and durable learner-receipt/integration-snapshot restoration. No new capture, custody, integration, lesson, campaign, performance or screenshot claim.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 1,
+    "total": 1,
+    "sourceHash": "f6a4d234947bdacc2e427bfde0b5f8c980b5d05448d73f1b45278755fed553a0",
+    "learnerId": 6223,
+    "teacherId": 6232,
+    "recipe": "fireClayHand",
+    "changedPaths": [
+      "state.bannerT"
+    ],
+    "provenance": {
+      "capturedFirst": true,
+      "sourceSocietyVisible": true,
+      "actualArtisanVisible": true,
+      "dateVisible": "Year 1 \u00b7 Autumn",
+      "learnerMethodSourcesUnchanged": true,
+      "integrationSnapshotUnchanged": true,
+      "strictRestoreUnchanged": true
+    },
+    "originalUnchanged": true,
+    "errors": []
+  },
+  "existingVillage": {
+    "scope": "Frozen-app import/render/Menu/existing workplace queue and actual owner recipe query/strict saved restore. Fresh private Chrome context, paused native fixture; no production actions, simulation steps, screenshots, performance or campaign claim.",
+    "originalChecksum": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+    "opening": {
+      "id": 12462,
+      "type": "smokehouse",
+      "time": 11394.073333341026,
+      "residents": 53
+    },
+    "query": {
+      "recipeRows": 2,
+      "epoch": 3,
+      "stateRevision": 0,
+      "requestId": 1
+    },
+    "render": {
+      "canvas": true,
+      "drawCalls": 100,
+      "simulationErrors": [],
+      "paused": true,
+      "time": 11394.073333341026,
+      "quality": "low"
+    },
+    "save": {
+      "saved": true,
+      "message": "Village saved"
+    },
+    "restore": {
+      "replaced": true,
+      "paused": true,
+      "time": 11394.073333341026,
+      "residents": 53,
+      "workplacePresent": true,
+      "errors": []
+    },
+    "passed": 1,
+    "total": 1,
+    "errors": [],
+    "elapsedMilliseconds": 36589
+  },
+  "incomingCompatibility": {
+    "scope": "Two desktop built integration checks: actual Menu Option H selection, nonzero geometry/native selection on original buildings, persisted page refresh and current-style restoration; native fresh Test Lab world council/leader controls, strict lab ruler save/reload and protected original-village restoration. No original-save ruler opt-in, terrain edits, screenshots, performance, visual approval or campaign acceptance.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 2,
+    "total": 2,
+    "buildingId": 12553,
+    "originalHash": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+    "carved": {
+      "style": "carved",
+      "draws": [
+        {
+          "count": 1,
+          "vertices": 636,
+          "finite": true,
+          "colors": 636,
+          "grain": 636,
+          "material": "carved-h-shared",
+          "inScene": true,
+          "originalIdentity": true
+        }
+      ],
+      "rendererCalls": 89
+    },
+    "selection": {
+      "hit": 12553,
+      "selected": 12553,
+      "nativeInput": true
+    },
+    "styleMenu": {
+      "selectedThroughUI": true,
+      "optionHPersistedThroughPageRefresh": true
+    },
+    "council": {
+      "ruler": "Lunumemir",
+      "stage": "household",
+      "visibleCurrentAndClassic": true,
+      "strictRulerMetadataPreserved": true
+    },
+    "originalRestoredAfterReset": true,
+    "originalUnchanged": true,
+    "errors": []
+  },
+  "frozenFirstRelease": {
+    "checklistVersion": "hearthwild-first-release-gates-v1",
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "changed": false
+  },
+  "remaining": "Traded-method agreements, broader institutions and full M4-03 remain open. Existing old custody records receive no invented origin history. Native route-admission discrepancy remains with Grok. No campaign, historical yield or Mac frame-time acceptance."
+}

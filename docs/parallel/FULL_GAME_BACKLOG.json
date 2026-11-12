@@ -9222,6 +9222,15 @@
       "liveCommit": "a4b7326266d698e2ee5a09c1e422c74ab0d182ca",
       "evidence": "docs/metrics/claude-integration-release-2026-11-12.json",
       "scope": "Whole landed Claude main integration retained; player-facing Original/Carved Option H menu switch and persisted browser preference; actual carved geometry and selection on existing original village, fresh native Test Lab council/ruler UI and strict lab saves, protected original restoration."
+    },
+    {
+      "id": "CODEX-CAPTURED-ARTISAN-TEACHING",
+      "owner": "Codex Platform",
+      "state": "live-partial",
+      "sourceCommit": "e2bca5b",
+      "liveCommit": "45421a4260fd281ca1144f60af9dc84994746ea5",
+      "evidence": "docs/metrics/captured-knowledge-release-2026-11-12.json",
+      "scope": "Captured artisan personal methods are frozen before surrender, retained through actual custody and free integration, and copied to local learners only after real observation and useful paid delivery. Optional strict saves, compact source identities and measured counts; homeward custody uses existing bounded return routing; missing influence paint field no longer throws."
     }
   ],
   "status_update_policy": {
