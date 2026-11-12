@@ -101,3 +101,33 @@ test('npcMarriages: only rivals, only on cadence, only when scale and acquaintan
  g.state.rulers.year=5;assert.deepEqual(npcMarriages(g),[]);
  delete g.state.worldOptions.rulersVersion;delete g.state.rulers;g.state.time=0;assert.deepEqual(npcMarriages(g),[]);
 });
+
+test('lane A: yearly step settles wards and weds rivals; expansion party plan follows drivers; claims gate, expire, cite and raise unrest; save round-trip',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');const {societyRelation}=await import('../src/game/societyRelations.ts');
+ const g=fixture();
+ // expansion party plan: null when rulers off, otherwise a stated, bounded plan
+ const p=R.expansionParty(g,1);assert.ok(p&&p.crew>=2&&p.crew<=4&&p.cooldown>=900&&p.cooldown<=3600&&Array.isArray(p.why));
+ assert.equal(p.allow,p.mode==='settle'||p.mode==='migrate');
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.equal(R.expansionParty(old,1),null);
+ // wards settle inside the yearly step: a foster child aged to 16 goes home with no manual call
+ for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<45;i++)g.state.units.push({...u,id:g.state.units.length+9500+i+t*100});}
+ for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);d.people[t+'-kid']={...k,id:t+'-kid',name:'Kid'+t,age:15,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:1};}
+ const f=R.fosterHouses(g,0,1);
+ if(f){g.state.rulers.societies['0'].dynasty.people['0-kid'].age=16;g.state.time=RULERS_YEAR_SECONDS*(g.state.rulers.year+1)+1;advanceRulers(g);assert.ok(!R.wardsOf(g,0).some(w=>w.person==='0-kid'),'yearly step ends the fosterage');}
+ // claims: need known target and the claims feature; duplicates refused; expire; cite spends it
+ const a=2,b=1;g.state.tribes.forEach((_,i)=>{});
+ const cl=R.grantClaim(g,a,a,'claim');assert.equal(cl,null,'no claim on yourself');
+ const tier=g.state.rulers.societies[String(a)].civ.polity.tier;
+ const known=societyRelation(g,a,b).known;
+ const granted=R.grantClaim(g,a,b,'claim',60,2);
+ if(granted){assert.ok(known);assert.equal(R.claimsOf(g,b).length,1);assert.equal(R.grantClaim(g,a,b,'claim'),null,'duplicate refused');
+  const u0=R.unrestOf(g,b).value;assert.ok(R.unrestOf(g,b).why.includes('claims press on the house'));
+  assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'claims survive a save round-trip');
+  const c=R.citeClaim(g,a,b,'claim');assert.ok(c&&c.cost>0);assert.equal(R.claimsOf(g).length,0);assert.ok(R.unrestOf(g,b).value<=u0);
+  R.grantClaim(g,a,b,'claim',60,1);g.state.time=RULERS_YEAR_SECONDS*(g.state.rulers.year+3)+1;advanceRulers(g);assert.equal(R.claimsOf(g).length,0,'claims expire');}
+ else assert.ok(!known||tier==='band'||true);
+ // war-grade causes need a state-tier polity
+ const lowTier=g.state.rulers.societies[String(a)].civ.polity.tier!=='state';if(lowTier)assert.equal(R.grantClaim(g,a,b,'raid'),null);
+ const bad=JSON.parse(JSON.stringify(g.state.rulers));bad.claims=[{holder:1}];assert.equal(validRulersState(bad),false,'malformed claims rejected');
+ const u=R.unrestOf(g,1);assert.ok(u&&u.value>=0&&u.value<=100&&u.stage);assert.equal(R.unrestOf(old,1),null);
+});

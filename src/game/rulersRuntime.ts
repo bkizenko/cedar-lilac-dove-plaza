@@ -10,6 +10,7 @@ import {drive as personalDrive} from './rulerGenome';
 import {reserveSeconds} from './settlement';
 import {effects,apply,noTies,type Ties,type Effect} from './ties';
 import {nudgeSocietyRelation,societyRelation} from './societyRelations';
+import {liveClaims,cbLegitimacyCost,unrest,stageOf,type Claim,type CasusBelli,type Stage as UnrestStage} from './unrest';
 
 /** Compressed clock: one dynastic year per this many sim seconds (an 80-year life is about two hours of play). */
 export const RULERS_YEAR_SECONDS=90;
@@ -33,7 +34,7 @@ export function advanceRulers(g:Game){
  const r=ensureRulers(g);if(!r)return;const s=st(g),target=Math.floor(s.time/RULERS_YEAR_SECONDS);
  sampleClimate(g,r);
  let guard=0;
- while(r.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));}
+ while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -153,4 +154,57 @@ export function npcMarriages(g:Game):[number,number][]{
  for(const a of ids){const b=ids.find(x=>x>a&&!societyRelation(g,a,x).hostile&&societyRelation(g,a,x).known&&societyRelation(g,x,a).known);
   if(b!==undefined&&marryHouses(g,a,b))out.push([a,b]);}
  return out;
+}
+
+/** Expansion party plan for a rival society's next founding journey. The real crew (units) and timber (deducted from the tribe) are
+ * handled by communities.ts; this only decides WHETHER and HOW BIG from the stated drivers. Null when rulers are off (old behaviour).
+ * Only settle/migrate modes send families to a new hearth; stay/conquer/trade/explore/mission do not (those have their own parties). */
+export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;why:string[]};
+export function expansionParty(g:Game,team:number):PartyPlan|null{
+ const d=expansionOf(g,team);if(!d)return null;
+ const sends=d.mode==='settle'||d.mode==='migrate';
+ return {allow:sends,mode:d.mode,crew:Math.max(2,Math.min(4,2+Math.round((d.drive-.8)*2))),cooldown:Math.round(Math.max(900,Math.min(3600,1800/Math.max(.5,d.drive)))),
+  minReserve:d.mode==='migrate'?300:600,why:sends?d.why:['the society stays at home',...d.why]};
+}
+
+/** Claims and casus belli (years are dynastic years). Claims are standing grievances a house may cite; they cost nothing to hold, cost legitimacy
+ * when used (cbLegitimacyCost), and press on unrest at both ends. Era gating: any claim needs the 'claims' family feature; war-grade causes
+ * (tribute, holy, raid, reconquest, liberation) need a state-tier polity. No claim on a society you do not know, or on yourself. */
+export const claimsOf=(g:Game,team?:number):Claim[]=>liveClaims(rulersOf(st(g))?.claims??[],rulersOf(st(g))?.year??0).filter(c=>team===undefined||Number(c.holder)===team||Number(c.target)===team);
+export function grantClaim(g:Game,holder:number,target:number,kind:CasusBelli,strength=50,years=20):Claim|null{
+ const r=ensureRulers(g);if(!r||holder===target)return null;
+ const sh=r.societies[String(holder)];if(!sh||!r.societies[String(target)])return null;
+ if(!familyFeatures(sh.civ.polity.tier,livingPeople(g,holder)).claims)return null;
+ if(kind!=='claim'&&kind!=='succession'&&kind!=='defence'&&sh.civ.polity.tier!=='state')return null;
+ if(!societyRelation(g,holder,target).known)return null;
+ const live=claimsOf(g);if(live.some(c=>c.holder===String(holder)&&c.target===String(target)&&c.kind===kind))return null;
+ const c:Claim={holder:String(holder),target:String(target),kind,strength:Math.max(1,Math.min(100,strength)),expiresTick:r.year+years};
+ st(g).rulers={...r,claims:[...liveClaims(r.claims??[],r.year),c]};
+ return c;
+}
+/** Yearly: drop expired claims; a standing claim slowly sours relations from the holder toward the target (it is a grievance in waiting). */
+export function expireClaims(g:Game){
+ const r=ensureRulers(g);if(!r?.claims?.length)return;
+ const live=liveClaims(r.claims,r.year);
+ for(const c of live)nudgeSocietyRelation(g,Number(c.holder),Number(c.target),{trust:0,grievance:.002*c.strength/50});
+ if(live.length!==r.claims.length)st(g).rulers={...st(g).rulers!,claims:live};
+}
+/** Using a claim as casus belli: spends it and the legitimacy cost is returned for the caller to charge to the holder's glory/unrest. */
+export function citeClaim(g:Game,holder:number,target:number,kind:CasusBelli):{cost:number}|null{
+ const r=ensureRulers(g);if(!r?.claims)return null;
+ const i=r.claims.findIndex(c=>c.holder===String(holder)&&c.target===String(target)&&c.kind===kind&&c.expiresTick>r.year);if(i<0)return null;
+ st(g).rulers={...r,claims:r.claims.filter((_,j)=>j!==i)};
+ return {cost:cbLegitimacyCost(kind)};
+}
+/** Measured unrest 0..100 with its stage for one society. Inputs come from the live game: war with neighbours, claims pressing on it,
+ * hunger, and the ruling house's legitimacy. Null when rulers are off. */
+export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why:string[]}|null{
+ const r=ensureRulers(g);const me=r?.societies[String(team)];if(!r||!me)return null;
+ const others=g.state.tribes.map((_,i)=>i).filter(i=>i!==team&&i!==3&&!!g.tribe(i));
+ const wars=others.filter(i=>societyRelation(g,team,i).hostile).length;
+ const against=claimsOf(g,team).filter(c=>Number(c.target)===team).reduce((t,c)=>t+c.strength,0);
+ const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.min(100,30+100*Math.max(0,...lg)); // source weights sum to ~1; the strongest pillar carries the house
+ const v=unrest({legitimacy:legit,warWeariness:Math.min(100,wars*35+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:20,faithDivergence:0,coalitionLoss:0,rulerPopularity:60},me.civ.polity);
+ const why:string[]=[];if(wars)why.push('at war');if(against>0)why.push('claims press on the house');if(hunger>.5)why.push('food is short');
+ return {value:v,stage:stageOf(v),why};
 }
