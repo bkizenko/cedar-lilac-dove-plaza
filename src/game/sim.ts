@@ -12,7 +12,7 @@ import {armorCombatDamage,armorMovementMultiplier,reconcileArmorHolders} from '.
 import {beginTradeLoading,tradeLoadingAI} from './tradeLoading';
 import {rivalSiteClearance,buildingBlocksTreeRegrowth} from './rivalConstruction';
 import {combatMusicMood} from './combatMusic';
-import {gamePrestigeView,tickPrestigeEvidence} from './prestigeGame';
+import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
 import { tickGoatSearchOrders, goatSearchTarget, captureGoatFromSearch, finishGoatSearch, goatSearchPen, visibleGoatsForPen } from './animalOrders';
 import{hasConstructionWork}from'./constructionTargets';
@@ -66,7 +66,7 @@ import {recordSimulationEvent} from './simulationEvents';
 import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
 import {campAnchor,CAMP_RULES,supplyDrops,supplyApproach,supplyReached,type SupplyDrop} from './campAnchor';
 import {prepareRivalDefense} from './rivalOperations';
-import {geographicInfluenceAt,paintGeographicTerritory,advanceGeographicInfluence,geographicInfluenceReady} from './influenceField';
+import {geographicInfluenceAt,paintGeographicTerritory,advanceGeographicInfluence,geographicInfluenceReady,geographicInfluenceDiagnostics} from './influenceField';
 import {grievanceChange,grievanceTemper} from './antagonism';
 import type {WorldRequest} from './worldOptions';
 import{reconcilePenWater}from'./penWater';
@@ -5893,7 +5893,7 @@ export class Game {
         tickCaptivity(this,sdt);
         phases?.mark('observation');
         this.updateVision(sdt);
-        tickPrestigeEvidence(this);
+        tickPrestigeEvidence(this,geographicInfluenceDiagnostics(this,0).paintReady);
         tickEncounters(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time-sdt)) tickPeace(this);
         if (Math.floor(this.state.time) !== Math.floor(this.state.time - sdt)) recordDiscoveries(this);
@@ -6356,7 +6356,7 @@ export class Game {
       })),
       prestige: Math.round(prestigeView.total??0),
       prestigeBreakdown: prestigeView,
-      prestigeRivals: this.state.tribes.filter(tr=>tr.id!==0&&tr.id!==3).map(tr=>this.prestigeBreakdown(0,tr.id)),
+      prestigeRivals: gamePrestigeRivals(this),
       stockCap: this.stockCap(0),
       port: this.hasBld(0, "dock"),
       night: this.isNight(),

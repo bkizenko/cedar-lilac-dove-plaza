@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
-import {collectOwnPrestige,gamePrestigeView,tickPrestigeEvidence,PRESTIGE_GAME_RULES} from '../src/game/prestigeGame.ts';
+import {collectOwnPrestige,gamePrestigeView,gamePrestigeRivals,prestigeTerritoryProgress,tickPrestigeEvidence,PRESTIGE_GAME_RULES} from '../src/game/prestigeGame.ts';
 import {scorePrestige} from '../src/game/prestigeScore.ts';
 import {readyFoodStock} from '../src/game/pantry.ts';
 import {foodDemand} from '../src/game/settlement.ts';
@@ -19,7 +19,8 @@ test('real Game owner score uses ready nourishment, body health and successful d
 test('score reads do not paint territory, refresh memories or mutate state; bounded simulation cache is explicit and old saves need no new field',()=>{
  const g=fixture(),state=JSON.stringify(g.state),territory=g.territory.slice();for(let i=0;i<3;i++){const v=g.prestigeBreakdown();assert.equal(v.territoryMeasuredAt,null);assert.equal(v.components.find(r=>r.component==='usableArea').available,false);assert.equal(g.prestige(),Math.round(v.total));}
  assert.equal(JSON.stringify(g.state),state);assert.deepEqual(g.territory,territory);
- for(let i=0;i<Math.ceil(g.territory.length/PRESTIGE_GAME_RULES.cellsPerTick);i++)tickPrestigeEvidence(g);
+ for(let i=0;i<4096;i++){tickPrestigeEvidence(g);const progress=prestigeTerritoryProgress(g);if(progress.available&&!progress.phase)break;}
+ assert.equal(prestigeTerritoryProgress(g).available,true,'bounded indexing and terrain sampling must both finish');
  const v=g.prestigeBreakdown();assert.equal(v.territoryMeasuredAt,g.state.time);assert.equal(v.territoryUpdating,false);assert.equal(v.components.find(r=>r.component==='usableArea').available,true);assert.equal(JSON.stringify(g.state),state);assert.deepEqual(g.territory,territory);
  const hud=g.snapshot();assert.equal(hud.prestige,g.prestige());assert.equal(hud.prestigeBreakdown.total,g.prestigeBreakdown().total);assert.ok(hud.prestigeRivals.every(r=>r.total===null));
  const loaded=decodeGame(encodeGame(g));assert.equal(loaded.prestigeBreakdown().territoryMeasuredAt,null,'cache is rebuilt, never fabricated in old save payload');
@@ -29,6 +30,7 @@ test('actual retained landmark report exposes a dated partial rival component wh
  // An archived report need not have a matching live structure: its witness
  // observed this historical site, not an omniscient current building lookup.
  const b={id:g.id(),x:20,y:2,z:20,w:6,d:6};
+ g.state.contacts=[1];const contact=gamePrestigeView(g,0,1);assert.equal(contact.identityKnown,true);assert.equal(contact.communityName,rival.name);assert.equal(contact.total,null);assert.equal(contact.knowledge,'unknown');assert.equal(gamePrestigeView(g,2,1).identityKnown,false);
  g.state.structureReports=[{version:1,observer:0,witnessId:g.state.units.find(u=>u.team===0).id,observedAt:20,receivedAt:25,active:true,site:{id:b.id,type:'temple',team:1,x:b.x,y:b.y,z:b.z,w:b.w,d:b.d,hp:100,maxHp:200},defenders:0,defensePower:0}];
  const state=JSON.stringify(g.state),before=gamePrestigeView(g,0,1);assert.equal(before.knowledge,'observed');assert.equal(before.observedAt,20);assert.equal(before.total,null);assert.equal(before.components.find(r=>r.component==='foodSecurity').points,null);assert.ok(before.knownSubtotal>0);assert.equal(JSON.stringify(g.state),state);
  rival.food=1e9;rival.wood=1e9;rival.productionPractice={};g.state.buildings.push(g.makeBld('temple',b.x+20,b.z+20,1));assert.deepEqual(gamePrestigeView(g,0,1),before,'private authority cannot update a dated report');
@@ -51,4 +53,9 @@ test('real boat-practice delivery evidence earns distinct methods while built hu
 
 test('food security days match the actual simulation clock rather than a second invented calendar',()=>{
  const g=fixture(),day=PRESTIGE_GAME_RULES.calendarDaySeconds;g.state.time=0;const start=g.clockState().day;g.state.time=day;assert.equal(g.clockState().day,start+1);g.state.time=day*32;assert.equal(g.clockState().day,start+32);assert.equal(day,56.25);
+});
+
+test('HUD rival facts traverse retained reports once for all subjects and match separate authorized queries',()=>{
+ const g=fixture();let iterations=0;g.state.structureReports=new Proxy([],{get(target,key,receiver){if(key===Symbol.iterator)iterations++;return Reflect.get(target,key,receiver);}});
+ const views=gamePrestigeRivals(g);assert.equal(iterations,1);for(const v of views)assert.deepEqual(v,gamePrestigeView(g,0,v.subject));
 });
