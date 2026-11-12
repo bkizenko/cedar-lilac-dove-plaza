@@ -3,11 +3,14 @@ import { DIFFICULTIES, difficultyEffects, type Difficulty } from "../game/diffic
 import { useState } from "react";
 import type { Engine } from "../game/engine";
 import type { WorldRequest, WorldOptions } from "../game/worldOptions";
+import type { SkinRequest } from "../game/skinState";
+import { SkinPicker } from "./SkinPicker";
 import { PRESETS, type MapPreset } from "../game/mapgen/presets";
 export function WorldSetup({ engine }: { engine: Engine }) {
   const [mapType, setMapType] = useState<MapPreset | "random">("random");
   const [size, setSize] = useState<WorldOptions["size"]>(1560);
   const [preset, setPreset] = useState<Difficulty>(engine.game.state.difficulty ?? "normal");
+  const [skin, setSkin] = useState<SkinRequest>({ mode: "random" });
   const lifecycle=useLifecycleAction(engine),busy=lifecycle.busy;
   const [previewRiverbanks, setPreviewRiverbanks] = useState(false);
   return (
@@ -61,6 +64,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
           <option value={2080}>Huge · 4× area</option>
         </select>
       </label>
+      <SkinPicker value={skin} onChange={setSkin} />
       {engine.game.testMode&&<label>
         <input type="checkbox" checked={previewRiverbanks} onChange={e=>setPreviewRiverbanks(e.target.checked)}/>
         Experimental riverbanks
@@ -70,13 +74,14 @@ export function WorldSetup({ engine }: { engine: Engine }) {
         disabled={busy}
         onClick={() => void lifecycle.run(async()=>{
           await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
-          return await engine.configureNewWorld({preset:mapType,size,difficulty:preset},previewRiverbanks);
+          return await engine.configureNewWorld({preset:mapType,size,difficulty:preset,skin},previewRiverbanks);
         })}
       >
         {busy ? "Generating…" : "New world"}
       </button>
       {lifecycle.error&&<p role="status" className="text-xs">{lifecycle.error}</p>}
       <span>
+        {engine.game.state.skins?.slots["0"]?.name ?? "Village"} ·{" "}
         {engine.game.world.mapgen?.name ?? engine.game.world.options?.layout ?? "Classic island"} ·{" "}
         {Math.round(engine.game.world.size)} m across
       </span>

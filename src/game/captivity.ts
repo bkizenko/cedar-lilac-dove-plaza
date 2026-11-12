@@ -1,4 +1,4 @@
-import {noteRaidDefenseResidentHome} from './warPrestige';
+import {noteRaidDefenseResidentHome,noteRaidDefenseResidentDelivered} from './warPrestige';
 import {snapshotCapturedMethods,type CapturedMethodSnapshot} from './capturedKnowledge';
 import {reconcileArmorHolders} from './armor';
 import{validHandoverProvenance}from'./communityHandoverValidation';
@@ -214,7 +214,7 @@ export function prisonerAI(g:Game,person:Unit,dt:number){
  if(p.phase==='custody'){u.order='hold';u.node=null;u.target=null;u.job=null;u.jobLock=false;u.workReason='Prisoner in guarded custody — no labor assigned';return true;}
  const drop=g.nearestDrop(u.x,u.z,p.captorTeam),spot=drop?supplyApproach(g,u,drop):null;
  if(!drop||!spot){u.order='hold';u.workReason='Prisoner waiting for a reachable custody site';return true;}
- if(supplyReached(g,u,drop,spot)){p.phase='custody';u.order='hold';u.node=null;u.target=null;recordConflict(g,'prisoner_custody',p.captorTeam,1,{actorId:u.id});return true;}
+ if(supplyReached(g,u,drop,spot)){p.phase='custody';noteRaidDefenseResidentDelivered(g,u);u.order='hold';u.node=null;u.target=null;recordConflict(g,'prisoner_custody',p.captorTeam,1,{actorId:u.id});return true;}
  if(Math.hypot(guard.x-u.x,guard.z-u.z)>PRISONER_RULES.escortSeparationMeters){u.order='hold';u.workReason='Waiting for prisoner escort to catch up';return true;}
  u.tx=spot.x;u.tz=spot.z;u.order='return';g.steer(u,dt);u.workReason='Walking under escort to custody';return true;
 }

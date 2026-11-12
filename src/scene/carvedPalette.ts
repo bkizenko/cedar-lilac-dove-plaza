@@ -102,6 +102,13 @@ let activePalette:CarvedPaletteName='village';
 export function setCarvedPalette(name:CarvedPaletteName){activePalette=name==='honey'?'honey':'village';}
 export function getCarvedPalette():CarvedPaletteName{return activePalette;}
 export function carvedSwatch(id:CarvedMaterialId):CarvedSwatch{return CARVED_PALETTES[activePalette][id];}
+/** Swatch for a part material, honouring an optional per-spec table (CivSkin look) before the active palette. Grain follows the construction course when the table gives none. */
+export type SpecSwatches=Record<string,{hex:string;roughness:number;grain?:number;course?:string}>|undefined;
+const COURSE_GRAIN:Record<string,number>={log:.9,plank:.9,beam:.9,timberPaper:.6,thatch:.7,weave:.6,wattle:.5,felt:.3,turf:.2,tile:.4};
+export function specSwatch(table:SpecSwatches,id:string):CarvedSwatch{
+ const o=table?.[id];if(o)return {hex:o.hex,roughness:o.roughness,grain:o.grain??COURSE_GRAIN[o.course??'']??.25};
+ return carvedSwatch(id as CarvedMaterialId);
+}
 export const CARVED_MATERIAL_IDS=Object.keys(CARVED_MATERIALS) as CarvedMaterialId[];
 export const WOOD_FAMILY:readonly CarvedMaterialId[]=['woodLight','woodMid','woodDark','thatch','shingle','tile','plaster','stone','stoneDark','trunk'];
 

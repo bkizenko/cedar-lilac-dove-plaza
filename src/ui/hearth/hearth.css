@@ -343,6 +343,16 @@
 .hw-dot{width:12px;height:12px;border-radius:50%;align-self:center;background:var(--hw-warn)}.hw-dot.d-bad{background:var(--hw-bad)}.hw-dot.d-good{background:var(--hw-good)}
 .hw-renown .hw-meter.is-top i{background:linear-gradient(90deg,var(--hw-gold),var(--hw-gold-2))}
 @media (max-width:640px){.hw-faction{grid-template-columns:14px 1fr auto}.hw-faction .hw-sub{grid-column:2/4}}
+/* civic panel */
+.hw-steps{display:inline-flex;gap:4px;flex-wrap:wrap}
+.hw-step{opacity:.55}.hw-step.is-past{opacity:.8}.hw-step.is-now{opacity:1;background:rgba(242,199,107,.22);border-color:rgba(242,199,107,.7)}
+.hw-chain{align-items:center}.hw-chain-link{display:inline-flex;align-items:center;gap:6px;color:var(--hw-dim)}
+.hw-lines{flex-direction:column;align-items:stretch}.hw-lines li{min-width:0;list-style:none}.hw-lines .hw-chip{max-width:100%}.hw-ellip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.hw-map-style .hw-btn-wide[aria-pressed=true]{background:rgba(242,199,107,.25);border-color:rgba(242,199,107,.7)}.hw-map-style{align-items:center}
+.hw-lines{padding:0;margin:0;width:100%}.hw-lines li{width:100%}.hw-lines .hw-chip{display:flex;overflow:hidden;width:100%;box-sizing:border-box}.hw-lines .hw-chip svg{flex:none}
+.hw-grid-2>*{min-width:0}.hw-lines .hw-ellip{flex:1;min-width:0}
+.hw-lines .game-tooltip-anchor{display:block;min-width:0;max-width:100%}
+.hw-lines li{overflow:hidden}.hw-lines .hw-chip{max-width:100%;text-overflow:ellipsis}
 
 /* ---------- capitulation terms ---------- */
 .hw-terms{display:grid;gap:var(--hw-s4)}

@@ -35,7 +35,9 @@ export type Part={shape:PartShape;size:readonly [number,number,number];pos:reado
  /** Present when this part belongs to a rotor that the layer turns (water wheel, sails). */
  anim?:PartAnim};
 export type BuildingSpec={family:string;variantKey:string;footprint:{w:number;d:number};parts:Part[];
- entry?:{x:number;z:number;width:number};notes:{reference:string}};
+ entry?:{x:number;z:number;width:number};notes:{reference:string};
+ /** Optional per-spec swatch table (a CivSkin look): a part's `mat` is looked up here first, then in the carved palette. Absent for the neutral Village grammar. */
+ materials?:Record<string,{hex:string;roughness:number;grain?:number;course?:string}>};
 
 export const LOD_DISTANCES_METRES=[30,70,120] as const;
 

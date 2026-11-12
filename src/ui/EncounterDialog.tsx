@@ -15,13 +15,13 @@ export function EncounterDialog({engine}:{engine:Engine|null}){
  return <dialog ref={ref} className="play-guide encounter-dialog" aria-labelledby="encounter-heading" onCancel={e=>{e.preventDefault();reply('observe');}}>
   <span className="encounter-eyebrow">{hostile?'Hostile encounter':'First contact'}</span>
   <h2 id="encounter-heading">{t.name}</h2>
-  <p>{person?personName(person):'Your explorer'} has met {stranger?personName(stranger):'someone'} from <strong>{t.name}</strong>.</p>
+  <p className="encounter-who">{person?personName(person):'Explorer'} · {stranger?personName(stranger):'Stranger'}</p>
   {stranger&&person&&<div className="encounter-talk"><EncounterPortrait engine={engine} strangerId={stranger.id}/><LeaderConversation key={`${person.id}:${stranger.id}`} engine={engine} personId={person.id} strangerId={stranger.id}/></div>}
-  {stranger?.carryType&&stranger.carry>0&&<p>Visible cargo: {Math.floor(stranger.carry)} {stranger.carryType}.</p>}
+  {stranger?.carryType&&stranger.carry>0&&<p>Carrying {Math.floor(stranger.carry)} {stranger.carryType}</p>}
   <ContactActions key={encounter.stranger} engine={engine} strangerId={encounter.stranger} personId={encounter.person} conversation={false}/>
   <div className="encounter-actions">
-   {!hostile&&<button type="button" onClick={()=>reply('greet')}>Part on friendly terms</button>}
-   <button type="button" onClick={()=>reply('observe')}>End conversation</button>
+   {!hostile&&<button type="button" onClick={()=>reply('greet')}>Part in peace</button>}
+   <button type="button" onClick={()=>reply('observe')}>Leave</button>
   </div>
  </dialog>;
 }

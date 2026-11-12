@@ -14,7 +14,7 @@ test('hearth alone automatically harvests, threshes, winnows, grinds and bakes w
  assert.ok(g.state.production.projects.some(p=>p.recipe==='grindGrain'));
  g=decodeGame(encodeGame(g));ground(g);drive(g,250,()=>g.state.production.projects.some(p=>p.recipe==='bakeBread'&&p.phase==='complete'));
  assert.equal(g.state.autoWorkEnabled,false);assert.ok(g.tribe(0).foodLots.bread>0);
- const m=g.state.production.metrics;assert.equal(m.consumed.grainSheaves,16);assert.equal(m.consumed.roughGrain,12);assert.equal(m.grainUsed,4);assert.equal(m.consumed.flour,4);assert.equal(m.edibleFoodProduced,11.36);assert.equal(m.logsUsed,1);assert.equal(m.waterUsedLiters,2);
+ const m=g.state.production.metrics;assert.equal(m.consumed.grainSheaves,16);assert.equal(m.consumed.roughGrain,12);assert.equal(m.grainUsed,4);assert.equal(m.consumed.flour,4);assert.equal(m.edibleFoodProduced,11.36);assert.equal(m.logsUsed,0,'paid cereal residues supply this batch heat before logs');assert.ok((m.consumed.chaff||0)+(m.consumed.straw||0)>0,'cooking debits actual finite residues');assert.equal(m.waterUsedLiters,2);
  assert.ok(['threshCerealHand','winnowCerealHand','grindGrain','bakeBread'].every(recipe=>g.state.production.projects.some(p=>p.recipe===recipe&&p.phase==='complete')));
 });
 test('legacy interrupted winnowing resumes same paid progress without new input or teleport',()=>{
