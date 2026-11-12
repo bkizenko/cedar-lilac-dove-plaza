@@ -1398,7 +1398,8 @@ export class WorldView {
     );
     sunCol.lerp(_c.set("#ffe0aa"),art.warmth*.75);
     // Option H only (opt-in renderStyle): golden-hour daylight grade (CHAT-G2). Winter, storms and night are exempt inside carvedDaylightGrade/this gate; default 'current' look is untouched.
-    if(this.renderStyle==='carved'&&!night){const gr=carvedDaylightGrade(day,{winter:sn.snow>0.4||wx==='frost',storm:wx==='storm'?1:wet?.5:0});sunCol.lerp(_c.set(gr.sun),.55);}
+    let hGrade:ReturnType<typeof carvedDaylightGrade>|null=null;
+    if(this.renderStyle==='carved'&&!night){const gr=hGrade=carvedDaylightGrade(day,{winter:sn.snow>0.4||wx==='frost',storm:wx==='storm'?1:wet?.5:0});sunCol.lerp(_c.set(gr.sun),.55);}
     this.hemi.color.set(
       night
         ? "#c4d0e8"
@@ -1442,6 +1443,8 @@ export class WorldView {
       fog.lerp(_c.set(ATMOSPHERE_RULES.coolDistance),ATMOSPHERE_RULES.distanceMix);
       this.hemi.color.lerp(_c.set(ATMOSPHERE_RULES.coolSky),ATMOSPHERE_RULES.skyMix);
     }
+    // Option H only: warm the skylight and distance haze a little toward the golden grade (scaled by its own warmth, so winter/storm stay cool).
+    if(hGrade&&clearDay){this.hemi.color.lerp(_c.set(hGrade.hemiSky),.3*hGrade.warmth);fog.lerp(_c.set(hGrade.sun),.12*hGrade.warmth);}
     this.hemi.groundColor.set(ATMOSPHERE_RULES.coolGround);
     const dens=atmosphericDensity(wx,night,sn.snow);
     const k = dt > 0.4 ? 1 : 1 - Math.exp(-dt * 0.38);
