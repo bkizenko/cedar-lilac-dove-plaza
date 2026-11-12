@@ -153,5 +153,42 @@
     "Only bounded visible settlement observation timestamp refresh is allowed during foreign built restore; owner/site/witness/coordinates and all other durable fields remain exact. Read-side settlement refresh remains a separate architecture audit.",
     "No full knowledge gate, all-method native journey, campaign or100-resident FPS credit.",
     "Latest Claude forge visuals on main are outside this exact frozen artifact."
-  ]
+  ],
+  "cleanup": {
+    "completedOwnTestWorktreesRemoved": 3,
+    "supersededRollbackRemoved": "9555f70",
+    "currentAndOnePreviousReleaseRetained": true,
+    "privateGeneratedCheckpointCopiesRemoved": true,
+    "approvedArtAndOriginalVillagesPreserved": true,
+    "private8103Stopped": true,
+    "live8101Pid": 42972,
+    "postCleanupNetwork": {
+      "passed": 5,
+      "total": 5,
+      "release": "2026-11-12T23-35-40-519Z-18d9fc9",
+      "assets": [
+        {
+          "port": 8086,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+        },
+        {
+          "port": 8086,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+        },
+        {
+          "port": 8101,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+        },
+        {
+          "port": 8101,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+        }
+      ]
+    },
+    "ordinarySuiteWithoutEarnedInputs": "Explicit diagnostic skips3, passed0; not credited to19"
+  }
 }
