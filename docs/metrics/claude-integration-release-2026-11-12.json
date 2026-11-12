@@ -1,0 +1,110 @@
+{
+  "sourceCommit": "724e65a",
+  "landedMainBase": "4ed02cd",
+  "diagnosticFix": "2e7ded2",
+  "liveCommit": "a4b7326266d698e2ee5a09c1e422c74ab0d182ca",
+  "release": "2026-11-12T07-15-48-214Z-a4b7326",
+  "scope": "Whole landed Claude main integration retained; player-facing Original/Carved Option H menu switch and persisted browser preference; actual carved geometry and selection on existing original village, fresh native Test Lab council/ruler UI and strict lab saves, protected original restoration.",
+  "batch": {
+    "passed": 49,
+    "total": 49,
+    "distinctFocused": 46,
+    "builtIntegration": 2,
+    "builtExistingVillage": 1
+  },
+  "focusedEvidence": {
+    "combinedIntegration": 35,
+    "graphicsPreferencesResolutionAndProfiles": 11
+  },
+  "typecheck": "pass",
+  "build": "pass",
+  "built": {
+    "scope": "Two desktop built integration checks: actual Menu Option H selection, nonzero geometry/native selection on original buildings, persisted page refresh and current-style restoration; native fresh Test Lab world council/leader controls, strict lab ruler save/reload and protected original-village restoration. No original-save ruler opt-in, terrain edits, screenshots, performance, visual approval or campaign acceptance.",
+    "target": "http://127.0.0.1:8103/",
+    "passed": 2,
+    "total": 2,
+    "buildingId": 12553,
+    "originalHash": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+    "carved": {
+      "style": "carved",
+      "draws": [
+        {
+          "count": 1,
+          "vertices": 636,
+          "finite": true,
+          "colors": 636,
+          "grain": 636,
+          "material": "carved-h-shared",
+          "inScene": true,
+          "originalIdentity": true
+        }
+      ],
+      "rendererCalls": 89
+    },
+    "selection": {
+      "hit": 12553,
+      "selected": 12553,
+      "nativeInput": true
+    },
+    "styleMenu": {
+      "selectedThroughUI": true,
+      "optionHPersistedThroughPageRefresh": true
+    },
+    "council": {
+      "ruler": "Olaor",
+      "stage": "household",
+      "visibleCurrentAndClassic": true,
+      "strictRulerMetadataPreserved": true
+    },
+    "originalRestoredAfterReset": true,
+    "originalUnchanged": true,
+    "errors": []
+  },
+  "existingVillage": {
+    "scope": "Frozen-app import/render/Menu/existing workplace queue and actual owner recipe query/strict saved restore. Fresh private Chrome context, paused native fixture; no production actions, simulation steps, screenshots, performance or campaign claim.",
+    "originalChecksum": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+    "opening": {
+      "id": 12462,
+      "type": "smokehouse",
+      "time": 11394.073333341026,
+      "residents": 53
+    },
+    "query": {
+      "recipeRows": 2,
+      "epoch": 3,
+      "stateRevision": 0,
+      "requestId": 1
+    },
+    "render": {
+      "canvas": true,
+      "drawCalls": 100,
+      "simulationErrors": [],
+      "paused": true,
+      "time": 11394.073333341026,
+      "quality": "low"
+    },
+    "save": {
+      "saved": true,
+      "message": "Village saved"
+    },
+    "restore": {
+      "replaced": true,
+      "paused": true,
+      "time": 11394.073333341026,
+      "residents": 53,
+      "workplacePresent": true,
+      "errors": []
+    },
+    "passed": 1,
+    "total": 1,
+    "errors": [],
+    "elapsedMilliseconds": 36690
+  },
+  "frozenFirstRelease": {
+    "passed": 34,
+    "total": 98,
+    "percent": 34.69,
+    "changed": false
+  },
+  "limits": "Scoped integration and usable visual switch, not exhaustive acceptance of every Claude feature, campaign, new War/World hooks or Mac frame-time target. Original graphics remains default. No screenshots retained."
+}
