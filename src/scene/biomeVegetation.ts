@@ -190,7 +190,7 @@ export class BiomeDressing {
   }
   const snowLoad=(context.snow??0)>.15?Math.min(1,(context.snow??0)*1.05):0;
   for(const [kind,mesh]of this.batches){mesh.count=counts.get(kind)??0;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
-   if(this.botanical?.has(kind)){const st=mesh.geometry.getAttribute('iState') as THREE.InstancedBufferAttribute,leaf=kind==='sapling'?Math.max(0,1-Math.min(1,(context.winter??0)*1.25)-Math.max(0,((context.autumn??0)-.5)*1.2)):1;for(let i=0;i<mesh.count;i++)st.setXY(i,leaf,snowLoad);st.needsUpdate=true;}}
+   if(this.botanical?.has(kind)){const st=mesh.geometry.getAttribute('iState') as THREE.InstancedBufferAttribute,leaf=kind==='sapling'||kind==='bush'?Math.max(0,1-Math.min(1,(context.winter??0)*1.25)-Math.max(0,((context.autumn??0)-.5)*1.2)):1;for(let i=0;i<mesh.count;i++)st.setXY(i,leaf,snowLoad);st.needsUpdate=true;}}
   return total;
  }
  dispose(){for(const mesh of this.batches.values()){this.scene.remove(mesh);mesh.geometry.dispose();if(!this.materials.length)(mesh.material as THREE.Material).dispose();mesh.dispose();}for(const m of this.materials)m.dispose();this.materials.length=0;this.batches.clear();}

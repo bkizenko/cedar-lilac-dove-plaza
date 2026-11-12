@@ -75,13 +75,13 @@ function dressingForm(kind:ProvinceKind,random:number,bank:boolean):DressingForm
  * instance cap always keeps what is around the camera. Same eligibility rules as the classic scatter (dry, gentle, outside buildings). */
 export type FloorSite={cover:number;edge:number;soil:number;slope:number};
 const NO_SITE:FloorSite={cover:0,edge:0,soil:.8,slope:0};
-function painterForm(kind:ProvinceKind,r:number,bank:boolean,moisture:number,site:FloorSite=NO_SITE):DressingPoint['kind']{
+export function painterForm(kind:ProvinceKind,r:number,bank:boolean,moisture:number,site:FloorSite=NO_SITE):DressingPoint['kind']{
  const pick=(table:[DressingPoint['kind'],number][])=>{let t=0;for(const [,w] of table)t+=w;let v=r*t;for(const [k,w] of table){v-=w;if(v<0)return k;}return table[0][0];};
  if(bank&&(kind==='wetland'||moisture>.6))return pick([['cattail',3],['reeds',4],['tallgrass',2],['grass',1]]);
  if(site.soil<.22)return pick([['pebbles',30],['rocks',12],['cushion',kind==='alpine'?14:4],['drygrass',16],['grass',8],['bush',2]]);
  if(site.cover>.3){ // under canopy: a forest floor of ferns, moss, fungi and deadwood, drier kinds keep grass and bushes
   const dry=kind==='dry-scrub'||kind==='arid',wet=moisture>.45&&!dry;
-  return dry?pick([['drygrass',24],['bush',12],['deadwood',10],['pebbles',14],['rocks',6],['stump',2],['sapling',3]]):pick([['fern',22],['bracken',wet?12:3],['moss',13],['mushroom',wet?8:3],['deadwood',7],['log',3.6],['stump',2.4],['grass',8],['bush',5],['sapling',11],['pinelet',kind==='conifer-forest'||kind==='alpine'?14:4],['rocks',3]]);
+  return dry?pick([['drygrass',24],['bush',12],['deadwood',10],['pebbles',14],['rocks',6],['stump',2],['sapling',3]]):pick([['fern',22],['bracken',wet?12:3],['moss',wet?5:2],['mushroom',wet?8:3],['deadwood',7],['log',3.6],['stump',2.4],['grass',8],['bush',5],['sapling',11],['pinelet',kind==='conifer-forest'||kind==='alpine'?14:4],['rocks',3]]);
  }
  if(site.cover>.07||site.edge>.25)return kind==='dry-scrub'||kind==='arid'?pick([['bush',14],['drygrass',22],['pebbles',10],['rocks',4]]):pick([['bush',15],['tallgrass',16],['bracken',moisture>.45?9:3],['flowers',10],['grass',24],['fern',8],['stump',1.5],['sapling',7],['rocks',2]]);
  switch(kind){
