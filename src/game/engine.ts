@@ -1076,6 +1076,7 @@ export class Engine {
   toggleMute() {
     this.game.muted = !this.game.muted;
     this.audio.setMuted(this.game.muted);
+    this.pushHud();
   }
 
   setRenderStyle(style:RenderStyle) {
