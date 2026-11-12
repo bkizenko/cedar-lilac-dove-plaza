@@ -6,7 +6,7 @@ Updated 11 November 2026, W6 ready (ET). Lane **W-World** (Grok): geography, bio
 
 Shored cuts were left out as instructed (pending Boris). The trench bank rule (`maximumNaturalGrade` 0.24) is unchanged.
 
-- **Base:** latest main `8f8e692` (already merged; no new main commits since). Nobody else has pushed to `agents/grok-world` (head was my `3541a67` before this handoff).
+- **Base:** latest main `d86d7da` (perf: population scans/defense neighbours), merged normally after the W6 commits. Nobody else has pushed to `agents/grok-world` (head was my `3541a67` before this handoff).
 - **Commits (each small and self-contained):**
   - `2ff347a`: sea-only tides (`tideVersion: 2`).
   - `3ff32bf`: aqueducts and canals routed around terrain (`waterRoutes.ts`).
@@ -14,7 +14,7 @@ Shored cuts were left out as instructed (pending Boris). The trench bank rule (`
   - The handoff commit (this section), with a one-comment `sim.ts` touch (see the shared-file list).
 
 ### Merge map for Codex (verified, not estimated)
-Each group below was cherry-picked onto a clean `origin/main` (`8f8e692`) in a scratch worktree. Then `tsc --noEmit` and the group's own tests were run there.
+Each group below was cherry-picked onto a clean `origin/main` (`8f8e692`; the later `d86d7da` touches only `defense*`, `haulage.ts` and `settlement.ts`, none of these files) in a scratch worktree. Then `tsc --noEmit` and the group's own tests were run there.
 
 | Group | Commits (in order) | Depends on | On main alone |
 |---|---|---|---|
@@ -91,9 +91,9 @@ Each group below was cherry-picked onto a clean `origin/main` (`8f8e692`) in a s
 6. **Validators:** `tideVersion` 1|2, `landformLabelVersion` 2, `riverProfileVersion` 2.
 
 ### Checks (W6)
-- All 23 branch test files (W1–W6): **93/93 pass**.
+- All 23 branch test files (W1–W6) plus main's new `defense-neighbors` test, after merging `d86d7da`: **105/105 pass**.
 - Walk-cache, v17-water, deep-water, excavation-live and wonder-sites tests: 15/15 with tide v2 present.
-- Unflagged hashes are identical to main on 48/48 worlds.
+- Unflagged hashes are identical to main on 48/48 worlds (re-run after the merge).
 - `tsc` and eslint are clean on all new and touched files.
 
 ### Next (W7 proposal)
