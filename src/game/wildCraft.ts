@@ -386,11 +386,11 @@ function directWild(g:Game,team:number){
 export type WildFeedbackRow={icon:string;kind:'work'|'rot'|'trap'|'wound'|'stock';text:string;why?:string;unitId?:number;amount?:number};
 export function wildCraftFeedback(g:Game,team:number):WildFeedbackRow[]{
  const w=g.state.wildCraft;if(!w)return [];const rows:WildFeedbackRow[]=[];
- for(const p of w.projects.filter(p=>p.team===team)){const u=g.state.units.find(u=>u.id===p.actorId);const r=WILD_RECIPES[p.recipe];
-  rows.push({icon:r.icon,kind:'work',text:`${p.phase}${r.workSeconds?` ${Math.min(100,Math.floor(p.progress/r.workSeconds*100))}%`:''}`,why:r.name,...(u?{unitId:u.id}:{})});}
+ for(const p of w.projects.filter(p=>p.team===team)){const u=g.state.units.find(u=>u.id===p.actorId&&u.team===team);const r=WILD_RECIPES[p.recipe];
+  rows.push({icon:r.icon,kind:'work',text:`${p.paused?'paused':p.phase}${r.workSeconds?` ${Math.min(100,Math.floor(p.progress/r.workSeconds*100))}%`:''}`,why:r.name,...(u?{unitId:u.id}:{})});}
  for(const t of w.traps.filter(t=>t.team===team))rows.push({icon:HUNT_METHOD_ICON[t.kind],kind:'trap',text:`${t.catches} caught`,why:t.kind});
- for(const[id,wd]of Object.entries(w.wounds)){const c=g.state.wildlife.find(c=>String(c.id)===id);if(c&&c.hp>0)rows.push({icon:'🩸',kind:'wound',text:`${c.species} bleeding`,amount:wd.trail.length});}
- const stock=wildStock(g,team),camp=g.campOf(team);
+ for(const[id,wd]of Object.entries(w.wounds)){const c=g.state.wildlife.find(c=>String(c.id)===id);if(c&&c.hp>0&&(team!==0||g.visibleAt(c.x,c.z)))rows.push({icon:'🩸',kind:'wound',text:`${c.species} bleeding`,amount:wd.trail.length});}
+ const stock=w.stock[String(team)]||{},camp=g.campOf(team);
  for(const k of WILD_GOODS){const n=stock[k]||0;if(n<=0)continue;const rate=wildSpoilRate(g,k,camp.x,camp.z);rows.push({icon:WILD_GOOD_ICON[k],kind:rate*600>.1?'rot':'stock',text:`${n.toFixed(1)}`,why:rate>0?`${(rate*600*100).toFixed(0)}% rots per 10 min`:'keeps',amount:n});}
  const food=foodInventory(g.tribe(team));
  if(food.berries>0)rows.push({icon:'🍇',kind:'rot',text:food.berries.toFixed(0),why:'berries rot fastest; dry or boil them'});
