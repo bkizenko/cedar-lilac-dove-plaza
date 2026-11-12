@@ -97,3 +97,18 @@ test('rival ruler voice renders as a quoted greeting in the diplomacy sheet and 
  assert.match(html,/Marsh Folk meets you at the door/);assert.match(html,/data-manner="warm"/);assert.match(html,/If refused: Marsh Folk declines kindly/);
  assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:[base],onAct(){}})),/data-manner/);
 });
+
+test('rival court line names ruler, regent and heir; rival change feed fires only on visible change; old data renders nothing',async()=>{
+ const {courtLine,rivalCourtChange}=await import('../src/ui/council/courtLine.ts');
+ const {DiplomacySheet}=await import('../src/ui/council/DiplomacySheet.tsx');
+ const court={ruler:'Ansa',rulerAge:41,house:'Reed',law:'primogeniture',heir:{name:'Bel',age:9,adult:false,legit:true},regent:'Corr',extinct:false};
+ assert.equal(courtLine(undefined),null);
+ assert.match(courtLine(court),/Corr holds the seat as regent; Bel, 9 \(a child\), would follow/);
+ assert.match(courtLine({...court,heir:undefined,regent:undefined,extinct:true}),/no heir/);
+ assert.equal(rivalCourtChange('Marsh',court,court),null);assert.equal(rivalCourtChange('Marsh',undefined,court),null);
+ assert.match(rivalCourtChange('Marsh',court,{...court,ruler:'Bel',regent:undefined}).title,/Ansa has left the seat/);
+ assert.match(rivalCourtChange('Marsh',{...court,regent:undefined},court).title,/regency begins/);
+ const base={team:1,name:'Marsh Folk',bond:'Friendly',trust:70,canMarry:false,means:[]};
+ assert.match(renderToStaticMarkup(h(DiplomacySheet,{neighbours:[{...base,court}],onAct(){}})),/data-court="1"/);
+ assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:[base],onAct(){}})),/data-court/);
+});

@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import type {Engine} from '../game/engine';
-import type {CouncilModel} from '../game/rulersView';
+import {rivalCourtChange} from './council/courtLine';
+import type {CouncilModel,RivalCourt} from '../game/rulersView';
 /** Death or change of the ruling person reads as an event, not a silent handover-card edit: a dismissible toast with
  * the chronicle line, who leads now and how they came to it. Presentation only; reads the council model, never mutates it. */
 type Seen={ruler:string;generation:number;house:string};
@@ -14,7 +15,7 @@ export function describeRulerChange(prev:Seen,c:CouncilModel):Omit<Event,'id'>|n
  return {tone:line?'mourning':'rise',title:line?`${prev.ruler} is dead`:`New ruler of House ${c.house.name}`,body:`${line?line.replace(/^\d+:\s*/,'')+'. ':''}${how}`};
 }
 export function RulerEventToast({engine}:{engine:Engine}){
- const [ev,setEv]=useState<Event|null>(null),seen=useRef<Seen|null>(null),n=useRef(0);
+ const [ev,setEv]=useState<Event|null>(null),seen=useRef<Seen|null>(null),rivals=useRef<Map<number,RivalCourt>>(new Map()),n=useRef(0);
  useEffect(()=>{
   let alive=true,busy=false;
   const poll=async()=>{
@@ -22,6 +23,8 @@ export function RulerEventToast({engine}:{engine:Engine}){
    try{
     const reply=await engine.readModel({kind:'rulers-council'});if(!alive||reply.model.kind!=='rulers-council')return;
     const c=reply.model.council;if(!c.enabled||!c.ruler||!c.house)return;
+    for(const nb of c.neighbours){const was=rivals.current.get(nb.team),rc=rivalCourtChange(nb.name,was,nb.court);if(nb.court)rivals.current.set(nb.team,nb.court);
+     if(rc){try{engine.audio?.proc.rulerEvent('rise');}catch{/* cue is optional */}setEv({id:++n.current,tone:'rise',...rc});}}
     const prev=seen.current;seen.current={ruler:c.ruler.name,generation:c.house.generation,house:c.house.name};
     const d=prev&&prev.house===c.house.name?describeRulerChange(prev,c):null;
     if(d){try{engine.audio?.play('invalid');engine.audio?.proc.rulerEvent(d.tone);}catch{/* cue is optional */}setEv({id:++n.current,...d});}
