@@ -95,7 +95,7 @@ import { FOOD_KINDS } from "./pantry";
 import {CROPS,CROP_TRIAL_RULES,initializeCultivation,validCultivationEvidence} from "./cultivation";
 import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
-import {setFlowFieldsEnabled} from './flowFields';
+
 type Entity = Unit | Building | ResourceNode | Critter;
 const key = (e: Entity | null) => (e ? `${"kind" in e ? e.kind : "critter"}:${e.id}` : null);
 export function encodeGame(g: Game) {
@@ -185,7 +185,9 @@ function validateGamePayload(raw: unknown) {
   if(s.rulers!==undefined&&!validRulersState(s.rulers))failRulers();
   if(s.worldOptions?.tideVersion!==undefined&&s.worldOptions.tideVersion!==1&&s.worldOptions.tideVersion!==2)fail();
   if(s.worldOptions?.landformLabelVersion!==undefined&&s.worldOptions.landformLabelVersion!==2)fail();
+  if(s.worldOptions?.flowFieldVersion!==undefined&&s.worldOptions.flowFieldVersion!==1)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
+  if(!validWaterEngineering(s,HALF*2))fail();
   const excavationSegs=s.worldgenVersion>=7?Math.round(HALF*2/1040*256):256;
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
   if(!validWaterEngineering(s,HALF*2))fail(); // includes validCanalWorks
@@ -771,6 +773,8 @@ export function decodeGame(raw:unknown):Game {
     floaters: [],
   } as GameState;
   ensureSkins(g.state); // old saves and damaged skin records are re-derived from the seed; a valid record is kept exactly
+  if(s.worldOptions?.flowFieldVersion===1)g.world.options={...(g.world.options??s.worldOptions),flowFieldVersion:1};
+  g.configureFlowFields();
   // Existing actual own stations are legacy adoption evidence, never a phantom building.
   for(const t of g.state.tribes)if(t.animalProcessingVersion===undefined)activateAnimalProcessing(g,t.id);
   restoreCargoRecoveryCommitments(g.state);
@@ -792,7 +796,7 @@ export function decodeGame(raw:unknown):Game {
   g.rebuildWalk();
   discountTownhallPlans(g);
   discountQuarryPlans(g);
-  setFlowFieldsEnabled(g,false);
+  g.configureFlowFields(); // opt-in flag persisted in worldOptions; absent = historic A*
   initializePenBeddingTracking(g);
   for(const p of g.state.wildCraft?.projects||[])if(p.actorId>0){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindWildCraftLoad(u,p);}
   for(const p of g.state.production?.projects||[])if(p.recipe==='smeltCopper'&&p.actorId!==null){const u=g.state.units.find(u=>u.id===p.actorId);if(u)bindCopperSmeltLoad(u,p);}

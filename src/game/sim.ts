@@ -144,7 +144,7 @@ import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {unitSightRadius,buildingSightRadius} from "./sightRadii";
 import {turnableBuilding,turnedFootprint} from "./footprints";
-import {flowPath,setFlowFieldsEnabled} from "./flowFields";
+import {flowPath,resetFlowFields,setFlowFieldsEnabled} from "./flowFields";
 import {scenicStartReport} from "./scenicBeauty";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
@@ -406,6 +406,12 @@ export class Game {
     return best;
   }
 
+  /** Apply once per world/reset/load. WeakMap route caches never survive a village replacement. */
+  configureFlowFields(){
+    resetFlowFields(this);
+    setFlowFieldsEnabled(this,(this.world.options??this.state?.worldOptions)?.flowFieldVersion===1);
+  }
+
   reset(seed?: number, worldgenVersion = seed === undefined ? 18 : 1, request:WorldRequest={}) {
     const preset=difficultyId(request.difficulty);
     this.selectedBoat = null;
@@ -415,6 +421,7 @@ export class Game {
     this.chopMarks.clear();
     const s = (seed ?? nextWorldSeed()) | 0;
     this.world = generateWorld(s,worldgenVersion,request);
+    this.configureFlowFields();
     this.state = this.blank();
     this.state.finiteRaiderCampVersion=1;
     enableCombatDoctrine(this);

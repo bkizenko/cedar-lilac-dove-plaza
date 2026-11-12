@@ -13,6 +13,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
   const [skin, setSkin] = useState<SkinRequest>({ mode: "random" });
   const lifecycle=useLifecycleAction(engine),busy=lifecycle.busy;
   const [wildCraft,setWildCraft] = useState(false);
+  const [sharedRoutes,setSharedRoutes]=useState(true),[seaTides,setSeaTides]=useState(true);
   const [previewRiverbanks, setPreviewRiverbanks] = useState(false);
   return (
     <div className="world-setup">
@@ -71,12 +72,14 @@ export function WorldSetup({ engine }: { engine: Engine }) {
         <input type="checkbox" checked={previewRiverbanks} onChange={e=>setPreviewRiverbanks(e.target.checked)}/>
         Experimental riverbanks
       </label>}
+      <label><input type="checkbox" checked={sharedRoutes} onChange={e=>setSharedRoutes(e.target.checked)}/> Shared routes</label>
+      <label><input type="checkbox" checked={seaTides} onChange={e=>setSeaTides(e.target.checked)}/> Sea tides</label>
       <button
         type="button"
         disabled={busy}
         onClick={() => void lifecycle.run(async()=>{
           await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
-          return await engine.configureNewWorld({preset:mapType,size,difficulty:preset,skin},previewRiverbanks,wildCraft);
+          return await engine.configureNewWorld({preset:mapType,size,difficulty:preset,skin,...(sharedRoutes?{flowFieldVersion:1 as const}:{}),...(seaTides?{tideVersion:2 as const}:{})},previewRiverbanks,wildCraft);
         })}
       >
         {busy ? "Generating…" : "New world"}
