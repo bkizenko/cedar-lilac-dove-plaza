@@ -360,7 +360,7 @@ export const CIVIC_ROLES:Record<string,{family:CivicFamilyId;sim:boolean;note:st
  dryrack:{family:'dryingYard',sim:true,note:'frames and windbreak'},tanner:{family:'tannery',sim:true,note:'vats and pits'},fibreWorkshop:{family:'loomHouse',sim:true,note:'looms and dye vats'},oven:{family:'bakeryOven',sim:true,note:'bread oven house'},
  townhall:{family:'townHall',sim:true,note:'by era'},watchtower:{family:'beacon',sim:true,note:'signal tower; existing tower family stays for plain lookout'},
  archive:{family:'archive',sim:false,note:'records and learning; proposed id'},granary:{family:'storeBarn',sim:false,note:'raised, domed, pit and crib stores; proposed id (warehouse covers stores today)'},
- windmill:{family:'windmill',sim:false,note:'post or tower mill; proposed id'},horsemill:{family:'horseMill',sim:false,note:'animal-powered mill; proposed id'},shipyard:{family:'shipyard',sim:false,note:'slipway; proposed id'},
+ windmill:{family:'windmill',sim:true,note:'post or tower mill; real water-works building'},horsemill:{family:'horseMill',sim:false,note:'animal-powered mill; proposed id'},shipyard:{family:'shipyard',sim:false,note:'slipway; proposed id'},
  gatehouse:{family:'gatehouse',sim:false,note:'stone gatehouse; the existing gate is a palisade gap; proposed id'},beacon:{family:'beacon',sim:false,note:'fire signal; proposed id'},
 };
 
