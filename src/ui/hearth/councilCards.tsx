@@ -50,3 +50,23 @@ export function FameFeed({log}:{log:string[]}){
  if(!items.length)return <p className="hw-empty">Nothing has happened to the house yet.</p>;
  return <ol className="hw-fame" aria-label="Chronicle">{items.map((l,i)=><li key={i} className={cx(i===0&&'is-new',i>4&&'is-old')}>{i===0&&<Scroll size={20}/>}<span>{l}</span></li>)}</ol>;
 }
+
+const mood=(n:number)=>n<35?'bad':n>65?'good':'mid';
+const MOOD_COLOR={bad:'var(--hw-bad)',mid:'var(--hw-warn)',good:'var(--hw-good)'} as const;
+const FACTION_NAME:Record<string,string>={kin:'Kin',warriors:'War-leaders',priests:'Priests',elders:'Elders',merchants:'Merchants',landholders:'Landholders',commons:'Common folk',assembly:'Assembly'};
+/** Factions: one segmented strip (width = weight in the realm, colour = mood) so the whole court reads at a glance, then a row per
+ * faction with what it wants stated outright rather than hidden in a tooltip. Colour is never the only cue: each row names the mood. */
+export function FactionsCard({factions,coalitionLoss}:{factions:CouncilModel['factions'];coalitionLoss:number}){
+ const word=(n:number)=>n<20?'Hostile':n<35?'Restless':n<50?'Uneasy':n<65?'Steady':n<85?'Content':'Devoted';
+ const sorted=[...factions].sort((a,b)=>b.power-a.power);
+ return <section className="hw-card hw-factions" aria-label="Factions"><div className="hw-card-head"><h3>Who must be kept content</h3>{coalitionLoss>0&&<span className="hw-chip t-bad"><TriangleAlert size={16}/>{coalitionLoss}% restless</span>}</div>
+  <div className="hw-strip" role="img" aria-label={'Faction weight and mood: '+sorted.map(f=>`${FACTION_NAME[f.kind]??f.kind} ${word(f.loyalty)}`).join(', ')}>{sorted.map(f=><span key={f.kind} style={{flexGrow:Math.max(4,f.power),background:MOOD_COLOR[mood(f.loyalty)]}}/>)}</div>
+  <ul className="hw-list">{sorted.map(f=><li key={f.kind} className="hw-faction"><span className={cx('hw-dot','d-'+mood(f.loyalty))} aria-hidden/><b>{FACTION_NAME[f.kind]??f.kind}</b><em className={'t-'+mood(f.loyalty)}>{word(f.loyalty)}</em><span className="hw-sub">wants {f.demand}</span></li>)}</ul></section>;
+}
+
+/** Renown: bars share one scale (the largest stream fills it) and are ranked, so the player sees what the house is actually famous for. */
+export function RenownCard({glory,score}:{glory:CouncilModel['glory'];score:number}){
+ const rows=glory.filter(g=>g.value>0).sort((a,b)=>b.value-a.value);if(!rows.length)return null;const top=rows[0].value;
+ return <section className="hw-card hw-renown" aria-label="Renown"><div className="hw-card-head"><h3>Renown</h3><span className="hw-chip"><Crown size={18}/>{score}</span></div>
+  <ul className="hw-list">{rows.map((g,i)=><li key={g.stream}><span className="hw-meter-row"><b className="hw-lbl">{g.stream}</b><span className={cx('hw-meter',i===0&&'is-top')} role="img" aria-label={`${g.stream} ${g.value}`}><i style={{width:Math.max(6,g.value/top*100)+'%'}}/></span><b>{g.value}</b></span></li>)}</ul></section>;
+}

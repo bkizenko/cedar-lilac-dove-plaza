@@ -10,7 +10,7 @@ import {STAGES} from '@/game/breakaways';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
 import {CapitulationTerms} from '../council/CapitulationTerms';
-import {HandoverCard,RulerPortrait,FameFeed} from './councilCards';
+import {HandoverCard,RulerPortrait,FameFeed,FactionsCard,RenownCard} from './councilCards';
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord} from '../council/CouncilParts';
 import {SocietyFlag} from '../SocietyFlag';
@@ -107,8 +107,8 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
    {c.house&&<section className="hw-card"><div className="hw-card-head"><h3>House</h3></div><ul className="hw-chips">{c.house.family.map(p=><li key={p.name+p.age} className="hw-chip hw-chip-soft"><Users size={16}/>{p.name} · {p.role} · {p.age}</li>)}</ul></section>}
   </div>}
   {tab==='realm'&&<div className="hw-grid-2">
-   {c.showFactions&&c.factions.length>0&&<section className="hw-card"><div className="hw-card-head"><h3>Factions</h3>{c.coalitionLoss>0&&<span className="hw-chip t-bad">{c.coalitionLoss}% restless</span>}</div><ul className="hw-list">{c.factions.map(f=><li key={f.kind}><GameTooltip title={FACTION_LABEL[f.kind]??f.kind} description={`Wants ${f.demand}`}><span className="hw-meter-row"><b className="hw-lbl">{FACTION_LABEL[f.kind]??f.kind}</b>{bar(f.power,tone(f.loyalty))}<em className={'t-'+tone(f.loyalty)}>{loyaltyWord(f.loyalty)}</em></span></GameTooltip></li>)}</ul></section>}
-   {c.glory.some(g=>g.value>0)&&<section className="hw-card"><div className="hw-card-head"><h3>Renown</h3><span className="hw-chip"><Crown size={18}/>{c.gloryScore}</span></div><ul className="hw-list">{[...c.glory].filter(g=>g.value>0).sort((a,b)=>b.value-a.value).map(g=><li key={g.stream}><span className="hw-meter-row"><b className="hw-lbl">{g.stream}</b>{bar(Math.min(100,g.value*4))}<em>{g.value}</em></span></li>)}</ul></section>}
+   {c.showFactions&&c.factions.length>0&&<FactionsCard factions={c.factions} coalitionLoss={c.coalitionLoss}/>}
+   <RenownCard glory={c.glory} score={c.gloryScore}/>
    {c.expansion&&<section className="hw-card"><div className="hw-card-head"><h3>Expansion</h3><span className="hw-chip">{c.expansion.mode}</span></div>{c.expansion.why.length>0&&<ul className="hw-chips">{c.expansion.why.map(w=><li key={w} className="hw-chip hw-chip-soft">{w}</li>)}</ul>}</section>}
    {(s?.own.length||0)>0&&<section className="hw-card"><div className="hw-card-head"><h3>Our outlying halls</h3></div><ul className="hw-chips">{s!.own.map((o,i)=><li key={i} className="hw-chip"><StageMeter stage={o.stage} label="Outlying hall"/>{o.resolution?<em>{o.resolution}</em>:<small>{o.pressure}%</small>}</li>)}</ul></section>}
    {b?.enabled&&b.routes.length>0&&<section className="hw-card"><div className="hw-card-head"><h3>Routes</h3></div><ul className="hw-list">{b.routes.map(r=><li key={r.team}><span className="hw-meter-row"><b className="hw-lbl">{r.name}</b><span className={cx('hw-chip',r.mode==='blocked'&&'t-bad')}>{ROUTE_ICON({size:18})}{r.mode==='open'?'Open':r.mode==='agreement'?'Agreed':r.mode==='escort'?`Escort ×${r.guards||2}`:'Blocked'}</span></span></li>)}</ul></section>}
