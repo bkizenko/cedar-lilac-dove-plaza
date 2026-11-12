@@ -1,0 +1,86 @@
+{
+  "serverCommit": "aa99f1337afc7438f32ef6d48acba75e053e6c31",
+  "clientCommit": "2128ed737f8bdfa3ed5d8ae73427b59f5467a012",
+  "release": "2026-11-12T20-25-07-528Z-2128ed7",
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 17,
+    "total": 17,
+    "script": 12,
+    "liveNetwork": {
+      "passed": 5,
+      "total": 5,
+      "assets": [
+        {
+          "port": 8086,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889",
+          "bytes": 1607064,
+          "identityAndGzipExact": true,
+          "head": true
+        },
+        {
+          "port": 8086,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d",
+          "bytes": 96304,
+          "identityAndGzipExact": true,
+          "head": true
+        },
+        {
+          "port": 8101,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889",
+          "bytes": 1607064,
+          "identityAndGzipExact": true,
+          "head": true
+        },
+        {
+          "port": 8101,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d",
+          "bytes": 96304,
+          "identityAndGzipExact": true,
+          "head": true
+        }
+      ],
+      "release": "2026-11-12T20-25-07-528Z-2128ed7",
+      "currentAndRollbackPreserved": true
+    }
+  },
+  "storage": {
+    "apply": true,
+    "before": "2026-11-11T20:43:13.938Z",
+    "releases": [
+      "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T20-25-07-528Z-2128ed7",
+      "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T20-05-20-589Z-0eb4b35"
+    ],
+    "selectedLinks": 1584,
+    "uniqueRawBytes": 492831628,
+    "rawBytesWhoseEveryLinkIsSelected": 313485235,
+    "compressedUniqueBytes": 144151780,
+    "removedLinks": 1584,
+    "unchangedCompressionLinks": 0,
+    "notSmaller": 0,
+    "skipped": {
+      "recent": 496,
+      "nonText": 734,
+      "unsafe": 0,
+      "tooLarge": 0
+    }
+  },
+  "verifiedContentGroups": 792,
+  "logicalReductionBytes": 348679848,
+  "conservativeNetFileBytes": 169333455,
+  "physicalLimitation": "Some raw hardlinks remain outside selected releases; do not claim all logical reduction as disk freed. Other agents may change free space concurrently.",
+  "safety": "Explicit >24h cutoff, selected current+rollback text assets only, all decoded bytes verified before unlink. Recent raw builds, art/audio, SSR functions, saved villages and original URLs retained. Future releases forward compressed chunks.",
+  "frozenAcceptance": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "delta": 0
+  }
+}
