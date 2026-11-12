@@ -56,7 +56,7 @@ export const cottage:Generator=(ctx,r)=>{
   const arid=ctx.climate==='arid'||ctx.material==='mudbrick',stoneHouse=ctx.material==='stone',two=!arid&&ctx.era>=3&&ctx.wealth>.5&&chance(r,.7);
   const h1=range(r,1.95,2.2)*Math.min(1.1,k+.1),h2=two?1.7:0,eave=h1+h2,cz=-d/2+D/2+.28*k+(arid?0:0);
   const rm=roofFor(ctx),pitch=roofPitch(ctx,r),wallMat:M=arid?'mud':stoneHouse?'stone':'plaster';
-  box(parts,'stoneDark',[L+.16,.3,D+.16],[0,0,cz],1);
+  box(parts,'stoneDark',[L+.05,.17,D+.05],[0,0,cz],1);
   if(stoneHouse){stoneWall(parts,{x:0,z:cz,w:L,d:D,h:h1,y0:.15,faces:['+z','-z','+x','-x'],course:.36});if(two)stoneWall(parts,{x:0,z:cz,w:L,d:D,h:h2,y0:h1+.15,faces:['+z'],course:.36});quoins(parts,0,cz,L,D,.15,h1+h2,'stoneDark',4);}
   else{
     box(parts,wallMat,[L,h1+.1,D],[0,.15,cz],2);
@@ -108,7 +108,7 @@ export const longhouse:Generator=(ctx,r)=>{
   if(ctx.form?.hall==='felt'){const y=yurtHall(parts,ctx,r,{w,d,large,k});return {parts,entry:y.entry};}
   const L=w*range(r,.78,.86),D=d*range(r,large?.5:.42,large?.58:.5),cz=-d/2+D/2+.9*k,wallH=range(r,1.55,1.9)*(large?1.2:1);
   const stone=ctx.material==='stone',pitch=roofPitch(ctx,r)+.05,rm=roofFor(ctx),wall:M=stone?'stone':'woodMid';
-  box(parts,'stoneDark',[L+.3,.34,D+.3],[0,0,cz],1);
+  box(parts,'stoneDark',[L+.06,.2,D+.06],[0,0,cz],1);
   if(stone)stoneWall(parts,{x:0,z:cz,w:L,d:D,h:wallH,y0:.2,course:.4});else box(parts,wall,[L,wallH,D],[0,.2,cz],2);
   // bowed middle bays and plank siding lines
   box(parts,wall,[L*.6,wallH,D+.26],[0,.2,cz],1);

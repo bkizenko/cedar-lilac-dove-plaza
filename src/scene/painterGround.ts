@@ -123,10 +123,7 @@ export class PainterGround{
    // resource-cluster tints stay faint hints
    const rk=this.region[i];
    if(rk===0){r=r*.94+.03;g*=.95;}else if(rk===1){g=Math.min(1,g*1.05);}else if(rk===2){r*=.95;g*=.96;b*=.93;}else if(rk===3){r=Math.min(1,r*.95+.05);g*=.94;b*=.9;}
-   // snow
-   const snowH=clamp01((h-3.2)/12);let cover=clamp01(sn.snow*(.35+snowH*.75)+(this.legacy[i]===7||this.legacy[i]===5?sn.winter*.25:0));
-   if(this.legacy[i]===0||rel<.1)cover*=.35;
-   if(cover>.02){const sh=clamp01(.5+fine*.5);mix3(SNOW_SHADE,SNOW,sh,tmp);r+=(tmp[0]-r)*cover;g+=(tmp[1]-g)*cover;b+=(tmp[2]-b)*cover;}
+   // snow is laid in the terrain shader (a seasonal snow line by world height, deeper in shaded hollows), not baked into vertex colour
    out[i*3]=r;out[i*3+1]=g;out[i*3+2]=b;
   }
   // one light smoothing pass keeps province seams soft without erasing rock edges

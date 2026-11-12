@@ -27,7 +27,7 @@ const millHouse:Generator=(ctx,r)=>{
   const rm=roofFor(ctx),pitch=Math.max(.5,roofPitch(ctx,r)),upper=ctx.material==='stone'&&ctx.era>=3?'stone':'plaster';
   // --- house: stone mill floor (millstones live here), timber-framed grain loft with a slight jetty
   stoneWall(parts,{x:cx,z:cz,w:L,d:D,h:h1,mat:'stone',faces:['+z','-z','-x'],course:.42});
-  box(parts,'stoneDark',[L+.16,.22,D+.16],[cx,0,cz],1);
+  box(parts,'stoneDark',[L+.05,.17,D+.05],[cx,0,cz],1);
   box(parts,'woodDark',[L+.2,.14,D+.2],[cx,h1,cz],1); // jetty plate
   box(parts,upper,[L+.1,h2,D+.1],[cx,h1+.14,cz],2);
   for(const f of['+z','-z'] as const)timberFrame(parts,{face:f,cx,cz,len:L,depth:D+.1,y0:h1+.14,h:h2-.14,bays:4,brace:true});
