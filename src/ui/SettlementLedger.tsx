@@ -86,13 +86,9 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
     <dialog ref={ref} className="play-guide settlement-ledger" onCancel={close}>
       <SocietyIdentityEditor engine={engine}/>
       <h2 className="font-display text-2xl text-bronze-bright">The village ledger</h2>
-      <p><strong>{habitat.name}</strong> · {habitat.advice}</p>
+      <p title={habitat.advice}><strong>{habitat.name}</strong></p>
       <p className="mt-2">
-        Year {cal.year + 1} · {cal.month} ({cal.name}) · {Math.ceil(cal.remaining / 60)} minutes until the next
-        season
-      </p>
-      <p className="text-sm text-parchment-dim">
-        Paused while you plan. Food reserves exclude future gathering and harvests.
+        Year {cal.year + 1} · {cal.month} ({cal.name}) · {Math.ceil(cal.remaining / 60)}m left in season
       </p>
       <div className="ledger-grid">
         {open&&<><NeedsPanel engine={engine} expanded/><SeasonLedger game={g}/></>}
@@ -108,12 +104,11 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
         <section>
           <h3>Food security</h3>
           {militia.length>0&&<div role="status">
-            <p>{militia.length} armed civilians are on military duty or hunting instead of ordinary food work. {standingDown>0&&`${standingDown} are returning to stand down.`}</p>
+            <p>{militia.length} armed{standingDown>0&&` · ${standingDown} standing down`}</p>
             <button className="my-2 min-h-12 w-full rounded-md border border-bronze/30 bg-ink-soft px-3 py-2 text-left" onClick={()=>engine.standDown()}>Return militia to food and work</button>
-            <p>They return home, unload supplies and put weapons away before resuming village priorities. Close the ledger to let them travel.</p>
           </div>}
           <strong>
-            {Math.floor(readyFoodStock({food:t.food,foodLots:foods}))} ready to eat · {Math.floor(t.food)} pantry stock · {g.stockCap(0)} sheltered capacity
+            {Math.floor(readyFoodStock({food:t.food,foodLots:foods}))} ready · {Math.floor(t.food)} stored · {g.stockCap(0)} cap
           </strong>
           <h4 className="mt-3 font-display text-bronze-bright">{knownCrops.length ? "Farming" : "Start farming"}</h4>
           <ol className="list-decimal pl-5">
@@ -142,32 +137,25 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
           ) : (
             <button className="min-h-11" onClick={()=>{seekCropSamples(g);engine.pushHud();}}>Find and gather crop seeds</button>
           )}
-          <p>Forage and hunt while fields grow. Sow in spring, tend in summer, then carry the autumn harvest home.</p>
-          <p>{Math.round(reserveSeconds(g) / 60)} minutes of ready food at current demand, excluding spoilage</p>
-          <p>{(foodSpoilage(g) * 60).toFixed(1)} food spoils per minute at present.</p>
-          <p>Food work continues when stores fill; extra supplies are kept outdoors.</p>
+          <p>{Math.round(reserveSeconds(g) / 60)}m of food · {(foodSpoilage(g) * 60).toFixed(1)}/m spoils</p>
           {t.food>g.stockCap(0)&&<button onClick={()=>{close();engine.setPlacing("warehouse");}}>Plan a storehouse · protects 200 more food</button>}
           {farms.length>0&&<details><summary>Field output & seasonal work</summary>
             {farms.map((b,i)=><p key={b.id}>Field {i+1}: {fieldProductionSummary(g,b)}.</p>)}
             <p>Estimates exclude walking, rest and later weather changes. Tools reduce work time; they do not create extra harvest. Food enters stores only when carried home.</p>
           </details>}
-          <p>Hunting: craft spears or bows at the hearth or crafting shelter, arm adults near village stores, then choose Hunt with weapons. Bows reach farther and equipped hunters need fewer hits. Meat must still be butchered and carried home.</p>
+          <p title="Craft spears or bows, arm adults near stores, then Hunt. Meat must be butchered and carried home.">Hunting: spears or bows</p>
           <p>{FOOD_KINDS.filter(k=>foods[k]>=1).map(k=>`${Math.floor(foods[k])} ${k}`).join(" · ") || "No food reserves"}</p>
-          <p>{Math.round(climate.temperature)}°C · {Math.round(climate.humidity*100)}% humidity · {Math.ceil(Math.max(0,t.food-g.stockCap(0)))} food outdoors. Fresh fish and berries keep less well than grain; cool, dry weather slows decay.</p>
+          <p title="Fresh fish and berries spoil fastest; cool, dry weather keeps food longer.">{Math.round(climate.temperature)}°C · {Math.round(climate.humidity*100)}% humid · {Math.ceil(Math.max(0,t.food-g.stockCap(0)))} outdoors</p>
           <p><strong>{cal.phase === 3 ? "Remaining winter" : "Full winter"}: about {winter.needed} food needed.</strong>{" "}
             {winter.shortage ? `${winter.shortage} more than current stores.` : "Current stores cover this estimate."}
           </p>
-          {winter.capacityShortfall > 0 && <p>Storage is {winter.capacityShortfall} below that target. Expand storage or plan winter food production.</p>}
-          <p className="text-sm">Estimate assumes current population, weather, adequate capacity and maintained stores, with no new gathering or harvest. It excludes food eaten before winter.</p>
-          {stores.map(b => <p key={b.id}>Storehouse preservation: {Math.round((b.storeCare || 0) * 100)}%. Available adults dry and smoke surplus food using timber.</p>)}
+          {winter.capacityShortfall > 0 && <p>Storage {winter.capacityShortfall} short</p>}
+                    {stores.map(b => <p key={b.id}>Storehouse care {Math.round((b.storeCare || 0) * 100)}%</p>)}
           <p>
             {(foodDemand(g) * 60).toFixed(1)} food consumed per minute · {foodWorkers}/
             {people.length} people currently doing food work
           </p>
-          <p>
-            {people.length - dependents} adults · {dependents} dependents. Children need food and
-            shelter before joining the workforce.
-          </p>
+          <p>{people.length - dependents} adults · {dependents} dependents</p>
           {s.agePicks.length > 0 ? (
             <p>
               Paths kept:{" "}

@@ -67,9 +67,7 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
           <dd>Deselect / cancel · guide · mute</dd>
         </dl>
         <p className="text-sm">
-          First steps: C selects a gatherer, ] finds resources, R gathers. Press 1, pan to open
-          ground, and Enter to place a hut. Tab reaches jobs, military training, research and
-          diplomacy.
+          Start: C worker · ] find · R gather · 1 hut · Enter place
         </p>
         <label className="audio-setting">
           Difficulty
@@ -77,7 +75,7 @@ export function PlayTools({ engine }: { engine: Engine | null }) {
             {Object.entries(DIFFICULTIES).map(([id,d])=><option key={id} value={id}>{d.name}</option>)}
           </select>
         </label>
-        <p className="text-sm">Applies immediately to food needs, spoilage, sea-raid size/frequency and incoming enemy damage. Quiet frontier still prevents new unprovoked raids.</p>
+        <p className="text-sm">Changes food, spoilage, raids and damage now.</p>
         <label className="audio-setting">
           Calm soundtrack
           <input

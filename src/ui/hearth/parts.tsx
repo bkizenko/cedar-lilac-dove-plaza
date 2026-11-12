@@ -256,6 +256,8 @@ function RaidNote({engine}:{engine:Engine}){
   {r.burned>0&&<span className="hw-chip t-bad" title="Buildings burned"><Flame size={18}/>{r.burned}</span>}
   <span className="hw-chip" title={lootText||'Nothing carried off'}><Package size={18}/>{total}</span></>}}/>;
 }
+/** Shorten the longest engine banners for display only. */
+const terse=(s:string)=>s.replace(/^C selects a gatherer.*$/,'C worker · ] find · R order');
 export function NotesStack({hud,engine,onOpen,hidden}:{hud:HudSnapshot;engine:Engine|null;onOpen:(k:DockKey)=>void;hidden:boolean}){
  const alerts=useAlerts(engine);
  const notes:Note[]=[];
@@ -265,7 +267,7 @@ export function NotesStack({hud,engine,onOpen,hidden}:{hud:HudSnapshot;engine:En
  if(hud.routeOffer&&!hud.pendingAge){const o=hud.routeOffer,G=RES_ICON[o.give==='wood'?'wood':o.give==='food'?'food':o.give==='stone'?'stone':o.give],T=RES_ICON[o.get==='wood'?'wood':o.get==='food'?'food':o.get==='stone'?'stone':o.get];
   notes.push({id:'route',icon:<Package size={24}/>,title:o.rival,chips:<><span className="hw-chip" title={`Give ${o.giveAmt} ${resWord(o.give)}`}><G size={18}/>{o.giveAmt}</span><ChevronRight size={18}/><span className="hw-chip" title={`Get ${o.getAmt} ${resWord(o.get)}`}><T size={18}/>{o.getAmt}</span></>,action:{label:'Accept',onClick:()=>engine?.acceptRoute()},dismiss:()=>engine?.declineRoute()});}
  if(hud.threat>=.5)notes.push({id:'threat',tone:'bad',icon:<Shield size={24}/>,title:'Raiders near',action:{label:'Horn',onClick:()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}});
- if(hud.banner&&!hud.placing)notes.push({id:'banner',icon:<Bell size={24}/>,title:hud.banner});
+ if(hud.banner&&!hud.placing)notes.push({id:'banner',icon:<Bell size={24}/>,title:terse(hud.banner)});
  return <aside className={cx('hw-notes',hidden&&'is-hidden')} aria-label="Notifications">
   {notes.map(n=><NoteCard key={n.id} n={n}/>)}
   {engine&&<RaidNote engine={engine}/>}
