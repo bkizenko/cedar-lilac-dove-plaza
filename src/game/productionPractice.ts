@@ -38,9 +38,11 @@ function context(g:Game){let c=contexts.get(g);if(!c||c.state!==g.state){c={stat
 function release(g:Game,u:Unit,completed=false){const c=context(g),id=c.claims.get(u.id);if(id){workRuntime(g).finish(id,!completed);workRuntime(g).forget(id);c.claims.delete(u.id);}}
 function claim(g:Game,u:Unit,w:ProductionApprentice){const c=context(g);if(c.claims.has(u.id))return true;const id=`apprentice:${u.id}:${w.projectId}`,jobs=workRuntime(g);jobs.propose({id,kind:'practical-observation',owner:u.team,actors:[u.id],target:w.workplace});if(!jobs.reserve(id,[{key:`production:${w.projectId}:observer`,amount:1,capacity:1}])){jobs.finish(id,true);jobs.forget(id);return false;}c.claims.set(u.id,id);return true;}
 function finishLesson(g:Game,u:Unit,reason:string,completed=false){release(g,u,completed);u.productionApprentice=undefined;if(u.order==='hold')u.workReason=reason;}
+/** Shared success receipt: broken pots alone never demonstrate a useful method. */
+export function productionPracticeUsefulOutput(project:ProductionProject,outputs:ItemStock){return productionFoodOutput(project)+Object.entries(outputs).reduce((sum,[kind,n])=>sum+(kind==='potsherds'?0:n||0),0);}
 export function recordProductionPractice(g:Game,project:ProductionProject,_carrier:Unit,outputs:ItemStock){
  const p=project as TrackedProject;if(p.practiceRecorded||p.phase==='complete'||!validRecipe(p.recipe))return;
- p.practiceRecorded=true;const r=PRODUCTION_RECIPES[p.recipe],useful=productionFoodOutput(project)+Object.entries(outputs).reduce((sum,[kind,n])=>sum+(kind==='potsherds'?0:n||0),0),t=g.tribe(p.team);
+ p.practiceRecorded=true;const r=PRODUCTION_RECIPES[p.recipe],useful=productionPracticeUsefulOutput(project,outputs),t=g.tribe(p.team);
  t.productionPractice??={};let history=t.productionPractice[p.recipe];if(!history)history=t.productionPractice[p.recipe]={batches:0,failedBatches:0,usefulOutputs:0,firstAt:g.state.time,lastAt:g.state.time,makers:[]};
  history.lastAt=g.state.time;if(useful>0){history.batches++;history.usefulOutputs+=useful;history.lastSuccessfulAt=g.state.time;}else{history.failedBatches++;history.lastFailedAt=g.state.time;}
  const makers=(p.practiceWorkers||[]).filter(w=>w.work+1e-8>=r.workSeconds*PRODUCTION_PRACTICE_RULES.minimumContributionFraction);
