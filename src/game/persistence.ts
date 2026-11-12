@@ -136,6 +136,9 @@ function validateGamePayload(raw: unknown) {
   if([7,8,9,10,11,12,13,14,15,16,17,18,19].includes(s.worldgenVersion)&&s.worldOptions===undefined)fail();
   if(s.worldOptions?.randomLayout!==undefined&&(![14,15,16,17,18,19].includes(s.worldgenVersion)||s.worldOptions.randomLayout!==true))fail();
   if(s.worldOptions?.openingSiteVersion!==undefined&&(![14,15,16,17,18,19].includes(s.worldgenVersion)||s.worldOptions.openingSiteVersion!==2))fail();
+  if(s.worldOptions?.riverProfileVersion!==undefined&&s.worldOptions.riverProfileVersion!==2)fail();
+  if(s.worldOptions?.tideVersion!==undefined&&s.worldOptions.tideVersion!==1&&s.worldOptions.tideVersion!==2)fail();
+  if(s.worldOptions?.landformLabelVersion!==undefined&&s.worldOptions.landformLabelVersion!==2)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   const excavationSegs=s.worldgenVersion>=7?Math.round(HALF*2/1040*256):256;
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
