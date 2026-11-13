@@ -22,6 +22,8 @@ import {carvedVariantFor,prosperityTier,skinKeyPart,variantSpec,type CarvedBuild
 import {buildCarvedMesh,impostorCard,type CarvedMeshData} from './carvedMesh';
 import {CARVED_GRAIN,CARVED_LIGHT_RIG,getCarvedPalette,specSwatch,woodGrainPixels} from './carvedPalette';
 import {ensureInstanceCapacity} from './instanceCapacity';
+import {buildingWeather,generateMaterialSet,getBuildingTextureMode,patchBuildingShader,textureSizeFor,BUILDING_SHADER_KEY,LAYER_COUNT} from './buildingTextures';
+import {getDetailLevel} from '../game/detailLevel';
 
 export const CARVED_LAYER_RULES=Object.freeze({maximumBuckets:192,initialInstances:16,cardInitialInstances:256});
 
@@ -43,6 +45,7 @@ export function carvedGeometry(data:CarvedMeshData):THREE.BufferGeometry{
  g.setAttribute('uv',new THREE.BufferAttribute(data.uvs,2));
  g.setAttribute('color',new THREE.BufferAttribute(lin,3));
  g.setAttribute('grain',new THREE.BufferAttribute(data.grain,1));
+ g.setAttribute('bm',new THREE.BufferAttribute(data.bm,4,true));
  g.computeBoundingSphere();g.computeBoundingBox();
  return g;
 }
@@ -55,17 +58,36 @@ export function carvedGrainTexture():THREE.DataTexture{
  sharedGrain=t;return t;
 }
 
+/** Shared uniforms of the per-material texture set: two layered atlases (albedo+height, roughness+cavity+stain), mode, bump scale, season weather. */
+export const BUILDING_TEX={a:{value:null as THREE.DataArrayTexture|null},b:{value:null as THREE.DataArrayTexture|null},set:{value:1},bump:{value:0},wet:{value:0},sun:{value:.4},moss:{value:.5},size:0};
+const texCache=new Map<number,[THREE.DataArrayTexture,THREE.DataArrayTexture]>();
+/** Build (or reuse) the layered atlases for a size and bind them. Only the active size stays resident on the GPU; others are disposed. */
+export function useBuildingTextureSize(size:number){
+ if(BUILDING_TEX.size===size&&BUILDING_TEX.a.value)return;
+ for(const [k,t] of texCache)if(k!==size){t[0].dispose();t[1].dispose();texCache.delete(k);}
+ let t=texCache.get(size);
+ if(!t){const set=generateMaterialSet(size),mk=(d:Uint8Array)=>{const x=new THREE.DataArrayTexture(d,size,size,LAYER_COUNT);x.format=THREE.RGBAFormat;x.type=THREE.UnsignedByteType;x.wrapS=x.wrapT=THREE.RepeatWrapping;x.colorSpace=THREE.NoColorSpace;x.magFilter=THREE.LinearFilter;x.minFilter=THREE.LinearMipmapLinearFilter;x.generateMipmaps=true;x.anisotropy=4;x.needsUpdate=true;return x;};t=[mk(set.a),mk(set.b)];texCache.set(size,t);}
+ BUILDING_TEX.a.value=t[0];BUILDING_TEX.b.value=t[1];BUILDING_TEX.size=size;
+}
+/** Per-frame/at-sync refresh of the texture uniforms from the Detail option, the legacy switch and the season weather. */
+export function refreshBuildingTextures(bump:boolean){
+ const legacy=getBuildingTextureMode()==='legacy';BUILDING_TEX.set.value=legacy?0:1;
+ if(!legacy)useBuildingTextureSize(textureSizeFor(getDetailLevel()));
+ BUILDING_TEX.bump.value=!legacy&&bump?2.2:0;BUILDING_TEX.wet.value=buildingWeather.wet;BUILDING_TEX.sun.value=buildingWeather.sun;BUILDING_TEX.moss.value=buildingWeather.moss;
+}
 /** The single shared carved material: vertex colour x grain map, where the
  * per-vertex `grain` attribute (palette grain strength) blends the map in. */
 export function createCarvedMaterial():THREE.MeshStandardMaterial{
+ refreshBuildingTextures(false);
  const m=new THREE.MeshStandardMaterial({vertexColors:true,map:carvedGrainTexture(),roughness:.86,metalness:0,flatShading:true});
  m.name='carved-h-shared';
  m.onBeforeCompile=shader=>{
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float grain;\nvarying float vGrain;').replace('#include <begin_vertex>','#include <begin_vertex>\nvGrain=grain;');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vGrain;').replace('#include <map_fragment>','#ifdef USE_MAP\n vec4 sampledDiffuseColor=texture2D(map,vMapUv);\n diffuseColor.rgb*=mix(vec3(1.0),sampledDiffuseColor.rgb,vGrain);\n#endif');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vGrain;');  // the map_fragment replacement (legacy grain, or the per-material set) lives in patchBuildingShader
+  patchBuildingShader(shader as never,BUILDING_TEX as never);
   patchSnowShader(shader);
  };
- m.customProgramCacheKey=()=>'carved-h-grain-snow-v2'+(m.bumpMap?'-bump':'');
+ m.customProgramCacheKey=()=>'carved-h-grain-snow-v2-'+BUILDING_SHADER_KEY+(m.bumpMap?'-bump':'');
  return m;
 }
 
@@ -104,7 +126,7 @@ export class CarvedBuildingLayer{
  setSnow(snow:number){const v=Math.max(0,Math.min(1,snow));carvedSnowUniform.value=v<.02?0:v;this.snow=carvedSnowUniform.value;}
  private snow=0;private bump=false;
  /** High/Ultra Detail: the grain map also drives a small bump so wood, thatch and stone read as relief (no extra geometry). */
- setBump(on:boolean){if(on===this.bump)return;this.bump=on;const m=this.material;m.bumpMap=on?carvedGrainTexture():null;m.bumpScale=on?1.6:0;m.needsUpdate=true;}
+ setBump(on:boolean){if(on===this.bump)return;this.bump=on;const m=this.material;m.bumpMap=on&&getBuildingTextureMode()==='legacy'?carvedGrainTexture():null;m.bumpScale=m.bumpMap?1.6:0;m.needsUpdate=true;}
  /** Stable variant key for an instance, cached per generator-relevant input. */
  private keyFor(b:CarvedInstance){
   const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.join??''}:${b.gateOpen?'o':''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getBuildingMute()?'mute':''}:${getCarvedPalette()}:${skinKeyPart(b)}`;
@@ -131,6 +153,7 @@ export class CarvedBuildingLayer{
   * `instances` to the camera frustum; this layer only picks LOD by distance. */
  sync(instances:readonly CarvedInstance[],camera:THREE.Vector3,tierFor:(m:number)=>RenderTier=renderTierForDistance){
   if(this.lastPalette!==getCarvedPalette()||this.lastGrammar!==getBuildingGrammar()){this.lastPalette=getCarvedPalette();this.lastGrammar=getBuildingGrammar();this.reset();}
+  refreshBuildingTextures(this.bump);
   this.frame++;for(const b of this.buckets.values()){b.count=0;b.owners.length=0;}this.card.count=0;this.card.owners.length=0;
   for(const inst of instances){
    const key=this.keyFor(inst);if(!key)continue;

@@ -36,6 +36,7 @@ import {WildPlantLayer} from './wildPlants';
 import {wildPlantsEnabled,habitatKindAt} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
 import {TowerPlatformLayer} from './towerPlatformLayer';
+import {setBuildingWeather} from './buildingTextures';
 import {CarvedBuildingLayer,carvedGeometry,createCarvedMaterial,type CarvedInstance} from './carvedBuildingLayer';
 import {carvedDaylightGrade,CARVED_LIGHT_RIG} from './carvedPalette';
 import {habitatForProvince,habitatForBaseKind} from './carvedHabitat';
@@ -2958,6 +2959,7 @@ export class WorldView {
     this.seasonAcc = 0;
     const sn = game.seasonMix();
     this.lastSnow = sn.snow;
+    {const wx=game.state.weather,rainy=wx==='rain'||wx==='storm'||wx==='flood'?1:wx==='mist'?.5:0;setBuildingWeather({wet:Math.min(1,rainy*.85+sn.spring*.25+sn.autumn*.2),sun:Math.max(0,sn.summer*.9+sn.spring*.35-rainy*.5),moss:Math.min(1,.25+sn.spring*.45+sn.autumn*.4+sn.winter*.25)});}
     this.carvedSnow = this.styleId==='village'||this.renderStyle==='carved'?sn.snow:0;this.carvedLayer?.setSnow(this.carvedSnow);carvedSnowUniform.value=this.carvedSnow<.02?0:this.carvedSnow;
     if(this.terrainSurface){this.terrainSurface.snow.value=sn.snow;this.terrainSurface.heights.needsUpdate=true;}
     const geo = this.terrain.geometry as THREE.BufferGeometry;

@@ -1,77 +1,77 @@
 {
  "era": 1,
- "per": 12,
+ "per": 40,
  "type": "hut",
  "tier": 1,
- "meanScore": 0.263,
+ "meanScore": 0.262,
  "rows": [
   {
    "civ": "sandrill",
-   "score": 0.316,
-   "minPair": 0.065,
+   "score": 0.299,
+   "minPair": 0.006,
    "tris": [
     216,
-    580
+    676
    ],
-   "hexes": 5,
-   "shapes": 5,
+   "hexes": 6,
+   "shapes": 7,
    "minPartY": 0
   },
   {
    "civ": "nilemark",
-   "score": 0.257,
-   "minPair": 0.107,
+   "score": 0.244,
+   "minPair": 0,
    "tris": [
-    252,
-    1028
+    204,
+    988
    ],
-   "hexes": 5,
-   "shapes": 6,
+   "hexes": 6,
+   "shapes": 7,
    "minPartY": 0
   },
   {
    "civ": "tigrane",
-   "score": 0.368,
-   "minPair": 0.085,
+   "score": 0.339,
+   "minPair": 0,
    "tris": [
-    296,
+    200,
     864
    ],
-   "hexes": 4,
+   "hexes": 5,
    "shapes": 9,
    "minPartY": 0
   },
   {
    "civ": "hanrei",
-   "score": 0.287,
-   "minPair": 0.111,
+   "score": 0.284,
+   "minPair": 0.053,
    "tris": [
     260,
-    772
+    792
    ],
-   "hexes": 4,
-   "shapes": 6,
+   "hexes": 5,
+   "shapes": 7,
    "minPartY": 0
   },
   {
    "civ": "vedara",
-   "score": 0.267,
-   "minPair": 0.089,
+   "score": 0.27,
+   "minPair": 0,
    "tris": [
     356,
-    748
+    800
    ],
-   "hexes": 5,
+   "hexes": 6,
    "shapes": 8,
    "minPartY": 0
   },
   {
    "civ": "aureline",
-   "score": 0.214,
-   "minPair": 0.058,
+   "score": 0.242,
+   "minPair": 0,
    "tris": [
-    340,
-    1012
+    328,
+    988
    ],
    "hexes": 5,
    "shapes": 7,
@@ -79,10 +79,10 @@
   },
   {
    "civ": "sahelan",
-   "score": 0.227,
-   "minPair": 0.039,
+   "score": 0.249,
+   "minPair": 0,
    "tris": [
-    240,
+    228,
     896
    ],
    "hexes": 7,
@@ -91,11 +91,11 @@
   },
   {
    "civ": "quillan",
-   "score": 0.266,
-   "minPair": 0.057,
+   "score": 0.258,
+   "minPair": 0,
    "tris": [
     260,
-    1028
+    988
    ],
    "hexes": 6,
    "shapes": 6,
@@ -103,8 +103,8 @@
   },
   {
    "civ": "kaaltun",
-   "score": 0.291,
-   "minPair": 0.086,
+   "score": 0.263,
+   "minPair": 0,
    "tris": [
     364,
     684
@@ -115,59 +115,59 @@
   },
   {
    "civ": "mekhari",
-   "score": 0.264,
-   "minPair": 0.045,
+   "score": 0.263,
+   "minPair": 0,
    "tris": [
-    256,
-    980
+    244,
+    988
    ],
-   "hexes": 5,
+   "hexes": 6,
    "shapes": 8,
    "minPartY": 0
   },
   {
    "civ": "brythen",
-   "score": 0.283,
+   "score": 0.262,
    "minPair": 0,
    "tris": [
-    352,
-    628
-   ],
-   "hexes": 4,
-   "shapes": 7,
-   "minPartY": 0
-  },
-  {
-   "civ": "rusvolt",
-   "score": 0.21,
-   "minPair": 0.072,
-   "tris": [
-    296,
-    932
-   ],
-   "hexes": 6,
-   "shapes": 6,
-   "minPartY": 0
-  },
-  {
-   "civ": "steppan",
-   "score": 0.21,
-   "minPair": 0,
-   "tris": [
-    596,
-    884
+    340,
+    728
    ],
    "hexes": 5,
    "shapes": 7,
    "minPartY": 0
   },
   {
-   "civ": "skoldar",
-   "score": 0.22,
-   "minPair": 0.081,
+   "civ": "rusvolt",
+   "score": 0.216,
+   "minPair": 0,
    "tris": [
-    328,
-    1104
+    272,
+    932
+   ],
+   "hexes": 7,
+   "shapes": 6,
+   "minPartY": 0
+  },
+  {
+   "civ": "steppan",
+   "score": 0.222,
+   "minPair": 0,
+   "tris": [
+    520,
+    884
+   ],
+   "hexes": 6,
+   "shapes": 8,
+   "minPartY": 0
+  },
+  {
+   "civ": "skoldar",
+   "score": 0.25,
+   "minPair": 0,
+   "tris": [
+    268,
+    988
    ],
    "hexes": 6,
    "shapes": 8,

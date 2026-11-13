@@ -6,6 +6,7 @@
 const cb = await import('../../src/scene/civSkin.ts'), sm = await import('../../src/scene/buildingStyleMap.ts'), cs = await import('../../src/scene/civStyles.ts'), vi = await import('../../src/scene/villageIdentity.ts');
 const cm = await import('../../src/scene/carvedMesh.ts'), bp = await import('../../src/scene/buildingParts.ts');
 const flags = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v ?? true]; }));
+if (flags.off) hv.setHutVariety(false);
 const era = +(flags.era ?? 1), per = +(flags.per ?? 12), type = flags.type || 'hut', tier = +(flags.tier ?? 1);
 const yaw = -.55, pitch = 34 * Math.PI / 180, cell = .2, GW = 90, GH = 60, cx = GW / 2, base = GH - 6;
 function silhouette(d) {
