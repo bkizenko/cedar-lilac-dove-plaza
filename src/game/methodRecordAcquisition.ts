@@ -2,8 +2,10 @@ import type {GameState} from './types';
 import type {MethodRecord} from './methodRecords';
 import {METHOD_RECORD_RULES as R} from './methodRecordRules';
 
+/** Initial physical record quote: gameplay units of wood, not a remote exchange rate. */
+export const METHOD_RECORD_TRADE_PRICE_WOOD=4 as const;
 /** A custody receipt, never a knowledge grant or a location report. */
-export type MethodRecordAcquisition={kind:'captured'|'recovered'|'inherited';fromTeam:number;toTeam:number;at:number;by?:number;handoverId?:number;returnedAt?:number};
+export type MethodRecordAcquisition={kind:'captured'|'recovered'|'inherited'|'traded';fromTeam:number;toTeam:number;at:number;by?:number;handoverId?:number;returnedAt?:number;payment?:{kind:'wood';amount:number}};
 export function appendMethodRecordAcquisition(record:MethodRecord,receipt:MethodRecordAcquisition){
  if(receipt.fromTeam===receipt.toTeam)return;
  record.acquisitions??=[];record.acquisitions.push(receipt);
@@ -20,7 +22,11 @@ export function validMethodRecordAcquisitions(state:GameState,record:MethodRecor
  const time=(v:unknown):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>=record.authoredAt&&v<=state.time;
  let previous=record.authoredAt,previousReturn:number|undefined,previousTeam:number|undefined;
  for(const receipt of record.acquisitions){
-  if(!receipt||!['captured','recovered','inherited'].includes(receipt.kind)||!team(receipt.fromTeam)||!team(receipt.toTeam)||receipt.fromTeam===receipt.toTeam||!time(receipt.at)||receipt.at<previous||previousReturn!==undefined&&receipt.at<previousReturn||previousTeam!==undefined&&receipt.fromTeam!==previousTeam||receipt.by!==undefined&&!id(receipt.by))return false;
+  if(!receipt||!['captured','recovered','inherited','traded'].includes(receipt.kind)||!team(receipt.fromTeam)||!team(receipt.toTeam)||receipt.fromTeam===receipt.toTeam||!time(receipt.at)||receipt.at<previous||previousReturn!==undefined&&receipt.at<previousReturn||previousTeam!==undefined&&receipt.fromTeam!==previousTeam||receipt.by!==undefined&&!id(receipt.by))return false;
+  if(receipt.kind==='traded'){
+   const p=receipt.payment;
+   if(!id(receipt.by)||receipt.handoverId!==undefined||!p||typeof p!=='object'||Array.isArray(p)||Object.keys(p).some(k=>k!=='kind'&&k!=='amount')||p.kind!=='wood'||p.amount!==METHOD_RECORD_TRADE_PRICE_WOOD)return false;
+  }else if(receipt.payment!==undefined)return false;
   if(receipt.returnedAt!==undefined&&(!time(receipt.returnedAt)||receipt.returnedAt<receipt.at))return false;
   if(receipt.handoverId!==undefined){
    if(receipt.kind!=='inherited'||!id(receipt.handoverId))return false;
