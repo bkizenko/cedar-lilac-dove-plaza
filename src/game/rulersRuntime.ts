@@ -54,7 +54,7 @@ const freeAdult=(d:import('./dynasty').Dynasty)=>Object.values(d.people).filter(
 /** Marriage between two societies' ruling houses. Both must be able to exchange spouses at their scale. Applies the signed
  * effects (scaled by the smaller society) to the tie ledger and the directed trust/grievance. Returns the cause chain, or null. */
 /** Player kin deals (marriage, fosterage, hostages) need real contact: envoys cannot reach a society the player has never met. Null = allowed. */
-export function kinDealRefusal(g:Game,team:number):string|null{return societyRelation(g,0,team).known||societyRelation(g,team,0).known?null:'You have not met that society; no envoy can carry the offer yet';}
+export function kinDealRefusal(g:Game,team:number):string|null{if(g.isFoe(0,team))return 'The houses are at war; no envoy can cross the lines to carry the offer';return societyRelation(g,0,team).known||societyRelation(g,team,0).known?null:'You have not met that society; no envoy can carry the offer yet';}
 export function marryHouses(g:Game,a:number,b:number):{why:string[];bond:number}|null{
  const r=ensureRulers(g);if(!r||a===b)return null;
  const sa=r.societies[String(a)],sb=r.societies[String(b)];if(!sa||!sb)return null;

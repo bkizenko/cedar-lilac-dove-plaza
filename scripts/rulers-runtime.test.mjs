@@ -580,3 +580,10 @@ test('lane A: wardReturns validator accepts bounded feed records and rejects mal
  assert.equal(validRulersState({...s,wardReturns:Array(25).fill(rec)}),false,'oversized list rejected');
  assert.equal(validRulersState({...s,wardReturns:'x'}),false);
 });
+
+test('kinDealRefusal: no envoy crosses the lines while the houses are at war',async()=>{
+ const {kinDealRefusal}=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();const orig=g.isFoe.bind(g);
+ g.isFoe=(a,b)=>(a===0&&b===1)||(a===1&&b===0)?true:orig(a,b);
+ assert.match(kinDealRefusal(g,1),/at war/);
+});
