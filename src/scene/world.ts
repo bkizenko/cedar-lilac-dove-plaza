@@ -69,6 +69,8 @@ import {PainterGround,blurGrid,smoothTileNormals,smoothGridNormals} from './pain
 import {geologyFor,dropGeology,type SurfaceGeology} from './painterGeology';
 import {installPainterFog} from './painterFog';
 import {ContactShadowMap} from './painterContact';
+import {RouteFieldMap,routeRibbons} from './routeField';
+import {routesEnabled} from '../game/routeWear';
 import {trailStampTexture,painterNodeRock} from './painterTrees';
 import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall} from './depthWater';
 import {seaSurfaceY} from '../game/localWater';
@@ -393,6 +395,7 @@ export class WorldView {
   private painterGround: PainterGround | null = null;
   private surfaceGeology: SurfaceGeology | null = null;
   private contactMap: ContactShadowMap | null = null;private contactAt = 0;
+  private routeField: RouteFieldMap | null = null;
   private waterMaterials: THREE.Material[] = [];
   private campVisual: CampVisual | null = null;
   private terrainLandscape = new Float32Array(0);
@@ -861,6 +864,7 @@ export class WorldView {
     this.painterGround=null;this.surfaceGeology=null;
     if(painterly){
       this.contactMap?.dispose();this.contactMap=new ContactShadowMap(game.world.size);this.terrainSurface.painter.pContactMap.value=this.contactMap.texture;this.contactAt=0;
+      this.routeField?.dispose();this.routeField=new RouteFieldMap(game.world.size);this.terrainSurface.painter.pTrailMap.value=this.routeField.texture;this.terrainSurface.painter.pTrailCfg.value=this.routeField.cfg;
       dropGeology(game.world);
       this.surfaceGeology=geologyFor(game.world as never,game.state.seed,{height:(x,z)=>game.height(x,z),waterAt:(x,z)=>game.waterAt(x,z)});
       const g=this.surfaceGeology.attributes(pos as THREE.BufferAttribute,undefined,(x,z)=>game.waterAt(x,z));
@@ -1723,12 +1727,18 @@ export class WorldView {
     return new THREE.CanvasTexture(canvas);
   }
 
+  /** Render tools: repaint the route field now. */
+  routeFieldNow(){this.routeField?.invalidate();this.trailSyncAt=-1;}
+
   private syncTrails(game:Game) {
     // GW-12/QA-013: continuous ribbons from the saved trail cells (display only; pace and state untouched).
     const stamp=Math.floor(game.state.time/4);
     if(this.trailSyncAt===stamp)return;this.trailSyncAt=stamp;
     let i=0;const CAP=4096;
-    for(const ribbon of trailRibbons(game)){
+    // Painterly look draws ground wear in the terrain shader (routeField.ts); the legacy ribbon meshes only serve the archived classic look.
+    const fieldDrawn=!!this.routeField&&routesEnabled(game)&&!(globalThis as {__LEGACY_TRAILS?:boolean}).__LEGACY_TRAILS;
+    const source=fieldDrawn?[]:routesEnabled(game)?routeRibbons(game):trailRibbons(game);
+    for(const ribbon of source){
       const pts=ribbon.points;
       for(let k=1;k<pts.length&&i<CAP;k++){
         const a=pts[k-1],b=pts[k],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<1e-3)continue;
@@ -1977,6 +1987,7 @@ export class WorldView {
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     this.syncEraDetails(game);
     this.foundations?.sync(game);
+    this.routeField?.update(game,performance.now(),game.state.weather,game.seasonMix().snow);
     if(this.contactMap&&performance.now()-this.contactAt>350){this.contactAt=performance.now();this.contactMap.update(game.state.buildings.filter(b=>b.team===0||game.exploredAt(b.x,b.z)));}
   }
 
@@ -3047,7 +3058,7 @@ export class WorldView {
   }
 
   private disposeWorld() {
-    this.foundations?.dispose();this.foundations=null;this.contactMap?.dispose();this.contactMap=null;
+    this.foundations?.dispose();this.foundations=null;this.contactMap?.dispose();this.contactMap=null;this.routeField?.dispose();this.routeField=null;
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
     this.wornArmor?.dispose();this.wornArmor=null;
