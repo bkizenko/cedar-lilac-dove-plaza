@@ -11,7 +11,7 @@ const files=[earned,legacy].map(path=>({path,bytes:readFileSync(path)}));
 const hash=b=>createHash('sha256').update(b).digest('hex');
 for(const f of files)f.hash=hash(f.bytes);
 const profile=mkdtempSync(join(tmpdir(),'hearthwild-trial-built-'));
-const report={passed:0,total:2,scope:'Built public resume of an actually harvested/paid/relocated seed trial at its original plot, plus unchanged original53 legacy village durable save. Finite declared native starting household; no new trial inputs, positions, terrain, knowledge or progress granted by this probe; no campaign/performance claim.'},errors=[];
+const report={passed:0,total:2,scope:'Built public resume of a paid/physically relocated seed trial at its original plot, plus unchanged original53 legacy village durable save. CONTROLLED finite initial household and four delivered samples on generated terrain (sample acquisition not qualified); no new trial inputs, positions, terrain, knowledge or progress granted by this probe; no campaign/performance claim.'},errors=[];
 let context,stage='launch';
 try{
  context=await chromium.launchPersistentContext(profile,{channel:'chrome',headless:true,viewport:{width:1440,height:1000},args:['--enable-unsafe-swiftshader']});
