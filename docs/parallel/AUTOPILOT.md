@@ -1112,6 +1112,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-13 02:00 | Claude | 30 (since 01:00 ET) | 30 | ~2 (people arm shoulder/elbow, Parties abroad card; lane D audit rows) | lanes A-D posted <1h |
 | 11-13 02:00 | Grok | 0 | 0 | 0 | idle (out); World rows covered by Claude/background agents |
 | 11-13 02:00 | Total | 41 | main = integration + codex-autopilot after 02:13 landing (aa299f8b) | ~3 | sweep 127 tests 124 pass/3 skip/0 fail; open rows ~64 by '| open |' count, ~226 done mentions |
+| 11-13 03:00 | Codex | 8 (since 02:00 ET) | 8 | 1 (owner-backed needs trade controls, UI seam) | active, on target |
+| 11-13 03:00 | Claude | 22 (since 02:00 ET) | 22 | ~2 (diplomacy meters, people budget fix; lane D audit rows) | lanes A-D posted <1h |
+| 11-13 03:00 | Grok | 0 | 0 | 0 | idle (out); World rows covered by Claude/background agents |
+| 11-13 03:00 | Total | 30 | main = integration + needs-trade-controls (9faca74b) | ~3 | sweep 129 tests 126 pass/3 skip/0 fail; open rows unchanged |
 
 ## Process improvements
 
