@@ -4284,7 +4284,7 @@ export class Game {
         // deliberate long journeys get this larger bounded fallback; it is cached
         // with the normal route and failed routes retain the retry cooldown.
         const returning = u.recalled || u.order === "return" || u.expedition?.returning || u.scout?.returning;
-        const longJourney=returning||!!u.scout||!!u.expedition||!!u.visit||!!u.envoy||!!u.coastalVoyageId||u.order==="trade";
+        const longJourney=returning||!!u.scout||!!u.expedition||!!u.visit||!!u.envoy||!!u.coastalVoyageId||u.tradeNeedsId!==undefined||u.order==="trade";
         const productionJourney=u.productionProjectId!==undefined&&this.state.production?.projects.some(p=>
           p.id===u.productionProjectId&&p.actorId===u.id&&p.team===u.team&&
           ['collecting','carrying','returning','unloading'].includes(p.phase));
@@ -4297,7 +4297,7 @@ export class Game {
           // Charge added ground searches against this step's shared budget;
           // a pending search is not an unreachable job or a stuck resident.
           if(!longJourney){if(this.navBudget<2)return false;this.navBudget-=2;}
-          path=findPath(grid,WALK,index(u.x,u.z),end,96000);
+          path=findPath(grid,WALK,index(u.x,u.z),end,u.tradeNeedsId!==undefined?192000:96000);
         }
         // A direct ground move remains a valid order when the requested point
         // is across a barrier. Complete it at the closest connected ground.
