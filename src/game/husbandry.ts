@@ -128,7 +128,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
    if(penPlacesOccupied(g,pen.id)+penPlacesReserved(g,pen.id,u.id)+rules.places>surveyPenPasture(g,pen).eligibleCapacity){tame.paused=true;u.order='idle';u.workReason='Pen full — taming paused';return true;}
    if(tame.trial&&tame.trial.roll>=tame.trial.chance){
     finishDomesticationTrial(g,u,'refused');
-    const q=pen.goatSearch;if(q){delete q.animal;q.returningHandlerId=u.id;q.state=(q.paidTrials||0)>=DOMESTICATION_RULES.maximumSearchTrials?'exhausted':'waiting';q.reason='refused';q.nextAttemptAt=g.state.time+5;}
+    const q=pen.goatSearch;if(q){delete q.animal;q.returningHandlerId=u.id;q.state=(q.paidTrials||0)>=DOMESTICATION_RULES.maximumSearchTrials?'exhausted':'waiting';q.reason='refused';q.nextAttemptAt=g.state.time+5;q.retryAfter=wild.domestication!.cooldownUntil;q.retryTarget={x:wild.x,z:wild.z};}
     finish(g,u);delete u.goatSearchPen;u.recalled=true;u.order='return';
     u.workReason=`The ${wild.species} refused handling — bait spent; returning with remaining supplies`;
     g.banner(u.workReason,5);return true;
