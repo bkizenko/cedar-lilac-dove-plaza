@@ -1088,6 +1088,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 21:00 | Claude | 24 (since 20:00 ET, all branches) | 19 landed by PM 21:10 | 2 (shield wear from condition; neighbour memory read model + UI) | lanes A-D steady; background agent wired M2-14 prehistory at game start and M2-11 departures/arrivals (06d19ded) |
 | 11-12 21:00 | Grok | 0 | 0 | 0 | out; Claude PM spawned civic-wiring agent for its idle World rows |
 | 11-12 21:00 | Total | ~36 | integration lag 0 after 21:10 PM landing | ~2 | focused sweep 131 tests 122 pass 9 skip 0 fail, civic 50/50 after merge; tsc diff nil in game code; M2-11/14/16, M4-07..09, CAT-117 now run in Game.step, still source-pushed-not-live until deploy qualifies |
+| 11-12 22:00 | Codex | 14 (since 21:00 ET, all branches) | 10 | 0 new live (typed pen controls/scout/transported-tamer verified native; LIVE054 protected) | on target; resumed AUTOPILOT queue |
+| 11-12 22:00 | Claude | 58 (since 21:00 ET, all branches) | 4 landed by PM 22:10 | 2 (trader verbs rob/interrogate/ransom + incident ledger; routes/trails + waystations + Roads card) | lanes A-D steady; CONCEPTS-ADULT-1 boards pushed |
+| 11-12 22:00 | Grok | 0 | 0 | 0 | out; World rows M5-04 map gallery handed to background agent |
+| 11-12 22:00 | Total | ~72 | integration lag 0 after 22:10 PM landing (4 commits) | ~2 | focused sweep 153 tests 150 pass 3 skip 0 fail (incl. routes-waystations, trader-interaction); tsc diff nil; source-pushed-not-live until deploy qualifies |
 
 ## Process improvements
 
