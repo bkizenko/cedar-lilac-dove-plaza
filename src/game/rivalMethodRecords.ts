@@ -6,7 +6,7 @@ import{hasTaskCommitment}from'./workCommitments';
 import{rivalKnows}from'./rivalDevelopment';
 import{methodRecords,methodRecordSources,type MethodSource}from'./methodRecords';
 import{METHOD_RECORD_RULES}from'./methodRecordRules';
-import{beginProduction,productionIssue}from'./production';
+import{beginProduction,productionIssue,resumeProduction}from'./production';
 import{surveyClayForTeam,beginClayGatherForTeam,clayIssueForTeam}from'./pottery';
 import{supplyDrops,supplyApproach}from'./campAnchor';
 
@@ -22,11 +22,19 @@ export function reviewRivalMethodRecords(g:Game,team:number):boolean{
  if(!isRivalTeam(team)||!g.tribe(team)?.alive)return false;
  let c=reviews.get(g);if(!c||c.state!==g.state){c={state:g.state,teams:new Map()};reviews.set(g,c);}const old=c.teams.get(team);if(old&&g.state.time<old.next)return false;const entry={next:g.state.time+RIVAL_METHOD_RECORD_RULES.reviewSeconds,reason:''};c.teams.set(team,entry);const no=(reason:string)=>{entry.reason=reason;return false;};
  if(reserveSeconds(g,team)<RIVAL_METHOD_RECORD_RULES.readyFoodSeconds)return no('Ready food reserves are below the existing safe-work target');
+ // Retained paid work owns its original materials and maker/carrier. New-record
+ // quotas must never strand it, and manual pauses remain an explicit choice.
+ const paid=g.state.production?.projects.find(p=>p.team===team&&live(p.phase)&&p.methodRecordWork?.kind==='author');
+ if(paid){
+  if(!['paused','stored'].includes(paid.phase))return no('An actual paid record is already being written or returned');
+  if(paid.pauseCause==='manual')return no('The actual paid record is manually paused');
+  if(!resumeProduction(g,paid.id))return no('The same paid record is waiting for its original maker or physical carrier');
+  entry.reason='The same paid record resumed with its original maker or physical carrier';return true;
+ }
  const records=methodRecords(g),pending=(g.state.production?.projects||[]).filter(p=>live(p.phase)&&p.methodRecordWork?.kind==='author'&&p.methodRecordAssetId===undefined),sources=[...records.map(r=>r.source),...pending.flatMap(p=>p.methodRecordWork?.kind==='author'?[p.methodRecordWork.source]:[])];
  if(records.length+pending.length>=METHOD_RECORD_RULES.maximumRecords)return no('Physical method-record capacity is full');
  if(sources.filter(s=>isRivalTeam(s.team)).length>=RIVAL_METHOD_RECORD_RULES.npcOriginRecords)return no('NPC-origin method-record capacity is full');
  if(sources.filter(s=>s.team===team).length>=RIVAL_METHOD_RECORD_RULES.recordsPerOrigin)return no('This community already supplied its bounded records');
- if(pending.some(p=>p.team===team)||g.state.production?.projects.some(p=>p.team===team&&live(p.phase)&&p.methodRecordWork?.kind==='author'))return no('An actual paid record is already being written or returned');
  const kilns=g.state.buildings.filter(b=>b.team===team&&b.type==='kiln'&&g.finished(b)&&!b.plannedCost);if(!kilns.length)return no('No actual finished kiln for a fired record');
  if(!g.state.buildings.some(b=>b.team===team&&b.type==='hearth'&&g.finished(b)&&!b.plannedCost))return no('No actual finished household hearth');
  const people=g.state.units.filter(u=>free(g,u,team)).sort((a,b)=>a.id-b.id),choices:{person:Unit;source:MethodSource}[]=[];
