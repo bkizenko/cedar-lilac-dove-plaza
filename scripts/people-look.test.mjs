@@ -43,3 +43,13 @@ test('people v2: worn armor and helmets add cosmetic near-only wear from real co
   const extra=ruin.bones.spine.length-fresh.bones.spine.length;assert.ok(extra>0&&extra<=10,'bounded wear parts');
  }
 });
+
+test('people v2: a worn shield adds bounded cosmetic wear from its real condition and keys its own variant',{skip},()=>{
+ for(const s of skins().slice(0,6)){
+  const mk=(c)=>outfit(s,'spearman','adult','soldier','summer','lightClothes',{shield:{kind:'woodShield',condition:c}});
+  const fresh=mk(.95),mid=mk(.5),ruin=mk(.1);
+  assert.equal(fresh.key,mk(.9).key,'high condition shares one pristine shield');
+  assert.notEqual(mid.key,fresh.key);assert.notEqual(ruin.key,mid.key);
+  assert.equal(fresh.rendered.shieldCondition,undefined);assert.equal(mid.rendered.shield,fresh.rendered.shield);assert.ok(mid.rendered.shieldCondition<.75);
+ }
+});

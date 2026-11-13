@@ -291,6 +291,10 @@ const field=hexRgb(c.st.field),acc=hexRgb(c.st.accent),ink=hexRgb(c.st.cordColou
  if(!isWicker||c.lod<2){const path=outline.map(([x,y],j)=>[x,y,zFn(1,j)] as V3);path.push(path[0]);
   b.tube(path,()=>era>=2?.0085:.011,b.pick(6,5,3),rimP,{caps:false});}
  if(isWicker&&c.lod===0)for(const f of [.55,.8])b.ring([0,0,D.bulge*(1-f*f)+.002],[0,0,1],D.rx*f,.004,c.paint('wicker',{len:.5,tint:'#7a5a34',tintAmount:.4}),20,4);
+ // worn face: scuffs and a rubbed patch from real condition (cosmetic only, bounded, near/mid LOD)
+ if(c.wear>.28&&c.lod<2){const nS=Math.min(7,2+Math.floor(c.wear*7)),scuff=c.paint('rawhide',{len:.1,tint:'#1c1712',tintAmount:.8}),rub=c.paint('rawhide',{len:.1,tint:'#d8c9a4',tintAmount:.7});
+  for(let i=0;i<nS;i++){const a2=c.r('sc'+i)*TAU,rr=(.25+c.r('sr'+i)*.6),sx=Math.cos(a2)*D.rx*rr,sy=Math.sin(a2)*D.ry*rr,nx=sx/D.rx,ny=sy/D.ry;
+   b.ellipsoid([sx,sy,D.bulge*(1-Math.min(1,nx*nx+ny*ny))+.012],[.02+c.r('sw'+i)*.04,.012+c.r('sh'+i)*.02,.006],i%3===2?rub:scuff,4);}}
  // boss
  const boss=era===0?(isWicker?c.paint('wicker',{len:.1}):c.paint('horn',{len:.1})):era===1?c.paint('copper',{len:.1,wear:c.wear}):mp(c,.2);
  const br=shape==='buckler'?.06:.075;
