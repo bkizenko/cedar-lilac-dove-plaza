@@ -1,3 +1,4 @@
+import {NeedsTradeControls} from './NeedsTradeControls';
 import {sendTradeEscort,tradeJourney} from '../game/caravans';
 import {useState} from 'react';
 import type {Engine} from '../game/engine';import type {ResKind} from '../game/types';
@@ -34,5 +35,6 @@ export function TradeProposal({engine,team,expanded=false}:{engine:Engine;team:n
  {!!travelers.length&&<details><summary>On the road · {travelers.length}</summary>{travelers.map(u=><div key={u.id}><p>{u.name||'Trader'} · {u.tradeLoading?'Loading offer':u.visit?.phase==='return'||u.order==='return'?'Returning':u.visit?.phase==='waiting'?'Negotiating':'Travelling'} · {g.state.units.filter(p=>p.hp>0&&p.escortId===u.id).length} guards{u.tradeReservation?` · ${u.tradeReservation.amount} ${names[u.tradeReservation.kind]} reserved`:''}</p><button onClick={()=>run(()=>sendTradeEscort(g,u.id))}>Add armed escort</button></div>)}</details>}
  {!carrier&&<p>Need an available adult with empty hands.</p>}
  </>;
- return expanded?<section className="trade-proposal">{content}</section>:<details className="trade-proposal"><summary>Trade & caravans</summary>{content}</details>;
+ const body=<><NeedsTradeControls engine={engine} team={team}/><details><summary>Individual trader & sea routes</summary>{content}</details></>;
+ return expanded?<section className="trade-proposal">{body}</section>:<details className="trade-proposal"><summary>Trade & caravans</summary>{body}</details>;
 }

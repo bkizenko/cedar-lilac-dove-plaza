@@ -1,3 +1,4 @@
+import {NeedsTradeControls} from '../NeedsTradeControls';
 import {RestartControl} from './RestartControl';
 import {MusicPanel} from './MusicControls';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
@@ -148,7 +149,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
 /* ---------- village ---------- */
 export function VillageScreen({hud,engine,onClose,initial,onKnowledge,onOffer}:{hud:HudSnapshot;engine:Engine;onClose:()=>void;initial?:string;onKnowledge:()=>void;onOffer:(t:number)=>void}){
  const [tab,setTab]=useState(initial||'stores');
- const tabs=[{id:'stores',label:'Stores',icon:<Package size={20}/>},{id:'work',label:'Work',icon:<Hammer size={20}/>},{id:'food',label:'Food',icon:<Wheat size={20}/>},{id:'craft',label:'Craft',icon:<Hammer size={20}/>},{id:'camp',label:'Camp',icon:<Home size={20}/>},...(hud.trade?[{id:'trade',label:'Trade',icon:<Handshake size={20}/>}]:[]),{id:'history',label:'History',icon:<Scroll size={20}/>}];
+ const tabs=[{id:'stores',label:'Stores',icon:<Package size={20}/>},{id:'work',label:'Work',icon:<Hammer size={20}/>},{id:'food',label:'Food',icon:<Wheat size={20}/>},{id:'craft',label:'Craft',icon:<Hammer size={20}/>},{id:'camp',label:'Camp',icon:<Home size={20}/>},{id:'trade',label:'Trade',icon:<Handshake size={20}/>},{id:'history',label:'History',icon:<Scroll size={20}/>}];
  const history=(engine.game.state.lifeHistory??[]).filter(e=>e.team===0).slice().reverse();
  return <Screen title="Village" icon={<Users size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab} wide>
   <div className="hw-legacy">
@@ -157,7 +158,7 @@ export function VillageScreen({hud,engine,onClose,initial,onKnowledge,onOffer}:{
    {tab==='food'&&<FarmingProgress engine={engine} onKnowledge={onKnowledge}/>}
    {tab==='craft'&&<CraftingAndBuildings engine={engine}/>}
    {tab==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/><PrestigeReadout view={hud.prestigeBreakdown} rivals={hud.prestigeRivals}/></>}
-   {tab==='trade'&&<TradeBlock hud={hud} engine={engine} onOffer={onOffer}/>}
+   {tab==='trade'&&<><NeedsTradeControls engine={engine} inboxOnly/><TradeBlock hud={hud} engine={engine} onOffer={onOffer}/></>}
    {tab==='history'&&(history.length===0?<p className="hw-empty">Nothing recorded yet.</p>:<ol className="hw-chron">{history.map((e,i)=><li key={i}><b>Y{Math.floor(e.time/YEAR_SECONDS)+1}</b> {e.text.replace(/^\[Contact \d+\] /,'')}</li>)}</ol>)}
   </div>
  </Screen>;
