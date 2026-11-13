@@ -904,9 +904,9 @@ export class Engine {
     const issue = geometryIssue ?? (type==='farm'?fieldSeedIssue(this.game.tribe(0).seeds||0,buildingCost(type,this.game,0,this.plotSize).seeds||0):null);
     this.game.state.placeIssue = issue;
     // Graded slope: say what the ground costs (tier word, goods, labour, foundation) once per change, like the field/pen cost line.
-    if(this.game.state.slopeModel==='graded'&&type!=='bridge'&&!this.plotStart&&(!issue||(this.game.state.terrainModel==='v2'&&/^(Too steep|Bare rock|Stone|Drystone|Terrace)/.test(issue)))){
+    if(this.game.state.slopeModel==='graded'&&type!=='bridge'&&!this.plotStart&&(!issue||(!!this.game.state.terrainModel&&/^(Too steep|Bare rock|Stone|Drystone|Terrace|Needs terraces)/.test(issue)))){
       // Terrain model v2 also names level sites that carry a nuance (Natural shelf, Sun slope...), points at a nearby shelf when the ground is refused, and says what a terrace field still needs.
-      const dims=this.plotSize??(this.placementTurn()?turnedFootprint(type):BUILDINGS[type]),v2=this.game.state.terrainModel==='v2',sa=slopeClassOf(type)==='exempt'?null:this.game.siteAssessment(type,x,z,dims.w,dims.d,v2),note=sa?(issue&&!sa.ok?`${issue}${sa.shelfHint?` · ${sa.shelfHint}`:''}`:`${sa.label} · ${sa.detail}`):'';
+      const dims=this.plotSize??(this.placementTurn()?turnedFootprint(type):BUILDINGS[type]),v2=!!this.game.state.terrainModel,sa=slopeClassOf(type)==='exempt'?null:this.game.siteAssessment(type,x,z,dims.w,dims.d,v2),note=sa?(issue&&!sa.ok?`${issue}${sa.shelfHint?` · ${sa.shelfHint}`:''}`:`${sa.label} · ${sa.detail}`):'';
       if(note!==this.slopeNoteKey){this.slopeNoteKey=note;if(sa&&(sa.tier!=='level'||!sa.ok||(v2&&(sa.tags?.length||sa.terrace?.k&&sa.terrace.k!=='none'))))this.game.banner(note,3);}
     }
     this.ghostPos.x = x;

@@ -97,6 +97,7 @@ import {smoothRivers} from "@/game/channelSmoothness";
 import {buildingQuarterTurns,turnedFootprint} from "@/game/footprints";
 import {siteRecord} from "@/game/slopeTiers";
 import {foundationBoxes} from "@/game/siteFoundation";
+import {hillFieldLines,HILL_RULES} from "@/game/hillFarming";
 import {carvedVariantFor,variantSpec} from './buildingStyleMap';
 import {buildCarvedMesh} from './carvedMesh';
 import {buildingGroundSupports} from './buildingGrounding';
@@ -2451,7 +2452,7 @@ export class WorldView {
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const carvedVariant=carved?carvedVariantFor(carved.input):null;
     const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'')+(carvedVariant?`|${carvedVariant.key}|${Math.round(carved!.y*20)}|${Math.round(x*2)},${Math.round(z*2)}|${carved!.fake.site?.foundation??''}`:'');
-    const fieldGame=type==='farm'?this.ghostGame:null,fieldSa=fieldGame&&fieldGame.state.terrainModel==='v2'?fieldGame.siteAssessment('farm',x,z,size?.w??BUILDINGS.farm.w,size?.d??BUILDINGS.farm.d):null;
+    const fieldGame=type==='farm'?this.ghostGame:null,fieldSa=fieldGame&&(fieldGame.state.terrainModel==='v2'||fieldGame.state.terrainModel==='v3')?fieldGame.siteAssessment('farm',x,z,size?.w??BUILDINGS.farm.w,size?.d??BUILDINGS.farm.d):null;
     const fieldKey=fieldSa?`|f${fieldSa.ok}${fieldSa.terrace?.k}${fieldSa.terrace?.n}${Math.round(x*2)},${Math.round(z*2)}`:'';
     if (this.ghost.userData.key === key+fieldKey) return;
     this.clearGhost();
@@ -2461,6 +2462,14 @@ export class WorldView {
       const tint=new THREE.Color(fieldSa.tier==='moderate'?'#f0b030':'#f08030'),w=size?.w??BUILDINGS.farm.w,d=size?.d??BUILDINGS.farm.d;
       for(const sp of foundationBoxes('strips',{x,z,w,d},{height:(px,pz)=>fieldGame.height(px,pz),level:fieldGame.height(x,z),downhill:fieldSa.downhill,terrace:{n:fieldSa.terrace.n,kind:fieldSa.terrace.k}})){
         const m=new THREE.Mesh(this.ghostBox,new THREE.MeshBasicMaterial({color:tint,transparent:true,opacity:.4,depthWrite:false}));m.position.set(sp.x,sp.y,sp.z);m.rotation.y=sp.yaw;m.scale.set(sp.length,sp.height,sp.width);this.ghostFoot.add(m);
+      }
+    }
+    // terrain model v3: the ordinary way to farm a hill is furrows along the contour and a bank at the lower edge; steep ground (warning tint) shows the same furrows
+    if(fieldGame&&fieldSa?.ok&&fieldSa.terrace&&fieldSa.terrace.k==='none'&&fieldSa.terrace.slope>=HILL_RULES.minHillDeg&&fieldGame.state.terrainModel==='v3'){
+      const warn=fieldSa.tier==='steep'||fieldSa.terrace.eros>=HILL_RULES.gullyRate,tint=new THREE.Color(warn?'#e07a30':'#d9b24a'),bank=new THREE.Color(warn?'#b8553a':'#9a7a4a'),w=size?.w??BUILDINGS.farm.w,d=size?.d??BUILDINGS.farm.d;
+      for(const ln of hillFieldLines((px,pz)=>fieldGame.height(px,pz),{x,z,w,d},fieldSa.downhill)){
+        const bk=ln.kind==='bank',m=new THREE.Mesh(this.ghostBox,new THREE.MeshBasicMaterial({color:bk?bank:tint,transparent:true,opacity:bk?.55:.45,depthWrite:false}));
+        m.position.set(ln.x,fieldGame.height(ln.x,ln.z)+(bk?.16:.05),ln.z);m.rotation.y=ln.yaw;m.scale.set(ln.length+.02,bk?.32:.08,bk?.5:.14);this.ghostFoot.add(m);
       }
     }
     if(carved&&carvedVariant){this.buildCarvedGhost(carved,carvedVariant,ok);return;}
