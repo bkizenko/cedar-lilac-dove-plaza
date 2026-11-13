@@ -9,13 +9,13 @@ function fixture(){
 }
 test('leader conversation has direct contextual replies without querying remote stocks or mutating the world',()=>{
  const {g,player,speaker}=fixture();for(const kind of ['food','wood','stone','copper','iron'])Object.defineProperty(g.tribe(1),kind,{get(){throw Error('remote stock oracle');},configurable:true});
- const before=JSON.stringify(g.state.units),history=JSON.stringify(g.state.lifeHistory);const view=leaderDialogue(g,player.id,speaker.id);assert.equal(view.role,'leader');assert.match(view.reply,/speaking with/);
- const result=chooseLeaderDialogue(g,player.id,speaker.id,'welcome','topic:needs');assert.equal(result.accepted,true);assert.match(result.reply,/no current account/);assert.equal(JSON.stringify(g.state.units),before);assert.equal(JSON.stringify(g.state.lifeHistory),history);
+ const before=JSON.stringify(g.state.units),history=JSON.stringify(g.state.lifeHistory);const view=leaderDialogue(g,player.id,speaker.id);assert.equal(view.role,'leader');assert.match(view.reply,/Say what brings you/);
+ const result=chooseLeaderDialogue(g,player.id,speaker.id,'welcome','topic:needs');assert.equal(result.accepted,true);assert.match(result.reply,/cannot tell you what our stores hold/);assert.equal(JSON.stringify(g.state.units),before);assert.equal(JSON.stringify(g.state.lifeHistory),history);
  const ordinary=speaker.type='worker';assert.equal(leaderDialogue(g,player.id,speaker.id).role,'representative');assert.ok(ordinary);
 });
 test('needs use only delivered dated bands and label stale evidence instead of current hidden stocks',()=>{
  const {g,player,speaker}=fixture();g.state.time=1000;g.state.tradeIntel={version:1,reports:[{observer:0,partner:1,observedAt:100,receivedAt:120,goods:[{kind:'wood',need:'needs',canOffer:false}]}],metrics:{}};
- Object.defineProperty(g.tribe(1),'wood',{get(){throw Error('remote stock oracle');},configurable:true});const view=leaderDialogue(g,player.id,speaker.id,'needs');assert.match(view.reply,/900 seconds old and may be out of date/);assert.match(view.reply,/need for timber/);g.state.time=2000;assert.match(leaderDialogue(g,player.id,speaker.id,'needs').reply,/no current account/);
+ Object.defineProperty(g.tribe(1),'wood',{get(){throw Error('remote stock oracle');},configurable:true});const view=leaderDialogue(g,player.id,speaker.id,'needs');assert.match(view.reply,/900 seconds old and may have gone cold/);assert.match(view.reply,/need for timber/);g.state.time=2000;assert.match(leaderDialogue(g,player.id,speaker.id,'needs').reply,/cannot tell you what our stores hold/);
 });
 test('conversation exchanges actual carried goods once; changed bundles and distance invalidate old choices',()=>{
  const {g,player,speaker}=fixture();Object.assign(player,{carry:4,carryType:'wood'});Object.assign(speaker,{carry:4,carryType:'food',carryFood:'provisions'});

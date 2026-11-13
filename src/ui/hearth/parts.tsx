@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
-import {Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound} from 'lucide-react';
+import {SkillStrip} from './skillsCard';
+import {Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import {MusicChip} from './MusicControls';
 import {FoldHandle,FoldMin,useFold} from './fold';
@@ -75,13 +76,14 @@ export function Rail({hud,engine,workOpen,onWork}:{hud:HudSnapshot;engine:Engine
 }
 
 /* ---------- dock ---------- */
-export type DockKey='build'|'village'|'ages'|'council'|'map';
+export type DockKey='build'|'village'|'ages'|'council'|'wonders'|'map';
 export function Dock({active,onPick,onHome,hasMap,alerts}:{active:DockKey|null;onPick:(k:DockKey)=>void;onHome:()=>void;hasMap:boolean;alerts:Partial<Record<DockKey,number>>}){
  const items:{k:DockKey;label:string;icon:ReactNode;tip:string}[]=[
   {k:'build',label:'Build',icon:<Hammer size={30}/>,tip:'Place buildings and fields'},
   {k:'village',label:'Village',icon:<Users size={30}/>,tip:'Stores, work, food, craft, camp (L)'},
   {k:'ages',label:'Ages',icon:<BookOpen size={30}/>,tip:'Knowledge and the next age'},
   {k:'council',label:'Council',icon:<Crown size={30}/>,tip:'Ruler, house, neighbours'},
+  {k:'wonders',label:'Wonders',icon:<Landmark size={30}/>,tip:'Great works, suggestions and ruins'},
  ];
  const f=useFold('dock');
  if(!f.showPanel)return <FoldHandle f={f} icon={<LayoutGrid size={24}/>}/>;
@@ -222,6 +224,7 @@ export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engin
   </header>
   {engine&&person&&<SelectedForeignVerbs engine={engine}/>}
   {stats.length>0&&<div className="hw-sel-meta">{stats.map(s=><Stat key={s.k} icon={s.icon} value={s.value} label={s.label} tone={s.tone} className="hw-chip"/>)}</div>}
+  {sel.kind==='unit'&&sel.skills&&<SkillStrip card={sel.skills}/>}
   {info&&<p className="hw-info">{sel.info}</p>}
   {tabs.length>1&&<div className="hw-ctx" role="tablist" aria-label="Orders">{tabs.map(t=><GameTooltip key={t.id} title={t.label}><button type="button" role="tab" aria-selected={ctx===t.id} aria-label={t.label} className={cx('hw-ctx-tab',ctx===t.id&&'is-on')} onClick={()=>setTab(t.id)}>{t.icon}<span>{t.label}</span></button></GameTooltip>)}</div>}
   {ctx==='work'&&showJobs&&<div className="hw-jobs" role="group" aria-label="Assign work">{JOBS.filter(j=>!j.need||j.need(hud)).map(j=><GameTooltip key={j.id} title={j.label} description={JOB_TIP[j.id]}><button type="button" className={cx('hw-job',hud.job===j.id&&'is-on')} aria-pressed={hud.job===j.id} aria-label={j.label} onClick={()=>engine?.assignJob(j.id as never)}>{j.icon}<span>{j.label}</span></button></GameTooltip>)}</div>}

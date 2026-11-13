@@ -65,6 +65,11 @@ for (const mode of modes) {
     for (const view of ['front', 'side']) rows.push({ label: `work stances ${view}: chop, quarry, till, build, plant, harvest, fight`, buf: await row(mode, view, ['chop', 'quarry', 'till', 'build', 'plant', 'harvest', 'fight'].map((c, i) => ({ clip: c, phase: c === 'plant' || c === 'harvest' ? .5 : .4, civ: CIV3[i % 3] })), { dx: 1.55 }) });
     await stack(`${tag}stance-${mode}`, `${tag}work stances stay narrow (${mode})`, rows);
   }
+  if (sheets.includes('headsclose')) {
+    const rows = [], civs = ['sandrill', 'hanrei', 'rusvolt', 'steppan', 'sahelan', 'quillan'];
+    for (const view of ['front']) rows.push({ label: `heads close-up ${view} (near tier, camera 12 m)`, buf: await row(mode, view, civs.map(civ => ({ clip: 'walk', phase: .25, civ })), { dx: .95, cam: { pos: [0, 1.65, 12], target: [0, 1.65, 0], fov: 9.5 } }) });
+    await stack(`${tag}headsclose-${mode}`, `${tag}head close-up (${mode})`, rows);
+  }
   if (sheets.includes('all') || sheets.includes('heads')) {
     const rows = [], civs = ['sandrill', 'hanrei', 'rusvolt', 'steppan', 'sahelan', 'quillan'];
     for (const [nm, d] of [['near', 20], ['mid', 140], ['far', 300]]) {

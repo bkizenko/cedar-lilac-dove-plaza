@@ -4,6 +4,7 @@ import {FOOD_KINDS,foodInventory,takeFoodLot} from './pantry';
 import {isDependent} from './settlement';
 import {boatClass} from './boatClasses';
 import {hasTaskCommitment} from './workCommitments';
+import {wonderEffect} from './wonderEffects';
 import {PORT_WORK_SPECS,PORT_TIERS,PORT_WORK_IDS,designStrength,shipDesign,tierFor,type PortWork} from './navalClasses';
 
 /**
@@ -171,7 +172,7 @@ export function tickBlockades(g:Game,dt:number){
 }
 
 // -- naval supply --------------------------------------------------------------------------------------------------------
-export const stowCapacity=(g:Game,boatId:number)=>{const b=g.state.boats?.find(b=>b.id===boatId);return b?{food:b.capacity*R.foodCapacityPerSeat,missiles:R.missileCapacity}:{food:0,missiles:0};};
+export const stowCapacity=(g:Game,boatId:number)=>{const b=g.state.boats?.find(b=>b.id===boatId);return b?{food:b.capacity*R.foodCapacityPerSeat*(1+wonderEffect(g.state,b.team,'portCapacity')),missiles:R.missileCapacity}:{food:0,missiles:0};};
 /** Load rations and missiles from the society's real stores at its own harbour. Everything loaded leaves the stores. */
 export function vesselSupplyQuote(g:Game,boatId:number,want:{food?:number;missileLoads?:number}={},team=0){
  const empty=(issue:string)=>({issue,food:0,loads:0,missiles:0,wood:0,dockId:undefined as number|undefined});

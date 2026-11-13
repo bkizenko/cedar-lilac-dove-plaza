@@ -21,7 +21,7 @@ const shim=path.join(root,'.hw-lucide-shim.mjs');
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'hw-ui-')),bundle=path.join(tmp,'ui.js');
 execFileSync(esbuild,['tools/render-preview/ui-council-entry.tsx','--bundle','--format=esm','--outfile='+bundle,'--alias:@=./src','--loader:.css=empty','--jsx=automatic','--define:process.env.NODE_ENV="production"','--alias:three/addons/utils/BufferGeometryUtils.js=./tools/render-preview/shims/BufferGeometryUtils.js',...['EffectComposer','RenderPass','UnrealBloomPass','ShaderPass','FilmPass','OutputPass'].map(n=>`--alias:three/addons/postprocessing/${n}.js=./tools/render-preview/shims/postprocessing.js`),'--alias:node:zlib=./tools/render-preview/shims/empty.js','--alias:three/examples/jsm/libs/fflate.module.js=./tools/render-preview/shims/fflate.js','--alias:lucide-react='+shim,'--log-level=error'],{cwd:root,stdio:'inherit'});
 fs.rmSync(shim,{force:true});
-const css=fs.readFileSync(path.join(root,'src/ui/hearth/hearth.css'),'utf8'),code=fs.readFileSync(bundle,'utf8');
+const css=['hearth.css','wonders.css'].map(f=>fs.readFileSync(path.join(root,'src/ui/hearth',f),'utf8')).join('\n'),code=fs.readFileSync(bundle,'utf8');
 const html=`<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#1b140d;color:#f8efd9;font-family:system-ui,sans-serif}${css}</style><div id=root></div><script type=module src=/ui.js></script>`;
 const server=http.createServer((q,r)=>{if(q.url==='/ui.js'){r.writeHead(200,{'content-type':'text/javascript'});r.end(code);}else{r.writeHead(200,{'content-type':'text/html'});r.end(html);}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));

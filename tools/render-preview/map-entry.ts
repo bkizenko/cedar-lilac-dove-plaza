@@ -12,7 +12,7 @@ type Spec={gallery?:string;/** forestEcologyVersion 1 (stands); absent = the leg
  prep?:{age?:number;buildings?:{type:string;x:number;z:number}[];irrigation?:{ditchFields:number[];waterMode?:boolean};fieldBlock?:{w:number;d:number;cols:number;rows:number;stages:string[];kind?:string;minGrade?:number}[];farms?:{x:number;z:number;rel?:boolean;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
  routes?:{from:[number,number];to:[number,number];trips:number;team?:number;jitter?:number}[];routesFresh?:boolean;routesIdle?:number;routesLegacy?:boolean;stations?:{x:number;z:number;stage:0|1|2|3;form?:string;team?:number;hp?:number}[];
- fov?:number;drawDistance?:'low'|'medium'|'high'|'ultra';detail?:'standard'|'high'|'ultra';shadows?:boolean;measure?:boolean;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
+ fov?:number;treeDetail?:1|2|3|4|5;drawDistance?:'low'|'medium'|'high'|'ultra';detail?:'standard'|'high'|'ultra';shadows?:boolean;measure?:boolean;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
 const w=window as unknown as {renderMap:(s:Spec)=>Promise<unknown>;__game?:Game;__view?:WorldView};
 {const g=HTMLCanvasElement.prototype.getContext as (this:HTMLCanvasElement,k:string,o?:object)=>unknown;
  (HTMLCanvasElement.prototype as unknown as {getContext:unknown}).getContext=function(this:HTMLCanvasElement,k:string,o?:object){return g.call(this,k,k.startsWith('webgl')?{...(o||{}),preserveDrawingBuffer:true}:o);};}
@@ -126,6 +126,7 @@ w.renderMap=async(S:Spec)=>{
  for(let k=0;k<30;k++){view.updateCamera(0);const cp=view.camera.position;if(cp.y>game.height(cp.x,cp.z)+4||view.pitch>=1.3)break;view.pitch+=.05;}
  view.updateCamera(0);
  if(S.drawDistance)view.setDrawDistance(S.drawDistance);
+ if(S.treeDetail)view.setTreeDetail(S.treeDetail);
  if(S.detail&&(view as unknown as {setDetailLevel?:(d:string)=>void}).setDetailLevel)(view as unknown as {setDetailLevel:(d:string)=>void}).setDetailLevel(S.detail);
  view.sync(game,5);view.sync(game,5);
  // filler chunks are generated under a per-frame time budget in play; here let them all finish so the picture is the settled one
