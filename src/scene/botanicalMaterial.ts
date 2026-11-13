@@ -124,10 +124,23 @@ export function makeBotanicalMaterial(sway:PainterSway,opts:{translucency?:numbe
  return m;
 }
 /** Cheap flat material for far crowns: same lighting as the near set, no map or wind. */
-export function makeBotanicalFarMaterial(){
+/** Screen-door fade ranges for far geometry, in metres from the eye: x,y = fade OUT (fully drawn at <= x, gone at >= y); z,w = fade IN (gone at <= z, fully drawn at >= w).
+ * Out uses b < visibility and in uses 1-b <= visibility, so an out-fading mesh and an in-fading mesh over the same range tile the screen exactly (a dithered cross-fade). */
+export type FarFade={value:THREE.Vector4};
+export const farFadeOff=()=>new THREE.Vector4(1e9,1e9+1,-2,-1);
+export function makeFarFade():FarFade{return {value:farFadeOff()};}
+export function makeBotanicalFarMaterial(fade?:FarFade){
  const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.95,metalness:0,vertexColors:true});
- m.customProgramCacheKey=()=>'botanical-far-v1';
- m.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <lights_fragment_end>',`#include <lights_fragment_end>
-  reflectedLight.indirectDiffuse+=diffuseColor.rgb*vec3(.10,.115,.05);`);};
+ m.customProgramCacheKey=()=>fade?'botanical-far-v2-dither':'botanical-far-v1';
+ m.onBeforeCompile=shader=>{
+  shader.fragmentShader=shader.fragmentShader.replace('#include <lights_fragment_end>',`#include <lights_fragment_end>
+  reflectedLight.indirectDiffuse+=diffuseColor.rgb*vec3(.10,.115,.05);`);
+  if(!fade)return;
+  shader.uniforms.uFarFade=fade;
+  shader.fragmentShader=shader.fragmentShader.replace('void main() {',`uniform vec4 uFarFade;
+  float farBayer(vec2 p){int i=int(mod(p.x,4.0))+int(mod(p.y,4.0))*4;float m[16]=float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.);return (m[i]+.5)/16.;}
+  void main() {
+  {float dd=length(vViewPosition),vOut=1.-smoothstep(uFarFade.x,uFarFade.y,dd),vIn=smoothstep(uFarFade.z,uFarFade.w,dd),b=farBayer(gl_FragCoord.xy);if(b>=vOut||(1.-b)>vIn)discard;}`);
+ };
  return m;
 }

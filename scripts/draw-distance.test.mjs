@@ -3,11 +3,11 @@ import {DRAW_DISTANCE_LEVELS,DRAW_DISTANCE_RULES,ADAPTIVE_RULES,DrawDistanceGove
 
 test('levels are monotonic: each step draws farther, clearer and with more filler; Low is the original behaviour',()=>{
  const L=DRAW_DISTANCE_RULES.levels;
- assert.equal(L.low.cameraFar,860);assert.equal(L.low.fogScale,1);assert.equal(L.low.treeFar,700);assert.equal(L.low.dressing,65);
+ assert.equal(L.low.cameraFar,860);assert.equal(L.low.fogScale,1);assert.equal(L.low.treeFar,700);
  assert.equal(L.low.fillerFar,0);assert.equal(L.low.fillerMaxTrees,0);assert.equal(L.low.fillerMaxBlobs,0);assert.equal(L.low.peopleFar,Infinity);
  for(let i=1;i<DRAW_DISTANCE_LEVELS.length;i++){
   const a=L[DRAW_DISTANCE_LEVELS[i-1]],b=L[DRAW_DISTANCE_LEVELS[i]];
-  for(const k of ['cameraFar','treeFar','fillerFar','fillerDetail','fillerMaxTrees','fillerMaxBlobs','dressing','fadeMetres'])assert.ok(b[k]>a[k],`${DRAW_DISTANCE_LEVELS[i]}.${k}`);
+  for(const k of ['cameraFar','treeFar','fillerFar','fillerDetail','fillerMaxTrees','fillerMaxBlobs','fadeMetres'])assert.ok(b[k]>a[k],`${DRAW_DISTANCE_LEVELS[i]}.${k}`);
   assert.ok(b.fogScale<a.fogScale,'air gets clearer');
  }
  assert.equal(DRAW_DISTANCE_RULES.defaultLevel,'medium');

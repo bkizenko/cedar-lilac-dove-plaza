@@ -48,6 +48,7 @@ import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
 import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
+import {DrawDistanceGovernor,drawBands,loadDrawDistance,type DrawBands,type DrawDistance} from '../game/drawDistance';
 import {currentRenderStyle,type RenderStyle} from './renderStyle';
 import {loadMapStyle,rememberMapStyle,type MapStyle} from './mapStyle';
 import {painterAtmosphere,makePainterSky,PAINTER_GRADE_SHADER} from './painterAtmosphere';
@@ -407,6 +408,16 @@ export class WorldView {
   private litFogD = 0.003;
   private litFog = new THREE.Color("#d2dcbe");
   private litSunCol = new THREE.Color("#fff4d2");
+  /** Draw distance (src/game/drawDistance.ts): the level the player chose, the level in force (the governor may ease it when frames stay over budget) and its bands. */
+  private drawGovernor = new DrawDistanceGovernor(loadDrawDistance());
+  private drawBandsNow: DrawBands = drawBands(this.drawGovernor.level, MAP);
+  private lastRenderAt = 0;
+  /** Called (once per easing) when the governor lowers the draw distance automatically. */
+  onDrawDistanceEased?: (level: DrawDistance, chosen: DrawDistance) => void;
+  private viewCull = new THREE.PerspectiveCamera();
+  private viewFrustum = new THREE.Frustum();
+  private viewProj = new THREE.Matrix4();
+  private viewSphere = new THREE.Sphere();
 
   constructor(canvas: HTMLCanvasElement) {
     this.quality = loadGraphicsQuality();
@@ -436,7 +447,7 @@ export class WorldView {
     installPainterFog();
     this.scene.fog = new THREE.FogExp2("#d8c4a0", 0.0034);
 
-    this.camera = new THREE.PerspectiveCamera(38, 1, 0.5, 860);
+    this.camera = new THREE.PerspectiveCamera(38, 1, 0.5, this.drawBandsNow.cameraFar);
     try{if(typeof location!=='undefined'&&new URLSearchParams(location.search).get('renderStyle')==='carved')this.renderStyle='carved';}catch{/* default stays 'current' */}
     this.mats = makeMaterials();
 
@@ -672,6 +683,30 @@ export class WorldView {
     if (this.bloom) this.bloom.resolution.set(w, h);
   }
 
+  /** The draw distance the player chose, the one in force (lower when the governor eased it) and the bands in force. */
+  getDrawDistance(): DrawDistance { return this.drawGovernor.chosen; }
+  getEffectiveDrawDistance(): DrawDistance { return this.drawGovernor.level; }
+  getDrawBands(): DrawBands { return this.drawBandsNow; }
+  /** Choose a draw distance (the UI persists it). Resets the automatic easing. */
+  setDrawDistance(level: DrawDistance) { this.drawGovernor.choose(level); this.lastRenderAt = 0; this.applyDrawBands(); }
+  private applyDrawBands() {
+    this.drawBandsNow = drawBands(this.drawGovernor.level, this.mapSize);
+    this.camera.far = this.drawBandsNow.cameraFar;
+    this.camera.updateProjectionMatrix();
+  }
+  /** What the tree layers need each sync: the bands, a conservative frustum test for far trees (camera frustum widened sideways so a quick turn does not show a hole
+   * before the next refresh), and a key that changes when the camera moved or turned enough to need a fresh far list. */
+  private treeView(prime: boolean) {
+    const cam = this.camera, p = cam.position, c = this.viewCull;
+    c.copy(cam); c.aspect = cam.aspect * 1.35; c.fov = Math.min(100, cam.fov * 1.12); c.near = 1; c.far = Math.max(cam.far, 100);
+    c.updateProjectionMatrix(); c.updateMatrixWorld(true);
+    this.viewProj.multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse); this.viewFrustum.setFromProjectionMatrix(this.viewProj);
+    const frustum = this.viewFrustum, sphere = this.viewSphere, y = this.look.y;
+    const inView = (x: number, z: number, r: number) => { sphere.center.set(x, y, z); sphere.radius = r + 60; return frustum.intersectsSphere(sphere); };
+    const key = `${Math.round(p.x / 6)}|${Math.round(p.z / 6)}|${Math.round(this.yaw * 14)}|${Math.round(this.pitch * 14)}|${Math.round(this.dist / 12)}`;
+    return { bands: this.drawBandsNow, inView, key, prime };
+  }
+
   applyQuality(q: "low" | "med" | "high") {
     this.quality = q;
     this.renderer.setPixelRatio(
@@ -703,6 +738,7 @@ export class WorldView {
       uniforms.uHalf.value=game.world.size/2;uniforms.uSize.value=game.world.size;
     }
     this.mapSize=game.world.size;
+    this.applyDrawBands();
     this.trailSyncAt=-1;
     if (this.fowMesh) {
       const positions = this.fowMesh.geometry.getAttribute("position") as THREE.BufferAttribute;
@@ -893,7 +929,7 @@ export class WorldView {
 
   private buildNature(game: Game) {
     const ecology=(game.world as typeof game.world&{ecology?:EcologicalProvinceGrid}).ecology;
-    if(ecology){this.biomeScene=new BiomeSceneLayer(this.scene,game,ecology,this.mapStyle==='painterly'?'painterly':'classic');this.biomeScene.sync(game,this.camera.position,this.quality,1);this.treeCount=game.state.trees.length;}
+    if(ecology){this.biomeScene=new BiomeSceneLayer(this.scene,game,ecology,this.mapStyle==='painterly'?'painterly':'classic');this.biomeScene.sync(game,this.camera.position,this.quality,1,this.treeView(true));this.treeCount=game.state.trees.length;}
     else {
     const pine = pineGeo();
     const nTree = game.state.trees.length;
@@ -1446,12 +1482,12 @@ export class WorldView {
 
   sync(game: Game, dt: number) {
     if (this.lost || this.disposed) return;
-    if(this.synchronizedState!==game.state){this.synchronizedState=game.state;this.buildingSyncIn=0;this.biomeScene?.sync(game,this.camera.position,this.quality,1);}
+    if(this.synchronizedState!==game.state){this.synchronizedState=game.state;this.buildingSyncIn=0;this.biomeScene?.sync(game,this.camera.position,this.quality,1,this.treeView(true));}
     this.landContinuation?.sync(game);
     this.bankLayer?.sync(game);
     if(game.state.excavations?.length){this.ensureExcavationLayer(game);this.excavationLayer?.sync(game);}
     this.updateDay(game, dt);
-    this.biomeScene?.sync(game,this.camera.position,this.quality,dt);this.biomeScene?.setTime(game.state.time);
+    this.biomeScene?.sync(game,this.camera.position,this.quality,dt,this.treeView(false));this.biomeScene?.setTime(game.state.time);
     this.wildPlantLayer?.sync(game);
     this.syncNature(game);
     this.syncWildlife(game);
@@ -1599,7 +1635,7 @@ export class WorldView {
     this.bounce.intensity = night ? 0.22 : 0.12 + elev * 0.12;
     (this.scene.fog as THREE.FogExp2).color.copy(this.litFog);
     this.scene.background = this.litFog;
-    (this.scene.fog as THREE.FogExp2).density = painter?-this.litFogD:this.litFogD; // negative density opts into the painterly aerial haze (painterFog.ts)
+    (this.scene.fog as THREE.FogExp2).density = (painter?-this.litFogD:this.litFogD)*this.drawBandsNow.fogScale; // negative density opts into the painterly aerial haze (painterFog.ts)
     this.renderer.toneMappingExposure = painter?painter.exposure:
       (night ? 1.08 : 1.02 + elev * 0.20 + dawn * 0.08 + sn.winter * 0.06) *
       (wx === "storm" || wx === "flood" ? 0.88 : 1);
@@ -2156,7 +2192,7 @@ export class WorldView {
     for (const t of UNIT_TYPES) {
       const old = this.unitMeshes.get(t);
       if (!old){this.unitInstanceOwners.set(t,[]);continue;}
-      const list=admitVisibleUnits(grouped.get(t)!,grouped.get(t)!.length,u=>u.team===0||game.visibleAt(u.x,u.z),this.hoveredUnitId);
+      const peopleFar=this.drawBandsNow.peopleFar,cp=this.camera.position,list=admitVisibleUnits(grouped.get(t)!,grouped.get(t)!.length,u=>(u.team===0||game.visibleAt(u.x,u.z))&&(u.selected||peopleFar===Infinity||Math.hypot(u.x-cp.x,u.z-cp.z)<=peopleFar),this.hoveredUnitId);
       const mesh=ensureInstanceCapacity(this.scene,old,list.length);this.unitMeshes.set(t,mesh);
       this.unitInstanceOwners.set(t,list);
       const n=list.length;
@@ -2541,6 +2577,7 @@ export class WorldView {
   render() {
     this.latestRenderMetrics=undefined;
     if (this.lost || this.disposed) return;
+    {const now=typeof performance!=='undefined'?performance.now():0;if(this.lastRenderAt>0){const eased=this.drawGovernor.observe(now-this.lastRenderAt);if(eased){this.applyDrawBands();this.onDrawDistanceEased?.(eased,this.drawGovernor.chosen);}}this.lastRenderAt=now;}
     beginRendererFrame(this.renderer.info);
     try {
     try {

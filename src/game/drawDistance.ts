@@ -8,7 +8,7 @@
  * Haze (exponential-squared fog) is thinned per level but still reaches >= 95% at the camera far plane, and the outer edge of every cut-off fades in
  * with a screen-door dither, so nothing visibly pops at the limit.
  *
- * 'low' is the behaviour before this system existed (camera far 860, original fog, no filler, 65 m dressing). It stays selectable. 'medium' is the default.
+ * 'low' is the behaviour before this system existed (camera far 860, original fog, no filler). It stays selectable. 'medium' is the default.
  * Render-only: nothing here touches heights, collision, resources, saves or simulation. */
 export type DrawDistance='low'|'medium'|'high'|'ultra';
 export const DRAW_DISTANCE_LEVELS:readonly DrawDistance[]=['low','medium','high','ultra'];
@@ -24,8 +24,6 @@ export type DrawBands={
  fillerFar:number;fillerDetail:number;fillerMaxTrees:number;fillerMaxBlobs:number;
  /** screen-door fade span (metres) ahead of every outer cut-off and across the detail->horizon hand-over */
  fadeMetres:number;
- /** ground dressing radius (metres) */
- dressing:number;
  /** people beyond this are not drawn (selected people always are); Infinity = never hide */
  peopleFar:number;
 };
@@ -33,13 +31,13 @@ export const DRAW_DISTANCE_RULES={
  /** clear-day painterly fog density, and sqrt(-ln 0.05): density*distance at which exp-squared fog is 95% */
  clearDensity:.0015,hazeK:1.731,
  key:'hearthwild:draw-distance',defaultLevel:'medium' as DrawDistance,
- /** the original numbers (camera far 860, fog scale 1, sim trees to 700 m, 65 m dressing) */
- legacy:{cameraFar:860,treeFar:700,dressing:65},
+ /** the original numbers (camera far 860, fog scale 1, sim trees to 700 m) */
+ legacy:{cameraFar:860,treeFar:700},
  levels:{
-  low:{cameraFar:860,fogScale:1,treeFar:700,fillerFar:0,fillerDetail:0,fillerMaxTrees:0,fillerMaxBlobs:0,fadeMetres:0,dressing:65,peopleFar:Infinity},
-  medium:{cameraFar:1400,fogScale:.82,treeFar:1000,fillerFar:1100,fillerDetail:260,fillerMaxTrees:450,fillerMaxBlobs:2200,fadeMetres:70,dressing:72,peopleFar:900},
-  high:{cameraFar:2000,fogScale:.6,treeFar:1500,fillerFar:1600,fillerDetail:340,fillerMaxTrees:800,fillerMaxBlobs:3600,fadeMetres:110,dressing:85,peopleFar:1400},
-  ultra:{cameraFar:3200,fogScale:.4,treeFar:2400,fillerFar:2600,fillerDetail:440,fillerMaxTrees:1300,fillerMaxBlobs:6500,fadeMetres:160,dressing:100,peopleFar:2400},
+  low:{cameraFar:860,fogScale:1,treeFar:700,fillerFar:0,fillerDetail:0,fillerMaxTrees:0,fillerMaxBlobs:0,fadeMetres:0,peopleFar:Infinity},
+  medium:{cameraFar:1400,fogScale:.82,treeFar:1100,fillerFar:1100,fillerDetail:260,fillerMaxTrees:450,fillerMaxBlobs:2200,fadeMetres:70,peopleFar:900},
+  high:{cameraFar:2000,fogScale:.6,treeFar:1600,fillerFar:1600,fillerDetail:340,fillerMaxTrees:800,fillerMaxBlobs:3600,fadeMetres:110,peopleFar:1400},
+  ultra:{cameraFar:3200,fogScale:.4,treeFar:2600,fillerFar:2600,fillerDetail:440,fillerMaxTrees:1300,fillerMaxBlobs:6500,fadeMetres:160,peopleFar:2400},
  } as Record<DrawDistance,DrawBands>,
  /** cluster cell sizes (metres) used for the horizon band, by distance from the camera */
  blobCells:[{from:0,size:16},{from:520,size:32},{from:1000,size:64}] as readonly {from:number;size:number}[],

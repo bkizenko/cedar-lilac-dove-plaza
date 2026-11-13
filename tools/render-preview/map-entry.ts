@@ -1,12 +1,13 @@
 /** Browser entry for the whole-map render harness (bundled by map.mjs with esbuild; REAL three.js, SwiftShader headless).
  * Builds the real Game world and the real WorldView, so every pixel is game output: terrain, water, vegetation, fields, sky, light, post. */
+import * as THREE from 'three';
 import {Game} from '@/game/sim';
 import {WorldView} from '@/scene/world';
 import {wearTrail} from '@/game/trails';
 type Spec={seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
  prep?:{buildings?:{type:string;x:number;z:number}[];farms?:{x:number;z:number;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
- fov?:number;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
+ fov?:number;drawDistance?:'low'|'medium'|'high'|'ultra';measure?:boolean;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
 const w=window as unknown as {renderMap:(s:Spec)=>Promise<unknown>;__game?:Game;__view?:WorldView};
 {const g=HTMLCanvasElement.prototype.getContext as (this:HTMLCanvasElement,k:string,o?:object)=>unknown;
  (HTMLCanvasElement.prototype as unknown as {getContext:unknown}).getContext=function(this:HTMLCanvasElement,k:string,o?:object){return g.call(this,k,k.startsWith('webgl')?{...(o||{}),preserveDrawingBuffer:true}:o);};}
@@ -69,16 +70,34 @@ w.renderMap=async(S:Spec)=>{
  // The harness has no camera-vs-terrain collision (it must be deterministic): lift the pitch until the eye clears the ground, like the in-game orbit camera does.
  for(let k=0;k<30;k++){view.updateCamera(0);const cp=view.camera.position;if(cp.y>game.height(cp.x,cp.z)+4||view.pitch>=1.3)break;view.pitch+=.05;}
  view.updateCamera(0);
+ if(S.drawDistance)view.setDrawDistance(S.drawDistance);
  view.sync(game,5);view.sync(game,5);
+ // filler chunks are generated under a per-frame time budget in play; here let them all finish so the picture is the settled one
+ for(let k=0;k<600;k++){const bs=(view as unknown as {biomeScene?:{lastFiller:{deferred:number}|null}}).biomeScene;if(!bs?.lastFiller||bs.lastFiller.deferred===0)break;view.sync(game,5);}
  if((S as {hide?:string[]}).hide)view.scene.traverse(o=>{if((S as {hide?:string[]}).hide!.some(h=>(h[0]==='='?o.name===h.slice(1):o.name.includes(h))))o.visible=false;});
  if(S.bloom!==undefined&&view.bloom)view.bloom.strength=S.bloom;
  if(S.passes!==undefined&&view.composer)view.composer.passes=view.composer.passes.slice(0,S.passes);
  if(S.keep&&view.composer)view.composer.passes=view.composer.passes.filter((_,i)=>S.keep!.includes(i));
  view.render();
  const info=view.renderer.info;
+ const extra=S.measure?measure(view,game,S):undefined;
  const near=(a:{x:number;z:number}[])=>a.map(n=>({x:Math.round(n.x),z:Math.round(n.z),d:Math.hypot(n.x-c0.x,n.z-c0.z)})).sort((p,q)=>p.d-q.d).slice(0,3).map(n=>[n.x,n.z]);
  const probes=(S.probe??[]).map(([px,pz])=>{const geo=(view as unknown as {terrain:{geometry:{attributes:Record<string,{count:number;getX:(i:number)=>number;getY:(i:number)=>number;getZ:(i:number)=>number;array:Float32Array}>}}}).terrain.geometry,pos=geo.attributes.position;let best=0,bd=1e9;for(let i=0;i<pos.count;i++){const d=Math.hypot(pos.getX(i)-px,pos.getZ(i)-pz);if(d<bd){bd=d;best=i;}}
   const c=geo.attributes.color.array,r=geo.attributes.surfaceRock?.array,sd=geo.attributes.surfaceSand?.array;return {at:[px,pz],h:+pos.getY(best).toFixed(2),color:[c[best*3],c[best*3+1],c[best*3+2]].map(v=>+v.toFixed(3)),rock:r?+r[best].toFixed(2):null,sand:sd?+sd[best].toFixed(2):null};});
  return {probes,nodes:{stone:near(game.state.stones),copper:near(game.state.copper),iron:near(game.state.iron)},build:Math.round(t1-t0),frame:Math.round(performance.now()-t1),calls:info.render.calls,tris:info.render.triangles,camp:[Math.round(c0.x),Math.round(c0.z)],size:game.world.size,waterY:game.world.waterY,
-  camps:game.world.camps.map(c=>[Math.round(c.x),Math.round(c.z),c.team]),features:(game.world.features||[]).map((f:any)=>[f.kind,Math.round(f.x),Math.round(f.z)]).slice(0,40)};
+  dd:S.drawDistance,extra,camps:game.world.camps.map(c=>[Math.round(c.x),Math.round(c.z),c.team]),features:(game.world.features||[]).map((f:any)=>[f.kind,Math.round(f.x),Math.round(f.z)]).slice(0,40)};
 };
+/** Per-band cost for the distance-quality report: triangles by object class from the scene graph (what was submitted this frame), renderer counters, JS heap, and the median of 3 renders in ms (SwiftShader: relative only). */
+function measure(view:WorldView,game:Game,S:Spec){
+ const groups:Record<string,{objects:number;instances:number;tris:number}>={};
+ const add=(k:string,n:number,i:number,t:number)=>{const g=groups[k]??(groups[k]={objects:0,instances:0,tris:0});g.objects+=n;g.instances+=i;g.tris+=t;};
+ view.scene.traverse(o=>{const m=o as unknown as {isMesh?:boolean;isInstancedMesh?:boolean;visible:boolean;count?:number;geometry?:{index?:{count:number}|null;attributes:{position?:{count:number}}}};
+  if(!m.isMesh&&!m.isInstancedMesh)return;let v:THREE.Object3D|null=o;while(v){if(!v.visible)return;v=v.parent;}
+  const g=m.geometry;if(!g)return;const per=((g.index?g.index.count:g.attributes.position?.count)||0)/3,n=m.isInstancedMesh?(m.count??0):1;if(n<=0)return;
+  const name=o.name||'';const k=name==='terrain'?'terrain':name.startsWith('filler-horizon')?'filler horizon crowns':name.startsWith('filler-far')?'filler far crowns+trunks':/^resource-(far|.*-t[01]|stumps|contact)/.test(name)||name.startsWith('resource-')?(name.startsWith('resource-far')?'sim far crowns+trunks':'sim trees near/mid'):name.startsWith('people')?'people':name.startsWith('nonblocking')?'ground dressing':/water|river|sea/.test(name)?'water':'buildings, props, other';
+  add(k,1,n,per*n);});
+ const times:number[]=[];for(let i=0;i<3;i++){const t=performance.now();view.render();times.push(performance.now()-t);}times.sort((a,b)=>a-b);
+ const mem=(performance as unknown as {memory?:{usedJSHeapSize:number}}).memory,i=view.renderer.info;
+ const bs=(view as unknown as {biomeScene?:{lastFiller:unknown}}).biomeScene;
+ return {groups,ms:Math.round(times[1]),msAll:times.map(Math.round),heapMB:mem?Math.round(mem.usedJSHeapSize/1048576):null,geometries:i.memory.geometries,textures:i.memory.textures,programs:i.programs?.length,filler:bs?.lastFiller,far:view.camera.far,fog:(view.scene.fog as THREE.FogExp2).density,bands:view.getDrawBands()};
+}

@@ -4,11 +4,13 @@ import {BiomeVegetation,BiomeDressing,resourceTreeForm,BIOME_VEGETATION_RULES,ty
 import type {DressingForm} from './vegetationKit';
 import {peekGeology} from './painterGeology';
 import {BotanicalForest} from './botanicalForest';
+import {FillerForest,type FillerTree,type FillerBlob} from './fillerForest';
+import {DRAW_DISTANCE_RULES,type DrawBands} from '../game/drawDistance';
 import {loadTreeSet,type TreeSet} from './treeSet';
 import type {TreeSite,BaseForm} from './botanicalSpecies';
 /** Read-only adapter contract. Integrator can pass Game directly after the
  * versioned ecology grid is attached to its generated world. */
-export type BiomeSceneGame={chopMarks?:ReadonlySet<number>;world:{size:number;mapgen?:{wind?:{x:number;z:number}}};state:{seed:number;trees:ResourceTree[];buildings:{hp:number;x:number;z:number;w:number;d:number}[]};
+export type BiomeSceneGame={chopMarks?:ReadonlySet<number>;world:{size:number;camps?:{x:number;z:number}[];mapgen?:{wind?:{x:number;z:number}}};state:{seed:number;trees:ResourceTree[];buildings:{hp:number;x:number;z:number;w:number;d:number}[]};
  height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;
  seasonMix:()=>{winter:number;autumn:number;snow:number}};
 export const BIOME_SCENE_RULES={treeRefreshSeconds:.1,dressingRefreshSeconds:.5,dressingCellMetres:6,dressingRadiusMetres:65,
@@ -166,23 +168,49 @@ function toBaseForm(f:string):BaseForm{return (f==='broadleaf'||f==='conifer'||f
  * Construct/dispose on WorldView rebuild; sync at normal render cadence. */
 export class BiomeSceneLayer {
  private grid:EcologicalProvinceGrid;private trees:BiomeVegetation|BotanicalForest;private dressing:BiomeDressing;private treeSet:TreeSet;private canopy=new CanopyCover();
- private treeIn=0;private dressingIn=0;private lastQuality='';
+ private treeIn=0;private dressingIn=0;private lastQuality='';private lastViewKey='';private lastBands:DrawBands|null=null;
  private style:VegetationStyle;
+ /** cosmetic filler forest (painterly botanical set only); render-only, see fillerForest.ts */
+ private filler:FillerForest|null=null;private fillerOut:{trees:FillerTree[];blobs:FillerBlob[]}={trees:[],blobs:[]};private buildingHash=new Map<number,{x:number;z:number;r:number}[]>();private buildingCount=-1;
+ lastFiller:{detailEff:number;farEff:number;trees:number;blobs:number;deferred:number;treeCapped:boolean;blobCapped:boolean}|null=null;
  constructor(scene:THREE.Scene,game:BiomeSceneGame,grid:EcologicalProvinceGrid,style:VegetationStyle='classic',treeSet:TreeSet=loadTreeSet()){
   this.grid=grid;this.style=style;this.treeSet=treeSet;const seed=game.state.seed,profileAt=(x:number,z:number)=>provinceAt(grid,x,z);
   if(style==='painterly'&&treeSet==='botanical'){const w=game.world.mapgen?.wind,wl=w?Math.hypot(w.x,w.z)||1:0;
    this.trees=new BotanicalForest(scene,{seed,siteAt:(x,z)=>treeSiteAt(game,grid,x,z),baseFormAt:(id,x,z)=>{const p=profileAt(x,z);return {base:toBaseForm(resourceTreeForm(id,p,seed)),kind:p.kind};},wind:w?[w.x/wl,w.z/wl]:undefined,
-    nearMetres:BIOME_VEGETATION_RULES.nearMetres,farMetres:BIOME_VEGETATION_RULES.farMetres,lowFarMetres:BIOME_VEGETATION_RULES.lowFarMetres,stumpHeightScale:BIOME_VEGETATION_RULES.stumpHeightScale});}
+    nearMetres:BIOME_VEGETATION_RULES.nearMetres,farMetres:BIOME_VEGETATION_RULES.farMetres,lowFarMetres:BIOME_VEGETATION_RULES.lowFarMetres,stumpHeightScale:BIOME_VEGETATION_RULES.stumpHeightScale});
+   this.filler=new FillerForest({seed,size:game.world.size,height:(x,z)=>game.height(x,z),waterAt:(x,z)=>game.waterAt(x,z),
+    provinceAt:(x,z)=>{const p=provinceAt(grid,x,z);return {kind:p.kind,treeDensityPerHectare:p.treeDensityPerHectare};},
+    soilAt:(x,z)=>{const geo=peekGeology(game.world as never),q=geo?geo.rockAt(x,z):null;return q?Math.max(0,Math.min(1,q.soil*(1-.7*q.scree))):null;},
+    camps:game.world.camps??[],baseFormAt:(id,x,z)=>toBaseForm(resourceTreeForm(id,profileAt(x,z),seed))});}
   else this.trees=new BiomeVegetation(scene,seed,profileAt,1,style);
   this.dressing=new BiomeDressing(scene,style,treeSet);
  }
  setTime(t:number){this.trees.setTime(t);this.dressing.setTime(t);}
  setSun(dir:THREE.Vector3,strength:number,realShadows=false){this.trees.setSun(dir,strength,realShadows);}
- sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number){
-  this.treeIn-=Math.max(0,dt);this.dressingIn-=Math.max(0,dt);const changed=quality!==this.lastQuality;this.lastQuality=quality;
-  let treeReport:ReturnType<BiomeVegetation['sync']>|undefined,dressingCount:number|undefined;
+ /** Hard filter for cosmetic filler: never within `buildingClearMetres` (plus the footprint) of a building, so a settlement that grows over the forest edge never has trees growing through it. */
+ private nearBuilding(game:BiomeSceneGame){
+  if(game.state.buildings.length!==this.buildingCount){this.buildingCount=game.state.buildings.length;this.buildingHash.clear();
+   for(const b of game.state.buildings){if(b.hp<=0)continue;const k=Math.floor(b.x/32)*8192+Math.floor(b.z/32),l=this.buildingHash.get(k),e={x:b.x,z:b.z,r:Math.hypot(b.w||0,b.d||0)/2+DRAW_DISTANCE_RULES.buildingClearMetres};if(l)l.push(e);else this.buildingHash.set(k,[e]);}}
+  return (x:number,z:number)=>{const ix=Math.floor(x/32),iz=Math.floor(z/32);for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const l=this.buildingHash.get((ix+dx)*8192+iz+dz);if(l)for(const e of l)if(Math.hypot(e.x-x,e.z-z)<e.r)return true;}return false;};
+ }
+ /** `view` carries the draw-distance bands and a conservative frustum test; its `key` changes when the camera moved or turned enough to need a fresh far list. `prime` lifts the per-frame
+  * time budget for generating filler chunks (first build after a world loads). Without `view` the original radii apply and no filler is drawn. */
+ sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number,view?:{bands:DrawBands;inView?:(x:number,z:number,r:number)=>boolean;key?:string;prime?:boolean}){
+  this.treeIn-=Math.max(0,dt);this.dressingIn-=Math.max(0,dt);const changed=quality!==this.lastQuality,treeChanged=changed||(view?.bands!==undefined&&view.bands!==this.lastBands)||(view?.key!==undefined&&view.key!==this.lastViewKey);this.lastQuality=quality;this.lastBands=view?.bands??null;this.lastViewKey=view?.key??'';
+  let treeReport:ReturnType<BiomeVegetation['sync']>|undefined,dressingCount:number|undefined,changedAgain=false;
   const context:VegetationContext={quality,camera,known:(x,z)=>game.exploredAt(x,z),marked:id=>game.chopMarks?.has(id)??false,...game.seasonMix()};
-  if(this.treeIn<=0||changed){treeReport=this.trees.sync(game.state.trees,context);this.treeIn=BIOME_SCENE_RULES.treeRefreshSeconds;}
+  if(this.treeIn<=0||treeChanged){
+   const bands=view?.bands;
+   if(bands){const low=quality==='low'?.6:1;context.farMetres=bands.treeFar*low;context.fadeMetres=bands.fadeMetres;context.inView=view.inView;
+    if(this.filler&&bands.fillerFar>0){
+     this.filler.setSimTrees(game.state.trees);
+     const r=this.filler.collect(camera,{detail:bands.fillerDetail*low,far:bands.fillerFar*low,fade:bands.fadeMetres,maxTrees:Math.floor(bands.fillerMaxTrees*(quality==='low'?.5:1)),maxBlobs:Math.floor(bands.fillerMaxBlobs*(quality==='low'?.5:1)),buildMs:view.prime?Infinity:3,inView:view.inView,exclude:this.nearBuilding(game)},this.fillerOut);
+     context.filler={trees:this.fillerOut.trees,blobs:this.fillerOut.blobs,detailEff:r.detailEff,farEff:r.farEff};
+     this.lastFiller={detailEff:r.detailEff,farEff:r.farEff,trees:this.fillerOut.trees.length,blobs:this.fillerOut.blobs.length,deferred:r.deferred,treeCapped:r.treeCapped,blobCapped:r.blobCapped};
+     // chunks still being generated: look again next frame instead of waiting a full refresh
+     if(r.deferred>0)changedAgain=true;
+    }else this.lastFiller=null;}
+   treeReport=this.trees.sync(game.state.trees,context);this.treeIn=changedAgain?.0:BIOME_SCENE_RULES.treeRefreshSeconds;}
   if(this.dressingIn<=0||changed){let floor:{cover:(x:number,z:number)=>number}|undefined;if(this.style==='painterly'&&this.treeSet==='botanical'){this.canopy.update(game.state.trees);floor=this.canopy;}
    const points=biomeDressingCandidates(game,this.grid,camera,quality,this.style,floor);dressingCount=this.dressing.sync(points,context,(x,z)=>dressingGroundAllowed(game,x,z));this.dressingIn=BIOME_SCENE_RULES.dressingRefreshSeconds;}
   return {treeReport,dressingCount};
