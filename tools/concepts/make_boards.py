@@ -69,7 +69,7 @@ def overview():
 def ui_board():
     keys = list(PALETTES)
     cw, ph = 700, 394          # desktop thumb 700x437 (1440x900), phone thumb
-    cell_w = 940; W = 2 * cell_w + 3 * 12; rowh = 520
+    cell_w = 940; W = 2 * cell_w + 3 * 12; rowh = 530
     H = 70 + 3 * rowh
     b = Image.new('RGB', (W, H), BG); dr = ImageDraw.Draw(b)
     dr.text((24, 12), 'Hearth HUD colour schemes: same content, flat matte panels, hard edges, serif or humanist type, text floor 16px, icons 24px+', fill=FG, font=font(22))
@@ -86,8 +86,26 @@ def ui_board():
         sx = x + 10
         for j, col in enumerate((p['panel'], p['panel2'], p['text'], p['accent'], p['accent2'], p['good'], p['bad'])):
             dr.rectangle((sx + j * 36, y + 36 + 424, sx + j * 36 + 30, y + 36 + 424 + 26), fill=col, outline=(90, 86, 80))
-        dr.text((sx + 7 * 36 + 8, y + 36 + 426), p['note'][:90], fill=DIM, font=font(13))
+        dr.text((sx, y + 36 + 456), p['note'][:96], fill=DIM, font=font(13))
     pth = f'{OUT}/ui-palettes-board.png'; b.save(pth); return pth
+
+def pairing(P):
+    cells = [('A  RECOMMENDED: V1 Honey stone and plaster + P1 Honey and charcoal  (summer)', 'pair-A-v1-summer-p1.png'),
+             ('A  same pairing in winter', 'pair-A-v1-winter-p1.png'),
+             ('B  evening alternative: V3 Golden hour + P5 Indigo dusk and amber', 'pair-B-v3-summer-p5.png'),
+             ('C  quiet alternative: V2 Earth tones + P3 Slate and bronze', 'pair-C-v2-summer-p3.png')]
+    cw = 940; W = 2 * cw + 36; ch = 36 + 587 + 14; H = 150 + 2 * ch + 40
+    b = Image.new('RGB', (W, H), BG); dr = ImageDraw.Draw(b)
+    dr.text((24, 12), 'Recommended pairing: scene look + HUD scheme (harness renders, real Hearth HUD over graded real scene)', fill=FG, font=font(24))
+    why = ['Why A: honey key light carries H warmth; plaster and sage greens drop the toy brightness; charcoal flat panels with a single honey accent keep the controls minimal like H.',
+           'No wood anywhere: panels are matte flat fills, 4px corners, Lora headings + Inter body, text >= 16px, icons >= 24px, text contrast 13.7:1.',
+           'B is the moodier time-of-day set; C is the safest if honey UI accents feel too yellow against the plaster. Light-panel schemes (P2, P4, P6) are on the palette board.']
+    for i, t in enumerate(why): dr.text((24, 56 + i * 26), t, fill=DIM if i else FG, font=font(16))
+    for i, (t, f) in enumerate(cells):
+        x, y = 12 + (i % 2) * (cw + 12), 150 + (i // 2) * ch
+        dr.text((x + 4, y), t, fill=FG, font=font(18)); b.paste(fit(Image.open(f'{U}/../pair/{f}').convert('RGB'), cw - 8), (x + 4, y + 30))
+    dr.text((24, H - 26), HONEST, fill=DIM, font=font(14))
+    pth = f'{OUT}/recommended-pairing.png'; b.save(pth); return pth
 
 if __name__ == '__main__':
     what = sys.argv[4] if len(sys.argv) > 4 else 'all'
@@ -96,4 +114,6 @@ if __name__ == '__main__':
         outs += [variant_board(v) for v in H_VARIANTS] + [overview()]
     if what in ('all', 'ui'):
         outs.append(ui_board())
+    if what in ('all', 'pair'):
+        outs.append(pairing(None))
     print('\n'.join(outs))
