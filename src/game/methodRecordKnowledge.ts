@@ -8,6 +8,7 @@ import {METHOD_RECORD_RULES as R,METHOD_RECORD_METHODS,methodRecordTitle,type Me
 import {BUILDINGS} from './constants';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent} from './settlement';
+import {methodRecordTradeOffers,beginMethodRecordTrade,cancelMethodRecordTrade} from './methodRecordTrade';
 const free=(g:Game,u:Unit)=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.prisoner&&!u.militia&&!isDependent(g,u)&&!u.emergency&&!u.recalled&&!u.jobLock&&!u.boat&&!hasTaskCommitment(u)&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&['idle','hold','gather'].includes(u.order);
 const supported=(recipe:string):recipe is MethodRecipe=>Object.hasOwn(METHOD_RECORD_METHODS,recipe);
 function proposal(g:Game,kind:'author'|'study'|'replicate',recordId?:number,authorMethod:MethodRecipe='twistCordage'){
@@ -28,10 +29,12 @@ function proposal(g:Game,kind:'author'|'study'|'replicate',recordId?:number,auth
 }
 /** Acquisition is custody evidence, never a demonstrated-method receipt. No foreign location enters the read model. */
 function acquisitionEvidence(r:ReturnType<typeof methodRecords>[number]):KnowledgeProvenance[]{
- return(r.acquisitions||[]).filter(a=>a.toTeam===0).map(a=>({kind:a.kind==='recovered'?'recorded':a.kind,sourceTeam:a.fromTeam,at:a.at,contributorIds:a.by===undefined?undefined:[a.by],summary:`${a.kind==='captured'?'Captured':a.kind==='inherited'?'Lawfully inherited':'Recovered'} this same physical record${a.returnedAt===undefined?'; return it to an owned cache before study':'; physically returned to an owned cache'}. Custody alone does not establish its method.`}));
+ return(r.acquisitions||[]).filter(a=>a.toTeam===0).map(a=>({kind:a.kind==='recovered'?'recorded':a.kind,sourceTeam:a.fromTeam,at:a.at,contributorIds:a.by===undefined?undefined:[a.by],summary:`${a.kind==='captured'?'Captured':a.kind==='inherited'?'Lawfully inherited':a.kind==='traded'?`Bought for ${a.payment!.amount} logs`:'Recovered'} this same physical record${a.returnedAt===undefined?'; return it to an owned cache before study':'; physically returned to an owned cache'}. Custody alone does not establish its method.`}));
 }
 export function methodRecordKnowledgeTopics(g:Game):KnowledgeTopic[]{
  const assets=methodRecords(g).filter(r=>r.team===0),topics:KnowledgeTopic[]=[],qualified=new Set<MethodRecipe>();
+ for(const offer of methodRecordTradeOffers(g)){const title=methodRecordTitle(offer.recipe);topics.push({id:`records:offer:${offer.recordId}`,title:`${title} record · ${offer.sellerName}`,knowledgeState:'partly',provenance:[{kind:'observed',sourceTeam:offer.sellerTeam,sourceName:offer.sellerName,summary:`Visible physical record by ${offer.makerName}`}],stage:'observation',need:'A peaceful artisan offers the actual practical example.',observation:'Currently visible at its real cache.',experiment:'Carry the agreed logs to the seller, then bring this same record home.',result:'Purchase does not establish the technique.',adoption:'Paid study and successful paid replication are still required.',metrics:{recordId:offer.recordId,priceWood:offer.priceWood},actions:[{id:`records:buy:${offer.recordId}`,label:`Buy record · ${offer.priceWood} logs`,blockedReason:null}],limitation:'Only a presently seen peaceful record is offered. Payment and record both travel physically.'});}
+ for(const u of g.state.units.filter(u=>u.team===0&&u.hp>0&&u.methodRecordTrade)){const w=u.methodRecordTrade!;topics.push({id:`records:purchase:${u.id}`,title:`Record purchase · ${u.name||'Resident'}`,knowledgeState:'partly',provenance:[],stage:'experiment',need:'Complete the physical exchange and return.',observation:w.phase==='loading'?'Loading payment at home':w.phase==='outbound'?'Carrying payment to the seller':'Bringing the purchased record home',experiment:'The same person and physical goods remain assigned.',result:'No technique is granted by the purchase.',adoption:'Study and replicate after return.',metrics:{recordId:w.recordId,priceWood:w.priceWood},actions:[{id:`records:cancel-purchase:${u.id}`,label:'Cancel purchase',blockedReason:null}],limitation:'Cancellation retains actual carried goods; there is no remote refund.'});}
  for(const u of g.state.units)if(u.team===0&&u.hp>0)for(const source of methodRecordSources(g,u))qualified.add(source.recipe);
  // Only demonstrated makers need author cards. Owned records have their own
  // physical-asset cards below; an empty camp keeps the single legacy prompt.
@@ -49,6 +52,8 @@ export function methodRecordKnowledgeTopics(g:Game):KnowledgeTopic[]{
 }
 export function runMethodRecordAction(g:Game,id:string):KnowledgeActionResult{
  const[,kind,arg]=id.split(':');
+ if(kind==='buy')return beginMethodRecordTrade(g,Number(arg));
+ if(kind==='cancel-purchase'){const u=g.state.units.find(u=>u.id===Number(arg)&&u.team===0&&u.hp>0),accepted=!!u&&cancelMethodRecordTrade(g,u);return{accepted,reason:accepted?'Purchase cancelled; actual carried goods return physically':'No active purchase for this resident'};}
  if(kind==='author'||kind==='study'||kind==='replicate'){
   const method=kind==='author'?(arg??'twistCordage'):'twistCordage';
   if(!supported(method))return{accepted:false,reason:'That demonstrated method cannot be recorded'};
