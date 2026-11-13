@@ -129,7 +129,7 @@ function mattock(c:Ctx,at:V3,rot:V3,L=1.0){
 export function sapperTools(c:Ctx){
  const b=c.b;
  // a compact kit lying where the gallery will start: tools along one side, spoil basket and rope on the other, a few props. About 1.3 m by 0.9 m.
- mattock(c,[-.3,.06,.28],[Math.PI/2,.12,0]);mattock(c,[-.28,.07,.1],[Math.PI/2-.03,-.1,0],1.05);if(c.lod<2)mattock(c,[-.3,.06,-.08],[Math.PI/2,.2,0],.95);
+ mattock(c,[-.3,.06,.28],[Math.PI/2,.12,0]);mattock(c,[-.28,.07,.1],[Math.PI/2-.03,-.1,0],1.05);if(c.lod===0)mattock(c,[-.3,.06,-.08],[Math.PI/2,.2,0],.95);
  // a spade: shaft and a broad blade
  b.push([.25,.07,.32],[Math.PI/2,-.1,0]);log(c,[0,-.5,0],[0,.3,0],.018,.015,c.wood2(.9));b.box([.04,.035,.045],[0,.33,0],c.wood2(.1));
  b.loft([{c:[0,.3,0],w:.035,h:.018},{c:[0,.12,0],w:.18,h:.011},{c:[0,-.08,0],w:.17,h:.011},{c:[0,-.26,0],w:.03,h:.009}],'y',c.era>=2?c.paint(c.metal,{len:.5}):c.wood2(.5),{shape:'rect'});b.pop();
