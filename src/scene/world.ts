@@ -95,6 +95,7 @@ import {trailRibbons} from "@/game/trailRibbons";
 import {smoothRivers} from "@/game/channelSmoothness";
 import {buildingQuarterTurns,turnedFootprint} from "@/game/footprints";
 import {siteRecord} from "@/game/slopeTiers";
+import {foundationBoxes} from "@/game/siteFoundation";
 import {carvedVariantFor,variantSpec} from './buildingStyleMap';
 import {buildCarvedMesh} from './carvedMesh';
 import {buildingGroundSupports} from './buildingGrounding';
@@ -2427,9 +2428,18 @@ export class WorldView {
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const carvedVariant=carved?carvedVariantFor(carved.input):null;
     const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'')+(carvedVariant?`|${carvedVariant.key}|${Math.round(carved!.y*20)}|${Math.round(x*2)},${Math.round(z*2)}|${carved!.fake.site?.foundation??''}`:'');
-    if (this.ghost.userData.key === key) return;
+    const fieldGame=type==='farm'?this.ghostGame:null,fieldSa=fieldGame&&fieldGame.state.terrainModel==='v2'?fieldGame.siteAssessment('farm',x,z,size?.w??BUILDINGS.farm.w,size?.d??BUILDINGS.farm.d):null;
+    const fieldKey=fieldSa?`|f${fieldSa.ok}${fieldSa.terrace?.k}${fieldSa.terrace?.n}${Math.round(x*2)},${Math.round(z*2)}`:'';
+    if (this.ghost.userData.key === key+fieldKey) return;
     this.clearGhost();
-    this.ghost.userData.key = key;
+    this.ghost.userData.key = key+fieldKey;
+    // terrain model v2: the terrace strips and walls the field will be built with, tinted like the other slope previews
+    if(fieldGame&&fieldSa?.ok&&fieldSa.terrace&&fieldSa.terrace.k!=='none'){
+      const tint=new THREE.Color(fieldSa.tier==='moderate'?'#f0b030':'#f08030'),w=size?.w??BUILDINGS.farm.w,d=size?.d??BUILDINGS.farm.d;
+      for(const sp of foundationBoxes('strips',{x,z,w,d},{height:(px,pz)=>fieldGame.height(px,pz),level:fieldGame.height(x,z),downhill:fieldSa.downhill,terrace:{n:fieldSa.terrace.n,kind:fieldSa.terrace.k}})){
+        const m=new THREE.Mesh(this.ghostBox,new THREE.MeshBasicMaterial({color:tint,transparent:true,opacity:.4,depthWrite:false}));m.position.set(sp.x,sp.y,sp.z);m.rotation.y=sp.yaw;m.scale.set(sp.length,sp.height,sp.width);this.ghostFoot.add(m);
+      }
+    }
     if(carved&&carvedVariant){this.buildCarvedGhost(carved,carvedVariant,ok);return;}
     const meshes = this.bldMeshes.get(type);
     if (!meshes) return;

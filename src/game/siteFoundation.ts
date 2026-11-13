@@ -1,10 +1,12 @@
 /** Foundation geometry for the graded slope model: pure boxes (no three.js) shared by the renderer, the placement ghost and the preview sheets.
  *  Every box is sunk to the real terrain under it, so no corner floats; the floor `level` is chosen by foundationLevel() so doors sit at grade. */
 import type {FoundationKind} from './slopeTiers';
-export type FoundationBoxKind='kerb'|'wall'|'apron'|'post'|'beam'|'portal'|'footing'|'strip-wall';
+import {terraceFrame,chordAt,TERRACE_RULES,type TerraceKind} from './terraceFarming';
+export type FoundationBoxKind='kerb'|'wall'|'apron'|'post'|'beam'|'portal'|'footing'|'strip-wall'|'strip-bund'|'strip-tread'|'strip-tread-alt'|'channel';
 export type FoundationBox=Readonly<{x:number;z:number;y:number;length:number;width:number;height:number;yaw:number;kind:FoundationBoxKind}>;
 export type FoundationInput={x:number;z:number;w:number;d:number;/** yaw and scale of the building's own frame (team style) */yaw?:number;sx?:number;sz?:number};
-export type FoundationOptions={height:(x:number,z:number)=>number;level:number;downhill:{x:number;z:number};burial?:number;fall?:number};
+/** `terrace` (terrain model v2 fields): strips, kind. Without it, 'strips' keeps the earlier low lip walls. */
+export type FoundationOptions={height:(x:number,z:number)=>number;level:number;downhill:{x:number;z:number};burial?:number;fall?:number;terrace?:{n:number;kind:TerraceKind|'none'}};
 export const FOUNDATION_RULES={segmentMetres:.9,minimumGapMetres:.12,kerbThickness:.3,wallThickness:.55,postSize:.22,postSpacing:2.7,beamHeight:.2,portalHeight:1.7} as const;
 
 /** Floor level for a foundation: dugouts take the ground at the door so the door is at grade; everything else sits on the highest contact. */
@@ -60,6 +62,25 @@ export function foundationBoxes(kind:FoundationKind|undefined,b:FoundationInput,
   for(const[sxl,szl]of[[-1,-1],[1,-1],[1,1],[-1,1]]){const p=W(sxl*(hw-.3),szl*(hd-.3)),lo=ground(p.x,p.z,.3)-burial;if(top-lo>.05)out.push({x:p.x,z:p.z,y:(top+lo)/2,length:.6,width:.6,height:top-lo,yaw,kind:'footing'});}
  }
  else if(kind==='strips'){
+  if(o.terrace){
+   if(o.terrace.kind==='none')return out;
+   const K=TERRACE_RULES.kinds[o.terrace.kind],plot={x:b.x,z:b.z,w:b.w,d:b.d},frame=terraceFrame(o.height,plot,o.terrace.n,o.downhill),tn=frame.tangent,yawT=Math.atan2(-tn.z,tn.x),seg=1.6,drained=o.terrace.kind==='andean'||o.terrace.kind==='stair';
+   const at=(t:number,s:number)=>({x:plot.x+frame.dir.x*t+tn.x*s,z:plot.z+frame.dir.z*t+tn.z*s});
+   for(const st of frame.strips){
+    const tm=(st.t0+st.t1)/2,ch=chordAt(plot,frame.dir,tm);if(!ch)continue;const len=ch.s1-ch.s0,k=Math.max(1,Math.ceil(len/seg)),top=st.level+.03,tread=st.t1-st.t0;
+    for(let j=0;j<k;j++){
+     const sa=ch.s0+len*j/k,sb=ch.s0+len*(j+1)/k,sm=(sa+sb)/2,c=at(tm,sm);let lo=Infinity;
+     for(const t of[st.t0,tm,st.t1])for(const s of[sa,sm,sb]){const q=at(t,s);lo=Math.min(lo,o.height(q.x,q.z));}
+     if(top-lo>.05)out.push({x:c.x,z:c.z,y:(top+lo-burial)/2,length:len/k+.01,width:tread,height:top-lo+burial,yaw:yawT,kind:st.i%2?'strip-tread-alt':'strip-tread'});
+     // the retaining wall: a facing on the downhill edge of the strip, from the ground below up to the tread
+     const w1=at(st.t1-K.wallThick/2,sm);let wlo=Infinity;for(const s of[sa,sm,sb]){const q=at(st.t1+.1,s);wlo=Math.min(wlo,o.height(q.x,q.z));}
+     if(top-wlo>.12)out.push({x:w1.x,z:w1.z,y:(top+wlo-burial)/2+.01,length:len/k+.01,width:K.wallThick,height:top-wlo+burial,yaw:yawT,kind:o.terrace.kind==='bund'?'strip-bund':'strip-wall'});
+    }
+    // irrigation channel running down the terraces at the edge of each strip, falling from tread to tread
+    if(drained){const c=at(tm,ch.s1-.35);out.push({x:c.x,z:c.z,y:top+.06,length:tread,width:.26,height:.1,yaw:Math.atan2(-frame.dir.z,frame.dir.x),kind:'channel'});}
+   }
+   return out;
+  }
   const dir=o.downhill,extent=Math.abs(dir.x)*b.w+Math.abs(dir.z)*b.d,across=Math.abs(dir.z)*b.w+Math.abs(dir.x)*b.d,n=Math.max(1,Math.ceil((o.fall??extent*.3)/.7)),tan={x:-dir.z,z:dir.x};
   if((o.fall??0)>1.8)for(let i=1;i<=n;i++){const t=-extent/2+extent*i/(n+1),cx=b.x+dir.x*t,cz=b.z+dir.z*t,g=o.height(cx,cz);
    out.push({x:cx,z:cz,y:g+.08,length:across*.98,width:.4,height:.7,yaw:Math.atan2(-tan.z,tan.x),kind:'strip-wall'});}

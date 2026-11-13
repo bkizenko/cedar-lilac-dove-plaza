@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {surveyFieldTopography} from '../game/plotTopography';
+import {terraceFrame,terraceHeightAt,fieldDownhill,type TerraceFrame} from '../game/terraceFarming';
 import type {FieldSurface} from './fieldSurface';
 import {painterCropGeometry,painterCropColor,painterCropScale} from './painterCrops';
 import {addPainterSway,painterSway} from './painterVegetationMaterial';
@@ -10,7 +11,8 @@ import {boundaryGeometry,BOUNDARY_COLOURS,BOUNDARY_CAPACITY} from './fieldBounda
 export type FieldCrop='grain'|'pulses'|'tubers';
 export const CROP_ART_RULES={maxPlantInstances:8192,maximumPlantsPerField:512,edgeMarginMetres:.45,maxDistanceMetres:320,
  rows:{grain:{rowMetres:.95,plantMetres:.82},pulses:{rowMetres:1.3,plantMetres:1.15},tubers:{rowMetres:1.45,plantMetres:1.3}}} as const;
-export type RenderField={id:number;type:string;x:number;z:number;w:number;d:number;hp:number;team:number;build:number;plannedCost?:unknown;cropType?:FieldCrop;fallowYear?:number;fertility?:number;crop?:{kind?:FieldCrop;year?:number;water?:number;planted:number;tended:number;ripened:boolean;remaining:number}};
+/** `site.terrace` (terrain model v2): the field stands on level terrace strips, so crops sit on the treads, not on the hillside between them. */
+export type RenderField={site?:{foundation?:string;terrace?:{k:string;n:number}};id:number;type:string;x:number;z:number;w:number;d:number;hp:number;team:number;build:number;plannedCost?:unknown;cropType?:FieldCrop;fallowYear?:number;fertility?:number;crop?:{kind?:FieldCrop;year?:number;water?:number;planted:number;tended:number;ripened:boolean;remaining:number}};
 type FieldGround={world:{heights:Float32Array};state:{time:number;buildings:RenderField[]};height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;navigationRevision?:()=>number};
 export function fieldCropKind(field:RenderField):FieldCrop{return field.crop?.kind??field.cropType??'grain';}
 export function fieldCropGrowth(field:RenderField){const c=field.crop;return c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);}
@@ -67,6 +69,14 @@ export class ContourFields {
  private style:'classic'|'painterly';private scene:THREE.Scene;private surface:FieldSurface;private meshes=new Map<FieldCrop,THREE.InstancedMesh>();
  private cache=new WeakMap<RenderField,{key:string;heights:Float32Array;revision:number;angle:number;origin:{x:number;z:number};grade:number;sites:{x:number;z:number}[]}>();
  private surveys=new WeakMap<RenderField,{key:string;heights:Float32Array;revision:number;survey:Survey}>();
+ private terraces=new WeakMap<RenderField,{key:string;heights:Float32Array;revision:number;frame:TerraceFrame}>();
+ /** Level strip frame of a terraced field (null for ordinary fields); cached while the ground is unchanged. */
+ terraceOf(ground:FieldGround,field:RenderField):TerraceFrame|null{
+  const t=field.site?.terrace;if(!t||t.k==='none'||field.site?.foundation!=='strips')return null;
+  const key=`${field.x}/${field.z}/${field.w}/${field.d}/${t.n}`,revision=ground.navigationRevision?.()??0,old=this.terraces.get(field);
+  if(old?.key===key&&old.heights===ground.world.heights&&old.revision===revision)return old.frame;
+  const plot={x:field.x,z:field.z,w:field.w,d:field.d},frame=terraceFrame((x,z)=>ground.height(x,z),plot,t.n,fieldDownhill((x,z)=>ground.height(x,z),plot));this.terraces.set(field,{key,heights:ground.world.heights,revision,frame});return frame;
+ }
  private bounds=new Map<BoundaryKind,THREE.InstancedMesh>();private boundSites=new WeakMap<RenderField,{key:string;sites:BoundarySite[]}>();
  private hoodCache:{buildings:RenderField[];count:number;at:number;map:Map<number,FieldGroupInfo>;byId:Map<number,RenderField>}|null=null;
  private position=new THREE.Vector3();private scale=new THREE.Vector3();private rotation=new THREE.Quaternion();private matrix=new THREE.Matrix4();private color=new THREE.Color();private up=new THREE.Vector3(0,1,0);private lastSurfaceRevision=-1;
@@ -116,8 +126,8 @@ export class ContourFields {
    const planted=field.crop?.planted??0,growth=painter?(stage==='sprouting'?.06+.2*planted:stage==='stubble'?.05:stage==='ripe'?1:fieldCropGrowth(field)):fieldCropGrowth(field);
    this.rotation.setFromAxisAngle(this.up,-plan.angle);
    this.color.set(kind==='grain'?(field.crop?.ripened?'#e2c15a':'#a8c17c'):kind==='pulses'?(field.crop?.ripened?'#bac183':'#9aba86'):'#91b887');
-   const ps=painterCropScale(growth),crop=painter&&stage==='stubble'?{...field.crop!,ripened:true,remaining:0}:field.crop;
-   for(const site of plan.sites){if(total>=CROP_ART_RULES.maxPlantInstances)break;this.position.set(site.x,ground.height(site.x,site.z),site.z);if(painter)this.scale.set(ps.xz,ps.y,ps.xz);else this.scale.set(1,Math.max(.025,growth),1);this.matrix.compose(this.position,this.rotation,this.scale);mesh.setMatrixAt(counts[kind],this.matrix);
+   const terr=this.terraceOf(ground,field),plot=terr?{x:field.x,z:field.z,w:field.w,d:field.d}:null,ps=painterCropScale(growth),crop=painter&&stage==='stubble'?{...field.crop!,ripened:true,remaining:0}:field.crop;
+   for(const site of plan.sites){if(total>=CROP_ART_RULES.maxPlantInstances)break;this.position.set(site.x,terr&&plot?terraceHeightAt((x,z)=>ground.height(x,z),plot,terr,site.x,site.z)+.03:ground.height(site.x,site.z),site.z);if(painter)this.scale.set(ps.xz,ps.y,ps.xz);else this.scale.set(1,Math.max(.025,growth),1);this.matrix.compose(this.position,this.rotation,this.scale);mesh.setMatrixAt(counts[kind],this.matrix);
     if(painter){const j=Math.abs(Math.sin(site.x*12.9898+site.z*78.233)*43758.5453)%1;painterCropColor(kind,crop,growth,j,this.color);}
     mesh.setColorAt(counts[kind]++,this.color);total++;}
   }
