@@ -49,7 +49,7 @@ async function sheet(file, title, rows, o = {}) {
   const cols = o.cols ?? 5, tw = o.tw ?? 260, th = o.th ?? 300, labW = 120, headH = 26, titleH = 34;
   const tiles = rows.flatMap(r => r.reqs.map(q => ({ req: q.req, tiltDeg: q.tilt ?? r.tilt ?? 0, az: q.az ?? o.az, el: q.el ?? o.el, ground: r.ground, zoom: q.zoom ?? r.zoom ?? o.zoom, focus: q.focus ?? r.focus, fr: q.fr ?? r.fr })));
   const nr = rows.length, spec = { width: tw * cols, height: th * nr, cols, tiles, bg: o.bg };
-  const r = await shoot(path.basename(file, '.png'), spec);
+  const r = await shoot(path.basename(file, '.png'), { ...spec, nearOff: args.includes('--near-off') });
   const comp = [{ input: svg(title, tw * cols + labW, titleH, 17, '#fff'), top: 0, left: 0 }];
   (o.heads ?? ERAS).forEach((h, i) => comp.push({ input: svg(h, tw, headH, 13, '#ddd', '#262626', 'middle'), top: titleH, left: labW + i * tw }));
   rows.forEach((row, i) => comp.push({ input: svg(row.label, labW, th, 13, '#ddd', '#262626'), top: titleH + headH + i * th, left: 0 }));
@@ -103,9 +103,21 @@ async function lodPair() {
   console.log(JSON.stringify(Object.fromEntries(ids.map(i => [i, (stats[i] || []).map(s => s.tris)]))));
   return info;
 }
+/** 20 items at the near tier, worn (condition .6), one image; run with --near-off for the before image */
+async function nearSheet() {
+  const ids = (idsOpt ? idsOpt.split(',') : ['spear', 'handAxe', 'bladeSword', 'shield', 'bow', 'dagger', 'club', 'sickle', 'hoe', 'spade', 'mallet', 'pickaxe', 'fellingAxe', 'quiver', 'standard', 'staff', 'flail', 'skinningKnife', 'warPick', 'hammer']).filter(i => DEFS.some(d => d.id === i));
+  const off = args.includes('--near-off'), rows = [];
+  for (let i = 0; i < ids.length; i += 5) rows.push(...[ids.slice(i, i + 5)]);
+  const flat = ids.map(id => { const d = DEFS.find(x => x.id === id); return { label: d.name, tilt: tiltOf(d, true), ground: d.frame === 'world', reqs: [R(id, 2, { lod: 0, condition: .6 })] }; });
+  const tiles = flat.map(r => ({ req: r.reqs[0].req, tiltDeg: r.tilt, ground: r.ground, zoom: 1.15 }));
+  const r = await shoot('near-items', { width: 360 * 5, height: 330 * Math.ceil(ids.length / 5), cols: 5, tiles, nearOff: off });
+  fs.copyFileSync(r.out, path.join(outDir, `items-near-${off ? 'before' : 'after'}.png`));
+  console.log(JSON.stringify(r.info.stats.map(s => [s.id, s.tris])));
+}
 const targets = pos.length ? pos : ['all'];
 for (const t of targets) {
-  if (t === 'wear') await wear();
+  if (t === 'near') await nearSheet();
+  else if (t === 'wear') await wear();
   else if (t === 'detail') await detail();
   else if (t === 'civs') await civs();
   else if (t === 'lod') await lodPair();

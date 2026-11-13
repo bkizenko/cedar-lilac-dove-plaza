@@ -19,7 +19,7 @@ const findThree = () => {
   return hit;
 };
 const args = process.argv.slice(2), outDir = path.resolve((args.find(a => a.startsWith('--out=')) || '--out=' + path.join(root, 'docs/renders/people2')).slice(6));
-const rig1 = args.includes('--rig1'), pos = args.filter(a => !a.startsWith('--'));
+const rig1 = args.includes('--rig1'), nearOff = args.includes('--near-off'), pos = args.filter(a => !a.startsWith('--'));
 fs.mkdirSync(outDir, { recursive: true });
 const esbuild = need('esbuild'), { chromium } = need('playwright'), sharp = need('sharp');
 const three = findThree(), tmp = path.join(outDir, '.tmp'); fs.mkdirSync(tmp, { recursive: true });
@@ -41,7 +41,7 @@ async function shoot(name, spec, dir = tmp) {
   page.on('console', m => { if (m.type() === 'error') console.error('[page]', m.text()); });
   page.on('pageerror', e => console.error('[pageerror]', e.message));
   await page.goto(pathToFileURL(html).href);
-  const info = await page.evaluate(s => window.renderPeople2(s), { ...spec, rig1 });
+  const info = await page.evaluate(s => window.renderPeople2(s), { ...spec, rig1, nearOff });
   const out = path.join(dir, name + '.png');
   await page.locator('canvas').screenshot({ path: out });
   await page.close();
@@ -148,11 +148,21 @@ async function toolsSheet() {
   }
   await stack(path.join(outDir, 'tools.png'), parts);
 }
+// near-detail sheet: 3 civs x 4 roles at close range (faces, hands, feet, cloth); run once with --near-off for the before image
+async function nearSheet() {
+  const civs = (process.env.NEAR_CIVS || 'civ:skoldar,civ:hanrei,civ:aureline').split(',').filter(k => ALL.includes(k));
+  for (const skin of civs) {
+    const people = [['worker', {}], ['worker', { role: 'farmer' }], ['spearman', {}], ['leader', { cls: 'leader' }]].map(([t, o], i) => P(skin, t, (i - 1.5) * 1.1, 0, { ...o, id: 410 + i * 13, facing: .35 }, 'summer', t === 'spearman' ? {} : {}));
+    const r = await shoot(`near-${skin.replace(':', '-')}-${nearOff ? 'before' : 'after'}`, { width: 1500, height: 760, season: 'summer', era: 3, seconds: .5, cam: { pos: [0.4, 1.35, 4.3], target: [0, 1.0, 0], fov: 30 }, people }, outDir);
+    stats['near-' + skin] = r.info;
+  }
+}
 const want = pos.length ? pos : ['all'];
 if (want[0] === 'civ') for (const s of want.slice(1)) await civSheet(s);
 else {
   const all = want.includes('all');
   if (all || want.includes('civs')) for (const s of ALL) await civSheet(s);
+  if (want.includes('near')) await nearSheet();
   if (want.includes('hands')) await handsSheet();
   if (want.includes('tools')) await toolsSheet();
   if (all || want.includes('roles')) await rolesSheet();
