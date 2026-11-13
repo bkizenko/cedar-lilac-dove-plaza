@@ -1295,3 +1295,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 12:10 ET Claude(PM): landed none (integration = main 99c6699f, no agent branch ahead) / throughput Claude 27/h, Codex 0 (idle since ~08:00, reassigned), Grok 0 (out); sweep 134 tests 0 fail / blocked: none
 12:20 ET Claude: shipped lane A: fixed diplomatic-voice owner-read test (helper only: lazy rulers init + paused pin; owner read was correct; rulers+voice 69/69, no src change so tsc nil) (8d8194e8, on integration) / now on AUD-SOC-TRADE-HOLDER-FIELDS (holder contract exists, wiring next) / blocked: none
+12:28 ET Claude: shipped lane B: attention inbox card (claims against/by us, wards due, hostile houses, no heir/regency, unrest, mourning; worst first, tap centres camera; Classic + Hearth; council-ui new test passes, 6 baseline lucide-react fails, tsc nil on new files) (b7b33f3d) / now on AUD-UI-ELDER-COUNSEL-LINE then WINTER-FOOD-DAYS / blocked: none
