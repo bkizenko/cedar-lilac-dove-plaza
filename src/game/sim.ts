@@ -178,6 +178,8 @@ import {wearTrail,pathPace,fadeTrails} from "./trails";
 import {traceStep,tickRouteWear} from "./routeWear";
 import {tickWaystations} from "./waystations";
 import {tickWonders} from "./wonderFounding";
+import {wonderDefenceFactor} from "./wonderEffects";
+import {lootRuins} from "./ruinsWorld";
 import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
@@ -3035,7 +3037,7 @@ export class Game {
       this.banner(u.workReason,7);this.onSfx('drop');
       return true;
     }
-    return false;
+    return lootRuins(this,u);
   }
 
   exploreAI(u: Unit, dt: number) {
@@ -4964,6 +4966,7 @@ export class Game {
     if(target.kind==='building'&&(intent==='capture'||(intent==='occupy'||intent==='loot')&&!['palisade','stonewall','gate','watchtower','keep'].includes(target.type)))return;
     if(source&&target.kind==='unit'&&!missionMayTargetCivilian(this,source,target))return;
     if(target.team===0&&attackerTeam!==0)dmg*=difficulty(this).damage;
+    if(this.state.wonders?.length)dmg*=wonderDefenceFactor(this.state,target.team,target.x,target.z);
     if(target.kind==='unit')dmg=armorCombatDamage(this,target,dmg);
     if(target.kind==='unit'&&attackerTeam===0&&isRivalTeam(target.team)&&source?.contactAttackTargetId!==target.id&&dmg>=target.hp&&acceptPrisonerSurrender(this,target,attackerTeam).accepted)return;
     if(attackerTeam===0&&target.team!==3)this.makeHostile(target.team);

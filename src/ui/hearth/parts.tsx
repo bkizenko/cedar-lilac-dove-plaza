@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {SkillStrip} from './skillsCard';
-import {Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound} from 'lucide-react';
+import {Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import {MusicChip} from './MusicControls';
 import {FoldHandle,FoldMin,useFold} from './fold';
@@ -76,13 +76,14 @@ export function Rail({hud,engine,workOpen,onWork}:{hud:HudSnapshot;engine:Engine
 }
 
 /* ---------- dock ---------- */
-export type DockKey='build'|'village'|'ages'|'council'|'map';
+export type DockKey='build'|'village'|'ages'|'council'|'wonders'|'map';
 export function Dock({active,onPick,onHome,hasMap,alerts}:{active:DockKey|null;onPick:(k:DockKey)=>void;onHome:()=>void;hasMap:boolean;alerts:Partial<Record<DockKey,number>>}){
  const items:{k:DockKey;label:string;icon:ReactNode;tip:string}[]=[
   {k:'build',label:'Build',icon:<Hammer size={30}/>,tip:'Place buildings and fields'},
   {k:'village',label:'Village',icon:<Users size={30}/>,tip:'Stores, work, food, craft, camp (L)'},
   {k:'ages',label:'Ages',icon:<BookOpen size={30}/>,tip:'Knowledge and the next age'},
   {k:'council',label:'Council',icon:<Crown size={30}/>,tip:'Ruler, house, neighbours'},
+  {k:'wonders',label:'Wonders',icon:<Landmark size={30}/>,tip:'Great works, suggestions and ruins'},
  ];
  const f=useFold('dock');
  if(!f.showPanel)return <FoldHandle f={f} icon={<LayoutGrid size={24}/>}/>;

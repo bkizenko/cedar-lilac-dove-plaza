@@ -613,6 +613,8 @@ export type GameState = {
   skins?: import("./skinState").SkinsState;
   /** Wonders standing or rising (src/game/wonderRecords.ts); drawn through the owner's CivSkin. Absent in old saves. */
   wonders?: import("./wonderRecords").WonderRecord[];
+  /** Ruins and ancient sites (src/game/ruinsWorld.ts); absent in old saves, which keep only the legacy cairns. */
+  ruins?: import("./ruinsWorld").RuinsState;
   tradeReports?: {team:number; time:number; offers:TradeDeal[]; observation?: {populationLow:number; populationHigh:number; buildings:number; stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>}}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
