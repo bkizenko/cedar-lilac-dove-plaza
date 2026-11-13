@@ -82,8 +82,9 @@ export function drawDistanceBudget(level:DrawDistance){
 /** One step less far; Low is the floor. */
 export function easeDrawDistance(level:DrawDistance):DrawDistance{const i=DRAW_DISTANCE_LEVELS.indexOf(level);return DRAW_DISTANCE_LEVELS[Math.max(0,i-1)];}
 export const ADAPTIVE_RULES={
- /** mean frame time (ms) above this for `overSeconds` seconds eases the draw distance one level (about 38 fps: above the Medium p95 budget of 22 ms with margin) */
- budgetMs:26,overSeconds:5,
+ /** mean frame time (ms) above this for `overSeconds` seconds eases the draw distance one level. 34 ms is just under 30 fps: the Low floor of docs/parallel/handoffs/claude-8gb-budget.md (33 ms),
+  * so a display or power mode that caps at 30 Hz does not trigger it, while a machine that cannot hold 30 fps does, well before the graphics-quality tuner (18 fps) acts. */
+ budgetMs:34,overSeconds:5,
  /** frame gaps longer than this are hitches or a hidden tab, not sustained load */
  hitchMs:250,
  /** after an easing, wait this long before judging again so the new level settles */
