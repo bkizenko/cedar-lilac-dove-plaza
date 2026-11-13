@@ -1252,6 +1252,7 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
   Claude keeps: visuals, mapgen/geology, UI, wonders+ruins, skills/decay model, world-scale renderer path, society/ruler UI. If you need a hook in those, post a board line, do not edit.
   blocked: none
 
+09:25 ET Claude: shipped per-person skill model + village specialisation (5fdf038c, 3923294a; skills.ts, skillRuntime.ts, SkillStrip/VillageSkillsCard, docs/SKILLS_MODEL.md, tests 17/17, renders docs/renders/skills/) / now on merging to main / blocked: none
 09:30 ET Claude: shipped natural gait, 9 load-carry styles with real log/basket/sack geometry, and the dark-head fix (dark veilwrap crown lifted, dark hair/beard lifted; close-up docs/renders/carry/headsclose-v2.png) (SHA in commit below) / now on final render review (rig1 carry sheets bundleBack, headLoad, sackBack, poleRear and heads-rig1 not rendered) / blocked: none
 09:10 ET claude: shipped era-true voice layer (vocab.ts, eraText at banner, docs/LANGUAGE_AUDIT.md) and the First Contact ledger dialog with genome-etched portrait, before/after renders in docs/renders/first-contact/ (e861fe9d) / now on merging, then converting remaining static UI strings from the audit / blocked: none
 09:08 ET Claude(animal-models): shipped rigged animal models, fish shoals, canoe hull (see git log) / now on handoff / blocked: none

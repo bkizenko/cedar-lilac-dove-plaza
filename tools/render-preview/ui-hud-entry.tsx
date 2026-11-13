@@ -26,6 +26,16 @@ w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number;seed?:nu
  const sc=o.scenario;
  const clear=()=>{for(const u of g.state.units)u.selected=false;g.selectedBoat=null;g.state.selBld=null;};
  if(sc==='worker'&&workers[0]){clear();workers[0].selected=true;}
+ if(sc==='skills'||sc==='skills-village'){clear();
+  // Train a small cast over simulated days so the cards show real model output: a veteran woodcutter, a rusty fisher, a young apprentice, a potter's quarter.
+  const{recordPractice,advanceSkillDay}=await import('@/game/skillRuntime');const{newRecord,skillGenome,trainEntry,forgetEntry}=await import('@/game/skills');const dayS=56.25;
+  const cast=workers.slice(0,14);const sd=g.state.seed|0;for(const u of cast)u.skills=newRecord(skillGenome(sd,u.id),u.parents?.map((p:number)=>skillGenome(sd,p)));
+  const t0=cast[0];trainEntry(t0.skills,'woodcutting',2600,40,1);trainEntry(t0.skills,'mining',900,40,1);trainEntry(t0.skills,'building',500,40,1);
+  trainEntry(t0.skills,'fishing',2500,40,1);forgetEntry(t0.skills,'fishing',4000,2000);
+  for(const u of cast.slice(1,9)){trainEntry(u.skills,'pottery',5200+Math.round(u.id%5)*300,40,1);trainEntry(u.skills,'cooking',700,40,1);}
+  for(const u of cast.slice(9,12)){trainEntry(u.skills,'woodcutting',700,40,1);trainEntry(u.skills,'foraging',400,40,1);}
+  g.state.time+=dayS*3;for(let d=0;d<90;d++){g.state.time+=dayS;for(const u of cast.slice(1,9))recordPractice(g,u,'pottery',50);advanceSkillDay(g);}
+  t0.selected=true;}
  if(sc==='crowd'){clear();workers.slice(0,4).forEach((u:any)=>u.selected=true);}
  if(sc==='building'){clear();const c=g.campOf(0);g.tribe(0).wood+=200;g.tribe(0).stone+=100;const res:any[]=[];for(const [t,dx,dz] of [['townhall',0,0],['hearth',9,8],['lumber',-12,6],['farm',14,-10]] as const){res.push(t+':'+g.placeBuilding(t,c.x+dx,c.z+dz,0));}(window as any).hwRes=res;
   const bs=g.state.buildings.filter((b:any)=>b.team===0);for(const b of bs){b.build=1;b.hp=b.maxHp*.8;}const b=bs.find((b:any)=>b.type==='hearth')||bs[0];if(b){b.selected=true;g.state.selBld=b;}}

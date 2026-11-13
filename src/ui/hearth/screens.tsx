@@ -16,6 +16,7 @@ import {STAGES} from '@/game/breakaways';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
 import {CivicPanel} from './civicPanel';
+import {VillageSkillsCard} from './skillsCard';
 import {HearthCaptiveCard,HearthCapitulationTerms,HandoverCard,RulerPortrait,FameFeed,NeighbourNewsFeed,FactionsCard,RenownCard} from './councilCards';
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord,partyLabel} from '../council/CouncilParts';
@@ -158,7 +159,7 @@ export function VillageScreen({hud,engine,onClose,initial,onKnowledge,onOffer}:{
    {tab==='stores'&&<><FoodStoreReadout stock={hud} items={engine.game.tribe(0).items} experience={foodExperienceReport(engine.game.tribe(0),engine.game.state.time)}/>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}<NeedsPanel engine={engine} expanded/></>}
    {tab==='work'&&<><WorkloadPanel engine={engine}/><HearthWildPanel engine={engine}/></>}
    {tab==='food'&&<FarmingProgress engine={engine} onKnowledge={onKnowledge}/>}
-   {tab==='craft'&&<CraftingAndBuildings engine={engine}/>}
+   {tab==='craft'&&<>{hud.villageSkills&&<VillageSkillsCard card={hud.villageSkills}/>}<CraftingAndBuildings engine={engine}/></>}
    {tab==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/><PrestigeReadout view={hud.prestigeBreakdown} rivals={hud.prestigeRivals}/></>}
    {tab==='trade'&&<><NeedsTradeControls engine={engine} inboxOnly/><TradeBlock hud={hud} engine={engine} onOffer={onOffer}/></>}
    {tab==='history'&&(history.length===0?<p className="hw-empty">Nothing recorded yet.</p>:<ol className="hw-chron">{history.map((e,i)=><li key={i}><b>Y{Math.floor(e.time/YEAR_SECONDS)+1}</b> {e.text.replace(/^\[Contact \d+\] /,'')}</li>)}</ol>)}
