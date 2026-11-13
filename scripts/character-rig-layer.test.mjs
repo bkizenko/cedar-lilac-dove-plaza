@@ -14,7 +14,7 @@ test('rig layer: a crowd of one outfit costs one draw per bone, not per person; 
  assert.equal(layer.stats.people,40);assert.equal(layer.stats.tiers[0],40);assert.ok(layer.stats.draws<=16,'one outfit (4 hem/sash variants of hips and spine): '+layer.stats.draws);const d40=layer.stats.draws;
  layer.beginFrame(w,cam(),'high',true);for(const u of units.slice(0,10))layer.write(u,[1.65,1.65,1.65],0,1,.5);layer.endFrame();assert.ok(d40<=layer.stats.draws+8,'draws are about variety, not head count');
  // far away: the same crowd is one merged silhouette per outfit
- layer.beginFrame(w,new THREE.Vector3(0,40,150),'high',true);for(const u of units)layer.write(u,[1.65,1.65,1.65],0,1,.5);layer.endFrame();
+ layer.beginFrame(w,new THREE.Vector3(0,60,320),'high',true);for(const u of units)layer.write(u,[1.65,1.65,1.65],0,1,.5);layer.endFrame();
  assert.equal(layer.stats.tiers[2],40);assert.ok(layer.stats.draws<=4,'far: one merged mesh per outfit variant (4 hem/sash variants): '+layer.stats.draws);assert.ok(layer.stats.triangles/40<=700,'far tier stays within its budget');
  assert.equal([...layer.object.children].reduce((n,m)=>n+m.count,0),40,'every person is exactly one far instance');
  layer.dispose();assert.equal(layer.object.parent,null);

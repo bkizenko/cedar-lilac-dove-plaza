@@ -33,6 +33,8 @@ let pw;for(const b of [root,'/home/claude/.npm-global/lib/node_modules']){try{pw
 const browser=await pw.chromium.launch();
 const page=await browser.newPage({viewport:{width:+(flags.w||1440),height:+(flags.h||900)},deviceScaleFactor:+(flags.dpr||1)});
 if(!flags.hint)await page.addInitScript(()=>{try{localStorage.setItem('hearthwild.ui.hintGraphics','1');}catch{}});
+if(flags.layout)await page.addInitScript(l=>{try{localStorage.setItem('hearthwild.ui.hudLayout.v1',l);}catch{}},String(flags.layout)==='all'?JSON.stringify({resources:true,time:true,audio:true,rail:true,dock:true,selection:true,alerts:true,notes:true,tips:true}):String(flags.layout)==='mixed'?JSON.stringify({resources:true,rail:true,audio:true,notes:true}):String(flags.layout));
+if(flags.layout==='all')await page.addInitScript(()=>{try{localStorage.setItem('hearthwild.minimap.collapsed','1');}catch{}});
 page.on('pageerror',e=>console.error('[pageerror]',e.message));
 page.on('console',m=>{if(m.type()==='error')console.error('[page]',m.text().slice(0,300));});
 await page.goto(`http://127.0.0.1:${server.address().port}/`);
@@ -43,5 +45,6 @@ const info=await page.evaluate(o=>window.hwMount(o),{scenario:screen,ui:flags.ui
 if(flags.click)for(const c of String(flags.click).split('|')){{const l=page.locator('[aria-label="'+c+'"]');await (await l.count()?l.first():page.getByText(c,{exact:true}).first()).click();}await page.waitForTimeout(400);}
 {const clip=flags.clip?Object.fromEntries(String(flags.clip).split(',').map((v,i)=>[['x','y','width','height'][i],+v])):undefined;await page.screenshot({path:out,clip});}
 if(flags.measure){const rows=await page.evaluate(()=>{const out=[];document.querySelectorAll('.hw button,.hw [role=button],.hw-chip,.hw-stat,.hw svg').forEach(e=>{const r=e.getBoundingClientRect();if(r.width&&r.height)out.push([e.tagName.toLowerCase()+'.'+((e.className&&e.className.baseVal)??e.className??'').toString().split(' ')[0],Math.round(r.width),Math.round(r.height),e.tagName!=='svg'?parseFloat(getComputedStyle(e).fontSize):0]);});return out;});fs.writeFileSync(String(flags.measure),JSON.stringify(rows));}
+if(flags.audit){const hits=await page.evaluate(()=>{const out={};for(let x=0;x<innerWidth;x+=12)for(let y=0;y<innerHeight;y+=12){const e=document.elementFromPoint(x,y);if(e&&e.closest('.hw')&&e.closest('button,.hw-speed,[role=group],aside,section,nav,header,article')){const k=(e.closest('button')||e.closest('.hw-speed')||e).className.toString().split(' ')[0];out[k]=(out[k]||0)+1;}else if(e&&e.closest('.hw')&&!e.classList.contains('hw'))out['LEAK:'+e.tagName+'.'+e.className]=1;}return out;});fs.writeFileSync(String(flags.audit),JSON.stringify(hits,null,1));}
 console.log(JSON.stringify(info));
 await browser.close();server.close();fs.rmSync(tmp,{recursive:true,force:true});

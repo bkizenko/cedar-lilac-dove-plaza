@@ -28,7 +28,7 @@ export function shapeTriangles(p:Part):V3[][]{
    quad(out,c(-1,0,-1),c(1,0,-1),c(1,1,-1),c(-1,1,-1));quad(out,c(-1,0,1),c(1,0,1),c(1,1,1),c(-1,1,1));
    quad(out,c(-1,0,-1),c(-1,0,1),c(-1,1,1),c(-1,1,-1));quad(out,c(1,0,-1),c(1,0,1),c(1,1,1),c(1,1,-1));break;}
   case 'cylinder':{
-   const b=ring(n,w/2,w/2,0),t=ring(n,d/2,d/2,h);
+   const ov=p.oval??1,b=ring(n,w/2,w/2*ov,0),t=ring(n,d/2,d/2*ov,h);
    for(let i=0;i<n;i++){const j=(i+1)%n;quad(out,b[i],b[j],t[j],t[i]);out.push([[0,0,0],b[i],b[j]],[[0,h,0],t[i],t[j]]);}break;}
   case 'cone':{
    const b=ring(n,w/2,d/2,0);for(let i=0;i<n;i++){const j=(i+1)%n;out.push([[0,h,0],b[i],b[j]],[[0,0,0],b[i],b[j]]);}break;}
