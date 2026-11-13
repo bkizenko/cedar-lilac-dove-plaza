@@ -1,6 +1,6 @@
 /** Shared helpers and types for the Option H procedural building families
  * (split out so core and extra family files can share them without a cycle). */
-import {beam,chance,far,fitToFootprint,part,pick,range,seededRandom,type BuildingSpec,type Part,type Rng} from './buildingParts';
+import {beam,chance,far,fitToFootprint,part,pick,range,seededRandom,type BuildingSpec,type Part,type Rng,type LodTier} from './buildingParts';
 import type {CarvedMaterialId} from './carvedPalette';
 export type BuildMaterial='wattle'|'timber'|'stone'|'mudbrick';
 export type Climate='temperate'|'cold'|'wet'|'arid';
@@ -69,6 +69,13 @@ export function roofCourses(parts:Part[],halfSpan:number,rise:number,length:numb
  }
 }
 export function door(parts:Part[],x:number,z:number,w=.85,h=1.55,face:'+z'|'-z'|'+x'|'-x'='+z'){
- const t=.07,along=face==='+z'||face==='-z';parts.push(part('box','woodEdge',along?[w,h,t]:[t,h,w],[x,0,z],1));
+ // A readable doorway at any distance: dark opening, pale-or-wood frame (posts + lintel) standing proud of the wall, and a step.
+ const t=.07,along=face==='+z'||face==='-z',f=.12,o=.035,s=face==='+z'||face==='+x'?1:-1;
+ const at=(a:number,b:number)=>(along?[x+a,0,z+s*b]:[x+s*b,0,z+a]) as [number,number,number];
+ const box=(mat:CarvedMaterialId,sw:number,sh:number,st:number,a:number,y:number,b:number,lod:LodTier=1)=>{const q=part('box',mat,along?[sw,sh,st]:[st,sh,sw],at(a,b),lod);parts.push({...q,pos:[q.pos[0],y,q.pos[2]]});};
+ box('recess',w,h,t,0,0,0,1);
+ for(const sx of[-1,1])box('woodDark',f,h+f,t+o*2,sx*(w/2+f/2-.01),0,o,0);
+ box('woodDark',w+f*2,f,t+o*2,0,h,o,0);
+ box('stoneDark',w+.5,.1,.4,0,0,.3,0);
 }
 export function windowAt(parts:Part[],x:number,y:number,z:number,face:'z'|'x'){parts.push(part('box','recess',face==='z'?[.45,.42,.06]:[.06,.42,.45],[x,y,z],0));}

@@ -53,6 +53,7 @@ import {penHousingCapacity,penFeedCapacity} from './penGeometry';
 import{validClayState}from'./pottery';
 import {EXCAVATION_RULES,validExcavations,migratePaidTrenches} from './excavation';
 import {validWaterEngineering} from './waterEngineering';
+import {validIrrigation} from './irrigation';
 import {validCoastalTradeState,migrateCoastalSettlementEndpoints} from './coastalTrade';
 import {validSocietyRelations} from './societyRelations';
 import {validCombatDoctrine} from './combatDoctrine';
@@ -194,6 +195,7 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions?.flowFieldVersion!==undefined&&s.worldOptions.flowFieldVersion!==1)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   if(!validWaterEngineering(s,HALF*2))fail();
+  if(!validIrrigation(s,HALF*2))fail();
   const excavationSegs=s.worldgenVersion>=7?Math.round(HALF*2/1040*256):256;
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
   if(!validWaterEngineering(s,HALF*2))fail(); // includes validCanalWorks

@@ -50,11 +50,11 @@ w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number})=>{
   return hud;};
  let hud:any=mkHud();
  const base:any={game:g,dispatchEpoch:0,disposed:false,loggingMode:false,quarterTurn:false,gateFacing:0,
-  view:{getMapStyle:()=>'painterly',getStyle:()=>'village',shadowsEnabled:true,unitRingsEnabled:true,look:{x:0,z:0},dist:60,camera:(()=>{const home=g.campOf(0),c:any=lookAtCamera({x:home.x-30,y:g.height(home.x,home.z)+70,z:home.z+90},{x:home.x,y:g.height(home.x,home.z),z:home.z},50,window.innerWidth/window.innerHeight);c.fov=50;c.aspect=window.innerWidth/window.innerHeight;return c;})()},
-  profile:{measure:(_n:string,f:()=>void)=>f()},audio:{settings:{master:.8,music:.6,sfx:.8,ambience:.5},play(){}},
+  view:{getDrawDistance:()=>'medium',getEffectiveDrawDistance:()=>'medium',getDrawDistance_:0,getMapStyle:()=>'painterly',getStyle:()=>'village',shadowsEnabled:true,unitRingsEnabled:true,look:{x:0,z:0},dist:60,camera:(()=>{const home=g.campOf(0),c:any=lookAtCamera({x:home.x-30,y:g.height(home.x,home.z)+70,z:home.z+90},{x:home.x,y:g.height(home.x,home.z),z:home.z},50,window.innerWidth/window.innerHeight);c.fov=50;c.aspect=window.innerWidth/window.innerHeight;return c;})()},
+  profile:{measure:(_n:string,f:()=>void)=>f()},audio:{settings:{master:.8,music:.6,sfx:.8,ambience:.5,musicPaused:false,muted:false},play(){},toggleMusicPaused(){},skipTrack(){},setVolume(){},score:{status:'Playing'}},
   readModel:async(q:any)=>({epoch:0,model:applyEngineReadQuery(g,q)}),
   dispatch:async(c:any,s:any)=>{const reply=(applyEngineCommand as any)?(applyEngineCommand as any)(g,c,s):{accepted:false};return{epoch:0,...reply};},
-  canRotatePlacement:()=>false,pushHud(){},keyboard:{}};
+  canRotatePlacement:()=>true,canRotateAnyPlacement:()=>true,rotatePlacementBy(){return true;},pushHud(){},keyboard:{}};
  const engine:any=new Proxy(base,{get:(t,p)=>p in t?t[p as any]:(p==='then'?undefined:()=>undefined)});
  const root=createRoot(document.getElementById('root')!);
  const draw=()=>root.render(o.ui==='classic'?h(Hud as any,{hud,engine}):h(HudHearth,{hud,engine}));

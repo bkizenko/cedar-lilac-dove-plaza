@@ -47,7 +47,7 @@ const sheetsDef = {
   },
   /** Clip review: exact phases of every job/fight clip through the same rig (pure clip sampling, no sim). */
   strips: (mode, part = 0) => {
-    const all = [['chop', 'worker'], ['quarry', 'worker'], ['build', 'worker'], ['till', 'worker'], ['plant', 'worker'], ['harvest', 'worker'], ['fish', 'worker'], ['carry', 'worker'], ['haul', 'worker'], ['craft', 'worker'], ['thrust', 'spearman'], ['shoot', 'archer'], ['slash', 'swordsman'], ['walk', 'worker']];
+    const all = [['chop', 'worker'], ['quarry', 'worker'], ['build', 'worker'], ['till', 'worker'], ['plant', 'worker'], ['harvest', 'worker'], ['fish', 'worker'], ['carry', 'worker'], ['haul', 'worker'], ['craft', 'worker'], ['thrust', 'spearman'], ['shoot', 'archer'], ['slash', 'swordsman'], ['walk', 'worker'], ['run', 'worker']];
     const rows = all.slice(part * 5, part * 5 + 5), strips = [];
     rows.forEach(([clip, type], r) => [0, .25, .5, .75].forEach((ph, c) => strips.push({ civ: (r + part) % 2 ? 'hanrei' : 'rusvolt', type, clip, phase: ph, x: (c - 1.5) * .92 + (r - 2) * 4.0, z: 0, facing: 1.25,
       gear: G((r + part) % 2 ? 'woolCoat' : 'hideCoat', type === 'spearman' || type === 'swordsman' ? ARMOR : {}) })));

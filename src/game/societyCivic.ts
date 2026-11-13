@@ -224,7 +224,7 @@ export function validInstitution(x:unknown):x is Institution{
 // ---------------------------------------------------------------- M4-08 leader proposals
 export type ProposalKind='project'|'agreement'|'commitment';
 export type ProposalStatus='open'|'accepted'|'declined'|'kept'|'broken';
-export type Proposal={base?:number;id:number;kind:ProposalKind;title:string;proposer:string;at:number;until:number;status:ProposalStatus;target?:number;planKind?:string;inherited?:boolean;legitimacyDelta:number;continuityDelta:number};
+export type Proposal={base?:number;id:number;kind:ProposalKind;title:string;proposer:string;at:number;until:number;status:ProposalStatus;target?:number;planKind?:string;inherited?:boolean;/** Awaiting the player's own answer (team 0 only); absent on old saves, which keep the council's automatic answer. */ask?:boolean;legitimacyDelta:number;continuityDelta:number};
 export const PROPOSAL_RULES={maxOpen:1,maxHistory:12,openSeconds:360,keptLegitimacy:4,brokenLegitimacy:-7,declinedLegitimacy:-1,brokenContinuity:-.03,keptContinuity:.01,legitimacyBound:15} as const;
 export type LeaderView={rulerId:string;legitimacy:number;ambition:number;caution:number;warm:number};
 export type CouncilView={consent:number;stage:Negotiation};
@@ -261,7 +261,7 @@ export function settleProposal(p:Proposal,fulfilled:boolean,time:number):Proposa
 }
 export const boundLegitimacy=(x:number)=>Math.max(-PROPOSAL_RULES.legitimacyBound,Math.min(PROPOSAL_RULES.legitimacyBound,x));
 export function validProposal(x:unknown):x is Proposal{
- const p=x as Proposal;return rec(p)&&Number.isInteger(p.id)&&['project','agreement','commitment'].includes(p.kind)&&typeof p.title==='string'&&typeof p.proposer==='string'&&num(p.at)&&num(p.until)&&['open','accepted','declined','kept','broken'].includes(p.status)&&num(p.legitimacyDelta)&&num(p.continuityDelta)&&(p.target===undefined||Number.isInteger(p.target));
+ const p=x as Proposal;return rec(p)&&Number.isInteger(p.id)&&['project','agreement','commitment'].includes(p.kind)&&typeof p.title==='string'&&typeof p.proposer==='string'&&num(p.at)&&num(p.until)&&['open','accepted','declined','kept','broken'].includes(p.status)&&num(p.legitimacyDelta)&&num(p.continuityDelta)&&(p.target===undefined||Number.isInteger(p.target))&&(p.ask===undefined||typeof p.ask==='boolean');
 }
 
 // ---------------------------------------------------------------- M2-16 chapter chain

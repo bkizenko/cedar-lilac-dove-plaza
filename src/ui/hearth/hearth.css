@@ -173,6 +173,12 @@
 .hw-map .world-minimap{width:100%;max-width:none;margin:0;aspect-ratio:1}
 .hw-map .world-minimap canvas{border:0;border-radius:0;touch-action:none}
 .hw-map .world-minimap-north{font-size:16px;font-weight:700;right:10px;top:8px}
+.hw-map-frame{position:relative}
+.hw-map-collapse,.hw-map-reopen{pointer-events:auto;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:var(--hw-s2);min-width:52px;min-height:52px;font-size:16px;font-weight:700;color:var(--hw-text);border:1px solid var(--hw-line-strong);background:var(--hw-panel);box-shadow:var(--hw-shadow)}
+.hw-map-collapse{position:absolute;left:8px;top:8px;border-radius:var(--hw-r-m);opacity:.92;z-index:2;padding:0}
+.hw-map-reopen{border-radius:var(--hw-r-m);padding:0 var(--hw-s4);float:right}
+.hw-map-collapse:hover,.hw-map-reopen:hover{border-color:var(--hw-gold-2)}
+.hw-map-wrap.is-collapsed{width:auto}
 .hw-map-neigh{display:grid;gap:2px;padding:0;background:transparent;border:0;text-align:left;cursor:pointer}
 .hw-neigh{display:flex;align-items:center;gap:var(--hw-s2);min-height:36px;padding:0 6px;border-radius:var(--hw-r-s)}
 .hw-neigh:hover{background:rgba(255,236,190,.1)}
@@ -208,6 +214,7 @@
 .hw-plain{list-style:none}
 .hw-stack{display:grid;gap:var(--hw-s4)}
 .hw-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.hw-proposal{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}
 .hw-list{display:grid;gap:var(--hw-s2)}
 .hw-meters{display:grid;gap:6px}
 .hw-meter-row{display:flex;align-items:center;gap:var(--hw-s3);width:100%}
@@ -307,6 +314,7 @@
  .hw-map-wrap{position:absolute;right:8px;bottom:84px;width:min(260px,calc(100vw - 16px))}
  .hw-map-wrap>.hw-map:not(.is-phone){display:none}
  .hw-map.is-phone{display:grid}
+ .hw-map-wrap.is-collapsed{display:none}
  .hw-map-x{justify-self:end}
  .hw-screen,.hw-screen.is-wide{width:100vw;max-height:100dvh;height:100dvh;border-radius:0;border:0}
  .hw-choice{height:auto;max-height:92dvh;border-radius:var(--hw-r-l);width:calc(100vw - 16px)}
@@ -490,6 +498,6 @@
 .hw-rotate-btn{min-height:52px;min-width:52px;font-size:16px;padding:0 var(--hw-s4)}
 .hw-rotate-btn svg{width:20px;height:20px}
 .hw-rotate-hint{font-size:16px;color:var(--hw-dim,inherit);opacity:.8}
-.hw-music{display:flex;gap:var(--hw-s2);justify-content:flex-end}
+.hw-music{display:contents}
 .hw-music-panel label{display:grid;gap:var(--hw-s1,4px);font-size:16px}
 .hw-music-panel .hw-btn-wide{min-height:52px;font-size:16px}

@@ -116,32 +116,15 @@ function reviewTeam(g:Game,c:CivicState,team:number){
   if(up&&home&&pol.stage!=='murmurs')lifeEvent(g,team,`${t.name}: ${NEGOTIATION_WARNING[pol.stage]}`,home.x,home.z);
  }
 
- if(team===0){c.snapshot[key]={pop,ruler,halls:hs.length,marriages};return;}
-
- // ---- institutions: real upkeep out of the society's own stock
- const list=c.institutions[key]??(c.institutions[key]=[]),cx={pop,complexityLevel:COMPLEXITY.indexOf(pol.level),buildings:buildingCounts(g,team)};
- for(const kind of INSTITUTIONS){
-  const have=list.find(i=>i.kind===kind),level=Math.max(1,Math.min(3,cx.complexityLevel-INSTITUTION_RULES[kind].minLevel+1)) as 1|2|3;
-  if(!have){
-   if(!mayEstablish(kind,cx).ok)continue;
-   const inst:Institution={kind,since:time,paidUntil:time,level,lapsed:true},cost=upkeepOf(inst);
-   if(canPay({food:t.food,wood:t.wood,stone:t.stone},cost)){t.food-=cost.food;t.wood-=cost.wood;t.stone-=cost.stone;list.push({...inst,lapsed:false,paidUntil:time+90});remember(g,team,'plan',`established a ${kind}: ${INSTITUTION_RULES[kind].note}`);}
-   continue;
-  }
-  const standing=mayEstablish(kind,cx).ok;
-  have.level=standing?level:have.level;const cost=upkeepOf(have);
-  if(standing&&canPay({food:t.food,wood:t.wood,stone:t.stone},cost)){t.food-=cost.food;t.wood-=cost.wood;t.stone-=cost.stone;if(have.lapsed)remember(g,team,'plan',`the ${kind} resumed`);have.lapsed=false;have.paidUntil=time+90;}
-  else if(!have.lapsed){have.lapsed=true;remember(g,team,'plan',`the ${kind} lapsed: ${standing?'it could not be paid for':'its house or numbers are gone'}`);}
- }
- fx=effectsOf(list);
-
- // ---- proposals and their consequences
- const open=c.proposals[key]??(c.proposals[key]=[]),lv=leaderView(g,team),o=outcomesOf(g,team);
+ /** Proposals and their consequences. The player's own ruler puts proposals to the player (ask) instead of the council answering them. */
  const reserve=reserveSeconds(g,team);
+ const proposalsStep=()=>{
+ const open=c.proposals[key]??(c.proposals[key]=[]),lv=leaderView(g,team),o=outcomesOf(g,team);
  for(let i=0;i<open.length;i++){
   let p=open[i];
   if(p.status==='open'){
-   if(lv){const r=consentFor(p,lv,{consent:fx.consent,stage:pol.stage},seed,p.id);
+   if(p.ask){if(time>=p.until)p=settleProposal({...p,ask:false},false,time);else p={...p};}
+   else if(lv){const r=consentFor(p,lv,{consent:fx.consent,stage:pol.stage},seed,p.id);
     if(r.accepted){p={...p,status:'accepted',until:time+PROPOSAL_RULES.openSeconds*2,base:o?.completed??0};remember(g,team,'plan',`the council accepted: ${p.title}`);}
     else if(time>=p.until)p=settleProposal(p,false,time);
     else p={...p};}
@@ -162,8 +145,29 @@ function reviewTeam(g:Game,c:CivicState,team:number){
   const n=g.state.time,pop2=Math.max(1,pop),cap=Math.max(1,g.popCap(team)),
    warm=g.state.tribes.map((_,j)=>j).find(j=>j!==team&&j!==3&&!!g.tribe(j)?.alive&&(()=>{const r=societyRelation(g,team,j);return r.known&&!r.hostile&&r.trust>=.5;})()&&!agreementsOf(g,team).some(a=>a.kind==='pact'&&a.status!=='lapsed'&&(a.a===j||a.b===j)));
   const prop=propose(lv,{foodSeconds:reserve,housing:pop2/cap,threat:clamp01(t.tension||0),openAgreementTarget:warm,time:n,nextId:c.nextId,stage:pol.stage,outpostsRestive:breakawaysOf(g,team).filter(b=>b.stage!=='loyal'&&!b.resolution).length},open,seed);
-  if(prop){c.nextId++;open.push(prop);remember(g,team,'plan',`the ruler proposes to ${prop.title}`);}
+  if(prop){c.nextId++;if(team===0&&PLAYER_ANSWERS_PROPOSALS)prop.ask=true;open.push(prop);remember(g,team,'plan',`the ruler proposes to ${prop.title}`);}
  }
+ };
+ if(team===0){if(PLAYER_ANSWERS_PROPOSALS)proposalsStep();c.snapshot[key]={pop,ruler,halls:hs.length,marriages};return;}
+
+ // ---- institutions: real upkeep out of the society's own stock
+ const list=c.institutions[key]??(c.institutions[key]=[]),cx={pop,complexityLevel:COMPLEXITY.indexOf(pol.level),buildings:buildingCounts(g,team)};
+ for(const kind of INSTITUTIONS){
+  const have=list.find(i=>i.kind===kind),level=Math.max(1,Math.min(3,cx.complexityLevel-INSTITUTION_RULES[kind].minLevel+1)) as 1|2|3;
+  if(!have){
+   if(!mayEstablish(kind,cx).ok)continue;
+   const inst:Institution={kind,since:time,paidUntil:time,level,lapsed:true},cost=upkeepOf(inst);
+   if(canPay({food:t.food,wood:t.wood,stone:t.stone},cost)){t.food-=cost.food;t.wood-=cost.wood;t.stone-=cost.stone;list.push({...inst,lapsed:false,paidUntil:time+90});remember(g,team,'plan',`established a ${kind}: ${INSTITUTION_RULES[kind].note}`);}
+   continue;
+  }
+  const standing=mayEstablish(kind,cx).ok;
+  have.level=standing?level:have.level;const cost=upkeepOf(have);
+  if(standing&&canPay({food:t.food,wood:t.wood,stone:t.stone},cost)){t.food-=cost.food;t.wood-=cost.wood;t.stone-=cost.stone;if(have.lapsed)remember(g,team,'plan',`the ${kind} resumed`);have.lapsed=false;have.paidUntil=time+90;}
+  else if(!have.lapsed){have.lapsed=true;remember(g,team,'plan',`the ${kind} lapsed: ${standing?'it could not be paid for':'its house or numbers are gone'}`);}
+ }
+ fx=effectsOf(list);
+
+ proposalsStep();
 
  // ---- regional logistics: central requests to distant hearths
  for(const k of Object.keys(c.autonomy)){const v=c.autonomy[k];if(v>0)c.autonomy[k]=Math.max(0,Math.round((v-.02)*100)/100);}
@@ -204,9 +208,26 @@ export function yearlyCivic(g:Game){
  }
 }
 
+// ---- the player answers their own ruler's proposals
+/** Switch: new proposals to the player's own society wait for an explicit answer. Saves made before it have no `ask` flag and keep the council's automatic answer. */
+export const PLAYER_ANSWERS_PROPOSALS=true;
+export type ProposalAnswer={accepted:boolean;reason:string};
+/** Accept or decline an open proposal the ruler has put to the player. Acceptance carries the same obligations as a council acceptance (it must be kept or it is broken); declining costs a little legitimacy. */
+export function answerProposal(g:Game,team:number,proposalId:number,accept:boolean):ProposalAnswer{
+ const c=peekCivic(g);if(!c)return {accepted:false,reason:'No council record yet'};
+ const key=String(team),list=c.proposals[key]??[],i=list.findIndex(p=>p.id===proposalId);
+ if(i<0)return {accepted:false,reason:'That proposal is no longer before you'};
+ const p=list[i];if(p.status!=='open'||!p.ask)return {accepted:false,reason:p.status==='open'?'The council is deciding that one itself':'That proposal has already been settled'};
+ const time=g.state.time;if(time>=p.until)return {accepted:false,reason:'That proposal has lapsed'};
+ if(accept){list[i]={...p,ask:false,status:'accepted',until:time+PROPOSAL_RULES.openSeconds*2,base:outcomesOf(g,team)?.completed??0};remember(g,team,'plan',`you accepted: ${p.title}`);return {accepted:true,reason:`Accepted: ${p.title}`};}
+ list[i]={...p,ask:false,status:'declined',legitimacyDelta:PROPOSAL_RULES.declinedLegitimacy,continuityDelta:0};
+ c.legitimacy[key]=boundLegitimacy((c.legitimacy[key]??0)+PROPOSAL_RULES.declinedLegitimacy);
+ remember(g,team,'plan',`you declined: ${p.title}`);return {accepted:true,reason:`Declined: ${p.title}`};
+}
+
 // ---- read models
 export type CivicLine={team:number;name:string;identity:{traits:Traits;pride:number;continuity:number;native:number;adopted:number;last:string};politics:Politics;
- institutions:{kind:string;level:number;lapsed:boolean;note:string}[];proposals:{title:string;kind:string;status:string;inherited:boolean}[];
+ institutions:{kind:string;level:number;lapsed:boolean;note:string}[];proposals:{id:number;title:string;kind:string;status:string;inherited:boolean;ask:boolean}[];
  outposts:{hall:number;distance:number;localDecisionShare:number;localFloorFood:number;grievance:number;lastRequest?:{obeyed:boolean;willingness:number}}[]};
 export type CivicModel={enabled:boolean;prehistory:{lines:string[];societies:{team:number;name:string;size:number;ageYears:number}[]}|null;own:CivicLine|null;societies:CivicLine[];chapter:ReturnType<typeof chapterChain>|null;warnings:string[]};
 function lineOf(g:Game,c:CivicState,team:number):CivicLine|null{
@@ -214,7 +235,7 @@ function lineOf(g:Game,c:CivicState,team:number):CivicLine|null{
  const views=settlementsOf(g,team);
  return {team,name:g.tribe(team).name,identity:{traits:id.traits,pride:id.pride,continuity:id.continuity,native:id.native,adopted:id.adopted,last:id.last},politics:pol,
   institutions:(c.institutions[key]??[]).map(i=>({kind:i.kind,level:i.level,lapsed:i.lapsed,note:INSTITUTION_RULES[i.kind].note})),
-  proposals:(c.proposals[key]??[]).slice(-4).map(p=>({title:p.title,kind:p.kind,status:p.status,inherited:!!p.inherited})),
+  proposals:(c.proposals[key]??[]).slice(-4).map(p=>({id:p.id,title:p.title,kind:p.kind,status:p.status,inherited:!!p.inherited,ask:!!p.ask&&p.status==='open'})),
   outposts:views.map(v=>({hall:v.hall,distance:Math.round(v.distance),localDecisionShare:localDecisionShare(v.distance,effectsOf(c.institutions[key]).adminReach),localFloorFood:localFloor({residents:v.residents,foodPerPerson:foodDemand(g,team)/Math.max(1,livingPeople(g,team))}),grievance:c.autonomy[String(v.hall)]??0,...(c.answers[String(v.hall)]?{lastRequest:{obeyed:c.answers[String(v.hall)].obeyed,willingness:c.answers[String(v.hall)].willingness}}:{})}))};
 }
 export function chapterInput(g:Game):ChapterInput{

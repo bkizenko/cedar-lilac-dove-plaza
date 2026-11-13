@@ -3,13 +3,14 @@
  * shared form with a tint. Each instance is individually imperfect (seeded size, lean, uneven heights, off-centre doors,
  * add-ons, rubble and patching with wear). Era 0-1 builds the poorest local dwelling; later eras add the signature wall,
  * a civic hall, plinths, storeys and trim. Materials are named `${civ}.${slot}` and resolved through `materials`. */
+import type {Heraldry} from './villageIdentity';
 import {beam,chance,fitToFootprint,partBounds,part,pick,range,seededRandom,type BuildingSpec,type Part,type Rng,type LodTier} from './buildingParts';
 import {ensureCore,ensureNearSupport,ensureTiers} from './buildingFamiliesCivic';
 import {CIVS,matId,materialTable,paletteTable,type CivId,type CivLook,type CivMaterials,type Swatch} from './civStyles';
 export type CivRole='house'|'civic'|'granary'|'market';
 /** eraMode 'morph' (default): the look follows `era`. 'fixed': the look is set by the building's own build-time culture/wealth (`built`, else the era it was first generated at) and never morphs when the world's era advances; only an explicit rebuild (new `built`) or extension (`extensions`) changes it. */
 export type EraMode='morph'|'fixed';export const ERA_MODES:EraMode[]=['morph','fixed'];export const DEFAULT_ERA_MODE:EraMode='fixed';
-export type CivContext={seed:number;era:number;wealth:number;/** 0 new .. 1 ruined-ish */wear:number;footprint:{w:number;d:number};lit?:boolean;/** a ruler has just died: banners hang at half-mast with a mourning band (original grammar only) */mourning?:boolean;/** a CivSkin's overrides: palette, roof form, granary and banner shape (absent = the civ's own approved bible) */look?:CivLook;eraMode?:EraMode;built?:{era:number;wealth:number};/** later additions, each built with the techniques of its own era */extensions?:{era:number}[]};
+export type CivContext={/** the village's heraldry (villageIdentity.ts): roof finial + rim trim, so same-colour villages differ beyond hue */heraldry?:Heraldry;seed:number;era:number;wealth:number;/** 0 new .. 1 ruined-ish */wear:number;footprint:{w:number;d:number};lit?:boolean;/** a ruler has just died: banners hang at half-mast with a mourning band (original grammar only) */mourning?:boolean;/** a CivSkin's overrides: palette, roof form, granary and banner shape (absent = the civ's own approved bible) */look?:CivLook;eraMode?:EraMode;built?:{era:number;wealth:number};/** later additions, each built with the techniques of its own era */extensions?:{era:number}[]};
 export type CivSpec=BuildingSpec&{civ:CivId;role:CivRole;materials:Record<string,Swatch>;banners:{pos:readonly[number,number,number];size:readonly[number,number,number]}[];imperfection:{scale:number;lean:number;offDoor:number;patches:number};eraMode:EraMode;builtEra:number;extensionEras:number[]};
 type V=[number,number,number];type Slot=keyof CivMaterials;
 type G={civ:CivId;look?:CivLook;r:Rng;w:number;d:number;era:number;wealth:number;wear:number;parts:Part[];
@@ -52,20 +53,33 @@ const mk=(civ:CivId,ctx:CivContext,r:Rng):G=>{const parts:Part[]=[],m=(s:Slot)=>
   banner:(x,z,h)=>{if(grammarSet==='original')return void bannerFor(parts,civ,m,x,z,h,ctx.mourning,ctx.look?.banner,ctx.wear);parts.push(beam(m('trim'),[x,0,z],[x,h,z],.08,1),part('box',m('cloth'),[.7,.95,.03],[x+.38,h-1.05,z],1));},
   door:(x,z,wd=.9,h=1.8)=>void parts.push(part('box',m('accent'),[wd,h,.08],[x,0,z],0))};return g;};
 const jit=(r:Rng,a:number)=>1+(r()-.5)*2*a;
-/** Poorest local dwelling per civ (era 0-1). */
-const POOR:Record<CivId,string>={sandrill:'cave',nilemark:'hut',tigrane:'dome',hanrei:'hut',vedara:'hut',aureline:'hut',sahelan:'conehut',quillan:'sod',kaaltun:'hut',mekhari:'raft',brythen:'lean',rusvolt:'dugout',steppan:'tent',skoldar:'tent'};
-function poor(g:G):Out{const {w,d,r}=g,k=POOR[g.civ],W=Math.min(w,d)*range(r,.6,.8),h=range(r,1.6,2.2);
+/** Poorest local dwelling per civ (era 0-1). Every one must read as a HUT at a glance: a wall, a clearly separate roof mass that overhangs it,
+ * and a dark framed doorway 0.95 m wide x 1.65 m tall (a person is ~1.7 m) on the +Z (entry) face. */
+const POOR:Record<CivId,string>={sandrill:'cave',nilemark:'hut',tigrane:'dome',hanrei:'hut',vedara:'hut',aureline:'hut',sahelan:'conehut',quillan:'sod',kaaltun:'hut',mekhari:'raft',brythen:'lean',rusvolt:'dugout',steppan:'tent',skoldar:'longhut'};
+export const POOR_KIND=POOR;
+const lum=(h:string)=>{const n=parseInt(h.slice(1),16);return .2126*(n>>16&255)+.7152*(n>>8&255)+.0722*(n&255);};
+/** The darkest of the civ's own swatches: the doorway opening (civ tables have no black slot, so the opening is its darkest tone). */
+function darkSlot(g:G):Slot{const t=(g.look?.palette??CIVS[g.civ].materials) as CivMaterials,slots:Slot[]=['wall2','accent','trim','roof','cloth'];return slots.reduce((a,b)=>lum(t[b].hex)<lum(t[a].hex)?b:a,slots[0]);}
+/** Framed doorway on the +Z face at x, wall plane z: dark opening, light-contrast posts + lintel, a threshold step. */
+function hutDoor(g:G,x:number,z:number,wd=.95,h=1.65){
+ const dk=darkSlot(g),fr:Slot=dk==='trim'?'wall':'trim';
+ g.B(dk,[wd,h,.1],[x,0,z],1);
+ for(const s of[-1,1])g.B(fr,[.14,h+.14,.2],[x+s*(wd/2+.07),0,z+.04],1);
+ g.B(fr,[wd+.4,.16,.2],[x,h,z+.04],1);g.B('wall2',[wd+.7,.1,.5],[x,0,z+.22],1);}
+function poor(g:G):Out{const {w,d,r}=g,k=POOR[g.civ],W=Math.min(w,d)*range(r,.74,.84),R=W/2,h=range(r,1.85,2.05),dx=g.off*.25;
  switch(k){
-  case 'cave':g.B('wall',[w*.8,3.2,d*.5],[0,0,-d*.2],2);g.B('accent',[1.1,1.5,.2],[g.off,0,d*.05+.02],0);g.B('wall2',[w*.5,.5,.6],[0,0,d*.12],1);break;
-  case 'dome':g.Cy('wall',W,h*.6,[0,0,0],2,10);g.Pr('sphere','wall',[W,h*.8,W],[0,h*.55,0],2);g.door(g.off*.3,W/2+.02,.7,1.2);break;
-  case 'conehut':g.Cy('wall',W,1.5,[0,0,0],2,10);g.Pr('cone','roof',[W*1.25,1.6,W*1.25],[0,1.45,0],2,undefined,10);g.door(g.off*.3,W/2+.02,.6,1.2);break;
-  case 'sod':g.B('wall',[W*1.1,1.3,W*.9],[0,0,0],2);g.Pr('wedge','roof',[W*1.3,.7,W*1.1],[0,1.3,0],2);g.door(g.off*.3,W*.45+.02,.6,1.1);break;
-  case 'lean':g.post('wall',-W/2,-W/2,1.9);g.post('wall',W/2,-W/2,1.9);g.post('wall',-W/2,0,1.1);g.post('wall',W/2,0,1.1);g.Pr('wedge','roof',[W*1.2,.9,W*1.1],[0,1.1,-W*.25],2);g.B('wall2',[W,1,.1],[0,0,-W/2],1);break;
-  case 'dugout':g.B('wall',[W*1.2,.5,W],[0,0,0],2);g.Pr('prism','roof',[W*1.2,.9,W*1.1],[0,.5,0],2);g.B('wall2',[.8,.9,.2],[g.off*.3,0,W/2],0);break;
-  case 'tent':g.Pr('cone','roof',[W*1.4,h*1.4,W*1.4],[0,0,0],2,undefined,8);g.B('accent',[.7,1.2,.05],[0,0,W*.4],0);g.post('trim',0,0,h*1.5+.3,.07,1);break;
-  case 'raft':for(const x of[-1,1])for(const z of[-1,1])g.post('trim',x*W*.4,z*W*.35,.9,.12,2);g.B('wall2',[W,.12,W*.9],[0,.9,0],2);g.B('wall',[W*.8,1.2,W*.7],[0,1.02,0],2);g.Pr('prism','roof',[W*.95,.7,W*.85],[0,2.22,0],2);break;
-  default:g.Cy('wall',W,1.3,[0,0,0],2,8);g.Pr('cone','roof',[W*1.2,1.1,W*1.2],[0,1.3,0],2,undefined,8);g.door(g.off*.3,W/2+.02,.6,1.1);}
- return {entry:{x:0,z:Math.min(d/2-.2,W/2+.4),width:.9}};}
+  case 'cave':{const bw=w*.86,bd=d*.62,bh=2.5,z0=-d*.12;g.B('wall',[bw,bh,bd],[0,0,z0],2);g.B('roof',[bw+.5,.28,bd+.5],[0,bh,z0],2);g.B('wall2',[bw+.5,.34,.26],[0,bh+.28,z0+bd/2+.12],1);for(const x of[-1,0,1])g.parts.push(part('cylinder',matId(g.civ,'trim') as Part['mat'],[.2,.8,.2],[x*bw*.3,bh-.35,z0+bd/2+.4],1,[Math.PI/2,0,0],6));hutDoor(g,dx,z0+bd/2+.02);return {entry:{x:dx,z:z0+bd/2+.5,width:.95}};}
+  case 'dome':{const wh=1.45;g.Cy('wall',W,wh,[0,0,0],2,10);g.Pr('sphere','wall',[W*1.04,W*.85,W*1.04],[0,wh-.1,0],2,undefined,10);g.Cy('wall2',W*1.06,.14,[0,wh-.12,0],1,10);hutDoor(g,dx,R*.951+.03,.9,1.45);return {entry:{x:dx,z:R+.5,width:.9}};}
+  case 'conehut':{g.Cy('wall',W,1.55,[0,0,0],2,10);g.Pr('cone','roof',[W*1.45,2.4,W*1.45],[0,1.4,0],2,undefined,10);hutDoor(g,dx,R*.951+.03,.85,1.5);g.Cy('trim',W*1.02,.12,[0,1.1,0],1,10);return {entry:{x:dx,z:R+.5,width:.9}};}
+  case 'sod':{const bw=W*1.15,bd=W*.95,wh=1.75;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.7,1.5,bd+.7],[0,wh-.05,0],2);g.B('wall2',[bw+.2,.3,bd+.2],[0,0,0],1);hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
+  case 'lean':{const bw=W*1.0,bd=W*1.0,wh=1.1;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.6,2.2,bd+.8],[0,wh-.05,0],2);g.post('trim',-bw/2,bd/2+.1,wh+.4,.14,1);g.post('trim',bw/2,bd/2+.1,wh+.4,.14,1);hutDoor(g,dx,bd/2+.02,.9,1.0);return {entry:{x:dx,z:bd/2+.5,width:.9}};}
+  case 'dugout':{const bw=W*1.15,bd=W*.95,wh=1.85;g.B('wall',[bw,wh,bd],[0,0,0],2);for(let i=0;i<4;i++)g.B('wall2',[bw+.12,.2,.2],[0,.15+i*.45,bd/2+.04],1);g.Pr('prism','roof',[bw+.8,1.5,bd+.8],[0,wh-.05,0],2);g.post('trim',0,0,wh+1.55,.1,1);hutDoor(g,dx,bd/2+.1);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
+  case 'tent':{g.Cy('wall',W*1.05,1.35,[0,0,0],2,10);g.Pr('cone','roof',[W*1.35,2.2,W*1.35],[0,1.3,0],2,undefined,10);g.post('trim',0,0,3.8,.07,1);hutDoor(g,dx,R*1.05*.951+.03,.9,1.3);return {entry:{x:dx,z:R+.5,width:.9}};}
+  case 'longhut':{const bw=W*1.25,bd=W*.85,wh=1.7;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.8,1.4,bd+.8],[0,wh-.05,0],2);g.B('wall2',[bw+.15,.35,bd+.15],[0,0,0],1);hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
+  case 'raft':{const bw=W*.95,bd=W*.8,fh=.85;for(const x of[-1,1])for(const z of[-1,1])g.post('trim',x*bw*.46,z*bd*.44,fh,.14,2);g.B('wall2',[bw+.3,.14,bd+.3],[0,fh,0],2);g.B('wall',[bw,1.6,bd],[0,fh+.14,0],2);g.Pr('prism','roof',[bw+.8,1.4,bd+.8],[0,fh+1.7,0],2);
+   g.B('trim',[.9,.1,.9],[dx,fh+.04,bd/2+.4],1);g.Pr('wedge','wall2',[.9,fh,.9],[dx,0,bd/2+1.1],1,[0,Math.PI,0]);const dk=darkSlot(g);g.B(dk,[.85,1.35,.1],[dx,fh+.14,bd/2+.02],1);for(const s of[-1,1])g.B('trim',[.12,1.45,.18],[dx+s*.5,fh+.14,bd/2+.04],0);g.B('trim',[1.1,.14,.18],[dx,fh+1.49,bd/2+.04],0);return {entry:{x:dx,z:bd/2+1.2,width:.9}};}
+  default:{g.Cy('wall',W,h*.85,[0,0,0],2,8);g.Cy('wall2',W*1.04,.3,[0,0,0],1,8);g.Pr('cone','roof',[W*1.4,2.0,W*1.4],[0,h*.85-.1,0],2,undefined,8);hutDoor(g,dx,R*.924+.03);return {entry:{x:dx,z:R+.5,width:.95}};}}
+}
 // ---------------------------------------------------------------- houses
 const HOUSE:Record<CivId,(g:G)=>Out>={
  sandrill:g=>{const {w,d,r}=g,mh=range(r,4,5.4);g.B('wall2',[w*.95,mh,d*.45],[0,0,-d*.3],2);const fw=w*.62*jit(r,.06),fh=range(r,3,3.6);g.B('wall',[fw,fh,.7],[g.off*.4,0,-d*.04],2);
@@ -417,6 +431,29 @@ function eraMarks(g:G,era:number,wealth:number){
  g.B('wall2',[b-a+.16,.14,d-c+.16],[cx,0,cz],1);
  if(era>=4)for(const sx of[a-.05,b+.05]){g.post('trim',sx,d+.35,1.5+wealth*.5,.09,1);if(era>=5)g.banner(sx,d+.35,1.5+wealth*.5);}
 }
+/** Village heraldry marks on a dwelling: a finial on the highest mass and a trim pattern along the roof rim. Adds a few near/mid parts, never changes the footprint. */
+function villageMarks(g:G,h:Heraldry){
+ const roofId=matId(g.civ,'roof'),cloth=matId(g.civ,'cloth');
+ const solid=g.parts.filter(p=>!p.ends&&p.mat!==cloth&&Math.max(p.size[0],p.size[2])>=1&&p.lod>=1);if(!solid.length)return;
+ let top=solid[0],ty=-1e9;for(const p of solid){const y=partBounds(p).maxY;if(y>ty){ty=y;top=p;}}
+ const tb=partBounds(top),cx=(tb.minX+tb.maxX)/2,cz=(tb.minZ+tb.maxZ)/2,A=matId(g.civ,'accent') as Part['mat'],T=matId(g.civ,'trim') as Part['mat'];
+ switch(h.shape){
+  case 0:g.parts.push(part('cone',A,[.34,.9,.34],[cx,ty,cz],1,undefined,6));break;
+  case 1:g.parts.push(part('sphere',A,[.46,.46,.46],[cx,ty,cz],1,undefined,8));break;
+  case 2:g.parts.push(part('box',A,[.38,.38,.38],[cx,ty,cz],1,[0,.5,0]));break;
+  case 3:g.parts.push(part('cylinder',A,[.46,.32,.46],[cx,ty,cz],1,undefined,8),part('cone',A,[.3,.4,.3],[cx,ty+.32,cz],1,undefined,6));break;
+  default:g.parts.push(part('box',A,[.09,.95,.09],[cx,ty,cz],1,[0,0,.55]),part('box',A,[.09,.95,.09],[cx,ty,cz],1,[0,0,-.55]));}
+ const roofs=g.parts.filter(p=>p.mat===roofId&&p.lod>=1&&['cone','prism','wedge','hip','pyramid'].includes(p.shape));if(!roofs.length)return;
+ let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9,y0=1e9,round=false;for(const p of roofs){const b=partBounds(p);x0=Math.min(x0,b.minX);x1=Math.max(x1,b.maxX);z0=Math.min(z0,b.minZ);z1=Math.max(z1,b.maxZ);y0=Math.min(y0,b.minY);if(p.shape==='cone')round=true;}
+ const y=y0+.03,L=(x1-x0)*.9,R=Math.min(x1-x0,z1-z0)/2*.94,ccx=(x0+x1)/2,ccz=(z0+z1)/2;
+ const piece=(px:number,pz:number,yaw:number,len:number,hh:number,py=y)=>g.parts.push(part('box',T,[len,hh,.1],[px,py,pz],1,[0,yaw,0]));
+ if(round){const n=h.trim===1||h.trim===3?12:20;for(let i=0;i<n;i++){if(h.trim===3&&i%2)continue;const a=i/n*Math.PI*2,chord=2*R*Math.sin(Math.PI/n)*(h.trim===1?.45:1.05);
+   piece(ccx+Math.sin(a)*R,ccz+Math.cos(a)*R,a,chord,h.trim===3?.26:.1);if(h.trim===2)piece(ccx+Math.sin(a)*R,ccz+Math.cos(a)*R,a,chord,.07,y+.16);}}
+ else{const zf=z1-.12;if(h.trim===0)piece(ccx,zf,0,L,.1);
+  if(h.trim===1)for(let i=0;i<Math.floor(L/.5);i++)piece(x0+(x1-x0)*.05+.25+i*.5,zf,0,.16,.14);
+  if(h.trim===2){piece(ccx,zf,0,L,.06);piece(ccx,zf,0,L,.06,y+.17);}
+  if(h.trim===3)for(let i=0;i<Math.floor(L/.4);i+=2)piece(x0+(x1-x0)*.05+.2+i*.4,zf,0,.24,.26);}
+}
 export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,variantKey=''):CivSpec{
  const look=ctx.eraMode==='fixed'?{era:ctx.built?.era??ctx.era,wealth:ctx.built?.wealth??ctx.wealth}:{era:ctx.era,wealth:ctx.wealth},fp0=ctx.footprint,ext=ctx.extensions??[],c2:CivContext={...ctx,...look,footprint:ext.length?{w:fp0.w*.7,d:fp0.d}:fp0};
  const r=seededRandom(ctx.seed),g=mk(civ,c2,r),sc=jit(r,.06);
@@ -426,6 +463,7 @@ export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,varian
  if(grammarSet==='original'&&role==='civic'&&!view.parts.some(p=>p.mat===matId(civ,'cloth')&&p.size[2]<.1&&p.size[1]>.6))view.banner(view.w*.36,view.d*.46,3.2);
  if(grammarSet==='original'&&(role==='house'||role==='civic')&&c2.era>=3)eraMarks(view,c2.era,c2.wealth);
  if(c2.era>1&&role!=='market')addons(view,seededRandom(ctx.seed^0x51ed270b));
+ if(ctx.heraldry&&(role==='house'||role==='granary'))villageMarks(view,ctx.heraldry);
  if(role!=='market')techniques(view,c2.era);
  const im=imperfect(view,g.parts,ctx.wear,seededRandom(ctx.seed^0x9e3779b1));
  const ref=`${CIVS[civ].name}: ${CIVS[civ].inspiration}`,e=out.entry;
