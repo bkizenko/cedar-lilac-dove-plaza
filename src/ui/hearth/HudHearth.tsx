@@ -19,9 +19,12 @@ import {HelpScreen} from './helpScreen';
 import {RoadsCard} from './roadsCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
 import {MinimapReopen,useMinimapCollapsed} from './minimapToggle';
+import {useHudHotkeys,Foldable} from './fold';
+import {layout,PANELS} from './hudLayout';
 import {useTestLabButton} from './useTestLabButton';
 import {FlaskConical} from 'lucide-react';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
+import {WondersScreen} from './wondersScreen';
 import './hearth.css';
 import './glance.css';
 import './wildPanel.css';
@@ -29,13 +32,19 @@ import './wildPanel.css';
 /** The Hearth interface: calm parchment-and-wood chrome, big icons and numbers, a contextual command card and a small number of full screens. */
 export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const lifecycle=useLifecycleAction(engine);
- const [screen,setScreen]=useState<null|{k:'village'|'council'|'ages'|'menu'|'trade'|'help';tab?:string}>(null);
+ const [screen,setScreen]=useState<null|{k:'village'|'council'|'ages'|'wonders'|'menu'|'trade'|'help';tab?:string}>(null);
  const [tray,setTray]=useState(false),[tab,setTab]=useState('Village'),[map,setMap]=useState(false),[test,setTest]=useState(false),[hidden,setHidden]=useState(false),[trade,setTrade]=useState<number|null>(null);
  const [mapCollapsed,setMapCollapsed]=useMinimapCollapsed();
  const [showTestLab,setShowTestLab]=useTestLabButton();
  const founding=hud.founding;
  const alerts=useGlanceAlerts(hud.started&&!hud.awaitingStart?engine:null);
  useEffect(()=>{if(hud.placing)setTray(false);},[hud.placing]);
+ // O: sound effects, U: hide or show the interface, Shift+U: minimise or show every panel. M (mute) and Shift+M (map) are handled elsewhere.
+ useHudHotkeys({
+  sfx:()=>{engine?.audio?.toggleSfxOff();engine?.pushHud?.();},
+  hide:()=>setHidden(v=>!v),
+  allPanels:()=>{const shown=PANELS.some(p=>!layout.isCollapsed(p.id)&&!['testlab','wonders','skills'].includes(p.id));layout.setAll(shown,PANELS.filter(p=>!['testlab','wonders','skills'].includes(p.id)).map(p=>p.id));},
+ },hud.started&&!hud.awaitingStart);
  if(!hud.started||hud.awaitingStart)return null;
  if(hidden)return <button type="button" className="hw hw-restore" onClick={()=>setHidden(false)}>Show interface</button>;
  const close=()=>setScreen(null);
@@ -50,7 +59,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {!founding&&!screen&&<AlertPins engine={engine} alerts={alerts}/>}
   {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})} onOpenHelp={()=>setScreen({k:'help'})}/>}
   <header className="hw-top"><ResourceBar hud={hud} engine={engine} onOpen={k=>setScreen(k==='council'?{k:'council'}:{k:'village',tab:'stores'})}/><TimeCard hud={hud} engine={engine} onAges={()=>setScreen({k:'ages'})} onMenu={()=>setScreen({k:'menu'})}/></header>
-  {!founding&&showTestLab&&<button type="button" className="hw-testlab" aria-label="Test lab" title="Open the Test lab" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),(o:unknown)=>{if(o)setTest(true);})}><FlaskConical size={24}/><span>Test lab</span></button>}
+  {!founding&&showTestLab&&<Foldable id="testlab" icon={<FlaskConical size={24}/>} className="hw-testlab-fold"><button type="button" className="hw-testlab" aria-label="Test lab" title="Open the Test lab" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),(o:unknown)=>{if(o)setTest(true);})}><FlaskConical size={24}/><span>Test lab</span></button></Foldable>}
   {!founding&&<Rail hud={hud} engine={engine} workOpen={screen?.k==='village'&&screen.tab==='work'} onWork={()=>setScreen({k:'village',tab:'work'})}/>}
   <NotesStack hud={hud} engine={engine} onOpen={open} hidden={false} alerts={alerts}/>
   {!founding&&!screen&&<RoadsCard engine={engine}/>}
@@ -66,7 +75,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
       {engine?.canRotateAnyPlacement()&&<RotateButtons engine={engine} gate={hud.placing==='gate'}/>}</>}/>
      :tray&&<BuildTray hud={hud} engine={engine} tab={tab} setTab={setTab} onPick={()=>setTray(false)}/>}
     <SelectionCard hud={hud} engine={engine} onOffer={t=>setTrade(t)}/>
-    <Dock active={screen?.k==='village'?'village':screen?.k==='ages'?'ages':screen?.k==='council'?'council':tray?'build':map?'map':null} onPick={open} onHome={()=>engine?.focusHome()} hasMap alerts={{}}/>
+    <Dock active={screen?.k==='village'?'village':screen?.k==='ages'?'ages':screen?.k==='council'?'council':screen?.k==='wonders'?'wonders':tray?'build':map?'map':null} onPick={open} onHome={()=>engine?.focusHome()} hasMap alerts={{}}/>
    </>}
   </div>
   <div className={cx('hw-map-wrap',mapCollapsed&&'is-collapsed')}>{mapCollapsed?<MinimapReopen onClick={()=>setMapCollapsed(false)}/>:<MinimapCard hud={hud} engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})} onCollapse={()=>setMapCollapsed(true)}/>}
@@ -76,6 +85,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {test&&engine&&<TestPanel engine={engine} close={()=>setTest(false)}/>}
   {screen?.k==='village'&&engine&&<VillageScreen hud={hud} engine={engine} initial={screen.tab} onClose={close} onKnowledge={()=>setScreen({k:'ages'})} onOffer={t=>setTrade(t)}/>}
   {screen?.k==='council'&&engine&&<CouncilScreen engine={engine} initial={screen.tab} onClose={close}/>}
+  {screen?.k==='wonders'&&engine&&<WondersScreen engine={engine} initial={screen.tab} onClose={close}/>}
   {screen?.k==='ages'&&<AgesScreen hud={hud} engine={engine} onClose={close}/>}
   {screen?.k==='help'&&<HelpScreen onClose={close}/>}
   {screen?.k==='menu'&&<MenuScreen hud={hud} engine={engine} lifecycle={lifecycle as never} onClose={close} onTest={()=>setTest(true)} showTestLab={showTestLab} onShowTestLab={setShowTestLab} onHide={()=>setHidden(true)}/>}

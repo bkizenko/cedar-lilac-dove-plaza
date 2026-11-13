@@ -16,7 +16,9 @@ export const HELP_GROUPS:{id:string;title:string;icon:ReactNode;rows:Row[]}[]=[
  {id:'build',title:'Build and gather',icon:<Hammer size={30}/>,rows:[
   {keys:['1-8'],does:'Quick build'},{keys:['Enter'],does:'Select or place'},{keys:['Shift+Enter'],does:'Add to selection'},{keys:['N'],does:'Mark trees'},{keys:['G'],does:'Drill an adult'},{keys:['X'],does:'Explore'}]},
  {id:'time',title:'Time and menus',icon:<Clock size={30}/>,rows:[
-  {keys:['P','Space'],does:'Pause'},{keys:['-','+'],does:'Speed'},{keys:['L'],does:'Village ledger'},{keys:['Tab'],does:'Every menu'},{keys:['Esc'],does:'Cancel'},{keys:['M'],does:'Mute'}]},
+  {keys:['P','Space'],does:'Pause'},{keys:['-','+'],does:'Speed'},{keys:['L'],does:'Village ledger'},{keys:['Tab'],does:'Every menu'},{keys:['Esc'],does:'Cancel'},{keys:['M'],does:'Mute all sound'}]},
+ {id:'hud',title:'Interface and sound',icon:<Keyboard size={30}/>,rows:[
+  {keys:['O'],does:'Sound effects on or off'},{keys:['M'],does:'All sound on or off'},{keys:['Shift+M'],does:'Show or hide the minimap'},{keys:['U'],does:'Hide or show the interface'},{keys:['Shift+U'],does:'Minimise every panel, or show all'},{keys:['Minimise'],does:'Each panel has a Minimise button and leaves a labelled handle. Menu, Layout: Show all, Reset layout'}]},
  {id:'map',title:'Map layers',icon:<Flag size={30}/>,rows:[
   {keys:['Map'],does:'Territory, influence, resources, water: buttons under the map'}]},
 ];

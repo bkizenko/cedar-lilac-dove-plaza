@@ -15,7 +15,9 @@ export const CROP_ART_RULES={maxPlantInstances:8192,maximumPlantsPerField:512,ed
  rows:{grain:{rowMetres:.95,plantMetres:.82},pulses:{rowMetres:1.3,plantMetres:1.15},tubers:{rowMetres:1.45,plantMetres:1.3}}} as const;
 /** `site.terrace` (terrain model v2): the field stands on level terrace strips, so crops sit on the treads, not on the hillside between them. */
 export type RenderField={site?:{foundation?:string;terrace?:{k:string;n:number}};id:number;type:string;x:number;z:number;w:number;d:number;hp:number;team:number;build:number;plannedCost?:unknown;cropType?:FieldCrop;fallowYear?:number;fertility?:number;crop?:{kind?:FieldCrop;year?:number;water?:number;planted:number;tended:number;ripened:boolean;remaining:number}};
-type FieldGround={world:{heights:Float32Array};state:{time:number;buildings:RenderField[]};height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;navigationRevision?:()=>number};
+type FieldGround={world:{heights:Float32Array};state:{time:number;buildings:RenderField[];terrainModel?:string};height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;navigationRevision?:()=>number};
+/** Terrain model v3: a field that is not stone-terraced is ordinary farmland on a slope: earth bank or hedge at the lower edge, no stone lip, no wall. */
+export function ordinaryHillside(ground:{state:{terrainModel?:string}},field:RenderField){const t=field.site?.terrace;return ground.state.terrainModel==='v3'&&(!t||t.k==='none'||t.k==='bund');}
 export function fieldCropKind(field:RenderField):FieldCrop{return field.crop?.kind??field.cropType??'grain';}
 export function fieldCropGrowth(field:RenderField){const c=field.crop;return c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);}
 /** Rows use the measured contour tangent. Only interior plant roots rotate;
@@ -145,7 +147,7 @@ export class ContourFields {
  look(ground:FieldGround,field:RenderField,water=0):FieldLookData{
   const info=this.hood(ground).map.get(field.id),m=info?.mask??0,stage=fieldStage(field as never,ground.state.time),plan=this.orientation(ground,field),
    moisture=field.crop?.water??1,soil=fieldSoilColour(field.fertility??1,moisture,field.id);
-  return{edges:[m&EDGE.W?1:0,m&EDGE.E?1:0,m&EDGE.N?1:0,m&EDGE.S?1:0],look:[STAGE_INDEX[stage],water,fieldSeed(field.id),Math.min(1.2,plan.grade)],soil:[soil[0],soil[1],soil[2],fieldWeeds(stage,field.crop?.tended??0)],stage};
+  return{edges:[m&EDGE.W?1:0,m&EDGE.E?1:0,m&EDGE.N?1:0,m&EDGE.S?1:0],look:[STAGE_INDEX[stage],water,fieldSeed(field.id),ordinaryHillside(ground,field)?Math.min(.2,plan.grade):Math.min(1.2,plan.grade)],soil:[soil[0],soil[1],soil[2],fieldWeeds(stage,field.crop?.tended??0)],stage};
  }
 /** `opts.quality` picks the draw-distance tiers (full detail, low-poly boundaries and thinned crops, then soil texture only) for the painterly style. */
  sync(ground:FieldGround,camera:{x:number;z:number;y?:number},styleOf?:FieldStyleOf,opts:{quality?:'low'|'med'|'high'}={}){
@@ -225,11 +227,11 @@ export class ContourFields {
     if(room>0){this.weedMesh.instanceMatrix.array.set(room===w.n?w.mat:w.mat.subarray(0,room*16),weedN*16);this.weedMesh.instanceColor!.array.set(room===w.n?w.col:w.col.subarray(0,room*3),weedN*3);weedN+=room;sig.push(w.serial);}
    }
    // ---- boundaries
-   const st=styleOf?.(field)??{era:0,variant:0},bkind=boundaryKind(st.era,st.variant,plan.grade);
+   const st=styleOf?.(field)??{era:0,variant:0},ordinaryHill=ordinaryHillside(ground,field),bkind=boundaryKind(st.era,st.variant,plan.grade,ordinaryHill);
    const near=trails.length?trails.filter(t=>Math.abs(t.x-field.x)<field.w/2+3&&Math.abs(t.z-field.z)<field.d/2+3):[];
-   const bkey=`${field.x}/${field.z}/${field.w}/${field.d}/${mask}/${bkind}/${tier}/${season}/${revision}/${near.map(t=>`${Math.round(t.x)},${Math.round(t.z)}`).join(';')}`;
+   const lower=ordinaryHill&&plan.grade>.12,bkey=`${field.x}/${field.z}/${field.w}/${field.d}/${mask}/${bkind}${lower?'/low':''}/${tier}/${season}/${revision}/${near.map(t=>`${Math.round(t.x)},${Math.round(t.z)}`).join(';')}`;
    let bc=this.boundCache.get(field);
-   if(!bc||bc.key!==bkey||bc.plan!==plan)bc={serial:this.serial++,key:bkey,plan,items:this.boundaryItems(ground,field,mask,bkind,tier,season,near)},this.boundCache.set(field,bc);
+   if(!bc||bc.key!==bkey||bc.plan!==plan)bc={serial:this.serial++,key:bkey,plan,items:this.boundaryItems(ground,field,mask,bkind,tier,season,near,lower?{x:Math.sin(plan.angle),z:-Math.cos(plan.angle)}:null)},this.boundCache.set(field,bc);
    if(boundN+bc.items.length<=BOUNDARY_SCENE_BUDGET){
     for(const it of bc.items){const mesh=this.bounds.get(it.mesh)!,n=used.get(it.mesh)??0;if(n>=mesh.instanceMatrix.count)continue;
      mesh.instanceMatrix.array.set(it.mat,n*16);(mesh.instanceColor!.array as Float32Array).set(it.col,n*3);used.set(it.mesh,n+1);}
@@ -246,8 +248,9 @@ export class ContourFields {
   const revision=ground.navigationRevision?.()??0;if(this.lastSurfaceRevision!==revision){this.surface.texture.needsUpdate=true;this.lastSurfaceRevision=revision;}return {plants:total,...counts};
  }
  /** Instance data for one field's boundary: pieces follow the slope (pitch from the ground at both ends), run corner to corner, and carry local rock colour (stone) or season (the rest). */
- private boundaryItems(ground:FieldGround,field:RenderField,mask:number,kind:BoundaryKind,tier:number,season:number,crossings:{x:number;z:number}[]){
-  const sites=boundarySites(field,mask,kind,{crossings}),items:BoundaryItem[]=[],c=new THREE.Color(),pale=new THREE.Color();
+ private boundaryItems(ground:FieldGround,field:RenderField,mask:number,kind:BoundaryKind,tier:number,season:number,crossings:{x:number;z:number}[],lowerEdge:{x:number;z:number}|null=null){
+  // a hillside field keeps its bank on the lower edge and flanks only; the upper edge is left open (water runs onto it, a ditch would sit there)
+  const sites=boundarySites(field,mask,kind,{crossings}).filter(s=>!lowerEdge||((s.x-field.x)*lowerEdge.x+(s.z-field.z)*lowerEdge.z)>=-.2*Math.max(field.w,field.d)/2),items:BoundaryItem[]=[],c=new THREE.Color(),pale=new THREE.Color();
   for(const site of sites){
    const cs=Math.cos(site.yaw),sn=-Math.sin(site.yaw),half=site.len/2,h0=ground.height(site.x-cs*half,site.z-sn*half),h1=ground.height(site.x+cs*half,site.z+sn*half),pitch=Math.atan2(h1-h0,site.len);
    const meshKey=site.gate?'gate:0':`${kind}:${tier===1?'lo':site.variant}`;

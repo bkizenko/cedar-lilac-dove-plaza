@@ -1,8 +1,9 @@
 import {planFoodWithdrawal,commitFoodWithdrawal,setCarriedFood,receiveCarriedFood,carriedFoodLots} from './tradeFood';
 import {siteSlopeIssue} from './siteSlope';
-import {assessSite,siteRecord,type SiteAssessment} from './slopeTiers';
+import {assessSite,siteRecord,floodSite,pileDwellingClass,slopeClassOf,type SiteAssessment} from './slopeTiers';
+import {provinceAt} from './ecologicalProvinces';
 import {assessSiteV2} from './siteAssessmentV2';
-import {terrainV2,terraceCapability,altitudeAt} from './terraceRuntime';
+import {terrainV2,terrainV3,terraceCapability,altitudeAt} from './terraceRuntime';
 import {TERRACE_CLIFF_GRADE} from './terraceFarming';
 import {geologyAt} from './mapgen/geology/read';
 import {tradeCargoCapacity,PACK_TRADE_TRAVEL_RULES} from './tradeCargo';
@@ -47,6 +48,7 @@ import {enableTerrainInfluence} from './terrainInfluenceRuntime';
 import {enableCommanders,tickCommanders} from './commanders';
 import {tickNaval,navalIndependentFood} from './navalFleet';
 import {pauseNavalWork,navalWorkerCommitted} from './navalPorts';
+import {enableSkillModel,advanceSkillDay,gatherSkillStep,personSkillCard,villageSkillCard} from './skillRuntime';
 import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
 import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
@@ -175,6 +177,8 @@ import {wearTrail,pathPace,fadeTrails} from "./trails";
 import {traceStep,tickRouteWear} from "./routeWear";
 import {tickWaystations} from "./waystations";
 import {tickWonders} from "./wonderFounding";
+import {wonderDefenceFactor} from "./wonderEffects";
+import {lootRuins} from "./ruinsWorld";
 import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
@@ -244,6 +248,7 @@ import type {
   SeasonMix,
   PeaceTerm,
 } from "./types";
+import { eraText } from "./vocab";
 import { waterSurfaceAt, generateWorld, inBounds, isFertile, sampleHeight, sampleWorldHeight, type WorldData } from "./worldgen";
 
 const WALK = 520;
@@ -316,7 +321,7 @@ export class Game {
     this.walk = new Uint8Array(WALK * WALK);
     this.state = this.blank();
     this.state.slopeModel = "graded"; // new villages use the tiered slope model; saves without the field keep the earlier linear rule
-    this.state.terrainModel = "v2"; // terrain nuance + terrace farming; saves without the field keep the plain tiers
+    this.state.terrainModel = "v3"; // terrain nuance + ordinary hillside farming with optional terraces; saves keep the model they were made with (v2 = automatic terraces, none = plain tiers)
     this.workBoard.reset();
   }
 
@@ -444,13 +449,14 @@ export class Game {
     this.configureFlowFields();
     this.state = this.blank();
     this.state.slopeModel = "graded"; // new villages use the tiered slope model; saves without the field keep the earlier linear rule
-    this.state.terrainModel = "v2"; // terrain nuance + terrace farming; saves without the field keep the plain tiers
+    this.state.terrainModel = "v3"; // terrain nuance + ordinary hillside farming with optional terraces; saves keep the model they were made with (v2 = automatic terraces, none = plain tiers)
     this.state.finiteRaiderCampVersion=1;
     enableCombatDoctrine(this);
     enableTerrainInfluence(this);
     enableCommanders(this);
     this.state.difficulty=preset;
     this.state.buildingMaintenanceVersion=1;
+    if(request?.skillsVersion!==0)enableSkillModel(this); // new games track per-person skills; saves without the field keep the old behaviour
     this.workBoard.reset();
     this.paths.clear();
     this.state.seed = s;
@@ -1032,7 +1038,7 @@ export class Game {
   }
 
   banner(text: string, t = 2) {
-    this.state.banner = text;
+    this.state.banner = eraText(text, this.state.tribes?.[0]?.age ?? this.state.age);
     this.state.bannerT = t;
   }
 
@@ -1243,8 +1249,9 @@ export class Game {
   siteAssessment(type:BldType,x:number,z:number,w:number,d:number,hint=false):SiteAssessment{
     let ground:{rockName?:string;hardness?:number;soilDepthMeters?:number;landformTag?:string}|null=null;
     try{const r=geologyAt({size:this.world.size,mapgen:this.world.mapgen as never},x,z);if(r)ground={rockName:r.rockName,hardness:r.hardness,soilDepthMeters:r.soilDepthMeters,landformTag:r.landformTag};}catch{ground=null;}
-    if(terrainV2(this))return assessSiteV2((px,pz)=>this.height(px,pz),type,x,z,w,d,{ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d}),capability:type==='farm'?terraceCapability(this,0):undefined,altitude:altitudeAt(this,x,z),waterDistance:riverDistance(this,x,z),hint});
-    return assessSite((px,pz)=>this.height(px,pz),type,x,z,w,d,{ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d})});
+    const pile=pileDwellingClass(slopeClassOf(type),type),wetland=pile&&!!this.world.ecology&&provinceAt(this.world.ecology,x,z).kind==='wetland',flood=pile&&floodSite((px,pz)=>this.height(px,pz),(px,pz)=>this.waterAt(px,pz),x,z,w,d,wetland);
+    if(terrainV2(this))return assessSiteV2((px,pz)=>this.height(px,pz),type,x,z,w,d,{flood,model:terrainV3(this)?'v3':'v2',ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d}),capability:type==='farm'?terraceCapability(this,0):undefined,altitude:altitudeAt(this,x,z),waterDistance:riverDistance(this,x,z),hint});
+    return assessSite((px,pz)=>this.height(px,pz),type,x,z,w,d,{flood,ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d})});
   }
 
   placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan,quarterTurn=false): string | null {
@@ -1282,7 +1289,7 @@ export class Game {
       if(_team===0&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return "Explore the whole plot first";
       if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&!prep?.clearable.includes(n)&&Math.abs(n.x-x)<d.w/2+clearance&&Math.abs(n.z-z)<d.d/2+clearance))return "Clear resources from the plot first";
       if(this.state.buildings.some(b=>{if(b.id===ignoreId||b.hp<=0)return false;const gap=type==='farm'&&b.type==='farm'&&b.team===_team?-1e-4:clearance;return Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+gap&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+gap;}))return "Too close to another building";
-      if(type==="farm")return fieldTopographyIssue(this,{x,z,w:d.w,d:d.d},terrainV2(this)?TERRACE_CLIFF_GRADE:undefined);
+      if(type==="farm")return fieldTopographyIssue(this,{x,z,w:d.w,d:d.d},terrainV2(this)&&(!terrainV3(this)||_team===0)?TERRACE_CLIFF_GRADE:undefined);
       if(compactGrainSite)return null;
     }
     if (type !== "quarry") {
@@ -3022,7 +3029,7 @@ export class Game {
       this.banner(u.workReason,7);this.onSfx('drop');
       return true;
     }
-    return false;
+    return lootRuins(this,u);
   }
 
   exploreAI(u: Unit, dt: number) {
@@ -4637,7 +4644,7 @@ export class Game {
       if (u.team !== 0 && "species" in node && Math.hypot(node.x-this.campOf(u.team).x,node.z-this.campOf(u.team).z)>75) {
         u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Herd beyond safe gathering range — returning to local work";return;
       }
-      if("type" in node&&node.type==="farm"){fieldWorkStep(this,u,node as Building,dt);return;}
+      if("type" in node&&node.type==="farm"){fieldWorkStep(this,u,node as Building,dt*gatherSkillStep(this,u,"food",node,dt));return;}
       const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?(u.haulage==="canoe"||this.height(u.x,u.z)>this.waterAt(u.x,u.z)+.12)&&Math.hypot(u.x-node.x,u.z-node.z)<=(u.haulage==="canoe"?2:7):Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&["tree","stone","copper","iron"].includes(node.kind)?3.2:1.22);
       if (!atSurface()) {
         const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):"kind" in node&&node.kind==="fish"?fishingBank(this,u,node):this.nearestWalk(u,node.x,node.z);
@@ -4663,7 +4670,7 @@ export class Game {
         "kind" in node && node.kind === "forage" && calendar(this).phase === 3 ? 2.2 : 1;
       const winterFishing = calendar(this).phase === 3 && (("type" in node && node.type === "dock") || ("kind" in node && node.kind === "fish")) ? 1.65 : 1;
       const urgency = t === "food" && reserveSeconds(this, u.team) < 240 ? 1.25 : 1;
-      const period = g.period * this.campBonus(u, t) * winterForage * winterFishing * subsistenceLaborMultiplier(this,t,u.x,u.z) / (GATHER_WORK_RATE * urgency);
+      const period = g.period * this.campBonus(u, t) * winterForage * winterFishing * subsistenceLaborMultiplier(this,t,u.x,u.z) / (GATHER_WORK_RATE * urgency * gatherSkillStep(this,u,t,node as never,dt));
       u.gatherT += dt;
       commandUsefulWork(this,u,dt);
       u.stride += dt * 9;
@@ -4951,6 +4958,7 @@ export class Game {
     if(target.kind==='building'&&(intent==='capture'||(intent==='occupy'||intent==='loot')&&!['palisade','stonewall','gate','watchtower','keep'].includes(target.type)))return;
     if(source&&target.kind==='unit'&&!missionMayTargetCivilian(this,source,target))return;
     if(target.team===0&&attackerTeam!==0)dmg*=difficulty(this).damage;
+    if(this.state.wonders?.length)dmg*=wonderDefenceFactor(this.state,target.team,target.x,target.z);
     if(target.kind==='unit')dmg=armorCombatDamage(this,target,dmg);
     if(target.kind==='unit'&&attackerTeam===0&&isRivalTeam(target.team)&&source?.contactAttackTargetId!==target.id&&dmg>=target.hp&&acceptPrisonerSurrender(this,target,attackerTeam).accepted)return;
     if(attackerTeam===0&&target.team!==3)this.makeHostile(target.team);
@@ -5897,6 +5905,7 @@ export class Game {
       try {
         this.state.time += sdt;
         advanceRulers(this); // Claude rulers lane: no-op unless worldOptions.rulersVersion===1
+        advanceSkillDay(this); // per-person skills: one batch per sim day, no-op without state.skillModel
         reconcileSiegeRams(this);
         updateSeasonReports(this);
         phases?.mark('production');
@@ -6234,6 +6243,7 @@ export class Game {
         kind: "unit",
         type: u.type,
         team: u.team,
+        skills: u.team===0?personSkillCard(this,u):undefined,
         carry: u.carry > 0 && u.carryType ? (u.carryType==="food"?Object.entries(carriedFoodLots(u)).map(([k,n])=>`${n} ${k}`).join(" · "):u.carryType+" "+u.carry) + "/" + cap : "",
         job: u.order === "hold" ? "hold" : u.job,
       };
@@ -6435,6 +6445,7 @@ export class Game {
       muted: this.muted,
       quality: this.quality,
       workerSelected: units.filter((u) => u.type === "worker").length,
+      villageSkills: villageSkillCard(this,0),
       militiaSelected: units.filter(u=>u.militia).length,
       militarySelected: units.filter((u) => u.type !== "worker" && u.type !== "leader").length,
       job:

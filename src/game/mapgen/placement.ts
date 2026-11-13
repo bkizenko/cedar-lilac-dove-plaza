@@ -15,6 +15,7 @@ import type { Hydrology } from './hydro';
 import type { PresetSpec } from './presets';
 import { geologyAt, type GeologyGrid } from './geology/read';
 import { ROCKS } from './geology/rocks';
+import { StandField, standDensityMul, crownSpacing, type StandSite } from '../forestEcology';
 export type Camp = { x: number; z: number; team: number };
 export type StartCharacter = 'river-farmland' | 'lakeshore' | 'coastal' | 'upland-quarry' | 'woodland' | 'steppe-pasture' | 'wetland-delta' | 'valley';
 export type StartReport = { team: number; x: number; z: number; character: StartCharacter; quality: number; landmass: number; features: Record<string, number> };
@@ -34,6 +35,8 @@ export type PlacementCtx = {
   features: { kind: string; x: number; z: number }[];
   /** fresh (geologyVersion 1) worlds only: stone outcrops then follow rock hardness and thin soil; absent keeps the legacy placement exactly */
   geology?: GeologyGrid;
+  /** forestEcologyVersion 1 (fresh worlds): trees follow stands (glades, windthrow gaps, crown spacing, age-sized crowns); absent keeps the legacy placement exactly */
+  forestEcology?: true;
 };
 export type Placed = {
   trees: ResourceNode[]; stones: ResourceNode[]; forage: ResourceNode[]; fish: ResourceNode[]; copper: ResourceNode[]; iron: ResourceNode[];
@@ -97,6 +100,14 @@ export function placeWorld(ctx: PlacementCtx): Placed {
   const landmassOf = (x: number, z: number) => landLabels.labels[Math.max(0, Math.min(wn - 1, Math.round((z + half) / wCell))) * wn + Math.max(0, Math.min(wn - 1, Math.round((x + half) / wCell)))];
   // ---- trees: biome density x canopy noise, never on wet or very steep ground ------------------------
   const treeCap = Math.floor(4300 * Math.pow(size / 1040, 1.28));
+  // ecological stands: glades and gaps thin the woods, riparian ground carries gallery forest, crowns keep their spacing and trees are sized by stand age
+  const standSite = (x: number, z: number): StandSite => {
+    const ci = cellIndex(ecology, x, z), g = grade(x, z, 3);
+    let acid = 0.5;
+    if (ctx.geology) { const r = geologyAt({ size, mapgen: { geology: ctx.geology } }, x, z); const n = r?.rockName; acid = n === 'granite' ? 1 : n === 'sandstone' ? 0.75 : n === 'sediment' ? 0.6 : n === 'shale' ? 0.45 : n === 'basalt' ? 0.25 : n === 'limestone' ? 0 : 0.5; }
+    return { kind: kindAt(ecology, x, z), moisture: ecology.moisture[ci], temp: ecology.temperatureOffsetCelsius[ci], slope: g, soil: ecology.soil[ci], aspect: 0, waterDist: ecology.freshwaterDistanceMeters[ci], alt: sample(x, z) - level(x, z), acid };
+  };
+  const stands = ctx.forestEcology ? new StandField(ctx.seed, standSite) : null;
   const treeStep = 4.6, tCandidates: { x: number; z: number; p: number }[] = [];
   for (let z = -half + 8; z < half - 8; z += treeStep) {
     for (let x = -half + 8; x < half - 8; x += treeStep) {
@@ -114,6 +125,7 @@ export function placeWorld(ctx: PlacementCtx): Placed {
       if (kind === 'dry-scrub' || kind === 'arid' || (kind === 'meadow' && ecology.moisture[cellIndex(ecology, jx, jz)] < 0.5)) density += Math.exp(-fresh / 26) * 0.5;
       const g = grade(jx, jz, 3);
       density *= 1 - smoothstep(0.35, 0.8, g);
+      if (stands) { density *= standDensityMul(ctx.seed, jx, jz, 1 - Math.min(1, ecology.soil[cellIndex(ecology, jx, jz)] * 1.25)); if (fresh < 30 && ecology.moisture[cellIndex(ecology, jx, jz)] > 0.5) density *= 1.25; }
       if (density <= 0.01) continue;
       tCandidates.push({ x: jx, z: jz, p: density * 0.32 });
     }
@@ -123,8 +135,10 @@ export function placeWorld(ctx: PlacementCtx): Placed {
     if (trees.length >= treeCap) break;
     if (rand() > c.p) continue;
     if (!dryTreeRootLocal(sample, level, c.x, c.z)) continue;
-    if (bTree.any(c.x, c.z, treeSpacing)) continue;
-    const n = mk('tree', c.x, c.z, (14 + Math.floor(rand() * 14)) * 2, 0.8 + rand() * 0.65, 0.85 + rand() * 0.3);
+    const plan = stands ? stands.plan(nid, c.x, c.z) : null;
+    if (bTree.any(c.x, c.z, plan ? crownSpacing(plan.species, plan.size) : treeSpacing)) continue;
+    const n = mk('tree', c.x, c.z, (14 + Math.floor(rand() * 14)) * 2, plan ? plan.size : 0.8 + rand() * 0.65, 0.85 + rand() * 0.3);
+    if (plan) { rand(); }
     if (kindAt(ecology, c.x, c.z) === 'alpine' || kindAt(ecology, c.x, c.z) === 'arid') n.scale *= 0.8;
     trees.push(n);
     register(n);

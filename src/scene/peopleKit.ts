@@ -102,8 +102,11 @@ export function bodyParts(c:KitCtx){
 
 // ---------------------------------------------------------------- head, hair, face
 const HAIR_LOD:LodTier=1;
+/** near-black hair on dark skin reads as one dark block at any distance: lift it toward a warm brown */
+const lum=(h:string)=>{const n=parseInt(h.slice(1),16);return ((n>>16&255)+(n>>8&255)+(n&255))/3;};
+const darkLift=(h:string)=>{const n=parseInt(h.slice(1),16),l=((n>>16&255)+(n>>8&255)+(n&255))/3;return l<60?mix(h,'#7a6252',.7):h;};
 function hairParts(c:KitCtx,style:HairStyle,covered:boolean){
- const {pal,bones,look}=c,hs=look.body.head,hair=pal.hair,sk=pal.skin,out:RigPart[]=bones.head,cap=(l:LodTier=2)=>Q(hair,'cylinder',[.26*hs,.1*hs,.25*hs],[0,1.08*1,-.012],l,undefined,7);
+ const {pal,bones,look}=c,hs=look.body.head,hair=darkLift(pal.hair),sk=pal.skin,out:RigPart[]=bones.head,cap=(l:LodTier=2)=>Q(hair,'cylinder',[.26*hs,.1*hs,.25*hs],[0,1.08*1,-.012],l,undefined,7);
  const back=(h:number,y:number,w=.25,d=.07,l:LodTier=1)=>Q(hair,'box',[w*hs,h,d],[0,y,-.125*hs],l);
  if(style==='wrapped'||covered)return out.push(Q(hair,'box',[.2*hs,.1,.05],[0,.95,-.12*hs],HAIR_LOD));
  const stub=mix(hair,sk,.62);
@@ -121,10 +124,12 @@ function hairParts(c:KitCtx,style:HairStyle,covered:boolean){
   case 'curls':out.push(cap(2),...Array.from({length:7},(_,i)=>{const a=i/7*Math.PI*2;return Q(hair,'cone',[.09,.09,.09],[Math.sin(a)*.13*hs,1.0+(i%2)*.04,Math.cos(a)*.12*hs-.02],1,undefined,4);}));break;
  }
 }
+/** near-black hair on dark skin reads as one dark cube at distance: lift a very dark beard toward a warm brown so the jaw keeps a shape */
+const beardCol=(c:KitCtx)=>darkLift(c.pal.hair);
 const BEARD:Record<BeardStyle,(c:KitCtx)=>RigPart[]>={
  none:()=>[],stubble:c=>[Q(mix(c.pal.hair,c.pal.skin,.55),'box',[.17*c.look.face.jaw,.09,.035],[0,.94,.095],0)],
  short:c=>[Q(c.pal.hair,'box',[.19*c.look.face.jaw,.1,.07],[0,.94,.085],1),Q(c.pal.hair,'box',[.11,.025,.04],[0,1.0,.125],0)],
- full:c=>[Q(c.pal.hair,'box',[.2*c.look.face.jaw,.2,.09],[0,.82,.07],1),Q(c.pal.hair,'box',[.13,.03,.045],[0,.99,.125],0)],
+ full:c=>[Q(beardCol(c),'box',[.19*c.look.face.jaw,.15,.065],[0,.85,.08],1),Q(beardCol(c),'box',[.13,.03,.045],[0,.99,.125],0)],
  braided:c=>[Q(c.pal.hair,'box',[.18*c.look.face.jaw,.14,.08],[0,.86,.085],1),Q(c.pal.hair,'cylinder',[.045,.2,.04],[0,.7,.12],1,undefined,5),Q(c.pal.accent,'cylinder',[.056,.025,.056],[0,.74,.12],0,undefined,5)],
  moustache:c=>[Q(c.pal.hair,'box',[.15,.03,.05],[0,1.0,.125],0),Q(c.pal.hair,'box',[.03,.07,.04],[-.065,.94,.12],0),Q(c.pal.hair,'box',[.03,.07,.04],[.065,.94,.12],0)],
 };
@@ -142,7 +147,7 @@ export function headParts(c:KitCtx,coveredHair:boolean){
 
 // ---------------------------------------------------------------- headwear
 export function headwearParts(c:KitCtx,kind:HeadKind){
- const {pal,bones,look,rich}=c,hs=look.body.head,h=bones.head,cl=(kind==='turban'||kind==='headcloth'||kind==='veilwrap'||kind==='kerchief')?mix(pal.under,pal.cloth2,.3):pal.cloth,cl2=pal.cloth2,tr=pal.trim,ac=pal.accent,straw=mix('#c9a85a',pal.cloth2,.15);
+ const {pal,bones,look,rich}=c,hs=look.body.head,h=bones.head,cl=(kind==='turban'||kind==='headcloth'||kind==='veilwrap'||kind==='kerchief')?mix(pal.under,pal.cloth2,.3):pal.cloth,cl2=(['turban','headcloth','veilwrap','kerchief'].includes(kind)&&lum(pal.cloth2)<90)?mix(pal.cloth2,'#e8dcc0',.5):pal.cloth2,tr=pal.trim,ac=pal.accent,straw=mix('#c9a85a',pal.cloth2,.15);
  const crown=(w:number,y:number,hh:number,col:string,l:LodTier=2,sides=8)=>Q(col,'cylinder',[w*hs,hh,w*hs*.96],[0,y,-.01],l,undefined,sides);
  switch(kind){
   case 'none':return false;
@@ -158,7 +163,7 @@ export function headwearParts(c:KitCtx,kind:HeadKind){
   case 'hood':h.push(Q(cl,'sphere',[.29*hs,.3,.3*hs],[0,.96,-.03],2),Q(cl,'cone',[.2,.2,.2],[0,.84,-.2*hs],1,[.9,0,0],6),Q(pal.fur,'cylinder',[.28*hs,.04,.27*hs],[0,1.0,.02],1,undefined,8));return false;
   case 'fillet':h.push(Q(tr,'cylinder',[.27*hs,.03,.27*hs],[0,1.08,-.01],1,undefined,8),Q(ac,'sphere',[.04,.04,.03],[0,1.085,.125*hs],0));break;
   case 'kerchief':h.push(crown(.285,1.08,.06,cl,1),Q(cl,'box',[.2*hs,.1,.06],[0,.94,-.145*hs],1),Q(ac,'box',[.04,.07,.03],[.12*hs,1.08,.1],0,[0,0,.5]));break;
-  case 'veilwrap':h.push(crown(.31,1.03,.13,cl),crown(.29,1.15,.07,cl2,2),Q(cl,'box',[.26*hs,.36,.06],[0,.62,-.14*hs],2),Q(cl2,'box',[.2,.1,.05],[0,.9,.12*hs],0),Q(tr,'cylinder',[.31*hs,.02,.31*hs],[0,1.1,-.01],0,undefined,8));break;
+  case 'veilwrap':h.push(crown(.31,1.03,.13,cl),crown(.29,1.15,.07,shade(cl,1.12),2),Q(cl,'box',[.26*hs,.36,.06],[0,.62,-.14*hs],2),Q(mix(cl2,'#e8dcc0',.55),'box',[.17,.065,.04],[0,.9,.12*hs],0),Q(tr,'cylinder',[.31*hs,.02,.31*hs],[0,1.1,-.01],0,undefined,8));break;
  }
  const k:HeadKind=kind as HeadKind;return k==='turban'||k==='veilwrap'||k==='headcloth'||k==='feltcap'||k==='furcap'||k==='flapcap'||k==='cone'||k==='hood';
 }

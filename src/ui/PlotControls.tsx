@@ -12,11 +12,13 @@ import {productionSlots} from '../game/production';
 import {fieldProductionReport} from '../game/productionReport';
 import {WaterControls} from './WaterControls';
 import type {Engine} from '../game/engine';
+import {terraceUpgradeQuote,terraceUpgradeIssue,terraceField,terraceLean,terrainV3} from '../game/terraceRuntime';
 export function PlotControls({game:g,building:b,refresh,engine}:{game:Game;building:Building;refresh:()=>void;engine?:Engine|null}){
  const grainSite=compactGrainWorkplace(b.type),practiceIssue=grainExpansionPracticeIssue(g,b);
  const report=b.type==='farm'?fieldProductionReport(g,b):null;
  const year=calendar(g).year,sown=b.crop?.year===year&&(b.crop.planted||0)>0,resting=b.fallowYear===year;
  const crops=g.tribe(b.team).cultivated||[];
+ const hill=b.type==='farm'&&b.team===0&&terrainV3(g)?terraceUpgradeQuote(g,b):null,hillIssue=hill?terraceUpgradeIssue(g,b):null,lean=hill?terraceLean(g,b):null,rec=b.site?.terrace;
  return <section className="rounded-lg border border-parchment/20 p-3 text-sm" aria-label={grainSite?"Workshop capacity":"Plot details"}>
    <div className="flex justify-between gap-2"><strong>{report?report.stage:b.type==='pen'?'Pasture enclosure':grainSite?'Workshop capacity':'Food storage contribution'}</strong><span>{report?`${report.staff}/${report.workerSlots} workers`:b.type==='pen'?`${b.w.toFixed(0)} × ${b.d.toFixed(0)} m`:grainSite?`${productionSlots(b)} work slots`:`+${Math.floor(200*plotArea(b))} food threshold`}</span></div>
    {report&&<div className="mt-2 grid grid-cols-2 gap-2"><div><span className="block text-parchment-dim">Harvest forecast</span><strong>{report.projected} / {report.potential}</strong><span className="block text-xs text-parchment-dim">{report.kind} · current / full care</span></div><div><span className="block text-parchment-dim">Work remaining</span><strong>{report.workSeconds}s</strong></div></div>}
@@ -27,6 +29,13 @@ export function PlotControls({game:g,building:b,refresh,engine}:{game:Game;build
      <p>Fertility {Math.round((b.fertility??1)*100)}% · Pulses tire soil less. Tubers suit woodland.</p>
      <button disabled={calendar(g).phase!==0||sown} onClick={()=>{setFieldRest(g,b.id,!resting);refresh();}} className="rounded-md border border-bronze/40 p-2 disabled:opacity-40">{resting?'Plant this spring':'Rest soil this year'}</button>
      {(calendar(g).phase!==0||sown)&&<p>Choose rest before spring sowing.</p>}
+   </div></details>}
+   {hill&&rec&&<details className="craft-group mt-3"><summary>Hillside{rec.k==='none'?'':` · ${hill.from==='bund'?'earth bunds':'terraced'}`}</summary><div className="craft-options">
+     <p>{rec.slope.toFixed(0)}° slope · {rec.k==='none'?'furrows along the contour, earth bank at the lower edge':hill.from==='bund'?'earth contour bunds':'terraced strips'} · loses about {(rec.eros*100).toFixed(1)}% of its soil a year{b.soilLoss?` · ${Math.round(b.soilLoss*100)}% already gone`:''}</p>
+     {hill.to&&<p>{hill.detail}</p>}
+     {lean?.leans&&<p className="text-parchment-dim">Your people favour terracing a slope like this.</p>}
+     {hill.to&&<button disabled={!!hillIssue} onClick={()=>{terraceField(g,b);refresh();}} className="rounded-md border border-bronze/40 p-2 disabled:opacity-40">{hill.from==='none'?'Terrace this field':hill.label}<span className="block text-sm text-parchment-dim">{hillIssue??'Goods are spent now'}</span></button>}
+     {!hill.to&&<p>{hill.issue}</p>}
    </div></details>}
    {b.type==='farm'&&b.team===0&&<WaterControls game={g} building={b} engine={engine} refresh={refresh}/>}
    {b.expansion?<div className="mt-3 space-y-2"><p>{expansionStatus(g,b)}</p><button className="w-full rounded-md border border-bronze/40 px-3 py-2" onClick={()=>{g.orderConstruction(b);refresh();}}>Assign extension builders</button>{!b.expansion.paid&&<button className="w-full rounded-md border border-parchment/20 px-3 py-2" onClick={()=>{b.expansion=undefined;g.workBoard.reset();refresh();}}>Cancel extension</button>}</div>:<details className="mt-3"><summary className="cursor-pointer py-2 text-base">{grainSite?'Expand workshop':'Expand plot'}</summary>{practiceIssue&&<p className="text-parchment-dim">{practiceIssue}</p>}<div className="mt-2 grid grid-cols-2 gap-2">{(['w','d'] as const).map(axis=>{

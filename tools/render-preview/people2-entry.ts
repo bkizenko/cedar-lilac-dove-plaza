@@ -1,6 +1,7 @@
 /** Browser entry for the PEOPLE v2 contact sheets (bundled by people2.mjs with esbuild; REAL three.js, SwiftShader in the sandbox).
  * Everything drawn is generator output: the real CharacterRigLayer + real animator + real peopleLook/peopleKit/peopleGear, for any registered skin. */
 import * as THREE from 'three';
+import {NEAR_PEOPLE} from '@/scene/peopleDetail';
 import {CharacterRigLayer,type PeopleWorld} from '@/scene/characterRigLayer';
 import {cultureForSkin} from '@/scene/civPeople';
 import {skinById,listSkins} from '@/scene/civSkin';
@@ -10,7 +11,7 @@ import type {RigGear} from '@/scene/characterRig';
 import {TEAM_STYLE} from '@/game/constants';
 
 type Row={skin:string;type:string;role?:Role;cls?:'child'|'elder'|'leader';gear?:RigGear;order?:string;node?:unknown;moving?:boolean;carry?:number;target?:boolean;recipe?:string;farm?:{ripened?:boolean;planted?:number;tended?:number};id?:number;haulage?:string;legacyLook?:boolean};
-type Spec={width:number;height:number;season:string;era:number;seconds:number;cam:{pos:number[];target:number[];fov:number};people:{row:Row;x:number;z:number;facing:number}[];bg?:string;shadows?:boolean;ground?:string;rig1?:boolean;sil?:boolean};
+type Spec={width:number;height:number;season:string;era:number;seconds:number;cam:{pos:number[];target:number[];fov:number};people:{row:Row;x:number;z:number;facing:number}[];bg?:string;shadows?:boolean;ground?:string;rig1?:boolean;sil?:boolean;nearOff?:boolean};
 const cultures=new Map<string,ReturnType<typeof cultureForSkin>>();
 const cul=(id:string)=>{let c=cultures.get(id);if(!c){c=cultureForSkin(skinById(id)!,3);cultures.set(id,c);}return c;};
 function lights(scene:THREE.Scene,shadows:boolean){
@@ -21,6 +22,7 @@ function lights(scene:THREE.Scene,shadows:boolean){
 const W=window as unknown as {renderPeople2:(s:Spec)=>Promise<unknown>;skinIds:()=>string[]};
 W.skinIds=()=>listSkins().filter(s=>s.id!=='neutral').map(s=>s.id);
 W.renderPeople2=async(S:Spec)=>{
+ NEAR_PEOPLE.enabled=!S.nearOff;
  const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);renderer.setSize(S.width,S.height);document.body.appendChild(renderer.domElement);
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NeutralToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=S.shadows!==false;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  const scene=new THREE.Scene();scene.background=new THREE.Color(S.bg||'#cfd8c4');scene.fog=new THREE.Fog('#d9ccb0',120,420);lights(scene,S.shadows!==false);

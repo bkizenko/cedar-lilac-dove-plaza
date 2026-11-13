@@ -280,6 +280,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   seaRaid?: {plan?:import('./raidIntent').RaidPlan;x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   siegeRamId?:number;
   craftingXP?: number;
+  /** Per-person skill record (skills.ts); present only when state.skillModel is on. */
+  skills?:import('./skills').SkillRecord;
   craftingPractice?:{toolmaking?:import("./crafting").ToolmakingPractice};
   copperStudy?:import('./materialStudy').CopperStudy;
   caravanRoute?:number;
@@ -531,6 +533,7 @@ export type GameState = {
   retainedHousingProjects?:import('./housingTypes').RetainedHousingProject[];
   retainedBuildingRepairs?:import('./buildingMaintenance').RetainedBuildingRepair[];
   buildingMaintenanceVersion?:1;
+  skillModel?:import('./skillRuntime').SkillModel;
   raidDefense?:import('./warPrestige').RaidDefenseState;
   raidIntentHistory?:import('./raidIntent').RaidIntentHistory[];
   communityHandovers?:import("./communityHandoverTypes").CommunityHandover[];
@@ -608,14 +611,17 @@ export type GameState = {
   skins?: import("./skinState").SkinsState;
   /** Wonders standing or rising (src/game/wonderRecords.ts); drawn through the owner's CivSkin. Absent in old saves. */
   wonders?: import("./wonderRecords").WonderRecord[];
+  /** Ruins and ancient sites (src/game/ruinsWorld.ts); absent in old saves, which keep only the legacy cairns. */
+  ruins?: import("./ruinsWorld").RuinsState;
   tradeReports?: {team:number; time:number; offers:TradeDeal[]; observation?: {populationLow:number; populationHigh:number; buildings:number; stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>}}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
   growthPolicy?: "stable" | "welcome" | "eager";
   /** 'graded' = tiered slope model (slopeTiers.ts); absent = the earlier single linear tolerance, so old saves behave as before. */
   slopeModel?: "graded";
-  /** 'v2' = terrain nuance + terrace farming (slopeNuance.ts, terraceFarming.ts); needs slopeModel 'graded'. Absent = the plain graded tiers (fields refused above 22 degrees). */
-  terrainModel?: "v2";
+  /** 'v2' = terrain nuance + terraces assigned automatically by slope (slopeNuance.ts, terraceFarming.ts); 'v3' = the same nuance, but hillside farming is ordinary (contour furrows, lower-edge bank) and terraces are an optional upgrade (hillFarming.ts).
+   *  Both need slopeModel 'graded'. Absent = the plain graded tiers (fields refused above 22 degrees). Saves keep the model they were made with. */
+  terrainModel?: "v2" | "v3";
   laborPolicy?: "balanced" | "food" | "build" | "wood" | "stone" | "hunt" | "explore" | "trade";
   conflict?: "quiet" | "balanced" | "dangerous";
   seed: number;
@@ -688,9 +694,11 @@ export type HudSelection = {
   planned?: boolean;
   buildingId?: number;
   completed?: boolean;
+  skills?:import('./skillRuntime').PersonSkillCard;
 };
 
 export type HudSnapshot = {
+  villageSkills?:import('./skillRuntime').VillageSkillCard;
   foodLots?: Partial<Record<FoodKind,number>>;
   cornerstoneCount?: number;
   food: number;

@@ -26,6 +26,9 @@ export const DISCOVERIES = [
   { id: "stones", name: "Footsteps before ours", points: 6,
     hint: "Reach and investigate a standing-stone site with a villager.",
     met: (g: Game) => g.world.megaliths.some((_, i) => g.looted.has(i)) },
+  { id: "lore", name: "Words of the old makers", points: 6,
+    hint: "Search a ruin or an ancient site and bring back a carved record.",
+    met: (g: Game) => (g.state.ruins?.lore ?? 0) > 0 },
   { id: "outpost", name: "A foothold beyond home", points: 8,
     hint: "Finish a cornerstone outpost at least 64 units from the home camp.",
     met: (g: Game) => g.state.buildings.some(b => b.team === 0 && b.type === "cornerstone" && g.finished(b) &&
