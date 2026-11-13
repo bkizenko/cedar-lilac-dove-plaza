@@ -18,7 +18,7 @@ export function readAnimalSet():AnimalSet{
 }
 /** Models face +X; the sim's facing is atan2(vx,vz) (forward = +Z at facing 0). */
 export const FACING_OFFSET=-Math.PI/2;
-export type AnimalRow={c:{id:number;species:string;x:number;y:number;z:number;facing:number;scale:number;hp:number;fly:number;adultScale?:number;sex?:'female'|'male'};domestic:boolean;
+export type AnimalRow={c:{id:number;species:string;x:number;y:number;z:number;facing:number;scale:number;hp:number;fly:number;beh?:{st:string};vx?:number;vz?:number;adultScale?:number;sex?:'female'|'male'};domestic:boolean;
  /** 0 spring .. 3 winter and progress within it */season:number;within:number;shore:boolean};
 const bucket=(n:number)=>Math.round(n*4)/4;
 export class AnimalAdapter{
@@ -35,7 +35,7 @@ export class AnimalAdapter{
    const c=r.c,look=this.look(r);if(!look||!hasEntry(look.species))continue;
    const e=entryFor(look.species),dist=Math.hypot(c.x-camera.x,c.z-camera.z),tier=tierForDistance(dist),corpse=c.hp<=0;
    const bird=c.species==='bird',flying=bird&&c.y-0>0&&c.fly>0;
-   const mot=this.motion.step(c.id,c.x,c.z,now,e.gait,e.herbivore,r.shore,look.seed);
+   const mot=this.motion.step(c.id,c.x,c.z,now,e.gait,e.herbivore,r.shore,look.seed,c.beh?.st,Math.hypot(c.vx??0,c.vz??0));
    let gait:Gait|'fly'|'swim'|'glide'=corpse?'dead':mot.gait==='idle'?mot.idle:mot.gait,phase=mot.phase;
    if(bird&&!corpse){const sp=BIRDS[look.species as 'duck'];gait=flying?(look.species==='raptor'?'glide':'fly'):mot.gait==='idle'?'idle':'walk';phase=(now*sp.hz*(flying?1:.3)+look.seed%10/10)%1000;}
    const size=look.size;

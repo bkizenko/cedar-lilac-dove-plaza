@@ -77,6 +77,7 @@ import{beginBoatExploration}from'./boatExploration';
 import {beginPrisonerGuardQueries,endPrisonerGuardQueries} from './prisonerGuardQueries';
 import {beginBuildingQueries,endBuildingQueries,nearbyStepBuildings} from './buildingQueries';
 import {WildlifeObstacles,moveGroundWildlife,wildlifeBodyRadius} from './wildlifeMovement';
+import {tickAnimals,initAnimalGroups,spawnWolfPacks,animalRand} from './animalBehaviour';
 import{tickTradeIntel}from'./tradeIntel';
 import{fibreAI,tickFibre,pauseFibreWork,reconcileFibreDeaths}from'./fibre';
 import {scoutIndependentNeeds,tickScoutProvisions} from './scoutProvisions';
@@ -2379,6 +2380,9 @@ export class Game {
       }
     }
     this.state.wildlife = list;
+    // New games use the activity-based behaviour model; saves without the flag keep the legacy random walk.
+    initAnimalGroups(this);
+    spawnWolfPacks(this,Math.max(1,Math.round(list.filter(c=>c.species==='deer'||c.species==='goat').length/18)));
   }
 
   spawnRegions() {
@@ -2580,6 +2584,7 @@ export class Game {
 
   tickWildlife(dt: number) {
     const obstacles=new WildlifeObstacles(this.state.buildings.filter(b=>this.solidBuilding(b)));
+    const modern=this.state.animalBehaviourVersion===1,active:Critter[]=[];
     for (const c of this.state.wildlife) {
       if (c.hp <= 0) {
         if(updateCarcass(this,c))continue;
@@ -2593,7 +2598,7 @@ export class Game {
             Math.hypot(other.x - c.x, other.z - c.z) < 120);
           if (!herd) continue;
           for (let attempt = 0; attempt < 24; attempt++) {
-            const a = Math.random() * Math.PI * 2, d = 8 + Math.random() * 14;
+            const a = (modern?animalRand(this.state.seed,c.id,attempt+Math.floor(this.state.time/60)*31):Math.random()) * Math.PI * 2, d = 8 + (modern?animalRand(this.state.seed,c.id,attempt+7777+Math.floor(this.state.time/60)*31):Math.random()) * 14;
             const x = herd.x + Math.cos(a) * d, z = herd.z + Math.sin(a) * d;
             const y = this.height(x, z);
             if (!this.withinWorld(x,z,4) || !this.walkable(x,z) || !obstacles.clearAt({x,z},wildlifeBodyRadius(c)) || y <= this.waterAt(x,z) + 0.35 ||
@@ -2611,6 +2616,8 @@ export class Game {
       const handler=this.state.units.find(u=>u.hp>0&&u.tamingWork?.animal===c.id&&!u.tamingWork.paused&&u.order==='hold'&&Math.hypot(u.x-c.x,u.z-c.z)<8);
       if(handler){c.vx=0;c.vz=0;c.facing=Math.atan2(handler.x-c.x,handler.z-c.z);continue;}
       c.wanderT -= dt;
+      // Externally placed animals pinned with a huge legacy wander timer (fixtures, scripted scenes) keep the old tick exactly.
+      if(modern&&!(c.wanderT>5000&&!c.beh)){if(tickHuntingHazard(this,c,dt,obstacles))continue;active.push(c);continue;}
       if (c.species === "bird") {
         c.fly += dt * 0.7;
         const homeA = c.fly;
@@ -2658,6 +2665,7 @@ export class Game {
       moveGroundWildlife(this,c,dt,obstacles);
       if (Math.hypot(c.vx, c.vz) > 0.15) c.facing = Math.atan2(c.vx, c.vz);
     }
+    if(modern)tickAnimals(this,active,dt,obstacles);
     return obstacles;
   }
 
