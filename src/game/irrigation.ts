@@ -10,6 +10,8 @@ export interface Ditch{id:number;team:number;x0:number;z0:number;x1:number;z1:nu
 export interface IrrigationState{version:1;nextId:number;ditches:Ditch[]}
 type Switched={irrigation?:IrrigationState};
 const st=(g:Game)=>g.state as Game['state']&Switched;
+/** Public controls stay off until physical reserved digging, observed freshwater and strict geometry are qualified. Existing experimental save data is retained. */
+export const IRRIGATION_PLAYER_RELEASE_READY:boolean=false;
 export const IRRIGATION_RULES=Object.freeze({
  version:1,maximumDitches:48,maximumLengthMetres:90,intakeSearchMetres:80,
  /** Ground may sit this far above the intake water level and still be fed by a dug (gravity) channel. */
