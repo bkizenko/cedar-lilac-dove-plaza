@@ -10,9 +10,10 @@ import {FillerForest,type FillerTree,type FillerBlob} from './fillerForest';
 import {DRAW_DISTANCE_RULES,type DrawBands} from '../game/drawDistance';
 import {loadTreeSet,type TreeSet} from './treeSet';
 import type {TreeSite,BaseForm} from './botanicalSpecies';
+import {StandField,understoryBias,openAt,type StandSite} from '../game/forestEcology';
 /** Read-only adapter contract. Integrator can pass Game directly after the
  * versioned ecology grid is attached to its generated world. */
-export type BiomeSceneGame={chopMarks?:ReadonlySet<number>;world:{size:number;camps?:{x:number;z:number}[];mapgen?:{wind?:{x:number;z:number}}};state:{seed:number;trees:ResourceTree[];buildings:{hp:number;x:number;z:number;w:number;d:number;type?:string}[]};
+export type BiomeSceneGame={chopMarks?:ReadonlySet<number>;world:{size:number;camps?:{x:number;z:number}[];/** forestEcologyVersion 1: stands (forestEcology.ts); absent = the original per-tree species choice */options?:{forestEcologyVersion?:1};mapgen?:{wind?:{x:number;z:number}}};state:{seed:number;trees:ResourceTree[];buildings:{hp:number;x:number;z:number;w:number;d:number;type?:string}[]};
  height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;
  seasonMix:()=>{winter:number;autumn:number;snow:number}};
 export const BIOME_SCENE_RULES={treeRefreshSeconds:.1,dressingRefreshSeconds:.5,dressingCellMetres:6,dressingRadiusMetres:65,
@@ -77,10 +78,11 @@ function dressingForm(kind:ProvinceKind,random:number,bank:boolean):DressingForm
 }
 /** Painterly undergrowth: a denser jittered grid, forms chosen per province and moisture, coloured flower patches, nearest-first so the
  * instance cap always keeps what is around the camera. Same eligibility rules as the classic scatter (dry, gentle, outside buildings). */
-export type FloorSite={cover:number;edge:number;soil:number;slope:number};
+export type FloorSite={cover:number;edge:number;soil:number;slope:number;/** canopy species of the stand here (ecology on): biases the forest floor */species?:string;/** glade openness 0..1 */open?:number};
 const NO_SITE:FloorSite={cover:0,edge:0,soil:.8,slope:0};
 export function painterForm(kind:ProvinceKind,r:number,bank:boolean,moisture:number,site:FloorSite=NO_SITE):DressingPoint['kind']{
- const pick=(table:[DressingPoint['kind'],number][])=>{let t=0;for(const [,w] of table)t+=w;let v=r*t;for(const [k,w] of table){v-=w;if(v<0)return k;}return table[0][0];};
+ const bias=site.species?understoryBias(site.species,site.open??0,moisture):null;
+ const pick=(table:[DressingPoint['kind'],number][])=>{if(bias)table=table.map(([k,w])=>[k,w*(bias[k]??1)] as [DressingPoint['kind'],number]);let t=0;for(const [,w] of table)t+=w;let v=r*t;for(const [k,w] of table){v-=w;if(v<0)return k;}return table[0][0];};
  if(bank&&(kind==='wetland'||moisture>.6))return pick([['cattail',3],['reeds',4],['tallgrass',2],['grass',1]]);
  if(site.soil<.22)return pick([['pebbles',30],['rocks',12],['cushion',kind==='alpine'?14:4],['drygrass',16],['grass',8],['bush',2]]);
  if(site.cover>.3){ // under canopy: a forest floor of ferns, moss, fungi and deadwood, drier kinds keep grass and bushes
@@ -119,7 +121,7 @@ export function villageLawnPoints(game:BiomeSceneGame,camera:{x:number;z:number}
  }
  return points;
 }
-function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camera:{x:number;z:number},floor?:{cover:(x:number,z:number)=>number}){
+function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camera:{x:number;z:number},floor?:{cover:(x:number,z:number)=>number;stand?:(x:number,z:number)=>{species:string;open:number}}){
  const rules=BIOME_SCENE_RULES,cell=rules.painterCellMetres,cx=Math.floor(camera.x/cell),cz=Math.floor(camera.z/cell),radius=Math.ceil(rules.dressingRadiusMetres/cell),points:DressingPoint[]=[];
  for(let dz=-radius;dz<=radius;dz++)for(let dx=-radius;dx<=radius;dx++){
   const ix=cx+dx,iz=cz+dz,x=(ix+.12+hash(ix,iz,game.state.seed,7)*.76)*cell,z=(iz+.12+hash(ix,iz,game.state.seed,61)*.76)*cell,d=Math.hypot(x-camera.x,z-camera.z);
@@ -134,7 +136,7 @@ function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camer
   // density falls with distance so the far ring thins out instead of ending on a hard line
   let site:FloorSite=NO_SITE;
   if(floor){const cover=floor.cover(x,z),around=[floor.cover(x+9,z),floor.cover(x-9,z),floor.cover(x,z+9),floor.cover(x,z-9)];
-   site={cover,edge:Math.max(...around,cover)-Math.min(...around,cover),soil:gq?Math.max(0,Math.min(1,gq.soil)):Math.max(0,Math.min(1,cond.soil)),slope:0};}
+   site={cover,edge:Math.max(...around,cover)-Math.min(...around,cover),soil:gq?Math.max(0,Math.min(1,gq.soil)):Math.max(0,Math.min(1,cond.soil)),slope:0,...(floor.stand?floor.stand(x,z):{})};}
   const density=Math.min(1,art.dressingDensity*(site.cover>.3?1.75:1.1))*(1-.55*Math.pow(d/rules.dressingRadiusMetres,2))*(floor?.35+.65*Math.min(1,site.soil*1.4):1);
   if(hash(ix,iz,game.state.seed,103)>density)continue;
   let bank=false;
@@ -146,7 +148,7 @@ function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camer
  points.push(...villageLawnPoints(game,camera,'painterly'));
  return points.sort((a,b)=>Math.hypot(a.x-camera.x,a.z-camera.z)-Math.hypot(b.x-camera.x,b.z-camera.z)).slice(0,rules.painterMaxCandidates);
 }
-export function biomeDressingCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camera:{x:number;z:number},quality:VegetationContext['quality'],style:VegetationStyle='classic',floor?:{cover:(x:number,z:number)=>number}){
+export function biomeDressingCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camera:{x:number;z:number},quality:VegetationContext['quality'],style:VegetationStyle='classic',floor?:{cover:(x:number,z:number)=>number;stand?:(x:number,z:number)=>{species:string;open:number}}){
  if(quality==='low')return [];
  if(style==='painterly')return painterCandidates(game,grid,camera,floor);
  const rules=BIOME_SCENE_RULES,cell=rules.dressingCellMetres,cx=Math.floor(camera.x/cell),cz=Math.floor(camera.z/cell),radius=Math.ceil(rules.dressingRadiusMetres/cell),points:DressingPoint[]=[];
@@ -186,6 +188,16 @@ export function treeSiteAt(game:BiomeSceneGame,grid:EcologicalProvinceGrid,x:num
  const aspect=slope>.02?Math.max(-1,Math.min(1,gz/Math.max(slope,.05)*Math.min(1,slope*4)*-1)):0;
  return {moisture:cond.moisture,temp:cond.temperatureOffsetCelsius,slope,soil,aspect,waterDist:cond.freshwaterDistanceMeters};
 }
+/** Acidity of the bedrock under a point, 0 (limestone) .. 1 (granite, sandstone, sand); .5 when the map has no geology layer. Weights are [sandstone, limestone, basalt, granite], the remainder shale. */
+function acidityAt(game:BiomeSceneGame,x:number,z:number){const geo=peekGeology(game.world as never),gq=geo?geo.rockAt(x,z):null;if(!gq)return .5;const w=gq.weights,shale=Math.max(0,1-w[0]-w[1]-w[2]-w[3]);return Math.max(0,Math.min(1,w[0]*.75+w[1]*0+w[2]*.25+w[3]*1+shale*.45));}
+/** The stand model's view of a point: the botanical site plus province kind, altitude above local water and bedrock acidity. */
+export function standSiteAt(game:BiomeSceneGame,grid:EcologicalProvinceGrid,x:number,z:number):StandSite{
+ const t=treeSiteAt(game,grid,x,z);return {...t,kind:provinceAt(grid,x,z).kind,alt:game.height(x,z)-game.waterAt(x,z),acid:acidityAt(game,x,z)};
+}
+/** Stand field for a world, or null when the world predates forestEcologyVersion 1 (old saves keep the per-tree species choice). */
+export function standFieldFor(game:BiomeSceneGame,grid:EcologicalProvinceGrid):StandField|null{
+ return game.world.options?.forestEcologyVersion===1?new StandField(game.state.seed,(x,z)=>standSiteAt(game,grid,x,z)):null;
+}
 function toBaseForm(f:string):BaseForm{return (f==='broadleaf'||f==='conifer'||f==='willow'||f==='acacia'||f==='palm'||f==='stunted'||f==='scrub'?f:'broadleaf') as BaseForm;}
 /** Drop-in integration layer, not automatically mounted by importing it.
  * Construct/dispose on WorldView rebuild; sync at normal render cadence. */
@@ -193,18 +205,20 @@ export class BiomeSceneLayer {
  private grid:EcologicalProvinceGrid;private trees:BiomeVegetation|BotanicalForest;private dressing:BiomeDressing;private treeSet:TreeSet;private canopy=new CanopyCover();
  private treeIn=0;private dressingIn=0;private lastQuality='';private lastViewKey='';private lastBands:DrawBands|null=null;
  private style:VegetationStyle;
+ /** ecological stands (new worlds); null keeps the original species choice */
+ stands:StandField|null=null;
  /** cosmetic filler forest (painterly botanical set only); render-only, see fillerForest.ts */
  private lastDetail:TreeDetail|undefined;private filler:FillerForest|null=null;private fillerOut:{trees:FillerTree[];blobs:FillerBlob[]}={trees:[],blobs:[]};private buildingHash=new Map<number,{x:number;z:number;r:number}[]>();private buildingCount=-1;
  lastFiller:{detailEff:number;farEff:number;trees:number;blobs:number;deferred:number;treeCapped:boolean;blobCapped:boolean}|null=null;
  constructor(scene:THREE.Scene,game:BiomeSceneGame,grid:EcologicalProvinceGrid,style:VegetationStyle='classic',treeSet:TreeSet=loadTreeSet()){
   this.grid=grid;this.style=style;this.treeSet=treeSet;const seed=game.state.seed,profileAt=(x:number,z:number)=>provinceAt(grid,x,z);
-  if(style==='painterly'&&treeSet==='botanical'){const w=game.world.mapgen?.wind,wl=w?Math.hypot(w.x,w.z)||1:0;
-   this.trees=new BotanicalForest(scene,{seed,siteAt:(x,z)=>treeSiteAt(game,grid,x,z),baseFormAt:(id,x,z)=>{const p=profileAt(x,z);return {base:toBaseForm(resourceTreeForm(id,p,seed)),kind:p.kind};},wind:w?[w.x/wl,w.z/wl]:undefined,
+  if(style==='painterly'&&treeSet==='botanical'){const w=game.world.mapgen?.wind,wl=w?Math.hypot(w.x,w.z)||1:0;this.stands=standFieldFor(game,grid);
+   this.trees=new BotanicalForest(scene,{seed,ecology:this.stands??undefined,siteAt:(x,z)=>treeSiteAt(game,grid,x,z),baseFormAt:(id,x,z)=>{const p=profileAt(x,z);return {base:toBaseForm(resourceTreeForm(id,p,seed)),kind:p.kind};},wind:w?[w.x/wl,w.z/wl]:undefined,
     nearMetres:DETAIL_RULES.treeNear,farMetres:BIOME_VEGETATION_RULES.farMetres,lowFarMetres:BIOME_VEGETATION_RULES.lowFarMetres,stumpHeightScale:BIOME_VEGETATION_RULES.stumpHeightScale});
    this.filler=new FillerForest({seed,size:game.world.size,height:(x,z)=>game.height(x,z),waterAt:(x,z)=>game.waterAt(x,z),
     provinceAt:(x,z)=>{const p=provinceAt(grid,x,z);return {kind:p.kind,treeDensityPerHectare:p.treeDensityPerHectare};},
     soilAt:(x,z)=>{const geo=peekGeology(game.world as never),q=geo?geo.rockAt(x,z):null;return q?Math.max(0,Math.min(1,q.soil*(1-.7*q.scree))):null;},
-    camps:game.world.camps??[],baseFormAt:(id,x,z)=>toBaseForm(resourceTreeForm(id,profileAt(x,z),seed))});}
+    camps:game.world.camps??[],ecology:this.stands??undefined,baseFormAt:(id,x,z)=>toBaseForm(resourceTreeForm(id,profileAt(x,z),seed))});}
   else this.trees=new BiomeVegetation(scene,seed,profileAt,1,style);
   this.dressing=new BiomeDressing(scene,style,treeSet);
  }
@@ -234,7 +248,7 @@ export class BiomeSceneLayer {
      if(r.deferred>0)changedAgain=true;
     }else this.lastFiller=null;}
    treeReport=this.trees.sync(game.state.trees,context);this.treeIn=changedAgain?.0:BIOME_SCENE_RULES.treeRefreshSeconds;}
-  if(this.dressingIn<=0||changed){let floor:{cover:(x:number,z:number)=>number}|undefined;if(this.style==='painterly'&&this.treeSet==='botanical'){this.canopy.update(game.state.trees);floor=this.canopy;}
+  if(this.dressingIn<=0||changed){let floor:{cover:(x:number,z:number)=>number;stand?:(x:number,z:number)=>{species:string;open:number}}|undefined;if(this.style==='painterly'&&this.treeSet==='botanical'){this.canopy.update(game.state.trees);floor=this.stands?{cover:this.canopy.cover,stand:(x:number,z:number)=>({species:this.stands!.at(x,z).primary,open:openAt(game.state.seed,x,z)})}:this.canopy;}
    const points=biomeDressingCandidates(game,this.grid,camera,quality,this.style,floor);dressingCount=this.dressing.sync(points,context,(x,z)=>dressingGroundAllowed(game,x,z));this.dressingIn=BIOME_SCENE_RULES.dressingRefreshSeconds;}
   return {treeReport,dressingCount};
  }
