@@ -12,7 +12,7 @@ export function useFold(id:PanelId):Fold{
  useLayoutVersion();
  const collapsed=layout.isCollapsed(id);
  const [phase,setPhase]=useState<'open'|'closing'|'closed'|'opening'>(collapsed?'closed':'open');
- const timer=useRef<ReturnType<typeof setTimeout>>();
+ const timer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined);
  useEffect(()=>{
   clearTimeout(timer.current);
   if(collapsed&&(phase==='open'||phase==='opening')){if(reduced())setPhase('closed');else{setPhase('closing');timer.current=setTimeout(()=>setPhase('closed'),FOLD_MS);}}

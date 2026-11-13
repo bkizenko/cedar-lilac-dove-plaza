@@ -23,7 +23,7 @@ export class WonderLayer{
  static levelOf(r:WonderRecord){return r.project?Math.min(STAGE_COUNT-1,stageOfLabour(r.progress,1)):STAGE_COUNT;}
  /** The kit spec for a record under a skin at a construction level (pure; exported for tests and the harness). Level 4 is the finished wonder. */
  static specFor(r:WonderRecord,skin:CivSkin|null,level=WonderLayer.levelOf(r)):BuildingSpec{
-  const civ:CivId=skin?.grammar??'aureline',options:WonderOptions={footprint:{w:r.w,d:r.d},era:r.era??3,wealth:r.wealth??.6,...(r.look??{}),...(skin?.palette?{palette:skin.palette,signature:skin.wonder.signature}:{}),...(level<STAGE_COUNT?{stage:level}:{})};
+  const civ:CivId=skin?.grammar??'aureline',options:WonderOptions={footprint:{w:r.w,d:r.d},era:r.era??3,wealth:r.wealth??.6,...((r.look??{}) as WonderOptions),...(skin?.palette?{palette:skin.palette,signature:skin.wonder.signature}:{}),...(level<STAGE_COUNT?{stage:level}:{})};
   const plan=generateWonderKit({v:1,seed:hashSeed(r.seed,'wonder',r.id),civ,family:r.family,options});
   return {...plan.spec,variantKey:`wonder.${r.id}.${level}.${skin?skinSignature(skin):'-'}`,materials:plan.materials};
  }

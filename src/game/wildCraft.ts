@@ -41,7 +41,7 @@ export const WILD_RULES={version:1,maxProjects:64,maxTraps:48,maxTrail:12,trailS
 /** Finite extra parts per carcass beyond meat/hide/bone, by species (game units). */
 export const BUTCHERY_PARTS:Record<CritterKind,{fat:number;sinew:number;brain:number;horn:number}>={
  deer:{fat:3,sinew:2,brain:1,horn:2},boar:{fat:6,sinew:2,brain:1,horn:2},goat:{fat:2,sinew:1,brain:1,horn:2},
- sheep:{fat:3,sinew:1,brain:1,horn:0},horse:{fat:4,sinew:4,brain:1,horn:0},cattle:{fat:8,sinew:4,brain:1,horn:2},bird:{fat:0,sinew:0,brain:0,horn:0}};
+ sheep:{fat:3,sinew:1,brain:1,horn:0},horse:{fat:4,sinew:4,brain:1,horn:0},cattle:{fat:8,sinew:4,brain:1,horn:2},bird:{fat:0,sinew:0,brain:0,horn:0},wolf:{fat:1,sinew:2,brain:1,horn:0}};
 
 /** Hunting method by held tool and animal. Pure: the AI and the feedback share it. */
 export type HuntMethod='stalk-spear'|'bow-ambush'|'thrown-stones'|'blade-close'|'snare'|'pitfall'|'dog-drive'|'fishing';

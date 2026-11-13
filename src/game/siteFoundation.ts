@@ -34,13 +34,13 @@ export function foundationBoxes(kind:FoundationKind|undefined,b:FoundationInput,
  const ground=(x:number,z:number,w=0)=>{let m=Infinity;for(const [ox,oz] of w?[[0,0],[w,0],[-w,0],[0,w],[0,-w]]:[[0,0]])m=Math.min(m,o.height(x+ox,z+oz));return m;};
  const out:FoundationBox[]=[];
  /** Box between two world points, bottom at the lowest terrain under it. */
- const strip=(ax:number,az:number,bx:number,bz:number,width:number,top:number,kind:FoundationBoxKind,minGap=R.minimumGapMetres)=>{
+ const strip=(ax:number,az:number,bx:number,bz:number,width:number,top:number,kind:FoundationBoxKind,minGap:number=R.minimumGapMetres)=>{
   const dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz);if(len<.02)return;const n=Math.max(1,Math.ceil(len/R.segmentMetres)),nx=-dz/len,nz=dx/len;
   for(let i=0;i<n;i++){const x0=ax+dx*i/n,z0=az+dz*i/n,x1=ax+dx*(i+1)/n,z1=az+dz*(i+1)/n;let lo=Infinity;
    for(const t of[0,.5,1])for(const side of[-.5,0,.5])lo=Math.min(lo,o.height(x0+(x1-x0)*t+nx*width*side,z0+(z1-z0)*t+nz*width*side));
    if(top-lo<minGap)continue;lo-=burial;out.push({x:(x0+x1)/2,z:(z0+z1)/2,y:(top+lo)/2,length:len/n+.012,width,height:top-lo,yaw:Math.atan2(-dz,dx),kind});}
  };
- const ring=(m:number,width:number,top:number,kind:FoundationBoxKind,minGap=R.minimumGapMetres)=>{
+ const ring=(m:number,width:number,top:number,kind:FoundationBoxKind,minGap:number=R.minimumGapMetres)=>{
   if(plan?.polys.length){
    // the real wall outlines of the generated model (local frame, never team-scaled), mitred outward by m
    const Wp=(p:{x:number;z:number})=>({x:b.x+c*p.x+s*p.z,z:b.z-s*p.x+c*p.z});
