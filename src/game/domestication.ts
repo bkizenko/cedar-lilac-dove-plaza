@@ -42,7 +42,7 @@ export function finishDomesticationTrial(g:Game,u:Unit,outcome:DomesticationOutc
 }
 export function noteDomesticationArrival(g:Game,u:Unit){if(u.tamingWork?.trial?.resolved==='success')history(g.tribe(0)).arrivals++;}
 /** Invalid actors lose the failed attempt reservation; actual paid bait is never refunded. Valid paused work remains paid. */
-export function reconcileDomestication(g:Game){for(const u of g.state.units){const w=u.tamingWork;if(!w?.trial)continue;const pen=g.state.buildings.find(b=>b.id===w.pen&&b.team===0&&b.type==='pen'&&g.finished(b)),animal=g.state.wildlife.find(a=>a.id===w.animal&&a.hp>0)||g.state.livestock?.find(a=>a.id===w.animal&&a.hp>0);
+export function reconcileDomestication(g:Game){if(!g.state.tribes.find(t=>t.id===0)?.domestication)return;for(const u of g.state.units){const w=u.tamingWork;if(!w?.trial)continue;const pen=g.state.buildings.find(b=>b.id===w.pen&&b.team===0&&b.type==='pen'&&g.finished(b)),animal=g.state.wildlife.find(a=>a.id===w.animal&&a.hp>0)||g.state.livestock?.find(a=>a.id===w.animal&&a.hp>0);
  if(u.hp>0&&u.team===0&&!u.prisoner&&u.enslavedFrom===undefined&&pen&&animal)continue;
  finishDomesticationTrial(g,u,'abandoned');delete u.tamingWork;delete u.goatSearchPen;g.workBoard.reset();if(u.hp>0&&u.team===0){u.order='return';u.recalled=true;u.workReason='Taming attempt ended; actual carried supplies return home';}
 }}

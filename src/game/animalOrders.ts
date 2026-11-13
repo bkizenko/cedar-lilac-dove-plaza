@@ -137,10 +137,11 @@ function tickGoatSearchOrder(g:Game,pen:Building){
  const scout=g.state.units.find(u=>u.hp>0&&u.goatSearchPen===pen.id&&(u.order==='explore'||u.exploreAfterDelivery));
  if(scout){q.state='searching';delete q.reason;return;}
  if((q.paidTrials||0)>=DOMESTICATION_RULES.maximumSearchTrials){q.state='exhausted';q.reason='refused';return;}
+ if(g.state.time<q.nextAttemptAt)return;
+ q.nextAttemptAt=g.state.time+GOAT_QUEUE_RULES.retrySeconds;
  const cooling=g.state.wildlife.filter(a=>a.hp>0&&a.species==='goat'&&g.visibleAt(a.x,a.z)&&Math.hypot(a.x-pen.x,a.z-pen.z)<HERD.searchRadiusMeters);
  if(cooling.length&&!cooling.some(a=>domesticationReady(g,a))){q.state='waiting';q.reason='cooldown';return;}
- if(g.state.time<q.nextAttemptAt)return;
- q.nextAttemptAt=g.state.time+GOAT_QUEUE_RULES.retrySeconds;q.state='waiting';delete q.reason;
+ q.state='waiting';delete q.reason;
  const reserved=penPlacesReserved(g,pen.id);
  if(penPlacesOccupied(g,pen.id)+reserved>=surveyPenPasture(g,pen).eligibleCapacity){q.reason='space';return;}
  if(g.tribe(0).food<HERD.tamingFood){q.reason='food';return;}

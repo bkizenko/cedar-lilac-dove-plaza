@@ -9,7 +9,7 @@ import {insidePen} from '../src/game/penGeometry.ts';
 
 // Authored finite initial people, bait, completed pen and wild individuals.
 // Natural generated terrain; subsequent movement, handling and arrivals use Game.step.
-function fixture(species='goat',seed=42){
+function fixture(species='goat',seed=42,sequence){
  const g=new Game();g.reset(seed,2);g.enterIsland();g.state.units=[];g.state.buildings=[];
  for(const k of ['trees','forage','stones','fish','wildlife','copper','iron'])g.state[k]=[];
  g.state.time=100;g.state.weather='clear';g.state.autoWorkEnabled=false;g.state.paused=false;g.state.nightWork=true;delete g.state.survivalVersion;
@@ -20,7 +20,11 @@ function fixture(species='goat',seed=42){
  assert.ok(point);const hall=g.makeBld('townhall',c.x,c.z,0),pen=g.makeBld('pen',point.x,point.z,0);pen.w=pen.d=16;g.state.buildings=[hall,pen];g.rebuildWalk();
  const at=g.nearestWalk(c.x+8,c.z+8);assert.ok(at);const u=g.spawnUnit('worker',at.x,at.z,0);Object.assign(u,{order:'hold',jobLock:false});
  let wildPoint;for(let r=10;r<26&&!wildPoint;r+=2)for(let i=0;i<24&&!wildPoint;i++){const x=pen.x+Math.cos(i*Math.PI/12)*r,z=pen.z+Math.sin(i*Math.PI/12)*r;if(g.walkable(x,z)&&g.height(x,z)>g.waterAt(x,z)+.5&&g.workBoard.connected(g,u.x,u.z,x,z)&&g.workBoard.connected(g,x,z,pen.x,pen.z))wildPoint={x,z};}
- assert.ok(wildPoint);const a={id:g.id(),species,x:wildPoint.x,y:g.height(wildPoint.x,wildPoint.z),z:wildPoint.z,facing:0,vx:0,vz:0,wanderT:10000,hp:24,maxHp:24,fly:0,scale:1,...(species==='sheep'?{fleece:{version:1,units:2,grownUnits:2,shearedUnits:0}}:{})};if(species==='sheep')g.state.sheepVersion=1;g.state.wildlife=[a];return{g,u,pen,a};
+ assert.ok(wildPoint);let id=g.id();
+ // Choose an explicitly authored initial individual for outcome-specific regression.
+ // No live roll, RNG, body or terrain is changed after an attempt is admitted.
+ if(sequence){const draw=(id,i)=>{let n=(seed^Math.imul(id,0x45d9f3b)^Math.imul(i,0x27d4eb2d))>>>0;n=Math.imul(n^(n>>>16),0x7feb352d);n=Math.imul(n^(n>>>15),0x846ca68b);return((n^(n>>>16))>>>0)/4294967296;};while(!(draw(id,1)>.95&&(sequence==='refuse-twice'?draw(id,2)>.95:draw(id,2)<.4)))id=g.id();}
+ const a={id,species,x:wildPoint.x,y:g.height(wildPoint.x,wildPoint.z),z:wildPoint.z,facing:0,vx:0,vz:0,wanderT:10000,hp:24,maxHp:24,fly:0,scale:1,...(species==='sheep'?{fleece:{version:1,units:2,grownUnits:2,shearedUnits:0}}:{})};if(species==='sheep')g.state.sheepVersion=1;g.state.wildlife=[a];return{g,u,pen,a};
 }
 function drive(g,seconds,done){const end=g.state.time+seconds;while(g.state.time<end&&!done()){g.step(.2);assert.deepEqual(g.simulationErrors,[]);}assert.ok(done(),JSON.stringify({time:g.state.time,report:domesticationReport(g),animals:g.state.livestock,units:g.state.units.map(u=>({id:u.id,x:u.x,z:u.z,order:u.order,reason:u.workReason,work:u.tamingWork})),queue:g.state.buildings.find(b=>b.type==='pen')?.goatSearch}));}
 const outcome=(g,u)=>!u.tamingWork?.trial||u.tamingWork.trial.resolved==='success';
@@ -52,4 +56,22 @@ test('legacy already paid unmarked handling remains guaranteed with its original
 test('trial snapshots and individual history reject forged or unbounded saves',()=>{
  const{g,u,pen}=fixture();assert.equal(beginHerdTaming(g,pen.id,u.id),true);const saved=encodeGame(g);
  for(const edit of [s=>s.units.find(p=>p.id===u.id).tamingWork.trial.roll=.12345,s=>s.units.find(p=>p.id===u.id).tamingWork.trial.paidFood=0,s=>s.units.find(p=>p.id===u.id).tamingWork.trial.chance=2,s=>s.wildlife[0].domestication.temperament=.12345,s=>s.tribes[0].domestication.paidAttempts=0]){const raw=structuredClone(saved);edit(raw.state);assert.throws(()=>decodeGame(raw));}
+});
+
+test('actual refusal spends finite bait then paid retry handles and escorts the same animal after strict reload',()=>{
+ let{g,u,pen,a}=fixture('goat',42,'refuse-then-success');const aid=a.id,uid=u.id,pid=pen.id,food=g.tribe(0).food;
+ assert.equal(beginHerdTaming(g,pid,uid),true);assert.ok(u.tamingWork.trial.roll>=u.tamingWork.trial.chance);
+ drive(g,240,()=>domesticationReport(g).refusals===1);assert.equal(u.tamingWork,undefined);assert.equal(penPlacesReserved(g,pid),0);assert.equal(g.state.wildlife.find(v=>v.id===aid).hp>0,true);assert.equal(g.state.livestock?.some(v=>v.id===aid)||false,false);
+ assert.equal(g.tribe(0).food,food-6);assert.equal(beginHerdTaming(g,pid,uid),false,'refused animal cooldown or actual return prevents instant repurchase');
+ g=decodeGame(encodeGame(g));u=g.state.units.find(v=>v.id===uid);pen=g.state.buildings.find(v=>v.id===pid);a=g.state.wildlife.find(v=>v.id===aid);
+ drive(g,180,()=>g.state.time>=a.domestication.cooldownUntil&&!u.recalled&&u.order!=='return');
+ const before=g.tribe(0).food;assert.equal(beginHerdTaming(g,pid,uid),true);assert.equal(g.tribe(0).food,before-6);assert.equal(u.tamingWork.trial.attempt,2);assert.ok(u.tamingWork.trial.roll<u.tamingWork.trial.chance);
+ drive(g,300,()=>domesticationReport(g).arrivals===1);const herd=g.state.livestock.filter(v=>v.id===aid);assert.equal(herd.length,1);assert.ok(insidePen(pen,herd[0].x,herd[0].z,.25));assert.equal(g.state.wildlife.some(v=>v.id===aid),false);
+ assert.deepEqual(herd[0].domestication.recent.map(r=>r.outcome),['refused','success']);assert.equal(u.domesticationPractice.completed,2);assert.equal(domesticationReport(g).baitSpent,12);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+test('one goat search stops after two actual refusals without a stuck capture or third bait debit',()=>{
+ const{g,u,pen,a}=fixture('goat',42,'refuse-twice');const food=g.tribe(0).food;
+ assert.equal(searchForWildGoats(g,pen.id).accepted,true);drive(g,600,()=>pen.goatSearch.state==='exhausted');
+ assert.equal(pen.goatSearch.reason,'refused');assert.equal(pen.goatSearch.paidTrials,2);assert.equal(domesticationReport(g).refusals,2);assert.equal(domesticationReport(g).paidAttempts,2);assert.equal(g.state.wildlife.some(v=>v.id===a.id&&v.hp>0),true);assert.equal(u.tamingWork,undefined);assert.equal(penPlacesReserved(g,pen.id),0);
+ const spent=g.tribe(0).food;drive(g,60,()=>g.state.time>=pen.goatSearch.nextAttemptAt+20);assert.equal(domesticationReport(g).paidAttempts,2);assert.ok(g.tribe(0).food<=food-12);assert.equal(domesticationReport(g).baitSpent,12);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
