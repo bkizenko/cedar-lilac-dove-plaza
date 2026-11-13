@@ -18,9 +18,10 @@ import type {CivSeed,Material} from '../game/civGenerator';
 import {SKIN_SPECS,AFFINITY,MATERIAL_SWATCH,MATERIAL_ROOF,EXTRA_EMBLEMS,CIV_FORMS,HALL_OF_ROOF,WALL_OF_COURSE} from './civSkinData';
 import {NEUTRAL_FORMS,type SkinForms} from './buildingHelpers';
 import type {LookOverride} from './peopleLook';
+import {genomeForCivId,repairSkinData,tasteEnvelopeEnabled,type Palette} from './tasteEnvelope';
 
 export const SKIN_VERSION=1;
-export type SkinMode='preset'|'remix'|'free'|'neutral';
+export type SkinMode='preset'|'remix'|'free'|'generated'|'neutral';
 export type Granary=CivStyle['granary'];
 export const BANNER_STYLES:BannerStyle[]=['flag','swallow','hanging','streamers','pennant','twin'];
 export type GarbMaterial='stone'|'mudbrick'|'timber'|'wattle';
@@ -110,7 +111,7 @@ export const presetSkin=(civ:CivId):CivSkin=>REGISTRY.get(`civ:${civ}`)!;
 // ---------------------------------------------------------------- validation (persistence uses this)
 export function validSkin(x:unknown):x is CivSkin{
  const s=x as CivSkin;if(!s||typeof s!=='object'||s.v!==1||typeof s.id!=='string'||!s.id||typeof s.name!=='string')return false;
- if(!['preset','remix','free','neutral'].includes(s.mode))return false;
+ if(!['preset','remix','free','generated','neutral'].includes(s.mode))return false;
  if(s.mode==='neutral')return s.grammar===null&&s.palette===null;
  if(!isCivId(s.grammar)||!s.palette)return false;
  for(const k of ['wall','wall2','roof','trim','accent','cloth','ground'] as const)if(!validSwatch(s.palette[k]))return false;
@@ -215,8 +216,25 @@ const slotOf=(id:string)=>{const n=Number(id.split('-').pop());return Number.isF
 export function skinFromCiv(civ:CivSeed):CivSkin{
  const origin={civ:civ.id,slot:slotOf(civ.id)};
  if(civ.mode==='preset'&&isCivId(civ.preset))return {...presetSkin(civ.preset),origin};
- if(civ.mode==='remix'&&isCivId(civ.preset))return remixSkin(civ,presetSkin(civ.preset));
- return freeSkin(civ);
+ if(civ.mode==='generated')return generatedSkin(civ);
+ const skin=civ.mode==='remix'&&isCivId(civ.preset)?remixSkin(civ,presetSkin(civ.preset)):freeSkin(civ);
+ return tasteEnvelopeEnabled()?tasteRepaired(skin):skin;
+}
+/** Taste-envelope repair of a free/remix skin (switch off by default: old saves and presets are untouched). Palette, garment colours, cut, headwear and roof are clamped deterministically. */
+function tasteRepaired(skin:CivSkin):CivSkin{
+ if(!skin.palette||!skin.grammar)return skin;
+ const pal={} as Palette;for(const k of ['wall','wall2','roof','trim','accent','cloth','ground'] as const)pal[k]=skin.palette[k].hex;
+ const fixed=repairSkinData({palette:pal,climate:CIVS[skin.grammar].climate,garb:skin.garb,roof:skin.roof as string},skin.id);
+ const palette={...skin.palette} as CivMaterials;for(const k of ['wall','wall2','roof','trim','accent','cloth','ground'] as const)palette[k]={...skin.palette[k],hex:fixed.palette[k]};
+ return {...skin,palette,roof:fixed.roof as RoofForm,garb:{...skin.garb,cut:fixed.garb.cut as CivDress['cut'],headwear:fixed.garb.headwear as CivDress['headwear'],body:fixed.garb.body,trim:fixed.garb.trim}};
+}
+/** A 'generated' civ: every field comes from its validated StyleGenome (tasteEnvelope.ts), so the buildings, people, banner and wonder of one civ share one look. */
+function generatedSkin(civ:CivSeed):CivSkin{
+ const g=genomeForCivId(civ.id),c=CIVS[g.grammar],M=g.materials;
+ const sw=(m:Material,hex:string,roof=false):Swatch=>{const b=roof?MATERIAL_ROOF[m]:MATERIAL_SWATCH[m];return {hex,roughness:b.roughness,course:b.course};};
+ const palette:CivMaterials={wall:sw(M.wall,g.palette.wall),wall2:sw(M.wall2,g.palette.wall2),roof:sw(M.roof,g.palette.roof,true),trim:{hex:g.palette.trim,roughness:.75,course:c.materials.trim.course},accent:{hex:g.palette.accent,roughness:.6},cloth:{hex:g.palette.cloth,roughness:.9,course:'cloth'},ground:{hex:g.palette.ground,roughness:1}};
+ return {v:1,id:'gen:'+civ.id,name:civ.name,mode:'generated',grammar:g.grammar,preset:g.grammar,palette,roof:g.roofForm,granary:g.granary,banner:{style:g.banner.style,emblem:g.banner.emblem},wonder:{signature:g.wonder.signature},
+  garb:{cut:g.garb.cut,headwear:g.garb.headwear,body:g.garb.body,trim:g.garb.trim,motif:g.garb.motif,climate:g.climate,coastal:g.coastal,material:GARB_MATERIAL[g.grammar]},silhouette:g.silhouette,hueShift:0,origin:{civ:civ.id,slot:slotOf(civ.id)}};
 }
 export {SILHOUETTES,MATERIAL_SWATCH};
 export type {Material};

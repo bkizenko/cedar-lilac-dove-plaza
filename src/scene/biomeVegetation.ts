@@ -23,7 +23,7 @@ export function resourceTreeForm(id:number,profile:VegetationProfile,seed:number
 }
 import type {ForestFiller} from './botanicalForest';
 export type VegetationContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number;
- /** draw-distance bands (see src/game/drawDistance.ts); absent = the original radii */farMetres?:number;fadeMetres?:number;inView?:(x:number,z:number,r:number)=>boolean;filler?:ForestFiller|null};
+ /** tree detail step numbers (see TREE_DETAIL): absent = the per-quality radii */detail?:{nearMetres:number;cardScale:number};/** draw-distance bands (see src/game/drawDistance.ts); absent = the original radii */farMetres?:number;fadeMetres?:number;inView?:(x:number,z:number,r:number)=>boolean;filler?:ForestFiller|null};
 type Part='trunk'|'canopy';
 export type VegetationStyle='classic'|'painterly';
 type AnyForm=TreeForm|'birch'|'cypress';
@@ -84,10 +84,10 @@ export class BiomeVegetation {
   const counts=new Map<AnyForm,{trunk:number;canopy:number}>();for(const form of this.forms){counts.set(form,{trunk:0,canopy:0});const b=this.batches.get(form)!;b.ids.trunk.length=b.ids.canopy.length=0;}
   let farTrunks=0,blobs=0;this.farTrunkIds.length=0;
   const farCounts=[0,0];this.farIds[0].length=this.farIds[1].length=0;
-  const near=BIOME_VEGETATION_RULES.nearMetres[context.quality];
+  const near=context.detail?context.detail.nearMetres:BIOME_VEGETATION_RULES.nearMetres[context.quality];
   for(const node of nodes){
    if(!context.known(node.x,node.z))continue;
-   const distance=Math.hypot(node.x-context.camera.x,node.z-context.camera.z);if(distance>(context.farMetres!==undefined?context.farMetres*(context.quality==='low'?BIOME_VEGETATION_RULES.lowFarMetres/BIOME_VEGETATION_RULES.farMetres:1):context.quality==='low'?BIOME_VEGETATION_RULES.lowFarMetres:BIOME_VEGETATION_RULES.farMetres))continue;
+   const distance=Math.hypot(node.x-context.camera.x,node.z-context.camera.z);if(distance>(context.farMetres!==undefined?context.farMetres*(context.quality==='low'&&!context.detail?BIOME_VEGETATION_RULES.lowFarMetres/BIOME_VEGETATION_RULES.farMetres:1):context.quality==='low'?BIOME_VEGETATION_RULES.lowFarMetres:BIOME_VEGETATION_RULES.farMetres))continue;
    let form=this.cache.get(node.id);if(!form){const profile=this.profileAt(node.x,node.z),base=resourceTreeForm(node.id,profile,this.seed);form=this.style==='painterly'?this.variant(base,profile.kind,node.id):base;this.cache.set(node.id,form);}
    const stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=node.scale*growth;
    const deciduous=form==='broadleaf'||form==='willow'||form==='birch',bare=deciduous&&context.winter>.8&&context.snow<.4;
