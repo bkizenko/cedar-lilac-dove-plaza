@@ -566,3 +566,15 @@ test('lane A: a deep unsettled grievance yields a hunting-ground claim; war or l
  R.eventClaims(g);assert.ok(R.claimsOf(g,b).filter(c=>c.holder===String(a)&&c.kind==='claim').length<=1,'repeat year does not duplicate');
  assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))));void canHold;
 });
+
+test('lane A: wardReturns validator accepts bounded feed records and rejects malformed or oversized ones; old saves without it load',async()=>{
+ const {validRulersState,initRulers}=await import('../src/game/rulersState.ts');
+ const s=initRulers(7,['a','b']);
+ assert.ok(validRulersState(s),'old save: no wardReturns');
+ const rec={kind:'foster',name:'Ada',from:'a',to:'b',year:5,how:'grown',age:16};
+ assert.ok(validRulersState(JSON.parse(JSON.stringify({...s,wardReturns:[rec]}))),'record survives JSON round-trip');
+ for(const bad of [{...rec,kind:'tribute'},{...rec,name:'x'.repeat(61)},{...rec,name:5},null])
+  assert.equal(validRulersState({...s,wardReturns:[bad]}),false,'malformed wardReturn rejected');
+ assert.equal(validRulersState({...s,wardReturns:Array(25).fill(rec)}),false,'oversized list rejected');
+ assert.equal(validRulersState({...s,wardReturns:'x'}),false);
+});
