@@ -10,13 +10,14 @@
  * Nothing here scripts a performance: no unit animates a job it is not doing. */
 import {CLIPS,clipForActivity,phaseFor,samplePose,blendPoses,gaitBlend,gaitStride,unitVariation,gaitFor,sampleDeath,deathClipFor,DEATH_SECONDS,stancePose,type Activity,type ClipId,type DeathClipId,type Pose,type Variation} from './animationClips';
 import {TOOL_FOR_CLIP,type ItemId} from './characterRig';
+import type {CarryStyleId} from './carryStyles';
 
 /** The Unit fields read (all optional so tests and the archive can build partial units). */
-export type UnitLike={id:number;type:string;team:number;x:number;y:number;z:number;vx:number;vz:number;facing:number;hp:number;order:string;r?:number;range?:number;cd?:number;rof?:number;carry?:number;militia?:boolean;
+export type UnitLike={id:number;type:string;team:number;x:number;y:number;z:number;vx:number;vz:number;facing:number;hp:number;order:string;r?:number;range?:number;cd?:number;rof?:number;carry?:number;/** Unit.carryType: the cargo kind (food, wood, stone, copper, iron) that sets how it is carried */carryType?:string;militia?:boolean;
  node?:unknown;target?:{x:number;z:number;r?:number}|null;plantingWork?:unknown;haulage?:string;boat?:{phase?:string};warming?:boolean;/** Unit.workReason: the sim's own 'Warming up by the lit hearth' marks a unit warming at a lit fire */workReason?:string;stride?:number;maturesAt?:number;ageT?:number;
  copperStudy?:{paused?:boolean}|null;husbandryWork?:unknown;weaponWork?:{paused?:boolean}|null;farmToolWork?:unknown;tamingWork?:unknown;haulageWork?:unknown;shelterId?:number};
 export type ProjectLike={phase:string;recipe:string;progress:number;blockedReason?:string};
-export type AnimContext={time:number;project?:ProjectLike;fireLit?:boolean;/** carried amount over capacity, 0..1 */load:number;/** the farm building the unit works, from its real crop record */farm?:{ripened?:boolean;planted?:number;tended?:number}|null};
+export type AnimContext={time:number;project?:ProjectLike;fireLit?:boolean;/** carried amount over capacity, 0..1 */load:number;/** the farm building the unit works, from its real crop record */farm?:{ripened?:boolean;planted?:number;tended?:number}|null;/** how this person carries the load (carryStyles.carryStyleFor); absent = the generic carry posture */carry?:{style:CarryStyleId;mass:number}|null};
 const WEAPON:Record<string,'spear'|'bow'|'blade'|undefined>={spearman:'spear',archer:'bow',ranger:'bow',swordsman:'blade'};
 export const weaponOf=(type:string)=>WEAPON[type];
 const isFish=(n:unknown)=>!!n&&typeof n==='object'&&(n as {kind?:string}).kind==='fish';
@@ -57,7 +58,11 @@ export function stepAnimator(st:AnimState,u:UnitLike,ctx:AnimContext):AnimFrame{
   st.run+=(target-st.run)*Math.min(1,dt*6);if(Math.abs(target-st.run)<1e-4)st.run=target;
   st.gait+=moved/gaitStride(st.run);const ph=st.gait+st.variation.phaseOffset;phase=ph-Math.floor(ph);
   pose=st.run>.001?blendPoses(samplePose(CLIPS.walk,phase,st.variation,sel.load),samplePose(CLIPS.run,phase,st.variation,sel.load),st.run):samplePose(clip,phase,st.variation,sel.load);
- }else{st.run=0;pose=samplePose(clip,phase,st.variation,sel.load);}
+ }else{
+  // a loaded person who stands still keeps the carry posture (hand on the strap, head upright under the jar) with both feet together
+  const stand=sel.clip==='idle'&&!!ctx.carry,carrying=(sel.clip==='carry'||stand)&&ctx.carry;st.run=0;
+  pose=samplePose(stand?CLIPS.carry:clip,stand?.25:phase,st.variation,stand?Math.max(sel.load,ctx.carry!.mass):sel.load,carrying?{id:ctx.carry!.style,mass:ctx.carry!.mass}:undefined);
+ }
  pose=stancePose(pose,sel.clip,WEAPON[u.type]);
  return {clip:sel.clip,phase,pose,load:sel.load,reason:sel.reason,itemR:TOOL_FOR_CLIP[sel.clip]};
 }
