@@ -57,6 +57,8 @@ import {validCombatDoctrine} from './combatDoctrine';
 import {validGuardDuties} from './guardDuty';
 import {validRaidReports} from './raidReports';
 import {validTransit} from './transit';
+import {validRouteWear} from './routeWear';
+import {validWaystations} from './waystations';
 import {validTerrainInfluence} from './terrainInfluenceRuntime';
 import {validCommanders} from './commanders';
 import {validNaval} from './navalPorts';
@@ -211,7 +213,7 @@ function validateGamePayload(raw: unknown) {
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s)||!validPenBeddingState(s))fail();
   if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validMethodRecords(s)||!validMethodRecordPickups(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
-  if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s)||!validTerrainInfluence(s)||!validCommanders(s)||!validNaval(s))fail();
+  if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s)||!validRouteWear(s)||!validWaystations(s)||!validTerrainInfluence(s)||!validCommanders(s)||!validNaval(s))fail();
   if(!validBoatPractice(s)||!validSailingState(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
