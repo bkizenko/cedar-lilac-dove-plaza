@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints} from 'lucide-react';
 import type {Engine} from '@/game/engine';
+import {MusicChip} from './MusicControls';
 import type {HudSnapshot} from '@/game/types';
 import {BUILDINGS} from '@/game/constants';
 import {YEAR_SECONDS} from '@/game/settlement';
@@ -45,6 +46,7 @@ export function TimeCard({hud,engine,onAges,onMenu}:{hud:HudSnapshot;engine:Engi
    <IconBtn label="Four times speed" active={!hud.paused&&speed===4} onClick={()=>engine?.setSpeed(4)}><span className="hw-x4">4×</span></IconBtn>
    <IconBtn label="Menu" onClick={onMenu}><MenuIcon size={26}/></IconBtn>
   </div>
+  <MusicChip engine={engine}/>
  </div>;
 }
 

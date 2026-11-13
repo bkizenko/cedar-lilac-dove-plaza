@@ -485,3 +485,11 @@
 /* Wheel, trackpad and touch inside the interface scroll the interface, never the camera: contain chaining, allow vertical pan. */
 .hw *{overscroll-behavior:contain}
 .hw-screen,.hw-sel,.hw-tiles,.hw-tray,.hw-notes{touch-action:pan-y}
+
+.hw-rotate{display:flex;flex-wrap:wrap;align-items:center;gap:var(--hw-s2)}
+.hw-rotate-btn{min-height:52px;min-width:52px;font-size:16px;padding:0 var(--hw-s4)}
+.hw-rotate-btn svg{width:20px;height:20px}
+.hw-rotate-hint{font-size:16px;color:var(--hw-dim,inherit);opacity:.8}
+.hw-music{display:flex;gap:var(--hw-s2);justify-content:flex-end}
+.hw-music-panel label{display:grid;gap:var(--hw-s1,4px);font-size:16px}
+.hw-music-panel .hw-btn-wide{min-height:52px;font-size:16px}

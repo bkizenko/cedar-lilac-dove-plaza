@@ -11,18 +11,23 @@ const r3=(v:number)=>Math.round(v*1000)/1000;
 
 // ---------------------------------------------------------------- settings / buses
 export type Bus='master'|'music'|'sfx'|'ambience';
-export type AudioSettings={master:number;music:number;sfx:number;ambience:number;muted:boolean};
-export const DEFAULT_AUDIO_SETTINGS:AudioSettings={master:.8,music:.55,sfx:.7,ambience:.6,muted:false};
+export type AudioSettings={master:number;music:number;sfx:number;ambience:number;muted:boolean;musicPaused:boolean};
+export const DEFAULT_AUDIO_SETTINGS:AudioSettings={master:.8,music:.4,sfx:.7,ambience:.6,muted:false,musicPaused:false};
 export const AUDIO_SETTINGS_KEY='hearthwild.audio.v1';
 export function normaliseSettings(raw:unknown):AudioSettings{
  const o=(raw&&typeof raw==='object'?raw:{}) as Record<string,unknown>,d=DEFAULT_AUDIO_SETTINGS;
  const n=(k:Bus)=>typeof o[k]==='number'&&Number.isFinite(o[k] as number)?clamp(o[k] as number):d[k];
- return {master:n('master'),music:n('music'),sfx:n('sfx'),ambience:n('ambience'),muted:typeof o.muted==='boolean'?o.muted:d.muted};
+ return {master:n('master'),music:n('music'),sfx:n('sfx'),ambience:n('ambience'),muted:typeof o.muted==='boolean'?o.muted:d.muted,musicPaused:typeof o.musicPaused==='boolean'?o.musicPaused:d.musicPaused};
 }
 /** Gain a bus node should hold. Volume curve is quadratic so the slider feels even. */
 export function busGain(s:AudioSettings,bus:Bus):number{
  if(s.muted)return 0;const v=bus==='master'?s.master:s[bus]*s.master;return r3(v*v);
 }
+/** How far the recorded score ducks under the nature bed: ambience at full lowers music to 45% of its level; ambience off leaves it alone. */
+export function musicDuck(ambienceGain:number):number{const a=Math.max(0,Math.min(1,ambienceGain));return r3(1-.55*Math.sqrt(a));}
+/** Seconds of silence between recorded pieces: sparse, so the birds, wind and water carry most of the day. */
+export const MUSIC_REST_MIN=90,MUSIC_REST_SPAN=120;
+export function musicRestSeconds(rand:number):number{return MUSIC_REST_MIN+Math.max(0,Math.min(1,rand))*MUSIC_REST_SPAN;}
 export function loadSettings(storage:Pick<Storage,'getItem'>|undefined|null):AudioSettings{
  try{const t=storage?.getItem(AUDIO_SETTINGS_KEY);return normaliseSettings(t?JSON.parse(t):null);}catch{return {...DEFAULT_AUDIO_SETTINGS};}
 }
