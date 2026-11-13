@@ -681,3 +681,28 @@ test('lane A: shared hunting ground is derived from real herds beside both house
  g.state.wildlife=[{species:'deer',hp:5,x:b1.x+5000,z:b1.z}];assert.equal(R.sharedGame(g,1,2),0,'far herd counts for no one');
  assert.equal(JSON.stringify(g.state.buildings.map(b=>[b.x,b.z]))+g.state.units.length,before,'pure read: nothing moved or spawned');
 });
+
+test('lane A: a starving neighbour sends its own people on foot; the player takes them in or turns them away; nothing is created',async()=>{
+ const {sendRefugees,answerRefugees,pendingRefugees,refugeeAI}=await import('../src/game/refugees.ts');
+ const {dispatchEngineCommand}=await import('../src/game/engineDispatch.ts').catch(()=>({}));void dispatchEngineCommand;
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*2+1;advanceRulers(g);
+ const t=g.state.tribes.findIndex((_,i)=>i>=1&&i!==3&&g.tribe(i));
+ const rel=(f,o)=>{const l=(g.state.societyRelations??=[]);let r=l.find(x=>x.from===f&&x.to===o);if(!r){r={from:f,to:o,known:true,trust:0,grievance:0,hostile:false,peaceUntil:0,lastContactSecond:0};l.push(r);}r.known=true;r.hostile=false;};
+ rel(t,0);rel(0,t);
+ assert.equal(sendRefugees(g).length,0,'fed neighbour sends no one');
+ const stock=g.tribe(t);stock.food=0;stock.foodLots={};
+ const before=g.state.units.length,sent=sendRefugees(g);
+ assert.ok(sent.includes(t),'starving neighbour sends a party');
+ assert.equal(g.state.units.length,before,'no units spawned');
+ const party=pendingRefugees(g,t);assert.ok(party.length>=1&&party.every(u=>u.team===t&&u.foundingJourney&&u.refugee.phase==='walking'));
+ assert.deepEqual(JSON.parse(JSON.stringify(party[0].refugee)),party[0].refugee,'survives JSON');
+ assert.equal(sendRefugees(g).length,0,'one standing party per society');
+ assert.equal(answerRefugees(g,t,true).ok,false,'cannot take in people still on the road');
+ const hall=g.campOf(0);
+ for(const u of party){u.x=hall.x+6;u.z=hall.z+6;}
+ for(const u of party)refugeeAI(g,u,.1);assert.ok(party.every(u=>u.refugee.phase==='waiting'));
+ const turned=JSON.parse(JSON.stringify(g.state.units.map(u=>u.id)));
+ const n=party.length,r=answerRefugees(g,t,true);
+ if(r.ok){assert.ok(party.every(u=>u.team===0&&!u.refugee&&!u.foundingJourney),'taken in: their own people join');assert.equal(g.state.units.length,before);}
+ else assert.match(r.reason,/room/);void n;void turned;
+});

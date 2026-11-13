@@ -7,6 +7,7 @@ import { soilQuality } from "./ecology";
 import { expansionParty, partyRisk } from './rulersRuntime';
 import { noteSettlement } from './societyRuntime';
 import { hasTaskCommitment } from './workCommitments';
+import { refugeeAI } from './refugees';
 export function lifeEvent(g: Game, team: number, text: string, x?: number, z?: number) {
   const history = (g.state.lifeHistory ??= []);
   history.push({ team, text, time: g.state.time });
@@ -208,6 +209,7 @@ function landRations(g: Game, u: Unit) {
 export function foundingJourneyAI(g: Game, u: Unit, dt: number) {
   const mission = u.foundingJourney;
   if (!mission) return false;
+  if (u.refugee) return refugeeAI(g, u, dt);
   if (u.team === 0) {
     u.foundingJourney = undefined;
     u.order = u.carry > 0 ? "return" : "hold";
