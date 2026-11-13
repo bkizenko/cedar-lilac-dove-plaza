@@ -10,7 +10,9 @@ import {validAgreement,validHistory,HISTORY_CAP,type Agreement,type HistoryEntry
 export type Outcome={plans:number;completed:number;abandoned:number;expired:number;interrupted:number;switched:number;raids:number;settles:number;pacts:number;held:Record<Kind,number>};
 export type LastDecision={t:number;kind:Kind;change:string;why:string[];alternatives:{kind:Kind;score:number;feasible:boolean;blocked?:string;reasons:string[];target?:number}[]};
 export type DecisionState={version:1;nextId:number;reviewAt:Record<string,number>;plans:Record<string,Plan>;director:Record<string,Director>;last:Record<string,LastDecision>;
- intel:IntelRecord[];agreements:Agreement[];history:Record<string,HistoryEntry[]>;outcomes:Record<string,Outcome>;breakaways:Breakaway[];lastRuler?:Record<string,string>;civic?:CivicState};
+ intel:IntelRecord[];agreements:Agreement[];history:Record<string,HistoryEntry[]>;outcomes:Record<string,Outcome>;breakaways:Breakaway[];lastRuler?:Record<string,string>;civic?:CivicState;/** ruler-change hall events (banner, mourning, handover card), newest last, capped; optional so old saves load */halls?:HallEvent[]};
+export type HallEvent={id:number;team:number;kind:'ruler-death'|'ruler-set-aside';time:number;mourningUntil:number;from:string;to:string;relation:'child'|'sibling'|'kin'|'none';contested:boolean;carried:number;strained:number;lapsed:number};
+export const HALL_EVENT_CAP=12;
 export const DECISION_LIMITS={intel:64,agreements:64,breakaways:32,history:HISTORY_CAP} as const;
 export const emptyOutcome=():Outcome=>({plans:0,completed:0,abandoned:0,expired:0,interrupted:0,switched:0,raids:0,settles:0,pacts:0,held:Object.fromEntries(KINDS.map(k=>[k,0])) as Record<Kind,number>});
 export const emptyDecisions=():DecisionState=>({version:1,nextId:1,reviewAt:{},plans:{},director:{},last:{},intel:[],agreements:[],history:{},outcomes:{},breakaways:[]});
@@ -33,5 +35,6 @@ export function validDecisionState(x:unknown):x is DecisionState{
  for(const o of Object.values(s.outcomes))if(!o||![o.plans,o.completed,o.abandoned,o.expired,o.interrupted,o.switched,o.raids,o.settles,o.pacts].every(num)||!rec(o.held))return false;
  if(s.lastRuler!==undefined&&!rec(s.lastRuler))return false;
  if(s.civic!==undefined&&!validCivic(s.civic))return false;
+ if(s.halls!==undefined&&(!Array.isArray(s.halls)||s.halls.length>HALL_EVENT_CAP||s.halls.some(h=>!h||!Number.isInteger(h.id)||!Number.isInteger(h.team)||!['ruler-death','ruler-set-aside'].includes(h.kind)||!num(h.time)||!num(h.mourningUntil)||h.mourningUntil<h.time||typeof h.from!=='string'||typeof h.to!=='string'||h.from.length>80||h.to.length>80||!['child','sibling','kin','none'].includes(h.relation)||typeof h.contested!=='boolean'||![h.carried,h.strained,h.lapsed].every(num))))return false;
  return true;
 }

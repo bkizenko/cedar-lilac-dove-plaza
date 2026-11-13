@@ -4,7 +4,7 @@
  * writes to the world are placing a watchtower the society can pay for, a recovery pause, and relation/unrest nudges through the existing ledgers.
  * Old saves (no option, no field) skip every entry point and behave exactly as before. */
 import type {Game} from './sim';
-import {ensureRulers,livingPeople,expansionOf,expansionInputs,expansionParty,unrestOf,wearinessOf} from './rulersRuntime';
+import {ensureRulers,livingPeople,expansionOf,expansionInputs,expansionParty,RULERS_YEAR_SECONDS,unrestOf,wearinessOf} from './rulersRuntime';
 import {societyRelation,nudgeSocietyRelation,agreeSocietyTruce} from './societyRelations';
 import {knownStructures} from './structureKnowledge';
 import {reserveSeconds,foodDemand,isDependent} from './settlement';
@@ -16,7 +16,7 @@ import {clamp01} from './rulerCore';
 import {DECISION_RULES,enumerate,decide,planFrom,maySpend,type Needs,type Plan,type TargetView,type Decision} from './societyDecisions';
 import {direct,type Director} from './strategicDirector';
 import {recordFromSightings,targetView,exposure,type IntelRecord,type Sighting} from './societyIntel';
-import {emptyDecisions,emptyOutcome,DECISION_LIMITS,type DecisionState,type LastDecision} from './societyState';
+import {emptyDecisions,emptyOutcome,DECISION_LIMITS,HALL_EVENT_CAP,type DecisionState,type LastDecision,type HallEvent} from './societyState';
 import {STAGES,BREAKAWAY_RULES,pressureOf,stageStep,options as breakawayOptions,pickOption,coerceSucceeds,type Breakaway,type SettlementView} from './breakaways';
 import {foundSocietyFromBreakaway} from './societyBreakaway';
 import {noteDepartures,civicLegitimacy,politicsLoss,outpostGrievance,civicEffects} from './societyCivicRuntime';
@@ -289,8 +289,16 @@ export function yearlySocieties(g:Game){
   // Grievances pass to the heir, eased at most 8% by kinship, never reset.
   for(let j=0;j<g.state.tribes.length;j++){if(j===team||j===3||!g.tribe(j)||!g.tribe(team))continue;
    const gr=societyRelation(g,team,j).grievance,after=inheritGrievance(gr,kin);if(gr-after>1e-6)nudgeSocietyRelation(g,team,j,{grievance:after-gr});}
+  // One hall event per change of ruler: lane C lowers the banner and shows mourning cloth until mourningUntil, lane B shows the handover card. Read-only data, no goods.
+  (d.halls??=[]).push({id:d.nextId++,team,kind:was?.alive?'ruler-set-aside':'ruler-death',time:g.state.time,mourningUntil:g.state.time+RULERS_YEAR_SECONDS*MOURNING_YEARS,from:was?.name??'the late ruler',to:heir.name,relation:rel,contested,carried,strained,lapsed});
+  if(d.halls.length>HALL_EVENT_CAP)d.halls.splice(0,d.halls.length-HALL_EVENT_CAP);
   remember(g,team,'succession',`${heir.name} succeeded ${was?.name??'the late ruler'} (${rel}${contested?', contested':''}); ${carried} agreements carried${strained?` (${strained} strained)`:''}${lapsed?`, ${lapsed} lapsed`:''}; grievances kept`);
  }
 }
+export const MOURNING_YEARS=.25;
+/** Hall events (newest last) for a team, or all teams; [] for old saves or when the decision layer is off. */
+export const hallEventsOf=(g:Game,team?:number):HallEvent[]=>(peek(g)?.halls??[]).filter(h=>team===undefined||h.team===team);
+/** The hall event still in mourning at the current time, if any: lane C reads this for the lowered banner and mourning cloth. */
+export const mourningOf=(g:Game,team:number):HallEvent|undefined=>{const l=hallEventsOf(g,team);const h=l[l.length-1];return h&&g.state.time<h.mourningUntil?h:undefined;};
 /** Hook for marriages between houses: records the agreement and its signers. */
 export function noteMarriage(g:Game,a:number,b:number){if(decisionsEnabled(g))recordAgreement(g,a,b,'marriage',`${g.tribe(a).name} and ${g.tribe(b).name} wed their houses`);}
