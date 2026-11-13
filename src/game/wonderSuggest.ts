@@ -67,7 +67,7 @@ export function suggestWonders(g:Game,team:number,opts:{siteChecks?:number;limit
   else if(used<checks||d.id===opts.focus){if(d.id!==opts.focus)used++;const p=probeWonderSites(g,team,d.id,4);sites=p.sites;if(!sites.length){feasible=false;blocker=p.nearest[0]?`No ground near the hall: ${p.nearest[0].toLowerCase()}`:'No ground near the hall suits it';}}
   else{feasible=false;blocker='Ground not checked yet';}
   const tf=terrainFit(g,d,sites[0]);
-  if(feasible){reasons.push(`Answers a need: ${nf.why}`);if(cf.why)reasons.push(`Fits your people: ${cf.why}`);if(tf.why)reasons.push(`Ground: ${tf.why}`);
+  if(feasible){reasons.push(`Answers a need: ${nf.why}`);reasons.push(cf.why?`Fits your people: ${cf.why}`:'No special leaning among your people');reasons.push(tf.why?`Ground: ${tf.why}`:'Ground passes all its rules');
    for(const e of d.effects.filter(e=>e.id!=='prestige'))reasons.push(e.words);}
   const issue=feasible?wonderFoundingIssue(g,team,d.id):null,ready=feasible&&!issue;if(issue)blocker=issue;
   const score=feasible?(.4*nf.value+.3*cf.value+.3*tf.value)*(ready?1:.85):0;

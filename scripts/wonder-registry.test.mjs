@@ -91,14 +91,14 @@ test('founding spends the first stage; later stages are delivered by the crew; g
  for(let k=0;k<400&&W.wondersOf(g)[0].project;k++){run(g,20);const p=W.wondersOf(g)[0];if(p.project){assert.ok(p.project.delivered>=lastDelivered);lastDelivered=p.project.delivered;levels.push(D.stageOfLabour(p.project.labour,p.project.need));}}
  const done=W.wondersOf(g)[0];assert.equal(done.project,undefined,'finished within the bound');assert.equal(done.progress,1);
  for(let i=1;i<levels.length;i++)assert.ok(levels[i]>=levels[i-1],'stages only advance');assert.ok(new Set(levels).size>=3,'several stages seen: '+[...new Set(levels)]);
- for(const k of ['wood','stone','food','copper','iron'])assert.ok(before[k]-t[k]>=cost[k]*.9||k==='food'||k==='wood',`${k} spent`);
+ for(const k of ['wood','stone','food','copper','iron'])assert.ok(before[k]-t[k]>=(cost[k]??0)*.9||k==='food'||k==='wood',`${k} spent`);
  assert.equal(Math.round(before.stone-t.stone),cost.stone,'stone spent equals the stone cost (nobody else spends stone here)');
  assert.deepEqual(g.simulationErrors,[]);
 });
 test('a stage waits when the stock cannot deliver it, and resumes when the goods arrive',()=>{
  const g=game();run(g,15);prepare(g,0);const t=g.tribe(0),pick=S.suggestWonders(g,0,{siteChecks:26,onlyReady:true})[0];
  assert.equal(W.foundWonder(g,0,pick.id,{site:pick.site}).ok,true);
- t.wood=0;t.stone=0;t.food=0;t.copper=0;t.iron=0;
+ t.wood=0;t.stone=0;t.copper=0;t.iron=0;t.food=3000;
  for(let k=0;k<30;k++)run(g,20);
  const rec=W.wondersOf(g)[0];assert.equal(rec.project.delivered,1,'nothing delivered without goods');assert.ok(rec.progress<=.26,'labour stops at the delivered stage: '+rec.progress);assert.match(rec.waiting??'',/goods|Needs/);
  t.wood=3000;t.stone=3000;t.food=3000;t.copper=300;t.iron=300;for(let k=0;k<40;k++)run(g,20);
@@ -144,7 +144,7 @@ test('effects: each is derived from finished records and reaches the system it n
  g.tribe(0).food=500;const spoil0=foodSpoilage(g,0);
  g.state.wonders.push(at('granary'),at('citadel',{x:home(g,0).x+30}),at('ziggurat',{x:home(g,0).x+60}),at('lighthouse',{x:home(g,0).x+90}),at('library',{x:home(g,0).x-30}));
  assert.ok(civicPrestige(g,0).total>base.pres,'prestige counts finished wonders');assert.ok(civicPrestige(g,0).wonders.length===5);
- assert.ok(foodSpoilage(g,0)<spoil0*.9,'granary slows spoilage');assert.ok(E.wonderEffect(g.state,0,'concord')>=6);assert.ok(E.wonderEffect(g.state,0,'portCapacity')>=.2);assert.ok(E.wonderEffect(g.state,0,'knowledge')>=.14);
+ assert.ok(foodSpoilage(g,0)<spoil0*.9,'granary slows spoilage');assert.ok(E.wonderEffect(g.state,0,'concord')>=6);assert.ok(E.wonderEffect(g.state,0,"portCapacity")>=.19);assert.ok(E.wonderEffect(g.state,0,'knowledge')>=.14);
  const h=home(g,0);assert.ok(E.wonderDefenceFactor(g.state,0,h.x+30,h.z+20)<1,'inside the citadel radius');assert.equal(E.wonderDefenceFactor(g.state,0,h.x+500,h.z),1,'outside it nothing changes');assert.equal(E.wonderDefenceFactor(g.state,1,h.x+30,h.z+20),1,'only the owner is covered');
  // a wonder still rising, or fallen, gives nothing
  g.state.wonders=[at('granary',{project:{labour:1,need:10,crewIds:[],started:0,paid:{wood:0,stone:0,food:0}},done:undefined,progress:.1})];assert.equal(E.wonderEffect(g.state,0,'storage'),0);

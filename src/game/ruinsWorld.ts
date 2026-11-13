@@ -111,7 +111,7 @@ export function tickRuins(g:Game,dt:number){
  const t=(clock.get(g)??0)+dt;if(t<RUIN_RULES.scanEvery){clock.set(g,t);return;}clock.set(g,0);
  const seen=new Set(R.seen??[]);
  for(const b of g.state.buildings){
-  if(b.hp>0||seen.has(b.id)||!RUIN_RULES.kinds.includes(b.type)||b.w*b.d<RUIN_RULES.minFootprint||!g.finished(b))continue;
+  if(b.hp>0||seen.has(b.id)||!RUIN_RULES.kinds.includes(b.type)||b.w*b.d<RUIN_RULES.minFootprint||b.build<1)continue;
   seen.add(b.id);(R.seen??(R.seen=[])).push(b.id);if(R.seen.length>400)R.seen.splice(0,R.seen.length-400);
   add(g,{kind:'village',x:b.x,z:b.z,w:b.w,d:b.d,yaw:0,seed:hash32('ruin-village',g.state.seed,b.id)>>>0,fell:g.state.time,team:b.team,was:b.type,style:styleOfTeam(g,b.team,b.id),src:b.id});
  }
