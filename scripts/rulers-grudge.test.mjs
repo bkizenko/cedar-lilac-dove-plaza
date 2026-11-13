@@ -16,3 +16,10 @@ test('house grudge: stored, directed, renewed, fades, weakens at succession, rou
  for(let i=0;i<60;i++)fadeGrudges(g,gen);assert.equal(grudgeOf(g,1,2),0,'unrenewed grudges fade out');
  delete g.state.rulers.grudges;assert.ok(rulersOf(g.state),'save without field still valid');
 });
+test('neighbourMemory shows remembered grudges from both sides and hides faded ones',async()=>{
+ const {neighbourMemory}=await import('../src/game/rulersView.ts');
+ const g=fixture();addGrudge(g,0,1,.6,'custody');
+ assert.ok(neighbourMemory(g,0,1).some(m=>m.kind==='grudge'&&/our house/i.test(m.text)),'holder sees ours');
+ assert.ok(neighbourMemory(g,1,0).some(m=>m.kind==='grudge'&&/their house/i.test(m.text)),'target sees theirs');
+ g.state.rulers.grudges[0].w=.01;assert.ok(!neighbourMemory(g,0,1).some(m=>m.kind==='grudge'),'faded grudge hidden');
+});
