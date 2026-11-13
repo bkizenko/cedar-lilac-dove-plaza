@@ -24,7 +24,7 @@ function TradeSheet({model,inboxOnly,busy,run}:{model:PlayerTradeModel;inboxOnly
     <label className="flex min-w-0 flex-col gap-1">Receive<select aria-label="Goods to receive" className={field} disabled={busy} value={get} onChange={e=>setGet(e.target.value as GoodKind)}>{model.goods.map(g=><option key={g.kind} value={g.kind} disabled={g.kind===give}>{PLAYER_TRADE_NAMES[g.kind]}</option>)}</select></label>
    </div>
    {offered&&<p className="text-parchment-dim">{Math.floor(offered.held)} {PLAYER_TRADE_NAMES[give].toLowerCase()} held · maximum offer {maxAmount}{received?` · ${Math.floor(received.held)} ${PLAYER_TRADE_NAMES[get].toLowerCase()} held`:''}</p>}
-   <button type="button" className={button} disabled={busy||invalid} onClick={()=>{if(!invalid&&model.team!==null)run({kind:'propose-needs-trade',team:model.team,give,get,amount:quantity});}}>Send offer</button>
+   <button type="button" className={button} disabled={busy||invalid} title={busy?'Working on the last order':invalid?'Pick two different goods and a whole quantity you can offer':undefined} onClick={()=>{if(!invalid&&model.team!==null)run({kind:'propose-needs-trade',team:model.team,give,get,amount:quantity});}}>Send offer</button>
   </>}
   {offers.map(offer=>{
    const incoming=offer.to===0,pay=incoming?offer.get:offer.give,take=incoming?offer.give:offer.get;
