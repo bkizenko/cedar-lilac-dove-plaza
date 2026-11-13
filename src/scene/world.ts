@@ -49,8 +49,10 @@ import {hearthHeating} from '@/game/survivalNeeds';
 import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
-import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
-import {DrawDistanceGovernor,drawBands,loadDrawDistance,type DrawBands,type DrawDistance} from '../game/drawDistance';
+import {GRAPHICS_RULES,graphicsPixelRatio} from '../game/graphics';
+import {initialEffective,TREE_DETAIL,type TreeStep} from '../game/graphicsSettings';
+import {buildingTierAt,getDetailLevel,setDetailLevel,loadDetailLevel,rememberDetailLevel,shadowHalfExtent,DETAIL_RULES,type DetailLevel} from '../game/detailLevel';
+import {DrawDistanceGovernor,drawBands,type DrawBands,type DrawDistance} from '../game/drawDistance';
 import {currentRenderStyle,type RenderStyle} from './renderStyle';
 import {loadMapStyle,rememberMapStyle,type MapStyle} from './mapStyle';
 import {painterAtmosphere,makePainterSky,PAINTER_GRADE_SHADER} from './painterAtmosphere';
@@ -95,6 +97,7 @@ import {trailRibbons} from "@/game/trailRibbons";
 import {smoothRivers} from "@/game/channelSmoothness";
 import {buildingQuarterTurns,turnedFootprint} from "@/game/footprints";
 import {siteRecord} from "@/game/slopeTiers";
+import {foundationBoxes} from "@/game/siteFoundation";
 import {carvedVariantFor,variantSpec} from './buildingStyleMap';
 import {buildCarvedMesh} from './carvedMesh';
 import {buildingGroundSupports} from './buildingGrounding';
@@ -425,7 +428,9 @@ export class WorldView {
   private litFog = new THREE.Color("#d2dcbe");
   private litSunCol = new THREE.Color("#fff4d2");
   /** Draw distance (src/game/drawDistance.ts): the level the player chose, the level in force (the governor may ease it when frames stay over budget) and its bands. */
-  private drawGovernor = new DrawDistanceGovernor(loadDrawDistance());
+  private drawGovernor = new DrawDistanceGovernor(initialEffective().draw);
+  /** Tree detail step 1..5 in force (src/game/graphicsSettings.ts TREE_DETAIL); the settings controller sets it, the tree layers read it each sync. */
+  private treeStep: TreeStep = initialEffective().trees;
   private drawBandsNow: DrawBands = drawBands(this.drawGovernor.level, MAP);
   private lastRenderAt = 0;
   /** Called (once per easing) when the governor lowers the draw distance automatically. */
@@ -436,7 +441,8 @@ export class WorldView {
   private viewSphere = new THREE.Sphere();
 
   constructor(canvas: HTMLCanvasElement) {
-    this.quality = loadGraphicsQuality();
+    this.quality = initialEffective().graphics;
+    setDetailLevel(loadDetailLevel());
     this.setStyle(this.styleId);
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -450,7 +456,7 @@ export class WorldView {
       graphicsPixelRatio(this.quality,canvas.clientWidth||800,canvas.clientHeight||600,window.devicePixelRatio||1),
     );
     this.renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 600, false);
-    this.renderer.shadowMap.enabled = this.shadowsEnabled;
+    this.renderer.shadowMap.enabled = this.sunShadows();
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.toneMappingExposure = 1.02;
@@ -472,7 +478,7 @@ export class WorldView {
     this.fill = new THREE.AmbientLight("#f1f1e6", 0.22);
     this.scene.add(this.fill);
     this.sun = new THREE.DirectionalLight("#fff1c4", 2.05);
-    this.sun.castShadow = this.shadowsEnabled;
+    this.sun.castShadow = this.sunShadows();
     this.sun.shadow.mapSize.set(
       this.quality === "high" ? 1024 : 512,
       this.quality === "high" ? 1024 : 512,
@@ -703,8 +709,23 @@ export class WorldView {
   getDrawDistance(): DrawDistance { return this.drawGovernor.chosen; }
   getEffectiveDrawDistance(): DrawDistance { return this.drawGovernor.level; }
   getDrawBands(): DrawBands { return this.drawBandsNow; }
+  /** Detail (detailLevel.ts): model-tier switch distances plus the High/Ultra fidelity features (sun shadow map, AgX grade, bump, MSAA). Render-only. */
+  getDetailLevel(): DetailLevel { return getDetailLevel(); }
+  setDetailLevel(level: DetailLevel) {
+    setDetailLevel(level);
+    this.applyQuality(this.quality);
+    this.carvedLayer?.setBump(DETAIL_RULES.bump[getDetailLevel()]);
+    this.setupComposer();
+    this.lastRenderAt = 0;
+  }
+  /** Effective sun-shadow switch: the user's Shadows checkbox, or any Detail level that carries a shadow map. */
+  private sunShadows(q: "low" | "med" | "high" = this.quality) { return (this.shadowsEnabled || DETAIL_RULES.shadowMap[getDetailLevel()] > 0) && q !== "low"; }
   /** Choose a draw distance (the UI persists it). Resets the automatic easing. */
   setDrawDistance(level: DrawDistance) { this.drawGovernor.choose(level); this.lastRenderAt = 0; this.applyDrawBands(); }
+  /** Put a level in force without changing the chosen one (Auto easing and safety fallbacks come through the settings controller, never from here on its own). */
+  setEffectiveDrawDistance(level: DrawDistance) { this.drawGovernor.level = level; this.applyDrawBands(); }
+  getTreeDetail(): TreeStep { return this.treeStep; }
+  setTreeDetail(step: TreeStep) { if (this.treeStep === step) return; this.treeStep = step; }
   private applyDrawBands() {
     this.drawBandsNow = drawBands(this.drawGovernor.level, this.mapSize);
     this.camera.far = this.drawBandsNow.cameraFar;
@@ -720,7 +741,7 @@ export class WorldView {
     const frustum = this.viewFrustum, sphere = this.viewSphere, y = this.look.y;
     const inView = (x: number, z: number, r: number) => { sphere.center.set(x, y, z); sphere.radius = r + 60; return frustum.intersectsSphere(sphere); };
     const key = `${Math.round(p.x / 6)}|${Math.round(p.z / 6)}|${Math.round(this.yaw * 14)}|${Math.round(this.pitch * 14)}|${Math.round(this.dist / 12)}`;
-    return { bands: this.drawBandsNow, inView, key, prime };
+    return { bands: this.drawBandsNow, inView, key, prime, detail: TREE_DETAIL[this.treeStep] };
   }
 
   applyQuality(q: "low" | "med" | "high") {
@@ -729,9 +750,11 @@ export class WorldView {
       graphicsPixelRatio(q,this.renderer.domElement?.clientWidth||800,this.renderer.domElement?.clientHeight||600,window.devicePixelRatio||1),
     );
     this.composer?.setPixelRatio(this.renderer.getPixelRatio?.()??graphicsPixelRatio(q,800,600,window.devicePixelRatio||1));
-    this.renderer.shadowMap.enabled = this.shadowsEnabled && q !== "low";
-    this.sun.castShadow = this.shadowsEnabled && q !== "low";
-    const map = q === "high" ? 1024 : 512;
+    this.renderer.shadowMap.enabled = this.sunShadows(q);
+    this.sun.castShadow = this.sunShadows(q);
+    const lv = getDetailLevel(), map = DETAIL_RULES.shadowMap[lv] || (q === "high" ? 1024 : 512);
+    this.renderer.toneMapping = DETAIL_RULES.grade[lv] === "agx" ? THREE.AgXToneMapping : THREE.NeutralToneMapping;
+    this.renderer.toneMappingExposure = DETAIL_RULES.grade[lv] === "agx" ? 1.12 : 1.02;
     this.sun.shadow.mapSize.set(map, map);
     this.sun.shadow.map?.dispose();
     this.sun.shadow.map = null;
@@ -1551,6 +1574,14 @@ export class WorldView {
       this.look.z + Math.sin(ang) * dist * 0.62,
     );
     this.sun.target.position.copy(this.look);
+    if (DETAIL_RULES.shadowMap[getDetailLevel()] > 0) {
+      // tight shadow box that follows the zoom: sharper texels when close; the focus is snapped to the texel grid so shadows do not crawl while panning
+      const half = shadowHalfExtent(this.dist), c = this.sun.shadow.camera;
+      if (c.right !== half) { c.left = -half; c.right = half; c.top = half; c.bottom = -half; c.updateProjectionMatrix(); }
+      const texel = (half * 2) / DETAIL_RULES.shadowMap[getDetailLevel()];
+      this.sun.target.position.x = Math.round(this.look.x / texel) * texel; this.sun.target.position.z = Math.round(this.look.z / texel) * texel;
+      this.sun.position.x += this.sun.target.position.x - this.look.x; this.sun.position.z += this.sun.target.position.z - this.look.z;
+    }
     this.bounce.position.set(this.look.x - 24, 20, this.look.z + 14);
     this.bounce.target.position.copy(this.look);
 
@@ -1997,7 +2028,7 @@ export class WorldView {
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     if(!this.irrigationLayer&&(game.state as {irrigation?:unknown}).irrigation){this.irrigationLayer=new IrrigationLayer(this.scene,(x,z)=>game.height(x,z));this.irrigationLayer.setPreview(this.ditchPreview);}
     this.irrigationLayer?.sync(game);
-    this.contourFields?.sync(game,this.camera.position,b=>{const st=this.villageStyle(game,b.team,b);return{era:st.era,variant:st.variant};});
+    this.contourFields?.sync(game,this.camera.position,b=>{const st=this.villageStyle(game,b.team,b);return{era:st.era,variant:st.variant};},{quality:this.quality});
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     for(const name of ['fieldEdges','fieldLook','fieldSoil']){const a=this.bldMeshes.get('farm')?.timber.geometry.getAttribute(name);if(a)a.needsUpdate=true;}
     this.syncEraDetails(game);
@@ -2054,8 +2085,8 @@ export class WorldView {
     if(!list.length&&!this.carvedLayer)return;
     const layer=this.carvedLayer||(this.carvedLayer=new CarvedBuildingLayer(this.scene));
     for(const mesh of this.carvedOwners.keys())this.buildingInstances.delete(mesh);this.carvedOwners.clear();
-    layer.setSnow(this.carvedSnow);
-    layer.sync(list,this.camera.position);
+    layer.setSnow(this.carvedSnow);layer.setBump(DETAIL_RULES.bump[getDetailLevel()]);
+    layer.sync(list,this.camera.position,m=>buildingTierAt(m));
     for(const [mesh,owners] of layer.pickSources()){
       const buildings=(owners as (CarvedInstance&{b:import("@/game/types").Building})[]).map(o=>o.b);
       this.carvedOwners.set(mesh,buildings);this.buildingInstances.set(mesh,buildings);
@@ -2429,9 +2460,18 @@ export class WorldView {
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const carvedVariant=carved?carvedVariantFor(carved.input):null;
     const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'')+(carvedVariant?`|${carvedVariant.key}|${Math.round(carved!.y*20)}|${Math.round(x*2)},${Math.round(z*2)}|${carved!.fake.site?.foundation??''}`:'');
-    if (this.ghost.userData.key === key) return;
+    const fieldGame=type==='farm'?this.ghostGame:null,fieldSa=fieldGame&&fieldGame.state.terrainModel==='v2'?fieldGame.siteAssessment('farm',x,z,size?.w??BUILDINGS.farm.w,size?.d??BUILDINGS.farm.d):null;
+    const fieldKey=fieldSa?`|f${fieldSa.ok}${fieldSa.terrace?.k}${fieldSa.terrace?.n}${Math.round(x*2)},${Math.round(z*2)}`:'';
+    if (this.ghost.userData.key === key+fieldKey) return;
     this.clearGhost();
-    this.ghost.userData.key = key;
+    this.ghost.userData.key = key+fieldKey;
+    // terrain model v2: the terrace strips and walls the field will be built with, tinted like the other slope previews
+    if(fieldGame&&fieldSa?.ok&&fieldSa.terrace&&fieldSa.terrace.k!=='none'){
+      const tint=new THREE.Color(fieldSa.tier==='moderate'?'#f0b030':'#f08030'),w=size?.w??BUILDINGS.farm.w,d=size?.d??BUILDINGS.farm.d;
+      for(const sp of foundationBoxes('strips',{x,z,w,d},{height:(px,pz)=>fieldGame.height(px,pz),level:fieldGame.height(x,z),downhill:fieldSa.downhill,terrace:{n:fieldSa.terrace.n,kind:fieldSa.terrace.k}})){
+        const m=new THREE.Mesh(this.ghostBox,new THREE.MeshBasicMaterial({color:tint,transparent:true,opacity:.4,depthWrite:false}));m.position.set(sp.x,sp.y,sp.z);m.rotation.y=sp.yaw;m.scale.set(sp.length,sp.height,sp.width);this.ghostFoot.add(m);
+      }
+    }
     if(carved&&carvedVariant){this.buildCarvedGhost(carved,carvedVariant,ok);return;}
     const meshes = this.bldMeshes.get(type);
     if (!meshes) return;
@@ -2665,7 +2705,7 @@ export class WorldView {
   render() {
     this.latestRenderMetrics=undefined;
     if (this.lost || this.disposed) return;
-    {const now=typeof performance!=='undefined'?performance.now():0;if(this.lastRenderAt>0){const eased=this.drawGovernor.observe(now-this.lastRenderAt);if(eased){this.applyDrawBands();this.onDrawDistanceEased?.(eased,this.drawGovernor.chosen);}}this.lastRenderAt=now;}
+    // no automatic draw-distance easing here: the settings controller (src/game/graphicsSettings.ts) is the only thing that may ease, and only knobs on Auto
     beginRendererFrame(this.renderer.info);
     try {
     try {
@@ -2793,7 +2833,9 @@ export class WorldView {
       const el = this.renderer.domElement;
       const w = el.clientWidth || 800;
       const h = el.clientHeight || 600;
-      this.composer = new EffectComposer(this.renderer);
+      const pr = this.renderer.getPixelRatio(), samples = DETAIL_RULES.msaaSamples[getDetailLevel()];
+      // the composer's own target is what the scene is drawn into, so the canvas antialias flag never applied on this path: MSAA must be asked for here
+      this.composer = new EffectComposer(this.renderer, new THREE.WebGLRenderTarget(Math.max(1, Math.floor(w * pr)), Math.max(1, Math.floor(h * pr)), { type: THREE.HalfFloatType, samples }));
       this.composer.addPass(new RenderPass(this.scene, this.camera));
       this.bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.14, 0.28, 0.92);
       this.composer.addPass(this.bloom);

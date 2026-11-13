@@ -6,8 +6,9 @@ import type {PainterSway} from './painterVegetationMaterial';
  * and fern fronds, small-leaf scatter and grass, each with ragged cut-out silhouettes so crowns read as leaf mass, not smooth blobs.
  * One material draws bark, cores and leaf cards of every species: bark/leaf are told apart by the `aLeaf` vertex attribute (instance hue only
  * tints leaf), `aShed` lets a tree drop leaves card by card against the per-instance leaf density `iState.x`, and `iState.y` is snow load. */
-export const ATLAS_COLS=4,ATLAS_ROWS=2,ATLAS_TILE=128;
-export const TILE={sprig:0,needle:1,narrow:2,solid:3,frond:4,fern:5,small:6,grass:7} as const;
+export const ATLAS_COLS=4,ATLAS_ROWS=3,ATLAS_TILE=128;
+/** tiles 0-7 are the original crown atlas; 8-11 (single leaf, lobed oak leaves, palmate maple leaf, toothed birch sprig) serve the near-tier hero trees (twig sprays with individual leaves) */
+export const TILE={sprig:0,needle:1,narrow:2,solid:3,frond:4,fern:5,small:6,grass:7,leaf:8,lobed:9,palmate:10,toothed:11} as const;
 export type TileId=typeof TILE[keyof typeof TILE];
 /** UV rectangle of a tile (v up), inset a few pixels so mip bleeding stays inside the gutter. */
 export function tileUV(tile:number,inset=2):[number,number,number,number]{
@@ -65,6 +66,18 @@ function paintTiles(cv:Canvas){
  // 7 grass: a fan of curved blades
  {for(let i=0;i<9;i++){const bx=64+(i-4)*7+(rnd()-.5)*4,h=70+rnd()*46,lean=(i-4)*5+(rnd()-.5)*10;
   for(let s=0;s<=26;s++){const t=s/26,x=bx+lean*t*t*1.4,y=3+h*t,w=(1-t)*(3.6+rnd()*.3)+.5;for(let dx=-Math.ceil(w);dx<=Math.ceil(w);dx++)if(Math.abs(dx)<=w)put(cv,7,Math.round(x+dx),Math.round(y),.55+.45*t+(rnd()-.5)*.06,1);}}}
+ // 8 single broadleaf leaf on a short petiole (hero twig sprays): slightly asymmetric ovate blade, midrib and two vein pairs
+ {stroke(cv,8,64,2,64,16,1.3,.5);leaf(cv,8,64,70,56,31,Math.PI/2,.92,.22);for(const s of [-1,1])for(const k of [0,1,2]){const y=34+k*20;stroke(cv,8,64,y,64+s*(24-k*5),y+14,.55,.58);}}
+ // 9 oak-like lobed leaves: three leaves, each a spine with rounded lobes pairs that widen then taper
+ for(const [bx,by,an,L] of [[64,6,Math.PI/2,100],[40,10,Math.PI/2+.5,66],[88,10,Math.PI/2-.5,66]] as [number,number,number,number][]){
+  const ca=Math.cos(an),sa=Math.sin(an);stroke(cv,9,bx,by,bx+ca*L*.95,by+sa*L*.95,1.2,.5);
+  for(let k=0;k<5;k++){const t=.18+k*.17,w=Math.sin(Math.min(1,t*1.05)*Math.PI*.95)*L*.2+3,cx=bx+ca*L*t,cy=by+sa*L*t;
+   for(const side of [-1,1]){const a=an+side*(1.15-.16*k);leaf(cv,9,cx+Math.cos(a)*w*.6,cy+Math.sin(a)*w*.6,w*.95+1,w*.55+1,a,.62+rnd()*.34,.1);}}
+  leaf(cv,9,bx+ca*L*.55,by+sa*L*.55,L*.42,L*.1+2,an,.82,.2);}
+ // 10 palmate maple leaf: five pointed lobes from one base with a petiole
+ {stroke(cv,10,64,2,64,26,1.5,.5);for(const [da,L,W] of [[0,52,10],[-.78,42,8.5],[.78,42,8.5],[-1.45,26,6.5],[1.45,26,6.5]] as [number,number,number][]){const a=Math.PI/2+da;leaf(cv,10,64+Math.cos(a)*L*.55,30+Math.sin(a)*L*.55,L*.6,W,a,.72+rnd()*.26,.2);stroke(cv,10,64,30,64+Math.cos(a)*L*.9,30+Math.sin(a)*L*.9,.7,.55);}}
+ // 11 toothed small leaves on a thin twig: birch/poplar/aspen blades, pointed and broad at the base, three pairs along the twig
+ {stroke(cv,11,64,2,64+6,122,1.2,.45);for(let i=0;i<6;i++){const t=.14+i*.14,x=64+6*t,y=2+120*t,side=i%2?1:-1,a=Math.PI/2+side*(.9-.1*i);leaf(cv,11,x+Math.cos(a)*18,y+Math.sin(a)*14,24-i,15-i*.6,a,.7+rnd()*.28,.2);}leaf(cv,11,70,112,20,12,Math.PI/2,.9,.2);}
 }
 let atlas:THREE.DataTexture|null=null;
 export function botanicalAtlasPixels(){
