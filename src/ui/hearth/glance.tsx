@@ -9,7 +9,7 @@ import {cx,IconBtn} from './kit';
 import {FoldHandle,FoldMin,useFold} from './fold';
 import {RES_ICON,RES_NAME} from './icons';
 import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,infoVisible,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
-import {detectAlerts,foodDays,waterDays,workloadOf} from './glanceReads';
+import {detectAlerts,foodDays,waterDays,workloadOf,winterOutlook} from './glanceReads';
 import {OVERLAY_KEYS,paintOverlays,type OverlayKey} from './overlayModel';
 import {hasInfluenceGradient,overlaySourcesOf} from './overlayReads';
 import {simulationDaySeconds} from '@/game/calendarPacing';
@@ -24,7 +24,7 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
  const trackers=useRef(new Map<string,TrendTracker>());
  const game=engine?.game;
  const water=Math.floor(game?.tribe(0).survival?.waterLiters||0),food=Math.floor(readyFoodStock(hud));
- const fd=game?foodDays(game):null,wd=game?waterDays(game):null;
+ const fd=game?foodDays(game):null,wd=game?waterDays(game):null,winter=game?winterOutlook(game):null;
  const cells:Cell[]=[
   {k:'food',value:food,stock:food,days:fd,fill:supplyFill(fd),level:supplyLevel(fd),trackTrend:true,tip:`Food ready to eat.${fd!==null?` About ${daysText(fd)} days at today's appetite.`:''} Raw supplies are in Village, Stores.`},
   {k:'wood',value:hud.wood,stock:hud.wood,days:null,fill:null,level:'unknown',trackTrend:true,tip:'Logs in stores.'},
@@ -40,6 +40,7 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
  return <div className={cx('hw-top-left',f.cls)}>
   <FoldMin f={f}/>
   {engine&&<button type="button" className="hw-flag" aria-label={`Council of ${engine.game.tribe(0).name}`} onClick={()=>onOpen('council')}><SocietyFlag game={engine.game} team={0}/><span>{engine.game.tribe(0).name}</span></button>}
+  {winter&&<GameTooltip title="Winter food" description={`Food lasts about ${daysText(winter.foodDays)} days at today's appetite; the thaw is ${daysText(winter.thawDays)} days away${winter.phase==='autumn'?`, and winter starts in ${daysText(winter.winterStartDays)}`:''}. Short by about ${daysText(winter.shortfallDays)} days: gather, hunt or ration.`}><button type="button" className={cx('hw-winter',`s-${winter.level}`)} aria-label={`Winter: food for ${daysText(winter.foodDays)} days, thaw in ${daysText(winter.thawDays)} days`} onClick={()=>onOpen('stores')}><Snowflake size={22}/><b>{daysText(winter.foodDays)}d</b><span>food</span><i aria-hidden="true">/</i><b>{daysText(winter.thawDays)}d</b><span>to thaw</span></button></GameTooltip>}
   <ul className="hw-res hw-supply" aria-label="Village stores">{cells.map(c=>{
    const I=RES_ICON[c.k],trend=c.trackTrend?trackers.current.get(c.k)?.trend()??null:null,T=trend&&trend!=='flat'?TREND_ICON[trend]:null;
    const tip=`${c.tip}${trend?` ${TREND_WORD[trend][0].toUpperCase()+TREND_WORD[trend].slice(1)} over the last day.`:''}`;

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {simulationDaySeconds} from '../src/game/calendarPacing.ts';
-import {foodDays,waterDays,detectAlerts,visibleRaiders,RAIDER_SIGHT_METERS} from '../src/ui/hearth/glanceReads.ts';
+import {winterOutlook,foodDays,waterDays,detectAlerts,visibleRaiders,RAIDER_SIGHT_METERS} from '../src/ui/hearth/glanceReads.ts';
 import {rankAlerts,pinSet} from '../src/ui/hearth/glanceModel.ts';
 import {overlaySourcesOf,knownTeams,parseColor,hasInfluenceGradient} from '../src/ui/hearth/overlayReads.ts';
 import {paintOverlays} from '../src/ui/hearth/overlayModel.ts';
@@ -94,4 +94,15 @@ test('water meter matches existing household runway including declared real herd
  const before=JSON.stringify(encodeGame(g)),status=survivalStatus(g),days=waterDays(g);
  assert.ok(g.state.livestock.some(a=>a.team===0&&a.hp>0));assert.ok(status.waterDemandLitersPerSecond>mine(g).length*SURVIVAL_RULES.waterLitersPerPersonSecond);
  assert.equal(collectedWaterDemand(g),status.waterDemandLitersPerSecond);assert.ok(Math.abs(days*simulationDaySeconds-status.waterSeconds)<1e-9);assert.equal(JSON.stringify(encodeGame(g)),before);
+});
+
+test('winter outlook: only autumn/winter and only when food will not last to the thaw; read-only',()=>{
+ const g=village(),year=1800,before=fingerprint(g);
+ g.state.time=year*3+10;g.tribe(0).food=1e6;assert.equal(winterOutlook(g),null,'spring/summer: nothing');
+ g.state.time=year*3+year*.8;const big=winterOutlook(g);assert.equal(big,null,'plenty of food: nothing');
+ g.state.time=year*3+year*.8;g.tribe(0).food=0;if(g.tribe(0).foodLots)for(const k of Object.keys(g.tribe(0).foodLots))g.tribe(0).foodLots[k]=0;
+ const w=winterOutlook(g);assert.ok(w&&w.phase==='winter'&&w.thawDays>0&&w.shortfallDays>0&&w.level==='critical');
+ g.state.time=year*3+year*.55;assert.equal(winterOutlook(g)?.phase,'autumn');
+ g.state.time=year*3+year*.2;assert.equal(winterOutlook(g),null);
+ assert.notEqual(fingerprint(g),before);// time moved by the test itself only
 });

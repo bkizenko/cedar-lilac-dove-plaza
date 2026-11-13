@@ -4,7 +4,7 @@
  */
 import type {Game} from '@/game/sim';
 import {reserveSeconds} from '@/game/settlement';
-import {simulationDaySeconds} from '@/game/calendarPacing';
+import {simulationDaySeconds,SIM_CALENDAR_RULES} from '@/game/calendarPacing';
 import {SURVIVAL_RULES,collectedWaterDemand} from '@/game/survivalNeeds';
 import {exposedHarvestUnits} from '@/game/production';
 import {harvestBacklogAlert} from '@/game/cerealProcessing';
@@ -65,3 +65,19 @@ export function detectAlerts(g:Game,workloadPercent:number|null=null):Alert[]{
  return out;
 }
 export const workloadOf=(g:Game)=>measureVillageWorkload(g).workloadPercent;
+
+export type WinterOutlook={phase:'autumn'|'winter';thawDays:number;winterStartDays:number;foodDays:number;shortfallDays:number;level:'critical'|'low'};
+/**
+ * Winter countdown: food days left against days until the first thaw (the start of spring, the next calendar year turn).
+ * Null unless it is autumn or winter, food days are finite and the stock will not last to the thaw. Pure read of the calendar and reserve rule.
+ */
+export function winterOutlook(g:Game):WinterOutlook|null{
+ const fd=foodDays(g);if(fd===null)return null;
+ const year=SIM_CALENDAR_RULES.yearSeconds,t=g.state.time%year,q=year/4,phase=Math.floor(t/q);
+ if(phase<2)return null;
+ const thawDays=(year-t)/simulationDaySeconds,winterStartDays=Math.max(0,(3*q-t)/simulationDaySeconds);
+ const need=phase===3?thawDays:thawDays;
+ if(fd>=need)return null;
+ const shortfall=need-fd;
+ return {phase:phase===3?'winter':'autumn',thawDays,winterStartDays,foodDays:fd,shortfallDays:shortfall,level:fd<=Math.min(3,need/2)?'critical':'low'};
+}
