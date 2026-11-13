@@ -49,36 +49,55 @@ export function fieldInsideDistance(f:{x:number;z:number;w:number;d:number},mask
 export function fieldEdgeDepth(f:{id:number;x:number;z:number;w:number;d:number},mask:number,x:number,z:number){
  return fieldInsideDistance(f,mask,x,z)-fieldInset(x,z,fieldSeed(f.id),Math.min(f.w,f.d)/2);
 }
-export interface BoundarySite{x:number;z:number;yaw:number;scale:number;tint:number}
-export const BOUNDARY_RULES=Object.freeze({step:{bank:1.8,wattle:.8,hedge:1.0,stone:1.1} as Record<BoundaryKind,number>,maximumPerField:180,inset:.6,gapMetres:2.4});
-/** Sites along the edges that are not merged with a neighbour. One gate gap on the longest open edge. */
-const i0=(s:number[],f:{x:number;z:number},bx:number,bz:number):[number,number]=>{const mx=(s[0]+s[2])/2,mz=(s[1]+s[3])/2;// inward normal of the side: toward the plot centre along the axis the side lies on
- return Math.abs(s[2]-s[0])>Math.abs(s[3]-s[1])?[0,mz>0?-1:1]:[mx>0?-1:1,0];};
-export function boundarySites(f:{id:number;x:number;z:number;w:number;d:number},mask:number,kind:BoundaryKind):BoundarySite[]{
- const R=BOUNDARY_RULES,hw=f.w/2,hd=f.d/2,sides:[number,number,number,number,number,number][]=[]; // x0,z0,x1,z1,yaw,len
- if(!(mask&EDGE.N))sides.push([-hw,-hd,hw,-hd,0,2*hw]);
- if(!(mask&EDGE.S))sides.push([-hw,hd,hw,hd,0,2*hw]);
- if(!(mask&EDGE.W))sides.push([-hw,-hd,-hw,hd,Math.PI/2,2*hd]);
- if(!(mask&EDGE.E))sides.push([hw,-hd,hw,hd,Math.PI/2,2*hd]);
- if(!sides.length)return[];
- const total=sides.reduce((s,k)=>s+k[5],0),step=Math.max(R.step[kind],total/R.maximumPerField);
- let longest=0;for(let i=1;i<sides.length;i++)if(sides[i][5]>sides[longest][5])longest=i;
- const gateAt=.3+.4*hash01(f.id,7,1),out:BoundarySite[]=[];
- sides.forEach((s,i)=>{
-  const n=Math.max(1,Math.round(s[5]/step));
-  for(let k=0;k<n;k++){
-   const t=(k+.5)/n+(hash01(f.id,k,i+11)-.5)*.5/n;
-   if(i===longest&&Math.abs(t-gateAt)*s[5]<R.gapMetres/2)continue;
-   const jx=(hash01(f.id,k,i+31)-.5)*.35,jz=(hash01(f.id,k,i+47)-.5)*.35;
-   // Start on the rectangle edge, then walk inward to where the drawn soil edge actually is (bisection; the outline wobbles and rounds corners).
-   const bx=f.x+s[0]+(s[2]-s[0])*t,bz=f.z+s[1]+(s[3]-s[1])*t;let inward=i0(s,f,bx,bz),hi=Math.min(f.w,f.d)/2;
-   // Near a rounded corner the straight inward walk can stay outside the soil; walk towards the plot centre instead.
-   if(fieldEdgeDepth(f,mask,bx+inward[0]*hi,bz+inward[1]*hi)<0){const cx=f.x-bx,cz=f.z-bz,len=Math.hypot(cx,cz)||1;inward=[cx/len,cz/len];hi=len;}
-   let lo=0;for(let it=0;it<10;it++){const m=(lo+hi)/2;if(fieldEdgeDepth(f,mask,bx+inward[0]*m,bz+inward[1]*m)<0)lo=m;else hi=m;}
-   const d=hi+.15;
-   out.push({x:bx+inward[0]*d+jx*.3,z:bz+inward[1]*d+jz*.3,yaw:s[4]+(hash01(f.id,k,i+59)-.5)*.5,scale:.8+.45*hash01(f.id,k,i+71),tint:hash01(f.id,k,i+83)});
+export interface BoundarySite{x:number;z:number;yaw:number;scale:number;tint:number;/** metres along the line, from this site's start point to the next */len:number;/** width/thickness factor */thick:number;/** which geometry variant (0..variants-1) */variant:number;/** a gate leaf fills this stretch instead of the boundary kind */gate:boolean}
+/** `step` is the mean piece length in metres; pieces vary +-35% and run corner to corner along the drawn soil edge, so there is no even beat. */
+export const BOUNDARY_RULES=Object.freeze({step:{bank:2,wattle:1.4,hedge:1.2,stone:1.35} as Record<BoundaryKind,number>,variants:{bank:2,wattle:2,hedge:2,stone:2} as Record<BoundaryKind,number>,maximumPerField:180,inset:.6,gapMetres:2.4,gateMetres:1.6,crossingMetres:1.3,
+ /** chance a piece is left out (hedge gaps), made low (tumbled wall) or broken (wattle) */gapChance:{bank:0,wattle:0,hedge:.06,stone:0} as Record<BoundaryKind,number>,lowChance:{bank:0,wattle:.06,hedge:0,stone:.07} as Record<BoundaryKind,number>});
+/** Detail tiers by 3D camera distance to a field: full geometry, then low-poly boundary and thinned crops, then nothing (the soil shader already carries the stage tint). */
+export const FIELD_DETAIL_TIERS={low:{full:60,max:130},med:{full:110,max:230},high:{full:150,max:300}} as const;
+export function fieldDetailTier(quality:'low'|'med'|'high',distance:number):0|1|2{const t=FIELD_DETAIL_TIERS[quality]??FIELD_DETAIL_TIERS.med;return distance<t.full?0:distance<t.max?1:2;}
+export interface BoundaryOptions{/** world points where a trail crosses near this field: the boundary opens there (gap or gate) */crossings?:readonly {x:number;z:number}[]}
+/** Pieces along the edges that are not merged with a neighbour, corner to corner around the drawn (wobbling, rounded) soil edge.
+ * One gate on the longest open side, a gap or gate wherever a trail crosses, and kind-specific gaps and low sections. */
+export function boundarySites(f:{id:number;x:number;z:number;w:number;d:number},mask:number,kind:BoundaryKind,opts:BoundaryOptions={}):BoundarySite[]{
+ const R=BOUNDARY_RULES,hw=f.w/2,hd=f.d/2;
+ // North, east, south, west; each runs from its start corner to the next corner, so neighbouring sides meet exactly.
+ const sides=[{bit:EDGE.N,x0:-hw,z0:-hd,x1:hw,z1:-hd,len:2*hw,nx:0,nz:1},{bit:EDGE.E,x0:hw,z0:-hd,x1:hw,z1:hd,len:2*hd,nx:-1,nz:0},{bit:EDGE.S,x0:hw,z0:hd,x1:-hw,z1:hd,len:2*hw,nx:0,nz:-1},{bit:EDGE.W,x0:-hw,z0:hd,x1:-hw,z1:-hd,len:2*hd,nx:1,nz:0}].map((s,i)=>({...s,i,open:!(mask&s.bit)}));
+ const open=sides.filter(s=>s.open);if(!open.length)return[];
+ const total=open.reduce((a,s)=>a+s.len,0),step=Math.max(R.step[kind],total/R.maximumPerField);
+ let longest=open[0];for(const s of open)if(s.len>longest.len)longest=s;
+ const gateAt=.3+.4*hash01(f.id,7,1),out:BoundarySite[]=[],cross=opts.crossings??[];
+ // Walk inward from a point on the rectangle to where the drawn soil edge actually is (bisection; the outline wobbles and rounds corners).
+ const snap=(bx:number,bz:number,nx:number,nz:number,toCentre:boolean)=>{
+  let inx=nx,inz=nz,hi=Math.min(f.w,f.d)/2;
+  if(toCentre||fieldEdgeDepth(f,mask,bx+inx*hi,bz+inz*hi)<0){const cx=f.x-bx,cz=f.z-bz,len=Math.hypot(cx,cz)||1;inx=cx/len;inz=cz/len;hi=len;}
+  let lo=0;for(let it=0;it<10;it++){const m=(lo+hi)/2;if(fieldEdgeDepth(f,mask,bx+inx*m,bz+inz*m)<0)lo=m;else hi=m;}
+  return{x:bx+inx*(hi+.15),z:bz+inz*(hi+.15)};
+ };
+ for(const s of open){
+  const n=Math.max(1,Math.round(s.len/step)),w:number[]=[];let sum=0;for(let k=0;k<n;k++){const v=.65+.7*hash01(f.id,k,s.i+11);w.push(v);sum+=v;}
+  const pts:{x:number;z:number}[]=[];let acc=0;
+  for(let k=0;k<=n;k++){
+   const t=k===n?1:acc/sum;if(k<n)acc+=w[k];
+   const bx=f.x+s.x0+(s.x1-s.x0)*t,bz=f.z+s.z0+(s.z1-s.z0)*t,corner=k===0||k===n;
+   pts.push(snap(bx,bz,s.nx,s.nz,corner));
   }
- });
+  // Which piece holds the gate on the longest side.
+  let gateK=-1;if(s===longest){let best=1e9,acc2=0;for(let k=0;k<n;k++){const tm=(acc2+w[k]/2)/sum;acc2+=w[k];const dd=Math.abs(tm-gateAt);if(dd<best){best=dd;gateK=k;}}}
+  let prevGap=true; // never open with a gap, never two gaps in a row
+  for(let k=0;k<n;k++){
+   const a=pts[k],b=pts[k+1],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<.15)continue;
+   const mx=(a.x+b.x)/2,mz=(a.z+b.z)/2,yaw=Math.atan2(-dz,dx),r=hash01(f.id,k,s.i+97);
+   let crossed=false;for(const c of cross)if(Math.hypot(c.x-mx,c.z-mz)<len/2+R.crossingMetres){crossed=true;break;}
+   const base={x:mx,z:mz,yaw,len,tint:hash01(f.id,k,s.i+83),variant:Math.floor(hash01(f.id,k,s.i+53)*R.variants[kind])%R.variants[kind]};
+   if(k===gateK||(crossed&&r<.5)){out.push({...base,scale:1,thick:1,gate:true,len:Math.max(R.gateMetres,len),variant:0});prevGap=false;continue;}
+   if(crossed){prevGap=true;continue;}
+   if(!prevGap&&r<R.gapChance[kind]){prevGap=true;continue;}
+   prevGap=false;
+   const low=hash01(f.id,k,s.i+131)<R.lowChance[kind];
+   out.push({...base,scale:(.82+.4*hash01(f.id,k,s.i+71))*(low?.5:1),thick:.85+.3*hash01(f.id,k,s.i+109),gate:false});
+  }
+ }
  return out;
 }
 /** Tilled-soil colour (sRGB 0-1) from fertility and moisture, muted. Dry and thin soil is paler and greyer; wet rich soil darker and browner. */

@@ -8,6 +8,7 @@
  * handful of distinct cottages, not 60 unique meshes. */
 import {withNearDetail} from './nearDetail';
 import {hashSeed,type BuildingSpec} from './buildingParts';
+import {getBuildingMute} from './buildingDetail';
 import {generateCivBuilding,type CivContext,type CivRole} from './civBuildings';
 import {heraldryKey,BANNER_ORDER,type Heraldry} from './villageIdentity';
 import {formsOf,lookOf,roleForType,skinSignature,villageRetint,type CivSkin} from './civSkin';
@@ -39,6 +40,8 @@ export type CarvedBuildingInput={worldSeed:number;type:string;id:number;era:numb
  mourning?:boolean;
  /** Building condition 0..1 (hp/maxHp); quantised to three wear tiers for skin grammars. */
  condition?:number};
+/** Distinct dwelling/granary geometries a skinned society keeps resident (id-keyed, so two huts in one village never match). */
+export const SKIN_DWELLING_VARIANTS=64;
 type Mapping={family:FamilyId;trade?:Trade;scale?:'small'|'large'};
 
 /** Variants per family: distinct geometries kept resident per era/material bucket. */
@@ -136,7 +139,9 @@ export type CarvedVariantKey={key:string;family:FamilyId;ctx:FamilyContext;
 export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|null{
  const era=eraBucket(input.era),habitat=input.habitat??'plains',climate=climateFor(habitat),map=familyForType(input.type,era,climate,input.reviewWatermill?input.waterSide:undefined);
  if(!map)return null;
- const material=materialFor(era,habitat),count=VARIANTS_PER_FAMILY[map.family],index=variantIndexFor(input.worldSeed,input.id,count);
+ const material=materialFor(era,habitat),skinned=!!(input.skin&&input.skin.grammar),roleHere=skinned?roleForType(input.type):null,
+  // A society's dwellings and granaries are each their own building: the variant is the building id, not a handful of shared meshes.
+  count=roleHere==='house'||roleHere==='granary'?SKIN_DWELLING_VARIANTS:skinned&&map.family==='workshop'?SKIN_DWELLING_VARIANTS/2:VARIANTS_PER_FAMILY[map.family],index=variantIndexFor(input.worldSeed,input.id,count);
  // Wealth is a property of the variant (spread across the pool), so richer and
  // poorer houses coexist in one village without unique meshes per building.
  const spread=count>1?index/(count-1):.5,tier=prosperityTier(input.prosperity);
@@ -146,7 +151,7 @@ export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|nul
  const tradition=traditionFor(input.worldSeed,input.settlementSeed);
  const fw=Math.round(input.footprint.w*100)/100,fd=Math.round(input.footprint.d*100)/100;
  const skin=input.skin&&input.skin.grammar?input.skin:null,role=skin?roleForType(input.type):null,wearTier=input.condition===undefined||input.condition>=.7?0:input.condition>=.4?1:2,mourn=!!(skin&&input.mourning);
- const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.join??'',input.gateOpen?'open':'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier,getBuildingGrammar(),...(skin?['skin',skinSignature(skin),role??'-',wearTier,mourn?'mourn':'',...(input.heraldry?[heraldryKey(input.heraldry)]:[])]:[])].join('|');
+ const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.join??'',input.gateOpen?'open':'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier,getBuildingGrammar(),getBuildingMute()?'mute':'',...(skin?['skin',skinSignature(skin),role??'-',wearTier,mourn?'mourn':'',...(input.heraldry?[heraldryKey(input.heraldry)]:[])]:[])].join('|');
  const ctx:FamilyContext={seed:hashSeed(input.worldSeed,key),era,material,climate,wealth,tradition,footprint:{w:fw,d:fd},
   ...(map.trade?{trade:map.trade}:{}),...(map.scale?{scale:map.scale}:{}),...(input.waterSide&&(input.reviewWatermill||input.type!=='grindingStone')?{waterSide:input.waterSide}:{}),...(input.wallAxis?{wallAxis:input.wallAxis}:{}),...(input.join!==undefined?{join:input.join}:{}),...(input.gateOpen?{gateOpen:true}:{}),...(skin?{form:formsOf(skin)}:{}),...(input.lit===false?{lit:false}:{})};
  if(skin&&role){

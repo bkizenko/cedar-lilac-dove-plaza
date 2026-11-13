@@ -9,7 +9,7 @@ import {findPath} from '@/game/navigation';
 import {galleryScene,galleryPose} from '@/scene/mapGallery';
 import {enableIrrigation,digDitch,ditchesOf} from '@/game/irrigation';
 type Spec={gallery?:string;seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
- prep?:{buildings?:{type:string;x:number;z:number}[];irrigation?:{ditchFields:number[];waterMode?:boolean};fieldBlock?:{w:number;d:number;cols:number;rows:number;stages:string[];kind?:string;minGrade?:number}[];farms?:{x:number;z:number;rel?:boolean;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
+ prep?:{age?:number;buildings?:{type:string;x:number;z:number}[];irrigation?:{ditchFields:number[];waterMode?:boolean};fieldBlock?:{w:number;d:number;cols:number;rows:number;stages:string[];kind?:string;minGrade?:number}[];farms?:{x:number;z:number;rel?:boolean;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
  routes?:{from:[number,number];to:[number,number];trips:number;team?:number;jitter?:number}[];routesFresh?:boolean;routesIdle?:number;routesLegacy?:boolean;stations?:{x:number;z:number;stage:0|1|2|3;form?:string;team?:number;hp?:number}[];
  fov?:number;drawDistance?:'low'|'medium'|'high'|'ultra';detail?:'standard'|'high'|'ultra';shadows?:boolean;measure?:boolean;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
@@ -87,6 +87,7 @@ w.renderMap=async(S:Spec)=>{
    for(const tr of S.prep.trails??[]){const [ax,az]=tr.from,[bx,bz]=tr.to,len=Math.hypot(bx-ax,bz-az),n=Math.ceil(len/1.5);
     for(let rep=0;rep<Math.ceil((tr.wear??.7)*2.7);rep++)for(let i=0;i<=n;i++){const x=ax+(bx-ax)*i/n,z=az+(bz-az)*i/n;wearTrail(game,x,z,(bx-ax)/len*1.5,(bz-az)/len*1.5);}}
   }
+  if(S.prep?.age!==undefined)(game.tribe(0) as unknown as {age:number}).age=S.prep.age; // village age -> era -> boundary kind (bank, wattle, hedge, drystone)
   view.rebuild(game);view.setFieldWaterMode(!!S.prep?.irrigation?.waterMode);
   cache={key,game,view};w.__game=game;w.__view=view;
  }

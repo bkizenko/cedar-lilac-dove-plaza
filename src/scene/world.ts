@@ -95,6 +95,7 @@ import {TRAIL_GRID} from "@/game/trails";
 import {trailRibbons} from "@/game/trailRibbons";
 import {smoothRivers} from "@/game/channelSmoothness";
 import {buildingQuarterTurns,turnedFootprint} from "@/game/footprints";
+import {siteRecord} from "@/game/slopeTiers";
 import {carvedVariantFor,variantSpec} from './buildingStyleMap';
 import {buildCarvedMesh} from './carvedMesh';
 import {buildingGroundSupports} from './buildingGrounding';
@@ -2019,7 +2020,7 @@ export class WorldView {
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     if(!this.irrigationLayer&&(game.state as {irrigation?:unknown}).irrigation){this.irrigationLayer=new IrrigationLayer(this.scene,(x,z)=>game.height(x,z));this.irrigationLayer.setPreview(this.ditchPreview);}
     this.irrigationLayer?.sync(game);
-    this.contourFields?.sync(game,this.camera.position,b=>{const st=this.villageStyle(game,b.team,b);return{era:st.era,variant:st.variant};});
+    this.contourFields?.sync(game,this.camera.position,b=>{const st=this.villageStyle(game,b.team,b);return{era:st.era,variant:st.variant};},{quality:this.quality});
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     for(const name of ['fieldEdges','fieldLook','fieldSoil']){const a=this.bldMeshes.get('farm')?.timber.geometry.getAttribute(name);if(a)a.needsUpdate=true;}
     this.syncEraDetails(game);
@@ -2448,7 +2449,7 @@ export class WorldView {
     if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const carvedVariant=carved?carvedVariantFor(carved.input):null;
-    const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'')+(carvedVariant?`|${carvedVariant.key}|${Math.round(carved!.y*20)}|${Math.round(x*2)},${Math.round(z*2)}`:'');
+    const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'')+(carvedVariant?`|${carvedVariant.key}|${Math.round(carved!.y*20)}|${Math.round(x*2)},${Math.round(z*2)}|${carved!.fake.site?.foundation??''}`:'');
     if (this.ghost.userData.key === key) return;
     this.clearGhost();
     this.ghost.userData.key = key;
@@ -2518,13 +2519,14 @@ export class WorldView {
     if(['palisade','gate','stonewall','trench','moat','warehouse','dock','aqueduct','quarry','cornerstone','cairn','grove','watchtower','canal'].includes(type))return null;
     const t=quarterTurn?turnedFootprint(type):BUILDINGS[type];
     const fake={id:game.state.nextId,kind:'building',type,team:0,x,y:game.height(x,z),z,w:t.w,d:t.d,hp:1,maxHp:1,build:1} as unknown as import("@/game/types").Building;
+    const sa=game.state.slopeModel==='graded'?game.siteAssessment(type,x,z,t.w,t.d):null,rec=sa&&sa.ok?siteRecord(sa):undefined;if(rec)fake.site=rec;
     const input=this.carvedInputFor(game,fake,type,1);
     return {input,y:input.y,yaw:input.yaw,fake};
   }
   private buildCarvedGhost(c:NonNullable<ReturnType<WorldView['carvedGhostInput']>>,variant:NonNullable<ReturnType<typeof carvedVariantFor>>,ok:boolean){
     let geo=this.ghostGeo.get(variant.key);
     if(!geo){if(this.ghostGeo.size>48){for(const g of this.ghostGeo.values())g.dispose();this.ghostGeo.clear();}geo=carvedGeometry(buildCarvedMesh(variantSpec(variant),0));this.ghostGeo.set(variant.key,geo);}
-    const tint=new THREE.Color(ok?'#59e07a':'#f0604e'),mat=createCarvedMaterial();
+    const tier=c.fake.site?.tier,tint=new THREE.Color(!ok?'#f0604e':tier==='moderate'?'#f0b030':tier==='steep'?'#f08030':'#59e07a'),mat=createCarvedMaterial();
     mat.transparent=true;mat.opacity=.66;mat.depthWrite=false;mat.color.set('#ffffff').lerp(tint,.5);mat.emissive.copy(tint);mat.emissiveIntensity=.2;
     this.ghost.add(new THREE.Mesh(geo,mat));
     // the levelled plinth / footings the finished building will stand on, tinted the same way

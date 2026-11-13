@@ -6,6 +6,7 @@
 import type {Heraldry} from './villageIdentity';
 import {beam,chance,fitToFootprint,partBounds,part,pick,range,seededRandom,type BuildingSpec,type Part,type Rng,type LodTier} from './buildingParts';
 import {ensureCore,ensureNearSupport,ensureTiers} from './buildingFamiliesCivic';
+import {dressDwelling,muteTable} from './buildingDetail';
 import {CIVS,matId,materialTable,paletteTable,type CivId,type CivLook,type CivMaterials,type Swatch} from './civStyles';
 export type CivRole='house'|'civic'|'granary'|'market';
 /** eraMode 'morph' (default): the look follows `era`. 'fixed': the look is set by the building's own build-time culture/wealth (`built`, else the era it was first generated at) and never morphs when the world's era advances; only an explicit rebuild (new `built`) or extension (`extensions`) changes it. */
@@ -66,9 +67,20 @@ function hutDoor(g:G,x:number,z:number,wd=.95,h=1.65){
  g.B(dk,[wd,h,.1],[x,0,z],1);
  for(const s of[-1,1])g.B(fr,[.14,h+.14,.2],[x+s*(wd/2+.07),0,z+.04],1);
  g.B(fr,[wd+.4,.16,.2],[x,h,z+.04],1);g.B('wall2',[wd+.7,.1,.5],[x,0,z+.22],1);}
-function poor(g:G):Out{const {w,d,r}=g,k=POOR[g.civ],W=Math.min(w,d)*range(r,.74,.84),R=W/2,h=range(r,1.85,2.05),dx=g.off*.25;
+/** Civs whose poorest dwelling is a plain round hut also build one of two alternative forms, picked per building. */
+const POOR_ALT:Partial<Record<CivId,string[]>>={nilemark:['flat','flat','hut'],hanrei:['hipbox','hut','hipbox'],vedara:['hut','hipbox'],aureline:['hut','sod','hut'],kaaltun:['hipbox','hut'],sahelan:['conehut','conehut','flat']};
+/** Per-building proportions: wall size, height, roof pitch and overhang vary so no two huts in a village share a silhouette. */
+function poor(g:G):Out{
+ const n0=g.parts.length,pr=seededRandom((g.r()*4294967296)>>>0),RO=range(pr,.9,1.14),RR=range(pr,.78,1.38),out=poorBase(g);
+ for(let i=n0;i<g.parts.length;i++){const p=g.parts[i];if(p.lod===2&&!p.ends&&(p.shape==='cone'||p.shape==='prism'||p.shape==='hip'||p.shape==='sphere')&&p.pos[1]>.9)g.parts[i]={...p,size:[p.size[0]*RO,p.size[1]*RR,p.size[2]*RO]};}
+ return out;
+}
+function poorBase(g:G):Out{const {w,d,r}=g,alt=POOR_ALT[g.civ],k=alt?alt[Math.min(alt.length-1,Math.floor(r()*alt.length))]:POOR[g.civ],W=Math.min(w,d)*range(r,.64,.88),R=W/2,h=range(r,1.6,2.2),dx=g.off*1.3;
  switch(k){
   case 'cave':{const bw=w*.86,bd=d*.62,bh=2.5,z0=-d*.12;g.B('wall',[bw,bh,bd],[0,0,z0],2);g.B('roof',[bw+.5,.28,bd+.5],[0,bh,z0],2);g.B('wall2',[bw+.5,.34,.26],[0,bh+.28,z0+bd/2+.12],1);for(const x of[-1,0,1])g.parts.push(part('cylinder',matId(g.civ,'trim') as Part['mat'],[.2,.8,.2],[x*bw*.3,bh-.35,z0+bd/2+.4],1,[Math.PI/2,0,0],6));hutDoor(g,dx,z0+bd/2+.02);return {entry:{x:dx,z:z0+bd/2+.5,width:.95}};}
+  case 'flat':{const bw=W*range(r,1,1.25),bd=W*range(r,.85,1.05),wh=range(r,1.8,2.3);g.B('wall',[bw,wh,bd],[0,0,0],2);g.B('wall2',[bw+.12,.26,bd+.12],[0,wh,0],2);g.B('roof',[bw*.84,.08,bd*.84],[0,wh+.2,0],1);
+   for(let i=0;i<3;i++)g.parts.push(part('cylinder',matId(g.civ,'trim') as Part['mat'],[.11,bw*.96,.11],[0,wh+.26+i*.0,-bd*.3+i*bd*.3],0,[0,0,Math.PI/2],5));hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
+  case 'hipbox':{const bw=W*range(r,1,1.2),bd=W*range(r,.9,1.1),wh=range(r,1.7,2.1);g.B('wall',[bw,wh,bd],[0,0,0],2);g.B('wall2',[bw+.1,.3,bd+.1],[0,0,0],1);g.parts.push({...part('hip',matId(g.civ,'roof') as Part['mat'],[bw*1.3,range(r,1,1.5),bd*1.3],[0,wh-.05,0],2),inset:bd*.3});hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
   case 'dome':{const wh=1.45;g.Cy('wall',W,wh,[0,0,0],2,10);g.Pr('sphere','wall',[W*1.04,W*.85,W*1.04],[0,wh-.1,0],2,undefined,10);g.Cy('wall2',W*1.06,.14,[0,wh-.12,0],1,10);hutDoor(g,dx,R*.951+.03,.9,1.45);return {entry:{x:dx,z:R+.5,width:.9}};}
   case 'conehut':{g.Cy('wall',W,1.55,[0,0,0],2,10);g.Pr('cone','roof',[W*1.45,2.4,W*1.45],[0,1.4,0],2,undefined,10);hutDoor(g,dx,R*.951+.03,.85,1.5);g.Cy('trim',W*1.02,.12,[0,1.1,0],1,10);return {entry:{x:dx,z:R+.5,width:.9}};}
   case 'sod':{const bw=W*1.15,bd=W*.95,wh=1.75;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.7,1.5,bd+.7],[0,wh-.05,0],2);g.B('wall2',[bw+.2,.3,bd+.2],[0,0,0],1);hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
@@ -492,6 +504,7 @@ export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,varian
  if(c2.era>1&&role!=='market')addons(view,seededRandom(ctx.seed^0x51ed270b));
  if(ctx.heraldry&&(role==='house'||role==='granary'))villageMarks(view,ctx.heraldry);
  if(role!=='market')techniques(view,c2.era);
+ if(grammarSet==='original'&&(role==='house'||role==='granary')){const mm=(sl:Slot)=>matId(civ,sl) as Part['mat'];dressDwelling(view.parts,{wall:mm('wall'),wall2:mm('wall2'),roof:mm('roof'),trim:mm('trim'),accent:mm('accent'),cloth:mm('cloth'),ground:mm('ground'),dark:mm(darkSlot(view))},seededRandom(ctx.seed^0x7f4a7c15),{wear:ctx.wear,wealth:c2.wealth,era:c2.era,footprint:c2.footprint,kind:role==='granary'?'granary':'house'});}
  const im=imperfect(view,g.parts,ctx.wear,seededRandom(ctx.seed^0x9e3779b1));
  const ref=`${CIVS[civ].name}: ${CIVS[civ].inspiration}`,e=out.entry;
  const fit=fitToFootprint({family:`civ.${civ}.${role}`,variantKey,footprint:{...c2.footprint},parts:im.parts,...(e?{entry:e}:{}),notes:{reference:ref}},.1);
@@ -500,7 +513,7 @@ export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,varian
  const sh=ext.length?-fp0.w*.15:0,shifted=sh?parts.map(p=>({...p,pos:[p.pos[0]+sh,p.pos[1],p.pos[2]] as V,...(p.ends?{ends:[[p.ends[0][0]+sh,p.ends[0][1],p.ends[0][2]],[p.ends[1][0]+sh,p.ends[1][1],p.ends[1][2]]] as const}:{})})):parts;
  const annexParts:Part[]=[];ext.slice(0,2).forEach((e,i)=>{const vg=mk(civ,{...ctx,era:e.era,wealth:look.wealth,footprint:fp0},seededRandom(ctx.seed+i*7+1)),aw=fp0.w*.26,ad=fp0.d*(.45-i*.1),x=fp0.w*.355,z=-fp0.d*.1+i*fp0.d*.34,h=range(vg.r,2.2,3);vg.B(e.era>=3?'wall':'wall2',[aw,h,ad],[x,0,z],2);roofFor(vg,Math.min(aw,ad)*.8,Math.min(aw,ad)*.8,h,x,z);vg.door(x,z+ad/2+.02,.8,1.7);annexParts.push(...vg.parts.filter(q=>{const b=partBounds(q);return b.minX>=-fp0.w/2&&b.maxX<=fp0.w/2&&b.minZ>=-fp0.d/2&&b.maxZ<=fp0.d/2;}));});
  const outParts=ext.length?ensureTiers(ensureNearSupport([...shifted,...annexParts],fp0),fp0):parts;
- return {...fit,footprint:{...fp0},...(entry?{entry:{...entry,x:entry.x+sh}}:{}),parts:outParts,eraMode:ctx.eraMode??DEFAULT_ERA_MODE,builtEra:look.era,extensionEras:ext.map(e=>e.era),civ,role,materials:ctx.look?.palette?paletteTable(civ,ctx.look.palette):materialTable(civ),banners:outParts.filter(p=>p.mat===cloth&&p.size[2]<.1&&p.size[1]>.6).map(p=>({pos:p.pos,size:p.size})),imperfection:{scale:sc,lean:im.lean,offDoor:g.off,patches:im.patches}};
+ return {...fit,footprint:{...fp0},...(entry?{entry:{...entry,x:entry.x+sh}}:{}),parts:outParts,eraMode:ctx.eraMode??DEFAULT_ERA_MODE,builtEra:look.era,extensionEras:ext.map(e=>e.era),civ,role,materials:muteTable(ctx.look?.palette?paletteTable(civ,ctx.look.palette):materialTable(civ)),banners:outParts.filter(p=>p.mat===cloth&&p.size[2]<.1&&p.size[1]>.6).map(p=>({pos:p.pos,size:p.size})),imperfection:{scale:sc,lean:im.lean,offDoor:g.off,patches:im.patches}};
 }
 
 /** Techniques a builder of this era commands (applied once, at build time): era 3 dressed plinth and door frame, era 4 corner quoins, era 5 cornice band. */

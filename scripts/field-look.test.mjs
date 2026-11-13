@@ -38,3 +38,18 @@ test('soil is muted (no saturated cartoon brown) and dry soil is paler than wet'
  assert.ok(dry[0]>wet[0]);assert.ok(fieldWeeds('fallow',0)>fieldWeeds('growing',1));
  assert.ok(hash01(1,2,3)>=0&&hash01(1,2,3)<1);
 });
+import {fieldDetailTier,FIELD_DETAIL_TIERS} from '../src/game/fieldLook.ts';
+test('boundary pieces run corner to corner with uneven lengths, one gate, and open where a trail crosses',()=>{
+ const f={id:5,x:0,z:0,w:16.4,d:12.3},all=boundarySites(f,0,'stone'),lens=all.map(s=>s.len);
+ assert.ok(Math.max(...lens)/Math.min(...lens)>1.4,'lengths should not be uniform');
+ assert.equal(all.filter(s=>s.gate).length,1);
+ assert.ok(all.every(s=>s.variant>=0&&s.variant<BOUNDARY_RULES.variants.stone&&s.len>.15));
+ const g=all.find(s=>s.gate),across=boundarySites(f,0,'stone',{crossings:[{x:-6,z:-f.d/2+1}]});
+ assert.ok(across.length<=all.length+1);assert.ok(!across.some(s=>!s.gate&&Math.hypot(s.x+6,s.z+f.d/2-1)<.6),'no wall piece sits on the trail');
+ assert.ok(g&&g.len>=BOUNDARY_RULES.gateMetres);
+ const hed=boundarySites(f,0,'hedge');assert.ok(hed.length>20);assert.deepEqual(boundarySites(f,0,'hedge',{crossings:[]}),hed);
+});
+test('draw-distance tiers: full detail, low-poly boundary and thinned crops, then soil texture only; farther tiers for better quality',()=>{
+ for(const q of ['low','med','high']){const t=FIELD_DETAIL_TIERS[q];assert.equal(fieldDetailTier(q,t.full-1),0);assert.equal(fieldDetailTier(q,t.full+1),1);assert.equal(fieldDetailTier(q,t.max+1),2);}
+ assert.ok(FIELD_DETAIL_TIERS.low.max<FIELD_DETAIL_TIERS.med.max&&FIELD_DETAIL_TIERS.med.max<FIELD_DETAIL_TIERS.high.max);
+});

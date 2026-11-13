@@ -17,6 +17,7 @@ import * as THREE from 'three';
 import {carvedSnowUniform,patchSnowShader} from './roofSnow';
 import {partsAtLod,renderTierForDistance,type BuildingSpec,type LodTier,type PartAnim,type RenderTier} from './buildingParts';
 import {getBuildingGrammar} from './buildingFamilies';
+import {getBuildingMute} from './buildingDetail';
 import {carvedVariantFor,prosperityTier,skinKeyPart,variantSpec,type CarvedBuildingInput} from './buildingStyleMap';
 import {buildCarvedMesh,impostorCard,type CarvedMeshData} from './carvedMesh';
 import {CARVED_GRAIN,CARVED_LIGHT_RIG,getCarvedPalette,specSwatch,woodGrainPixels} from './carvedPalette';
@@ -106,7 +107,7 @@ export class CarvedBuildingLayer{
  setBump(on:boolean){if(on===this.bump)return;this.bump=on;const m=this.material;m.bumpMap=on?carvedGrainTexture():null;m.bumpScale=on?1.6:0;m.needsUpdate=true;}
  /** Stable variant key for an instance, cached per generator-relevant input. */
  private keyFor(b:CarvedInstance){
-  const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.join??''}:${b.gateOpen?'o':''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getCarvedPalette()}:${skinKeyPart(b)}`;
+  const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.join??''}:${b.gateOpen?'o':''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getBuildingMute()?'mute':''}:${getCarvedPalette()}:${skinKeyPart(b)}`;
   if(!this.keys.has(k)){const v=carvedVariantFor(b);this.keys.set(k,v?v.key:null);if(v&&!this.specs.has(v.key))this.specs.set(v.key,variantSpec(v));}
   return this.keys.get(k)??null;
  }

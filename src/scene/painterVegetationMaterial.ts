@@ -49,21 +49,21 @@ export function makePainterProp(){return new THREE.MeshStandardMaterial({color:0
 
 /** Adds the same wind sway to a material that already has its own onBeforeCompile (e.g. terrain-conforming crops). Sway is applied after the
  * existing vertex transform ('project_vertex'), so plants keep sitting on the ground and only the free tips move. */
-export function addPainterSway(material:THREE.Material,sway:PainterSway,key:string,amp=.2){
+export function addPainterSway(material:THREE.Material,sway:PainterSway,key:string,amp=.2,bodyPhase=0){
  const previous=material.onBeforeCompile,previousKey=material.customProgramCacheKey;
- material.customProgramCacheKey=()=>`${previousKey?previousKey.call(material):''}|painter-sway-${key}`;
+ material.customProgramCacheKey=()=>`${previousKey?previousKey.call(material):''}|painter-sway-${key}${bodyPhase?`-bp${bodyPhase}`:''}`;
  material.onBeforeCompile=(shader,renderer)=>{
   previous?.call(material,shader,renderer);
   shader.uniforms.uTime=sway.uTime;shader.uniforms.uWind=sway.uWind;
   shader.vertexShader=`uniform float uTime;uniform float uWind;\n`+shader.vertexShader.replace('#include <project_vertex>',`
    {
     #ifdef USE_INSTANCING
-     vec3 swI=instanceMatrix[3].xyz;
+     vec3 swI=instanceMatrix[3].xyz;float swS=length(instanceMatrix[1].xyz);
     #else
-     vec3 swI=vec3(0.);
+     vec3 swI=vec3(0.);float swS=1.;
     #endif
-    float swH=max(position.y,0.);
-    float swP=dot(swI.xz,vec2(.173,.131));
+    float swH=max(position.y,0.)*swS;
+    float swP=dot(swI.xz,vec2(.173,.131))${bodyPhase?`+position.x*${bodyPhase.toFixed(2)}+position.z*${(bodyPhase*.7).toFixed(2)}`:''};
     float swG=.5+.5*sin(uTime*.55+swI.x*.021+swI.z*.017);
     vec2 swW=vec2(sin(uTime*1.25+swP),cos(uTime*.93+swP*1.31))*uWind*(.3+.7*swG);
     transformed.xz+=swW*swH*swH*${amp.toFixed(3)};

@@ -40,6 +40,8 @@ import { cultivationIssue } from "./cultivation";
 import { encodeGame, decodeGame,validateGameSave } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE, SAVE_KEY } from "./constants";
+import {slopeClassOf} from "./slopeTiers";
+import {turnedFootprint} from "./footprints";
 import { Game } from "./sim";
 import { GameAudio } from "./audio";
 import { probeWorld } from "./audioProbe";
@@ -320,6 +322,7 @@ export class Engine {
   bridgeSpan: BridgeSpan|undefined;
   plotWidth=1;plotDepth=1;
   plotPreviewKey="";
+  slopeNoteKey="";
   private nextFieldPreviewAt=0;
   resizePlot(delta:number,depth=false){
     if(depth)this.plotDepth=Math.max(1,Math.min(maximumPlotAxisMultiple(this.game.state.placing??"farm"),this.plotDepth+delta));else this.plotWidth=Math.max(1,Math.min(maximumPlotAxisMultiple(this.game.state.placing??"farm"),this.plotWidth+delta));
@@ -900,6 +903,11 @@ export class Engine {
     const geometryIssue = this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan,this.placementTurn());
     const issue = geometryIssue ?? (type==='farm'?fieldSeedIssue(this.game.tribe(0).seeds||0,buildingCost(type,this.game,0,this.plotSize).seeds||0):null);
     this.game.state.placeIssue = issue;
+    // Graded slope: say what the ground costs (tier word, goods, labour, foundation) once per change, like the field/pen cost line.
+    if(!issue&&this.game.state.slopeModel==='graded'&&type!=='bridge'&&!this.plotStart){
+      const dims=this.plotSize??(this.placementTurn()?turnedFootprint(type):BUILDINGS[type]),sa=slopeClassOf(type)==='exempt'?null:this.game.siteAssessment(type,x,z,dims.w,dims.d),note=sa?`${sa.label} · ${sa.detail}`:'';
+      if(note!==this.slopeNoteKey){this.slopeNoteKey=note;if(sa&&sa.tier!=='level')this.game.banner(note,3);}
+    }
     this.ghostPos.x = x;
     this.ghostPos.z = z;
     const bridge=type==="bridge"?(this.bridgeSpan??planBridge(this.game,x,z)):null;

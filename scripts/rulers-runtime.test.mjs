@@ -598,3 +598,19 @@ test('partyRisk (CAT-97): hostile people near the road raise risk and demand esc
  assert.ok(quiet.risk>=0&&quiet.risk<=1);
  delete g.state.worldOptions.rulersVersion;assert.equal(partyRisk(g,0,a,b),null);
 });
+
+test('harvest gathering: rotating well-fed host, peaceful known rivals only, ties rise, no goods or units move, skipped at war, old saves untouched, save round-trip',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();R.ensureRulers(g);
+ const rel=(f,t,o={})=>({from:f,to:t,known:true,trust:.3,grievance:0,hostile:false,peaceUntil:0,lastContactSeconds:0,...o});
+ const ids=g.state.tribes.map((_,i)=>i).filter(i=>i!==0&&i!==3&&g.tribe(i));assert.ok(ids.length>=2);
+ g.state.societyRelations=[];for(const a of ids)for(const b of ids)if(a!==b)g.state.societyRelations.push(rel(a,b));
+ const snap=()=>JSON.stringify([g.state.units.map(u=>[u.team,u.hp>0]),g.state.buildings.length,g.state.tribes.map(t=>t.stock??null)]);
+ let gat=null,before=snap();for(let y=0;y<ids.length&&!gat;y++){g.state.rulers.year=y;gat=R.harvestGathering(g);}
+ assert.ok(gat,'a fed peaceful host holds a gathering');if(gat){assert.ok(!gat.guests.includes(gat.host));assert.ok(gat.guests.every(x=>x!=='0'&&x!=='3'));assert.equal(snap(),before,'no goods, units or buildings created or moved');assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'round-trips valid');assert.equal(g.state.rulers.gatherings.at(-1).year,gat.year);}
+ // war between any two attendees: no gathering
+ for(const r of g.state.societyRelations)r.hostile=true;g.state.rulers.gatherings=[];
+ for(let y=0;y<ids.length;y++){g.state.rulers.year=y;assert.equal(R.harvestGathering(g),null,'hostile houses do not feast together');}
+ // old save: nothing
+ delete g.state.worldOptions.rulersVersion;delete g.state.rulers;assert.equal(R.harvestGathering(g),null);
+});
