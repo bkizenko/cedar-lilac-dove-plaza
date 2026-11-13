@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {assignHusbandry} from '../src/game/husbandry.ts';
 import {herdRules} from '../src/game/animalSpecies.ts';
+import {newFleece} from '../src/game/sheep.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 
 // Controlled initial breeding endowment, not earned capture or natural-terrain qualification.
@@ -10,6 +11,7 @@ import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 function fixture(species){
  const g=new Game();g.reset(123456);g.enterIsland();
  g.state.units=[];g.state.buildings=[];g.state.wildlife=[];g.state.livestock=[];
+ if(species==='sheep')g.state.sheepVersion=1;
  g.world.heights.fill(4);g.vision.fill(2);g.state.time=100;g.state.weather='clear';
  delete g.state.survivalVersion;g.state.autoWorkEnabled=false;g.state.paused=false;g.state.nightWork=true;
  g.raidT=g.seaT=g.calamityT=1e8;
@@ -20,9 +22,9 @@ function fixture(species){
  const r=herdRules(species),parents=['female','male'].map((sex,i)=>({id:g.id(),species,team:0,pen:pen.id,
   x:20+i,y:4,z:0,facing:0,vx:0,vz:0,wanderT:0,fly:0,hp:24,maxHp:24,scale:1,adultScale:1,
   sex,born:100-r.maturity,tamedAt:0,hunger:5,milk:0,pregnancy:sex==='female'?r.gestation-.1:0,
-  foodConsumed:12+i,waterConsumedLiters:8+i,
+  foodConsumed:12+i,waterConsumedLiters:8+i,...(species==='sheep'?{fleece:newFleece(2)}:{}),
   ...(['horse','cattle'].includes(species)?{packHarness:{version:1,preparedAt:0,wood:r.harnessWood,workSeconds:r.harnessSeconds}}:{})}));
- g.state.livestock=parents;g.rebuildWalk();return {g,pen,parents};
+ g.state.livestock=[...parents];g.rebuildWalk();return {g,pen,parents};
 }
 function drive(g,seconds,until){
  const end=g.state.time+seconds;
@@ -33,6 +35,7 @@ for(const species of ['goat','sheep','horse','cattle'])test(`${species} birth cr
  const {g,pen,parents}=fixture(species),mother=parents[0],history={food:mother.foodConsumed,water:mother.waterConsumedLiters,harness:structuredClone(mother.packHarness)};
  drive(g,2,()=>g.state.livestock.length===3);
  const child=g.state.livestock.find(a=>!parents.some(p=>p.id===a.id));assert.ok(child);
+ if(species==='sheep'){assert.deepEqual(child.fleece,newFleece());assert.ok(mother.fleece.units>=2);}
  assert.equal(child.packHarness,undefined);assert.equal(child.foodConsumed,0);assert.equal(child.waterConsumedLiters,0);
  assert.equal(child.team,mother.team);assert.equal(child.pen,pen.id);assert.equal(child.species,species);
  assert.equal(child.maxHp,mother.maxHp);assert.equal(child.hp,child.maxHp);assert.equal(child.pregnancy,0);assert.equal(child.milk,0);
