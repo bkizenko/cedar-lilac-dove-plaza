@@ -1,3 +1,4 @@
+import {withdrawCarriedFood} from '../src/game/tradeFood.ts';
 import {finishTradeLoading} from './helpers/finish-trade-loading.mjs';
 import {endowSettlementSites} from './helpers/endowed-settlement-sites.mjs';
 import test from 'node:test';
@@ -26,11 +27,11 @@ function walkHome(g,u){
 
 test('procurement learns terms at arrival and physically returns finite goods',()=>{
   const g=setup(),ours=g.tribe(0).food,theirs=g.tribe(1).wood;
-  assert.equal(sendProcurement(g,1,'food','wood',20,5),true);
+  assert.equal(sendProcurement(g,1,'food','wood',16,5),true);
   const u=g.state.units.find(u=>u.procurement);assert.ok(u);finishTradeLoading(g,u,ours);
-  assert.equal(g.tribe(0).food,ours-20);assert.equal(u.carry,20);
+  assert.equal(g.tribe(0).food,ours-16);assert.equal(u.carry,16);
   assert.equal(g.tribe(1).wood,theirs);assert.equal(g.state.tradeReports,undefined,'no remote terms');
-  toMeeting(g,u);const quote=quoteShipment(g,1,'food','wood',20,u).deal;assert.ok(quote);
+  toMeeting(g,u);const quote=quoteShipment(g,1,'food','wood',16,u).deal;assert.ok(quote);
   g.tradeAI(u,.1);assert.equal(u.carry,quote.getAmt);assert.equal(u.carryType,'wood');
   assert.equal(g.tribe(0).wood,100);assert.equal(g.tribe(1).wood+u.carry,theirs);
   assert.equal(g.state.tradeReports[0].time,g.state.time);assert.equal(u.procurement,undefined);
@@ -40,10 +41,11 @@ test('procurement learns terms at arrival and physically returns finite goods',(
 
 test('a minimum return is binding and a refused budget travels home without a remote refund',()=>{
   const g=setup(),before=g.tribe(0).food,theirs=g.tribe(1).wood;
-  assert.equal(sendProcurement(g,1,'food','wood',20,200),true);
+  assert.equal(sendProcurement(g,1,'food','wood',20,200),false,'an impossible return load is rejected up front');
+  assert.equal(sendProcurement(g,1,'food','wood',12,24),true);
   const u=g.state.units.find(u=>u.procurement);finishTradeLoading(g,u,before);toMeeting(g,u);g.tradeAI(u,.1);
-  assert.equal(u.order,'return');assert.equal(u.carryType,'food');assert.equal(u.carry,20);
-  assert.equal(g.tribe(0).food,before-20);assert.equal(g.tribe(1).wood,theirs);
+  assert.equal(u.order,'return');assert.equal(u.carryType,'food');assert.equal(u.carry,12);
+  assert.equal(g.tribe(0).food,before-12);assert.equal(g.tribe(1).wood,theirs);
   walkHome(g,u);assert.equal(g.tribe(0).food,before);
 });
 
@@ -52,7 +54,7 @@ test('changed local needs, conflict and stolen budgets prevent the planned purch
     const g=setup();sendProcurement(g,1,'food','wood',20,5);const u=g.state.units.find(u=>u.procurement);finishTradeLoading(g,u,240);
     if(failure==='shortage')g.tribe(1).wood=24;
     if(failure==='war')g.tribe(1).hostile=true;
-    if(failure==='theft')u.carry=12;
+    if(failure==='theft')assert.ok(withdrawCarriedFood(u,8));
     toMeeting(g,u);g.tradeAI(u,.1);assert.equal(u.order,'return');assert.equal(u.carryType,'food');
     assert.equal(u.carry,failure==='theft'?12:20);assert.equal(g.tribe(0).wood,100);
     walkHome(g,u);assert.equal(g.tribe(0).food,failure==='theft'?232:240);
@@ -100,7 +102,7 @@ test('trading priority advances only approved route departures and retains pause
 
 test('loading a fully stolen current shipment cannot regenerate its budget',()=>{
   const g=setup();sendProcurement(g,1,'food','wood',4,1);const u=g.state.units.find(u=>u.procurement);finishTradeLoading(g,u,240);
-  u.carry=0;u.carryType=null;
+  assert.ok(withdrawCarriedFood(u,u.carry));
   const raw=encodeGame(g);assert.equal(raw.cargoVersion,1);
   for(const marker of [true,false]){
     const copy=structuredClone(raw);if(!marker)delete copy.cargoVersion;
