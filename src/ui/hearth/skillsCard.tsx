@@ -17,7 +17,7 @@ export function VillageSkillsCard({card}:{card:VillageSkillCard}){
  return <section className="hw-card hw-vskills" aria-label="Village specialisation"><div className="hw-card-head"><h3>What the village is known for</h3></div>
   <ul className="hw-vskill-list">{card.rows.map(r=><li key={r.id} className="hw-vskill"><span className="hw-skill-name">{r.label}</span><span className="hw-skill-word">{r.lapsed?'fading':r.word}</span>
    <span className="hw-skill-bar" role="progressbar" aria-label={`${r.label} tradition`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={r.tradition}><i style={{width:`${Math.max(4,r.tradition)}%`}}/></span>
-   <span className="hw-vskill-meta">{r.practitioners} hands · {r.masters} masters{r.guild&&<span className="hw-chip hw-skill-guild">guild</span>}{r.lapsed&&<span className="hw-chip t-warn">no master left</span>}</span></li>)}</ul>
+   <span className="hw-vskill-meta">{r.practitioners} {r.practitioners===1?'hand':'hands'} · {r.masters} {r.masters===1?'master':'masters'}{r.guild&&<span className="hw-chip hw-skill-guild">guild</span>}{r.lapsed&&<span className="hw-chip t-warn">no master left</span>}</span></li>)}</ul>
   {card.quarters.length>0&&<ul className="hw-chips" aria-label="Craft quarters">{card.quarters.map(q=><li key={q} className="hw-chip hw-chip-soft">{q}</li>)}</ul>}
   <p className="hw-sub">Tradition grows where many skilled hands work with local resources and fades when nobody keeps it up. It speeds that work a little; it never creates goods.</p>
  </section>;
