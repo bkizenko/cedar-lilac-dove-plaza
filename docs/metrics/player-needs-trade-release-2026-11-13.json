@@ -1,0 +1,96 @@
+{
+  "release": {
+    "release": "2026-11-13T09-09-19-758Z-1aa5ab3",
+    "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T09-09-19-758Z-1aa5ab3",
+    "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T07-28-20-529Z-ea6d6a6",
+    "commit": "1aa5ab39eb86e5437684d3993704135f45dda099",
+    "retained": {
+      "linked": 1494,
+      "copied": 0,
+      "existing": 13
+    }
+  },
+  "batch": {
+    "passed": 9,
+    "total": 9,
+    "newBackend": 3,
+    "pureUI": 2,
+    "nativeLongRoundTrip": 1,
+    "builtPublicJourneys": 2,
+    "builtLegacyCompatibility": 1
+  },
+  "supporting": {
+    "passed": 49,
+    "total": 49,
+    "existingTrade": 19,
+    "council": 20,
+    "husbandry": 10
+  },
+  "nativeTotal": {
+    "passed": 55,
+    "total": 55
+  },
+  "compiler": "PASS full tsc --noEmit",
+  "build": "PASS npm run build at87653ab3; subsequent1aa5ab39 changes diagnostic JSON comparison only; product-source diff verified empty",
+  "builtEvidence": {
+    "passed": 3,
+    "total": 3,
+    "outgoing": {
+      "paidStone": 30,
+      "quotedWood": 36,
+      "receivedWood": 8,
+      "maximumObservedTravel": 858.2023660212874,
+      "carrierLoss": 1
+    },
+    "incoming": {
+      "receivedStone": 13,
+      "reservedWood": 16
+    },
+    "durable": true,
+    "original53Unchanged": true,
+    "errors": []
+  },
+  "network": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T09-09-19-758Z-1aa5ab3",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "limitations": [
+    "Finite initial native-terrain fixture endowments, not earned settlement discovery or campaign qualification",
+    "One carrier lost; surviving cargo receipt is not a claim that all quoted goods arrived",
+    "192k cached needs-journey search measured22ms natively; not a100-resident FPS/performance claim",
+    "Existing unused Option H standalone adapter is not claimed wired; current Hearth and Classic surfaces are wired",
+    "Rival/coastal scalar food consumers remain W11 follow-up"
+  ],
+  "diagnostics": [
+    "Public test initially matched duplicate controls outside dialog; scoped selector to actual offer dialog",
+    "Durable comparison initially retained undefined keys JSON serialization drops; normalized saved JSON semantics without product changes"
+  ],
+  "firstReleaseGates": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  }
+}
