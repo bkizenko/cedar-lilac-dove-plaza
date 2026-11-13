@@ -2211,6 +2211,7 @@ export class WorldView {
         }else vehicles[kind!]++;
         if(kind==='canoe'&&this.canoePaddles&&paddles<instCap(this.canoePaddles)){
           const moving=afloat&&Math.hypot(u.vx,u.vz)>.1;
+          if(moving)this.fishAdapter?.wake(x,water,z,u.facing);
           const stroke=moving?Math.sin(game.state.time*4+u.id*.7):0;
           _p.set(.72,afloat?.85:.5,0);
           _e.set(afloat?stroke*.65:Math.PI/2,0,afloat?-.25:0);_q.setFromEuler(_e);_s.set(1,1,1);

@@ -1250,3 +1250,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
   6. NATIVE CHECKS Claude cannot run, done alongside the above: full suite + tsc on main, real-build run of Claude's landed work with seed and screenshot per failure, M1 frame times for Standard/High/Ultra Detail, draw-distance, forest and people caps. Report, do not make it the whole task.
   Claude keeps: visuals, mapgen/geology, UI, wonders+ruins, skills/decay model, world-scale renderer path, society/ruler UI. If you need a hook in those, post a board line, do not edit.
   blocked: none
+09:08 ET Claude(animal-models): shipped rigged animal models, fish shoals, canoe hull (see git log) / now on handoff / blocked: none
