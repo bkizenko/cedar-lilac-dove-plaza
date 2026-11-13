@@ -68,8 +68,8 @@ export class BotanicalForest{
  private cardScale=1;
  private setCardScale(k:number){if(Math.abs(k-this.cardScale)<1e-6)return;this.cardScale=k;for(const b of this.batches.values()){this.scene.remove(b.mesh);b.mesh.dispose();}this.batches.clear();}
  private geometryInfo(spIdx:number){let i=this.info.get(spIdx);if(!i){i=botanicalTree(BOTANICAL_SPECIES[spIdx].id,0,1);this.info.set(spIdx,i);}return i;}
- private batch(sp:number,v:number,tier:0|1,needed:number){
-  const key=(sp*VARIANTS_PER_SPECIES+v)*2+tier;let b=this.batches.get(key);
+ private batch(sp:number,v:number,tier:0|1|2,needed:number){
+  const key=(sp*VARIANTS_PER_SPECIES+v)*3+tier;let b=this.batches.get(key);
   if(!b){b=this.makeBatch(botanicalTree(BOTANICAL_SPECIES[sp].id,v,tier,this.cardScale).geometry,`resource-${BOTANICAL_SPECIES[sp].id}-v${v}-t${tier}`,Math.max(8,needed));this.batches.set(key,b);}
   else if(needed>b.capacity){const old=b,nb=this.makeBatch(old.mesh.geometry,old.name,Math.max(needed,old.capacity*2),old);this.scene.remove(old.mesh);old.mesh.dispose();b=nb;this.batches.set(key,b);}
   return b;
@@ -98,19 +98,23 @@ export class BotanicalForest{
   // Detail: at most `maxFullTrees` are drawn at the full tier, nearest first (the M1 triangle budget); the rest of the ring uses the mid tier
   {const cap=DETAIL_RULES.maxFullTrees[getDetailLevel()],ds:number[]=[];for(const node of nodes){if(node.amount<=0&&!node.planted)continue;const q=Math.hypot(node.x-ctx.camera.x,node.z-ctx.camera.z);if(q<=d0&&ctx.known(node.x,node.z))ds.push(q);}
    if(ds.length>cap){ds.sort((a,b)=>a-b);d0=Math.min(d0,ds[cap-1]);}}
+  // HERO tier: the nearest maxHeroTrees real trees inside heroTreeMetres draw the enriched near geometry (treeBotany lod 2); never more, so the triangle budget is bounded
+  let heroD=Math.min(d0,DETAIL_RULES.heroTreeMetres[getDetailLevel()]);
+  {const cap=DETAIL_RULES.maxHeroTrees[getDetailLevel()],ds:number[]=[];for(const node of nodes){if(node.amount<=0&&!node.planted)continue;const q=Math.hypot(node.x-ctx.camera.x,node.z-ctx.camera.z);if(q<=heroD&&ctx.known(node.x,node.z))ds.push(q);}
+   if(ds.length>cap){ds.sort((x,y)=>x-y);heroD=ds[cap-1];}}
   // with the cosmetic filler on, sim trees beyond the individual-detail radius draw as one cheap low-poly crown (hand-over is a dithered cross-fade); the budget's real reach bounds both
   const detailEff=ctx.filler?ctx.filler.detailEff:Infinity;this.cheapIds[0].length=this.cheapIds[1].length=0;
   const reach=ctx.filler?Math.min(cullFar,ctx.filler.farEff):cullFar;
   if(fadeM>0)this.simFade.value.set((ctx.filler?detailEff:cullFar)-fadeM,ctx.filler?detailEff:cullFar,-2,-1);else this.simFade.value.set(1e9,1e9+1,-2,-1);
   const fillerCounts={trees:0,far:0,blobs:0,cheap:0};this.fill.begin();
-  const farCounts=[0,0];let farTrunks=0,blobs=0,midTrees=0,fullTrees=0,leafy=0;this.farTrunkIds.length=0;this.farIds[0].length=this.farIds[1].length=0;
+  const farCounts=[0,0];let farTrunks=0,blobs=0,midTrees=0,fullTrees=0,heroTrees=0,leafy=0;this.farTrunkIds.length=0;this.farIds[0].length=this.farIds[1].length=0;
   // two passes would let batches size exactly; instead capacity doubles on demand
   const tally=new Map<number,number>();
   for(const list of [nodes,ctx.filler?.trees??[]])for(const node of list){
    if(!ctx.known(node.x,node.z))continue;
    const dx=node.x-ctx.camera.x,dz=node.z-ctx.camera.z,distance=Math.hypot(dx,dz);if(distance>reach)continue;
    const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=node.scale*growth;
-   const tier:0|1|2=node.filler?2:distance<=d0?0:distance<=d1?1:2; // cosmetic filler never uses the pickable individual tiers
+   const tier:0|1|2=node.filler?2:distance<=d0?0:distance<=d1?1:2,heroTier:0|1|2=tier===0&&distance<=heroD&&!node.filler?2:tier; // cosmetic filler never uses the pickable individual tiers
    if(tier===2&&ctx.inView&&!ctx.inView(node.x,node.z,10))continue;
    if(node.filler)fillerCounts.trees++;
    if(stump){
@@ -132,11 +136,11 @@ export class BotanicalForest{
    if(ctx.marked?.(node.id))this.color.set('#c58e43');
    if(distance<=Math.min(near*2.2,165)&&!stump){blobs=this.blob(node,s,sp.crownR*rec.sx*(sp.arch==='palm'?.5:.85),blobs);}
    if(tier!==2){
-    const key=(rec.sp*VARIANTS_PER_SPECIES+rec.v)*2+tier,need=(tally.get(key)??0)+1;tally.set(key,need);
-    const b=this.batch(rec.sp,rec.v,tier as 0|1,need),i=b.n++;b.ids.push(node.id);
+    const key=(rec.sp*VARIANTS_PER_SPECIES+rec.v)*3+heroTier,need=(tally.get(key)??0)+1;tally.set(key,need);
+    const b=this.batch(rec.sp,rec.v,heroTier as 0|1|2,need),i=b.n++;b.ids.push(node.id);
     this.pos.set(node.x,node.y,node.z);this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);this.scale.set(s*rec.sx,s*rec.sy,s*rec.sx);this.matrix.compose(this.pos,this.quat,this.scale);
     b.mesh.setMatrixAt(i,this.matrix);b.mesh.setColorAt(i,this.color);b.state.setXY(i,density,snow);
-    if(tier===0)fullTrees++;else midTrees++;if(density>.05||sp.evergreen)leafy++;
+    if(tier===0)fullTrees++;else midTrees++;if(heroTier===2)heroTrees++;if(density>.05||sp.evergreen)leafy++;
    }else{
     const g=this.geometryInfo(rec.sp),fl=node.filler===true;
     if(distance>detailEff-fadeM){
@@ -176,7 +180,7 @@ export class BotanicalForest{
   if(this.shadows){this.shadows.count=blobs;this.shadows.instanceMatrix.needsUpdate=true;}
   this.farTrunk.count=farTrunks;this.farTrunk.instanceMatrix.needsUpdate=true;
   for(let i=0;i<2;i++){const m=this.far[i];m.count=farCounts[i];m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;}
-  return {nearTrees:fullTrees+midTrees,nearCanopies:leafy,farCanopies:farCounts[0]+farCounts[1],resourceCount:nodes.length,fullTrees,midTrees,filler:{...fillerCounts,...this.fill.stats()}};
+  return {nearTrees:fullTrees+midTrees,nearCanopies:leafy,farCanopies:farCounts[0]+farCounts[1],resourceCount:nodes.length,fullTrees,midTrees,heroTrees,filler:{...fillerCounts,...this.fill.stats()}};
  }
  /** Meshes of the cosmetic filler layer (for tests and the measurement harness). */
  fillerMeshes(){return this.fill.meshes();}

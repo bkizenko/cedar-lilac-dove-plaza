@@ -1,0 +1,8 @@
+{
+ "trees-before-a": {"species":["oak","birch","maple"],"variants":[0],"lod":0,"width":1500,"height":800,"dist":19,"spacing":9,"lookY":4.2,"pitch":0.1,"fov":34},
+ "trees-after-a":  {"species":["oak","birch","maple"],"variants":[0],"lod":2,"width":1500,"height":800,"dist":19,"spacing":9,"lookY":4.2,"pitch":0.1,"fov":34},
+ "trees-before-b": {"species":["scotsPine","willow","olive"],"variants":[0],"lod":0,"width":1500,"height":800,"dist":19,"spacing":9,"lookY":4.2,"pitch":0.1,"fov":34},
+ "trees-after-b":  {"species":["scotsPine","willow","olive"],"variants":[0],"lod":2,"width":1500,"height":800,"dist":19,"spacing":9,"lookY":4.2,"pitch":0.1,"fov":34},
+ "trees-after-oak-trunk": {"species":["oak"],"variants":[2],"lod":2,"width":1000,"height":800,"dist":7,"lookY":1.6,"pitch":0.05,"fov":40},
+ "trees-before-oak-trunk": {"species":["oak"],"variants":[2],"lod":0,"width":1000,"height":800,"dist":7,"lookY":1.6,"pitch":0.05,"fov":40}
+}
