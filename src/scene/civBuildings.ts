@@ -346,6 +346,9 @@ CIVIC.kaaltun=g=>{const {w,d,r}=g;let y=0;
  g.B('wall',[W*.9,h,D*.84],[0,y,zc],2);g.B('accent',[1.1,1.7,.08],[0,y,zc+D*.42+.02],0);g.B('wall2',[W,.3,D*.96],[0,y+h-.3,zc],1);
  P(g,'prism','roof',[W*1.3,2.5,D*1.3],[0,y+h,zc]);P(g,'prism','roof',[W*1.62,1.0,D*1.56],[0,y+h-.2,zc],undefined,undefined,0);P(g,'cone','accent',[.35,.8,.35],[0,y+h+2.4,zc+D*.65],undefined,6,1);P(g,'cone','accent',[.35,.8,.35],[0,y+h+2.4,zc-D*.65],undefined,6,1);
  for(const s of[-1,1]){g.B('wall2',[.5,4.2,.45],[s*w*.43,0,d*.3],2);g.B('accent',[.7,.5,.5],[s*w*.43,4.2,d*.3],1);g.B('cloth',[.04,1.4,.7],[s*w*.43+.4*s,3.1,d*.3],1);}
+ // carved lintel frieze with notched teeth above the hall door and a stepped roof-comb, original Kaaltun grammar (near-only teeth)
+ g.B('accent',[W*.8,.2,.1],[0,y+h*.72,zc+D*.42+.07],0);for(let i=0;i<7;i++)g.B('trim',[.18,.13,.12],[-W*.34+i*W*.113,y+h*.72+.03,zc+D*.42+.1],0);
+ for(let i=0;i<3;i++)g.B('wall2',[W*.5-i*.12,.2,.3],[0,y+h+2.5-.1+i*.2,zc],0);
  g.banner(w*.1,d*.42,2.4);return {entry:{x:0,z:d*.47,width:2}};};
 /** Mekhari: stilt-house river folk. Woven houses on posts with a plank deck, ladder and upturned saddle roofs; the civic hall is a long stilt longhouse with tall upswept gable ends and a gangway. */
 const saddle=(g:G,W:number,D:number,y:number,rise:number,up:number)=>{
