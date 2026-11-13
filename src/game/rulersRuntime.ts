@@ -279,6 +279,15 @@ export function expireClaims(g:Game){
  for(const c of live)nudgeSocietyRelation(g,Number(c.holder),Number(c.target),{trust:0,grievance:.002*c.strength/50});
  if(live.length!==r.claims.length)st(g).rulers={...st(g).rulers!,claims:live};
 }
+/** Goodwill (0..1) a house holds toward another from remembered acts: agreements between the two (marriage, pact, truce) and fosterage, each fading with a
+ * ten-year half-life (same curve as neighbourMemory in rulersView). Derived only from existing records; old saves give 0. Hostages are not goodwill. */
+export function memoryGoodwill(g:Game,a:number,b:number):number{
+ const r=rulersOf(st(g));if(!r)return 0;const fade=(y:number)=>Math.pow(0.5,Math.max(0,r.year-y)/10);let sum=0;
+ const ags=(r.decisions as unknown as {agreements?:{a:number;b:number;since:number}[]}|undefined)?.agreements??[];
+ for(const ag of ags)if((ag.a===a&&ag.b===b)||(ag.a===b&&ag.b===a))sum+=fade(Math.floor(ag.since/RULERS_YEAR_SECONDS));
+ for(const w of r.wards??[])if(w.kind==='foster'&&((Number(w.from)===a&&Number(w.to)===b)||(Number(w.from)===b&&Number(w.to)===a)))sum+=fade(w.since);
+ return Math.min(1,sum);
+}
 /** Yearly: claims born of real events, never invented. A raided house holds a 'defence' claim (no legitimacy cost) on its raider; a house bound by
  * marriage to a line that has run out of heirs (no heir, no regent) holds a 'succession' claim on it. grantClaim still applies every gate. */
 export function eventClaims(g:Game):Claim[]{
@@ -291,8 +300,9 @@ export function eventClaims(g:Game):Claim[]{
  // Strength follows the real recorded grievance; grantClaim still gates by tier/feature/known and refuses duplicates.
  for(const key of Object.keys(r.societies)){const h=Number(key);if(!Number.isInteger(h))continue;
   for(const okey of Object.keys(r.societies)){const o=Number(okey);if(h===o||!Number.isInteger(o))continue;
-   const rel=societyRelation(g,h,o);if(!rel.known||rel.hostile||!(rel.grievance>=.5))continue;
-   const c=grantClaim(g,h,o,'claim',Math.round(30+30*Math.min(1,rel.grievance)),10);if(c)out.push(c);}}
+   const rel=societyRelation(g,h,o),good=memoryGoodwill(g,h,o); // remembered marriage/pact/fosterage makes a house slower to press a grounds claim, and softer when it does
+   if(!rel.known||rel.hostile||!(rel.grievance>=.5+.25*good))continue;
+   const c=grantClaim(g,h,o,'claim',Math.max(10,Math.round(30+30*Math.min(1,rel.grievance)-18*good)),10);if(c)out.push(c);}}
  return out;
 }
 /** Using a claim as casus belli: spends it and the legitimacy cost is returned for the caller to charge to the holder's glory/unrest. */
