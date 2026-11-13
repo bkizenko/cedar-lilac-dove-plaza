@@ -36,6 +36,8 @@ export class ProceduralAudio{
   b.music.gain.setTargetAtTime(busGain(s,'music'),t,.1);b.sfx.gain.setTargetAtTime(busGain(s,'sfx'),t,.05);b.amb.gain.setTargetAtTime(busGain(s,'ambience'),t,.2);
  }
  /** Ruler events: mourning darkens the score for ~50 s, a rise or succession rings bells and horn for ~25 s. */
+ /** Slow diplomacy events get a short cue on the sfx bus (muted by the same mute key): a claim raised against us rings the bell, a treaty or marriage signed sounds the horn. */
+ diplomacyCue(kind:'claim'|'treaty'){if(this.ctx&&this.active)this.playSfx(kind==='claim'?'bell':'horn');}
  rulerEvent(tone:'mourning'|'rise'){if(tone==='mourning')this.mourning=1;else this.ceremony=1;if(this.ctx&&this.active)this.playSfx(tone==='mourning'?'bell':'horn');}
 
  update(dt:number,w:WorldAudio){

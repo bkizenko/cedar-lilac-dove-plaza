@@ -136,3 +136,15 @@ test('diplomacy trust and grudge bars expose meter semantics',()=>{
  const html=renderToStaticMarkup(h(DiplomacySheet,{neighbours:nb,onAct(){}}));
  assert.equal((html.match(/role="meter"/g)||[]).length,nb.length*2);assert.match(html,/aria-label="Trust in /);assert.match(html,/aria-label="Grudge held by /);assert.match(html,/aria-valuemax="100"/);
 });
+
+test('slow diplomacy events: new claim against us and new neighbour news raise a cue, silent on first sight and when unchanged',async()=>{
+ const {diplomacyEvents}=await import('../src/ui/RulerEventToast.tsx');
+ const mk=(casus,news)=>({neighbours:[{team:2,name:'Ridge Clan',casus}],news});
+ const claim={byUs:false,kind:'raid',strength:40,endsIn:5,cost:2,reason:'They hold raids and cattle-lifting.'};
+ const first=diplomacyEvents(null,mk([claim],[{time:5,kind:'marriage',with:2,text:'old news'}]));
+ assert.equal(first.cue,null);assert.equal(first.events.length,0);
+ const none=diplomacyEvents(first.next,mk([claim],[{time:5,kind:'marriage',with:2,text:'old news'}]));assert.equal(none.cue,null);assert.equal(none.events.length,0);
+ const c1=diplomacyEvents({claims:new Set(),newsTime:5},mk([claim],[]));assert.equal(c1.cue,'claim');assert.match(c1.events[0].title,/Ridge Clan raise a claim/);
+ const t1=diplomacyEvents(first.next,mk([claim],[{time:9,kind:'treaty',with:2,text:'Truce sworn.'}]));assert.equal(t1.cue,'treaty');assert.match(t1.events[0].body,/Truce sworn/);
+ assert.equal(diplomacyEvents({claims:new Set(),newsTime:0},mk([{...claim,byUs:true}],[])).cue,null);
+});
