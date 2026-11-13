@@ -497,3 +497,17 @@ test('AUD-SOC-HOSTAGE-RETURN: a fosterling coming home or a pledge broken by war
  g.tribe(1).hostile=true;R.settleWards(g);
  assert.ok(g.state.rulers.wardReturns.some(w=>w.how==='war'),'war ending the other pledge is logged');
 });
+
+test('lane A: event claims are born of real events (raided house gets a defence claim; married heirless house draws a succession claim), saved and old saves load',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();
+ const none=fixture();delete none.state.worldOptions.rulersVersion;delete none.state.rulers;assert.deepEqual(R.eventClaims(none),[],'old saves: no claims born');
+ assert.doesNotThrow(()=>R.spendRaidClaim(g,1,2));
+ const d=R.claimsOf(g).filter(c=>c.kind==='defence');for(const c of d){assert.equal(c.holder,'2');assert.equal(c.target,'1');}
+ // marriage tie + heirless line => succession claim, only from a real tie
+ const r=g.state.rulers;r.ties={...(r.ties??{}),'0|1':{...(r.ties?.['0|1']??{}),bond:30}};
+ const dyn=r.societies['1'].dynasty;for(const p of Object.values(dyn.people))if(p.id!==dyn.rulerId)p.alive=false;dyn.regent=undefined;
+ R.eventClaims(g);for(const c of R.claimsOf(g).filter(c=>c.kind==='succession'))assert.equal(c.holder,'0');
+ assert.deepEqual(R.eventClaims(g),[],'duplicates refused');
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'event claims survive a save round-trip');
+});

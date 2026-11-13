@@ -7,8 +7,9 @@ import {wearTrail} from '@/game/trails';
 import {traceStep,tickRouteWear,setRoutesEnabled} from '@/game/routeWear';
 import {findPath} from '@/game/navigation';
 import {galleryScene,galleryPose} from '@/scene/mapGallery';
+import {enableIrrigation,digDitch,ditchesOf} from '@/game/irrigation';
 type Spec={gallery?:string;seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
- prep?:{buildings?:{type:string;x:number;z:number}[];farms?:{x:number;z:number;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
+ prep?:{buildings?:{type:string;x:number;z:number}[];irrigation?:{ditchFields:number[];waterMode?:boolean};fieldBlock?:{w:number;d:number;cols:number;rows:number;stages:string[];kind?:string;minGrade?:number}[];farms?:{x:number;z:number;rel?:boolean;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
  routes?:{from:[number,number];to:[number,number];trips:number;team?:number;jitter?:number}[];routesFresh?:boolean;routesIdle?:number;routesLegacy?:boolean;stations?:{x:number;z:number;stage:0|1|2|3;form?:string;team?:number;hp?:number}[];
  fov?:number;drawDistance?:'low'|'medium'|'high'|'ultra';measure?:boolean;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
@@ -48,7 +49,7 @@ w.renderMap=async(S:Spec)=>{
   const view=new WorldView(canvas);
   if(S.quality)view.applyQuality(S.quality);
   if(S.prep){
-   const t=game.tribe(0);Object.assign(t,{food:900,wood:300,stone:100,seeds:40,cultivated:['grain','pulses','tubers']});game.vision.fill(2);
+   const t=game.tribe(0);Object.assign(t,{food:900,wood:300,stone:100,seeds:400,cultivated:['grain','pulses','tubers']});game.vision.fill(2);
    for(const pb of S.prep.buildings??[]){
     const before=game.state.buildings.length;
     const ok=game.placeBuilding(pb.type as never,pb.x,pb.z);
@@ -56,20 +57,34 @@ w.renderMap=async(S:Spec)=>{
     if(!ok||!b){console.warn('building placement failed',pb.type,pb.x,pb.z,game.state.banner);continue;}
     b.build=1;delete b.plannedCost;
    }
+   // fieldBlock: find the nearest site where a cols x rows block of edge-to-edge plots is all placeable, then lay them down (edge-to-edge, as the snapped drag does).
+   for(const blk of S.prep.fieldBlock??[]){
+    const c0b=game.campOf(0);let found:{x:number;z:number}|null=null,bestD=1e9;
+    for(let r=16;r<=200&&!found;r+=4)for(let a=0;a<48;a++){const ang=a/48*Math.PI*2,ox=c0b.x+Math.cos(ang)*r,oz=c0b.z+Math.sin(ang)*r;let ok=true;
+     for(let j=0;j<blk.rows&&ok;j++)for(let i=0;i<blk.cols&&ok;i++){const x=ox+i*blk.w,z=oz+j*blk.d;if(game.placementIssue('farm',x,z,0,{w:blk.w,d:blk.d}))ok=false;}
+     if(ok){const grade=Math.abs(game.height(ox+blk.w*blk.cols,oz)-game.height(ox,oz))/(blk.w*blk.cols);if(grade>=(blk.minGrade??0)){const d=r;if(d<bestD){bestD=d;found={x:ox,z:oz};}}}}
+    if(!found){console.warn('no field block site');continue;}
+    (w as unknown as {__blk?:[number,number]}).__blk=[found.x+blk.w*blk.cols/2,found.z+blk.d*blk.rows/2];
+    let k=0;for(let j=0;j<blk.rows;j++)for(let i=0;i<blk.cols;i++,k++)(S.prep.farms??=[]).push({x:found.x+i*blk.w,z:found.z+j*blk.d,w:blk.w,d:blk.d,kind:blk.kind as never,stage:(blk.stages[k%blk.stages.length]) as never});
+   }
    for(const f of S.prep.farms??[]){
     const before=game.state.buildings.length;
-    const ok=game.placeBuilding('farm',f.x,f.z);
+    const cc=game.campOf(0),fx=f.rel?cc.x+f.x:f.x,fz=f.rel?cc.z+f.z:f.z;
+    const ok=game.placeBuilding('farm',fx,fz,0,f.w&&f.d?{w:f.w,d:f.d}:undefined);
     const b=game.state.buildings.slice(before).find(q=>q.type==='farm')??game.state.buildings.filter(q=>q.type==='farm').at(-1);
-    if(!ok||!b){console.warn('farm placement failed',f.x,f.z,game.state.banner);continue;}
+    if(!ok||!b){console.warn('farm placement failed',fx,fz,game.state.banner);continue;}
     const st=f.stage??'mature',bb=b as unknown as {build:number;hp:number;plannedCost?:unknown;crop?:Record<string,unknown>;cropType?:string;w:number;d:number;fallowYear?:number};
     bb.build=1;delete bb.plannedCost;if(f.w)bb.w=f.w;if(f.d)bb.d=f.d;bb.cropType=f.kind??'grain';
-    const stages:Record<string,[number,number,boolean,number]>={bare:[0,0,false,1],sprout:[.12,0,false,1],young:[.45,.2,false,1],mature:[1,.7,false,1],ripe:[1,1,true,1],stubble:[1,1,true,0]};
-    const [planted,tended,ripened,remaining]=stages[st];bb.crop={kind:f.kind??'grain',planted,tended,ripened,remaining};
+    const stages:Record<string,[number,number,boolean,number]>={fallow:[0,0,false,1],bare:[0,0,false,1],sprout2:[.6,.1,false,1],growing:[1,.8,false,1],sprout:[.12,0,false,1],young:[.45,.2,false,1],mature:[1,.7,false,1],ripe:[1,1,true,1],stubble:[1,1,true,0]};
+    const [planted,tended,ripened,remaining]=stages[st];bb.crop={kind:f.kind??'grain',planted,tended,ripened,remaining};if(st==='fallow')bb.fallowYear=Math.floor((S.time??0)/1800);
    }
+   if(S.prep.irrigation){enableIrrigation(game);const fs=game.state.buildings.filter(q=>q.type==='farm');
+    for(const i of S.prep.irrigation.ditchFields){const f=fs[i];if(!f)continue;const r=digDitch(game,0,f.id);if(!r.ok)console.warn('ditch refused',r.reason);else r.ditch.done=r.ditch.length;}
+    console.warn('ditches',JSON.stringify(ditchesOf(game).map(d=>[d.lift,Math.round(d.length)])));}
    for(const tr of S.prep.trails??[]){const [ax,az]=tr.from,[bx,bz]=tr.to,len=Math.hypot(bx-ax,bz-az),n=Math.ceil(len/1.5);
     for(let rep=0;rep<Math.ceil((tr.wear??.7)*2.7);rep++)for(let i=0;i<=n;i++){const x=ax+(bx-ax)*i/n,z=az+(bz-az)*i/n;wearTrail(game,x,z,(bx-ax)/len*1.5,(bz-az)/len*1.5);}}
   }
-  view.rebuild(game);
+  view.rebuild(game);view.setFieldWaterMode(!!S.prep?.irrigation?.waterMode);
   cache={key,game,view};w.__game=game;w.__view=view;
  }
  const {game,view}=cache;
@@ -98,7 +113,7 @@ w.renderMap=async(S:Spec)=>{
   if(sc.farm&&!(game.state.buildings as {type:string}[]).some(b=>b.type==='farm')){const t=game.tribe(0);Object.assign(t,{food:900,wood:300,stone:100,seeds:40,cultivated:['grain','pulses','tubers']});game.vision.fill(2);
    const n=game.state.buildings.length;if(game.placeBuilding('farm',p.x,p.z)){const b=game.state.buildings[n] as unknown as {build:number;plannedCost?:unknown;cropType?:string;crop?:unknown};b.build=1;delete b.plannedCost;b.cropType='grain';b.crop={kind:'grain',planted:.45,tended:.2,ripened:false,remaining:1};view.rebuild(game);}}
   S.look=[p.x,p.z];S.lookY=p.lookY-game.height(p.x,p.z);}}
- const lx=S.look?S.look[0]:c0.x,lz=S.look?S.look[1]:c0.z;
+ const blk=(w as unknown as {__blk?:[number,number]}).__blk,lx=S.look?S.look[0]:blk?blk[0]:c0.x,lz=S.look?S.look[1]:blk?blk[1]:c0.z;
 (view as unknown as {cameraGround:unknown}).cameraGround=null;
  view.look.set(lx,game.height(lx,lz)+(S.lookY??.55),lz);view.yaw=S.yaw;view.pitch=S.pitch;view.dist=S.dist;
  for(let i=0;i<(S.settle??3);i++){view.updateCamera(0);view.sync(game,.5);}
