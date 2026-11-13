@@ -9,7 +9,7 @@
 import {part,type LodTier,type Part} from './buildingParts';
 import {mix} from './unitAppearance';
 import type {RigBone,RigPart,RigSlot} from './characterRig';
-import {skinColour,fibreOf,warmthOf,SKIN_RAMP,type BeardStyle,type Cut,type Fibre,type Foot,type HairStyle,type HeadKind,type Individual,type Jewel,type MarkPattern,type PeopleLook,type Role} from './peopleLook';
+import {skinColour,fibreOf,warmthOf,SKIN_RAMP,type Body,type BeardStyle,type Cut,type Fibre,type Foot,type HairStyle,type HeadKind,type Individual,type Jewel,type MarkPattern,type PeopleLook,type Role} from './peopleLook';
 import type {BodyClass} from './characterRig';
 
 export type Bones=Record<RigBone,RigPart[]>;
@@ -18,43 +18,74 @@ export const emptyBones=():Bones=>({hips:[],spine:[],head:[],armL:[],armR:[],leg
 export const Q=(col:string,shape:Part['shape'],size:[number,number,number],pos:[number,number,number],lod:LodTier,rot?:[number,number,number],sides?:number,onlyFrom?:LodTier):RigPart=>({...part(shape,'cloth',size,pos,lod,rot,sides),slot:'garment' as RigSlot,col,...(onlyFrom!==undefined?{onlyFrom}:{})});
 export const shade=(hex:string,k:number)=>mix(hex,k<1?'#000000':'#ffffff',Math.min(1,Math.abs(1-k)));
 
+/** Tapered box (a frustum, same 12 triangles as a box): `bot` and `top` are [width,depth], `pos` the base centre. The tailoring primitive: tapered torso, A-line skirt, sloped yoke, tapered sleeve. */
+export const TB=(col:string,bot:readonly [number,number],top:readonly [number,number],h:number,pos:[number,number,number],lod:LodTier,rot?:[number,number,number]):RigPart=>({...Q(col,'box',[bot[0],h,bot[1]],pos,lod,rot),taper:[top[0]/bot[0],top[1]/bot[1]] as const});
+
+// ---------------------------------------------------------------- colour: muted, dyed-cloth tones (no saturated primaries)
+const hsl=(hex:string):[number,number,number]=>{const n=parseInt(hex.slice(1,7),16),r=(n>>16)/255,g=((n>>8)&255)/255,b=(n&255)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;let h=0,s=0;
+ if(d>0){s=d/(1-Math.abs(2*l-1));h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h/=6;}return [h,s,l];};
+const unhsl=(h:number,s:number,l:number):string=>{const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q,f=(t:number)=>{t=(t%1+1)%1;const v=t<1/6?p+(q-p)*6*t:t<.5?q:t<2/3?p+(q-p)*(2/3-t)*6:p;return Math.round(Math.min(1,Math.max(0,v))*255).toString(16).padStart(2,'0');};return '#'+f(h+1/3)+f(h)+f(h-1/3);};
+/** Pull any dye towards a natural cloth tone: saturation capped (madder, woad, weld, walnut and lichen are never primary), lightness kept in a readable band. Pure and deterministic. */
+export function earthy(hex:string,maxS=.4,sMul=.78,minL=.15,maxL=.7):string{const [h,s,l]=hsl(hex);return unhsl(h,Math.min(maxS,s*sMul),Math.min(maxL,Math.max(minL,l)));}
+export const SAT_CAP:Record<Role,number>={child:.34,elder:.2,farmer:.28,hunter:.3,smith:.26,priest:.42,ruler:.46,soldier:.3,scout:.3,merchant:.44,worker:.3};
+
+/** Torso frame in the rig's unit frame: a human-shaped trunk (wider than deep, shoulders over a narrower waist) rather than a drum. `tw` is the waist height. */
+export type Frame={tw:number;ww:number;wd:number;cw:number;cd:number;sw:number};
+export const frameOf=(b:Body):Frame=>({tw:.57+b.torso*.5,ww:.27*b.waist+.05,wd:.21*b.waist+.02,cw:.34*b.chest+.05,cd:.25*b.chest+.04,sw:.46*b.shoulder+.02});
+/** Half depth of the bare torso front at height y (waist to chest, tapering to the neck above the shoulder line). */
+export const frontZ=(F:Frame,y:number)=>y<=.8?F.wd/2+(F.cd-F.wd)/2*Math.min(1,Math.max(0,(y-F.tw)/(.8-F.tw))):F.cd/2-(F.cd-.17)/2*Math.min(1,(y-.8)/.09);
+/** Depth of the shoulder yoke at height y (circular neck rings sit on this). */
+export const yokeD=(F:Frame,y:number)=>(F.cd+.02)+(.17-(F.cd+.02))*Math.min(1,Math.max(0,(y-.79)/.1));
+
 export const FIBRE_BASE:Record<Fibre,string>={linen:'#ddd0ae',wool:'#b3aa90',felt:'#c9c0a8',hide:'#a07a52',fur:'#76503a',cotton:'#e6decb',bark:'#9c7c54',feather:'#cdbb8c',silk:'#eadcbc',leather:'#74492f'};
 export const DYE_K:Record<Fibre,number>={linen:.78,wool:.72,felt:.55,hide:.16,fur:.1,cotton:.86,bark:.4,feather:.3,silk:.92,leather:.22};
 const sideOf=(i:number)=>i<0?'L':'R';
 const CLASS_HEM:Record<BodyClass,number>={adult:0,child:.02,elder:-.02,leader:-.03,soldier:.02};
 
-export type Palette={skin:string;hair:string;cloth:string;cloth2:string;under:string;trim:string;accent:string;leather:string;metal:string;fur:string;paint:string};
+export type Palette={skin:string;hair:string;cloth:string;cloth2:string;under:string;trim:string;accent:string;leather:string;metal:string;fur:string;paint:string;/** shirt / undersleeve linen */sleeve:string;/** trouser / legging cloth */legs:string;/** darker hem and cuff soil */soil:string;/** work apron */apron:string};
 export type KitCtx={look:PeopleLook;ind:Individual;cls:BodyClass;role:Role;item?:string;fibre:Fibre|null;cond:number;season:string;rich:number;cut:Cut;pal:Palette;bones:Bones;v:number;cold:boolean};
 
-/** Hex colours of one person: skin from the society's band, hair greying with age, cloth from the real garment's fibre and the society's dye family. */
-export function paletteFor(look:PeopleLook,ind:Individual,cls:BodyClass,fibre:Fibre|null,dyeBody:string,dyeTrim:string):Palette{
+/** Hex colours of one person: skin from the society's band, hair greying with age, cloth from the real garment's fibre and the society's dye family, then pulled to muted adult cloth tones
+ *  (role sets how bright a dye may be: rulers and traders wear the richest, elders and labourers the dullest; wear and dirt come from the individual). */
+export function paletteFor(look:PeopleLook,ind:Individual,cls:BodyClass,fibre:Fibre|null,dyeBody:string,dyeTrim:string,role:Role='worker'):Palette{
  const skin=skinColour(look,ind.skinTone),h0=look.hair.colors[ind.hairColour%look.hair.colors.length],grey=cls==='elder'?.55+ind.age*.4:ind.age>.6?.18:0,hair=grey>0?mix(h0,'#d0ccc2',Math.min(.95,grey)):h0;
- const dyes=look.dyes,di=ind.variant<2?0:ind.variant-1,body=di===0?dyeBody:dyes.cloth[di%dyes.cloth.length],base=fibre?FIBRE_BASE[fibre]:'#a88b61',k=fibre?DYE_K[fibre]:0,cloth=mix(base,body,k),FURS=['#6e5440','#8a7258','#a89478','#4a3a30'];
- return {skin,hair,cloth,cloth2:mix(base,dyes.cloth[(di+1)%dyes.cloth.length],k),under:dyes.under,trim:dyeTrim||dyes.trim,accent:dyes.accent,leather:mix('#70462f',skin,.12),metal:'#8a8478',fur:mix(FURS[(ind.variant+ind.hairColour)%4],cloth,.08),paint:look.mark.colour};
+ const dyes=look.dyes,di=ind.variant<2?0:ind.variant-1,body=di===0?dyeBody:dyes.cloth[di%dyes.cloth.length],base=fibre?FIBRE_BASE[fibre]:'#a88b61',k=fibre?DYE_K[fibre]:0,FURS=['#6e5440','#8a7258','#a89478','#4a3a30'];
+ const cap=SAT_CAP[cls==='child'?'child':cls==='elder'?'elder':role],elderGrey=cls==='elder'?.16:0,dirt=Math.min(.2,ind.dirt*1.6+(role==='farmer'||role==='worker'||role==='smith'?.04:0));
+ const tone=(hex:string,c=cap,l=1)=>shade(mix(earthy(hex,c,.78),'#7c725f',elderGrey+dirt*.5),l);
+ const cloth=tone(mix(base,body,k)),cloth2=tone(mix(base,dyes.cloth[(di+1)%dyes.cloth.length],k)),under=tone(mix(dyes.under,'#e6dcc2',.4),cap*.6,.98);
+ const fur=mix(FURS[(ind.variant+ind.hairColour)%4],cloth,.08),leather=mix('#70462f',skin,.1);
+ return {skin,hair,cloth,cloth2,under,trim:earthy(dyeTrim||dyes.trim,Math.min(.55,cap+.12),.85,.2,.72),accent:earthy(dyes.accent,Math.min(.5,cap+.1),.8,.2,.6),leather,metal:'#8a8478',fur,paint:look.mark.colour,
+  sleeve:tone(mix(under,cloth,.28),cap*.7,.97),legs:tone(mix(cloth2,'#6a5b46',.45),cap*.8,.82),soil:shade(mix(cloth,'#4a3d2c',.35),.8),apron:fibre==='leather'||fibre==='hide'?shade(leather,1.05):mix('#cfc3a2',cloth,.32)};
 }
 
 // ---------------------------------------------------------------- body
-/** Skin body, clothed where the cut covers it (sleeve and trouser colour are the body part colour: no extra triangles). */
+/** The human frame under the clothes: legs (skin or the trouser cloth), arms with their sleeve cloth, the shoulder-hipped trunk where the cut leaves it bare, hips only where no skirt covers them.
+ *  Sleeves and trousers are the body part's own colour; the garment (peopleGarb) cuts the clothed trunk itself, so nothing is drawn twice. */
 export function bodyParts(c:KitCtx){
- const {look,ind,cut,pal,bones,cls}=c,b=look.body,covered=cut.torso==='tunic'||cut.torso==='robe'||cut.torso==='deel'||cut.torso==='poncho';
+ const {look,ind,cut,pal,bones,fibre}=c,b=look.body,F=frameOf(b),covered=cut.torso==='tunic'||cut.torso==='robe'||cut.torso==='deel'||cut.torso==='poncho',clad=!!fibre&&covered;
  const sleeveUp=cut.sleeve!=='none',sleeveLow=cut.sleeve==='long'||cut.sleeve==='wide',trousers=cut.lower==='trousers'||cut.lower==='leggings'||cut.lower==='dhoti';
- const tw=.57+b.torso*.5,w=b.waist,sh=b.shoulder,ch=b.chest,hp=b.hip,lt=b.limb,hand=b.hand;
- const cloth=pal.cloth,sk=pal.skin;
+ const full=cut.torso==='tunic'||cut.torso==='robe'||cut.torso==='deel',skirted=!!fibre&&(full||cut.lower==='skirt'||cut.lower==='kilt');
+ const w=b.waist,hp=b.hip,lt=b.limb,hand=b.hand,cloth=pal.cloth,sk=pal.skin;
+ const coat=cut.torso==='robe'||cut.torso==='deel',shirt=cut.torso==='poncho'||(cut.torso==='tunic'&&ind.variant%2===1);
  for(const sd of [-1,1] as const){
-  const leg:RigBone=sd<0?'legL':'legR',arm:RigBone=sd<0?'armL':'armR',x=sd*.085*hp,legCol=trousers?(cut.lower==='leggings'?pal.cloth2:cloth):sk;
+  const leg:RigBone=sd<0?'legL':'legR',arm:RigBone=sd<0?'armL':'armR',x=sd*.085*hp,legCol=trousers?(cut.lower==='leggings'?shade(pal.legs,.92):cut.lower==='dhoti'?cloth:pal.legs):sk;
   bones[leg].push(Q(legCol,'cylinder',[.07*lt,.25,.098*lt],[x,.07,0],2,undefined,6),Q(legCol,'cylinder',[.098*lt,.24,.132*lt],[x,.27,0],2,undefined,6));
-  const ax=sd*(.17+.04*sh),upper=sleeveUp&&covered?cloth:sk,lower=sleeveLow&&covered?(cut.sleeve==='wide'?pal.cloth2:cloth):sk;
+  // sleeve cloth: coats are one cloth to the wrist (cuff in the trim); a tunic over a shirt shows the shirt below the elbow; a poncho shows the shirt
+  const ax=sd*(.17+.04*b.shoulder),upper=!sleeveUp||!covered?sk:cut.torso==='poncho'?pal.sleeve:shade(cloth,.95),
+   lower=!sleeveLow||!covered?(sleeveUp&&covered&&cut.torso!=='poncho'&&shirt?pal.sleeve:sk):coat?(cut.sleeve==='wide'?pal.cloth2:shade(cloth,.9)):shirt||cut.torso==='poncho'?pal.sleeve:shade(cloth,.9);
   bones[arm].push(Q(upper,'cylinder',[.074*lt,.16,.095*lt],[ax,.71,0],2,undefined,6),Q(lower,'cylinder',[.056*lt,.16,.074*lt],[ax,.55,0],2,undefined,6),Q(sk,'box',[.07*hand,.075*hand,.075*hand],[ax,.48,.01],1,undefined,undefined,1),
    // near only: a rounded mitten fist instead of the box hand (24 vs 12 tris); mid keeps the box so the far/mid budgets are unchanged
    Q(sk,'cylinder',[.066*hand,.07*hand,.072*hand],[ax,.4825,.012],0,undefined,6));
-  // near only (lane C arm pass): a shoulder cap rounds the yoke seam and an elbow knuckle breaks the straight tube; both sit inside the existing silhouette (no reach change), tinted like the segment they cover
-  bones[arm].push(Q(upper,'cylinder',[.082*lt,.07,.1*lt],[ax,.775,0],0,undefined,5),Q(lower,'cylinder',[.066*lt,.05,.082*lt],[ax,.628,0],0,undefined,5));
+  // near only: a shoulder cap rounds the yoke seam, an elbow knuckle breaks the straight tube, and a cuff band closes the wrist (all inside the existing reach)
+  bones[arm].push(Q(upper,'cylinder',[.086*lt,.07,.104*lt],[ax,.775,0],0,undefined,5),Q(lower,'cylinder',[.066*lt,.05,.082*lt],[ax,.628,0],0,undefined,5));
+  if(sleeveLow&&covered)bones[arm].push(Q(cut.torso==='poncho'?pal.trim:coat?pal.trim:shade(lower,.8),'cylinder',[.07*lt,.028,.07*lt],[ax,.535,0],0,undefined,6));
   if(cut.sleeve==='wide'&&covered)bones[arm].push(Q(pal.cloth2,'cone',[.15,.1,.15],[ax,.42,0],1,[Math.PI,0,0],6),Q(pal.trim,'cylinder',[.15,.02,.15],[ax,.42,0],0,undefined,6));
  }
- const torsoCol=covered?cloth:sk,hipCol=cut.lower!=='none'||covered?cloth:sk;
- bones.hips.push(Q(hipCol,'cylinder',[.31*hp,.16,.28*w],[0,.42,0],2,undefined,7));
- bones.spine.push(Q(torsoCol,'cylinder',[.27*w,tw-.5+.22,.34*ch],[0,tw-.14,0],2,undefined,8),Q(torsoCol,'box',[.38*sh+.06,.085,.2*ch],[0,.805,0],1,undefined,undefined,1),Q(torsoCol,'cylinder',[.092,.38*sh+.06,.2*ch],[0,.8,0],0,[0,0,Math.PI/2],8),Q(sk,'cylinder',[.09*b.neck,.07+.02*b.neck,.078*b.neck],[0,.885,0],0,undefined,5));
- void cls;
+ const hipCol=cut.lower!=='none'||covered?cloth:sk;
+ // trunk: bare skin (chest tapering from the shoulders to a narrower waist) unless the garment cuts the clothed trunk itself
+ if(!clad)bones.spine.push(TB(sk,[F.ww,F.wd],[F.cw*.96,F.cd*.92],.8-(F.tw-.03),[0,F.tw-.03,0],2),TB(sk,[F.sw*.96,F.cd],[.16,.15],.1,[0,.79,0],2));
+ if(!skirted)bones.hips.push(TB(hipCol,[.3*hp+.05,.2*hp+.03],[F.ww+.01,F.wd],.17,[0,.4,0],2));
+ bones.spine.push(Q(sk,'cylinder',[.09*b.neck,.07+.02*b.neck,.078*b.neck],[0,.885,0],0,undefined,5));
 }
 
 // ---------------------------------------------------------------- head, hair, face
@@ -139,20 +170,20 @@ export function footParts(c:KitCtx,foot:Foot){
 
 // ---------------------------------------------------------------- jewellery
 export function jewelParts(c:KitCtx,jewels:readonly Jewel[]){
- const {pal,bones,look,rich}=c,sh=look.body.shoulder,gold=pal.metal==='#8a8478'?mix('#c9a23c',pal.trim,.2):pal.metal,bead=(i:number)=>[pal.accent,pal.trim,pal.cloth2][i%3];
+ const {pal,bones,look,rich}=c,sh=look.body.shoulder,F=frameOf(look.body),yd=(y:number)=>yokeD(F,y),gold=pal.metal==='#8a8478'?mix('#c9a23c',pal.trim,.2):pal.metal,bead=(i:number)=>[pal.accent,pal.trim,pal.cloth2][i%3];
  for(const j of jewels){
   switch(j){
-   case 'beads':bones.spine.push(Q(bead(0),'cylinder',[.21,.035,.19],[0,.8,0],0,undefined,8),Q(bead(1),'box',[.04,.05,.03],[0,.76,.115],0),Q(bead(2),'cylinder',[.2,.02,.18],[0,.815,0],0,undefined,8));break;
-   case 'collar':bones.spine.push(Q(gold,'cylinder',[.34*sh,.028,.2],[0,.82,.01],0,undefined,10),Q(pal.accent,'cylinder',[.27*sh,.03,.17],[0,.83,.012],0,undefined,10),Q(pal.trim,'cylinder',[.2,.032,.14],[0,.835,.013],0,undefined,10));break;
-   case 'torc':bones.spine.push(Q(gold,'cylinder',[.2,.03,.18],[0,.845,0],0,undefined,8),Q(gold,'sphere',[.045,.045,.045],[-.07,.845,.095],0),Q(gold,'sphere',[.045,.045,.045],[.07,.845,.095],0));break;
+   case 'beads':bones.spine.push(Q(bead(0),'cylinder',[yd(.85)+.025,.035,yd(.85)+.025],[0,.85,0],0,undefined,8),Q(bead(1),'box',[.04,.05,.03],[0,.79,yd(.8)/2+.005],0),Q(bead(2),'cylinder',[yd(.82)+.02,.02,yd(.82)+.02],[0,.82,0],0,undefined,8));break;
+   case 'collar':bones.spine.push(Q(gold,'cylinder',[.34*sh,.028,.34*sh],[0,.83,0],0,undefined,10),Q(pal.accent,'cylinder',[.27*sh,.03,.27*sh],[0,.842,0],0,undefined,10),Q(pal.trim,'cylinder',[.2,.032,.2],[0,.856,0],0,undefined,10));break;
+   case 'torc':bones.spine.push(Q(gold,'cylinder',[yd(.855)+.03,.03,yd(.855)+.03],[0,.855,0],0,undefined,8),Q(gold,'sphere',[.045,.045,.045],[-.06,.85,yd(.855)/2+.02],0),Q(gold,'sphere',[.045,.045,.045],[.06,.85,yd(.855)/2+.02],0));break;
    case 'earring':bones.head.push(Q(gold,'box',[.03,.08,.03],[-.135*look.body.head,.9,0],0),Q(gold,'box',[.03,.08,.03],[.135*look.body.head,.9,0],0));break;
    case 'earspool':for(const s of [-1,1])bones.head.push(Q(gold,'cylinder',[.07,.03,.07],[s*.135*look.body.head,.97,0],0,[0,0,Math.PI/2],6),Q(pal.accent,'sphere',[.04,.04,.04],[s*.16*look.body.head,.97,0],0));break;
    case 'bangles':for(const s of [-1,1]){const x=s*(.17+.04*sh);bones[s<0?'armL':'armR'].push(Q(gold,'cylinder',[.068,.022,.068],[x,.51,0],0,undefined,6),Q(pal.accent,'cylinder',[.07,.02,.07],[x,.54,0],0,undefined,6));}break;
    case 'armlet':for(const s of [-1,1])bones[s<0?'armL':'armR'].push(Q(gold,'cylinder',[.1,.04,.1],[s*(.17+.04*sh),.76,0],0,undefined,6));break;
-   case 'brooch':bones.spine.push(Q(gold,'sphere',[.07,.07,.04],[.15*sh,.83,.13],0),Q(pal.accent,'sphere',[.035,.035,.03],[.15*sh,.845,.15],0));break;
-   case 'amulet':bones.spine.push(Q(pal.leather,'cylinder',[.2,.015,.18],[0,.82,0],0,undefined,6),Q(pal.accent,'box',[.055,.07,.03],[0,.73,.13],0),Q(gold,'box',[.03,.02,.032],[0,.8,.125],0));break;
+   case 'brooch':bones.spine.push(Q(gold,'sphere',[.07,.07,.04],[.12*sh,.79,frontZ(F,.8)+.012],0),Q(pal.accent,'sphere',[.035,.035,.03],[.12*sh,.80,frontZ(F,.8)+.03],0));break;
+   case 'amulet':bones.spine.push(Q(pal.leather,'cylinder',[yd(.84)+.02,.015,yd(.84)+.02],[0,.84,0],0,undefined,6),Q(pal.accent,'box',[.055,.07,.03],[0,.72,frontZ(F,.75)+.02],0,[.15,0,0]),Q(gold,'box',[.03,.02,.032],[0,.79,frontZ(F,.8)+.015],0));break;
    case 'anklet':for(const s of [-1,1])bones[s<0?'legL':'legR'].push(Q(gold,'cylinder',[.09,.02,.09],[s*.085*look.body.hip,.11,0],0,undefined,6));break;
-   case 'shells':bones.spine.push(Q('#e8e0cc','cylinder',[.2,.03,.18],[0,.8,0],0,undefined,8),...[-1,0,1].map(i=>Q('#efe7d2','cone',[.04,.07,.03],[i*.06,.72+Math.abs(i)*.02,.12],0,[Math.PI,0,0],4)));break;
+   case 'shells':bones.spine.push(Q('#e8e0cc','cylinder',[yd(.85)+.025,.03,yd(.85)+.025],[0,.85,0],0,undefined,8),...[-1,0,1].map(i=>Q('#efe7d2','cone',[.04,.07,.03],[i*.06,.74+Math.abs(i)*.02,frontZ(F,.78)+.02],0,[Math.PI,0,0],4)));break;
    case 'browband':bones.head.push(Q(pal.trim,'cylinder',[.255*look.body.head,.026,.255*look.body.head],[0,1.065,-.005],0,undefined,8),Q(pal.accent,'sphere',[.04,.04,.025],[0,1.07,.122*look.body.head],0));break;
   }
  }
@@ -166,7 +197,7 @@ export function markParts(c:KitCtx,mk:{kind:string;pattern:MarkPattern;sites:rea
  const {pal,bones,look,cut}=c,col=mk.kind==='tattoo'?mix(pal.skin,'#1a2030',.5):mk.kind==='scar'?mix(pal.skin,'#ffffff',.22):pal.paint,hs=look.body.head,sh=look.body.shoulder;
  const faceSite=mk.sites.includes('face'),armSite=mk.sites.includes('arms'),chestSite=mk.sites.includes('chest'),handSite=mk.sites.includes('hands');
  const forearmBare=cut.sleeve==='none'||cut.sleeve==='short',upperBare=cut.sleeve==='none',torsoBare=cut.torso==='bare'||cut.torso==='vest';
- const F=.112*hs+.002;
+ const F=.112*hs+.002,FR=frameOf(look.body),cz=(y:number)=>frontZ(FR,y)+.004;
  switch(mk.pattern){
   case 'eyeBand':if(faceSite)bones.head.push(Q(col,'box',[.2*hs,.032,.012],[0,1.05,F],0),Q(col,'box',[.035,.035,.012],[.095*hs,1.03,F-.01],0),Q(col,'box',[.035,.035,.012],[-.095*hs,1.03,F-.01],0));break;
   case 'cheekDots':if(faceSite)for(const s of [-1,1])for(let i=0;i<3;i++)bones.head.push(tick(col,s*(.06+i*.018)*hs/1,.99-i*.012,F,.018,.018));break;
@@ -179,9 +210,9 @@ export function markParts(c:KitCtx,mk:{kind:string;pattern:MarkPattern;sites:rea
     if(armSite&&forearmBare){const tr=mk.pattern==='tideLines'?[.6,.565,.53]:[.6,.57];for(let i=0;i<tr.length;i++)bones[arm].push(Q(col,'cylinder',[.06,.012,.06+(i%2?0:.002)],[x,tr[i],0],0,undefined,6));if(mk.pattern==='leafBand')for(let i=0;i<3;i++)bones[arm].push(Q(col,'box',[.02,.045,.01],[x,.57+i*.02,.05],0,[0,0,i%2?.5:-.5]));}
     if(armSite&&upperBare&&mk.pattern==='knotBand')bones[arm].push(Q(col,'cylinder',[.082,.03,.1],[x,.74,0],0,undefined,6),Q(col,'box',[.025,.03,.01],[x+s*.01,.77,.05],0));
    }
-   if(chestSite&&torsoBare&&mk.pattern==='tickRows')for(let i=0;i<3;i++)bones.spine.push(tick(col,0,.75+i*.03,.17*look.body.chest,.12,.012));
+   if(chestSite&&torsoBare&&mk.pattern==='tickRows')for(let i=0;i<3;i++)bones.spine.push(tick(col,0,.75+i*.03,cz(.75+i*.03),.12,.012));
    break;
-  case 'chevronChest':if((chestSite||faceSite)&&torsoBare)for(let i=0;i<3;i++)bones.spine.push(Q(col,'box',[.1,.014,.012],[-.045,.74+i*.032,.172*look.body.chest],0,[0,0,.5]),Q(col,'box',[.1,.014,.012],[.045,.74+i*.032,.172*look.body.chest],0,[0,0,-.5]));break;
+  case 'chevronChest':if((chestSite||faceSite)&&torsoBare)for(let i=0;i<3;i++)bones.spine.push(Q(col,'box',[.1,.014,.012],[-.045,.74+i*.032,cz(.74+i*.032)],0,[0,0,.5]),Q(col,'box',[.1,.014,.012],[.045,.74+i*.032,cz(.74+i*.032)],0,[0,0,-.5]));break;
  }
  void warmthOf;void SKIN_RAMP;void sideOf;void fibreOf;
 }

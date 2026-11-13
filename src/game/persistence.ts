@@ -1,4 +1,5 @@
 import {validCarriedFood,validFoodLots} from './tradeFood';
+import {validSiteRecord,slopeClassOf} from './slopeTiers';
 import {validDomesticationState} from './domestication';
 import {validCropTrialAnchor} from './cultivation';
 import {validExpeditionProvisions} from './expeditionProvisions';
@@ -378,6 +379,7 @@ function validateGamePayload(raw: unknown) {
       }
     }
   }
+  if (s.slopeModel !== undefined && s.slopeModel !== "graded") fail();
   if (s.growthPolicy !== undefined && !["stable", "welcome", "eager"].includes(s.growthPolicy)) fail();
   if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt", "explore", "trade"].includes(s.laborPolicy)) fail();
   if (s.conflict !== undefined && !["quiet", "balanced", "dangerous"].includes(s.conflict)) fail();
@@ -547,6 +549,7 @@ function validateGamePayload(raw: unknown) {
   }
   for (const b of s.buildings) {
     add(b, "building");
+    if(b.site!==undefined&&(s.slopeModel!=='graded'||slopeClassOf(b.type)==='exempt'||!validSiteRecord(b.site)))fail();
     if(b.excavationDepth!==undefined&&(b.type!=='trench'||!EXCAVATION_RULES.depths.includes(b.excavationDepth)))fail();
     if(b.excavationVolume!==undefined&&(b.type!=='trench'||!num(b.excavationVolume)||b.excavationVolume<0||b.excavationVolume>1e6))fail();
     if(b.excavationWorkSeconds!==undefined&&(b.type!=='trench'||!num(b.excavationWorkSeconds)||b.excavationWorkSeconds<18||b.excavationWorkSeconds>1e8))fail();
