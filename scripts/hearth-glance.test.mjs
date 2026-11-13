@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {avoidPinControls,SUPPLY_RULES,TrendTracker,supplyLevel,supplyFill,daysText,rankAlerts,pinSet,infoVisible,INFO_RULES,isKeyTip,projectToScreen,edgeArrow,lookAtCamera,ALERT_RANK,MAX_PINS} from '../src/ui/hearth/glanceModel.ts';
+import {avoidPinControls,SUPPLY_RULES,TrendTracker,supplyLevel,supplyFill,daysText,rankAlerts,pinSet,infoVisible,INFO_RULES,isKeyTip,projectToScreen,edgeArrow,lookAtCamera,ALERT_RANK,MAX_PINS,budgetNotes,budgetKey,ALERT_BUDGET} from '../src/ui/hearth/glanceModel.ts';
 import {paintOverlays,TERRITORY_NONE,TERRITORY_CONTESTED,RESOURCE_COLOR} from '../src/ui/hearth/overlayModel.ts';
 import {influenceGradientModel} from '../src/game/terrainInfluenceView.ts';
 // Docs: docs/UIUX_PROPOSAL.md changes 7 (supply meters), 8 (priority stack), 9 (map overlays), 10 (pins and edge arrows). Pure models only: no DOM, no lucide.
@@ -177,3 +177,16 @@ test('large resource marks never paint their neighbouring unexplored pixels',()=
 
 
 test('world pin chips avoid actual notification/control rectangles using their whole measured extent',()=>{const desired={x:1331.5,y:172.5,width:73,height:52},controls=[{x:1048,y:164,width:380,height:190},{x:1128,y:632,width:300,height:356},{x:12,y:12,width:1416,height:132}],before=structuredClone(desired),safe=avoidPinControls(desired,1440,1000,controls),overlaps=(a,b)=>a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y;assert.ok(safe);assert.ok(controls.every(b=>!overlaps(safe,b)));assert.ok(safe.x>=8&&safe.y>=8&&safe.x+safe.width<=1432&&safe.y+safe.height<=992);assert.deepEqual(desired,before,'only chip presentation shifts; caller world point remains unchanged');const second=avoidPinControls(desired,1440,1000,[...controls,safe]);assert.ok(second);assert.equal(overlaps(safe,second),false);assert.equal(avoidPinControls(desired,1440,1000,[{x:0,y:0,width:1440,height:1000}]),null,'fully covered viewport hides the chip instead of overlaying controls');assert.deepEqual(avoidPinControls({x:400,y:400,width:80,height:52},1440,1000,controls),{x:400,y:400,width:80,height:52});});
+
+test('alert budget: a burst merges same-kind lines, caps timed cards, keeps sticky ones, and reports what folded away',()=>{
+ const burst=[{id:'a',sticky:true,title:'Raiders near'},{id:'b',sticky:false,title:'3 raiders sighted'},{id:'c',sticky:false,title:'2 raiders sighted'},{id:'d',sticky:false,title:'Granary low'},{id:'e',sticky:false,title:'Heir named'},{id:'f',sticky:false,title:'Envoy arrives'},{id:'g',sticky:false,title:'Wolves seen'}];
+ assert.equal(budgetKey('3 Raiders  sighted'),budgetKey('12 raiders sighted'));
+ const r=budgetNotes(burst);
+ assert.equal(r.rows[0].note.id,'a','sticky critical stays on top');
+ assert.equal(r.rows[1].title,'5 raiders sighted');assert.equal(r.rows[1].count,2);
+ assert.equal(r.rows.filter(x=>!x.note.sticky).length,ALERT_BUDGET.maxTimed);
+ assert.equal(r.hidden,2,'envoy and wolves fold into the count');
+ assert.deepEqual(budgetNotes(burst.slice(0,1)).rows.length,1);
+ assert.equal(budgetNotes([]).hidden,0);
+ assert.equal(burst.length,7,'input untouched');
+});

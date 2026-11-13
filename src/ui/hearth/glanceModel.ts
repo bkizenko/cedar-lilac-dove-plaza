@@ -94,6 +94,28 @@ export function infoVisible(firstSeenSeconds:number,nowSeconds:number,sticky:boo
  return {show:age<INFO_RULES.ttlSeconds,fading:age>=INFO_RULES.ttlSeconds-INFO_RULES.fadeSeconds};
 }
 
+/** Alert budget: during a war or raid several news cards can arrive together. Sticky cards (critical, offers) always show; timed ones are merged by
+ * a number-free key ("3 raiders sighted" and "2 raiders sighted" are one card, summed) and capped, the rest fold into one "+N more" line. Display only:
+ * nothing here touches the chronicle, which keeps every event. */
+export const ALERT_BUDGET=Object.freeze({maxTimed:3});
+export type BudgetNote={id:string;sticky:boolean;title:string};
+export type BudgetRow<T extends BudgetNote>={note:T;count:number;/** Title with the summed number when the lines differed only by a number. */title:string};
+export const budgetKey=(title:string)=>title.replace(/\d+/g,'#').replace(/\s+/g,' ').trim().toLowerCase();
+export function budgetNotes<T extends BudgetNote>(notes:readonly T[],max=ALERT_BUDGET.maxTimed):{rows:BudgetRow<T>[];hidden:number}{
+ const rows:BudgetRow<T>[]=[],byKey=new Map<string,BudgetRow<T>>();
+ for(const note of notes){
+  if(note.sticky){rows.push({note,count:1,title:note.title});continue;}
+  const k=budgetKey(note.title),hit=byKey.get(k);
+  if(hit){hit.count++;const nums=[hit.title,note.title].map(t=>t.match(/\d+/g)?.map(Number)??[]);
+   if(nums[0].length===1&&nums[1].length===1)hit.title=hit.title.replace(/\d+/,String(nums[0][0]+nums[1][0]));
+   continue;}
+  const row={note,count:1,title:note.title};byKey.set(k,row);rows.push(row);
+ }
+ let timed=0,hidden=0;const out:BudgetRow<T>[]=[];
+ for(const r of rows){if(r.note.sticky){out.push(r);continue;}if(timed<max){timed++;out.push(r);}else hidden+=r.count;}
+ return {rows:out,hidden};
+}
+
 /* ---------- screen projection ---------- */
 export type CameraMatrices={matrixWorldInverse:{elements:ArrayLike<number>};projectionMatrix:{elements:ArrayLike<number>}};
 export type ScreenPoint={x:number;y:number;/** True when the point is in front of the camera and inside the viewport. */onScreen:boolean;behind:boolean;/** NDC, flipped through the camera when the point is behind it, for edge arrows. */dx:number;dy:number};
