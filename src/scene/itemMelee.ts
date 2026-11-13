@@ -3,7 +3,8 @@
  *  Frames: hand items have the grip at the origin, tip along +Y, face along +Z; shields are centred where the left arm carries them. */
 import {TAU,v3,hexRgb,rgbMix,likePaint,withTex,type V3,type Paint} from './itemMesh';
 import {type Ctx,shaft,splinters,lashing,gripWrap,decorPaint,makerMark,tassel} from './itemKit';
-import {bandPaint} from './itemMaterials';
+import {bandPaint,texMetaFor} from './itemMaterials';
+import {TILE,TILE_SCALE,motifCell,emblemCell,type MotifName} from './itemTexture';
 
 const leaf=(t:number)=>Math.pow(Math.max(0,Math.sin(Math.PI*Math.pow(Math.min(1,t),.72))),.75);
 const edgeGlint=(p:Paint,t0:number,k=.4):Paint=>likePaint((q,n,t,a)=>{const c=p(q,n,t,a);return t>t0?[Math.min(1,c[0]+k*(t-t0)),Math.min(1,c[1]+k*(t-t0)),Math.min(1,c[2]+k*(t-t0))]:c;},p);
@@ -268,26 +269,20 @@ export function shield(c:Ctx,shapeIn?:string){
  const flatPlank=shape==='tower'||shape==='kite';
  const zFn=(s:number,j:number)=>{const [x,y]=outline[j],nx=(x*s)/D.rx,ny=(y*s)/D.ry;const r2=flatPlank?nx*nx*.9+ny*ny*.12:nx*nx+ny*ny;return D.bulge*(1-Math.min(1,r2))+(c.wear>.3?.006*Math.sin(j*2.3+c.seed)*s*c.wear:0);};
  const isHide=era===0&&shape!=='wicker',isWicker=shape==='wicker';
- const field=hexRgb(c.st.field),acc=hexRgb(c.st.accent),ink=hexRgb(c.st.cordColour),trim=hexRgb(c.st.trim);
- const baseP=isWicker?c.paint('wicker',{len:1}):isHide?c.paint('hide',{len:1,tint:'#a07a4c',tintAmount:.2}):c.wood(.9,{tint:c.st.field,tintAmount:.6});
- const D2=D;
- const design:Paint=(p,n,t,a)=>{
-  const col=baseP(p,n,t,a),x=p[0]/D2.rx,y=p[1]/D2.ry,r=Math.hypot(x,y),ang=Math.atan2(y,x);let m=0,k=0;
-  if(!isWicker&&!isHide&&Math.abs(((p[0]/.075)%1+1)%1-.5)>.485)return col.map(v=>v*.62) as typeof col; // plank seams
-  switch(c.st.decor){
-   case 'bands':m=Math.abs(r-.62)<.07||Math.abs(r-.3)<.05?1:0;break;
-   case 'chevron':m=Math.abs(Math.abs(x)*1.0-(y+.2)*.6)<.1&&y<.5&&y>-.6?1:0;k=r<.8?0:0;break;
-   case 'dots':{const ring=Math.abs(r-.58)<.08,q=(ang/TAU*10+10)%1;m=ring&&q<.5?1:0;break;}
-   case 'spiral':m=(((ang/TAU)+r*2.1+10)%1)<.2&&r>.2&&r<.9?1:0;break;
-   case 'notches':m=r>.86&&((ang/TAU*28+28)%1)<.5?1:0;break;
-   case 'steps':{const q=Math.floor((x+1)*4),h=Math.floor((y+1)*4);m=(q+h)%2===0&&r<.8&&r>.38&&Math.abs(Math.abs(x)-Math.abs(y))<.3?1:0;break;}
-   default:break;
-  }
+const field=hexRgb(c.st.field),acc=hexRgb(c.st.accent),ink=hexRgb(c.st.cordColour),trim=hexRgb(c.st.trim);
+ const baseP=isWicker?c.paint('wicker',{len:1}):isHide?c.paint('hide',{len:1,tint:'#a07a4c',tintAmount:.2}):c.wood(.9,{tile:TILE.PLANK,grain:.15,tint:c.st.field,tintAmount:.3});
+ const R=Math.max(D.rx,D.ry);
+ // the painted face: society motif and civ emblem are decals (crisp, in the society's own colours); the vertex paint carries the rim band, the wear and the field
+ const MOTIF:Record<string,MotifName>={bands:'rings',chevron:'chevrons',dots:'dots',spiral:'spiral',notches:'teeth',steps:'fret',none:'stripes'};
+ const layer=isWicker?TILE.WEAVE:isHide?TILE.HIDE:TILE.PLANK,sc=TILE_SCALE[layer];
+ const design:Paint=likePaint((p,n,t,a)=>{
+  const col=baseP(p,n,t,a),x=p[0]/D.rx,y=p[1]/D.ry,r=Math.hypot(x,y),ang=Math.atan2(y,x);
   if(isWicker){const w=Math.sin(r*34)*.5+.5;return rgbMix(col,hexRgb('#6e5230'),w*.35*(Math.sin(ang*14)>0?1:.6));}
-  let out=col;if(isHide)out=rgbMix(out,m?ink:hexRgb('#6b4a2a'),m?.8:0);else out=m?rgbMix(out,acc,.8):out;
-  if(era>=1&&!isHide&&r>.82&&!m)out=rgbMix(out,field,.5);
-  void k;void trim;return out;
- };
+  let out=col;
+  if(era>=1&&!isHide&&r>.82)out=rgbMix(out,field,.5);
+  if(isHide&&r>.9)out=rgbMix(out,hexRgb('#6b4a2a'),.5);
+  return out;},baseP);
+ design.tex={...texMetaFor(layer),planar:(p)=>[p[0]*sc[0],p[1]*sc[1]],...(isWicker?{}:{decal:{cellA:motifCell(MOTIF[c.st.decor]??'rings'),cellB:emblemCell(c.st.emblem),uv:(p:V3):[number,number]=>[p[0]/(2*R)+.5,p[1]/(2*R)+.5],accA:ink,accB:era>=1&&!isHide?trim:acc}})};
  const back=c.paint('leather',{len:1});
  b.push([-.12,.1,.09]);
  b.dish(outline,b.pick(7,5,3),zFn,isHide?.014:.022,design,back);

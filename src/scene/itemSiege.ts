@@ -2,7 +2,8 @@
  *  footprint centre, +Y up, the working front toward +Z. Built from squared timbers, hide, rope, wheels and era-correct metal (iron-shod heads,
  *  bronze or iron fittings); wear shows as weathered grey timber, frayed lashings, patched hides and missing planks. */
 import {TAU,v3,hexRgb,rgbMix,type V3,type Paint} from './itemMesh';
-import {type Ctx,lashing,splinters,makerMark,decorPaint} from './itemKit';
+import {type Ctx,lashing,splinters,makerMark,decorPaint,gripWrap} from './itemKit';
+import {wedge} from './itemMelee';
 
 // ---------------------------------------------------------------------------------------------------------------- shared timber craft
 /** a squared timber between two points */
@@ -112,30 +113,37 @@ export function mantlet(c:Ctx){
 }
 
 // ---------------------------------------------------------------------------------------------------------------- sappers' kit
-function mattock(c:Ctx,at:V3,rot:V3,L=1.15){
+function mattock(c:Ctx,at:V3,rot:V3,L=1.0){
  const b=c.b;b.push(at,rot);
- log(c,[0,-L*.5,0],[0,L*.5,0],.021,.017,c.wood2(L));
- const y=L*.5-.06;
+ log(c,[0,-L*.5,0],[0,L*.5,0],.02,.0165,c.wood2(L));
+ gripWrap(c,-L*.5+.06,-L*.5+.3,.021);
+ const y=L*.5-.05;
  if(c.era===0){b.rod([0,y,-.02],[0,y+.01,.26],t=>.02*(1-t)+.004,6,c.paint('antler',{len:.3}),{segs:3});b.rod([0,y,-.02],[0,y+.01,-.1],()=>.016,6,c.paint('antler',{len:.1}),{segs:1});lashing(c,y-.06,y+.06,.025,8,{mat:'sinew'});}
- else{const m=c.paint(c.metal,{len:.5});b.loft([{c:[0,y,-.03],w:.05,h:.075},{c:[0,y,.03],w:.05,h:.08}],'z',m,{shape:'oct'});
-  b.rod([0,y,.03],[0,y-.03,.3],t=>.02*(1-t)+.002,6,m,{segs:4,caps:'a'});b.loft([{c:[0,y,-.03],w:.045,h:.07},{c:[0,y,-.14],w:.01,h:.08}],'z',m,{shape:'oct'});}
+ else{const m=c.paint(c.metal,{len:.5});
+  b.loft([{c:[0,y,-.036],w:.046,h:.075},{c:[0,y,.03],w:.046,h:.08}],'z',m,{shape:'oct'});            // the eye
+  wedge(c,y,.03,.2,{w0:.026,w1:.003,h0:.07,h1:.12,drop:.012,paint:m});                                 // adze blade, broad and thin
+  b.rod([0,y,-.036],[0,y-.012,-.21],t=>.02*(1-t)+.002,c.sd(6),m,{segs:4,caps:'a'});                    // pick on the other side
+ }
  b.pop();
 }
 export function sapperTools(c:Ctx){
  const b=c.b;
- mattock(c,[-.5,.08,0],[Math.PI/2,.15,0]);mattock(c,[-.2,.1,.15],[Math.PI/2-.04,-.12,0],1.2);if(c.lod<2)mattock(c,[.15,.1,.3],[Math.PI/2,.28,0],1.1);
+ // a compact kit lying where the gallery will start: tools along one side, spoil basket and rope on the other, a few props. About 1.3 m by 0.9 m.
+ mattock(c,[-.3,.06,.28],[Math.PI/2,.12,0]);mattock(c,[-.28,.07,.1],[Math.PI/2-.03,-.1,0],1.05);if(c.lod<2)mattock(c,[-.3,.06,-.08],[Math.PI/2,.2,0],.95);
  // a spade: shaft and a broad blade
- b.push([.5,.09,-.1],[Math.PI/2,-.1,0]);log(c,[0,-.55,0],[0,.35,0],.019,.016,c.wood2(1));b.box([.04,.04,.05],[0,.38,0],c.wood2(.1));
- b.loft([{c:[0,.34,0],w:.04,h:.02},{c:[0,.14,0],w:.2,h:.012},{c:[0,-.1,0],w:.19,h:.012},{c:[0,-.3,0],w:.03,h:.01}],'y',c.era>=2?c.paint(c.metal,{len:.5}):c.wood2(.5),{shape:'rect'});b.pop();
- // an iron or wooden pry bar
- b.rod([.95,.04,.3],[.95,.04,-1.2],t=>.022-.007*t,c.sd(6),c.era>=2?c.paint(c.metal,{len:1.5}):c.wood(1.5),{segs:2});
+ b.push([.25,.07,.32],[Math.PI/2,-.1,0]);log(c,[0,-.5,0],[0,.3,0],.018,.015,c.wood2(.9));b.box([.04,.035,.045],[0,.33,0],c.wood2(.1));
+ b.loft([{c:[0,.3,0],w:.035,h:.018},{c:[0,.12,0],w:.18,h:.011},{c:[0,-.08,0],w:.17,h:.011},{c:[0,-.26,0],w:.03,h:.009}],'y',c.era>=2?c.paint(c.metal,{len:.5}):c.wood2(.5),{shape:'rect'});b.pop();
+ // a pry bar, iron or hardwood, with a flattened toe
+ const bar=c.era>=2?c.paint(c.metal,{len:1.2}):c.wood(1.2);
+ b.rod([.5,.035,.5],[.5,.035,-.55],t=>.018-.006*t,c.sd(6),bar,{segs:2});b.rod([.5,.035,-.55],[.5,.05,-.62],()=>.011,c.sd(6),bar,{segs:1,caps:'b'});
  // rope coil and a basket of spoil
- if(c.lod<2){for(let k=0;k<3;k++)b.ring([-.95,.04+k*.035,.35],[0,1,0],.2-k*.012,.02,c.paint('cord',{len:2,tint:c.st.cordColour,tintAmount:.2}),b.pick(18,12,8),5);}
- b.rod([.3,.0,.65],[.3,.34,.65],t=>.26-.06*t,c.sd(12),c.paint('wicker',{len:1}),{segs:4});
- b.ellipsoid([.3,.34,.65],[.23,.07,.23],c.paint('stone',{len:1,tint:'#6a5a44',tintAmount:.5}),6);
- // timber props to hold a gallery
- timber(c,[-1.1,.07,-.5],[-.2,.07,-.9],.1,.1,c.wood(1));timber(c,[-.2,.07,-.9],[.6,.07,-.9],.1,.1,c.wood(1));
- makerMark(c,[-.3,.14,-.9],'wood',2,[-Math.PI/2,0,0]);
+ if(c.lod<2){for(let k=0;k<4;k++)b.ring([-.55,.025+k*.03,.4],[0,1,0],.15-k*.008,.016,c.paint('cord',{len:2,tint:c.st.cordColour,tintAmount:.2}),b.pick(18,12,8),5);}
+ b.rod([.2,.0,-.2],[.2,.24,-.2],t=>.18-.04*t,c.sd(14),c.paint('wicker',{len:1}),{segs:5});
+ b.ring([.2,.24,-.2],[0,1,0],.14,.01,c.paint('wicker',{len:.3,tint:'#7a5a34',tintAmount:.4}),b.pick(20,12,8),4);
+ b.ellipsoid([.2,.24,-.2],[.15,.05,.15],c.paint('stone',{len:1,tint:'#6a5a44',tintAmount:.5}),6);
+ // timber props to hold a gallery, cut to a hand's length
+ timber(c,[-.75,.05,-.4],[-.1,.05,-.45],.075,.075,c.wood(.7));timber(c,[-.1,.05,-.45],[.2,.05,-.6],.07,.07,c.wood(.4));
+ makerMark(c,[-.4,.1,-.4],'wood',2,[-Math.PI/2,0,0]);
 }
 
 // ---------------------------------------------------------------------------------------------------------------- ballista (torsion bolt thrower)

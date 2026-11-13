@@ -6,6 +6,7 @@
 import {hash32,mixHexColour} from './itemMesh';
 import type {MatId} from './itemMaterials';
 import {skinById} from './civSkin';
+import {CIVS} from './civStyles';
 import {LOOKS,lookForSkin,type ShieldShape,type HelmStyle} from './peopleLook';
 import type {CivId} from './civStyles';
 
@@ -17,7 +18,7 @@ export type BladeForm='leaf'|'straight'|'curved'|'sickle';
 export type PotForm='round'|'amphora'|'bowl'|'tall';
 export type WrapKind='sinew'|'leather'|'cord'|'rattan'|'wire';
 export type ItemStyle={
- civ:string;/** preferred hafting wood and a second, harder wood for limbs and handles */wood:MatId;wood2:MatId;
+ civ:string;/** the banner emblem id of this society (painted on shields) */emblem:string;/** preferred hafting wood and a second, harder wood for limbs and handles */wood:MatId;wood2:MatId;
  wrapKind:WrapKind;wrap:MatId;/** hex of dyed cord/ribbon/felt */cordColour:string;trim:string;accent:string;field:string;
  pommel:Pommel;guard:Guard;tassel:Tassel;decor:Decor;bladeForm:BladeForm;potForm:PotForm;shield:ShieldShape;helm:HelmStyle;
  /** the knapping stone this society works first */stone:MatId;/** metal warmth: -1 cool/greyer .. +1 warm/redder */metalWarmth:number;
@@ -50,7 +51,7 @@ export function itemStyleFor(skinId?:string|null):ItemStyle{
  const remix=!!skin&&(skin.mode==='remix'||skin.mode==='free');
  const woods:MatId[]=['ash','oak','yew','birch','bamboo','cedar','pine','elm','willow'];
  const s:ItemStyle={
-  civ,wood:remix&&h%3===0?woods[(h>>>3)%woods.length]:row.wood,wood2:row.wood2??row.wood,wrapKind:row.wrapKind??'leather',wrap:row.wrap??'leather',
+  civ,emblem:skin?.banner?.emblem??CIVS[civ as CivId]?.emblem?.id??'sunDisc',wood:remix&&h%3===0?woods[(h>>>3)%woods.length]:row.wood,wood2:row.wood2??row.wood,wrapKind:row.wrapKind??'leather',wrap:row.wrap??'leather',
   cordColour:remix?mixHexColour(row.cordColour??'#9a2f26',acc,.55):row.cordColour??'#9a2f26',trim,accent:acc,field,
   pommel:row.pommel??'ball',guard:row.guard??'straight',tassel:row.tassel??'none',decor:row.decor??'bands',bladeForm:row.bladeForm??'leaf',potForm:row.potForm??'round',
   shield:look.shield,helm:look.helm,stone:row.stone??'flint',metalWarmth:row.metalWarmth??0,maker:h%4,markShape:(h>>>5)%6,

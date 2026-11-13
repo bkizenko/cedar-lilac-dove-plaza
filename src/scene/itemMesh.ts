@@ -222,7 +222,7 @@ export class MeshBuilder{
  dish(outline:[number,number][],rings:number,zFn:(s:number,j:number)=>number,thick:number,paint:Paint,backPaint?:Paint){
   const Cn=outline.length,make=(side:1|-1)=>{const g:V3[][]=[];for(let k=0;k<=rings;k++){const s=k/rings;g.push(outline.map(([x,y],j)=>[x*s,y*s,zFn(s,j)+side*thick/2] as V3));}return g;};
   const front=make(1),back=make(-1);
-  this.grid(front,paint,{smooth:true,flip:false});this.grid(back,backPaint??paint,{smooth:true,flip:true});
+  this.grid(front,paint,{smooth:true,flip:true});this.grid(back,backPaint??paint,{smooth:true,flip:false});
   this.grid([front[rings],back[rings]],paint,{smooth:true});
   return this;
  }

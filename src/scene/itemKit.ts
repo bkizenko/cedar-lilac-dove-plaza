@@ -27,6 +27,15 @@ export function makeCtx(req:ItemReq):Ctx{
   r:k=>(hash32(req.id,req.seed,k)%10007)/10007};
  return c;
 }
+/** a Catmull-Rom curve through the points (handles, straps, cords): `n` samples per span, fewer at lower LOD */
+export function curve(c:Ctx,pts:V3[],n=6):V3[]{
+ const k=c.b.pick(n,Math.max(2,Math.round(n/2)),1),out:V3[]=[];
+ for(let i=0;i<pts.length-1;i++){
+  const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(pts.length-1,i+2)];
+  for(let j=0;j<k;j++){const t=j/k,t2=t*t,t3=t2*t;out.push([0,1,2].map(a=>.5*((2*p1[a])+(-p0[a]+p2[a])*t+(2*p0[a]-5*p1[a]+4*p2[a]-p3[a])*t2+(-p0[a]+3*p1[a]-3*p2[a]+p3[a])*t3)) as V3);}
+ }
+ out.push(pts[pts.length-1]);return out;
+}
 /** a shaft path with a slight, wear-dependent warp */
 export function shaftPath(c:Ctx,x:number,y0:number,y1:number,z=0,warp=.01):V3[]{
  const n=c.b.pick(24,10,3),wx=(c.r('wx')-.5)*warp*(1+c.wear*3),wz=(c.r('wz')-.5)*warp*(1+c.wear*3);

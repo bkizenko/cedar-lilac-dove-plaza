@@ -3,8 +3,8 @@
  *  sack, torch, handcart, harness) and ship fittings (oar, steering oar, anchor, rope coil, block, bailer). Each is shaped for its era's material
  *  and its society's style, with hafting and lashing done the way that era did it. Hand items: grip at the origin, working end along +Y.
  *  World items: origin on the ground, +Y up, working front toward +Z. */
-import {TAU,v3,hexRgb,rgbMix,type V3,type Paint} from './itemMesh';
-import {type Ctx,shaft,splinters,lashing,gripWrap,decorPaint,makerMark,tassel} from './itemKit';
+import {TAU,v3,hexRgb,rgbMix,likePaint,type V3,type Paint} from './itemMesh';
+import {type Ctx,shaft,splinters,lashing,gripWrap,decorPaint,makerMark,tassel,curve} from './itemKit';
 import {haft,wedge} from './itemMelee';
 import {hideSheet,log,timber,wheel} from './itemSiege';
 import type {ItemCategory,Frame} from './itemModels';
@@ -62,13 +62,22 @@ function sickle(c:Ctx){
  makerMark(c,[0,-.06,.0165],'wood',.9,[0,0,0]);
 }
 function flail(c:Ctx){
- const b=c.b;
+ const b=c.b,metalHead=c.era>=2,P=metalHead?mp(c,.1):c.paint('leather',{len:.15}),thong=c.paint('rawhide',{len:.2,tint:c.st.cordColour,tintAmount:.15});
  haft(c,-.2,.62,.017,{knob:true});
- b.ring([0,.64,0],[1,0,0],.022,.006,c.paint('leather',{len:.15}),b.pick(12,8,6),4);
- b.tube([[0,.64,0],[0,.66,.03],[0,.66,.07]],()=>.006,4,c.paint('leather',{len:.15}),{caps:true});
- b.push([0,.66,.07],[Math.PI/2-.2,0,0]);
- log(c,[0,0,0],[0,.55,0],.022,.025,decorPaint(c,c.wood2(.6),.55,.2,.9));
- b.ring([0,.04,0],[0,1,0],.022,.005,c.paint('leather',{len:.15}),b.pick(12,8,6),4);b.pop();
+ // the swivel: a bound ferrule on the handle, a leather (or iron) eye, and a hinge thong looped through the beater
+ if(c.lod<2)b.rod([0,.585,0],[0,.655,0],()=>.0225,c.sd(8),metalHead?mp(c,.06):c.paint('rawhide',{len:.1}),{segs:1,caps:'a'});
+ b.ring([0,.64,0],[1,0,0],.024,.0065,P,b.pick(14,10,6),4);
+ b.tube([[0,.64,0],[0,.665,.03],[0,.67,.07]],()=>.0058,5,thong,{caps:true});
+ if(c.lod<2)b.ring([0,.67,.052],[1,0,0],.016,.0045,thong,b.pick(12,8,6),4);
+ b.push([0,.67,.07],[Math.PI/2-.2,0,0]);
+ // the swipple: a split of hardwood, thicker at the free end, worn pale where the hands of threshers have knocked it
+ log(c,[0,0,0],[0,.55,0],.021,.027,decorPaint(c,c.wood2(.6),.55,.2,.9));
+ if(c.lod<2){
+  b.ring([0,.035,0],[0,1,0],.0215,.006,thong,b.pick(14,8,6),4);                      // hinge groove, bound
+  b.ring([0,.505,0],[0,1,0],.0275,.007,P,b.pick(14,8,6),4);                           // cap band near the free end
+  if(metalHead){for(const y of [.025,.545])b.ring([0,y,0],[0,1,0],y<.1?.0225:.0285,.0048,mp(c,.05),b.pick(16,10,6),4);if(c.lod===0)for(let i=0;i<5;i++){const a=i/5*TAU;b.ellipsoid([Math.cos(a)*.0295,.5,Math.sin(a)*.0295],[.0045,.0045,.0045],mp(c,.01),4);}}
+ }
+ b.pop();
  makerMark(c,[.0,.1,.0172],'wood');
 }
 function quern(c:Ctx){
@@ -285,20 +294,32 @@ const potForms:Record<string,{H:number;p:[number,number][]}>={
  tall:{H:.5,p:[[0,.1],[.2,.14],[.5,.165],[.78,.12],[.94,.105],[1,.13]]},
 };
 function potAt(c:Ctx,form:string,at:V3,rotZ=0,scale=1){
- const b=c.b,def=potForms[form]??potForms.round,m=b.pick(24,14,8),n=c.sd(24),f=prof(def.p);
- const clay=c.paint('clay',{len:def.H,tint:c.st.field,tintAmount:.08}),ink=hexRgb(c.st.cordColour),acc=hexRgb(c.st.accent),dec=c.st.decor;
- const paint:Paint=(p,nn,t,a)=>{let k=clay(p,nn,t,a);
+ const b=c.b,def=potForms[form]??potForms.round,m=b.pick(56,28,10),n=c.sd(26),f=prof(def.p),H=def.H*scale;
+ const clay=c.paint('clay',{len:def.H,tint:c.st.field,tintAmount:.08}),ink=hexRgb(c.st.cordColour),acc=hexRgb(c.st.accent),dec=c.st.decor,slip=hexRgb('#e1cfae'),soot=hexRgb('#2b211b');
+ const sootK=.25+.5*c.r('soot')+c.wear*.3;
+ const paint:Paint=likePaint((p,nn,t,a)=>{let k=clay(p,nn,t,a);
   const band=(t0:number,t1:number)=>t>t0&&t<t1;
+  if(t>.84)k=rgbMix(k,slip,.42);                 // a slipped, burnished neck
   if(band(.02,.06)||band(.82,.86)||band(.5,.53))k=rgbMix(k,ink,.75);
   const ang=a*TAU;let m2=0;
   if(band(.55,.8)){if(dec==='chevron')m2=Math.abs(((ang*3/TAU*4)%1)-.5)*2<.4+.9*Math.abs(((t*9)%1)-.5)?0:1;else if(dec==='dots')m2=((a*14)%1<.5&&((t*10)%1)<.5)?1:0;else if(dec==='spiral')m2=(((a*3+t*5)%1)<.2)?1:0;else if(dec==='steps')m2=(Math.floor(a*12)+Math.floor(t*12))%2===0?1:0;else if(dec==='notches')m2=(a*20)%1<.3?1:0;else m2=band(.62,.66)||band(.72,.75)?1:0;}
   if(m2)k=rgbMix(k,acc,.82);
+  // fire clouds: soot climbs from the base on one side, thicker with use; the base itself is blackened
+  const cloud=Math.max(0,1-t/(.3+.4*sootK))*(.35+.65*Math.max(0,Math.sin(a*TAU*1+c.r('cloud')*6)));if(t<.7)k=rgbMix(k,soot,Math.min(.8,cloud*sootK*1.3));
   if(c.wear>.5&&((vn(p)>.78)))k=rgbMix(k,hexRgb('#2a1e16'),.6);
-  return k;};
+  return k;},clay);
  b.push(at,[0,0,rotZ]);b.push([0,0,0],[0,0,0]);
- b.tube(Array.from({length:m+1},(_,i)=>[0,def.H*scale*i/m,0] as V3),t=>f(t)*scale,n,paint,{caps:'a'});
- b.rod([0,def.H*scale*.985,0],[0,def.H*scale*.93,0],()=>f(1)*scale*.86,n,c.paint('char',{len:.1}),{segs:1,caps:'a'});
- if(form==='amphora')for(const s of [-1,1])b.tube([[s*.07,.52,0],[s*.16,.5,0],[s*.19,.38,0],[s*.16,.3,0]].map(p=>[p[0],p[1]*scale,p[2]] as V3),()=>.014,5,clay,{caps:true});
+ // hand-coiled walls: each coil is a faint ridge, and no pot is a perfect circle
+ const ecc=.02+.02*c.r('ecc'),eph=c.r('eph')*TAU,coil=H/Math.max(7,Math.round(def.H/.034));
+ b.tube(Array.from({length:m+1},(_,i)=>[Math.sin(i/m*2.2+eph)*.004*scale,H*i/m,0] as V3),t=>{const r=f(t)*scale*(1+(t>.06&&t<.8?.012*Math.sin(t*H/coil*TAU):0));return [r*(1+ecc),r*(1-ecc)];},n,paint,{caps:'a'});
+ const rimR=f(1)*scale;
+ b.rod([0,H*.985,0],[0,H*.93,0],()=>rimR*.86,n,c.paint('char',{len:.1}),{segs:1,caps:'a'});
+ if(c.lod<2){
+  b.ring([0,H*.995,0],[0,1,0],rimR*.97,.011*scale,clay,b.pick(30,18,10),5);                       // rolled lip
+  b.ring([0,H*.04,0],[0,1,0],f(.04)*scale*1.02,.01*scale,clay,b.pick(30,18,10),5);               // foot ring
+  if(c.lod===0)for(const t of [.56,.6,.64])b.ring([0,H*t,0],[0,1,0],f(t)*scale+.0015,.0034*scale,c.paint('cord',{len:.2,tint:c.st.cordColour,tintAmount:.2}),b.pick(36,18,10),4); // cord impressed bands
+ }
+ if(form==='amphora')for(const s of [-1,1])b.tube([[s*.07,.52,0],[s*.16,.5,0],[s*.19,.38,0],[s*.16,.3,0]].map(p=>[p[0],p[1]*scale,p[2]] as V3),()=>.016,6,clay,{caps:true});
  if(form==='round'&&c.lod<2)for(const s of [-1,1])b.ring([s*.2,.17,0],[0,0,1],.03,.008,clay,10,4);
  b.pop();b.pop();
 }
@@ -312,25 +333,44 @@ function pot(c:Ctx){
  for(let i=0;i<4;i++){const a=i*1.7+.4,px=Math.cos(a)*.3,pz=Math.sin(a)*.3;b.push([px,.012,pz],[.5,a,.0]);b.loft([{c:[0,0,0],w:.11,h:.07},{c:[0,.01,0],w:.15,h:.1},{c:[0,.02,0],w:.05,h:.03}],'y',c.paint('clay',{len:.2,wear:.7}),{shape:'oct'});b.pop();}
 }
 function basket(c:Ctx){
- const b=c.b,H=.36,n=c.sd(28),m=b.pick(24,14,8),f=prof([[0,.14],[.3,.19],[1,.25]]);
- const W=c.paint('wicker',{len:.1,wear:c.wear}),acc=hexRgb(c.st.accent);
- const pat:Paint=(p,nn,t,a)=>{const k=W(p,nn,t,a);return (Math.floor(a*14)%3===0&&t>.55&&t<.8)?rgbMix(k,acc,.6):k;};
- b.tube(Array.from({length:m+1},(_,i)=>[0,H*i/m,0] as V3),t=>f(t),n,pat,{caps:'a'});
- b.ring([0,H,0],[0,1,0],.25,.011,c.paint('wicker',{len:.1,tint:'#7a5a34',tintAmount:.4}),b.pick(26,16,10),5);
- b.ring([0,.0,0],[0,1,0],.14,.011,c.paint('wicker',{len:.1,tint:'#7a5a34',tintAmount:.4}),b.pick(20,12,8),5);
- for(const s of [-1,1])b.tube([[s*.25,H,0],[s*.28,H+.12,0],[s*.1,H+.26,0],[0,H+.28,0]],()=>.011,5,c.paint('cord',{len:.5,tint:c.st.cordColour,tintAmount:.25}),{caps:true});
- b.tube([[0,H+.28,0],[-.1,H+.26,0],[-.28,H+.12,0],[-.25,H,0]],()=>.011,5,c.paint('cord',{len:.5,tint:c.st.cordColour,tintAmount:.25}),{caps:true});
+ const b=c.b,H=.36,n=c.sd(30),m=b.pick(40,22,8),f=prof([[0,.14],[.3,.19],[1,.25]]);
+ const W=c.paint('wicker',{len:.1,wear:c.wear}),acc=hexRgb(c.st.accent),dark=c.paint('wicker',{len:.1,tint:'#6a4a28',tintAmount:.5,wear:c.wear});
+ const pat:Paint=likePaint((p,nn,t,a)=>{const k=W(p,nn,t,a);return (Math.floor(a*15)%3===0&&t>.55&&t<.8)?rgbMix(k,acc,.6):k;},W);
+ // coiled courses ripple the wall; the radius also breathes a little so it never looks turned
+ const course=H/18;
+ b.tube(Array.from({length:m+1},(_,i)=>[0,H*i/m,0] as V3),t=>f(t)*(1+.016*Math.sin(t*H/course*TAU)+.012*Math.sin(t*5.3+c.r('br')*6)),n,pat,{caps:'a'});
+ if(c.lod<2){ // the upright stakes show through the weaving
+  const k=b.pick(22,12,0);for(let i=0;i<k;i++){const a=i/k*TAU+.1,r0=f(0)+.004,r1=f(1)+.004;
+   b.rod([Math.cos(a)*r0,.004,Math.sin(a)*r0],[Math.cos(a)*r1,H,Math.sin(a)*r1],()=>.0058,4,dark,{segs:3,caps:'b'});}
+ }
+ b.ring([0,H,0],[0,1,0],.25,.013,c.paint('wicker',{len:.1,tint:'#7a5a34',tintAmount:.4}),b.pick(30,18,10),5);
+ b.ring([0,H-.03,0],[0,1,0],.247,.007,c.paint('cord',{len:.2,tint:c.st.cordColour,tintAmount:.5}),b.pick(30,18,10),4);   // binding below the rim
+ b.ring([0,.0,0],[0,1,0],.14,.012,c.paint('wicker',{len:.1,tint:'#7a5a34',tintAmount:.4}),b.pick(22,12,8),5);
+ b.rod([0,.004,0],[0,.016,0],()=>.14,c.sd(18),dark,{segs:1,caps:'a'});                                                 // plaited base
+ b.tube(curve(c,[[.25,H,0],[.285,H+.1,0],[.2,H+.22,0],[0,H+.29,0],[-.2,H+.22,0],[-.285,H+.1,0],[-.25,H,0]],6),()=>.0115,6,c.paint('cord',{len:.5,tint:c.st.cordColour,tintAmount:.25}),{caps:true});
+ if(c.lod===0)for(const s of [-1,1])lashing(c,H-.02,H+.07,.012,0,{x:s*.255,mat:'cord'});
  if(!c.broken&&c.lod<2){const n2=b.pick(16,8,3);for(let i=0;i<n2;i++){const a=i*2.4,r=.03+.17*Math.sqrt(i/n2);b.ellipsoid([Math.cos(a)*r,H-.03,Math.sin(a)*r],[.022,.016,.026],c.paint(i%3?'leather':'rawhide',{len:.05,tint:'#a0443a',tintAmount:i%5===0?.5:0}),3);}}
  makerMark(c,[0,.1,.15],'wood',1.5,[0,0,0]);
 }
 function waterskin(c:Ctx){
- const b=c.b,P=c.paint('hide',{len:.5,tint:'#a08158',tintAmount:.3}),sag=.02+c.wear*.03;
- b.ellipsoid([0,.2,0],[.17,.22,.1],P,c.sd(9));b.ellipsoid([0,.14,.0],[.16,.14,.095],P,c.sd(7));
- for(const [x,y] of [[-.16,.34],[.16,.34],[-.14,.04],[.14,.04]] as const)b.rod([x*.8,y-.04,0],[x*1.05,y+(y>.2?.05:-.03),0],()=>.024,5,P,{segs:1}); // the limbs, tied off
- b.tube([[0,.4,0],[0,.5,0],[0,.58,sag]],t=>.04-.015*t,c.sd(8),P,{caps:true});
- b.ring([0,.55,sag],[0,1,0],.04,.005,c.paint('cord',{len:.1,tint:c.st.cordColour,tintAmount:.4}),b.pick(12,8,6),4);
- b.rod([0,.57,sag],[0,.66,sag],()=>.026,6,c.wood2(.1),{segs:1}); // stopper
- b.tube([[-.1,.4,.08],[-.2,.55,.12],[0,.72,.15],[.2,.55,.12],[.1,.4,.08]],()=>.007,4,c.paint('leather',{len:.4,tint:c.st.cordColour,tintAmount:.15}),{caps:true});
+ const b=c.b,P=c.paint('hide',{len:.5,tint:'#a08158',tintAmount:.3}),sag=.02+c.wear*.03,cordP=c.paint('cord',{len:.1,tint:c.st.cordColour,tintAmount:.5}),dark=c.paint('hide',{len:.3,tint:'#4a3622',tintAmount:.5,wear:Math.min(1,c.wear+.3)});
+ // the body is a tanned hide stitched up its seam: a flattened ellipsoid, fuller at the belly than at the shoulders
+ b.ellipsoid([0,.2,0],[.17,.22,.1],P,c.sd(10));b.ellipsoid([0,.14,.0],[.16,.14,.095],P,c.sd(8));
+ for(const [x,y] of [[-.16,.34],[.16,.34],[-.14,.04],[.14,.04]] as const)b.rod([x*.8,y-.04,0],[x*1.05,y+(y>.2?.05:-.03),0],()=>.024,6,P,{segs:2}); // the limbs, tied off
+ // gathers where the neck was cut away, then the neck itself with a bound lip
+ if(c.lod<2)for(let i=0;i<b.pick(9,5,0);i++){const a=i/9*TAU;b.rod([Math.cos(a)*.05,.38,Math.sin(a)*.04],[Math.cos(a)*.026,.46,Math.sin(a)*.022],()=>.011,4,P,{segs:1});}
+ b.tube([[0,.4,0],[0,.5,0],[0,.58,sag]],t=>.04-.015*t,c.sd(9),P,{caps:true});
+ b.ring([0,.55,sag],[0,1,0],.04,.005,cordP,b.pick(14,8,6),4);b.ring([0,.5,0],[0,1,0],.037,.005,cordP,b.pick(14,8,6),4);
+ b.rod([0,.57,sag],[0,.67,sag],()=>.026,c.sd(8),c.wood2(.1),{segs:1}); // stopper
+ b.ring([0,.64,sag],[0,1,0],.026,.0035,cordP,b.pick(12,8,6),4);          // the stopper is tied on
+ b.tube(curve(c,[[-.14,.36,.075],[-.21,.5,.1],[-.12,.65,.13],[0,.7,.14],[.12,.65,.13],[.21,.5,.1],[.14,.36,.075]],6),()=>.009,5,c.paint('leather',{len:.4,tint:c.st.cordColour,tintAmount:.15}),{caps:true}); // carrying strap
+ if(c.lod===0){ // toggle on the strap, a bone peg
+  b.rod([-.03,.7,.14],[.03,.7,.14],()=>.009,5,c.paint('bone',{len:.06}),{segs:1});
+  // the seam: whipstitch along the rim of the hide, each stitch a short cord crossing it, with a darker welt under
+  const N=18;for(let i=0;i<N;i++){const a=-Math.PI*.42+i/(N-1)*Math.PI*.84,sx=Math.sin(a)*.17,sy=.2+Math.cos(a)*.22*(a>0?.9:1);
+   b.rod([sx*.97,sy-.01,.092*Math.cos(a)*.0+.012],[sx*1.0,sy+.01,-.012+.0],()=>.0021,3,cordP,{segs:1,caps:'a'});}
+  b.tube(Array.from({length:14},(_,i)=>{const a=-Math.PI*.46+i/13*Math.PI*.92;return [Math.sin(a)*.171,.2+Math.cos(a)*.222,.0] as V3;}),()=>.007,4,dark,{caps:true});
+ }
  b.tube(Array.from({length:b.pick(12,8,4)},(_,i)=>{const N=b.pick(12,8,4)-1,y=.08+.28*i/N;return [.0,y,.098*Math.sqrt(Math.max(0,1-Math.pow((y-.2)/.22,2)))+.003] as V3;}),()=>.0035,3,c.paint('cord',{len:.4}),{caps:true});
  makerMark(c,[.0,.12,.103],'wood',1.3,[0,0,0]);
 }

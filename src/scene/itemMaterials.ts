@@ -34,7 +34,7 @@ export const TEX_OF:Readonly<Record<MatId,number>>=Object.freeze({
 });
 export const texMetaFor=(layer:number)=>({layer,du:TILE_SCALE[layer][0],dv:TILE_SCALE[layer][1]});
 const clamp=(x:number,a=0,b=1)=>Math.max(a,Math.min(b,x));
-export type PaintOpts={/** override the atlas layer (planks, rivets) */tile?:number;seed?:number;/** 0 new .. 1 ruined */wear?:number;/** length of the primitive along t, metres (grain stretch) */len?:number;tint?:string;tintAmount?:number;/** second colour for stripes, bands and painted work */accent?:string;/** forged pattern or twisted strands */pattern?:boolean;/** extra age for metals (patina) independent of use */age?:number};
+export type PaintOpts={/** override the atlas layer (planks, rivets) */tile?:number;/** scale of the per-vertex grain (the texture carries the fine grain; 1 default) */grain?:number;seed?:number;/** 0 new .. 1 ruined */wear?:number;/** length of the primitive along t, metres (grain stretch) */len?:number;tint?:string;tintAmount?:number;/** second colour for stripes, bands and painted work */accent?:string;/** forged pattern or twisted strands */pattern?:boolean;/** extra age for metals (patina) independent of use */age?:number};
 const isWood=(m:MatId)=>['ash','oak','yew','birch','bamboo','cedar','pine','ebony','elm','willow'].includes(m);
 const isMetal=(m:MatId)=>['copper','bronze','iron','steel','gold','lead'].includes(m);
 /** The painter for one substance. Pure and deterministic in (mat, opts, position). */
@@ -50,8 +50,8 @@ export function paintFor(mat:MatId,o:PaintOpts={}):Paint{
   if(wood){
    // growth rings and grain run along the length: stretch noise in t, wrap it around in a
    const g=vnoise(a*9+seed*.1,t*len*3.2,seed+9),ring=.5+.5*Math.sin((g*5+t*len*.6)*TAU*.5);
-   c=rgbMix(c,dark,clamp((ring-.45)*b.g*.9));
-   const knot=vnoise(p[0]*11+5,p[1]*11,p[2]*11+7,seed+1);if(knot>.84)c=rgbMix(c,dark,.55*(knot-.84)/.16*b.g+.1);
+   c=rgbMix(c,dark,clamp((ring-.45)*b.g*.9*(o.grain??1)));
+   const knot=vnoise(p[0]*11+5,p[1]*11,p[2]*11+7,seed+1);if(knot>.84)c=rgbMix(c,dark,(.55*(knot-.84)/.16*b.g+.1)*(o.grain??1));
    if(wear>.55)c=rgbMix(c,hexRgb('#8b8a82'),(wear-.55)*.5); // silvered, weathered
   }
   switch(mat){
