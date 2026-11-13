@@ -1,0 +1,183 @@
+{
+ "fields-spring": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.62,
+  "dist": 46,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 3825,
+  "season": "spring",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "bare",
+      "sprout",
+      "sprout2",
+      "fallow"
+     ]
+    }
+   ]
+  }
+ },
+ "fields-summer": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.62,
+  "dist": 46,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4275,
+  "season": "summer",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "growing",
+      "sprout2",
+      "bare",
+      "fallow"
+     ]
+    }
+   ]
+  }
+ },
+ "fields-autumn": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.62,
+  "dist": 46,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4725,
+  "season": "autumn",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "ripe",
+      "ripe",
+      "stubble",
+      "bare"
+     ]
+    }
+   ]
+  }
+ },
+ "fields-winter": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.62,
+  "dist": 46,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 5175,
+  "season": "winter",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "stubble",
+      "stubble",
+      "bare",
+      "fallow"
+     ]
+    }
+   ]
+  }
+ },
+ "fields-close": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.9,
+  "pitch": 0.5,
+  "dist": 18,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4725,
+  "season": "autumn",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "ripe",
+      "ripe",
+      "stubble",
+      "bare"
+     ]
+    }
+   ]
+  }
+ },
+ "fields-water": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.62,
+  "dist": 46,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4275,
+  "season": "summer",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "growing",
+      "growing",
+      "growing",
+      "growing"
+     ]
+    }
+   ],
+   "irrigation": {
+    "ditchFields": [
+     0,
+     1
+    ],
+    "waterMode": true
+   }
+  }
+ }
+}

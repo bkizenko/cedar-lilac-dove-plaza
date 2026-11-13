@@ -10,7 +10,9 @@ import {planExpansion,expansionStatus,grainExpansionPracticeIssue} from '../game
 import {compactGrainWorkplace} from '../game/cerealRules';
 import {productionSlots} from '../game/production';
 import {fieldProductionReport} from '../game/productionReport';
-export function PlotControls({game:g,building:b,refresh}:{game:Game;building:Building;refresh:()=>void}){
+import {WaterControls} from './WaterControls';
+import type {Engine} from '../game/engine';
+export function PlotControls({game:g,building:b,refresh,engine}:{game:Game;building:Building;refresh:()=>void;engine?:Engine|null}){
  const grainSite=compactGrainWorkplace(b.type),practiceIssue=grainExpansionPracticeIssue(g,b);
  const report=b.type==='farm'?fieldProductionReport(g,b):null;
  const year=calendar(g).year,sown=b.crop?.year===year&&(b.crop.planted||0)>0,resting=b.fallowYear===year;
@@ -26,6 +28,7 @@ export function PlotControls({game:g,building:b,refresh}:{game:Game;building:Bui
      <button disabled={calendar(g).phase!==0||sown} onClick={()=>{setFieldRest(g,b.id,!resting);refresh();}} className="rounded-md border border-bronze/40 p-2 disabled:opacity-40">{resting?'Plant this spring':'Rest soil this year'}</button>
      {(calendar(g).phase!==0||sown)&&<p>Choose rest before spring sowing.</p>}
    </div></details>}
+   {b.type==='farm'&&b.team===0&&<WaterControls game={g} building={b} engine={engine} refresh={refresh}/>}
    {b.expansion?<div className="mt-3 space-y-2"><p>{expansionStatus(g,b)}</p><button className="w-full rounded-md border border-bronze/40 px-3 py-2" onClick={()=>{g.orderConstruction(b);refresh();}}>Assign extension builders</button>{!b.expansion.paid&&<button className="w-full rounded-md border border-parchment/20 px-3 py-2" onClick={()=>{b.expansion=undefined;g.workBoard.reset();refresh();}}>Cancel extension</button>}</div>:<details className="mt-3"><summary className="cursor-pointer py-2 text-base">{grainSite?'Expand workshop':'Expand plot'}</summary>{practiceIssue&&<p className="text-parchment-dim">{practiceIssue}</p>}<div className="mt-2 grid grid-cols-2 gap-2">{(['w','d'] as const).map(axis=>{
      const size={w:b.w,d:b.d};size[axis]=Math.min(BUILDINGS[b.type][axis]*maximumPlotAxisMultiple(b.type),size[axis]+BUILDINGS[b.type][axis]);const cost=expansionCost(b,size),max=size[axis]<=b[axis]+1e-6;
      return <button key={axis} disabled={max||!!practiceIssue||!!g.state.ended} className="rounded-md border border-bronze/40 px-2 py-2 disabled:opacity-40" onClick={()=>{planExpansion(g,b,axis);refresh();}}>{axis==='w'?'Wider':'Deeper'}<span className="block text-sm text-parchment-dim">{max?'Maximum':cost.seeds!==undefined?`${cost.seeds} seeds`:`${cost.wood} logs${cost.stone?` · ${cost.stone} stone`:''}`}{grainSite&&!max&&` · ${productionSlots({...b,...size})} slots`}</span></button>;
