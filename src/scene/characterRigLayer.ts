@@ -36,6 +36,8 @@ function toGeometry(parts:readonly RigPart[],pivot:readonly number[],colors:Reco
  g.setAttribute('position',new THREE.BufferAttribute(d.positions,3));g.setAttribute('normal',new THREE.BufferAttribute(d.normals,3));g.setAttribute('color',new THREE.BufferAttribute(linear(d.colors),3));
  g.computeBoundingSphere();if(g.boundingSphere)g.boundingSphere.radius=Math.max(g.boundingSphere.radius,1.5);return g;
 }
+/** Clips in which a person wears what they carry; at work (chop, till, build...) the hands and shoulders are busy. */
+const CARRY_WORN=new Set<string>(['carry','idle','walk','run','row']);
 const hash=(s:string)=>(hashSeed(s)>>>0).toString(36);
 /** Items v2: a held item's detailed procedural model (society, era, shield kind), or null to fall back to the first rig's parts. */
 const heldItemGeometry=(item:ItemId,o:RigOutfit,era:number,tier:LodTier,condition?:number)=>{const m=heldItemMesh(item,{skin:o.look?.id,era,lod:tier===0?0:2,shieldKind:o.rendered.shield,condition});if(!m)return null;const g=meshGeometry(m);if(g.boundingSphere)g.boundingSphere.radius=Math.max(g.boundingSphere.radius,1.5);return g;};
@@ -145,7 +147,7 @@ export class CharacterRigLayer{
    if(tier<2){
     let st=this.states.get(u.id);if(!st){st=newAnimState(u,w.time);this.states.set(u.id,st);}
     const f=stepAnimator(st,u,{time:w.time,project:w.projectFor(u),fireLit:w.fireLitNear(u),load:w.loadOf(u),farm:w.farmFor(u),carry:carry&&!u.plantingWork?{style:carry.style,mass:carry.mass}:null});
-    pose=f.pose;if(!itemR&&f.itemR)itemR=f.itemR;if(!itemR&&f.clip==='craft'&&outfit.role==='smith')itemR='hammer';
+    pose=f.pose;if(carry&&!CARRY_WORN.has(f.clip))carry=null;if(!itemR&&f.itemR)itemR=f.itemR;if(!itemR&&f.clip==='craft'&&outfit.role==='smith')itemR='hammer';
     if(tier===1)pose=poseAtTier(pose,1);else if(outfit.look&&f.clip!=='row'&&!PEOPLE_RULES.noLife)pose=lifePose(pose,f.clip,w.time,u.id,this.inds.get(u.id)?.ind.age);
    }else pose=NEUTRAL_POSE;
   }

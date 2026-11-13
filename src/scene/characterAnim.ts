@@ -58,7 +58,11 @@ export function stepAnimator(st:AnimState,u:UnitLike,ctx:AnimContext):AnimFrame{
   st.run+=(target-st.run)*Math.min(1,dt*6);if(Math.abs(target-st.run)<1e-4)st.run=target;
   st.gait+=moved/gaitStride(st.run);const ph=st.gait+st.variation.phaseOffset;phase=ph-Math.floor(ph);
   pose=st.run>.001?blendPoses(samplePose(CLIPS.walk,phase,st.variation,sel.load),samplePose(CLIPS.run,phase,st.variation,sel.load),st.run):samplePose(clip,phase,st.variation,sel.load);
- }else{st.run=0;pose=samplePose(clip,phase,st.variation,sel.load,sel.clip==='carry'&&ctx.carry?{id:ctx.carry.style,mass:ctx.carry.mass}:undefined);}
+ }else{
+  // a loaded person who stands still keeps the carry posture (hand on the strap, head upright under the jar) with both feet together
+  const stand=sel.clip==='idle'&&!!ctx.carry,carrying=(sel.clip==='carry'||stand)&&ctx.carry;st.run=0;
+  pose=samplePose(stand?CLIPS.carry:clip,stand?.25:phase,st.variation,stand?Math.max(sel.load,ctx.carry!.mass):sel.load,carrying?{id:ctx.carry!.style,mass:ctx.carry!.mass}:undefined);
+ }
  pose=stancePose(pose,sel.clip,WEAPON[u.type]);
  return {clip:sel.clip,phase,pose,load:sel.load,reason:sel.reason,itemR:TOOL_FOR_CLIP[sel.clip]};
 }

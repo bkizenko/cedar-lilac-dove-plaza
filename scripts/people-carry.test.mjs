@@ -109,7 +109,7 @@ test('rig layer: a loaded worker draws its load on its own bones (not a legacy s
  // eight carriers of the same cargo, fill and style share their load geometry
  const crowd=run(Array.from({length:8},(_,i)=>U({id:10+i*3,carry:9,carryType:'food',x:i*1.2})));const ks=[...crowd.layer.variants.keys()].filter(k=>k.includes('load|'));assert.ok(ks.length<=18,'shared load variants: '+ks.length);
  // far tier draws a (cheaper) load too, and the rig never reports a fallback because of loads
- const far=run([U({id:40,carry:9,carryType:'stone'})],new THREE.Vector3(0,40,150));assert.ok([...far.layer.variants.keys()].some(k=>k.includes('load|')&&k.includes('|t2|')),'far tier load');assert.equal(far.stats.fallbacks,0);
+ const far=run([U({id:40,carry:9,carryType:'stone'})],new THREE.Vector3(0,40,1500));assert.ok([...far.layer.variants.keys()].some(k=>k.includes('load|')&&k.includes('|t2|')),'far tier load');assert.equal(far.stats.fallbacks,0);
  // a unit on a cart or boat does not wear the load (the vehicle carries it)
  const cart=run([U({id:50,carry:9,carryType:'wood',haulage:'cart'})]);assert.equal([...cart.layer.variants.keys()].filter(k=>k.includes('load|')).length,0);
 });

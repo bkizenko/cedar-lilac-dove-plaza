@@ -62,8 +62,8 @@ function basket(c:V3,dBot:number,dTop:number,h:number,fill:number,kind:CarryKind
 }
 /** What the real cargo looks like heaped in a basket top: grain, stones, ore lumps, split wood. */
 function contents(c:V3,dTop:number,h:number,fill:number,kind:CarryKind,r:()=>number,out:LoadPart[]){
- const [x,y,z]=c,top=y+h*.88,mound=.05+.17*fill;
- if(kind==='food'){out.push(P('body',tone(LOAD_COL.grain,r,.06),'cone',[dTop*.96,mound*1.5,dTop*.96],[x,top-mound*.4,z],2,undefined,8));for(let i=0;i<3;i++)out.push(P('detail',shade(LOAD_COL.grain,.88+r()*.2),'cone',[.07,.05,.07],[x+(r()-.5)*dTop*.5,top+mound*.5,z+(r()-.5)*dTop*.5],0,undefined,4));return;}
+ const [x,y,z]=c,top=y+h*.88,mound=.04+.12*fill;
+ if(kind==='food'){out.push(P('body',tone(LOAD_COL.grain,r,.06),'cone',[dTop*.96,mound*1.3,dTop*.96],[x,top-mound*.3,z],2,undefined,8));for(let i=0;i<3;i++)out.push(P('detail',shade(LOAD_COL.grain,.88+r()*.2),'cone',[.07,.05,.07],[x+(r()-.5)*dTop*.5,top+mound*.5,z+(r()-.5)*dTop*.5],0,undefined,4));return;}
  const n=2+Math.round(fill*3),col=kind==='stone'?LOAD_COL.stone:kind==='copper'?LOAD_COL.copper:kind==='iron'?LOAD_COL.iron:LOAD_COL.wood;
  if(kind==='wood'){for(let i=0;i<n+2;i++){const a=i/(n+2)*Math.PI*2,rr=dTop*.28*(i%2?1:.55);out.push(cyl('body',tone(LOAD_COL.bark,r,.1),[x+Math.sin(a)*rr,top-.1,z+Math.cos(a)*rr],[x+Math.sin(a)*rr*.8+(r()-.5)*.06,top+.18+r()*.16,z+Math.cos(a)*rr*.8],.07,.06,1,5));}return;}
  for(let i=0;i<n;i++){const a=i/n*Math.PI*2+r(),rr=dTop*(.16+.1*(i%2)),s=.1+r()*.07;out.push(P('body',tone(col,r,.12),'hip',[s*1.15,s,s*1.05] as V3,[x+Math.sin(a)*rr,top-.05+(i%2)*.03,z+Math.cos(a)*rr],i<2?2:1,[0,a,0]));}
@@ -73,8 +73,8 @@ function contents(c:V3,dTop:number,h:number,fill:number,kind:CarryKind,r:()=>num
 function sack(c:V3,w:number,h:number,r:()=>number,out:LoadPart[],tied=true,skin=false){
  const [x,y,z]=c,col=tone(skin?LOAD_COL.hide:LOAD_COL.sack,r,.07),dk=skin?LOAD_COL.hideDark:LOAD_COL.sackDark;
  out.push(...blob('body',col,[x,y,z],w,h*.8,w*.8,2,7),...blob('body',shade(col,1.05),[x+w*.14,y+h*.22,z-.01],w*.62,h*.42,w*.5,1,6),...blob('body',shade(col,.93),[x-w*.17,y+h*.04,z+.03],w*.55,h*.36,w*.5,0,5));
- out.push(P('body',col,'cone',[w*.52,h*.3,w*.46],[x,y+h*.66,z],2,undefined,6));
- if(tied)out.push(P('cord',LOAD_COL.cord,'cylinder',[w*.3,.034,w*.27],[x,y+h*.72,z],1,undefined,6));
+ out.push(P('body',col,'cone',[w*.4,h*.2,w*.36],[x,y+h*.7,z],2,undefined,6));
+ if(tied)out.push(P('cord',LOAD_COL.cord,'cylinder',[w*.24,.034,w*.22],[x,y+h*.74,z],1,undefined,6));
  for(let i=0;i<3;i++){const a=(i-1)*.7;out.push(cyl('detail',dk,[x+Math.sin(a)*w*.3,y+h*.12,z-w*.36],[x+Math.sin(a)*w*.34,y+h*.58,z-w*.34],.016,.012,0,3));}
 }
 /** A jar: belly, neck, lip, two small handles; an amphora when `tall`. */
@@ -128,7 +128,7 @@ export function carryLoadParts(c:CarryChoice,seed:number):LoadParts{
    head.push(P('detail',LOAD_COL.pad,'cylinder',[.25,.055,.25],[0,y0-.045,-.005],1,undefined,8),P('detail',shade(LOAD_COL.pad,.8),'cylinder',[.255,.02,.255],[0,y0-.03,-.005],0,undefined,8));
    const tmp:LoadPart[]=[];
    if(c.kind==='food'&&v<.5)jar([0,y0,0],.3+.04*v,v<.22,r,tmp);
-   else basket([0,y0,0],.27,.42+.04*v,.26,fill,c.kind,r,tmp);
+   else basket([0,y0,0],.3,.46+.04*v,.2,fill,c.kind,r,tmp);
    // the load sits on the pad and rocks with the head
    for(const q of tmp)head.push(q);
    break;}
@@ -152,9 +152,9 @@ export function carryLoadParts(c:CarryChoice,seed:number):LoadParts{
    const n=c.pieces,cz=-.27,col=c.kind==='stone'?LOAD_COL.stone:c.kind==='copper'?LOAD_COL.copper:LOAD_COL.iron;
    for(const s of [-1,1])out.push(cyl('body',LOAD_COL.wood,[s*.15,.3,cz+.03],[s*.15,1.0,cz-.02],.05,.045,2,6));
    for(const y of [.36,.62,.9])out.push(cyl('body',LOAD_COL.wood,[-.19,y,cz],[.19,y,cz],.042,.042,1,6));
-   for(let i=0;i<n;i++){const col2=tone(col,r,.12),w=.2+.07*r(),h=.17+.05*r(),dz=.18+.04*r(),x=((i%2)-.5)*.1*(n>2?1:0),y=.38+i*.145+(i%2)*.01;
+   for(let i=0;i<n;i++){const col2=tone(col,r,.12),w=.19+.06*r(),h=.14+.04*r(),dz=.17+.04*r(),x=((i%2)-.5)*.1*(n>2?1:0),y=.38+i*.12+(i%2)*.01;
     out.push(P('body',col2,c.kind==='stone'?'box':'hip',[w,h,dz],[x,y,cz-.2],2,[0,(r()-.5)*.35,0],6));}
-   if(c.kind==='stone')for(let i=0;i<n;i++)out.push(P('detail',shade(LOAD_COL.stoneLight,.9+r()*.15),'hip',[.07,.04,.06],[((i%2)-.5)*.08,.47+i*.145,cz-.33],0));
+   if(c.kind==='stone')for(let i=0;i<n;i++)out.push(P('detail',shade(LOAD_COL.stoneLight,.9+r()*.15),'hip',[.07,.04,.06],[((i%2)-.5)*.08,.45+i*.12,cz-.32],0));
    for(const y of [.5,.78])out.push(P('cord',LOAD_COL.cord,'cylinder',[.42,.03,.2],[0,y,cz-.18],1,undefined,8));
    loops([.13,.92,cz+.02],[.115,.6,.205],out);
    break;}

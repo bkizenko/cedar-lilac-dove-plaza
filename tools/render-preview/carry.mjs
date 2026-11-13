@@ -67,7 +67,7 @@ for (const mode of modes) {
   }
   if (sheets.includes('all') || sheets.includes('heads')) {
     const rows = [], civs = ['sandrill', 'hanrei', 'rusvolt', 'steppan', 'sahelan', 'quillan'];
-    for (const [nm, d] of [['near', 18], ['mid', 52], ['far', 105]]) {
+    for (const [nm, d] of [['near', 20], ['mid', 140], ['far', 300]]) {
       const fov = 2 * Math.atan(.62 / d) * 180 / Math.PI * 1.0;
       rows.push({ label: `heads at the ${nm} tier (camera ${d} m)`, buf: await row(mode, 'front', civs.map(civ => ({ clip: 'walk', phase: .25, civ })), { dx: Math.max(.7, d * .045), cam: { pos: [0, 1.75, d], target: [0, 1.75, 0], fov: Math.max(2.4, fov * 6.2) } }) });
     }
