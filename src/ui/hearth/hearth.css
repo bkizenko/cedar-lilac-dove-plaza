@@ -502,3 +502,8 @@
 .hw-music{display:contents}
 .hw-music-panel label{display:grid;gap:var(--hw-s1,4px);font-size:16px}
 .hw-music-panel .hw-btn-wide{min-height:52px;font-size:16px}
+
+/* Test lab shortcut: left column under the village rail (rail ends ~450px at desktop, ~440px on phones); clear of map, music, speed, alerts. */
+.hw-testlab{position:absolute;left:var(--hw-s3);top:462px;z-index:2;pointer-events:auto;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:var(--hw-s2);min-width:52px;min-height:52px;padding:0 var(--hw-s3);border-radius:var(--hw-r-m);font-size:16px;font-weight:700;color:var(--hw-text);border:1px solid var(--hw-line-strong);background:var(--hw-panel);box-shadow:var(--hw-shadow)}
+.hw-testlab:hover{border-color:var(--hw-gold-2)}.hw-testlab:disabled{opacity:.6;cursor:default}
+@media (max-width:760px){.hw-testlab{left:8px;top:452px}}

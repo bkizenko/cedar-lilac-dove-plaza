@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {surveyFieldTopography} from '../game/plotTopography';
+import {terraceFrame,terraceHeightAt,fieldDownhill,type TerraceFrame} from '../game/terraceFarming';
 import type {FieldSurface} from './fieldSurface';
 import {painterCropGeometry,painterCropColor,painterCropScale,painterWeedGeometry,PAINTER_CROP_SEGMENT} from './painterCrops';
 import {addPainterSway,painterSway} from './painterVegetationMaterial';
@@ -12,7 +13,8 @@ import {ROCKS} from '../game/mapgen/geology/rocks';
 export type FieldCrop='grain'|'pulses'|'tubers';
 export const CROP_ART_RULES={maxPlantInstances:8192,maximumPlantsPerField:512,edgeMarginMetres:.45,maxDistanceMetres:320,
  rows:{grain:{rowMetres:.95,plantMetres:.82},pulses:{rowMetres:1.3,plantMetres:1.15},tubers:{rowMetres:1.45,plantMetres:1.3}}} as const;
-export type RenderField={id:number;type:string;x:number;z:number;w:number;d:number;hp:number;team:number;build:number;plannedCost?:unknown;cropType?:FieldCrop;fallowYear?:number;fertility?:number;crop?:{kind?:FieldCrop;year?:number;water?:number;planted:number;tended:number;ripened:boolean;remaining:number}};
+/** `site.terrace` (terrain model v2): the field stands on level terrace strips, so crops sit on the treads, not on the hillside between them. */
+export type RenderField={site?:{foundation?:string;terrace?:{k:string;n:number}};id:number;type:string;x:number;z:number;w:number;d:number;hp:number;team:number;build:number;plannedCost?:unknown;cropType?:FieldCrop;fallowYear?:number;fertility?:number;crop?:{kind?:FieldCrop;year?:number;water?:number;planted:number;tended:number;ripened:boolean;remaining:number}};
 type FieldGround={world:{heights:Float32Array};state:{time:number;buildings:RenderField[]};height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;navigationRevision?:()=>number};
 export function fieldCropKind(field:RenderField):FieldCrop{return field.crop?.kind??field.cropType??'grain';}
 export function fieldCropGrowth(field:RenderField){const c=field.crop;return c?.ripened?(c.remaining>0?1:.04):.04+.75*(c?.planted||0)+.2*(c?.tended||0);}
@@ -86,6 +88,14 @@ export class ContourFields {
  private style:'classic'|'painterly';private scene:THREE.Scene;private surface:FieldSurface;private meshes=new Map<FieldCrop,THREE.InstancedMesh>();
  private cache=new WeakMap<RenderField,{key:string;heights:Float32Array;revision:number;angle:number;origin:{x:number;z:number};grade:number;sites:{x:number;z:number}[]}>();
  private surveys=new WeakMap<RenderField,{key:string;heights:Float32Array;revision:number;survey:Survey}>();
+ private terraces=new WeakMap<RenderField,{key:string;heights:Float32Array;revision:number;frame:TerraceFrame|null}>();
+ /** Ground height for plants of a field: the level tread on a terraced field, the hillside otherwise. */
+ private plantY(ground:FieldGround,field:RenderField,x:number,z:number){
+  const t=field.site?.terrace;if(!t||t.k==='none'||field.site?.foundation!=='strips')return ground.height(x,z);
+  const key=`${field.x}/${field.z}/${field.w}/${field.d}/${t.n}`,revision=ground.navigationRevision?.()??0;let old=this.terraces.get(field);
+  if(!old||old.key!==key||old.heights!==ground.world.heights||old.revision!==revision){const h=(px:number,pz:number)=>ground.height(px,pz),plot={x:field.x,z:field.z,w:field.w,d:field.d};old={key,heights:ground.world.heights,revision,frame:terraceFrame(h,plot,t.n,fieldDownhill(h,plot))};this.terraces.set(field,old);}
+  return terraceHeightAt((px,pz)=>ground.height(px,pz),{x:field.x,z:field.z,w:field.w,d:field.d},old.frame!,x,z)+.03;
+ }
  /** Painterly only: boundary meshes by `${kind}:${variant|lo}`, weed tufts, and per-field instance caches (rebuilt only when the field, terrain, stage, season or detail tier changes). */
  private bounds=new Map<string,THREE.InstancedMesh>();private weedMesh?:THREE.InstancedMesh;
  private cropCache=new WeakMap<RenderField,FieldInstances>();private weedCache=new WeakMap<RenderField,FieldInstances>();private boundCache=new WeakMap<RenderField,{serial:number;key:string;plan:unknown;items:BoundaryItem[]}>();
@@ -150,7 +160,7 @@ export class ContourFields {
    const growth=fieldCropGrowth(field);
    this.rotation.setFromAxisAngle(this.up,-plan.angle);
    this.color.set(kind==='grain'?(field.crop?.ripened?'#e2c15a':'#a8c17c'):kind==='pulses'?(field.crop?.ripened?'#bac183':'#9aba86'):'#91b887');
-   for(const site of plan.sites){if(total>=CROP_ART_RULES.maxPlantInstances)break;this.position.set(site.x,ground.height(site.x,site.z),site.z);this.scale.set(1,Math.max(.025,growth),1);this.matrix.compose(this.position,this.rotation,this.scale);mesh.setMatrixAt(counts[kind],this.matrix);
+   for(const site of plan.sites){if(total>=CROP_ART_RULES.maxPlantInstances)break;this.position.set(site.x,this.plantY(ground,field,site.x,site.z),site.z);this.scale.set(1,Math.max(.025,growth),1);this.matrix.compose(this.position,this.rotation,this.scale);mesh.setMatrixAt(counts[kind],this.matrix);
     mesh.setColorAt(counts[kind]++,this.color);total++;}
   }
   for(const [kind,mesh]of this.meshes){mesh.count=counts[kind];mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
@@ -188,7 +198,7 @@ export class ContourFields {
      const ps=painterCropScale(growth),crop=stage==='stubble'?{...field.crop!,ripened:true,remaining:0}:field.crop,mat=new Float32Array(sites.length*16),col=new Float32Array(sites.length*3),ux=Math.cos(plan.angle),uz=Math.sin(plan.angle);
      sites.forEach((site,i)=>{
       const h1=hash01(site.x,site.z,3),h2=hash01(site.x,site.z,5),h3=hash01(site.x,site.z,7),h4=hash01(site.x,site.z,11),along=(h1-.5)*.16,across=(h2-.5)*.08,x=site.x+ux*along-uz*across,z=site.z+uz*along+ux*across;
-      this.position.set(x,ground.height(x,z),z);this.rotation.setFromAxisAngle(this.up,-plan.angle+(h3-.5)*.2);this.scale.set(ratio,ps.y*(.86+.28*h4),ps.xz*(.88+.24*h1));this.matrix.compose(this.position,this.rotation,this.scale);this.matrix.toArray(mat,i*16);
+      this.position.set(x,this.plantY(ground,field,x,z),z);this.rotation.setFromAxisAngle(this.up,-plan.angle+(h3-.5)*.2);this.scale.set(ratio,ps.y*(.86+.28*h4),ps.xz*(.88+.24*h1));this.matrix.compose(this.position,this.rotation,this.scale);this.matrix.toArray(mat,i*16);
       painterCropColor(kind,crop,growth,Math.abs(Math.sin(site.x*12.9898+site.z*78.233)*43758.5453)%1,this.color);col[i*3]=this.color.r;col[i*3+1]=this.color.g;col[i*3+2]=this.color.b;
      });
      c={serial:this.serial++,key,plan,n:sites.length,mat,col};this.cropCache.set(field,c);
@@ -206,7 +216,7 @@ export class ContourFields {
       const cx=(hash01(field.id,i>>2,201)-.5)*(field.w-1.6),cz=(hash01(field.id,i>>2,203)-.5)*(field.d-1.6),x=field.x+cx+(hash01(field.id,i,205)-.5)*1.4,z=field.z+cz+(hash01(field.id,i,207)-.5)*1.4;
       if(fieldEdgeDepth(field,mask,x,z)<.5)continue;
       const s=.55+.9*hash01(field.id,i,209)*(stage==='ripe'||stage==='growing'?1.2:1),k=.85+.3*hash01(field.id,i,211);
-      this.position.set(x,ground.height(x,z)-.01,z);this.rotation.setFromAxisAngle(this.up,hash01(field.id,i,213)*6.28);this.scale.set(s,s*(.8+.5*hash01(field.id,i,215)),s);this.matrix.compose(this.position,this.rotation,this.scale);this.matrix.toArray(mat,n*16);
+      this.position.set(x,this.plantY(ground,field,x,z)-.01,z);this.rotation.setFromAxisAngle(this.up,hash01(field.id,i,213)*6.28);this.scale.set(s,s*(.8+.5*hash01(field.id,i,215)),s);this.matrix.compose(this.position,this.rotation,this.scale);this.matrix.toArray(mat,n*16);
       col[n*3]=Math.min(1.3,T[0]*k);col[n*3+1]=Math.min(1.3,T[1]*k);col[n*3+2]=Math.min(1.3,T[2]*k);n++;
      }
      w={serial:this.serial++,key,plan,n,mat,col};this.weedCache.set(field,w);
