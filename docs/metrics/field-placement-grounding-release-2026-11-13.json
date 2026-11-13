@@ -1,0 +1,127 @@
+{
+  "release": {
+    "release": "2026-11-13T04-59-30-518Z-5b82b90",
+    "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T04-59-30-518Z-5b82b90",
+    "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T04-22-31-462Z-03f3198",
+    "commit": "5b82b90a27216ac73eb1f53542db08f920cdcf2e",
+    "retained": {
+      "linked": 1473,
+      "copied": 0,
+      "existing": 12
+    }
+  },
+  "artifactBuiltAtCommit": "614f5e00c1f08879de566151d0ff46ceb714e537",
+  "scriptOnlyFollowup": "77c0235d2cdfaff508aa6b11dac70ae40e8c4c45; product source/package/vite identical to built commit",
+  "batch": {
+    "passed": 23,
+    "total": 23,
+    "nativePlacementAndGrounding": 20,
+    "nativeIrrigationPublicGuard": 1,
+    "built": 2
+  },
+  "additionalSourceRuns": {
+    "initialIncoming": {
+      "passed": 41,
+      "total": 41,
+      "qualification": "Includes experimental irrigation component tests, not playable irrigation acceptance; overlaps with focused placement tests excluded from batch total"
+    },
+    "extendedIncoming": {
+      "passed": 37,
+      "scope": "field look, foreign hull attack, raid stop bias, geology, wonder founding and trader interaction. Initial JSX guard harness failed and corrected guard passed separately; no failed entry credited."
+    }
+  },
+  "compiler": "PASS full tsc --noEmit after whole integration and minimap icon fix",
+  "build": "PASS npm run build; expected DATABASE_URL migration skip",
+  "builtEvidence": {
+    "passed": 2,
+    "total": 2,
+    "scope": "Public mouse field snapping and rotated nonsquare crafting-shelter placement on observed original53 terrain, actual footprints/payment/durable saves. Private6.25Hz is not performance evidence. No irrigation, screenshots, authored resources, terrain, fog or actors.",
+    "field": {
+      "neighbour": 12691,
+      "footprint": {
+        "id": 15363,
+        "x": -242,
+        "z": -361.8,
+        "w": 8.2,
+        "d": 8.2
+      },
+      "seedDebit": 4,
+      "snapMask": 4,
+      "previewPure": true,
+      "terrainUnchanged": true,
+      "strictDurable": true
+    },
+    "rotatedSlope": {
+      "footprint": {
+        "id": 15363,
+        "x": -286,
+        "z": -402,
+        "w": 4.8,
+        "d": 5.4
+      },
+      "observedRelief": 1.7988841174198882,
+      "cost": {
+        "food": 0,
+        "wood": 18,
+        "stone": 2,
+        "copper": 0,
+        "iron": 0
+      },
+      "ghost": {
+        "meshes": 76,
+        "vertices": 4128,
+        "finite": true,
+        "key": "workshop-oknullundefined|workshop|workshop|bench||1|timber|wet|1|||||lit|4.8|5.4|0|-1|village|skin|civ:steppan~19bnqra|-|0||h120|172|-572,-804"
+      },
+      "terrainUnchanged": true,
+      "previewPure": true,
+      "strictDurable": true
+    },
+    "originalUnchanged": true,
+    "errors": [],
+    "shaderErrors": []
+  },
+  "network": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T04-59-30-518Z-5b82b90",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "irrigation": {
+    "publicReleaseReady": false,
+    "requiredRemainder": [
+      "Real reserved adults physically dig; no duplicate passive labor per ditch",
+      "Freshwater sources and observed intakes only",
+      "Strict geometry/field identity checks",
+      "Public controls after connected physical implementation"
+    ],
+    "owner": "Grok W3, Claude architecture; source remains retained, objective unchanged"
+  },
+  "limitations": [
+    "Native geometry tests do not establish art beauty or smooth 100-resident performance",
+    "Only actual described public field/rotation/cost/save scopes credited",
+    "Full irrigation and full campaign remain unfinished",
+    "37/98 unchanged"
+  ]
+}

@@ -9413,6 +9413,17 @@
       "supportingPassed": 17,
       "supportingTotal": 17,
       "firstReleaseGates": "37/98 unchanged"
+    },
+    {
+      "date": "2026-11-13",
+      "commit": "5b82b90a27216ac73eb1f53542db08f920cdcf2e",
+      "release": "2026-11-13T04-59-30-518Z-5b82b90",
+      "status": "live-partial",
+      "summary": "5b82b90a27216ac73eb1f53542db08f920cdcf2e published as 2026-11-13T04-59-30-518Z-5b82b90 on 8086/8101. 23/23 focused checks (20 placement/grounding native, 1 public irrigation guard, 2 actual built scopes); full tsc/build PASS. Public mouse field placement on the actual original 53-person village snapped to neighbor12691 at (-242,-361.8), paid 4 seeds once, and retained the exact 8.2m footprint through strict reload. Public rotated workshop placement on 1.799m actual relief paid 18 logs/2 stone once; carved ghost geometry finite and saved footprint matched. Preview/cancel and sampled terrain unchanged; original file SHA preserved. Small huts/houses/stations have no generic filled plinth, existing wall supports and hill admission retained; large hall/keep platforms require explicit size policy. Irrigation public controls are gated OFF: duplicate abstract labor, freshwater/observed intake and saved geometry issues remain unresolved under Grok W3/Claude architecture. Incoming source checks passed separately (41 initial cases; extended37 plus separately corrected guard1); overlaps are not added to focused count. Whole integration through3eb84711 included. No new full gate, campaign, historical balance, art beauty or 100-resident FPS credit; 37/98 unchanged.",
+      "evidence": "docs/metrics/field-placement-grounding-release-2026-11-13.json",
+      "batchPassed": 23,
+      "batchTotal": 23,
+      "firstReleaseGates": "37/98 unchanged"
     }
   ],
   "status_update_policy": {

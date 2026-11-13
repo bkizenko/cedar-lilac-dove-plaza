@@ -99,3 +99,5 @@ Updated 2026-11-13T02:53:05.633863+00:00
 LIVE 2026-11-13T03-32-14-127Z-7c81460 /7c81460f bothportsverified: newborn equipmentconservation and paidseedtrial originalsite;43/43scope+19/19supporting, tsc/buildPASS, original53preserved;37/98 unchanged. docs/metrics/trial-newborn-release-2026-11-12.json
 
 LIVE 2026-11-13T04-22-31-462Z-03f3198 /03f31981 bothportsverified: actualNPCrecord purchase4physical logs→sameasset home→publicpaidstudy/usefulreplication;11/11scope+17/17supporting, fulltsc/buildPASS, original53preserved;37/98 unchanged. docs/metrics/method-record-purchase-release-2026-11-12.json
+
+LIVE 2026-11-13T04-59-30-518Z-5b82b90 /5b82b90a: actual public field snap and rotated slope placement, exact costs and strict saves; small-building platform correction. Focused23/23, tsc/build PASS; irrigation remains gated OFF and unfinished; 37/98 unchanged. docs/metrics/field-placement-grounding-release-2026-11-13.json
