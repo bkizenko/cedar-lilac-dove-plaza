@@ -47,6 +47,8 @@ export function bodyParts(c:KitCtx){
   bones[arm].push(Q(upper,'cylinder',[.074*lt,.16,.095*lt],[ax,.71,0],2,undefined,6),Q(lower,'cylinder',[.056*lt,.16,.074*lt],[ax,.55,0],2,undefined,6),Q(sk,'box',[.07*hand,.075*hand,.075*hand],[ax,.48,.01],1,undefined,undefined,1),
    // near only: a rounded mitten fist instead of the box hand (24 vs 12 tris); mid keeps the box so the far/mid budgets are unchanged
    Q(sk,'cylinder',[.066*hand,.07*hand,.072*hand],[ax,.4825,.012],0,undefined,6));
+  // near only (lane C arm pass): a shoulder cap rounds the yoke seam and an elbow knuckle breaks the straight tube; both sit inside the existing silhouette (no reach change), tinted like the segment they cover
+  bones[arm].push(Q(upper,'cylinder',[.082*lt,.07,.1*lt],[ax,.775,0],0,undefined,6),Q(lower,'cylinder',[.066*lt,.05,.082*lt],[ax,.628,0],0,undefined,6));
   if(cut.sleeve==='wide'&&covered)bones[arm].push(Q(pal.cloth2,'cone',[.15,.1,.15],[ax,.42,0],1,[Math.PI,0,0],6),Q(pal.trim,'cylinder',[.15,.02,.15],[ax,.42,0],0,undefined,6));
  }
  const torsoCol=covered?cloth:sk,hipCol=cut.lower!=='none'||covered?cloth:sk;
