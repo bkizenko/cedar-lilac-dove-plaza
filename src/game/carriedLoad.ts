@@ -29,7 +29,7 @@ function charcoalLoad(u:Unit){const p=charcoalLoads.get(u);if(!p?.charcoal||p.ac
  * gear capacity changes the burden fraction rather than creating inventory. */
 export const CARRIED_LOAD_RULES={itemBatchUnits:40,waterLiters:24,provisionFood:24,personMaximumPenalty:.32,maximumBurdenFraction:1.5,minimumPersonPace:.52,boatPassengerUnits:1.5,boatCargoUnitsPerSeat:5,boatMaximumPenalty:.38,minimumBoatPace:.5}as const;
 /** Tunable abstract item-volume units; carried equipment is not worn protection. */
-export function equipmentLoadUnits(u:Unit){return (u.armorCargoId===undefined?0:EQUIPMENT_LOAD_RULES.armor)+(u.farmToolCargoId===undefined?0:EQUIPMENT_LOAD_RULES.farmTool)+Object.entries(u.weaponCargo||{}).reduce((n,[kind,amount])=>n+(amount||0)*(EQUIPMENT_LOAD_RULES.weapons[kind as keyof typeof EQUIPMENT_LOAD_RULES.weapons]||0),0);}
+export function equipmentLoadUnits(u:Unit){return (u.caravanArmed?(u.type==='spearman'?EQUIPMENT_LOAD_RULES.weapons.spears:u.type==='archer'?EQUIPMENT_LOAD_RULES.weapons.bows:u.type==='swordsman'?EQUIPMENT_LOAD_RULES.weapons.blades:0):0)+(u.armorCargoId===undefined?0:EQUIPMENT_LOAD_RULES.armor)+(u.farmToolCargoId===undefined?0:EQUIPMENT_LOAD_RULES.farmTool)+Object.entries(u.weaponCargo||{}).reduce((n,[kind,amount])=>n+(amount||0)*(EQUIPMENT_LOAD_RULES.weapons[kind as keyof typeof EQUIPMENT_LOAD_RULES.weapons]||0),0);}
 export function carriedLoadUnits(u:Unit){
  const copper=copperStudyHeld(u),prototype=copper.copper/GATHER.copper.carry+copper.wood/GATHER.wood.carry+copper.charcoal/CARRIED_LOAD_RULES.itemBatchUnits;
  const house=u.housingCargo?.materials;const housing=house?house.wood/GATHER.wood.carry+house.stone/GATHER.stone.carry+house.plantFibre/CARRIED_LOAD_RULES.itemBatchUnits:0;
