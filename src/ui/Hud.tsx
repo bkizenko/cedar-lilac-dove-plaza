@@ -842,7 +842,7 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
               <div className="building-actions mt-2 flex flex-col gap-2">
                 {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}
                 {sel.type==='watchtower'&&engine&&<TowerPlatformReadout engine={engine}/>}
-                {sel.completed&&engine?.game.state.selBld&&expandablePlot(engine.game.state.selBld.type)&&<PlotControls game={engine.game} building={engine.game.state.selBld} refresh={()=>engine.pushHud()}/>}
+                {sel.completed&&engine?.game.state.selBld&&expandablePlot(engine.game.state.selBld.type)&&<PlotControls game={engine.game} building={engine.game.state.selBld} engine={engine} refresh={()=>engine.pushHud()}/>}
                 {!sel.completed&&engine?.game.state.selBld&&<button className="min-h-11 rounded-md border border-bronze/40 px-2" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}>Build now</button>}
                 {engine&&sel.buildingId&&<HousingControls engine={engine} buildingId={sel.buildingId}/>}
                 {sel.completed&&engine&&sel.buildingId&&<EraUpgradeControls engine={engine} buildingId={sel.buildingId}/>}

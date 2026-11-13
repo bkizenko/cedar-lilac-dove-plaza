@@ -210,6 +210,11 @@ export class Engine {
     this.waterDraft={state:this.game.state,kind,source:null,target:null,plan:null};this.updateGhost();this.pushHud();
   }
   cancelWaterEngineering(){this.waterDraft=null;this.pushHud();}
+  /** Field Water mode: irrigated and rain-fed plots tinted on the map. Display only. */
+  fieldWaterMode=false;
+  setFieldWaterMode(on:boolean){this.fieldWaterMode=on;this.view.setFieldWaterMode(on);this.pushHud();}
+  /** Planned irrigation ditch drawn on the terrain while the player reads the quote. */
+  previewDitch(plan:{from:{x:number;z:number};to:{x:number;z:number};ok:boolean;length:number}|null){this.view.setDitchPreview(plan&&plan.length>0?{x0:plan.from.x,z0:plan.from.z,x1:plan.to.x,z1:plan.to.z,ok:plan.ok}:null);}
   waterEngineeringStatus(){
     if(this.waterDraft&&this.waterDraft.state!==this.game.state)this.waterDraft=null;
     const d=this.waterDraft,p=d?.plan,issue=p?.issues[0]??null;
