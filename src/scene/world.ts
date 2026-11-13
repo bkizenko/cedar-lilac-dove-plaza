@@ -36,11 +36,13 @@ import {WildPlantLayer} from './wildPlants';
 import {wildPlantsEnabled,habitatKindAt} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
 import {TowerPlatformLayer} from './towerPlatformLayer';
-import {CarvedBuildingLayer,type CarvedInstance} from './carvedBuildingLayer';
+import {CarvedBuildingLayer,carvedGeometry,createCarvedMaterial,type CarvedInstance} from './carvedBuildingLayer';
 import {carvedDaylightGrade,CARVED_LIGHT_RIG} from './carvedPalette';
 import {habitatForProvince,habitatForBaseKind} from './carvedHabitat';
 import {provinceAt} from '../game/ecologicalProvinces';
 import {CARVED_TYPES} from './buildingStyleMap';
+import {villageHeraldry} from './villageIdentity';
+import {facesPlaza,nearestAnchor,plazaQuarterTurns} from './placementFacing';
 import {lineIndex,joinMaskFor,LINE_OF_TYPE,waterSideFor} from './carvedLines';
 import {fabricContext} from '@/game/buildingFabric';
 import {hearthHeating} from '@/game/survivalNeeds';
@@ -88,7 +90,10 @@ import {architectureStyle,localArchitecture} from "./architecture";
 import {TRAIL_GRID} from "@/game/trails";
 import {trailRibbons} from "@/game/trailRibbons";
 import {smoothRivers} from "@/game/channelSmoothness";
-import {buildingQuarterTurns} from "@/game/footprints";
+import {buildingQuarterTurns,turnedFootprint} from "@/game/footprints";
+import {carvedVariantFor,variantSpec} from './buildingStyleMap';
+import {buildCarvedMesh} from './carvedMesh';
+import {buildingGroundSupports} from './buildingGrounding';
 import * as THREE from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -339,6 +344,8 @@ export class WorldView {
   resourceRing!: THREE.Mesh<THREE.RingGeometry,THREE.MeshBasicMaterial>;
   workRings!: THREE.InstancedMesh;
   ghost: THREE.Group;
+  /** Terrain-fitting plinth/footing preview (world space, never rotated with the ghost) and the cache of carved ghost geometry per variant. */
+  private ghostFoot=new THREE.Group();private ghostGeo=new Map<string,THREE.BufferGeometry>();private ghostGame:Game|null=null;private ghostBox=new THREE.BoxGeometry(1,1,1);
   private linePreview: THREE.InstancedMesh | null = null;
   arrows: THREE.InstancedMesh;
   huntingStones: THREE.InstancedMesh;
@@ -542,7 +549,7 @@ export class WorldView {
     this.terrain = new THREE.Mesh();
     this.water = new THREE.Mesh();
     this.ghost = new THREE.Group();
-    this.scene.add(this.ghost);
+    this.scene.add(this.ghost,this.ghostFoot);
 
     const arrowGeo = new THREE.ConeGeometry(0.08, 0.55, 5);
     arrowGeo.rotateX(Math.PI / 2);
@@ -1922,21 +1929,17 @@ export class WorldView {
           const lineSkin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,lineEra=fabricContext(b)?.built.era??(game.tribe(b.team)?.age||0);
           if(type==='warehouse'){
             for(const m of plotModules(b))carvedList.push({worldSeed:game.state.seed,type,id:b.id*16+Math.abs(Math.round(m.x*3+m.z*7))%13,era:lineEra,footprint:{w:BUILDINGS.warehouse.w*m.sx,d:BUILDINGS.warehouse.d*m.sz},settlementSeed:b.team,
-              x:b.x+m.x,y:foundationProfile(game,b).level,z:b.z+m.z,...(lineSkin?{skin:lineSkin}:{}),yaw:0,progress:ys,b});
+              x:b.x+m.x,y:foundationProfile(game,b).level,z:b.z+m.z,...(lineSkin?{skin:lineSkin,heraldry:villageHeraldry(game.state.seed,b.team)}:{}),yaw:0,progress:ys,b});
             continue;
           }
           const inLine=!!LINE_OF_TYPE[type],join=inLine?joinMaskFor(lineIdx,b):0,gYaw=type==='gate'&&!join?gateOrientation(b.gateFacing).yawRadians:0;
           const side=type==='dock'?waterSideFor(b.x,b.z,(x,z)=>game.height(x,z)<game.waterAt(x,z)+.1):undefined;
           carvedList.push({worldSeed:game.state.seed,type,id:b.id,era:lineEra,footprint:{w:b.w,d:b.d},settlementSeed:b.team,x:b.x,y:foundationProfile(game,b).level,z:b.z,
-            ...(inLine?{join}:{}),...(type==='gate'&&b.gateOpen?{gateOpen:true}:{}),...(side?{waterSide:side}:{}),...(lineSkin?{skin:lineSkin}:{}),yaw:gYaw,progress:ys,b});
+            ...(inLine?{join}:{}),...(type==='gate'&&b.gateOpen?{gateOpen:true}:{}),...(side?{waterSide:side}:{}),...(lineSkin?{skin:lineSkin,heraldry:villageHeraldry(game.state.seed,b.team)}:{}),yaw:gYaw,progress:ys,b});
           continue;
         }
         if(this.renderStyle==='carved'&&!modular&&!b.bridge&&!fort&&CARVED_TYPES.includes(type)&&!CARVED_KEEP_CURRENT.has(type)){
-          const fab=fabricContext(b),mill=type==='watermill'||type==='windmill';
-          const skin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,mourn=!!skin&&(this.mourning.get(b.team)?.until??0)>game.state.time;
-          carvedList.push({worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
-            settlementSeed:b.team,...(()=>{const h=game.world.ecology?habitatForProvince(provinceAt(game.world.ecology,b.x,b.z).kind):habitatForBaseKind(habitatKindAt(game,b.x,b.z));return h?{habitat:h}:{};})(),lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,
-            ...(skin?{skin,...(mourn?{mourning:true}:{}),...(b.build>=1&&b.maxHp>0?{condition:b.hp/b.maxHp}:{})}:{}),yaw:type==='watermill'?this.millFacing(game,b):buildingQuarterTurns(b)*Math.PI/2,progress:ys,...(mill&&b.build>=1?{spin:this.millSpin(game,b)}:{}),b});
+          carvedList.push({...this.carvedInputFor(game,b,type,ys),b});
           continue;
         }
         const scalable=type==="farm"||modular;
@@ -2018,6 +2021,23 @@ export class WorldView {
     const list=game.state.wonders;if(!list?.length&&!this.wonderLayer)return;
     const layer=this.wonderLayer||(this.wonderLayer=new WonderLayer(this.scene));
     layer.sync(list||[],this.camera.position,t=>this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,t):null,(x,z)=>game.height(x,z),(x,z)=>game.exploredAt(x,z));
+  }
+
+  /** The ONE place a roofed building becomes carved-generator input. The finished building (syncBuildings) and the placement ghost (setGhost) both call it, so the preview is the same model, skin, heraldry and facing as what gets built. */
+  private carvedInputFor(game:Game,b:import("@/game/types").Building,type:BldType,ys:number):CarvedInstance{
+    const fab=fabricContext(b),mill=type==='watermill'||type==='windmill';
+    const skin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,mourn=!!skin&&(this.mourning.get(b.team)?.until??0)>game.state.time;
+    return {worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
+      settlementSeed:b.team,...(()=>{const h=game.world.ecology?habitatForProvince(provinceAt(game.world.ecology,b.x,b.z).kind):habitatForBaseKind(habitatKindAt(game,b.x,b.z));return h?{habitat:h}:{};})(),lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,
+      ...(skin?{skin,heraldry:villageHeraldry(game.state.seed,b.team),...(mourn?{mourning:true}:{}),...(b.build>=1&&b.maxHp>0?{condition:b.hp/b.maxHp}:{})}:{}),yaw:type==='watermill'?this.millFacing(game,b):this.dwellingYaw(game,b),progress:ys,...(mill&&b.build>=1?{spin:this.millSpin(game,b)}:{})};
+  }
+
+  /** Quarter-turn yaw of a carved building. Dwellings the player did not turn explicitly swing their door toward the village's plaza (placementFacing.ts). */
+  private dwellingYaw(game:Game,b:import("@/game/types").Building){
+    const own=buildingQuarterTurns(b);
+    if(own||!facesPlaza(b.type,b.w,b.d))return own*Math.PI/2;
+    const halls=this.styleHalls.filter(h=>h.team===b.team),anchor=nearestAnchor(b.x,b.z,halls.length?halls:[game.campOf(b.team)]);
+    return plazaQuarterTurns(b.x,b.z,anchor)*Math.PI/2;
   }
 
   private syncCarvedBuildings(list:(CarvedInstance&{b:import("@/game/types").Building})[]){
@@ -2352,7 +2372,7 @@ export class WorldView {
   }
 
   private syncGhost(_game: Game) {
-    /* ghost visibility is owned by Engine.updateGhost / setGhost */
+    this.ghostGame=_game; /* ghost visibility is owned by Engine.updateGhost / setGhost */
   }
 
   setLinePreview(points:{x:number;z:number;y:number;ok:boolean}[]){
@@ -2378,14 +2398,17 @@ export class WorldView {
       return;
     }
     this.ghost.visible = true;
-    this.ghost.position.set(x, y, z);
-    this.ghost.rotation.set(0,type==='gate'?gateOrientation(gateFacing).yawRadians:quarterTurn?Math.PI/2:0,0);this.ghost.scale.set(1,1,1);
+    const carved=this.carvedGhostInput(type,x,z,quarterTurn,size,bridge,towerPlatform);
+    this.ghost.position.set(x, carved?carved.y:y, z);
+    this.ghost.rotation.set(0,carved?carved.yaw:type==='gate'?gateOrientation(gateFacing).yawRadians:quarterTurn?Math.PI/2:0,0);this.ghost.scale.set(1,1,1);
     if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
-    const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'');
+    const carvedVariant=carved?carvedVariantFor(carved.input):null;
+    const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'')+(carvedVariant?`|${carvedVariant.key}|${Math.round(carved!.y*20)}|${Math.round(x*2)},${Math.round(z*2)}`:'');
     if (this.ghost.userData.key === key) return;
     this.clearGhost();
     this.ghost.userData.key = key;
+    if(carved&&carvedVariant){this.buildCarvedGhost(carved,carvedVariant,ok);return;}
     const meshes = this.bldMeshes.get(type);
     if (!meshes) return;
     const tint = !ok ? "#b53632" : qualityStep === null ? "#6a8a48" : new THREE.Color("#a69b46").lerp(new THREE.Color("#29df51"),qualityStep).getHex();
@@ -2444,6 +2467,30 @@ export class WorldView {
     }
   }
 
+  /** Same builder as the finished building (carvedInputFor), or null when this type keeps the classic ghost (fort lines, plots, bridges, towers on platforms, modular stores). */
+  private carvedGhostInput(type:BldType,x:number,z:number,quarterTurn:boolean,size?:{w:number;d:number},bridge?:unknown,tower?:unknown){
+    const game=this.ghostGame;
+    if(!game||this.renderStyle!=='carved'||size||bridge||tower||!CARVED_TYPES.includes(type)||CARVED_KEEP_CURRENT.has(type))return null;
+    if(['palisade','gate','stonewall','trench','moat','warehouse','dock','aqueduct','quarry','cornerstone','cairn','grove','watchtower','canal'].includes(type))return null;
+    const t=quarterTurn?turnedFootprint(type):BUILDINGS[type];
+    const fake={id:game.state.nextId,kind:'building',type,team:0,x,y:game.height(x,z),z,w:t.w,d:t.d,hp:1,maxHp:1,build:1} as unknown as import("@/game/types").Building;
+    const input=this.carvedInputFor(game,fake,type,1);
+    return {input,y:input.y,yaw:input.yaw,fake};
+  }
+  private buildCarvedGhost(c:NonNullable<ReturnType<WorldView['carvedGhostInput']>>,variant:NonNullable<ReturnType<typeof carvedVariantFor>>,ok:boolean){
+    let geo=this.ghostGeo.get(variant.key);
+    if(!geo){if(this.ghostGeo.size>48){for(const g of this.ghostGeo.values())g.dispose();this.ghostGeo.clear();}geo=carvedGeometry(buildCarvedMesh(variantSpec(variant),0));this.ghostGeo.set(variant.key,geo);}
+    const tint=new THREE.Color(ok?'#59e07a':'#f0604e'),mat=createCarvedMaterial();
+    mat.transparent=true;mat.opacity=.66;mat.depthWrite=false;mat.color.set('#ffffff').lerp(tint,.5);mat.emissive.copy(tint);mat.emissiveIntensity=.2;
+    this.ghost.add(new THREE.Mesh(geo,mat));
+    // the levelled plinth / footings the finished building will stand on, tinted the same way
+    const game=this.ghostGame;if(!game)return;
+    for(const sp of buildingGroundSupports(game,c.fake)){
+      const m=new THREE.Mesh(this.ghostBox,new THREE.MeshBasicMaterial({color:tint,transparent:true,opacity:.35,depthWrite:false}));
+      m.position.set(sp.x,sp.y,sp.z);m.rotation.y=sp.yaw;m.scale.set(sp.length,sp.height,sp.width);this.ghostFoot.add(m);
+    }
+  }
+
   private clearGhost() {
     while (this.ghost.children.length) {
       const ch = this.ghost.children[0] as THREE.Mesh;
@@ -2453,6 +2500,7 @@ export class WorldView {
       if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
       else if (mat) (mat as THREE.Material).dispose();
     }
+    for(const ch of [...this.ghostFoot.children] as THREE.Mesh[]){this.ghostFoot.remove(ch);(ch.material as THREE.Material).dispose();}
     this.ghost.userData.key = "";
   }
 
