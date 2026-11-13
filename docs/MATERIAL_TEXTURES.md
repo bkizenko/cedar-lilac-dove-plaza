@@ -14,7 +14,7 @@
 Plan scaled per building (oval or long via `Part.oval`, D-shaped back), door width, height and position, lean-to, porch, annex, hurdle, drying rack, plinth course of another material, painted band on richer huts, patched roof on poorer, finial on richer, 2-4 alternate base forms per civ. Mekhari raft hut now sits on a low sill (no stilts). All parts start at y >= 0. Measured variety (`tools/render-preview/hut-variety-score.mjs`, 12 huts per civ, mid tier, mean pairwise silhouette distance 1-IoU): **0.139 before, 0.262 after** (40 huts/civ, every civ up; min civ 0.216). The mid tier is capped at 990 by `capMidTier` after dressing.
 
 ## Workplace props (`src/scene/worksDetail.ts`)
-Forge, kiln/pottery, oven, loom, drying rack/smokehouse/tannery, sawyer, temple, market, stables, quay, tower, gate, palisade, hearth, mill, college, generic bench: seeded per building id, wear patches, inside the footprint, near-only except 140 mid triangles, held under the near ceiling. Under a CivSkin they take that society's swatches.
+Forge, kiln/pottery, oven, loom, drying rack/smokehouse/tannery, sawyer, temple, market, stables, quay, tower, gate, palisade, hearth, mill, college, generic bench: seeded per building id, inside the footprint, near-only except 140 mid triangles, held under the near ceiling. Under a CivSkin they take that society's swatches.
 
 ## Checks
 `scripts/building-textures.test.mjs`: determinism, seam tiling, memory budget, material choice, per-vertex layers for all civs, weather clamps, shader patch, hut variety (distinct, ground level, caps), legacy switches, works props for all 14 civs plus neutral, watermill wheel for all civs (rotor present at near and mid). Renders: `docs/renders/materials/` (`tools/render-preview/materials-sheets.sh`).

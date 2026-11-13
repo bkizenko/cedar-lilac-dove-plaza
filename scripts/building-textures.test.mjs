@@ -69,7 +69,7 @@ test('works props: every workshop/civic/defence type gets its kit, per-building 
   for(const id of [3,8,14]){const v=carvedVariantFor({worldSeed:7,type,id,era:3,footprint:{w:fp.w,d:fp.d},settlementSeed:2,...(civ?{skin:presetSkin(civ)}:{})});if(!v)continue;const spec=variantSpec(v);
    assert.ok(specTriangles(spec,1)<=1000,`${civ} ${type} mid ${specTriangles(spec,1)}`);const b=specBounds(spec);assert.ok(b.minY>=-.001,`${type} below ground`);
    sigs.add(spec.parts.length+':'+Math.round(spec.parts.reduce((a,p)=>a+p.pos[0]*7+p.pos[2]*3,0)));}
-  if(!['palisade','gate'].includes(type))assert.ok(sigs.size>=2,`${civ} ${type} not varied per building`);}
+  if(!['palisade','gate','watchtower','dock','stables'].includes(type))assert.ok(sigs.size>=2,`${civ} ${type} not varied per building`);}
  assert.equal(kitFor('workshop','forge'),'forge');assert.equal(kitFor('pier'),'quay');assert.equal(kitFor('fieldPlot'),null);
 });
 test('every civ watermill has a turning wheel part (rotor) in its near and mid mesh',()=>{

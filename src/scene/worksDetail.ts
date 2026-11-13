@@ -39,20 +39,17 @@ export function dressWorks(spec:BuildingSpec,trade?:string,wear=.3,wealth=.4):Bu
   case 'temple':{for(const s of[-1,1]){cyl('stone',.55,.9,[awayFromDoor(ex+s*1.9),0,front(.7)],1,8,.45);cyl('recess',.35,.1,[ex+s*1.9,.9,front(.7)],0,8);}box('stone',[3.4,.2,1.2],[ex,0,front(.7)],1);for(let i=0;i<2;i++)box('clothRed',[.08,1.7,.5],[ex+(i?1:-1)*2.6,0,front(.9)],0);cyl('stoneDark',.4,.35,[flank(.6),0,rear(-.5)],0,7);break;}
   case 'market':{const n=Math.round(range(r,2,4));for(let i=0;i<n;i++){const x=cl(-fw*.7+i*(fw*1.4)/Math.max(1,n-1)+(r()-.5)*.5,fw-.4);box(pick(r,['woodLight','woodMid']),[.7,.4,.5],[x,0,front(.5)],0,[0,(r()-.5)*.6,0]);if(r()<.6)box(pick(r,['cloth','clothRed','clothBlue']),[.4,.28,.3],[x,.4,front(.5)],0);}
    cyl('woodDark',.45,.6,[awayFromDoor(-fw*.8),0,rear(-.7)],0,8,.4);box('cloth',[.5,.35,.35],[awayFromDoor(fw*.75),0,rear(-.7)],0,[0,.4,0]);for(let i=0;i<3;i++)cyl('straw',.34,.28,[-fw*.4+i*.4,0,front(.2)],0,7);break;}
-  case 'stables':{box('straw',[.9,.6,.6],[flank(.7),0,front(-.5)],1);box('woodDark',[1.5,.4,.4],[awayFromDoor(-side*(mass.maxX-.8)),0,front(.5)],0);box('woodMid',[1.4,.08,.08],[awayFromDoor(flank(.4)),1.0,front(.9)],0);for(const s of[-1,1])box('woodMid',[.1,1.1,.1],[awayFromDoor(flank(.4))+s*.7,0,front(.9)],0);box('iron',[.18,.18,.06],[flank(.2),1.1,front(.05)],0);break;}
+  case 'stables':{box('straw',[range(r,.7,1.2),range(r,.4,.8),range(r,.5,.8)],[flank(.7),0,front(-.5)],1,[0,(r()-.5)*.6,0]);box('woodDark',[range(r,1.1,1.7),.4,.4],[awayFromDoor(-side*(mass.maxX-.8)),0,front(.5)],0);box('woodMid',[1.4,.08,.08],[awayFromDoor(flank(.4)),1.0,front(.9)],0);for(const s of[-1,1])box('woodMid',[.1,1.1,.1],[awayFromDoor(flank(.4))+s*.7,0,front(.9)],0);break;}
   case 'quay':{for(let i=0;i<3;i++)cyl('woodDark',.3,.8,[-fw*.7+i*fw*.7,0,front(.3)],0,6);cyl('cloth',.5,.12,[fw*.4,0,front(.2)],0,8);box('woodMid',[.8,.5,.6],[-fw*.3,0,rear(-.9)],1);box('woodDark',[.6,.4,.5],[fw*.5,0,rear(-.9)],0,[0,.5,0]);break;}
-  case 'tower':{box('woodDark',[.9,.5,.7],[flank(.6),0,front(.3)],0);for(let i=0;i<3;i++)add3(box,i,flank(.9),front(.3));cyl('iron',.5,.25,[flank(.6),.5,front(.3)],0,8);box('clothRed',[.06,1.4,.5],[side*(mass.maxX-.2),0,front(.1)],0);break;}
-  case 'gate':{for(const s of[-1,1]){box('iron',[.12,.12,.12],[ex+s*range(r,1.1,1.5),range(r,1.4,1.8),front(.05)],0);cyl('woodDark',.12,range(r,1.0,1.6),[ex+s*range(r,1.4,1.8),1.1,front(.2)],0,5);}box('stoneDark',[.8,.3,.5],[ex,0,front(.6)],0);break;}
+  case 'tower':{box('woodDark',[.9,.5,.7],[flank(.6),0,front(.3)],0);cyl('iron',.5,.25,[flank(.6),.5,front(.3)],0,8);box('clothRed',[.06,1.4,.5],[side*(mass.maxX-.2),0,front(.1)],0);break;}
+  case 'gate':{for(const s of[-1,1]){box('iron',[.12,.12,.12],[ex+s*range(r,1.1,1.5),range(r,1.4,1.8),front(.05)],0);cyl('woodDark',.12,range(r,1.0,1.6),[ex+s*range(r,1.4,1.8),0,front(.2)],0,5);}box('stoneDark',[.8,.3,.5],[ex,0,front(.6)],0);break;}
   case 'palisade':{const n=Math.round(range(r,3,6));for(let i=0;i<n;i++)box(pick(r,['woodDark','woodMid']),[.14,range(r,.35,.7),.14],[-fw*.7+i*fw*1.4/n+(r()-.5)*.3,range(r,1.7,2.1),front(.0)],0,[(r()-.5)*.3,0,(r()-.5)*.3]);break;}
   case 'hearth':{for(let i=0;i<4;i++)cyl('stoneDark',.3,.2,[Math.sin(i*1.57)*.7,0,Math.cos(i*1.57)*.7+front(.8)],0,6);log(flank(.6),front(.4),.12,.9,0.4);break;}
   case 'mill':{for(let i=0;i<3;i++)box('cloth',[.45,.34,.3],[awayFromDoor(-side*(mass.maxX-.5))+i*.28,0,front(.4)],0,[0,i*.4,0]);cyl('stone',1.1,.25,[flank(.9),0,front(.8)],1,9);cyl('stoneDark',.25,.3,[flank(.9),.25,front(.8)],0,6);break;}
   case 'college':{for(const s of[-1,1])box('stone',[.5,.5,.5],[ex+s*2.0,0,front(.6)],0);box('woodMid',[.8,.45,.35],[flank(.7),0,front(.5)],0);break;}
   default:{box('woodMid',[1.2,.55,.5],[flank(.7),0,front(.3)],1);for(let i=0;i<2;i++)cyl('woodDark',.4,.55,[awayFromDoor(-side*(mass.maxX-.3))+i*.45,0,front(.5)],0,8,.34);box('woodMid',[.1,1.3,.08],[flank(.2),0,front(.05)],0,[0,0,.12]);box('iron',[.3,.1,.06],[flank(.12),1.25,front(.0)],0);}
  }
- // wear: poorer or older works have patched daub on the front wall and a broken crate
- if(wear>.35&&r()<.8)box('mud',[.5+r()*.4,.4,.05],[cl(ex+range(r,-2.5,2.5),mass.maxX-.4),range(r,.3,1.0),front(.02)],0);
  if(!out.length)return spec;
  const m=out;return {...spec,parts:[...spec.parts,...m]};
- function add3(b:typeof box,i:number,x:number,z:number){b('woodMid',[.1,.1,.9],[x-.2+i*.2,.5+i*.02,z+.0],0);}
  function cl(v:number,l:number){return Math.max(-l,Math.min(l,v));}
 }

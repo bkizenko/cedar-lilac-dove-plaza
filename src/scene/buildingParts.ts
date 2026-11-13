@@ -165,7 +165,7 @@ export function structuralSignature(spec:BuildingSpec){
 export function capMidTier(parts:Part[],cap=990):Part[]{
  let mid=0;for(const p of parts)if(p.lod>=1)mid+=partTriangles(p);
  if(mid<=cap)return parts;
- const vol=(p:Part)=>p.size[0]*Math.max(.05,p.size[1])*Math.max(.05,p.size[2]),order=parts.map((p,i)=>({p,i})).filter(x=>x.p.lod===1).sort((a,b)=>vol(a.p)-vol(b.p)||a.i-b.i),out=parts.slice();
+ const vol=(p:Part)=>p.size[0]*Math.max(.05,p.size[1])*Math.max(.05,p.size[2]),order=parts.map((p,i)=>({p,i})).filter(x=>x.p.lod===1&&!x.p.anim).sort((a,b)=>vol(a.p)-vol(b.p)||a.i-b.i),out=parts.slice();
  for(const {p,i} of order){if(mid<=cap)break;out[i]={...p,lod:0};mid-=partTriangles(p);}
  return out;
 }
