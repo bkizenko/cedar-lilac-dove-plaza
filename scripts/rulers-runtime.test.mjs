@@ -664,3 +664,20 @@ test('lane A: child-ruler regency has a regent, a handover year, real limits (no
  assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'regency survives a save round-trip');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.equal(R.unrestOf(old,1),null);
 });
+
+test('lane A: shared hunting ground is derived from real herds beside both houses; it lowers the grounds-claim bar a little, moves nothing, old saves count 0',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();const none=fixture();delete none.state.worldOptions.rulersVersion;delete none.state.rulers;
+ assert.equal(R.sharedGame(none,1,2),0,'old saves: no ground');
+ const b1=g.state.buildings.find(b=>b.team===1&&b.hp>0),b2=g.state.buildings.find(b=>b.team===2&&b.hp>0);
+ if(!b1||!b2)return;
+ assert.equal(R.sharedGame(g,1,1),0);
+ const before=JSON.stringify(g.state.buildings.map(b=>[b.x,b.z]))+g.state.units.length;
+ const mx=(b1.x+b2.x)/2,mz=(b1.z+b2.z)/2,reach=R.HUNT_GROUND_REACH;
+ const near=Math.hypot(b1.x-b2.x,b1.z-b2.z)<=2*reach;
+ g.state.wildlife=[{species:'deer',hp:5,x:mx,z:mz},{species:'bird',hp:1,x:mx,z:mz},{species:'deer',hp:0,x:mx,z:mz}];
+ assert.equal(R.sharedGame(g,1,2),near?1:0,'only a living huntable beast inside both reaches counts');
+ assert.equal(R.sharedGame(g,1,2),R.sharedGame(g,2,1),'symmetric');
+ g.state.wildlife=[{species:'deer',hp:5,x:b1.x+5000,z:b1.z}];assert.equal(R.sharedGame(g,1,2),0,'far herd counts for no one');
+ assert.equal(JSON.stringify(g.state.buildings.map(b=>[b.x,b.z]))+g.state.units.length,before,'pure read: nothing moved or spawned');
+});

@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useReducer,useRef,useState,type ReactNode} from 'react';
-import {ArrowUp,ArrowDown,ArrowRight,Minus,Swords,Droplets,Wheat,Snowflake,Package,ClipboardList,Users,BookOpen,Bell,ChevronRight,X,Flag,Radar,Gem,Footprints,Coins,TriangleAlert,Newspaper} from 'lucide-react';
+import {ArrowUp,ArrowDown,ArrowRight,Minus,Swords,Droplets,Wheat,Snowflake,Package,ClipboardList,Users,Flame,Home,BookOpen,Bell,ChevronRight,X,Flag,Radar,Gem,Footprints,Coins,TriangleAlert,Newspaper} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import type {HudSnapshot} from '@/game/types';
 import {readyFoodStock} from '../FoodStoreReadout';
@@ -10,6 +10,7 @@ import {FoldHandle,FoldMin,useFold} from './fold';
 import {RES_ICON,RES_NAME} from './icons';
 import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,infoVisible,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
 import {detectAlerts,foodDays,waterDays,workloadOf,winterOutlook} from './glanceReads';
+import {firstNeeds,firstNeedsVisible,type FirstNeed,type FirstNeedKind} from './firstNeeds';
 import {OVERLAY_KEYS,paintOverlays,type OverlayKey} from './overlayModel';
 import {hasInfluenceGradient,overlaySourcesOf} from './overlayReads';
 import {simulationDaySeconds} from '@/game/calendarPacing';
@@ -120,6 +121,7 @@ export function PriorityStack({hud,engine,alerts,onOpen,hidden,extra}:{hud:HudSn
     <span className="hw-chip t-bad" title={critical.tip}>{critical.count}</span>
     <button type="button" className="hw-note-act" onClick={()=>critical.kind==='raiders'?(engine?.game.soundDefenseHorn(),engine?.pushHud()):alertAction(critical,engine)}>{critical.kind==='raiders'?'Horn':'Find'}</button>
    </article>}
+   <FirstNeedsStrip engine={engine}/>
    {(chips.length>0||idle)&&<div className="hw-chiprow" role="group" aria-label="Needs attention">
     {chips.map(a=><GameTooltip key={a.kind} title={a.tip}><button type="button" className={cx('hw-chip hw-chip-btn',a.severity==='critical'?'t-bad':'t-warn')} aria-label={a.tip} onClick={()=>alertAction(a,engine)}>{ALERT_ICON[a.kind]({size:24})}{a.kind==='harvest'?'':a.count}</button></GameTooltip>)}
     {idle&&<GameTooltip title={`${hud.idleWorkers} idle`} description="Jump to the next idle resident"><button type="button" className="hw-chip hw-chip-btn" aria-label={`${hud.idleWorkers} idle`} onClick={()=>engine?.focusIdle()}><Users size={24}/>{hud.idleWorkers}</button></GameTooltip>}
@@ -130,6 +132,23 @@ export function PriorityStack({hud,engine,alerts,onOpen,hidden,extra}:{hud:HudSn
    {extra}
   </div>}
  </aside>;
+}
+
+
+/* ====================== first five minutes: the four starting needs ====================== */
+const NEED_ICON:Record<FirstNeedKind,(p:{size:number})=>ReactNode>={water:p=><Droplets {...p}/>,fire:p=><Flame {...p}/>,shelter:p=><Home {...p}/>,food:p=><Wheat {...p}/>};
+/** Soft-priority strip for a new village: water, fire, shelter, food. Each chip has icon, word and a tooltip reason; a met need retires for the session. */
+export function FirstNeedsStrip({engine}:{engine:Engine|null}){
+ const game=engine?.game,retired=useRef(new Set<FirstNeedKind>()),slow=Math.floor(performance.now()/1000);
+ const show=useMemo<FirstNeed[]>(()=>{
+  if(!game)return [];
+  const r=firstNeedsVisible(firstNeeds(game),retired.current);retired.current=r.retired;return r.show;
+ },[game,game?.state,slow]);
+ if(!show.length)return null;
+ return <div className="hw-chiprow hw-firstneeds" role="group" aria-label="First needs">
+  <span className="hw-fn-label">First needs</span>
+  {show.map(n=><GameTooltip key={n.kind} title={n.label} description={n.hint}><button type="button" className="hw-chip hw-chip-btn t-warn" aria-label={`${n.label}: ${n.hint}`} onClick={()=>{if(engine&&n.at){engine.focusMinimap(n.at.x,n.at.z);engine.pushHud();}}}>{NEED_ICON[n.kind]({size:24})}{n.label}</button></GameTooltip>)}
+ </div>;
 }
 
 /* ====================== world pins and edge arrows ====================== */
