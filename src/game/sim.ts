@@ -245,6 +245,7 @@ import type {
   SeasonMix,
   PeaceTerm,
 } from "./types";
+import { eraText } from "./vocab";
 import { waterSurfaceAt, generateWorld, inBounds, isFertile, sampleHeight, sampleWorldHeight, type WorldData } from "./worldgen";
 
 const WALK = 520;
@@ -1033,7 +1034,7 @@ export class Game {
   }
 
   banner(text: string, t = 2) {
-    this.state.banner = text;
+    this.state.banner = eraText(text, this.state.tribes?.[0]?.age ?? this.state.age);
     this.state.bannerT = t;
   }
 
