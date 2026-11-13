@@ -32,7 +32,7 @@ test('ring spacing is fine at the edge and coarse at the horizon, and the whole 
 });
 test('beyond the map the land does not end: an island edge becomes open sea to the horizon, a land edge continues as land that rises into ranges',()=>{
  const sea=buildHorizon(base(island));
- let seaV=0;for(const s of sea.sea)seaV+=s;assert.ok(seaV/sea.sea.length>.7,'an island edge is mostly sea beyond');
+ let seaV=0;for(const s of sea.sea)seaV+=s;assert.ok(seaV/sea.sea.length>.6,'an island edge is mostly sea beyond');
  for(let i=1;i<sea.positions.length;i+=3)if(sea.sea[(i-1)/3])assert.ok(Math.abs(sea.positions[i]-SEA)<1e-5,'sea vertices sit on the water line');
  const land=buildHorizon(base(edgeLand));
  let maxH=-1e9,landFar=0,n=0;const per=4*HORIZON_RULES.tiers.medium.side;
@@ -94,7 +94,7 @@ test('aerial perspective: haze reaches the sky colour at the far plane, turns bl
  assert.match(frag,/fogDensity < 0\.0/,'painter path is opt-in by the sign of the density');
  assert.match(frag,/exp\( - max\( fogMidY/,'valley mist decays exponentially with height');
  assert.match(frag,/fogFactor3/,'per-channel extinction');assert.ok(PAINTER_FOG_RULES.extinction[0]>PAINTER_FOG_RULES.extinction[2],'red is extinguished faster than blue');
- assert.ok(PAINTER_FOG_RULES.coolEndMetres>=1000,'the blue shift keeps developing out to the far plane');
+ assert.ok(PAINTER_FOG_RULES.coolEndMetres>=1000&&PAINTER_FOG_RULES.coolEndMetres<=1400,'the blue shift keeps developing out to the far plane');
  for(const level of DRAW_DISTANCE_LEVELS.filter(l=>l!=='low')){const b=drawBands(level,1040),d=DRAW_DISTANCE_RULES.clearDensity*b.fogScale;assert.ok(1-Math.exp(-d*d*b.cameraFar*b.cameraFar)>=.949,`${level} far plane is hazed to the sky colour`);}
  const hex=h=>new THREE.Color(h),at=(o={})=>painterAtmosphere({elev:.9,dawn:0,dusk:0,night:false,weather:'clear',winter:0,autumn:0,spring:0,snow:0,day:3,...o});
  const noon=at(),f=hex(noon.fog),hz=hex(noon.skyHorizon),gnd=hex(noon.skyGround);

@@ -63,7 +63,7 @@ export class HorizonRing{
    const cone=new THREE.ConeGeometry(1,1,6,1,true);cone.translate(0,.5,0);
    const m=new THREE.InstancedMesh(cone,this.canopyMat,geo.canopies.length),mat=new THREE.Matrix4(),q=new THREE.Quaternion(),p=new THREE.Vector3(),s=new THREE.Vector3(),c=new THREE.Color();
    geo.canopies.forEach((k,i)=>{
-    p.set(k.x,k.y,k.z);q.setFromAxisAngle(new THREE.Vector3(0,1,0),k.tone*6.28);s.set(k.r,k.h*1.15,k.r);mat.compose(p,q,s);m.setMatrixAt(i,mat);
+    p.set(k.x,k.y,k.z);q.setFromAxisAngle(new THREE.Vector3(0,1,0),k.tone*6.28);s.set(k.r,k.h,k.r);mat.compose(p,q,s);m.setMatrixAt(i,mat);
     const hi=Math.max(0,Math.min(1,(k.y-seaY-30)/130)),r=.13+k.tone*.06-hi*.02,gr=.27+k.tone*.1-hi*.06,b=.14+k.tone*.04;
     c.setRGB(r,gr,b);m.setColorAt(i,c);
    });

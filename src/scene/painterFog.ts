@@ -8,7 +8,7 @@ export const PAINTER_FOG_RULES={
  /** valley mist: extra optical depth that decays exponentially with the height of the sight line above the water line (scale height `valleyScaleMetres`), so mist pools in basins and over water and thins smoothly up a hill, with no height step */
  valleyBaseMetres:3,valleyScaleMetres:34,valleyBoost:1.5,
  /** Rayleigh-like aerial perspective: the in-scattered light turns bluer with distance (and, looking up at a ridge, towards the zenith), and red is extinguished a little faster than blue */
- coolStartMetres:70,coolEndMetres:1500,coolStrength:.8,upBlueStrength:.45,extinction:[1.1,1.0,.9] as readonly number[],
+ coolStartMetres:60,coolEndMetres:1100,coolStrength:.85,upBlueStrength:.45,extinction:[1.1,1.0,.9] as readonly number[],
 } as const;
 let installed=false;
 export function installPainterFog(){

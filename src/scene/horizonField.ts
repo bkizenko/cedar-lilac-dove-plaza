@@ -21,18 +21,20 @@ export const HORIZON_RULES={
   ultra:{side:192,rings:34,growth:1.11,canopyCap:7200},
  } as Record<HorizonTierName,HorizonTier>,
  /** metres over which the carried edge heights give way to the far field */
- blendMetres:560,
+ blendMetres:600,carryDecayMetres:170,
  /** metres over which an edge that is sea (or land) keeps biasing the continent mask towards sea (or land) */
- carryMetres:1300,
+ carryMetres:1500,
  /** how far under the transparent continuation the ring lies where both draw land, so the two never z-fight */
  underContinuation:.45,
  /** canopy bands: outer distance beyond the edge (m) and cell size (m); crowns grow with distance because they stand for forest masses, not single trees */
  canopyBands:[{to:260,cell:22},{to:700,cell:40},{to:1500,cell:80},{to:4200,cell:150}] as readonly {to:number;cell:number}[],
  /** ground heights above water for the snowline and tree line */
  snowlineMetres:250,treelineMetres:190,
- mountainMetres:330,hillMetres:34,
+ mountainMetres:210,hillMetres:34,
  /** triangle cost of one canopy blob (open 6-sided cone) */
  canopyTriangles:6,
+ /** a forest mass stands about as tall as a canopy (m), however wide the blob: far masses read as a low dark mat, never as peaks */
+ canopyMaxHeight:26,
 } as const;
 export type HorizonInput={
  seed:number;half:number;
@@ -63,10 +65,12 @@ export function ringOffsets(extent:number,rings:number,growth:number){
 /** Far-field ground height (metres, absolute) at a point `t` metres beyond the blended edge. `carry` is +1 when the edge is land, -1 when sea. */
 export function farHeight(seed:number,seaY:number,x:number,z:number,t:number,carry:number){
  const ox=seed%977*13.7,oz=seed%653*9.1;
- const continent=fbm(x/2900+ox,z/2900+oz,3),mask=continent-.5+carry*.21*(1-sstep(0,HORIZON_RULES.carryMetres,t))+(fbm(x/520+oz,z/520-ox,2)-.5)*.1;
+ const continent=fbm(x/2900+ox,z/2900+oz,3),mask=continent-.5+carry*(carry>0?.21:.3)*(1-sstep(0,HORIZON_RULES.carryMetres,t))+(fbm(x/520+oz,z/520-ox,2)-.5)*.1;
  const hills=fbm(x/330+oz,z/330+ox,3);
- const range=fbm(x/1700-ox,z/1700+oz,3),ridgeNoise=1-Math.abs(2*fbm(x/640+ox*.3,z/640-oz*.3,4)-1);
- const mount=sstep(.46,.66,range)*sstep(.02,.2,mask)*Math.pow(ridgeNoise,1.5);
+ // broad massifs with rounded crests (low-octave noise, ridge only as a gentle modulation): no saw teeth at the ring's 25-60 m vertex spacing
+ const range=fbm(x/2000-ox,z/2000+oz,2),rn=fbm(x/1100+ox*.3,z/1100-oz*.3,2),ridgeBase=1-Math.abs(2*rn-1),crest=ridgeBase*ridgeBase*(3-2*ridgeBase);
+ // ranges only stand up beyond the first few hundred metres: near the map the far field is hills, so the mountains read as distant
+ const mount=sstep(.44,.7,range)*sstep(.02,.2,mask)*(.4+.6*crest)*sstep(250,950,t);
  const land=sstep(-.005,.06,mask);
  const coast=seaY+land*(5+hills*HORIZON_RULES.hillMetres)+sstep(.03,.2,mask)*hills*22;
  const sea=seaY-2-Math.max(0,-mask)*60;
@@ -78,7 +82,9 @@ export function horizonHeight(inp:Pick<HorizonInput,'seed'|'half'|'width'|'seaY'
  if(dd<=width)return inp.inner(x,z);
  const bx=Math.max(-outer,Math.min(outer,x)),bz=Math.max(-outer,Math.min(outer,z)),b=inp.inner(bx,bz),t=dd-width;
  const carry=b>seaY+.3?1:-1,far=farHeight(seed,seaY,x,z,t,carry);
- return lerp(b,far,sstep(0,HORIZON_RULES.blendMetres,t));
+ // the edge's deviation from the far field decays with distance, so a hump at the edge is not extruded into a long wall
+ const f0=farHeight(seed,seaY,bx,bz,0,carry),dev=b-f0,k=Math.exp(-t/HORIZON_RULES.carryDecayMetres);
+ return far+dev*k*(1-sstep(HORIZON_RULES.blendMetres*.6,HORIZON_RULES.blendMetres,t));
 }
 const PAL={
  grass:[.36,.47,.22],dry:[.5,.49,.27],forest:[.2,.34,.19],pine:[.15,.27,.17],rock:[.46,.43,.39],rockHigh:[.56,.54,.52],snow:[.86,.89,.93],sand:[.72,.66,.46],
@@ -111,18 +117,17 @@ export function buildHorizon(inp:HorizonInput):HorizonGeometry{
  const vcount=(N+1)*per,positions=new Float32Array(vcount*3),colors=new Float32Array(vcount*3),sea=new Float32Array(vcount);
  const H=(x:number,z:number)=>horizonHeight(inp,x,z);
  const under=(x:number,z:number,h:number)=>width>0&&edgeDistance(half,x,z)<=width&&h>seaY+.2?h-HORIZON_RULES.underContinuation:h;
- for(let i=0;i<=N;i++){
-  const rho=half+offs[i];
-  for(let s=0;s<per;s++){
-   const side=Math.floor(s/S),f=(s%S)/S;let x:number,z:number;
-   if(side===0){x=rho;z=-rho+2*rho*f;}else if(side===1){x=rho-2*rho*f;z=rho;}else if(side===2){x=-rho;z=rho-2*rho*f;}else{x=-rho+2*rho*f;z=-rho;}
-   const h=H(x,z),sp=Math.max(6,offs[Math.min(N,i+1)]-offs[Math.max(0,i-1)])*.6+6;
-   const slope=Math.hypot(H(x+sp,z)-H(x-sp,z),H(x,z+sp)-H(x,z-sp))/(2*sp);
-   const g=horizonGround(seed,seaY,x,z,h,slope),v=i*per+s;
-   const y=g.sea?seaY:under(x,z,h);
-   positions[v*3]=x;positions[v*3+1]=y;positions[v*3+2]=z;
-   colors[v*3]=g.rgb[0];colors[v*3+1]=g.rgb[1];colors[v*3+2]=g.rgb[2];sea[v]=g.sea;
-  }
+ // pass 1: ground height at every vertex (one evaluation each); pass 2: slope from the neighbouring vertices, colour, sea flag
+ const hs=new Float32Array(vcount),at=(i:number,s:number)=>{const rho=half+offs[i],side=Math.floor(s/S),f=(s%S)/S;
+  return side===0?[rho,-rho+2*rho*f]:side===1?[rho-2*rho*f,rho]:side===2?[-rho,rho-2*rho*f]:[-rho+2*rho*f,-rho];};
+ for(let i=0;i<=N;i++)for(let s=0;s<per;s++){const [x,z]=at(i,s),v=i*per+s;hs[v]=H(x,z);positions[v*3]=x;positions[v*3+2]=z;}
+ for(let i=0;i<=N;i++)for(let s=0;s<per;s++){
+  const v=i*per+s,x=positions[v*3],z=positions[v*3+2],sp=(i*per+(s+1)%per),sm=(i*per+(s+per-1)%per),ri=Math.min(N,i+1),rm=Math.max(0,i-1),rp=ri*per+s,rmv=rm*per+s;
+  const ds=Math.hypot(positions[sp*3]-positions[sm*3],positions[sp*3+2]-positions[sm*3+2])||1,dr=Math.max(1,offs[ri]-offs[rm]);
+  const slope=Math.hypot((hs[sp]-hs[sm])/ds,(hs[rp]-hs[rmv])/dr),h=hs[v];
+  const g=horizonGround(seed,seaY,x,z,h,slope);
+  positions[v*3+1]=g.sea?seaY:under(x,z,h);
+  colors[v*3]=g.rgb[0];colors[v*3+1]=g.rgb[1];colors[v*3+2]=g.rgb[2];sea[v]=g.sea;
  }
  const indices=new Uint32Array(N*per*6);let k=0;
  for(let i=0;i<N;i++)for(let s=0;s<per;s++){
@@ -144,12 +149,12 @@ export function placeCanopies(inp:HorizonInput,cap:number):Canopy[]{
    const jx=hash2(gx*7.1+seed,gz*3.7+band.cell),jz=hash2(gx*1.9-seed,gz*5.3+band.cell);
    const x=(gx+.15+jx*.7)*cell,z=(gz+.15+jz*.7)*cell,dd=edgeDistance(half,x,z);
    if(dd<=from+(from===0?18:0)||dd>to)continue;
-   const h=horizonHeight(inp,x,z),sp=cell*.5,slope=Math.hypot(horizonHeight(inp,x+sp,z)-horizonHeight(inp,x-sp,z),horizonHeight(inp,x,z+sp)-horizonHeight(inp,x,z-sp))/(2*sp);
-   const g=horizonGround(seed,seaY,x,z,h,slope);
-   if(g.sea||g.forest<.42||slope>.75)continue;
+   const h=horizonHeight(inp,x,z);if(h<seaY+1.5||h>seaY+HORIZON_RULES.treelineMetres)continue;const sp=cell*.5,slope=Math.hypot(horizonHeight(inp,x+sp,z)-h,horizonHeight(inp,x,z+sp)-h)/sp;
+   if(slope>.75)continue;const g=horizonGround(seed,seaY,x,z,h,slope);
+   if(g.sea||g.forest<.42)continue;
    if(hash2(gx*13.3+seed*.1,gz*17.9)>g.forest*1.15)continue;
    const r=cell*(.5+hash2(gx*2.2,gz*9.1+seed)*.28);
-   all.push({x,y:h-Math.min(4,r*.12),z,r,h:r*(.9+hash2(gx+seed,gz*4.4)*.6),tone:hash2(gx*5.5,gz*6.6)});
+   all.push({x,y:h-Math.min(4,r*.12),z,r,h:Math.min(HORIZON_RULES.canopyMaxHeight,r*(.9+hash2(gx+seed,gz*4.4)*.6)),tone:hash2(gx*5.5,gz*6.6)});
   }
   from=to;
  }
