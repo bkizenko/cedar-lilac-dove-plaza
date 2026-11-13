@@ -167,6 +167,7 @@ import {beginExpedition,expeditionAI,routineRest} from "./journeys";
 import {wearTrail,pathPace,fadeTrails} from "./trails";
 import {traceStep,tickRouteWear} from "./routeWear";
 import {tickWaystations} from "./waystations";
+import {tickWonders} from "./wonderFounding";
 import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
@@ -5998,7 +5999,7 @@ export class Game {
         tickCommunities(this,sdt);
         tickScouts(this,sdt);
         fadeTrails(this,sdt);
-        tickRouteWear(this,sdt);tickWaystations(this,sdt);
+        tickRouteWear(this,sdt);tickWaystations(this,sdt);tickWonders(this,sdt);
         tickVisitors(this,sdt);
         phases?.mark('economy');
         this.tickRoutes(sdt);

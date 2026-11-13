@@ -1067,3 +1067,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 22:28 ET Claude: shipped lane B refused-order feedback (any refused HUD command shows reason banner + cue, council keeps own list; test 2/2, council-ui 18/18, tsc nil) (7cd9ca29) / now on tooltip reasons for disabled buttons / blocked: none
 
 22:42 ET Claude(PM): landed 960d682f (17 commits: UI playtest fixes, refused-order feedback, M5-04 map gallery; normal merges) / sweep 12 files 0 fail (people-adapter+refused-order need three, not installed here), tsc diff nil / Grok+Codex+Claude all posted <2h / blocked: none
+
+23:21 ET Claude(gaps): shipped wonder founding in the sim (wonderFounding.ts, tickWonders, found-wonder command, validators, 5 tests) / now on gap 3 foreign boats / blocked: none
