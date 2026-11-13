@@ -5,7 +5,7 @@ import {NEGOTIATION,NEGOTIATION_WARNING,INSTITUTION_RULES,type InstitutionKind} 
 import {GameTooltip} from '../GameTooltip';
 import {cx} from './parts';
 
-/** Terse civic read-out: one fact per chip, the reason on hover. Read-only (no proposal dispatch exists yet). */
+/** Terse civic read-out: one fact per chip, the reason on hover. Open proposals to our own society carry Accept/Decline (answer-proposal command). */
 const pct=(v:number)=>Math.round(v*100);
 export const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/[-_]/g,' ').toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 const STAGE_LABEL:Record<string,string>={quiet:'Quiet',murmurs:'Murmurs',demands:'Demands',talks:'Talks',rupture:'Rupture'};
@@ -49,17 +49,18 @@ function Identity({line}:{line:CivicLine}){
   {id.last&&<Chip sub icon={<Scroll size={16}/>} tip={id.last}>{cut(id.last,26)}</Chip>}
  </Row>;
 }
-function Proposals({line}:{line:CivicLine}){
+export type AnswerProposal=(proposalId:number,accept:boolean)=>void;
+function Proposals({line,onAnswer}:{line:CivicLine;onAnswer?:AnswerProposal}){
  if(!line.proposals.length)return null;
- return <Row label="Proposals" icon={<Scroll size={18}/>}>{line.proposals.map((p,i)=><Chip key={i} tone={p.status==='broken'||p.status==='declined'?'bad':p.status==='kept'||p.status==='accepted'?'good':undefined} tip={`${p.title}${p.inherited?' (from the last ruler)':''}`} icon={p.kind==='agreement'?<Handshake size={16}/>:<Scroll size={16}/>}>{cut(p.title,24)}<small>{WARD[p.status]??p.status}</small></Chip>)}</Row>;
+ return <Row label="Proposals" icon={<Scroll size={18}/>}>{line.proposals.map((p,i)=><span key={i} className="hw-proposal">{p.ask&&onAnswer&&<><button type="button" className="hw-btn-wide" aria-label={`Accept: ${p.title}`} onClick={()=>onAnswer(p.id,true)}><Check size={16}/>Accept</button><button type="button" className="hw-btn-wide" aria-label={`Decline: ${p.title}`} onClick={()=>onAnswer(p.id,false)}><X size={16}/>Decline</button></>}<Chip tone={p.status==='broken'||p.status==='declined'?'bad':p.status==='kept'||p.status==='accepted'?'good':undefined} tip={`${p.title}${p.inherited?' (from the last ruler)':''}`} icon={p.kind==='agreement'?<Handshake size={16}/>:<Scroll size={16}/>}>{cut(p.title,24)}<small>{WARD[p.status]??p.status}</small></Chip></span>)}</Row>;
 }
 function Outposts({line}:{line:CivicLine}){
  if(!line.outposts.length)return null;
  return <Row label="Outposts" icon={<Compass size={18}/>}>{line.outposts.map(o=>{const g=o.grievance;return <Chip key={o.hall} tone={g>=.6?'bad':g>=.3?'warn':undefined} tip={`Hall ${o.hall}: ${o.distance} m away, decides ${pct(o.localDecisionShare)}% locally, keeps ${o.localFloorFood} food${o.lastRequest?`, last request ${o.lastRequest.obeyed?'obeyed':'refused'}`:''}`} icon={<Compass size={16}/>}>{o.distance}m<small>{pct(o.localDecisionShare)}%</small><small>{pct(g)}% sore</small></Chip>;})}</Row>;
 }
-export function CivicLineCard({line,title}:{line:CivicLine;title?:string}){
+export function CivicLineCard({line,title,onAnswer}:{line:CivicLine;title?:string;onAnswer?:AnswerProposal}){
  return <section className="hw-card hw-civic"><div className="hw-card-head"><h3>{title??line.name}</h3></div>
-  <Identity line={line}/><Politics line={line}/><Institutions line={line}/><Proposals line={line}/><Outposts line={line}/>
+  <Identity line={line}/><Politics line={line}/><Institutions line={line}/><Proposals line={line} onAnswer={onAnswer}/><Outposts line={line}/>
  </section>;
 }
 export function ChapterCard({chapter}:{chapter:NonNullable<CivicModel['chapter']>}){
@@ -68,11 +69,11 @@ export function ChapterCard({chapter}:{chapter:NonNullable<CivicModel['chapter']
   {chapter.broken&&<div className="hw-chips"><span className="hw-row-label"><TriangleAlert size={18}/>Next</span><Chip tone="bad" tip={chapter.links.find(l=>l.id===chapter.broken)?.evidence}>{CHAIN_LABEL[chapter.broken]}</Chip></div>}
  </section>;
 }
-export function CivicPanel({civic}:{civic:CivicModel}){
+export function CivicPanel({civic,onAnswer}:{civic:CivicModel;onAnswer?:AnswerProposal}){
  if(!civic.enabled)return <p className="hw-empty">Nothing recorded yet.</p>;
  const lines=civic.prehistory?.lines??[];
  return <div className="hw-grid-2">
-  {civic.own&&<CivicLineCard line={civic.own} title="Our people"/>}
+  {civic.own&&<CivicLineCard line={civic.own} title="Our people" onAnswer={onAnswer}/>}
   {civic.chapter&&<ChapterCard chapter={civic.chapter}/>}
   {lines.length>0&&<section className="hw-card"><div className="hw-card-head"><h3>Before the game</h3></div><ul className="hw-chips hw-plain hw-lines">{lines.map((l,i)=><li key={i}><Chip sub icon={<Scroll size={16}/>} tip={l}><span className="hw-ellip">{l}</span></Chip></li>)}</ul></section>}
   {civic.societies.map(s=><CivicLineCard key={s.team} line={s}/>)}

@@ -1048,6 +1048,7 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 22:28 ET Claude: shipped lane B refused-order feedback (any refused HUD command shows reason banner + cue, council keeps own list; test 2/2, council-ui 18/18, tsc nil) (7cd9ca29) / now on tooltip reasons for disabled buttons / blocked: none
 
+23:02 ET Claude(gaps): shipped society proposal accept/decline (answer-proposal command, player-addressed proposals with ask flag, Council UI buttons, 7 tests) / now on gap 2 wonders / blocked: none
 03:50 ET Claude: shipped placement playtest fixes - ghost uses real building model, hut doors + readable huts all civs, slope tolerance + plinth, village heraldry, no raider rings ($SHA) / now on live-play verification of ghost + plinth / blocked: none
 22:50 ET Claude: shipped UI playtest fixes (wheel gate, music duck/pause/skip chip, rotate buttons Q/E/R, stores-full pin labels, restart confirm; tests 22/22) (SHA below in report) / now on audit of other lost menu controls / blocked: none
 23:00 ET claude: shipped people animation rework: upright work poses (spine<=18deg, planted bent-knee stances, squat only for forage), distinct run cycle blended walk->run by speed, 6 new tests + 38 existing people tests pass, before/after pose sheets docs/renders/animation/ (357b9edb) / now on idle / blocked: none
