@@ -2170,6 +2170,8 @@ export class WorldView {
         _p.set(0,(kind==='cart'?.7:kind==='pack'?(horse?1.40:bovine?1.46:1.05):.34)+height*.5,kind==='canoe'?-.85:0).applyMatrix4(_haulMatrix);
         _s.set(1.25,height/.55,1.65);_m.compose(_p,_q,_s);
       }else{
+        // people v2 carry their load on the body (logs on the shoulder, baskets on the back, jars on the head): see carryLoads.ts
+        if(this.people?.active&&!u.haulage&&!u.boat)continue;
         _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
         _e.set(0,u.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);
       }
