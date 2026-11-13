@@ -1,0 +1,77 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Audience: hall (mockup)</title><link rel="stylesheet" href="fp.css"><script src="fp.js"></script></head>
+<body><div id="stage">
+<div class="mock-tag">DESIGN MOCKUP, not an in-game render. Audience: seated in the hall, people come to you in a line. Each is a real resident or envoy.</div>
+<svg class="scene" id="sc" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg"></svg>
+<div class="topbar">
+ <div class="pill">Audience · Hall</div>
+ <div class="pill" id="p1"></div>
+ <div class="pill">Day 12 · Evening · 1x</div>
+</div>
+<div class="crosshair" style="opacity:.0"></div>
+<div class="card" id="card" style="left:380px;top:640px;width:680px;padding:14px 20px">
+ <div class="head"><div class="medal" id="medal" style="width:50px;height:50px"></div><div><div class="who" style="font-size:24px">Elder</div><div class="basis"><span class="tag">I was told</span><span>by the wardens · yesterday</span></div></div><div class="fact" id="f1" style="margin-left:auto"></div></div>
+ <div class="line" style="font-size:22px;margin-top:10px;padding:10px 14px">The wardens want the north wall higher. They say it quietly.</div>
+ <div class="replies" style="margin-top:12px"><div class="btn gold"><span class="n">1</span>Hear them</div><div class="btn"><span class="n">2</span>Open Council</div><div class="btn quiet"><span class="n">3</span>Later</div></div>
+</div>
+<div class="hint" style="right:28px;top:100px"><span class="key">Enter</span>Answer <span class="key">1-3</span>Reply <span class="key">Tab</span>Leave seat</div>
+<div class="note" style="left:28px;top:590px;max-width:300px"><b>Mockup note</b>The elder is speaking now. The envoy and the merchant stand in line with a small role mark over them. The envoy's terms come from the real diplomacy data and answer with the same commands as the Society tab. No numbers on faction loyalty: the elder says it in words.</div>
+<script>
+const {person,icon,rng,shade}=FP;const sc=document.getElementById('sc');
+const VX=720,VY=420;
+// back wall rect
+const bx0=560,bx1=880,by0=300,by1=500;
+let s=`<defs>
+<linearGradient id="wallL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3b2a1a"/><stop offset="1" stop-color="#6b4d2e"/></linearGradient>
+<linearGradient id="wallR" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#3b2a1a"/><stop offset="1" stop-color="#6b4d2e"/></linearGradient>
+<linearGradient id="ceil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c130c"/><stop offset="1" stop-color="#4a3522"/></linearGradient>
+<linearGradient id="floor" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#3f2e1d"/><stop offset="1" stop-color="#7a5c38"/></linearGradient>
+<radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffcf7a" stop-opacity=".85"/><stop offset=".5" stop-color="#f08a3a" stop-opacity=".25"/><stop offset="1" stop-color="#f08a3a" stop-opacity="0"/></radialGradient>
+<radialGradient id="vig" cx=".5" cy=".5" r=".78"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#0d0804" stop-opacity=".62"/></radialGradient>
+<linearGradient id="door" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfe0e0"/><stop offset="1" stop-color="#f0e2b8"/></linearGradient></defs>
+<rect width="1440" height="900" fill="#1a110a"/>`;
+// ceiling, walls, floor
+s+=`<polygon points="0,0 1440,0 ${bx1},${by0} ${bx0},${by0}" fill="url(#ceil)"/>
+<polygon points="0,0 ${bx0},${by0} ${bx0},${by1} 0,900" fill="url(#wallL)"/>
+<polygon points="1440,0 ${bx1},${by0} ${bx1},${by1} 1440,900" fill="url(#wallR)"/>
+<polygon points="0,900 ${bx0},${by1} ${bx1},${by1} 1440,900" fill="url(#floor)"/>
+<rect x="${bx0}" y="${by0}" width="${bx1-bx0}" height="${by1-by0}" fill="#58402a"/>`;
+// back wall planks and door opening
+for(let i=0;i<9;i++)s+=`<rect x="${bx0+i*36}" y="${by0}" width="2" height="${by1-by0}" fill="#3a2a1a" opacity=".6"/>`;
+s+=`<rect x="650" y="322" width="140" height="178" fill="url(#door)"/><path d="M650 322 L650 500 M790 322 L790 500 M650 322 L790 322" stroke="#2b2016" stroke-width="10"/>`;
+s+=`<path d="M690 500 L700 440 L740 440 L750 500 Z" fill="#8a9a6a" opacity=".5"/><rect x="662" y="470" width="116" height="30" fill="#7b9a55" opacity=".35"/>`;
+// floorboards converge
+for(let i=-14;i<=14;i++){s+=`<line x1="${VX+i*20}" y1="${by1}" x2="${VX+i*210}" y2="900" stroke="#2f2216" stroke-width="2" opacity=".55"/>`;}
+for(let k=0;k<7;k++){const t=k/7,y=by1+Math.pow(t,1.7)*400;s+=`<line x1="0" y1="${y}" x2="1440" y2="${y}" stroke="#2f2216" stroke-width="1" opacity=".25"/>`;}
+// side wall planks
+for(let i=1;i<9;i++){const t=i/9,x=bx0*t;s+=`<line x1="${x}" y1="${by0*t}" x2="${x}" y2="${900-(900-by1)*t}" stroke="#2b1d11" stroke-width="2" opacity=".4"/>`;const x2=1440-(1440-bx1)*t;s+=`<line x1="${x2}" y1="${by0*t}" x2="${x2}" y2="${900-(900-by1)*t}" stroke="#2b1d11" stroke-width="2" opacity=".4"/>`;}
+// roof beams (cross) at depths and rafters
+const depth=(d)=>({l:bx0*(1-d)+0*d,r:bx1*(1-d)+1440*d,t:by0*(1-d)+0*d});
+[.0,.22,.46,.72].forEach((d,i)=>{const q=depth(d),th=8+d*34;s+=`<rect x="${q.l}" y="${q.t}" width="${q.r-q.l}" height="${th}" fill="#2b1d11"/><rect x="${q.l}" y="${q.t+th}" width="${q.r-q.l}" height="${th*.3}" fill="#150d07" opacity=".7"/>`;});
+// posts at depths each side
+[.1,.34,.6].forEach(d=>{const q=depth(d),pw=14+d*60,y0=q.t,y1=900-(900-by1)*(1-d);s+=`<rect x="${q.l+4+d*30}" y="${y0}" width="${pw}" height="${y1-y0}" fill="#4a3522"/><rect x="${q.l+4+d*30}" y="${y0}" width="${pw*.3}" height="${y1-y0}" fill="#6a4c2c"/>`;s+=`<rect x="${q.r-4-d*30-pw}" y="${y0}" width="${pw}" height="${y1-y0}" fill="#3a2a1a"/><rect x="${q.r-4-d*30-pw}" y="${y0}" width="${pw*.3}" height="${y1-y0}" fill="#5a4129"/>`;});
+// banners on side walls (house colour with a simple charge)
+s+=`<g><polygon points="190,150 290,172 290,420 190,468" fill="#7c2e22"/><polygon points="190,150 290,172 290,420 190,468" fill="none" stroke="#e3ad4f" stroke-width="3"/><circle cx="240" cy="300" r="30" fill="#e3ad4f"/><path d="M240 276 L254 316 L226 316 Z" fill="#7c2e22"/></g>`;
+s+=`<g><polygon points="1250,150 1150,172 1150,420 1250,468" fill="#7c2e22"/><polygon points="1250,150 1150,172 1150,420 1250,468" fill="none" stroke="#e3ad4f" stroke-width="3"/><circle cx="1200" cy="300" r="30" fill="#e3ad4f"/><path d="M1200 276 L1214 316 L1186 316 Z" fill="#7c2e22"/></g>`;
+// the hearth (mid hall)
+s+=`<ellipse cx="720" cy="610" rx="260" ry="80" fill="url(#glow)"/>
+<ellipse cx="720" cy="640" rx="90" ry="22" fill="#2b2016"/><ellipse cx="720" cy="634" rx="76" ry="17" fill="#6b6354"/><ellipse cx="720" cy="632" rx="62" ry="12" fill="#2a1a0c"/>
+<path d="M690 632 Q700 590 712 572 Q716 600 726 560 Q736 596 748 580 Q752 612 760 632 Z" fill="#f08a3a"/><path d="M702 632 Q710 604 720 590 Q728 606 740 632 Z" fill="#ffd27a"/>
+<g stroke="#4a3522" stroke-width="7" stroke-linecap="round"><path d="M684 636 L760 626"/><path d="M690 626 L752 638"/></g>`;
+// people (feet-based). Elder speaking now, envoy and merchant waiting in line.
+s+=person(610,690,300,{tunic:'#6d7a62',trousers:'#4e4030',cap:'#c9c5bb',hair:'#c9c5bb',arm:'beckon',staff:true,skin:'#a77050'});
+s+=person(850,602,206,{tunic:'#2f5f8a',trousers:'#d9d2bd',cap:'#e8e1cc',arm:'fold',skin:'#d4a37c',belt:'#e3ad4f'});
+s+=person(925,586,176,{tunic:'#3a6c98',trousers:'#cfc8b3',cap:'#d9d2bd',skin:'#d4a37c'});
+s+=person(528,550,150,{tunic:'#b8863a',trousers:'#5b4630',arm:'carry',skin:'#8b583b'});
+// two wardens by the post (the faction the elder speaks of)
+s+=person(458,610,200,{tunic:'#8a4a3a',trousers:'#3e3224',cap:'#5b5b57',skin:'#c08963',staff:true});
+// role marks above the queue (diegetic: a small token the player learns to read)
+function mark(x,y,svg,label){return `<g transform="translate(${x} ${y})"><circle r="24" fill="#2c2218" stroke="#e3ad4f" stroke-width="2.5"/><g transform="translate(-15 -15) scale(.94)">${svg.replace('<svg','<svg width="32" height="32"').replace(/^<svg[^>]*>/,'').replace('</svg>','')}</g><text y="46" text-anchor="middle" font-family="Trebuchet MS,sans-serif" font-size="17" font-weight="700" fill="#f8efd9" stroke="#1a110a" stroke-width="4" paint-order="stroke">${label}</text></g>`;}
+s+=mark(850,338,icon.envoy,'Envoy');s+=mark(528,330,icon.steward,'Merchant');
+// carved seat arms in the foreground
+s+=`<polygon points="0,900 0,700 150,690 250,900" fill="#2a1c10"/><polygon points="0,700 150,690 160,716 0,740" fill="#5a4129"/><polygon points="1440,900 1440,700 1290,690 1190,900" fill="#2a1c10"/><polygon points="1440,700 1290,690 1280,716 1440,740" fill="#4a3522"/>`;
+s+=`<circle cx="70" cy="690" r="26" fill="#6a4c2c"/><circle cx="1370" cy="690" r="26" fill="#5a4129"/>`;
+s+=`<rect width="1440" height="900" fill="url(#vig)"/>`;
+sc.innerHTML=s;
+document.getElementById('medal').innerHTML=icon.elder;document.getElementById('p1').innerHTML=icon.people.replace('<svg','<svg width="24" height="24"')+' 3 waiting';
+document.getElementById('f1').innerHTML=icon.warn+'Wardens: restless';
+</script></div></body></html>

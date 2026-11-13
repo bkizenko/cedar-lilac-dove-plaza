@@ -21,7 +21,9 @@ export function resourceTreeForm(id:number,profile:VegetationProfile,seed:number
  for(const form of TREE_FORMS){value-=Math.max(0,weights[form]??0);if(value<0)return form;}
  return Object.keys(defaults[profile.kind])[0] as TreeForm;
 }
-export type VegetationContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number};
+import type {ForestFiller} from './botanicalForest';
+export type VegetationContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number;
+ /** draw-distance bands (see src/game/drawDistance.ts); absent = the original radii */farMetres?:number;fadeMetres?:number;inView?:(x:number,z:number,r:number)=>boolean;filler?:ForestFiller|null};
 type Part='trunk'|'canopy';
 export type VegetationStyle='classic'|'painterly';
 type AnyForm=TreeForm|'birch'|'cypress';
@@ -85,7 +87,7 @@ export class BiomeVegetation {
   const near=BIOME_VEGETATION_RULES.nearMetres[context.quality];
   for(const node of nodes){
    if(!context.known(node.x,node.z))continue;
-   const distance=Math.hypot(node.x-context.camera.x,node.z-context.camera.z);if(distance>(context.quality==='low'?BIOME_VEGETATION_RULES.lowFarMetres:BIOME_VEGETATION_RULES.farMetres))continue;
+   const distance=Math.hypot(node.x-context.camera.x,node.z-context.camera.z);if(distance>(context.farMetres!==undefined?context.farMetres*(context.quality==='low'?BIOME_VEGETATION_RULES.lowFarMetres/BIOME_VEGETATION_RULES.farMetres:1):context.quality==='low'?BIOME_VEGETATION_RULES.lowFarMetres:BIOME_VEGETATION_RULES.farMetres))continue;
    let form=this.cache.get(node.id);if(!form){const profile=this.profileAt(node.x,node.z),base=resourceTreeForm(node.id,profile,this.seed);form=this.style==='painterly'?this.variant(base,profile.kind,node.id):base;this.cache.set(node.id,form);}
    const stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=node.scale*growth;
    const deciduous=form==='broadleaf'||form==='willow'||form==='birch',bare=deciduous&&context.winter>.8&&context.snow<.4;

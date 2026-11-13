@@ -38,7 +38,7 @@ for (const [name, spec0] of Object.entries(shots)) {
   await page.setViewportSize({ width: spec.width, height: spec.height });
   const info = await page.evaluate(s => window.renderMap(s), spec);
   await page.locator('canvas').screenshot({ path: path.join(outDir, name + '.png'), timeout: 180000 });
-  console.log(name, JSON.stringify(info).slice(0, 700));
+  console.log(name, JSON.stringify(info).slice(0, 8000));
   if (spec.eval) console.log(name, 'EVAL', JSON.stringify(await page.evaluate(spec.eval)));
 }
 await browser.close();

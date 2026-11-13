@@ -1,0 +1,308 @@
+{
+ "valley-wide-low": {
+  "tris": 1360254,
+  "calls": 116,
+  "groups": {
+   "buildings, props, other": 861006,
+   "terrain": 81760,
+   "water": 62601,
+   "ground dressing": 30368,
+   "sim trees near/mid": 17094,
+   "people": 6264,
+   "sim far crowns+trunks": 302484
+  },
+  "ms": 18,
+  "syncMs": 22,
+  "heapMB": 273,
+  "geometries": 276,
+  "programs": 48,
+  "filler": null
+ },
+ "valley-wide-medium": {
+  "tris": 1157804,
+  "calls": 124,
+  "groups": {
+   "buildings, props, other": 861006,
+   "terrain": 81760,
+   "water": 62601,
+   "filler far crowns+trunks": 7208,
+   "ground dressing": 30368,
+   "sim trees near/mid": 20028,
+   "people": 6264,
+   "filler horizon crowns": 22152,
+   "sim far crowns+trunks": 67740
+  },
+  "ms": 3,
+  "syncMs": 7.9,
+  "heapMB": 273,
+  "geometries": 284,
+  "programs": 48,
+  "filler": {
+   "detailEff": 260,
+   "farEff": 1100,
+   "trees": 70,
+   "blobs": 31,
+   "deferred": 0,
+   "treeCapped": false,
+   "blobCapped": false
+  }
+ },
+ "highland-mid-medium": {
+  "tris": 1120063,
+  "calls": 114,
+  "groups": {
+   "buildings, props, other": 712022,
+   "terrain": 90848,
+   "water": 52841,
+   "ground dressing": 69462,
+   "sim far crowns+trunks": 63648,
+   "sim trees near/mid": 122866,
+   "filler horizon crowns": 3616,
+   "people": 6736
+  },
+  "ms": 15,
+  "syncMs": 25.6,
+  "heapMB": 273,
+  "geometries": 268,
+  "programs": 48,
+  "filler": {
+   "detailEff": 260,
+   "farEff": 1100,
+   "trees": 11,
+   "blobs": 8,
+   "deferred": 0,
+   "treeCapped": false,
+   "blobCapped": false
+  }
+ },
+ "highland-wide-low": {
+  "tris": 1112165,
+  "calls": 110,
+  "groups": {
+   "buildings, props, other": 712022,
+   "terrain": 90848,
+   "water": 52841,
+   "ground dressing": 16399,
+   "sim trees near/mid": 8550,
+   "people": 6736,
+   "sim far crowns+trunks": 220200
+  },
+  "ms": 3,
+  "syncMs": 6.9,
+  "heapMB": 273,
+  "geometries": 293,
+  "programs": 48,
+  "filler": null
+ },
+ "highland-wide-medium": {
+  "tris": 982777,
+  "calls": 115,
+  "groups": {
+   "buildings, props, other": 712022,
+   "terrain": 90848,
+   "water": 52841,
+   "filler far crowns+trunks": 5356,
+   "ground dressing": 16399,
+   "sim trees near/mid": 8870,
+   "people": 6736,
+   "filler horizon crowns": 17176,
+   "sim far crowns+trunks": 67960
+  },
+  "ms": 3,
+  "syncMs": 4.9,
+  "heapMB": 273,
+  "geometries": 296,
+  "programs": 48,
+  "filler": {
+   "detailEff": 260,
+   "farEff": 1100,
+   "trees": 50,
+   "blobs": 34,
+   "deferred": 0,
+   "treeCapped": false,
+   "blobCapped": false
+  }
+ },
+ "steppe-mid-medium": {
+  "tris": 936907,
+  "calls": 111,
+  "groups": {
+   "buildings, props, other": 673746,
+   "terrain": 93472,
+   "water": 39034,
+   "ground dressing": 42304,
+   "sim far crowns+trunks": 29620,
+   "sim trees near/mid": 48478,
+   "people": 6684,
+   "filler horizon crowns": 7972
+  },
+  "ms": 12,
+  "syncMs": 12.4,
+  "heapMB": 273,
+  "geometries": 266,
+  "programs": 48,
+  "filler": {
+   "detailEff": 260,
+   "farEff": 1100,
+   "trees": 21,
+   "blobs": 14,
+   "deferred": 0,
+   "treeCapped": false,
+   "blobCapped": false
+  }
+ },
+ "steppe-wide-low": {
+  "tris": 1081609,
+  "calls": 95,
+  "groups": {
+   "buildings, props, other": 673746,
+   "terrain": 93472,
+   "water": 39034,
+   "ground dressing": 2096,
+   "sim trees near/mid": 8446,
+   "people": 6684,
+   "sim far crowns+trunks": 250560
+  },
+  "ms": 6,
+  "syncMs": 3.7,
+  "heapMB": 273,
+  "geometries": 289,
+  "programs": 48,
+  "filler": null
+ },
+ "steppe-wide-medium": {
+  "tris": 894849,
+  "calls": 99,
+  "groups": {
+   "buildings, props, other": 673746,
+   "terrain": 93472,
+   "water": 39034,
+   "filler far crowns+trunks": 1820,
+   "ground dressing": 2096,
+   "sim trees near/mid": 8466,
+   "people": 6684,
+   "filler horizon crowns": 25652,
+   "sim far crowns+trunks": 36308
+  },
+  "ms": 3,
+  "syncMs": 2.9,
+  "heapMB": 273,
+  "geometries": 291,
+  "programs": 48,
+  "filler": {
+   "detailEff": 260,
+   "farEff": 1100,
+   "trees": 8,
+   "blobs": 111,
+   "deferred": 0,
+   "treeCapped": false,
+   "blobCapped": false
+  }
+ },
+ "island-mid-medium": {
+  "tris": 1158655,
+  "calls": 137,
+  "groups": {
+   "buildings, props, other": 648810,
+   "terrain": 94528,
+   "water": 39738,
+   "ground dressing": 84608,
+   "sim far crowns+trunks": 111440,
+   "sim trees near/mid": 144120,
+   "people": 6784,
+   "filler horizon crowns": 22900
+  },
+  "ms": 11,
+  "syncMs": 14.2,
+  "heapMB": 273,
+  "geometries": 293,
+  "programs": 48,
+  "filler": {
+   "detailEff": 260,
+   "farEff": 1100,
+   "trees": 2,
+   "blobs": 105,
+   "deferred": 0,
+   "treeCapped": false,
+   "blobCapped": false
+  }
+ },
+ "island-wide-low": {
+  "tris": 1314442,
+  "calls": 132,
+  "groups": {
+   "buildings, props, other": 648810,
+   "terrain": 94528,
+   "water": 39738,
+   "ground dressing": 89701,
+   "sim trees near/mid": 223956,
+   "people": 6784,
+   "sim far crowns+trunks": 213476
+  },
+  "ms": 4,
+  "syncMs": 8.1,
+  "heapMB": 273,
+  "geometries": 317,
+  "programs": 48,
+  "filler": null
+ },
+ "island-wide-medium": {
+  "tris": 1227314,
+  "calls": 137,
+  "groups": {
+   "buildings, props, other": 648810,
+   "terrain": 94528,
+   "water": 39738,
+   "filler far crowns+trunks": 892,
+   "ground dressing": 89701,
+   "sim trees near/mid": 224016,
+   "people": 6784,
+   "filler horizon crowns": 13544,
+   "sim far crowns+trunks": 111852
+  },
+  "ms": 5,
+  "syncMs": 1.9,
+  "heapMB": 273,
+  "geometries": 320,
+  "programs": 48,
+  "filler": {
+   "detailEff": 260,
+   "farEff": 1100,
+   "trees": 5,
+   "blobs": 49,
+   "deferred": 0,
+   "treeCapped": false,
+   "blobCapped": false
+  }
+ },
+ "valley-wide-ultra": {
+  "tris": 1256384,
+  "calls": 127,
+  "groups": {
+   "buildings, props, other": 861006,
+   "terrain": 81760,
+   "water": 62601,
+   "filler far crowns+trunks": 10552,
+   "ground dressing": 30368,
+   "sim trees near/mid": 20028,
+   "people": 6264,
+   "filler horizon crowns": 18804,
+   "sim far crowns+trunks": 166324
+  },
+  "ms": 4,
+  "syncMs": 6.9,
+  "heapMB": 273,
+  "geometries": 287,
+  "programs": 48,
+  "filler": {
+   "detailEff": 440,
+   "farEff": 1242.810878613476,
+   "trees": 84,
+   "blobs": 18,
+   "deferred": 0,
+   "treeCapped": false,
+   "blobCapped": false
+  }
+ },
+ "_note": "SwiftShader software GL: relative only, not M1 GPU timings. Highland camera sits inside a mountain in the harness (same for low and medium), so those shots are not published."
+}

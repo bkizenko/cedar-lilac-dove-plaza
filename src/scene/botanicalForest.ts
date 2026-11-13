@@ -1,14 +1,20 @@
 import * as THREE from 'three';
 import {BOTANICAL_SPECIES,DEFAULT_SITE,VARIANTS_PER_SPECIES,pickSpecies,pickVariant,stableUnit,type BaseForm,type BotanicalSpecies,type TreeSite} from './botanicalSpecies';
 import {botanicalTree,botanicalStump,type TreeGeometry} from './treeBotany';
-import {makeBotanicalMaterial,makeBotanicalFarMaterial} from './botanicalMaterial';
+import {makeBotanicalMaterial,makeBotanicalFarMaterial,makeFarFade} from './botanicalMaterial';
+import {FillerLayer} from './fillerLayer';
+import type {FillerBlob} from './fillerForest';
 import {painterFarClustered,painterFarNeedle,contactShadowGeometry,radialShadowTexture} from './painterTrees';
 import {painterSway,type PainterSway} from './painterVegetationMaterial';
 /** Instanced botanical forest (the painterly default). One mesh per (species, variant, LOD tier), all sharing one material: tier 0 full leaf-card
  * trees, tier 1 mid trees (same skeleton, cores plus sparse cards), then far crowns and rooted far trunks. Each living tree is a real resource node; nothing here
  * adds wood, collision or clicks. Per-tree seeded variation: species and age class by site, height/width, lean (wind, slope), hue, autumn colour, leaf-fall timing. */
-export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number};
-export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean};
+/** Cosmetic filler for one frame (see fillerForest.ts): individual trees (negative ids, `filler: true`, never resources) and merged horizon crowns, with the radii the budget really reached. */
+export type ForestFiller={trees:readonly ForestNode[];blobs:readonly FillerBlob[];detailEff:number;farEff:number};
+export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number;
+ /** draw-distance bands (src/game/drawDistance.ts): sim trees are culled beyond this (graphics Low scales it down as before); absent = the original 700/420 m */
+ farMetres?:number;/** screen-door fade span ahead of the cut-offs (0/absent = hard edge) */fadeMetres?:number;/** conservative frustum test (x,z,radius) for far-tier trees; absent = draw all */inView?:(x:number,z:number,r:number)=>boolean;filler?:ForestFiller|null};
+export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean;/** cosmetic filler tree: never a resource, never picked */filler?:true};
 export type ForestOptions={seed:number;siteAt:(x:number,z:number)=>TreeSite;baseFormAt:(id:number,x:number,z:number)=>{base:BaseForm;kind:string};/** unit wind vector the trees lean along */wind?:[number,number];nearMetres:Record<'low'|'med'|'high',number>;farMetres:number;lowFarMetres:number;stumpHeightScale:number};
 export const FOREST_LOD={fullFraction:.4,midFraction:1.15} as const;
 type Rec={sp:number;v:number;sx:number;sy:number;lean:[number,number];yaw:number;hue:[number,number,number];autumn:number;timing:number};
@@ -21,9 +27,9 @@ export class BotanicalForest{
  private farTrunk:THREE.InstancedMesh;private farTrunkIds:number[]=[];private far:THREE.InstancedMesh[];private farIds:number[][]=[[],[]];
  private shadows:THREE.InstancedMesh|null=null;private shadowMat:THREE.MeshBasicMaterial;private sunAz=new THREE.Vector2(-.6,.8);private sunElev=.8;private shadowOpacity=.34;
  private matrix=new THREE.Matrix4();private pos=new THREE.Vector3();private scale=new THREE.Vector3();private quat=new THREE.Quaternion();private euler=new THREE.Euler(0,0,0,'XZY');private color=new THREE.Color();private hsl={h:0,s:0,l:0};private snowColor=new THREE.Color('#d4e0dd');
- private wind:[number,number];
+ private wind:[number,number];private simFade=makeFarFade();private fill:FillerLayer;private cheapIds:number[][]=[[],[]];
  constructor(scene:THREE.Scene,o:ForestOptions){
-  this.scene=scene;this.o=o;this.wind=o.wind??[.7,.7];this.mat=makeBotanicalMaterial(this.sway);this.farMat=makeBotanicalFarMaterial();
+  this.scene=scene;this.o=o;this.wind=o.wind??[.7,.7];this.mat=makeBotanicalMaterial(this.sway);this.farMat=makeBotanicalFarMaterial(this.simFade);this.fill=new FillerLayer(scene);
   const farGeo=new THREE.CylinderGeometry(1,1,1,5).translate(0,.5,0),a=new Float32Array(farGeo.attributes.position.count*3);for(let i=0;i<a.length;i+=3)a.set([.2,.12,.07],i);farGeo.setAttribute('color',new THREE.BufferAttribute(a,3));
   this.farTrunk=new THREE.InstancedMesh(farGeo,this.farMat,1);this.farTrunk.name='resource-far-rooted-trunk';this.farTrunk.count=0;this.farTrunk.frustumCulled=false;scene.add(this.farTrunk);
   const unit=(g:THREE.BufferGeometry)=>{g.computeBoundingBox();const b=g.boundingBox!,c=b.getCenter(new THREE.Vector3()),h=b.getSize(new THREE.Vector3()).multiplyScalar(.5);g.translate(-c.x,-c.y,-c.z);g.scale(1/h.x,1/h.y,1/h.z);g.computeBoundingBox();return g;};
@@ -41,7 +47,9 @@ export class BotanicalForest{
   const out:{mesh:THREE.InstancedMesh;resourceIds:readonly number[]}[]=[];
   for(const b of this.batches.values())out.push({mesh:b.mesh,resourceIds:b.ids});
   if(this.stumps)out.push({mesh:this.stumps.mesh,resourceIds:this.stumps.ids});
-  out.push({mesh:this.farTrunk,resourceIds:this.farTrunkIds});for(let i=0;i<2;i++)out.push({mesh:this.far[i],resourceIds:this.farIds[i]});return out;
+  out.push({mesh:this.farTrunk,resourceIds:this.farTrunkIds});for(let i=0;i<2;i++)out.push({mesh:this.far[i],resourceIds:this.farIds[i]});
+  // cheap far crowns of sim trees come first in their pool; instances after them are cosmetic filler (no id: never picked)
+  for(let i=0;i<2;i++)if(this.cheapIds[i].length)out.push({mesh:this.fill.blobMesh(i),resourceIds:this.cheapIds[i]});return out;
  }
  private rec(node:ForestNode):Rec{
   let r=this.recs.get(node.id);if(r)return r;
@@ -82,15 +90,22 @@ export class BotanicalForest{
  sync(nodes:readonly ForestNode[],ctx:ForestContext){
   for(const b of this.batches.values()){b.n=0;b.ids.length=0;}
   if(this.stumps){this.stumps.n=0;this.stumps.ids.length=0;}
-  const near=this.o.nearMetres[ctx.quality],d0=near*FOREST_LOD.fullFraction,d1=near*FOREST_LOD.midFraction,cullFar=ctx.quality==='low'?this.o.lowFarMetres:this.o.farMetres;
+  const near=this.o.nearMetres[ctx.quality],d0=near*FOREST_LOD.fullFraction,d1=near*FOREST_LOD.midFraction,cullFar=ctx.farMetres!==undefined?ctx.farMetres*(ctx.quality==='low'?this.o.lowFarMetres/this.o.farMetres:1):ctx.quality==='low'?this.o.lowFarMetres:this.o.farMetres,fadeM=Math.max(0,ctx.fadeMetres??0);
+  // with the cosmetic filler on, sim trees beyond the individual-detail radius draw as one cheap low-poly crown (hand-over is a dithered cross-fade); the budget's real reach bounds both
+  const detailEff=ctx.filler?ctx.filler.detailEff:Infinity;this.cheapIds[0].length=this.cheapIds[1].length=0;
+  const reach=ctx.filler?Math.min(cullFar,ctx.filler.farEff):cullFar;
+  if(fadeM>0)this.simFade.value.set((ctx.filler?detailEff:cullFar)-fadeM,ctx.filler?detailEff:cullFar,-2,-1);else this.simFade.value.set(1e9,1e9+1,-2,-1);
+  const fillerCounts={trees:0,far:0,blobs:0,cheap:0};this.fill.begin();
   const farCounts=[0,0];let farTrunks=0,blobs=0,midTrees=0,fullTrees=0,leafy=0;this.farTrunkIds.length=0;this.farIds[0].length=this.farIds[1].length=0;
   // two passes would let batches size exactly; instead capacity doubles on demand
   const tally=new Map<number,number>();
-  for(const node of nodes){
+  for(const list of [nodes,ctx.filler?.trees??[]])for(const node of list){
    if(!ctx.known(node.x,node.z))continue;
-   const dx=node.x-ctx.camera.x,dz=node.z-ctx.camera.z,distance=Math.hypot(dx,dz);if(distance>cullFar)continue;
+   const dx=node.x-ctx.camera.x,dz=node.z-ctx.camera.z,distance=Math.hypot(dx,dz);if(distance>reach)continue;
    const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=node.scale*growth;
    const tier:0|1|2=distance<=d0?0:distance<=d1?1:2;
+   if(tier===2&&ctx.inView&&!ctx.inView(node.x,node.z,10))continue;
+   if(node.filler)fillerCounts.trees++;
    if(stump){
     if(distance>d1)continue;
     const b=this.stumpBatch(b0(this.stumps)+1);const i=b.n++;b.ids.push(node.id);
@@ -116,23 +131,48 @@ export class BotanicalForest{
     b.mesh.setMatrixAt(i,this.matrix);b.mesh.setColorAt(i,this.color);b.state.setXY(i,density,snow);
     if(tier===0)fullTrees++;else midTrees++;if(density>.05||sp.evergreen)leafy++;
    }else{
-    const g=this.geometryInfo(rec.sp);
-    if(farTrunks>=this.farTrunk.instanceMatrix.count){const old=this.farTrunk,mesh=new THREE.InstancedMesh(old.geometry,old.material,old.instanceMatrix.count*2);mesh.name=old.name;mesh.frustumCulled=false;mesh.instanceMatrix.array.set(old.instanceMatrix.array);this.scene.remove(old);old.dispose();this.scene.add(mesh);this.farTrunk=mesh;}
+    const g=this.geometryInfo(rec.sp),fl=node.filler===true;
+    if(distance>detailEff-fadeM){
+     // beyond the individual-detail radius: one cheap crown (no trunk), pickable like the far crown it replaces. Inside the last `fade` metres both are drawn (complementary dither = cross-fade).
+     if(density<=.05&&dec){if(distance>detailEff)continue;}else{
+     const style=sp.group==='conifer'&&sp.arch!=='umbrella'&&sp.arch!=='decurrent'||sp.group==='stunted'&&sp.id==='juniper'?1:0;
+     this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);
+     this.pos.set(g.crownCenter[0]*s*rec.sx,g.crownCenter[1]*s*rec.sy,g.crownCenter[2]*s*rec.sx).applyQuaternion(this.quat);this.pos.x+=node.x;this.pos.y+=node.y;this.pos.z+=node.z;
+     this.scale.set(g.crownHalf[0]*s*rec.sx*.96,g.crownHalf[1]*s*rec.sy*.96,g.crownHalf[2]*s*rec.sx*.96);this.matrix.compose(this.pos,this.quat,this.scale);
+     const c=CHEAP_TMP.copy(this.color);if(snow>0)c.lerp(this.snowColor,snow*.55);this.fill.addBlob(style===1,this.matrix,c);
+     if(!fl)this.cheapIds[style].push(node.id);fillerCounts.cheap++;if(distance>detailEff)continue;}
+    }
+    if(!fl&&farTrunks>=this.farTrunk.instanceMatrix.count){const old=this.farTrunk,mesh=new THREE.InstancedMesh(old.geometry,old.material,old.instanceMatrix.count*2);mesh.name=old.name;mesh.frustumCulled=false;mesh.instanceMatrix.array.set(old.instanceMatrix.array);this.scene.remove(old);old.dispose();this.scene.add(mesh);this.farTrunk=mesh;}
     this.pos.set(node.x,node.y,node.z);this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);
-    const tr=Math.max(.12,sp.r0*.7)*s*rec.sx;this.scale.set(tr,Math.max(.6,g.crownCenter[1])*s*rec.sy,tr);this.matrix.compose(this.pos,this.quat,this.scale);this.farTrunk.setMatrixAt(farTrunks++,this.matrix);this.farTrunkIds.push(node.id);
+    const tr=Math.max(.12,sp.r0*.7)*s*rec.sx;this.scale.set(tr,Math.max(.6,g.crownCenter[1])*s*rec.sy,tr);this.matrix.compose(this.pos,this.quat,this.scale);if(fl)this.fill.addTrunk(this.matrix);else{this.farTrunk.setMatrixAt(farTrunks++,this.matrix);this.farTrunkIds.push(node.id);}
     if(density<=.05&&dec)continue;
-    const style=sp.group==='conifer'&&sp.arch!=='umbrella'&&sp.arch!=='decurrent'||sp.group==='stunted'&&sp.id==='juniper'?1:0,i=farCounts[style]++;this.growFar(style,i+1);const mesh=this.far[style];
+    const style=sp.group==='conifer'&&sp.arch!=='umbrella'&&sp.arch!=='decurrent'||sp.group==='stunted'&&sp.id==='juniper'?1:0,i=fl?0:farCounts[style]++;if(!fl)this.growFar(style,i+1);const mesh=this.far[style];
     this.pos.set(g.crownCenter[0]*s*rec.sx,g.crownCenter[1]*s*rec.sy,g.crownCenter[2]*s*rec.sx).applyQuaternion(this.quat);this.pos.x+=node.x;this.pos.y+=node.y;this.pos.z+=node.z;
-    this.scale.set(g.crownHalf[0]*s*rec.sx*.96,g.crownHalf[1]*s*rec.sy,g.crownHalf[2]*s*rec.sx*.96);this.matrix.compose(this.pos,this.quat,this.scale);mesh.setMatrixAt(i,this.matrix);
-    const c=this.color;if(snow>0)c.lerp(this.snowColor,snow*.55);mesh.setColorAt(i,c);this.farIds[style].push(node.id);
+    this.scale.set(g.crownHalf[0]*s*rec.sx*.96,g.crownHalf[1]*s*rec.sy,g.crownHalf[2]*s*rec.sx*.96);this.matrix.compose(this.pos,this.quat,this.scale);
+    const c=this.color;if(snow>0)c.lerp(this.snowColor,snow*.55);
+    if(fl){this.fill.addCrown(style===1,this.matrix,c);fillerCounts.far++;}else{mesh.setMatrixAt(i,this.matrix);mesh.setColorAt(i,c);this.farIds[style].push(node.id);}
    }
   }
+  if(ctx.filler){
+   const f=ctx.filler;this.fill.setFades(f.detailEff,f.farEff,fadeM);
+   for(const b of f.blobs){
+    if(!ctx.known(b.x,b.z))continue;
+    const needle=b.needle>.5,bare=b.dec*Math.min(1,ctx.winter*1.25)*(ctx.snow>.4?.6:1),aut=b.dec*Math.min(.9,ctx.autumn*.85);
+    this.color.setRGB(b.cr,b.cg,b.cb);if(aut>.02)this.color.lerp(BLOB_AUTUMN,aut);if(bare>.02)this.color.lerp(BLOB_BARE,Math.min(.85,bare));if(ctx.snow>.15)this.color.lerp(this.snowColor,Math.min(.55,ctx.snow*.5));
+    this.color.multiplyScalar(.96+.2*(Math.abs(Math.sin(b.x*12.9898+b.z*78.233)*43758.5453)%1));
+    this.euler.set(0,((b.x*.73+b.z*1.31)%6.28),0,'XZY');this.quat.setFromEuler(this.euler);this.pos.set(b.x,b.y,b.z);this.scale.set(b.r*(needle?.62:1),b.h*(1-.18*bare),b.r*(needle?.62:1));
+    this.matrix.compose(this.pos,this.quat,this.scale);this.fill.addBlob(needle,this.matrix,this.color);fillerCounts.blobs++;
+   }
+  }
+  this.fill.finish();
   for(const b of [...this.batches.values(),...(this.stumps?[this.stumps]:[])]){const m=b.mesh;m.count=b.n;m.visible=b.n>0;m.castShadow=ctx.quality!=='low'&&b.n>0;m.instanceMatrix.needsUpdate=true;m.instanceMatrix.clearUpdateRanges?.();if(m.instanceColor)m.instanceColor.needsUpdate=true;b.state.needsUpdate=true;}
   if(this.shadows){this.shadows.count=blobs;this.shadows.instanceMatrix.needsUpdate=true;}
   this.farTrunk.count=farTrunks;this.farTrunk.instanceMatrix.needsUpdate=true;
   for(let i=0;i<2;i++){const m=this.far[i];m.count=farCounts[i];m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;}
-  return {nearTrees:fullTrees+midTrees,nearCanopies:leafy,farCanopies:farCounts[0]+farCounts[1],resourceCount:nodes.length,fullTrees,midTrees};
+  return {nearTrees:fullTrees+midTrees,nearCanopies:leafy,farCanopies:farCounts[0]+farCounts[1],resourceCount:nodes.length,fullTrees,midTrees,filler:{...fillerCounts,...this.fill.stats()}};
  }
+ /** Meshes of the cosmetic filler layer (for tests and the measurement harness). */
+ fillerMeshes(){return this.fill.meshes();}
  private growFar(index:number,needed:number){const old=this.far[index];if(needed<=old.instanceMatrix.count)return;const mesh=new THREE.InstancedMesh(old.geometry,old.material,Math.max(needed,old.instanceMatrix.count*2));mesh.name=old.name;mesh.frustumCulled=false;mesh.instanceMatrix.array.set(old.instanceMatrix.array);
   mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(mesh.instanceMatrix.count*3),3);if(old.instanceColor)mesh.instanceColor.array.set(old.instanceColor.array);this.scene.remove(old);old.dispose();this.scene.add(mesh);this.far[index]=mesh;}
  /** Species and age class chosen for a resource node (for tests and debug overlays). */
@@ -141,8 +181,10 @@ export class BotanicalForest{
   for(const b of this.batches.values()){this.scene.remove(b.mesh);b.mesh.geometry.dispose();b.mesh.dispose();}this.batches.clear();
   if(this.stumps){this.scene.remove(this.stumps.mesh);this.stumps.mesh.geometry.dispose();this.stumps.mesh.dispose();}
   for(const m of this.far){this.scene.remove(m);m.geometry.dispose();m.dispose();}this.scene.remove(this.farTrunk);this.farTrunk.geometry.dispose();this.farTrunk.dispose();
-  if(this.shadows){this.scene.remove(this.shadows);this.shadows.dispose();}this.shadowMat.dispose();this.mat.dispose();this.farMat.dispose();
+  if(this.shadows){this.scene.remove(this.shadows);this.shadows.dispose();}this.shadowMat.dispose();this.fill.dispose();this.mat.dispose();this.farMat.dispose();
  }
 }
 const b0=(b:Batch|null)=>b?b.n:0;
+const CHEAP_TMP=new THREE.Color();
+const BLOB_AUTUMN=new THREE.Color('#b8793a'),BLOB_BARE=new THREE.Color('#756a58');
 export type {BotanicalSpecies};

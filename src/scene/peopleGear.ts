@@ -41,6 +41,20 @@ export function armorParts(c:KitCtx,style:ArmorStyle):RigPart[]{
  return o;
 }
 
+const wearTier=(c?:number)=>c===undefined||!Number.isFinite(c)||c>=.75?'-':String(Math.max(0,Math.ceil(c*8)));
+/** Cosmetic wear on OWNED armor and helmets, read from the asset's real condition (near LOD only, no stat change, nothing added when condition is high):
+ *  scuffed dark patches and a rubbed bright edge from about three-quarters condition down, a torn gap and a hanging cord when badly worn. */
+export function wornGearParts(c:KitCtx,kind:'armor'|'helm',cond:number,col:string):RigPart[]{
+ if(!Number.isFinite(cond)||cond>=.75)return [];
+ const wear=Math.min(1,(.75-Math.max(0,cond))/.75),n=Math.min(6,1+Math.floor(wear*6)),b=c.look.body,ch=b.chest,dark=shade(col,.55),lite=shade(col,1.22),o:RigPart[]=[];
+ for(let i=0;i<n;i++){const h=hashSeed(`${kind}-wear-${c.v}-${i}`),u=(h%97)/97,v=((h>>>7)%89)/89;
+  if(kind==='armor')o.push(Q(i%3===2?lite:dark,'box',[.06+u*.07,.03+v*.04,.012],[(u-.5)*.3*ch,.46+v*.3,.19*ch+.058],0,[0,0,(u-.5)*1.4]));
+  else o.push(Q(i%3===2?lite:dark,'box',[.05+u*.06,.03,.02],[(u-.5)*.2,.99+(v-.2)*.18,.15+v*.03],0,[0,0,(u-.5)*1.2]));}
+ if(wear>.55){if(kind==='armor')o.push(Q('#1c1712','box',[.09,.1,.02],[.1*ch,.62,.19*ch+.06],0,[0,0,.3]),Q(dark,'box',[.012,.16,.012],[.12*ch,.38,.19*ch+.06],0,[0,0,.1]));
+  else o.push(Q('#1c1712','box',[.06,.05,.02],[-.1,1.04,.15],0));}
+ return o;
+}
+
 // ---------------------------------------------------------------- helmets
 export type HelmKind='leatherCap'|'bronzeHelm'|'ironHelm';
 const HELM_COL:Record<HelmKind,string>={leatherCap:'#7a5236',bronzeHelm:'#b48e3e',ironHelm:'#7d8084'};
@@ -149,12 +163,12 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
  // armor: owned padded torso built in the society's padded style; other protection kinds draw by kind
  if(gear.armor){
   const k=gear.armor.kind as string,style:ArmorStyle|null=k==='paddedTorso'?look.armor.padded:k==='hideCuirass'?'hide':k==='scaleCuirass'?'scale':k==='lamellar'?'lamellar':k==='mail'?'mail':k==='plate'?'plate':null;
-  if(style&&gear.armor.condition>0){rendered.armor='paddedTorso';for(const q of armorParts(c,style)){bones[(q.pos[1]+(q.shape==='box'||q.shape==='sphere'?q.size[1]/2:0))<.5?'hips':'spine'].push(q);}
+  if(style&&gear.armor.condition>0){rendered.armor='paddedTorso';for(const q of armorParts(c,style)){bones[(q.pos[1]+(q.shape==='box'||q.shape==='sphere'?q.size[1]/2:0))<.5?'hips':'spine'].push(q);}for(const q of wornGearParts(c,'armor',gear.armor.condition,PADDED_BASE[style]))bones.spine.push(q);
    bones.spine.push(Q(input.affiliation??'#c2b080','box',[.2,.2,.03],[0,.58,.2],1));}
   else ignored.push(`armor kind '${k}' is not a known asset kind`);
  }
  const hm=hasHelm?gear.helmet!:undefined;
- if(hm){rendered.helmet=hm.kind;for(const q of helmetParts(c,hm.kind,look.helm,role==='ruler'))bones.head.push(q);}else if(gear.helmet)ignored.push('helmet with no condition left is not drawn');
+ if(hm){rendered.helmet=hm.kind;for(const q of helmetParts(c,hm.kind,look.helm,role==='ruler'))bones.head.push(q);for(const q of wornGearParts(c,'helm',hm.condition,HELM_COL[hm.kind]))bones.head.push(q);}else if(gear.helmet)ignored.push('helmet with no condition left is not drawn');
  // ruler: cloak and circlet from the society's flag, as the first rig, on top of the society's rank headwear
  const flag=culture.flag;
  if(type==='leader'){
@@ -167,7 +181,7 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
  const garmentColor=pal.cloth,trimColor=pal.trim;
  Object.assign(colors,{garment:garmentColor,trim:trimColor,leather:pal.leather,padding:PADDED_BASE[look.armor.padded],stitch:input.affiliation??'#c2b080',wood:'#8a5a2c',metal:pal.metal,hair:pal.hair,skin:pal.skin,body:garmentColor,cloak:mix(flag.fields[0] as string,'#000000',.12),flag:flag.fields[0] as string,flag2:flag.fields[1] as string,charge:flag.chargeColor,team:input.teamColor,boot:shade(pal.leather,.6)});
  for(const k of SLOT_KINDS)if(!colors[k])colors[k]='#808080';
- const key=['rig2',look.id,bodyClass,type,role,rendered.garment??'-',item??'-',cut.torso,cut.mantle,hk,rendered.armor?look.armor.padded+(gear.armor?.kind??''):'-',rendered.helmet??'-',rendered.shield??'-',ind.skinTone,ind.hairColour,ind.hair,ind.beard,ind.jewel.join('+'),ind.mark?ind.mark.pattern+ind.mark.sites.join(''):'-',ind.patches,ind.variant,ind.hand,season,rich,culture.key,input.teamColor,input.affiliation??'-',g?Math.round((g.condition)*4):'-'].join('|');
+ const key=['rig2',look.id,bodyClass,type,role,rendered.garment??'-',item??'-',cut.torso,cut.mantle,hk,rendered.armor?look.armor.padded+(gear.armor?.kind??''):'-',rendered.helmet??'-',rendered.shield??'-',ind.skinTone,ind.hairColour,ind.hair,ind.beard,ind.jewel.join('+'),ind.mark?ind.mark.pattern+ind.mark.sites.join(''):'-',ind.patches,ind.variant,ind.hand,season,rich,culture.key,input.teamColor,input.affiliation??'-',g?Math.round((g.condition)*4):'-',wearTier(gear.armor?.condition),wearTier(gear.helmet?.condition)].join('|');
  void CLS_HEIGHT;void hashSeed;void lookForSkin;void individualFor;
  return {key,bones,colors,itemR,itemL,bodyClass,rendered,ignored,fit:bodyClass,look,role,ind,frame:{height:look.body.height*ind.height,build:ind.build,dirt:ind.dirt}} as RigOutfit;
 }
