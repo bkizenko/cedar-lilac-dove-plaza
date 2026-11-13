@@ -1107,6 +1107,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-13 01:00 | Claude | 27 (since 00:00 ET, all on main) | 27 | ~3 (leader standard wear, water-pack legacy test fix, ASTRA-14/19/20 tests + wildlife bounds guard) | lanes A-D posted <1h |
 | 11-13 01:00 | Grok | 0 | 0 | 0 | out; PM spawned background agent for ASTRA-14/19/20 (done, f570d47b) |
 | 11-13 01:00 | Total | 42 (all branches) | main = integration after 01:20 landing (10 commits) | ~3 | sweep 151/151 + 94/94 new, tsc diff nil; open ~9 not-started rows, 258 done/live by table count; wildlife-habitat.test seed 71 fails on main already (open) |
+| 11-13 02:00 | Codex | 11 (since 01:00 ET) | 11 | 1 (W5 typed trade-food custody LIVE 7b4854c; needs-trade escrow follow-through claimed) | active, on target |
+| 11-13 02:00 | Claude | 30 (since 01:00 ET) | 30 | ~2 (people arm shoulder/elbow, Parties abroad card; lane D audit rows) | lanes A-D posted <1h |
+| 11-13 02:00 | Grok | 0 | 0 | 0 | idle (out); World rows covered by Claude/background agents |
+| 11-13 02:00 | Total | 41 | main = integration + codex-autopilot after 02:13 landing (aa299f8b) | ~3 | sweep 127 tests 124 pass/3 skip/0 fail; open rows ~64 by '| open |' count, ~226 done mentions |
 
 ## Process improvements
 
