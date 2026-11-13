@@ -364,6 +364,8 @@ export function neighbourNews(g:Game,sinceTime=0,limit=8):NeighbourNews[]{
  if(rulersEnabled(g))for(const [id,list] of Object.entries(d?.history??{})){
   const t=Number(id);if(!Number.isInteger(t)||t===0||t===3||!g.tribe(t)||!societyRelation(g,0,t).known)continue;
   for(const h of list){
+   // Decision-feed: a known court's breakaway or reintegration is public (a community splits or is retaken); its private plans, postures and reasons are not.
+   if(h.kind==='breakaway'||h.kind==='reintegration'){const bt=h.year*RULERS_YEAR_SECONDS;if(bt>=sinceTime)out.push({time:bt,kind:h.kind,a:t,b:t,text:`${g.tribe(t).name} ${h.text}`});continue;}
    if(h.kind!=='succession')continue;const time=h.year*RULERS_YEAR_SECONDS;if(time<sinceTime)continue;
    const m=/^(.+?) succeeded (.+?) \((child|sibling|kin|none)(, contested)?\)/.exec(h.text);if(!m)continue;
    out.push({time,kind:'succession',a:t,b:t,text:`${g.tribe(t).name}: ${m[1]} succeeded ${m[2]}${m[4]?', and the claim is disputed':''}`});
