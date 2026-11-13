@@ -2567,7 +2567,7 @@ export class Game {
             const a = Math.random() * Math.PI * 2, d = 8 + Math.random() * 14;
             const x = herd.x + Math.cos(a) * d, z = herd.z + Math.sin(a) * d;
             const y = this.height(x, z);
-            if (!obstacles.clearAt({x,z},wildlifeBodyRadius(c)) || y <= this.waterAt(x,z) + 0.35 ||
+            if (!this.withinWorld(x,z,4) || !this.walkable(x,z) || !obstacles.clearAt({x,z},wildlifeBodyRadius(c)) || y <= this.waterAt(x,z) + 0.35 ||
                 (!this.world.options&&Math.hypot(x, z) >= (this.world.islandR || 140) - 6) || this.visibleAt(x, z)) continue;
             c.hp = c.maxHp;
             c.carcass=undefined;delete c.huntDefense;
