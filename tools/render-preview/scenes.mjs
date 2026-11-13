@@ -6,6 +6,7 @@ import { rigFor } from './rigs.mjs';
 import { CIVS, civScene, civLineupScene } from './civ.mjs';
 import { civBuildingsScene } from './civ-bldgs.mjs';
 import { hutSheetScene } from './hut-sheet.mjs';
+import { slopeScene, villagesScene } from './placement-demo.mjs';
 
 const B = constants.BUILDINGS;
 const WORLD = 1207;
@@ -301,6 +302,8 @@ export const SCENES = {
   caravans: caravanScene,
   wonders: wonderScene,
   'civ-lineup': civLineupScene,
+  'placement-slope': slopeScene(),
+  'placement-villages': villagesScene(),
   'hut-sheet': hutSheetScene(),
   'hut-sheet-a': hutSheetScene({ civs: ['sandrill','nilemark','tigrane','hanrei','vedara','aureline','sahelan'] }),
   'hut-sheet-b': hutSheetScene({ civs: ['quillan','kaaltun','mekhari','brythen','rusvolt','steppan','skoldar'] }),

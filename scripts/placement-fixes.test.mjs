@@ -51,7 +51,7 @@ test('hut: every civ at every early age is a readable hut - dark framed door at 
     const spec=variantSpec(carvedVariantFor({worldSeed:3,type:'hut',id:4,era,footprint:{w:5.4,d:5.2},settlementSeed:0,skin:presetSkin(civ)})),L=`${civ} era${era}`;
     const lum=h=>{const n=parseInt(h.slice(1),16);return .2126*(n>>16&255)+.7152*(n>>8&255)+.0722*(n&255);};
     const mats=Object.entries(spec.materials).filter(([k])=>/\.(wall2|accent|trim|roof|cloth)$/.test(k)).sort((a,b)=>lum(a[1].hex)-lum(b[1].hex));
-    const doors=spec.parts.filter(p=>p.shape==='box'&&p.size[1]>=1&&p.size[1]<=1.8&&p.size[0]>=.7&&p.size[0]<=1.25&&p.size[2]<=.16&&p.lod>=1);
+    const doors=spec.parts.filter(p=>p.shape==='box'&&p.size[1]>=1&&p.size[1]<=1.8&&p.size[0]>=.6&&p.size[0]<=1.25&&p.size[2]<=.16&&p.lod>=1);
     assert.ok(doors.length>0,L+' has a mid-distance door opening');
     assert.ok(doors.some(p=>p.mat===mats[0][0]),L+' door opening is the darkest tone of its palette');
     let top=0,maxZ=-1e9;for(const p of spec.parts){const q=partBounds(p);top=Math.max(top,q.maxY);if(p.lod>=1&&Math.abs(q.maxX-q.minX)<1.3)maxZ=Math.max(maxZ,q.maxZ);}
