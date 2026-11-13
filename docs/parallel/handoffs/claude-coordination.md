@@ -1233,3 +1233,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
   6. Raider/diplomacy/conquest backlog and any waiting wiring from your own queue.
   Claude architect/PM; Grok out. blocked: none
 08:30 ET Claude: shipped taste envelope (style genome validator+repair, cast distance, era view, 'generated' civ source; switch off by default, presets unchanged; 200 genomes pass, 24-civ sheets in docs/renders/taste-envelope, docs/TASTE_ENVELOPE.md) (989f3327) / now on idle, ready for next item / blocked: none
+09:19 ET Claude: shipped near-tier detail (hero trees, people faces/hands/feet/folds, item grain/knots/stitch/residue; before/after in docs/renders/near-detail) (SHA-PENDING) / now on idle, ready for next item / blocked: none

@@ -23,16 +23,16 @@ export function nearItemDetail(c:Ctx,category:string){
  const vtx=(i:number):[V3,V3]=>[[b.P[i*3],b.P[i*3+1],b.P[i*3+2]],v3.norm([b.N[i*3],b.N[i*3+1],b.N[i*3+2]])];
  // residue patches (ellipsoids lying flat on the surface): more with wear, fewer on tiny items
  const nPatch=Math.min(5,Math.round(2+wear*4*(.4+scale*.6)));
- for(let k=0;k<nPatch&&used+48<=room;k++){
+ for(let k=0;k<nPatch&&used+64<=room&&(!c.room||c.room()>=64);k++){
   const i=idx[Math.floor(c.r('p'+k)*idx.length)%idx.length],[p,n]=vtx(i);if(v3.len(n)<.5)continue;
   const r=(.006+c.r('pr'+k)*.011)*(.6+scale*.6),paint=flat(rgbHex(rgbMix(resid[k%2],[.5,.42,.3],.1+.25*c.r('pm'+k))));
-  b.pushAlong(v3.add(p,v3.mul(n,.0004)),v3.add(p,n));b.ellipsoid([0,0,0],[r,.0014,r*(.6+.5*c.r('pe'+k))],paint,4);b.pop();used+=48;
+  b.pushAlong(v3.add(p,v3.mul(n,.0004)),v3.add(p,n));b.ellipsoid([0,0,0],[r,.0014,r*(.6+.5*c.r('pe'+k))],paint,4);b.pop();used+=64;
  }
  // edge chips: pale flakes at the widest vertices (blade edges, axe bits, adze lips), only on edged categories and worked items
  if(category==='melee'||category==='hunt'||category==='craft'||category==='farm'){
   const edge=idx.filter(i=>Math.abs(b.P[i*3]-(minX+maxX)/2)>(maxX-minX)*.42);
   const nChip=Math.min(5,Math.round(1+wear*5));
-  for(let k=0;k<nChip&&edge.length&&used+14<=room;k++){
+  for(let k=0;k<nChip&&edge.length&&used+16<=room&&(!c.room||c.room()>=16);k++){
    const i=edge[Math.floor(c.r('c'+k)*edge.length)%edge.length],[p,n]=vtx(i),s=.004+c.r('cs'+k)*.005;
    b.push(v3.add(p,v3.mul(n,.0006)),[c.r('cx'+k)*3,c.r('cy'+k)*3,c.r('cz'+k)*3]);b.box([s,s*.5,s*.8],[0,0,0],flat(rgbHex(rgbMix(chipCol,[.5,.45,.35],c.r('cm'+k)*.5))));b.pop();used+=12;
   }
