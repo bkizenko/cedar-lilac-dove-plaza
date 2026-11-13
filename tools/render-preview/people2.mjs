@@ -128,12 +128,24 @@ async function handsSheet() {
   }
   await stack(path.join(outDir, 'hands.png'), parts);
 }
+async function toolsSheet() {
+  const skins = (process.env.HANDS_SKINS || 'civ:skoldar,civ:hanrei').split(','), parts = [];
+  for (const skin of skins.filter(k => ALL.includes(k))) for (const era of [0, 2, 4]) for (const [dist, cam] of [['game', { pos: [0, 1.7, 7.4], target: [0, 1.0, 0], fov: 32 }], ['rts', { pos: [0, 9, 14], target: [0, .8, 0], fov: 34 }]]) {
+    const row = [['worker', { order: 'gather', node: { kind: 'tree' } }], ['worker', { order: 'gather', node: { kind: 'rock' } }], ['worker', { order: 'gather', node: { kind: 'fish' } }], ['worker', { role: 'farmer', order: 'gather', node: { kind: 'farm' } }], ['worker', { role: 'smith', recipe: 'smeltCopper' }], ['worker', { role: 'builder', recipe: 'buildHut' }]];
+    const people = row.map(([t, o], i) => P(skin, t, (i - 2.5) * 1.5, 0, { ...o, id: 90 + i * 17 + era, facing: .7 }, 'summer', {}));
+    const r = await shoot(`tools-${skin}-${era}-${dist}`, { width: 1500, height: dist === 'game' ? 440 : 360, season: 'summer', era, seconds: .7, cam, people });
+    parts.push({ label: `${skin} era ${era} ${dist}: woodcutter, quarrier, angler, farmer, smith, builder (tool in hand)`, img: r.out });
+    stats[`tools-${skin}-${era}-${dist}`] = { close: r.info, rts: r.info };
+  }
+  await stack(path.join(outDir, 'tools.png'), parts);
+}
 const want = pos.length ? pos : ['all'];
 if (want[0] === 'civ') for (const s of want.slice(1)) await civSheet(s);
 else {
   const all = want.includes('all');
   if (all || want.includes('civs')) for (const s of ALL) await civSheet(s);
   if (want.includes('hands')) await handsSheet();
+  if (want.includes('tools')) await toolsSheet();
   if (all || want.includes('roles')) await rolesSheet();
   if (all || want.includes('armor')) await armorSheet();
   if (all || want.includes('overview')) await lineup(path.join(outDir, 'overview.png'), ALL);

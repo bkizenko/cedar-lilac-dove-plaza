@@ -35,7 +35,7 @@ export const ITEM_DEFS:Readonly<Record<string,ItemDef>>=Object.freeze(Object.fro
  D('atlatl','Atlatl','ranged','hand',atlatl,hb),
  D('arrow','Arrow','ranged','hand',arrow,[1500,700,250]),
  D('quiver','Quiver of arrows','ranged','hand',quiver,hb),
- ...SIEGE_GENERATORS.map(g=>D(g.id,g.name,'siege','world',g.gen,g.id==='siegeTower'?sb:g.id==='sapperTools'?[16000,7000,2800] as const:wb,g.id)),
+ ...SIEGE_GENERATORS.map(g=>D(g.id,g.name,'siege','world',g.gen,g.id==='siegeTower'?sb:g.id==='sapperTools'?[16000,8000,3200] as const:wb,g.id)),
  ...TOOL_GENERATORS.map(g=>D(g.id,g.name,g.category,g.frame,g.gen,g.budget??hb)),
 ]));
 export const ITEM_IDS:readonly string[]=Object.freeze(Object.keys(ITEM_DEFS));
