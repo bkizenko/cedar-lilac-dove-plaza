@@ -93,19 +93,19 @@ function cloth(u:number,v:number,s:number){
 function bronzeLike(u:number,v:number,s:number,gold=false){
  reset(.38,.7);worley(u,v,10,s+3);const facet=hash3(Math.floor(W.id*997),3,s),hamm=smooth(0,.5,W.f2-W.f1),brush=pn(u*260,v*3,260,3,s+4),brush2=pn(u*90,v*2,90,2,s+5),scr=pn(u*40,v*210,40,210,s+6);
  PX.m=.92+(W.id-.5)*.26+(brush-.5)*.34+(brush2-.5)*.18+(hamm-.5)*.2+(scr>.9?.35:0);PX.h=.5+(W.id-.5)*.5-(1-hamm)*.12+(brush-.5)*.06;
- PX.rough=clamp(.34+(1-brush)*.18+(1-hamm)*.1-(scr>.9?.12:0));PX.metal=gold?.9:.72;
+ PX.rough=clamp(.34+(1-brush)*.18+(1-hamm)*.1-(scr>.9?.12:0));PX.metal=gold?.8:.6;
  PX.tr=1+(W.id-.5)*.05;PX.tb=1-(W.id-.5)*.06;void facet;
 }
 function iron(u:number,v:number,s:number){
  reset(.6,.5);const scale=pn(u*34,v*34,34,34,s+1),pit=pn(u*110,v*110,110,110,s+2),streak=pn(u*180,v*4,180,4,s+3),hamm=(worley(u,v,12,s+4),W.f2-W.f1),bright=pn(u*14,v*7,14,7,s+5);
  PX.m=.78+(scale-.5)*.5+(streak-.5)*.3+smooth(0,.4,hamm)*.18-(pit>.82?.34:0)+(bright>.7?.28:0);PX.h=.5+(scale-.5)*.35-(pit>.82?.35:0);
- PX.rough=clamp(.48+(1-streak)*.18+(pit>.82?.3:0)-(bright>.7?.18:0));PX.metal=pit>.82?.2:.55;
+ PX.rough=clamp(.48+(1-streak)*.18+(pit>.82?.3:0)-(bright>.7?.18:0));PX.metal=pit>.82?.15:.5;
  PX.tr=1+(pit>.82?.1:0);PX.tb=1-(pit>.82?.1:0);
 }
 function steel(u:number,v:number,s:number){
  reset(.26,.82);const fine=pn(u*300,v*2,300,2,s+1),fine2=pn(u*120,v*3,120,3,s+2),wave=.5+.5*Math.sin(TAU*(u*7+pn(u*3,v*3,3,3,s+3)*1.6+v*1.2)),weld=pn(u*22+wave*2.4,v*4,22,4,s+4),scr=pn(u*30,v*300,30,300,s+5);
  PX.m=.98+(fine-.5)*.3+(fine2-.5)*.18+(weld-.5)*.34*(1)+(scr>.93?.4:0);PX.h=.5+(weld-.5)*.12+(fine-.5)*.05;
- PX.rough=clamp(.2+(1-fine)*.16+(weld<.35?.1:0)-(scr>.93?.1:0));PX.metal=.84;
+ PX.rough=clamp(.2+(1-fine)*.16+(weld<.35?.1:0)-(scr>.93?.1:0));PX.metal=.7;
  PX.tr=1-(weld-.5)*.02;PX.tb=1+(weld-.5)*.04;
 }
 function flint(u:number,v:number,s:number){

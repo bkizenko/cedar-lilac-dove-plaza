@@ -8,7 +8,7 @@ export type V3=[number,number,number];
 export type RGB=[number,number,number];
 export type LodTier=0|1|2;
 /** colour at a surface point: local position, surface normal, t = 0..1 along the primitive's length, a = 0..1 around it (blades: |x|/halfwidth) */
-export type TexMeta={/** layer of the detail atlas (itemTexture.ts TILE) */layer:number;/** repeats per metre across (u) and along (v) the surface */du:number;dv:number;
+export type TexMeta={/** layer of the detail atlas (itemTexture.ts TILE) */layer:number;/** planar mapping from the local position (shield faces, flat plates) instead of metric along/around */planar?:(p:V3)=>[number,number];/** repeats per metre across (u) and along (v) the surface */du:number;dv:number;
  /** up to two painted decals (cells of the decal atlas) mapped planar from the local position */
  decal?:{cellA:number;cellB:number;uv:(p:V3)=>[number,number];accA:RGB;accB:RGB}};
 export type Paint=((p:V3,n:V3,t:number,a:number)=>RGB)&{tex?:TexMeta};
@@ -114,7 +114,7 @@ export class MeshBuilder{
    if(i>0){const a=rings[i-1],cx0=a.reduce((s,p)=>s+p[0],0)/Cn,cy0=a.reduce((s,p)=>s+p[1],0)/Cn,cz0=a.reduce((s,p)=>s+p[2],0)/Cn,cx1=row.reduce((s,p)=>s+p[0],0)/Cn,cy1=row.reduce((s,p)=>s+p[1],0)/Cn,cz1=row.reduce((s,p)=>s+p[2],0)/Cn;
     rowV.push(rowV[i-1]+Math.hypot(cx1-cx0,cy1-cy0,cz1-cz0));}
   }
-  const uvOf=(r:number,uc:number):[number,number]=>[colU[r][uc]*du,rowV[r]*dv];
+  const pl=tex?.planar,uvOf=(r:number,uc:number):[number,number]=>pl?pl(rings[r][uc%Cn]):[colU[r][uc]*du,rowV[r]*dv];
   const faces:{a:[number,number,number];b:[number,number,number];c:[number,number,number];n:V3}[]=[];
   for(let i=0;i<R-1;i++)for(let j=0;j<cols;j++){
    const j1=(j+1)%Cn,q=[[i,j,j],[i,j1,j+1],[i+1,j1,j+1],[i+1,j,j]] as [number,number,number][];

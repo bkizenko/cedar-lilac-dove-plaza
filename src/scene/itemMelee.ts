@@ -1,12 +1,12 @@
 /** MELEE ITEMS: spears, javelins, pikes, clubs and maces, axes, war picks, swords and daggers, shields. Each is built for an era (0 flint & bone,
  *  1 copper, 2 bronze, 3 iron, 4 steel) with correct hafting for that era, in the society's own style, with visible wear.
  *  Frames: hand items have the grip at the origin, tip along +Y, face along +Z; shields are centred where the left arm carries them. */
-import {TAU,v3,hexRgb,rgbMix,type V3,type Paint} from './itemMesh';
+import {TAU,v3,hexRgb,rgbMix,likePaint,withTex,type V3,type Paint} from './itemMesh';
 import {type Ctx,shaft,splinters,lashing,gripWrap,decorPaint,makerMark,tassel} from './itemKit';
 import {bandPaint} from './itemMaterials';
 
 const leaf=(t:number)=>Math.pow(Math.max(0,Math.sin(Math.PI*Math.pow(Math.min(1,t),.72))),.75);
-const edgeGlint=(p:Paint,t0:number,k=.4):Paint=>(q,n,t,a)=>{const c=p(q,n,t,a);return t>t0?[Math.min(1,c[0]+k*(t-t0)),Math.min(1,c[1]+k*(t-t0)),Math.min(1,c[2]+k*(t-t0))]:c;};
+const edgeGlint=(p:Paint,t0:number,k=.4):Paint=>likePaint((q,n,t,a)=>{const c=p(q,n,t,a);return t>t0?[Math.min(1,c[0]+k*(t-t0)),Math.min(1,c[1]+k*(t-t0)),Math.min(1,c[2]+k*(t-t0))]:c;},p);
 const mp=(c:Ctx,len:number,o:{pattern?:boolean}={})=>c.paint(c.metal,{len,pattern:o.pattern??c.era===4,age:c.era===1?.1:c.era===2?.08:0});
 const stoneOf=(c:Ctx)=>c.st.stone;
 

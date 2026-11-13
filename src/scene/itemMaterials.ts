@@ -3,7 +3,8 @@
  *  BLUF: `paintFor(mat,opts)` returns a per-vertex `Paint`. Wood has grain and knots along the primitive's length; flint is faceted with cortex
  *  and a bright fresh edge; copper and bronze green with age and wear, iron rusts, steel keeps a pattern-welded sheen; leather darkens and
  *  shines at the grip; cord and sinew show their twist. `wear` 0 is new, 1 is ruined. Nothing here touches the simulation. */
-import {hexRgb,rgbMix,vnoise,TAU,type Paint,type RGB,type V3} from './itemMesh';
+import {hexRgb,rgbMix,vnoise,TAU,withTex,likePaint,type Paint,type RGB,type V3} from './itemMesh';
+import {TILE,TILE_SCALE} from './itemTexture';
 
 export type MatId=
  |'flint'|'obsidian'|'chert'|'bone'|'antler'|'horn'|'ivory'|'stone'|'basalt'|'shell'
@@ -19,17 +20,29 @@ export const MATERIALS:Readonly<Record<MatId,Base>>=Object.freeze({
  ash:B('#b8a27c',.1,.9,'#7e6339'),oak:B('#826648',.1,.9,'#53391e'),yew:B('#a56a3c',.1,.9,'#5e3217'),birch:B('#d3c3a1',.07,.5,'#4a3f33'),bamboo:B('#c9b55a',.06,.4,'#6e5e24'),cedar:B('#a4603c',.09,.9,'#5d2e18'),pine:B('#c2a273',.09,.9,'#8a6330'),ebony:B('#4a3628',.08,.7,'#1f1710'),elm:B('#96795a',.1,.9,'#5c4125'),willow:B('#b39d78',.08,.8,'#7a5f37'),
  leather:B('#704a2c',.13,.2,'#3d2514'),rawhide:B('#cdb68c',.1,.2,'#8f7a52'),sinew:B('#b9a06c',.08,.5,'#7b6738'),cord:B('#c4b184',.1,.6,'#85744d'),linen:B('#d8cdaa',.07,.4,'#a79a74'),wool:B('#cbbd9c',.12,.3,'#8c7e5e'),felt:B('#b8ad94',.12,0,'#7f7560'),pitch:B('#2a2018',.08,0,'#0f0b08'),clay:B('#b5694a',.1,0,'#7a3f27'),wicker:B('#bd9d66',.09,.7,'#7e6334'),hair:B('#8a3426',.12,.5,'#3d140d'),feather:B('#d9d2c0',.12,.6,'#6b5f4a'),hide:B('#8a6b45',.14,.2,'#4d3a22'),ochre:B('#b5532c',.1,0,'#7a3319'),char:B('#2e2a27',.12,0,'#100e0d'),fire:B('#ff9a2a',.2,0,'#e04a12'),water:B('#6a93a8',.08,0,'#3c5f73'),
 });
-const PATINA:Partial<Record<MatId,string>>={copper:'#4f9b7c',bronze:'#4d8c6c',iron:'#8e4a28',steel:'#6d5b45',lead:'#b8bcbc',gold:'#b8923a'};
+/** Ageing, per metal: what use dulls it to (`tarn`, most of the surface), what bloom grows in damp recesses (`bloom`, patchy), and how much of the bloom the metal makes.
+ *  Worn bronze is mostly dark brown tarnish with scattered verdigris, worn iron is dark oxide with orange rust, steel dulls grey with a few rust freckles. Never uniformly green. */
+const PATINA:Partial<Record<MatId,{tarn:string;bloom:string;amount:number}>>={
+ copper:{tarn:'#6e4a33',bloom:'#58a086',amount:.7},bronze:{tarn:'#5e4a2a',bloom:'#5b9a78',amount:.55},iron:{tarn:'#3e332c',bloom:'#a4532c',amount:.9},steel:{tarn:'#66686a',bloom:'#8a5232',amount:.35},lead:{tarn:'#8b8f92',bloom:'#c9cdcc',amount:.5},gold:{tarn:'#b08a2c',bloom:'#b08a2c',amount:.1},
+};
+/** the atlas layer each substance wears */
+export const TEX_OF:Readonly<Record<MatId,number>>=Object.freeze({
+ flint:TILE.FLINT,obsidian:TILE.OBSIDIAN,chert:TILE.FLINT,bone:TILE.BONE,antler:TILE.BONE,horn:TILE.BONE,ivory:TILE.BONE,stone:TILE.STONE,basalt:TILE.STONE,shell:TILE.BONE,
+ copper:TILE.BRONZE,bronze:TILE.BRONZE,iron:TILE.IRON,steel:TILE.STEEL,gold:TILE.GOLD,lead:TILE.IRON,
+ ash:TILE.WOOD,oak:TILE.WOOD,yew:TILE.WOOD,birch:TILE.WOOD,bamboo:TILE.WOOD,cedar:TILE.WOOD,pine:TILE.WOOD,ebony:TILE.WOOD,elm:TILE.WOOD,willow:TILE.WOOD,
+ leather:TILE.LEATHER,rawhide:TILE.HIDE,sinew:TILE.CORD,cord:TILE.CORD,linen:TILE.CLOTH,wool:TILE.CLOTH,felt:TILE.CLOTH,pitch:TILE.NONE,clay:TILE.CLAY,wicker:TILE.WEAVE,hair:TILE.CORD,feather:TILE.NONE,hide:TILE.HIDE,ochre:TILE.NONE,char:TILE.NONE,fire:TILE.NONE,water:TILE.NONE,
+});
+export const texMetaFor=(layer:number)=>({layer,du:TILE_SCALE[layer][0],dv:TILE_SCALE[layer][1]});
 const clamp=(x:number,a=0,b=1)=>Math.max(a,Math.min(b,x));
-export type PaintOpts={seed?:number;/** 0 new .. 1 ruined */wear?:number;/** length of the primitive along t, metres (grain stretch) */len?:number;tint?:string;tintAmount?:number;/** second colour for stripes, bands and painted work */accent?:string;/** forged pattern or twisted strands */pattern?:boolean;/** extra age for metals (patina) independent of use */age?:number};
+export type PaintOpts={/** override the atlas layer (planks, rivets) */tile?:number;seed?:number;/** 0 new .. 1 ruined */wear?:number;/** length of the primitive along t, metres (grain stretch) */len?:number;tint?:string;tintAmount?:number;/** second colour for stripes, bands and painted work */accent?:string;/** forged pattern or twisted strands */pattern?:boolean;/** extra age for metals (patina) independent of use */age?:number};
 const isWood=(m:MatId)=>['ash','oak','yew','birch','bamboo','cedar','pine','ebony','elm','willow'].includes(m);
 const isMetal=(m:MatId)=>['copper','bronze','iron','steel','gold','lead'].includes(m);
 /** The painter for one substance. Pure and deterministic in (mat, opts, position). */
 export function paintFor(mat:MatId,o:PaintOpts={}):Paint{
  const b=MATERIALS[mat],base=hexRgb(b.c),dark=hexRgb(b.d),seed=(o.seed??1)|0,wear=clamp(o.wear??0),len=o.len??1,age=clamp(o.age??0);
  const tint=o.tint?hexRgb(o.tint):null,ta=o.tintAmount??.35,acc=o.accent?hexRgb(o.accent):null;
- const patina=PATINA[mat]?hexRgb(PATINA[mat]!):null,wood=isWood(mat),metal=isMetal(mat),dirt=hexRgb('#40321f');
- return (p:V3,n:V3,t:number,a:number):RGB=>{
+ const patina=PATINA[mat]?{tarn:hexRgb(PATINA[mat]!.tarn),bloom:hexRgb(PATINA[mat]!.bloom),amount:PATINA[mat]!.amount}:null,wood=isWood(mat),metal=isMetal(mat),dirt=hexRgb('#40321f');
+ const f=(p:V3,n:V3,t:number,a:number):RGB=>{
   let c:RGB=base;
   if(tint)c=rgbMix(c,tint,ta);
   const lo=vnoise(p[0]*7+seed,p[1]*7,p[2]*7,seed),hi=vnoise(p[0]*31,p[1]*31,p[2]*31,seed+3);
@@ -63,8 +76,11 @@ export function paintFor(mat:MatId,o:PaintOpts={}):Paint{
     const worn=clamp(wear*1.1+age*.9);
     if(patina&&worn>0){
      const m=vnoise(p[0]*9+3,p[1]*9,p[2]*9+1,seed+6)*.7+vnoise(p[0]*27,p[1]*27,p[2]*27,seed+2)*.3,cover=m*.55+worn*1.25-.72;
-     // patina collects in recesses: less on exposed edges
-     const edgeKeep=a>.88?.55:1;if(cover>0)c=rgbMix(c,patina,clamp(cover*2.2)*edgeKeep*(mat==='gold'?.3:mat==='steel'?.45:1));
+     // tarnish dulls most of the surface, but exposed edges keep their metal
+     const edgeKeep=a>.88?.5:1;if(cover>0)c=rgbMix(c,patina.tarn,clamp(cover*1.9)*edgeKeep*(mat==='gold'?.2:.85));
+     // bloom (verdigris, rust) grows only in a few damp pockets and only on aged metal
+     const bl=vnoise(p[0]*17+9,p[1]*17,p[2]*17+4,seed+14)*.65+vnoise(p[0]*48,p[1]*48,p[2]*48,seed+15)*.35,pocket=clamp((bl-.6)*3.2)*clamp((worn-.22)*1.6)*patina.amount*(a>.9?.3:1);
+     if(pocket>0)c=rgbMix(c,patina.bloom,pocket*.85);
     }
     break;}
    case 'leather':case 'hide':case 'rawhide':{
@@ -88,13 +104,14 @@ export function paintFor(mat:MatId,o:PaintOpts={}):Paint{
   if(a>0&&acc&&(mat==='leather'||mat==='rawhide'||mat==='linen'||mat==='wool'||mat==='felt'||mat==='cord')&&Math.abs(Math.sin(t*len*14*TAU/6))>.97)c=acc;
   return [clamp(c[0]*k),clamp(c[1]*k),clamp(c[2]*k)];
  };
+ return withTex(f as Paint,texMetaFor(o.tile??TEX_OF[mat]));
 }
 /** Stripe/band paint over a base paint: used for painted hafts, shield fields and pot bands. `along` selects t (length) or a (around). */
 export function bandPaint(base:Paint,band:RGB,period:number,duty:number,along:'t'|'a'|'x'|'y'='t',phase=0):Paint{
- return (p,n,t,a)=>{const c=base(p,n,t,a),v=along==='t'?t:along==='a'?a:along==='x'?p[0]:p[1],f=((v*period+phase)%1+1)%1;return f<duty?rgbMix(c,band,.85):c;};
+ return likePaint((p,n,t,a)=>{const c=base(p,n,t,a),v=along==='t'?t:along==='a'?a:along==='x'?p[0]:p[1],f=((v*period+phase)%1+1)%1;return f<duty?rgbMix(c,band,.85):c;},base);
 }
 /** A different paint for the part of a surface where `pred` holds (decoration, wear patches, inlays). */
-export function overPaint(base:Paint,over:Paint,pred:(p:V3,n:V3,t:number,a:number)=>boolean):Paint{return (p,n,t,a)=>pred(p,n,t,a)?over(p,n,t,a):base(p,n,t,a);}
+export function overPaint(base:Paint,over:Paint,pred:(p:V3,n:V3,t:number,a:number)=>boolean):Paint{return likePaint((p,n,t,a)=>pred(p,n,t,a)?over(p,n,t,a):base(p,n,t,a),base);}
 /** Which metal a given era forges. 0 stone age, 1 copper, 2 bronze, 3 iron, 4 steel. */
 export const ERA_METAL:readonly (MatId|null)[]=[null,'copper','bronze','iron','steel'];
 export const ERA_NAMES=['flint & bone','copper','bronze','iron','steel'] as const;

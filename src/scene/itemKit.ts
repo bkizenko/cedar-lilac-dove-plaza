@@ -1,6 +1,6 @@
 /** ITEM KIT: the shared context and craft helpers every item generator uses (shafts, lashings, grips, tassels, decoration, maker's marks).
  *  Pure. A generator receives a `Ctx` (builder + era + society style + wear) and draws into `ctx.b`; nothing here knows about the game state. */
-import {MeshBuilder,hash32,hexRgb,rgbMix,v3,TAU,type LodTier,type Paint,type V3,type RGB} from './itemMesh';
+import {MeshBuilder,hash32,hexRgb,rgbMix,v3,TAU,likePaint,type LodTier,type Paint,type V3,type RGB} from './itemMesh';
 import {paintFor,metalOfEra,type MatId,type PaintOpts} from './itemMaterials';
 import {itemStyleFor,type ItemStyle} from './itemStyle';
 
@@ -60,7 +60,7 @@ export function gripWrap(c:Ctx,y0:number,y1:number,r:number,o:{x?:number;z?:numb
 /** Decorated wood paint: society decoration (bands, chevrons, dots, spirals, steps) in the accent over the shaft grain. */
 export function decorPaint(c:Ctx,base:Paint,len:number,t0=0,t1=1,col?:string):Paint{
  const ink=hexRgb(col??c.st.cordColour),d=c.st.decor;if(d==='none'||c.lod===2)return base;
- return (p,n,t,a)=>{
+ return likePaint((p,n,t,a)=>{
   const k=base(p,n,t,a);if(t<t0||t>t1)return k;const u=(t-t0)/(t1-t0||1),L=len*(t1-t0);let m=0;
   if(d==='bands')m=(u*L*14)%1<.22&&(Math.floor(u*L*14)%3===0)?1:0;
   else if(d==='chevron'){const f=Math.abs(((a*3+u*L*9)%1+1)%1-.5)*2;m=Math.abs(((u*L*12)%1+1)%1-f)<.14?1:0;}
@@ -69,7 +69,7 @@ export function decorPaint(c:Ctx,base:Paint,len:number,t0=0,t1=1,col?:string):Pa
   else if(d==='notches'){m=((u*L*26)%1)<.09&&a>.4&&a<.6?1:0;}
   else if(d==='steps'){const s=Math.floor(u*L*18),f=((a*4)%1+1)%1;m=f<.5&&s%2===0&&((a*4+s*.5)%1)<.5?1:0;}
   return m?rgbMix(k,ink,.82):k;
- };
+ },base);
 }
 /** the maker's mark: tiny stamped dots or a cross, as the workshop's identity, on a flat surface at `at` facing +Z (or `rot`). */
 export function makerMark(c:Ctx,at:V3,mat:MatId|'wood',scale=1,rot:V3=[0,0,0]){
