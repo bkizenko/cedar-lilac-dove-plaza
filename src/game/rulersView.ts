@@ -14,6 +14,7 @@ import {societyRelation} from './societyRelations';
 import {dominantTraits} from './rulerGenome';
 import {heir,yearlyDeathChance} from './dynasty';
 import {hash32,makeRng} from './rulerCore';
+import {mourningOf} from './societyRuntime';
 
 export type CouncilModel={
  enabled:boolean;stage:string;showSuccession:boolean;showFactions:boolean;
@@ -28,6 +29,7 @@ export type CouncilModel={
  log:string[];
  /** Agreements the player is party to (marriages, pacts, fosterage), newest first; optional so old callers and empty models stay valid. */
  news?:{time:number;kind:string;with:number;text:string}[];
+ mourning?:{from:string;to:string;relation:string;contested:boolean;kind:string;secondsLeft:number;carried:number;strained:number;lapsed:number};
  handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
 };
 /** What a known neighbour's court shows the outside world: who rules, who would follow, who stands in as regent. Read-only; unknown societies get none. */
@@ -90,7 +92,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
   rivals:Object.values(d.people).filter(p=>p.alive&&p.id!==d.rulerId&&p.id!==hp?.id&&p.age>=16&&p.claimStrength>0).sort((x,y)=>y.claimStrength-x.claimStrength).slice(0,3).map(p=>({name:p.name,age:p.age,role:role(p.id),claim:p.claimStrength,legit:p.legit})),
   pressure:(u=>u?{unrest:Math.round(u.value),stage:u.stage,claimsAgainst:claimsOf(g,team).filter(c=>Number(c.target)===team).length,why:u.why}:undefined)(unrestOf(g,team))}:undefined;
  return {
-  handover,enabled:true,stage:f.stage,showSuccession:f.showSuccessionUI,showFactions:f.factions,
+  handover,mourning:(m=>m?{from:m.from,to:m.to,relation:m.relation,contested:m.contested,kind:m.kind,secondsLeft:Math.max(0,Math.round(m.mourningUntil-g.state.time)),carried:m.carried,strained:m.strained,lapsed:m.lapsed}:undefined)(mourningOf(g,team)),enabled:true,stage:f.stage,showSuccession:f.showSuccessionUI,showFactions:f.factions,
   ruler:person?{...(({name,age,headline,contradiction,wants,fears,competences,values})=>({name,age,headline,contradiction,wants:wants.map(String),fears:String(fears),competences,values:values as string[]}))(dossier(person))}:undefined,
   house:{name:d.house,generation:d.generation,family:Object.values(d.people).filter(p=>p.alive).map(p=>({name:p.name,age:p.age,role:role(p.id),adult:p.age>=16}))},
   polity:{form:me.civ.polity.form,law:me.civ.polity.succession,tier:me.civ.polity.tier},
