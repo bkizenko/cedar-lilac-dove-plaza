@@ -17,6 +17,7 @@ export type ForceVerb='attack'|'capture'|'rob'|'interrogate'|'ransom'|'release-p
 export type PeaceTermId='whitePeace'|'tribute'|'forcedLabor'|'puppet'|'annexation';
 
 let eraVoiceOn=true;
+try{if(typeof localStorage!=='undefined'&&localStorage.getItem('hearthwild.voice')==='modern')eraVoiceOn=false;}catch{/* storage blocked: keep the era voice */}
 /** The switch. Default on. Persisted by callers (the UI reads `hearthwild.voice`), never by this module. */
 export function setEraVoice(on:boolean){eraVoiceOn=!!on;}
 export function eraVoiceEnabled(){return eraVoiceOn;}
