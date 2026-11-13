@@ -23,7 +23,7 @@ export function shapeTriangles(p:Part):V3[][]{
  const [w,h,d]=p.size,hw=w/2,hd=d/2,n=Math.max(3,p.sides??8),out:V3[][]=[];
  switch(p.shape){
   case 'box':{
-   const c=(x:number,y:number,z:number):V3=>[x*hw,y*h,z*hd];
+   const [tx,tz]=p.taper??[1,1],c=(x:number,y:number,z:number):V3=>[x*hw*(1+(tx-1)*y),y*h,z*hd*(1+(tz-1)*y)];
    quad(out,c(-1,0,-1),c(1,0,-1),c(1,0,1),c(-1,0,1));quad(out,c(-1,1,-1),c(1,1,-1),c(1,1,1),c(-1,1,1));
    quad(out,c(-1,0,-1),c(1,0,-1),c(1,1,-1),c(-1,1,-1));quad(out,c(-1,0,1),c(1,0,1),c(1,1,1),c(-1,1,1));
    quad(out,c(-1,0,-1),c(-1,0,1),c(-1,1,1),c(-1,1,-1));quad(out,c(1,0,-1),c(1,0,1),c(1,1,1),c(1,1,-1));break;}
