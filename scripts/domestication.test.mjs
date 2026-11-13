@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
+import {beginPackTaming} from '../src/game/packAnimals.ts';
 import {beginHerdTaming,penPlacesReserved} from '../src/game/husbandry.ts';
 import {searchForWildGoats,cancelGoatSearch} from '../src/game/animalOrders.ts';
 import {domesticationReport,DOMESTICATION_RULES as R,validDomesticationState} from '../src/game/domestication.ts';
@@ -93,4 +94,20 @@ test('actual scouting packet pays bait once and cancelled paused capture retains
  const trial=structuredClone(u.tamingWork.trial),packet=structuredClone(u.expedition),food=g.tribe(0).food;
  assert.equal(cancelGoatSearch(g,pen.id),true);assert.equal(u.tamingWork.paused,true);assert.deepEqual(u.tamingWork.trial,trial);assert.deepEqual(u.expedition,packet);assert.equal(g.tribe(0).food,food);
  const copy=decodeGame(encodeGame(g)),same=copy.state.units.find(v=>v.id===u.id);assert.deepEqual(same.tamingWork.trial,trial);assert.equal(same.expedition.food,packet.food);assert.equal(same.tamingWork.animal,a.id);
+});
+
+test('new direct pack-goat trials use exact paid lots, refuse, reload and retry the same actual animal',()=>{
+ let{g,u,a}=fixture('goat',42,'refuse-then-success');const aid=a.id,uid=u.id,homeId=g.state.buildings.find(b=>b.type==='townhall').id,food=g.tribe(0).food,wood=g.tribe(0).wood;
+ assert.equal(beginPackTaming(g,homeId,0,uid),true);assert.equal(g.tribe(0).food,food-10);assert.equal(g.tribe(0).foodLots.provisions,food-10);assert.equal(g.tribe(0).wood,wood-2);assert.equal(u.tamingWork.trial.purpose,'pack');
+ const terms=structuredClone(u.tamingWork.trial);g.interruptMission(u);const paid=structuredClone({food:g.tribe(0).food,lots:g.tribe(0).foodLots,wood:g.tribe(0).wood});g=decodeGame(encodeGame(g));u=g.state.units.find(v=>v.id===uid);a=g.state.wildlife.find(v=>v.id===aid);
+ assert.equal(beginPackTaming(g,homeId,0,uid),true);assert.deepEqual(u.tamingWork.trial,terms);assert.deepEqual({food:g.tribe(0).food,lots:g.tribe(0).foodLots,wood:g.tribe(0).wood},paid);
+ drive(g,240,()=>domesticationReport(g).refusals===1);assert.equal(u.packAnimal,undefined);assert.equal(u.tamingWork,undefined);assert.ok(g.state.wildlife.some(v=>v.id===aid&&v.hp>0));const lastSeen={x:a.x,z:a.z};assert.equal(domesticationReport(g).woodSpent,2);assert.equal(domesticationReport(g).recent[0].purpose,'pack');
+ drive(g,180,()=>g.state.time>=a.domestication.cooldownUntil&&!u.recalled&&u.order!=='return');g.clearSelect();g.selectEntity(u);g.issueMove(lastSeen.x,lastSeen.z);drive(g,180,()=>g.visibleAt(a.x,a.z)&&!['move','return'].includes(u.order));
+ const before=g.tribe(0).food;assert.equal(beginPackTaming(g,homeId,0,uid),true,g.state.banner);assert.equal(g.tribe(0).food,before-10);assert.equal(g.tribe(0).wood,wood-4);assert.equal(u.tamingWork.trial.attempt,2);
+ drive(g,240,()=>u.packAnimal?.id===aid);assert.equal(u.packAnimal.packHarness.wood,2);assert.equal(u.packAnimal.packHarness.workSeconds,60);assert.equal(g.state.wildlife.some(v=>v.id===aid),false);assert.equal(domesticationReport(g).arrivals,0,'a pack transfer is not a pen arrival');assert.equal(domesticationReport(g).baitSpent,20);assert.equal(domesticationReport(g).woodSpent,4);assert.deepEqual(u.packAnimal.domestication.recent.map(r=>r.outcome),['refused','success']);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+test('old already paid unmarked pack work still resumes without new charges or a refusal roll',()=>{
+ const{g,u,a}=fixture('goat',42,'refuse-twice'),home=g.state.buildings.find(b=>b.type==='townhall'),food=g.tribe(0).food,wood=g.tribe(0).wood;
+ u.tamingWork={animal:a.id,progress:0,paused:true};u.order='hold';assert.equal(beginPackTaming(g,home.id,0,u.id),true);assert.equal(u.tamingWork.trial,undefined);assert.equal(g.tribe(0).food,food);assert.equal(g.tribe(0).wood,wood);
+ drive(g,240,()=>u.packAnimal?.id===a.id);assert.equal(domesticationReport(g).paidAttempts,0);assert.equal(g.tribe(0).wood,wood);assert.equal(u.packAnimal.packHarness.wood,2,'existing legacy paid harness receipt preserved');assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
