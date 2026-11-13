@@ -250,6 +250,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 
 | ID | Source | Title | Owner | Queue | Status | Evidence |
 |---|---|---|---|---|---|---|
+| BLD-DETAIL-1 | Boris playtest 11-13 (Codex hut richer, ours cookie-cutter) | Detail and variety pass on dwellings, granaries, craft sheds for 14 civs: construction-detail layer (buildingDetail.ts), per-building hut forms, id-keyed dwelling variants, opt-in muted tone | Claude | Tonight | done in source (3ac2e22f) | docs/BUILDING_DETAIL_NOTES.md; docs/renders/building-detail/ before/after/muted sheets; civ-architecture, civ-skin, carved-* tests pass; no near-black |
 | M0-01 | gate | Gather/job-assignment physical actor eligibility gives one rejection reason and bounded actor assessments | Codex | — (done) | done/live | batch1 |
 | M0-02 | gate | Direct gather/drill interruption preserves already-paid transport progress and material charges | Codex | — (done) | done/live | batch1; batch4 |
 | M0-03 | gate | Atomic reservation contract rejects partial claims and competing migrated actor ownership | Codex | — (done) | done/live | batch2 |
