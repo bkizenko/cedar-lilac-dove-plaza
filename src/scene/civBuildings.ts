@@ -366,6 +366,27 @@ CIVIC.skoldar=g=>{const {w,d,r}=g,W=w*.88,D=d*.6,fh=.7,h=1.6,rise=2.1,y=fh+h;
  for(const s of[-1,1]){g.B('wall2',[.28,2.9,.28],[s*2.2,fh,D*.5+1.5],1);P(g,'sphere','accent',[.5,.55,.5],[s*2.2,fh+2.9,D*.5+1.5],undefined,undefined,1);}
  for(let i=0;i<7;i++)P(g,'cylinder',i%2?'accent':'cloth',[.6,.08,.6],[-W*.44+i*W*.14,fh+h*.5,-D*.5-.05],[Math.PI/2,0,0],10,0);
  g.B('wall2',[.6,.7,.6],[W*.22,y+rise*.7,0],1);g.banner(W*.42,D*.62,5);return {entry:{x:0,z:D*.5+1.9,width:1.5}};};
+/** Quillan (original grammar): fitted-stone terraces. Walls are battered courses (each course steps in) over a terrace plinth, the doorway and niches are trapezoids, the roof is a steep hip of bundled thatch with a ridge cap; the civic hall climbs three terrace tiers to a long thatched hall. Legacy wedge-and-slab set stays archived. */
+const stoneCourses=(g:G,W:number,D:number,y0:number,n:number,ch:number,z0:number,inset=.14)=>{let w=W,d=D,y=y0;for(let i=0;i<n;i++){g.B(i%2?'wall2':'wall',[w,ch,d],[0,y,z0],2);y+=ch;w-=inset;d-=inset;}return {y,w,d};};
+const trapezoidDoor=(g:G,x:number,z:number,y:number,h:number,wd:number)=>{g.B('accent',[wd,h,.1],[x,y,z],0);for(const s of[-1,1])P(g,'wedge','wall2',[.14,h,.16],[x+s*(wd*.5+.04),y,z],[0,s>0?0:Math.PI,0],undefined,1);g.B('trim',[wd+.5,.16,.2],[x,y+h,z],1);};
+HOUSE.quillan=g=>{const {w,d,r}=g,W=w*.74*jit(r,.05),D=d*.66,z0=-d*.04,ph=range(r,.5,.7),ch=range(r,.5,.62),rise=range(r,2.0,2.5);
+ g.B('wall2',[W+.9,ph,D+.9],[0,0,z0],2);g.B('wall',[W+.6,.14,D+.6],[0,ph,z0],1);
+ const top=stoneCourses(g,W,D,ph+.14,4,ch,z0,.16);
+ for(let i=0;i<4;i++)for(let j=-1;j<=1;j+=2)g.B('trim',[.05,ch*.9,.05],[j*(W*.5-i*.08)*.98,ph+.14+i*ch,D*.5-i*.08+z0],0);
+ for(let i=0;i<3;i++)g.B('accent',[.34,.5,.06],[-W*.32+i*W*.3,ph+.14+ch*1.4,z0+D*.5-.3],0);
+ trapezoidDoor(g,g.off*.25,z0+D*.5-.2,ph+.14,1.5,.78);
+ g.Pr('hip','roof',[W*1.32,rise,D*1.28],[0,top.y,z0],2);
+ P(g,'cylinder','roof',[W*1.1,.32,D*1.08],[0,top.y-.2,z0],undefined,10,1);g.B('trim',[.22,.3,D*.5],[0,top.y+rise-.1,z0],1);
+ for(let i=0;i<4;i++)g.B('wall2',[W*.4,.2+i*.2,.5],[g.off*.25,0,z0+D*.5+.6+(3-i)*.32],1);
+ return {entry:{x:g.off*.25,z:z0+D*.5+1.7,width:.9}};};
+CIVIC.quillan=g=>{const {w,d,r}=g,W=w*.84,D=d*.56,z0=-d*.14;let y=0;
+ for(let i=0;i<3;i++){const k=1-i*.1;g.B(i%2?'wall':'wall2',[w*.94*k,.7,d*.9*k],[0,y,-d*.02*i],2);g.B('trim',[w*.94*k+.1,.1,d*.9*k+.1],[0,y+.7,-d*.02*i],1);y+=.8;}
+ const top=stoneCourses(g,W*.9,D,y,5,.62,z0,.18),h=top.y-y,hall=top.y;
+ for(let i=0;i<6;i++)trapezoidDoor(g,-W*.34+i*W*.136,z0+D*.5-.1,y,i===2||i===3?1.4:.9,i===2||i===3?.64:.4);
+ for(let i=0;i<8;i++)g.B('wall',[W*.3,.25,.5],[0,i*(y/8),d*.42+.2+(8-i)*.28-.25],1);
+ g.Pr('hip','roof',[W*1.18,range(r,2.8,3.2),D*1.3],[0,hall,z0],2);P(g,'cylinder','roof',[W*.98,.36,D*1.14],[0,hall-.22,z0],undefined,10,1);
+ g.B('trim',[W*.7,.28,.3],[0,hall+2.7,z0],1);for(const s of[-1,1]){g.B('wall2',[.4,3.6,.4],[s*w*.43,0,d*.3],2);P(g,'wedge','accent',[.5,.5,.5],[s*w*.43,3.6,d*.3],undefined,undefined,1);}
+ g.banner(w*.4,d*.3,6.2);return {entry:{x:0,z:d*.42+.6,width:W*.3}};};
 /** Nilemark: whitewashed mudbrick blocks with parapets, roof stairs and palm pergolas; the civic hall is a gate of two battered towers before a columned court. */
 HOUSE.nilemark=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,h=range(r,2.5,3);
  g.B('wall2',[W+.2,.3,D+.2],[0,0,0],2);g.B('wall',[W,h,D],[0,.3,0],2);
