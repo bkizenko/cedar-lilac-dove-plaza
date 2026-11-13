@@ -67,3 +67,10 @@ Implemented on `claude/trader-interaction-audit` (merged into `integration/2026-
 - Foreign boats cannot be selected or attacked, so coastal traders afloat are untouched; armed escorts of a caravan cannot be captured; animals and gear carried by a trader have no robbery adapter (they stay on the body). Attack-move still ignores peaceful traders by design.
 - Reputation is expressed only through society trust and grievance; there is no separate prestige score for harming traders.
 - UI is not rendered or play-tested here (no `node_modules`/browser in the sandbox); the contact-panel render test needs `typescript`.
+
+## Update 11-12 (gap list 3 and 4)
+
+- **Foreign boats**: a visible foreign hull can be selected (inspect only; `Game.selectForeignBoat`) and targeted. `naval-order attack` (right-click with your own hull) refuses first, makes a peaceful society hostile only when the attack proceeds, notes a trader incident if traders are aboard, and boards in grapnel range or closes in. Tests: `scripts/foreign-boat-attack.test.mjs`.
+- **Armed escorts**: a caravan escort (`caravanArmed`) that is beaten (hp at or below 60%) and outnumbered can be captured; its loan weapon goes into the capturing guard's `weaponCargo` (exactly once; nobody's stock changes) and it becomes the unarmed worker it was. A healthy escort still fights on; any other armed adult still cannot be captured.
+- **Gear and animals**: `rob` now also takes what a trader carries: weapon bundles up to the taker's load, carried armor (the same asset, team follows the holder), a farm tool with its condition, a led pack animal, and the loan weapon of an escort. Each moves exactly once to the robber's hands (`robGear` in `traderInteraction.ts`); a farmer's own tool is not fair game. Tests: `scripts/trader-interaction.test.mjs` (gear, capture, escort rules).
+- Not done: gear is held by the robber (real holders, saved) but is not auto-deposited at the robber's cache; kill still leaves it to the existing death reconcilers.

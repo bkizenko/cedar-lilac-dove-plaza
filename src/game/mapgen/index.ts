@@ -150,7 +150,7 @@ function finish(seed: number, requestedSeed: number, size: number, segs: number,
   if (wet && wet.areaSquareMeters > 6000) features.push({ kind: 'wetland', x: wet.center.x, z: wet.center.z, radius: Math.sqrt(wet.areaSquareMeters / Math.PI) });
   const riverList = (rivers as Extract<LocalWaterBody, { kind: "river" }>[]).map(r => ({ pts: r.pts.map(p => ({ x: p.x, z: p.z })), w: r.width }));
   // ---- resources and starts ------------------------------------------------------------------------------------
-  const placed = placeWorld({ seed, size, waterY, preset: spec, terrain, hydro, ecology, waterBodies: bodies, sample, level, rivers: riverList, features });
+  const placed = placeWorld({ seed, size, waterY, preset: spec, terrain, hydro, ecology, waterBodies: bodies, sample, level, rivers: riverList, features, ...(geology ? { geology } : {}) });
   // legacy three-habitat anchors: the spawner sends each wild group to the camp whose anchor matches, so the
   // anchors tag the camps whose surroundings really suit grazers, woodland game and upland goats
   const habitats = assignHabitatAnchors(ecology, placed.camps, size);

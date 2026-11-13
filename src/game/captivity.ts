@@ -12,7 +12,7 @@ import {isRivalTeam} from './factions';
 import type {Game} from './sim';
 import type {Unit} from './types';
 import {isDependent} from './settlement';
-import {traderKnowledgeSnapshot,noteTraderIncident} from './traderInteraction';
+import {traderKnowledgeSnapshot,noteTraderIncident,seizeLoanWeapon} from './traderInteraction';
 import {capitulationYielded} from './capitulation';
 
 /** Team transfer ends the former owner's construction intent. Interrupt first:
@@ -116,7 +116,7 @@ export function captiveKnowledgeSnapshot(g:Game,u:Unit,origin:number):CaptiveKno
 }
 export type PrisonerCustody={methods?:CapturedMethodSnapshot;knows?:CaptiveKnowledge;rejoinedTeam?:number;rejoinedHandoverId?:number;originTeam:number;captorTeam:number;originHomeHall?:number;phase:'escorting'|'custody'|'released';guardId?:number;food:number;waterLiters:number;unguardedSeconds:number};
 export type PrisonerUnit=Unit&{prisoner?:PrisonerCustody};
-export const PRISONER_RULES={version:1,guardCapacity:3,surrenderRadiusMeters:6,defenderRadiusMeters:12,superiorityRatio:2,escortSeparationMeters:8,unguardedEscapeSeconds:30,localSupplyRadiusMeters:3,foodPerSecond:.036,waterLitersPerSecond:.008,foodGraceSeconds:60,foodFatalSeconds:160,waterGraceSeconds:180,waterFatalSeconds:1800} as const;
+export const PRISONER_RULES={version:1,guardCapacity:3,surrenderRadiusMeters:6,defenderRadiusMeters:12,superiorityRatio:2,escortSurrenderHealth:.6,escortSeparationMeters:8,unguardedEscapeSeconds:30,localSupplyRadiusMeters:3,foodPerSecond:.036,waterLitersPerSecond:.008,foodGraceSeconds:60,foodFatalSeconds:160,waterGraceSeconds:180,waterFatalSeconds:1800} as const;
 export const prisonerIndependentNeeds=(u:Unit)=>!!(u as PrisonerUnit).prisoner&&(u as PrisonerUnit).prisoner!.phase!=='custody';
 const armedPrisonerGuard=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>0&&!isDependent(g,u)&&!(u as PrisonerUnit).prisoner&&u.enslavedFrom===undefined&&(u.militia||!['worker','leader'].includes(u.type));
 function guardLoad(g:Game,id:number){return g.state.units.filter(u=>u.hp>0&&(u as PrisonerUnit).prisoner?.phase!=='released'&&(u as PrisonerUnit).prisoner?.guardId===id).length;}
@@ -125,12 +125,16 @@ export function presentPrisonerGuard(g:Game,u:PrisonerUnit){const p=u.prisoner;i
 /** Called only after the surrender decision, with nearby actual captors. */
 export function acceptPrisonerSurrender(g:Game,target:Unit,captorTeam=0){
  const u=target as PrisonerUnit;
- if(u.hp<=0||u.team===captorTeam||u.prisoner||u.enslavedFrom!==undefined||u.type!=='worker'||u.militia||u.boat||isDependent(g,u))return {accepted:false,reason:'Only a living unarmed adult can accept these surrender terms'};
+ // A caravan escort carries a weapon on loan from its own stores: beaten (wounded) and outnumbered it may yield, and the weapon is taken with it.
+ const escort=!!u.caravanArmed&&u.militia&&!u.boat&&(u.type==='spearman'||u.type==='archer'||u.type==='swordsman');
+ if(u.hp<=0||u.team===captorTeam||u.prisoner||u.enslavedFrom!==undefined||(u.type!=='worker'||u.militia)&&!escort||u.boat||isDependent(g,u))return {accepted:false,reason:'Only a living unarmed adult can accept these surrender terms'};
+ if(escort&&u.hp>u.maxHp*PRISONER_RULES.escortSurrenderHealth)return {accepted:false,reason:'An armed escort fights on until it is beaten'};
  const captors=g.state.units.filter(p=>armedPrisonerGuard(g,p,captorTeam)&&Math.hypot(p.x-u.x,p.z-u.z)<=PRISONER_RULES.surrenderRadiusMeters&&g.workBoard.connected(g,p.x,p.z,u.x,u.z));
  const defenders=g.state.units.filter(p=>armedPrisonerGuard(g,p,u.team)&&!capitulationYielded(g,p)&&Math.hypot(p.x-u.x,p.z-u.z)<=PRISONER_RULES.defenderRadiusMeters);
  if(!captors.length||captors.length<defenders.length*PRISONER_RULES.superiorityRatio)return {accepted:false,reason:'Reach the person with enough local force to obtain surrender'};
  const guard=captors.filter(p=>guardLoad(g,p.id)<PRISONER_RULES.guardCapacity&&((p as Unit&{conflictIntent?:string}).conflictIntent==='capture'||['idle','hold'].includes(p.order)&&(!p.escortId||guardLoad(g,p.id)>0))&&(!p.carry||p.carryType==='food')&&!p.emergency&&!p.envoy&&!p.expedition&&!p.visit&&!p.trade&&!p.boat).sort((a,b)=>guardLoad(g,a.id)-guardLoad(g,b.id)||a.id-b.id)[0];
  if(!guard)return {accepted:false,reason:'No nearby guard has capacity to escort another prisoner'};
+ if(escort&&!seizeLoanWeapon(u,guard))return {accepted:false,reason:'No nearby guard can carry the escort\'s weapon'};
  const methods=snapshotCapturedMethods(g.state,u);
  const origin=u.team,home=u.homeHall,tradeKnowledge=traderKnowledgeSnapshot(g,u,origin);if(captorTeam===0&&isRivalTeam(origin)){noteTraderIncident(g,u,'captured');g.makeHostile(origin);}interruptForTeamTransfer(g,u);if(guardLoad(g,guard.id)===0)g.interruptMission(guard);
  const knows=captiveKnowledgeSnapshot(g,u,origin);if(tradeKnowledge)knows.trade=tradeKnowledge;

@@ -4,6 +4,7 @@ import {explicitArmedOrder,hasLocalLootPursuer} from './defense';
 import {beginSeaRaiderReturn,SEA_RAIDER_RETURN_RULES} from './seaRaiderReturn';
 import {supplyDrops} from './campAnchor';
 import {markStolenLoad,stolenMarkRoom} from './stolenCargo';
+import {biasReportsToStops} from './waystations';
 import {difficulty} from './difficulty';
 import {noteRaidCarried} from './raidReports';
 import type { Game } from "./sim";
@@ -114,7 +115,7 @@ export function dispatchExistingCampRaid(g:Game){
  if(g.state.conflict==='quiet'||g.state.finiteRaiderCampVersion!==1)return false;
  for(const camp of g.state.buildings){
   if(camp.team!==3||!camp.raiderCamp||!g.finished(camp)||!camp.campEconomy||g.state.time-camp.campEconomy.lastDispatchAt<FINITE_CAMP_RULES.dispatchIntervalSeconds)continue;
-  const reports=camp.campEconomy.knownSites.filter(r=>r.team===0&&g.state.time-r.observedAt<=FINITE_CAMP_RULES.reportLifetimeSeconds);
+  const reports=biasReportsToStops(g,camp.campEconomy.knownSites.filter(r=>r.team===0&&g.state.time-r.observedAt<=FINITE_CAMP_RULES.reportLifetimeSeconds));
   for(const report of reports){
    const sent:Unit[]=[];
    for(const u of g.state.units){

@@ -49,7 +49,7 @@ export function missionMayTargetCivilian(_g:Game,actor:Unit,target:Unit){
 /** Capture is a deliberate approach/surrender task, distinct from a lethal attack. */
 export function captureTarget(g:Game,id:number){
  const target=g.state.units.find(u=>u.id===id&&u.hp>0);
- if(!target||target.team===0||target.type!=='worker'||target.militia||isDependent(g,target)||(target as PrisonerUnit).prisoner)return {accepted:false,reason:'Choose a living unarmed adult who can surrender'};
+ if(!target||target.team===0||(target.type!=='worker'||target.militia)&&!target.caravanArmed||isDependent(g,target)||(target as PrisonerUnit).prisoner)return {accepted:false,reason:'Choose a living unarmed adult who can surrender'};
  if(!g.visibleAt(target.x,target.z))return {accepted:false,reason:'Reach and see the person before seeking surrender'};
  const actors=g.selectedUnits().filter(u=>armed(g,u,0)&&!u.boat);
  if(!actors.length)return {accepted:false,reason:'Select armed adults to approach the person'};

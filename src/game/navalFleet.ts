@@ -6,7 +6,8 @@ import {FOOD_KINDS} from './pantry';
 import {hasTaskCommitment} from './workCommitments';
 import {combatPractice} from './warfare';
 import {boatClass,boatClassIssue} from './boatClasses';
-import {launchRiverboat} from './boats';
+import {launchRiverboat,commandRiverboat} from './boats';
+import {isTraderUnit,noteTraderIncident} from './traderInteraction';
 import {awardCommanderXp,commandersOf,fleetAuraFor} from './commanders';
 import {SHIP_DESIGNS,shipDesign,designStrength,navalMatchup,PORT_TIERS,type ShipDesign,type NavalMode} from './navalClasses';
 import {NAVAL_RULES,ensureNaval,navalState,dockOf,portRecord,portTier,hasWork,noteEvent,vesselOf,dockBlockaded,tickNavalPorts,tickBlockades,pauseNavalProject,type NavalOutcome} from './navalPorts';
@@ -192,6 +193,38 @@ function tickBoardings(g:Game,dt:number){
  }
 }
 /** Dispatch-friendly start: pick the nearest hostile hull in grapnel range. */
+/** Attack a named foreign hull. Refusals come first and cost nothing; then, against a society that is not yet an enemy, the attack itself is the
+ * hostile act (it makes the society hostile and, if traders are aboard, leaves an incident their people will carry home). In grapnel range the
+ * ordinary boarding begins; otherwise the hull sails toward the target and the order is repeated to board. Raiders are always foes. */
+export function attackBoatIssue(g:Game,attackerId:number,targetId:number,team=0):string|null{
+ const a=boatById(g,attackerId),t=boatById(g,targetId);
+ if(!a||a.team!==team)return 'Not one of your hulls';
+ if(!t||t.team===team)return 'Choose a foreign hull';
+ if(team===0&&!g.visibleAt(t.x,t.z))return 'You cannot see that hull';
+ if(t.team!==3&&!g.tribe(t.team))return 'That hull belongs to no society';
+ if(team===0&&t.team!==3&&g.isAlly(t.team))return 'That hull belongs to an ally';
+ if(designOfBoat(g,a.id).boarding<=0)return 'This hull carries no boarders';
+ if(!a.captain)return 'Board residents to take the helm first';
+ if(aboard(g,a.id).length<C.minimumBoarders)return `Needs at least ${C.minimumBoarders} fighters aboard`;
+ return null;
+}
+export function attackBoat(g:Game,attackerId:number,targetId:number,team=0):NavalOutcome{
+ const issue=attackBoatIssue(g,attackerId,targetId,team);if(issue)return no(issue);
+ const a=boatById(g,attackerId)!,t=boatById(g,targetId)!;
+ const foe=g.isFoe(a.team,t.team)||g.isFoe(t.team,a.team);
+ if(!foe){
+  // Surfaces the real boarding refusal (range, boarders) only after we know the attack is allowed; the hostile act happens only when it will proceed.
+  const near=dist(a,t)<=C.boardingRangeMeters+designOfBoat(g,t.id).length/2;
+  if(team===0){
+   const trader=aboard(g,t.id).find(u=>isTraderUnit(g,u));if(trader&&near)noteTraderIncident(g,trader,'robbed');
+   g.makeHostile(t.team);
+  }
+ }
+ const board=beginBoarding(g,attackerId,targetId,team);
+ if(board.accepted)return board;
+ if(board.reason==='Close to grapnel range first'){commandRiverboat(g,a.id,t.x,t.z);return {accepted:true,reason:'Closing on the hull; order the attack again at grapnel range to board'};}
+ return board;
+}
 export function boardNearest(g:Game,attackerId:number,team=0):NavalOutcome{
  const a=boatById(g,attackerId);if(!a||a.team!==team)return no('Not one of your hulls');
  const near=(g.state.boats??[]).filter(b=>b.hp>0&&b.team!==team).sort((p,q)=>dist(p,a)-dist(q,a)||p.id-q.id)[0];

@@ -38,7 +38,7 @@ export function advanceRulers(g:Game){
  sampleClimate(g,r);
  if(decisionsEnabled(g))beginCivic(g); // M2-14: prehistory recorded once at the start (cheap no-op afterwards)
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
+ while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -220,6 +220,16 @@ export function expireClaims(g:Game){
  for(const c of live)nudgeSocietyRelation(g,Number(c.holder),Number(c.target),{trust:0,grievance:.002*c.strength/50});
  if(live.length!==r.claims.length)st(g).rulers={...st(g).rulers!,claims:live};
 }
+/** Yearly: claims born of real events, never invented. A raided house holds a 'defence' claim (no legitimacy cost) on its raider; a house bound by
+ * marriage to a line that has run out of heirs (no heir, no regent) holds a 'succession' claim on it. grantClaim still applies every gate. */
+export function eventClaims(g:Game):Claim[]{
+ const r=ensureRulers(g);if(!r)return [];const out:Claim[]=[];
+ for(const [key,t] of Object.entries(r.ties??{})){
+  if(!(t.bond>0))continue;const [x,y]=key.split('|').map(Number);if(!Number.isInteger(x)||!Number.isInteger(y))continue;
+  for(const [h,o] of [[x,y],[y,x]]){const d=r.societies[String(o)]?.dynasty,sp=r.societies[String(o)]?.civ.polity.succession;if(!d||!sp)continue;
+   if(!heir(d,sp,makeRng(hash32('claim-preview',d.generation,d.rulerId)))&&!d.regent){const c=grantClaim(g,h,o,'succession',45,15);if(c)out.push(c);}}}
+ return out;
+}
 /** Using a claim as casus belli: spends it and the legitimacy cost is returned for the caller to charge to the holder's glory/unrest. */
 export function citeClaim(g:Game,holder:number,target:number,kind:CasusBelli):{cost:number}|null{
  const r=ensureRulers(g);if(!r?.claims)return null;
@@ -292,6 +302,7 @@ export function journeyPermit(g:Game,team:number,kind:'explore'|'trade'|'raid',t
 /** Called when a permitted raid actually leaves: a state's strike spends its claim and pays the legitimacy cost as grievance at home. */
 export function spendRaidClaim(g:Game,team:number,target:number){
  noteRaid(g,team,target);
+ grantClaim(g,target,team,'defence',60,10); // the raided house may answer in kind, at no legitimacy cost
  const c=citeClaim(g,team,target,'raid');if(c)nudgeSocietyRelation(g,target,team,{trust:0,grievance:.01*c.cost});return c;
 }
 

@@ -64,6 +64,8 @@ import {watermillSite} from '@/game/waterWorks';
 import {setCarvedPalette} from './carvedPalette';
 import {ContourFields} from './contourFields';
 import {FieldSnapMarks} from './fieldSnapMarks';
+import {fieldWater} from '../game/irrigation';
+import {IrrigationLayer} from './irrigationLayer';
 import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
 import {TerrainSurface,duneSandWeight} from './terrainSurface';
@@ -1130,6 +1132,7 @@ export class WorldView {
         g.timber.setAttribute('fieldRows',new THREE.InstancedBufferAttribute(new Float32Array(capacity*4),4));
         const positions=g.timber.attributes.position,colors=g.timber.attributes.color,soilColor=new THREE.Color('#795632');
         for(let i=0;i<positions.count;i++)if(Math.abs(positions.getY(i)-.075)<.002)colors.setXYZ(i,soilColor.r,soilColor.g,soilColor.b);
+        if(this.mapStyle==='painterly')for(const name of ['fieldEdges','fieldLook','fieldSoil'])g.timber.setAttribute(name,new THREE.InstancedBufferAttribute(new Float32Array(capacity*4),4));
       }
       const timber = new THREE.InstancedMesh(g.timber, timberMaterial, capacity);
       if((type === "farm" || type === "pen" || terrainLaidWorkplace(type)) && this.fieldSurface) timber.customDepthMaterial = this.fieldSurface.depth;
@@ -1967,7 +1970,9 @@ export class WorldView {
           if(rigid&&!this.renderer.shadowMap.enabled&&!this.buildingCameraCull.visible(mesh,_m,8+this.dist*.12))return;
           const i=counts[part]++;mesh.setMatrixAt(i,_m);this.buildingInstances.get(mesh)!.push(b);
           const art=mesh.geometry.getAttribute('buildingArt')as THREE.InstancedBufferAttribute|undefined;if(art&&artisan)art.setXYZW(i,artisan.x,artisan.z,artisan.brace,artisan.lift);
-          if(type==='farm'&&part==='timber'&&this.contourFields){const rows=this.contourFields.rows(game,b);(mesh.geometry.getAttribute('fieldRows') as THREE.InstancedBufferAttribute).setXYZW(i,rows.nx,rows.nz,rows.offset,rows.spacing);}
+          if(type==='farm'&&part==='timber'&&this.contourFields){const rows=this.contourFields.rows(game,b);(mesh.geometry.getAttribute('fieldRows') as THREE.InstancedBufferAttribute).setXYZW(i,rows.nx,rows.nz,rows.offset,rows.spacing);
+            const edges=mesh.geometry.getAttribute('fieldEdges') as THREE.InstancedBufferAttribute|undefined;
+            if(edges){const look=this.contourFields.look(game,b,this.fieldWaterMode?(fieldWater(game,b).kind==='dry'?1:2):0);edges.setXYZW(i,...look.edges);(mesh.geometry.getAttribute('fieldLook') as THREE.InstancedBufferAttribute).setXYZW(i,...look.look);(mesh.geometry.getAttribute('fieldSoil') as THREE.InstancedBufferAttribute).setXYZW(i,...look.soil);}}
           if(mesh.instanceColor){
             if(!civicPartColor(type,part,part==='timber'?identity.timber:identity.roof,_c))_c.set(part==='timber'?(b.plannedCost?"#87b7cb":type==="moat"?"#49787e":type==="trench"?"#493b27":type==="stonewall"?"#aaa494":type==="farm"?"#ffffff":identity.timber):type==="cornerstone"?game.tribe(b.team).color:identity.roof);
             if(type==="farm"&&part==="extra")_c.set(b.crop?.ripened&&b.crop.remaining>0?"#f1d16b":b.crop?.planted?"#b1df70":"#887453");
@@ -1989,8 +1994,11 @@ export class WorldView {
     this.syncWonders(game);
     this.penFences?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
-    this.contourFields?.sync(game,this.camera.position);
+    if(!this.irrigationLayer&&(game.state as {irrigation?:unknown}).irrigation){this.irrigationLayer=new IrrigationLayer(this.scene,(x,z)=>game.height(x,z));this.irrigationLayer.setPreview(this.ditchPreview);}
+    this.irrigationLayer?.sync(game);
+    this.contourFields?.sync(game,this.camera.position,b=>{const st=this.villageStyle(game,b.team,b);return{era:st.era,variant:st.variant};});
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
+    for(const name of ['fieldEdges','fieldLook','fieldSoil']){const a=this.bldMeshes.get('farm')?.timber.geometry.getAttribute(name);if(a)a.needsUpdate=true;}
     this.syncEraDetails(game);
     this.foundations?.sync(game);
     this.routeField?.update(game,performance.now(),game.state.weather,game.seasonMix().snow);
@@ -2376,7 +2384,11 @@ export class WorldView {
     this.ghostGame=_game; /* ghost visibility is owned by Engine.updateGhost / setGhost */
   }
 
-  private fieldSnapMarks:FieldSnapMarks|null=null;
+  private fieldSnapMarks:FieldSnapMarks|null=null;private fieldWaterMode=false;private irrigationLayer:IrrigationLayer|null=null;private ditchPreview:{x0:number;z0:number;x1:number;z1:number;ok:boolean}|null=null;
+  /** Planned ditch line (amber when affordable, red when not). Null clears. */
+  setDitchPreview(p:{x0:number;z0:number;x1:number;z1:number;ok:boolean}|null){this.ditchPreview=p;this.irrigationLayer?.setPreview(p);}
+  /** Water mode: irrigated plots read cool and dark, rain-fed plots pale (painterly look only). */
+  setFieldWaterMode(on:boolean){this.fieldWaterMode=on;if(this.fieldSurface)this.fieldSurface.waterMode.value=on?1:0;}
   /** Highlight the seams a field being placed snaps to. Empty clears. */
   setFieldSnap(edges:readonly import('@/game/fieldSnap').SnapEdge[]){
     if(!edges.length){this.fieldSnapMarks?.set([]);return;}
@@ -3139,7 +3151,7 @@ export class WorldView {
     this.hullFleet?.dispose();this.hullFleet=null;
     this.sailRigs?.dispose();this.sailRigs=null;
     this.towerPlatforms?.dispose();this.towerPlatforms=null;
-    this.contourFields?.dispose();this.contourFields=null;this.fieldSnapMarks?.dispose();this.fieldSnapMarks=null;
+    this.contourFields?.dispose();this.contourFields=null;this.fieldSnapMarks?.dispose();this.fieldSnapMarks=null;this.irrigationLayer?.dispose();this.irrigationLayer=null;
     this.biomeScene?.dispose();this.biomeScene=null;
     this.wildlifeOwners.clear();this.packHorseOwners=[];this.domesticHorseOwners=[];this.packCattleOwners=[];this.domesticCattleOwners=[];this.woodenArdOwners=[];
     if(!this.lost)this.woodenArds?.dispose();

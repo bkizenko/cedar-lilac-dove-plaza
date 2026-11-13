@@ -168,6 +168,7 @@ import {beginExpedition,expeditionAI,routineRest} from "./journeys";
 import {wearTrail,pathPace,fadeTrails} from "./trails";
 import {traceStep,tickRouteWear} from "./routeWear";
 import {tickWaystations} from "./waystations";
+import {tickWonders} from "./wonderFounding";
 import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
@@ -270,6 +271,8 @@ export class Game {
   selectedWaterReach: WaterReach | null = null;
   selectedCritter: Critter | null = null;
   selectedBoat: number | null = null;
+  /** A foreign hull the player is looking at (inspect and target only; never receives orders). */
+  selectedForeignBoat: number | null = null;
   private approachCache = new WeakMap<Unit,{building:Building;revision:number;time:number;canoe:boolean;spot:{x:number;z:number}|null}>();
   chopMarks = new Set<number>();
   looted = new Set<number>();
@@ -1681,6 +1684,7 @@ export class Game {
 
   clearSelect() {
     this.selectedBoat = null;
+    this.selectedForeignBoat = null;
     this.selectedResource = null;
     this.selectedWaterReach = null;
     this.selectedCritter = null;
@@ -1727,6 +1731,16 @@ export class Game {
     return true;
   }
 
+  /** Select a visible foreign hull to inspect or to name as a target. Own hulls use selectBoat; a foreign hull never takes orders. */
+  selectForeignBoat(id: number) {
+    const boat = this.state.boats?.find(b => b.id === id && b.team !== 0 && b.hp > 0);
+    if (!boat || !this.visibleAt(boat.x, boat.z)) return false;
+    const toggle = this.selectedForeignBoat === id;
+    this.clearSelect();
+    if (!toggle) this.selectedForeignBoat = id;
+    return true;
+  }
+
   selectedUnits() {
     return this.state.units.filter((u) => u.selected && u.team === 0 && u.hp > 0);
   }
@@ -1757,13 +1771,13 @@ export class Game {
       return;
     }
     if (!additive || entity.kind === "building") this.clearSelect();
-    this.selectedBoat = null;
+    this.selectedBoat = null;this.selectedForeignBoat = null;
     entity.selected = true;
     if (entity.kind === "building") this.state.selBld = entity;
   }
 
   selectAt(x: number, z: number, additive: boolean) {
-    this.selectedBoat = null;
+    this.selectedBoat = null;this.selectedForeignBoat = null;
     let bestU: Unit | null = null;
     let bd = 2.2;
     for (const u of this.state.units) {
@@ -6003,7 +6017,7 @@ export class Game {
         tickCommunities(this,sdt);
         tickScouts(this,sdt);
         fadeTrails(this,sdt);
-        tickRouteWear(this,sdt);tickWaystations(this,sdt);
+        tickRouteWear(this,sdt);tickWaystations(this,sdt);tickWonders(this,sdt);
         tickVisitors(this,sdt);
         phases?.mark('economy');
         this.tickRoutes(sdt);
@@ -6277,6 +6291,13 @@ export class Game {
       };
     }
     if(this.selectedCritter&&!units.length&&!this.state.selBld){const c=this.selectedCritter;if(!this.state.wildlife.includes(c)||!huntable(this,c,0)||(c.hp>0?!this.visibleAt(c.x,c.z):!this.exploredAt(c.x,c.z)))this.selectedCritter=null;else selection={name:c.hp>0?`Wild ${c.species}`:`${c.species} carcass`,type:c.species,info:c.hp>0?"Living wild animal · select hunters, then right-click to hunt":"Finite carcass · butcher and carry raw meat, hides and bones home before cooking or preserving",hp:c.hp>0?c.hp:c.carcass?.meat||0,maxHp:c.hp>0?c.maxHp:32,kind:"resource"};}
+    if(this.selectedForeignBoat !== null) {
+      const f=this.state.boats?.find(b=>b.id===this.selectedForeignBoat&&b.team!==0&&b.hp>0);
+      if(f&&this.visibleAt(f.x,f.z)){
+        const owner=f.team===3?'Raiders':this.tribe(f.team)?.name??'Foreign',crew=this.state.units.filter(u=>u.hp>0&&u.boat?.id===f.id&&u.boat.phase==='aboard').length;
+        selection={name:`${owner} ${f.hullClass?boatClass(f).name:'riverboat'}`,info:`${crew} crew visible · right-click it with one of your hulls to attack`,hp:f.hp,maxHp:boatClass(f).maxHp,kind:'boat',type:'riverboat',team:f.team};
+      } else this.selectedForeignBoat=null;
+    }
     if(this.selectedBoat !== null) {
       const b=this.state.boats?.find(b=>b.id===this.selectedBoat&&b.team===0&&b.hp>0);
       if(b) {

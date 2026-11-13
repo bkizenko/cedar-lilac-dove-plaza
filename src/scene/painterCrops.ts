@@ -6,9 +6,9 @@ export type PainterCrop='grain'|'pulses'|'tubers';
 export type CropState={planted:number;tended:number;ripened:boolean;remaining:number};
 const col=(hex:string)=>new THREE.Color(hex);
 const STAGES:Record<PainterCrop,{sprout:THREE.Color;young:THREE.Color;lush:THREE.Color;late:THREE.Color;ripe:THREE.Color;stubble:THREE.Color}>={
- grain:{sprout:col('#a8e070'),young:col('#76b84a'),lush:col('#5fa23c'),late:col('#a3b54a'),ripe:col('#ecbc4c'),stubble:col('#c2a468')},
- pulses:{sprout:col('#9edd7c'),young:col('#6cb352'),lush:col('#4f9a43'),late:col('#8aa84a'),ripe:col('#c9b25a'),stubble:col('#a89460')},
- tubers:{sprout:col('#92d36a'),young:col('#62b04e'),lush:col('#459641'),late:col('#6f9a45'),ripe:col('#a49246'),stubble:col('#8c7650')},
+ grain:{sprout:col('#9bb872'),young:col('#7a9a56'),lush:col('#6a8a4a'),late:col('#a0a65a'),ripe:col('#cdb06a'),stubble:col('#b8a27a')},
+ pulses:{sprout:col('#97b57c'),young:col('#6f9658'),lush:col('#5d8450'),late:col('#8a9a58'),ripe:col('#b8a96a'),stubble:col('#a09070')},
+ tubers:{sprout:col('#8fb078'),young:col('#628f58'),lush:col('#527a4c'),late:col('#6f8a50'),ripe:col('#968a56'),stubble:col('#85755a')},
 };
 /** Hue of one plant. jitter in [0,1) is a stable per-plant value so neighbouring plants differ a little (painted, not stamped). */
 export function painterCropColor(kind:PainterCrop,state:CropState|undefined,growth:number,jitter:number,out=new THREE.Color()){
