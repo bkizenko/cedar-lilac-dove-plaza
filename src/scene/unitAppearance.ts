@@ -82,13 +82,21 @@ export function headwearParts(kind:Dress['headwear'],item:GarmentId,rich=0,v=0):
 }
 /** Insignia and banners are cut from the owned garment's cloth (a sash, shoulder cloth, chest patch, a leader's standard);
  * they are never free gear, appear only on a drawn garment, and only at near LOD. Era only adds richness. */
-export function insigniaParts(type:UnitKind,rich:number,v:number):UnitPart[]{
+/** Cosmetic wear on a leader's standard from the garment's real condition: a torn notch in the fly below .6, a hanging
+ * thread and faded patch below .35. Near LOD only, bounded (<=3 boxes), no stat or goods change. */
+export function standardWear(cond:number,v:number):UnitPart[]{
+ if(!Number.isFinite(cond)||cond>=.6)return [];
+ const x=-.3+.21,o:UnitPart[]=[P('stitch','box',[.1,.12,.026],[x+.15,1.43+(v%2?.04:0),-.1],0,[0,0,.25])];
+ if(cond<.35)o.push(P('stitch','box',[.2,.1,.024],[x-.08,1.58,-.1],0),P('stitch','box',[.012,.2,.012],[x+.1,1.3,-.1],0,[0,0,.12]));
+ return o;
+}
+export function insigniaParts(type:UnitKind,rich:number,v:number,cond=1):UnitPart[]{
  const side=v%2?1:-1;
  switch(type){
   case 'worker':return rich>=1?[P('trim','box',[.5,.05,.03],[0,.7,.19],0,[0,0,side*.65])]:[];
   case 'spearman':case 'archer':case 'ranger':return [P('trim','box',[.17,.04,.2],[-side*.2,.82,0],0),...(rich>=2?[P('trim','box',[.17,.015,.21],[-side*.2,.86,0],0)]:[])];
   case 'swordsman':case 'warden':return [P('trim','box',[.15,.15,.02],[0,.72,.265],0)];
-  case 'leader':return [P('trim','box',[.17,.17,.02],[0,.72,.265],0),P('wood','cylinder',[.035,1.7,.035],[-.3,.85,-.1],0,undefined,5),P('garment','box',[.42,.34,.02],[-.3+.21,1.55,-.1],0),P('trim','box',[.42,.05,.022],[-.3+.21,1.7,-.1],0),...(rich>=1?[P('trim','box',[.2,.2,.024],[-.3+.21,1.52,-.1],0,[0,0,Math.PI/4])]:[]),...(rich>=2?[P('trim','sphere',[.07,.07,.07],[-.3,1.72,-.1],0)]:[])];
+  case 'leader':return [P('trim','box',[.17,.17,.02],[0,.72,.265],0),P('wood','cylinder',[.035,1.7,.035],[-.3,.85,-.1],0,undefined,5),P('garment','box',[.42,.34,.02],[-.3+.21,1.55,-.1],0),P('trim','box',[.42,.05,.022],[-.3+.21,1.7,-.1],0),...(rich>=1?[P('trim','box',[.2,.2,.024],[-.3+.21,1.52,-.1],0,[0,0,Math.PI/4])]:[]),...(rich>=2?[P('trim','sphere',[.07,.07,.07],[-.3,1.72,-.1],0)]:[]),...standardWear(cond,v)];
   default:return [];}
 }
 export function armorParts(motif:Motif|'none',rich:number):UnitPart[]{
@@ -109,7 +117,7 @@ export function unitAppearance(input:UnitAppearanceInput):UnitAppearance{
  const v=hashSeed(input.seed,'variant')%4,tr=seededRandom(hashSeed(input.seed,'tint'));
  const g=gear.garment&&Number.isFinite(gear.garment.condition)&&gear.garment.condition>0?gear.garment:undefined;
  const dress=g?dressFor(culture,season,g.item):dressFor(culture,season);
- if(g){rendered.garment=g.item;rendered.cut=dress.cut;parts.push(...garmentParts(g.item,dress.cut,v,dress.trimMotif,rich));const hw=headwearParts(dress.headwear,g.item,rich,v);if(hw.length){rendered.headwear=dress.headwear;parts.push(...hw);}const ins=insigniaParts(type,rich,v);if(ins.length){rendered.insignia=type;parts.push(...ins);}}
+ if(g){rendered.garment=g.item;rendered.cut=dress.cut;parts.push(...garmentParts(g.item,dress.cut,v,dress.trimMotif,rich));const hw=headwearParts(dress.headwear,g.item,rich,v);if(hw.length){rendered.headwear=dress.headwear;parts.push(...hw);}const ins=insigniaParts(type,rich,v,g.condition);if(ins.length){rendered.insignia=type;parts.push(...ins);}}
  else if(gear.garment)ignored.push('garment with no condition left is not drawn');
  if(gear.armor){if(gear.armor.kind==='paddedTorso'&&gear.armor.condition>0){rendered.armor='paddedTorso';parts.push(...armorParts(culture.flag.border,rich));}else ignored.push(`armor kind '${gear.armor.kind}' is not a known asset kind`);}
  const w=weaponParts(type);if(w.weapon){rendered.weapon=w.weapon;parts.push(...w.parts);}
