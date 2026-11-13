@@ -92,6 +92,9 @@ test('fosterage and hostages: real wards, tie effects, term end, war breaks the 
  g.state.rulers.societies['0'].dynasty.people['0-kid'].age=16;settleWards(g);
  assert.ok(!wardsOf(g,0).some(w=>w.person==='0-kid'),'fosterling goes home at 16');
  const n=wardsOf(g,0).length;g.state.rulers.societies['1'].dynasty.people['1-kid'].alive=false;settleWards(g);assert.ok(wardsOf(g,0).length<=n);
+ {const died=g.state.rulers.wardReturns.find(w=>w.how==='died'&&w.name==='Kid1');assert.ok(died,'death in custody is recorded');
+  const cl=(g.state.rulers.claims??[]).filter(c=>c.kind==='defence'&&c.holder===died.from&&c.target===died.to);assert.ok(cl.length<=1,'at most one defence claim, gated by era/feature');
+  const before=JSON.stringify(g.state.rulers.claims);settleWards(g);assert.equal(JSON.stringify(g.state.rulers.claims),before,'no repeat grievance once the ward is settled');}
  const {nudgeSocietyRelation}=await import('../src/game/societyRelations.ts');
  g.tribe(1).hostile=true;settleWards(g);assert.equal(wardsOf(g,0).length,0,'war ends every pledge');
 });

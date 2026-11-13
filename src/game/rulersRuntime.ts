@@ -143,15 +143,18 @@ function exchangeKin(g:Game,a:number,b:number,action:'fosterage'|'hostageExchang
 /** Yearly: fosterlings go home at 16 (bond rises), hostages after a 8-year term; the dead are removed; war breaks the pledge with a grievance. */
 export function settleWards(g:Game){
  const r=ensureRulers(g);if(!r?.wards?.length)return;
- const keep:Ward[]=[],done:Ward[]=[],back:WardReturn[]=[];
+ const keep:Ward[]=[],done:Ward[]=[],back:WardReturn[]=[],diedInCustody:Ward[]=[];
  for(const w of r.wards){
   const p=r.societies[w.from]?.dynasty.people[w.person];
-  if(!p||!p.alive){done.push(w);if(p)back.push({kind:w.kind,name:p.name,from:w.from,to:w.to,year:r.year,how:'died',age:p.age});continue;}
+  if(!p||!p.alive){done.push(w);if(p){back.push({kind:w.kind,name:p.name,from:w.from,to:w.to,year:r.year,how:'died',age:p.age});diedInCustody.push(w);}continue;}
   const term=w.kind==='foster'?p.age>=16:r.year-w.since>=8,war=societyRelation(g,Number(w.from),Number(w.to)).hostile;
   if(term||war){done.push(w);back.push({kind:w.kind,name:p.name,from:w.from,to:w.to,year:r.year,how:war?'war':w.kind==='foster'?'grown':'term',age:p.age});if(war)tieChange(g,Number(w.from),Number(w.to),'breakPact',livingPeople(g,Number(w.from)),livingPeople(g,Number(w.to)));}
   else keep.push(w);
  }
  if(done.length)st(g).rulers={...st(g).rulers!,wards:keep,wardReturns:[...(r.wardReturns??[]),...back].slice(-24)};
+ // Death in the other house's custody: trust drops (breakPact tie change) and the home house holds a 'defence' claim on the host (no legitimacy cost;
+ // grantClaim still gates by era/feature/known and refuses duplicates).
+ for(const w of diedInCustody){const a=Number(w.from),b=Number(w.to);tieChange(g,a,b,'breakPact',livingPeople(g,a),livingPeople(g,b));grantClaim(g,a,b,'defence',40,12);}
 }
 
 /** Rival societies wed each other: every 4th dynastic year each non-player society tries the nearest-numbered peaceful, mutually known neighbour

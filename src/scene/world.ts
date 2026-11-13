@@ -2789,8 +2789,10 @@ export class WorldView {
       this.hearth.position.set(site.x+(fire?0:1.6),site.y+.85,site.z+(fire?0:4.2));
       // living fire: three incommensurate flicker bands plus a rare gust, hotter/yellower on a surge, deeper orange as it sinks; lit fires only (light follows actual heating), no free light
       const t=game.state.time,fl=Math.sin(t*9)*.14+Math.sin(t*23.7+1.3)*.09+Math.sin(t*5.1+2.1)*.07+(Math.sin(t*1.7)>.93?-.22:0);
-      this.hearth.intensity=(game.isNight()?2.4:1.35)*(fire?1:.8)+fl*(game.isNight()?1.6:1);
-      this.hearth.color.setHSL(.07+fl*.05,.95,.58+fl*.08);
+      // mourning window for the player's ruler: the hearth burns low and a little cooler (render only; heating and fuel are untouched)
+      const mourn=(this.mourning.get(0)?.until??0)>t?.65:1;
+      this.hearth.intensity=((game.isNight()?2.4:1.35)*(fire?1:.8)+fl*(game.isNight()?1.6:1))*mourn;
+      this.hearth.color.setHSL(.07+fl*.05-(1-mourn)*.02,.95-(1-mourn)*.2,.58+fl*.08);
     }else this.hearth.intensity=0;
     void dt;
   }
