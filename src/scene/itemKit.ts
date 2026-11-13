@@ -3,6 +3,7 @@
 import {MeshBuilder,hash32,hexRgb,rgbMix,v3,TAU,likePaint,type LodTier,type Paint,type V3,type RGB} from './itemMesh';
 import {paintFor,metalOfEra,type MatId,type PaintOpts} from './itemMaterials';
 import {itemStyleFor,type ItemStyle} from './itemStyle';
+import {NEAR_ITEM} from './itemNear';
 
 /** What to build. `condition` 1 new .. 0 ruined; `variant` picks a sub-form (shield shape, spear kind) or 'broken'. */
 export type ItemReq={id:string;era:number;skin?:string|null;condition:number;seed:number;lod:LodTier;variant?:string};
@@ -51,15 +52,15 @@ export function shaft(c:Ctx,y0:number,y1:number,r0:number,r1:number,o:{x?:number
 }
 /** near tier only: raised grain ridges that run along a wooden shaft with a slow spiral, a couple of knots, so a haft reads as wood and not as a smooth tube */
 export function shaftGrain(c:Ctx,path:V3[],r0:number,r1:number,len:number){
- if(c.lod!==0||(c.room&&c.room()<260))return;
+ if(!NEAR_ITEM.enabled||c.lod!==0||(c.room&&c.room()<260))return;
  const base=c.wood(len,{wear:Math.min(1,c.wear+.2)}),dark=likePaint((p,n,t,a)=>{const k=base(p,n,t,a);return [k[0]*.68,k[1]*.66,k[2]*.64] as RGB;},base),light=likePaint((p,n,t,a)=>{const k=base(p,n,t,a);return [Math.min(1,k[0]*1.18),Math.min(1,k[1]*1.15),Math.min(1,k[2]*1.1)] as RGB;},base);
- const m=path.length,n=Math.min(m-1,6),step=Math.max(1,Math.floor((m-1)/n)),rad=(t:number)=>r0+(r1-r0)*t;
- for(let k=0;k<3;k++){
+ const m=path.length,n=Math.min(m-1,5),step=Math.max(1,Math.floor((m-1)/n)),rad=(t:number)=>r0+(r1-r0)*t;
+ for(let k=0;k<2;k++){
   const a0=c.r('gr'+k)*TAU,pts:V3[]=[];
   for(let i=0;i<m;i+=step){const t=i/(m-1),a=a0+t*(1.1+k*.4),rr=rad(t)*.97;pts.push([path[i][0]+Math.cos(a)*rr,path[i][1],path[i][2]+Math.sin(a)*rr]);}
   if(pts.length>1)c.b.tube(pts,t=>[.0011+.0003*k,.0009],3,k===1?light:dark,{caps:false});
  }
- for(let k=0;k<2;k++){const t=.2+c.r('kn'+k)*.6,i=Math.min(m-1,Math.round(t*(m-1))),a=c.r('ka'+k)*TAU,rr=rad(t);c.b.ellipsoid([path[i][0]+Math.cos(a)*rr*.95,path[i][1],path[i][2]+Math.sin(a)*rr*.95],[rr*.34,rr*.22,rr*.34],dark,5);}
+ for(let k=0;k<1;k++){const t=.2+c.r('kn'+k)*.6,i=Math.min(m-1,Math.round(t*(m-1))),a=c.r('ka'+k)*TAU,rr=rad(t);c.b.ellipsoid([path[i][0]+Math.cos(a)*rr*.95,path[i][1],path[i][2]+Math.sin(a)*rr*.95],[rr*.34,rr*.22,rr*.34],dark,4);}
 }
 /** a jagged snapped end: several thin splinters rising from a broken shaft */
 export function splinters(c:Ctx,at:V3,r:number,dir:V3=[0,1,0],len=.09){
@@ -73,13 +74,13 @@ export function lashing(c:Ctx,y0:number,y1:number,r:number,turns:number,o:{x?:nu
  const cx=o.x??0,cz=o.z??0,cord=o.cord??.0034,p=o.paint??(o.mat?c.paint(o.mat,{len:.1}):c.wrap(.1));
  const dense=Math.max(3,Math.min(30,Math.round(Math.abs(y1-y0)/(cord*2.05)))),fray=c.wear>.55?Math.round(dense*.2):0;void turns;
  c.b.lash([cx,y0,cz],[cx,y1,cz],r+cord*.7,dense-fray,cord,p);
- if(c.lod===0&&(!c.room||c.room()>120)&&dense>3){const kp:V3=[cx+r*.7,y1,cz+r*.7];c.b.ellipsoid(kp,[cord*2.6,cord*1.8,cord*2.6],p,5);c.b.rod(kp,[kp[0]+r*.5,y1+cord*7,kp[2]+r*.3],()=>cord*.7,3,p,{segs:1});}
+ if(NEAR_ITEM.enabled&&c.lod===0&&(!c.room||c.room()>120)&&dense>3){const kp:V3=[cx+r*.7,y1,cz+r*.7];c.b.ellipsoid(kp,[cord*2.6,cord*1.8,cord*2.6],p,4);c.b.rod(kp,[kp[0]+r*.5,y1+cord*7,kp[2]+r*.3],()=>cord*.7,3,p,{segs:1});}
  if(c.lod===0&&c.wear>.35){c.b.rod([cx+r,y0,cz],[cx+r+.012,y0-.035-.03*c.wear,cz+.006],()=>cord*.8,4,p,{segs:1});}
 }
 /** a bound grip: leather/cord overlapped turns with a dyed accent band at each end */
 export function gripWrap(c:Ctx,y0:number,y1:number,r:number,o:{x?:number;z?:number;bands?:boolean}={}){
  lashing(c,y0,y1,r,0,{x:o.x,z:o.z,cord:c.st.wrapKind==='leather'?.0042:.0034});
- if(c.lod===0&&c.st.wrapKind==='leather'&&(c.room?c.room()>260:true)){const n=Math.min(12,Math.max(3,Math.round((y1-y0)/.012)));const st=c.paint('cord',{len:.1,tint:c.st.cordColour,tintAmount:.9});for(let i=0;i<n;i++){const y=y0+(i+.5)*(y1-y0)/n,rr=r+.0022;c.b.box([.0016,.0062,.0016],[(o.x??0)+rr*.7071,y,(o.z??0)+rr*.7071],st,[0,-.7854,i%2?.35:-.35]);}}
+ if(NEAR_ITEM.enabled&&c.lod===0&&c.st.wrapKind==='leather'&&(c.room?c.room()>260:true)){const n=Math.min(6,Math.max(3,Math.round((y1-y0)/.02)));const st=c.paint('cord',{len:.1,tint:c.st.cordColour,tintAmount:.9});for(let i=0;i<n;i++){const y=y0+(i+.5)*(y1-y0)/n,rr=r+.0022;c.b.box([.0016,.0062,.0016],[(o.x??0)+rr*.7071,y,(o.z??0)+rr*.7071],st,[0,-.7854,i%2?.35:-.35]);}}
  if(o.bands!==false&&c.lod<2){for(const y of [y0+.006,y1-.006])c.b.ring([o.x??0,y,o.z??0],[0,1,0],r+.002,.003,c.paint('cord',{len:.1,tint:c.st.cordColour,tintAmount:.9}),c.b.pick(14,10,6),4);}
 }
 /** Decorated wood paint: society decoration (bands, chevrons, dots, spirals, steps) in the accent over the shaft grain. */
