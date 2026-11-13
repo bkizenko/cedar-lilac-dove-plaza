@@ -4,7 +4,7 @@ import {BUILDINGS} from './constants';
 import type {Building} from './types';
 import {TRADE_PRICING,partialPayment} from "./tradePricing";
 import {hasTaskCommitment} from './workCommitments';
-import {carryingCapacity} from './haulage';
+import {tradeCargoCapacity} from './tradeCargo';
 import {isRivalTeam} from "./factions";
 import type { Game } from "./sim";
 import { predisposition } from "./people";
@@ -165,7 +165,7 @@ export function quoteShipment(
   // At a physical meeting they can offer a smaller surplus rather than reject
   // every proposal that would otherwise touch their protected reserves.
   const surplus=Math.max(0,Math.floor(other[get]-protectedReserve(g,team,get)));
-  const quantity=Math.min(200,marketQuantity,surplus,visitingTrader?.caravanRoute?carryingCapacity(visitingTrader,get):Infinity);
+  const quantity=Math.min(200,marketQuantity,surplus,visitingTrader?tradeCargoCapacity(visitingTrader,get):Infinity);
   if(surplus<1)return no(get==="food"&&calendar(g).phase>=2?"They are keeping food for winter. Ask for different goods.":"They have no surplus of those goods to exchange. Try another resource.");
   if (quantity < 1) return no("Offer more goods for at least one item in return.");
   const payment=partialPayment(amount,marketQuantity,quantity);

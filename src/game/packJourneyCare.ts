@@ -19,6 +19,44 @@ function cache(g:Game,u:Unit){return supplyDrops(g,u.team).find(d=>{const p=supp
 function origin(g:Game,u:Unit):PackedFoodOrigin|null{const d=cache(g,u);return d?{team:u.team,anchorKind:d.kind==='camp'?'camp':'building',...(d.kind==='camp'?{}:{buildingId:d.id}),x:d.x,z:d.z,loadedAt:g.state.time}:null;}
 const weight=(food:number,water:number)=>food+water*CARRIED_LOAD_RULES.provisionFood/CARRIED_LOAD_RULES.waterLiters;
 
+/** Available care is delivered stock after the same home food/water reserve. */
+function roadStock(g:Game,u:Unit){
+ const stock=foodInventory(g.tribe(u.team));
+ const homeWater=g.state.units.filter(v=>v.team===u.team&&v.hp>0&&v.id!==u.id&&!v.prisoner&&!v.expedition&&!v.scoutProvisions).length*PACK_JOURNEY_CARE_RULES.homeWaterRate*PACK_JOURNEY_CARE_RULES.homeWaterSeconds;
+ const availableWater=Math.max(0,(g.tribe(u.team).survival?.waterLiters||0)-homeWater);
+ // Preserve home meals even when there is no grain and an animal must use
+ // the same delivered plant provisions as people.
+ let readyBudget=Math.max(0,readyFoodStock(g.tribe(u.team)).nourishment-foodDemand(g,u.team)*PACK_JOURNEY_CARE_RULES.homeMealSeconds);
+ const available:Partial<Record<FoodKind,number>>={};
+ for(const kind of PACK_JOURNEY_FEED_KINDS){const factor=FOOD_NOURISHMENT[kind]??1,n=kind==='grain'?stock[kind]:Math.min(stock[kind],readyBudget/factor);available[kind]=n;if(kind!=='grain')readyBudget-=n*factor;}
+ const feedAvailable=PACK_JOURNEY_FEED_KINDS.reduce((n,k)=>n+(available[k]||0),0);
+ return {stock,available,availableWater,feedAvailable};
+}
+function carePacket(g:Game,u:Unit,at:PackedFoodOrigin,seconds:number,available:Partial<Record<FoodKind,number>>,stock:Record<FoodKind,number>){
+ const care=herdRules(u.packAnimal!.species).careMultiplier,feedRate=PACK_ANIMAL_RULES.feedPerSecond*care,waterRate=g.state.survivalVersion===1?PACK_ANIMAL_RULES.waterPerSecond*care:0;
+ const feed:Partial<Record<FoodKind,number>>={},stockAfterCare={...stock};let need=seconds*feedRate;
+ for(const kind of PACK_JOURNEY_FEED_KINDS){const n=Math.min(available[kind]||0,need);if(n>0){feed[kind]=n;stockAfterCare[kind]-=n;need-=n;}}
+ const feedLoaded=seconds*feedRate,waterLoaded=seconds*waterRate;
+ return {stockAfterCare,packet:{version:1 as const,animalId:u.packAnimal!.id,origin:at,feed,feedLoaded,feedUsed:0,waterLiters:waterLoaded,waterLoaded,waterUsed:0}};
+}
+/** Trade has its own real cargo. Reserve only the animal's round-trip supplies,
+ * not an additional expedition allowance or a second carrying-capacity bonus. */
+export function quotePackTradeCare(g:Game,u:Unit,seconds:number):PackJourneyCareQuote|null{
+ if(!Number.isFinite(seconds)||seconds<0)return null;
+ const a=u.packAnimal,prior=u.packJourneySupplies,stock=foodInventory(g.tribe(u.team));
+ if(prior){
+  if(u.haulage!=='pack'||!a||a.hp<=0||prior.animalId!==a.id)return null;
+  const care=herdRules(a.species).careMultiplier;
+  if(feedHeld(prior)+1e-8<seconds*PACK_ANIMAL_RULES.feedPerSecond*care||g.state.survivalVersion===1&&prior.waterLiters+1e-8<seconds*PACK_ANIMAL_RULES.waterPerSecond*care)return null;
+  return {reservedUnits:weight(feedHeld(prior),prior.waterLiters),maximumHumanUnits:0,stockAfterCare:stock,packet:prior,existing:true};
+ }
+ if(u.haulage!=='pack'||!a||a.hp<=0)return {reservedUnits:0,maximumHumanUnits:0,stockAfterCare:stock};
+ const at=origin(g,u);if(!at)return null;
+ const available=roadStock(g,u),care=herdRules(a.species).careMultiplier,feed=seconds*PACK_ANIMAL_RULES.feedPerSecond*care,water=g.state.survivalVersion===1?seconds*PACK_ANIMAL_RULES.waterPerSecond*care:0;
+ if(feed>available.feedAvailable+1e-8||water>Math.min(available.availableWater,PACK_JOURNEY_CARE_RULES.maximumWaterLiters)+1e-8||weight(feed,water)>PACK_JOURNEY_CARE_RULES.maximumFoodUnits)return null;
+ return {reservedUnits:weight(feed,water),maximumHumanUnits:0,...carePacket(g,u,at,seconds,available.available,stock)};
+}
+
 /** Quote the SAME animal's finite road supplies, reserving space before human
  * provisions. No remote pantry access, new animal, or extra carrying bonus. */
 export function quotePackJourneyCare(g:Game,u:Unit,totalFoodUnitBudget:number):PackJourneyCareQuote|null{
@@ -33,20 +71,11 @@ export function quotePackJourneyCare(g:Game,u:Unit,totalFoodUnitBudget:number):P
  const at=origin(g,u);if(!at)return null;
  const rules=herdRules(a.species),humanRate=FOOD_PER_PERSON_SECOND*predisposition(u).appetite,feedRate=PACK_ANIMAL_RULES.feedPerSecond*rules.careMultiplier;
  const waterRate=g.state.survivalVersion===1?PACK_ANIMAL_RULES.waterPerSecond*rules.careMultiplier:0;
- const homeWater=g.state.units.filter(v=>v.team===u.team&&v.hp>0&&v.id!==u.id&&!v.prisoner&&!v.expedition&&!v.scoutProvisions).length*PACK_JOURNEY_CARE_RULES.homeWaterRate*PACK_JOURNEY_CARE_RULES.homeWaterSeconds;
- const availableWater=Math.max(0,(g.tribe(u.team).survival?.waterLiters||0)-homeWater);
- // Preserve home meals even when there is no grain and an animal must use
- // the same delivered plant provisions as people.
- let readyBudget=Math.max(0,readyFoodStock(g.tribe(u.team)).nourishment-foodDemand(g,u.team)*PACK_JOURNEY_CARE_RULES.homeMealSeconds);
- const available:Partial<Record<FoodKind,number>>={};
- for(const kind of PACK_JOURNEY_FEED_KINDS){const factor=FOOD_NOURISHMENT[kind]??1,n=kind==='grain'?stock[kind]:Math.min(stock[kind],readyBudget/factor);available[kind]=n;if(kind!=='grain')readyBudget-=n*factor;}
- const feedAvailable=PACK_JOURNEY_FEED_KINDS.reduce((n,k)=>n+(available[k]||0),0);
+ const {available,availableWater,feedAvailable}=roadStock(g,u);
  const seconds=Math.min(totalFoodUnitBudget/(humanRate+feedRate+weight(0,waterRate)),feedAvailable/feedRate,waterRate?Math.min(availableWater,PACK_JOURNEY_CARE_RULES.maximumWaterLiters)/waterRate:Infinity);
  if(!Number.isFinite(seconds)||seconds*humanRate<6)return null;
- const feed:Partial<Record<FoodKind,number>>={},stockAfterCare={...stock};let need=seconds*feedRate;
- for(const kind of PACK_JOURNEY_FEED_KINDS){const n=Math.min(available[kind]||0,need);if(n>0){feed[kind]=n;stockAfterCare[kind]-=n;need-=n;}}
- const feedLoaded=seconds*feedRate,waterLoaded=seconds*waterRate;
- return {reservedUnits:weight(feedLoaded,waterLoaded),maximumHumanUnits:seconds*humanRate,stockAfterCare,packet:{version:1,animalId:a.id,origin:at,feed,feedLoaded,feedUsed:0,waterLiters:waterLoaded,waterLoaded,waterUsed:0}};
+ const p=carePacket(g,u,at,seconds,available,stock);
+ return {reservedUnits:weight(p.packet.feedLoaded,p.packet.waterLoaded),maximumHumanUnits:seconds*humanRate,...p};
 }
 
 /** Called synchronously after the parent has preflighted its human lots too. */
