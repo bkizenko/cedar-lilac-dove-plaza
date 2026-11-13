@@ -214,7 +214,7 @@ function RouteSwitches({engine}:{engine:Engine}){
   <label className="hw-check"><input type="checkbox" checked={routes&&stops&&raid} disabled={!routes||!stops} onChange={e=>set({raiders:e.target.checked})}/>Raiders seek out stops</label></div></section>;
 }
 
-export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:{hud:HudSnapshot;engine:Engine|null;onClose:()=>void;lifecycle:{busy:boolean;error?:string|null;run:(f:()=>Promise<unknown>,after?:(r:any)=>void)=>unknown};onTest:()=>void;onHide:()=>void;onTrade?:()=>void}){
+export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade,showTestLab=true,onShowTestLab}:{showTestLab?:boolean;onShowTestLab?:(v:boolean)=>void;hud:HudSnapshot;engine:Engine|null;onClose:()=>void;lifecycle:{busy:boolean;error?:string|null;run:(f:()=>Promise<unknown>,after?:(r:any)=>void)=>unknown};onTest:()=>void;onHide:()=>void;onTrade?:()=>void}){
  const d=engine?.game.state.difficulty??'normal';
  const [tab,setTab]=useState('play');
  const tabs=[{id:'play',label:'Game',icon:<Settings size={20}/>},{id:'world',label:'World',icon:<Route size={20}/>},{id:'tools',label:'Tools',icon:<Hammer size={20}/>},{id:'help',label:'Help',icon:<CircleHelp size={20}/>}];
@@ -230,6 +230,7 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.gfx.effective.graphics);engine.pushHud();}}}/>Shadows</label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/>Selection rings</label>
     <label className="hw-check"><input type="checkbox" checked={!hud.muted} onChange={()=>engine?.toggleMute()}/>All sound</label>
+    {onShowTestLab&&<label className="hw-check"><input type="checkbox" checked={showTestLab} onChange={e=>onShowTestLab(e.target.checked)}/>Show Test lab on main screen</label>}
     <AudioSliders engine={engine}/></div>
     <div className="hw-row"><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.help=true;engine.pushHud();}onClose();}}>Controls · H</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}onClose();}}>Ledger · L</button></div></section>
   </div>}
