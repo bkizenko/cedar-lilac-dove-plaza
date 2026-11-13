@@ -1048,4 +1048,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 22:28 ET Claude: shipped lane B refused-order feedback (any refused HUD command shows reason banner + cue, council keeps own list; test 2/2, council-ui 18/18, tsc nil) (7cd9ca29) / now on tooltip reasons for disabled buttons / blocked: none
 
-23:00 ET claude: shipped people animation rework: upright work poses (spine<=18deg, planted bent-knee stances, squat only for forage), distinct run cycle blended walk->run by speed, 6 new tests + 38 existing people tests pass, before/after pose sheets docs/renders/animation/ (SHA_PLACEHOLDER) / now on idle / blocked: none
+23:00 ET claude: shipped people animation rework: upright work poses (spine<=18deg, planted bent-knee stances, squat only for forage), distinct run cycle blended walk->run by speed, 6 new tests + 38 existing people tests pass, before/after pose sheets docs/renders/animation/ (357b9edb) / now on idle / blocked: none
