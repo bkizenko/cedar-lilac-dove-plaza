@@ -288,6 +288,16 @@ export function memoryGoodwill(g:Game,a:number,b:number):number{
  for(const w of r.wards??[])if(w.kind==='foster'&&((Number(w.from)===a&&Number(w.to)===b)||(Number(w.from)===b&&Number(w.to)===a)))sum+=fade(w.since);
  return Math.min(1,sum);
 }
+/** Contested hunting ground: living huntable game (deer, boar, goat) that stands within HUNT_GROUND_REACH of a building of BOTH houses, i.e. a herd two
+ * settlements both live beside. Derived only from real wildlife and building positions: no new state, nothing is taken or moved, old saves count 0. */
+export const HUNT_GROUND_REACH=80;
+export function sharedGame(g:Game,a:number,b:number):number{
+ if(a===b||!rulersEnabled(g))return 0;const s=g.state as unknown as {wildlife?:{species:string;hp:number;x:number;z:number}[];buildings?:{team:number;hp:number;x:number;z:number}[]};
+ const wl=s.wildlife??[],bs=s.buildings??[];if(!wl.length||!bs.length)return 0;
+ const near=(team:number,x:number,z:number)=>bs.some(bd=>bd.team===team&&bd.hp>0&&Math.hypot(bd.x-x,bd.z-z)<=HUNT_GROUND_REACH);
+ let n=0;for(const c of wl){if(c.hp<=0||(c.species!=='deer'&&c.species!=='boar'&&c.species!=='goat'))continue;if(near(a,c.x,c.z)&&near(b,c.x,c.z))n++;}
+ return n;
+}
 /** Yearly: claims born of real events, never invented. A raided house holds a 'defence' claim (no legitimacy cost) on its raider; a house bound by
  * marriage to a line that has run out of heirs (no heir, no regent) holds a 'succession' claim on it. grantClaim still applies every gate. */
 export function eventClaims(g:Game):Claim[]{
@@ -301,8 +311,9 @@ export function eventClaims(g:Game):Claim[]{
  for(const key of Object.keys(r.societies)){const h=Number(key);if(!Number.isInteger(h))continue;
   for(const okey of Object.keys(r.societies)){const o=Number(okey);if(h===o||!Number.isInteger(o))continue;
    const rel=societyRelation(g,h,o),good=memoryGoodwill(g,h,o); // remembered marriage/pact/fosterage makes a house slower to press a grounds claim, and softer when it does
-   if(!rel.known||rel.hostile||!(rel.grievance>=.5+.25*good))continue;
-   const c=grantClaim(g,h,o,'claim',Math.max(10,Math.round(30+30*Math.min(1,rel.grievance)-18*good)),10);if(c)out.push(c);}}
+   const shared=sharedGame(g,h,o); // a herd both houses live beside lowers the grievance bar a little (never below .3) and adds a little strength
+   if(!rel.known||rel.hostile||!(rel.grievance>=Math.max(.3,.5-Math.min(.2,shared*.04))+.25*good))continue;
+   const c=grantClaim(g,h,o,'claim',Math.max(10,Math.round(30+30*Math.min(1,rel.grievance)-18*good+Math.min(10,shared*2))),10);if(c)out.push(c);}}
  return out;
 }
 /** Using a claim as casus belli: spends it and the legitimacy cost is returned for the caller to charge to the holder's glory/unrest. */
