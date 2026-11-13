@@ -280,6 +280,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   seaRaid?: {plan?:import('./raidIntent').RaidPlan;x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   siegeRamId?:number;
   craftingXP?: number;
+  /** Per-person skill record (skills.ts); present only when state.skillModel is on. */
+  skills?:import('./skills').SkillRecord;
   craftingPractice?:{toolmaking?:import("./crafting").ToolmakingPractice};
   copperStudy?:import('./materialStudy').CopperStudy;
   caravanRoute?:number;
@@ -529,6 +531,7 @@ export type GameState = {
   retainedHousingProjects?:import('./housingTypes').RetainedHousingProject[];
   retainedBuildingRepairs?:import('./buildingMaintenance').RetainedBuildingRepair[];
   buildingMaintenanceVersion?:1;
+  skillModel?:import('./skillRuntime').SkillModel;
   raidDefense?:import('./warPrestige').RaidDefenseState;
   raidIntentHistory?:import('./raidIntent').RaidIntentHistory[];
   communityHandovers?:import("./communityHandoverTypes").CommunityHandover[];
@@ -684,9 +687,11 @@ export type HudSelection = {
   planned?: boolean;
   buildingId?: number;
   completed?: boolean;
+  skills?:import('./skillRuntime').PersonSkillCard;
 };
 
 export type HudSnapshot = {
+  villageSkills?:import('./skillRuntime').VillageSkillCard;
   foodLots?: Partial<Record<FoodKind,number>>;
   cornerstoneCount?: number;
   food: number;

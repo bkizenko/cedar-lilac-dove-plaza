@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
+import {SkillStrip} from './skillsCard';
 import {Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import {MusicChip} from './MusicControls';
@@ -206,6 +207,7 @@ export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engin
   </header>
   {engine&&person&&<SelectedForeignVerbs engine={engine}/>}
   {stats.length>0&&<div className="hw-sel-meta">{stats.map(s=><Stat key={s.k} icon={s.icon} value={s.value} label={s.label} tone={s.tone} className="hw-chip"/>)}</div>}
+  {sel.kind==='unit'&&sel.skills&&<SkillStrip card={sel.skills}/>}
   {info&&<p className="hw-info">{sel.info}</p>}
   {tabs.length>1&&<div className="hw-ctx" role="tablist" aria-label="Orders">{tabs.map(t=><GameTooltip key={t.id} title={t.label}><button type="button" role="tab" aria-selected={ctx===t.id} aria-label={t.label} className={cx('hw-ctx-tab',ctx===t.id&&'is-on')} onClick={()=>setTab(t.id)}>{t.icon}<span>{t.label}</span></button></GameTooltip>)}</div>}
   {ctx==='work'&&showJobs&&<div className="hw-jobs" role="group" aria-label="Assign work">{JOBS.filter(j=>!j.need||j.need(hud)).map(j=><GameTooltip key={j.id} title={j.label} description={JOB_TIP[j.id]}><button type="button" className={cx('hw-job',hud.job===j.id&&'is-on')} aria-pressed={hud.job===j.id} aria-label={j.label} onClick={()=>engine?.assignJob(j.id as never)}>{j.icon}<span>{j.label}</span></button></GameTooltip>)}</div>}

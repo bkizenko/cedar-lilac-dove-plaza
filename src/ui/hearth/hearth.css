@@ -502,3 +502,15 @@
 .hw-music{display:contents}
 .hw-music-panel label{display:grid;gap:var(--hw-s1,4px);font-size:16px}
 .hw-music-panel .hw-btn-wide{min-height:52px;font-size:16px}
+
+/* per-person skills and village specialisation (skillsCard.tsx): words first, bars second, 40px rows */
+.hw-skills{display:grid;gap:var(--hw-s2);padding:var(--hw-s2) var(--hw-s3)}
+.hw-skill,.hw-vskill{display:grid;grid-template-columns:minmax(0,1.3fr) auto minmax(64px,1fr) auto;align-items:center;gap:var(--hw-s2);min-height:40px;font-size:var(--hw-fs)}
+.hw-vskill{grid-template-columns:minmax(0,1.2fr) auto minmax(64px,1fr);}
+.hw-vskill-list{list-style:none;margin:0;padding:0;display:grid;gap:var(--hw-s2)}
+.hw-vskill-meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:var(--hw-s2);align-items:center;font-size:var(--hw-fs);opacity:.85}
+.hw-skill-name{font-weight:650}.hw-skill-word{opacity:.9}
+.hw-skill-bar{display:block;height:10px;border-radius:6px;background:rgba(255,236,190,.16);overflow:hidden}
+.hw-skill-bar i{display:block;height:100%;border-radius:6px;background:#d9b45a}
+.hw-skill-rusty,.hw-skill-guild{min-height:28px;padding:2px 10px}.hw-skill-guild{background:rgba(217,180,90,.22)}
+.hw-skill-note{margin:0;font-size:var(--hw-fs);opacity:.9}
