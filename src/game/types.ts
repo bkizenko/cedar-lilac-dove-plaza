@@ -344,6 +344,8 @@ export type Building = {
   excavationVolume?:number;
   excavationWorkSeconds?:number;
   towerPlatform?:import('./towerPlatforms').TowerPlatform;
+  /** Graded slope model: the foundation this site needs and the extra goods/labour it was charged (optional; absent on level sites and old saves). */
+  site?:import('./slopeTiers').SiteRecord;
   id: number;
   kind: "building";
   type: BldType;
@@ -608,6 +610,8 @@ export type GameState = {
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
   growthPolicy?: "stable" | "welcome" | "eager";
+  /** 'graded' = tiered slope model (slopeTiers.ts); absent = the earlier single linear tolerance, so old saves behave as before. */
+  slopeModel?: "graded";
   laborPolicy?: "balanced" | "food" | "build" | "wood" | "stone" | "hunt" | "explore" | "trade";
   conflict?: "quiet" | "balanced" | "dangerous";
   seed: number;

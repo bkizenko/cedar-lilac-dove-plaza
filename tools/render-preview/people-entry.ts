@@ -9,14 +9,15 @@ import {wornArmorGeometry} from '@/scene/wornArmor';
 import {cultureForCiv} from '@/scene/civPeople';
 import {CIVS,CIV_IDS,type CivId} from '@/scene/civStyles';
 import type {UnitLike} from '@/scene/characterAnim';
-import {rigOutfit,TOOL_FOR_CLIP,type RigGear} from '@/scene/characterRig';
+import {rigOutfit,bodyClassFor,TOOL_FOR_CLIP,type RigGear} from '@/scene/characterRig';
+import {LOOKS,roleOf,type Role} from '@/scene/peopleLook';
 import {CLIPS,samplePose,stancePose,type ClipId} from '@/scene/animationClips';
 import {weaponOf} from '@/scene/characterAnim';
 import {TEAM_STYLE} from '@/game/constants';
 
-type Row={civ:CivId;type:string;cls?:'child'|'elder'|'leader';gear?:RigGear;order?:string;node?:unknown;moving?:boolean;haulage?:string;carry?:number;target?:boolean;recipe?:string;farm?:{ripened?:boolean;planted?:number;tended?:number};id?:number;dieAt?:number;fish?:boolean};
+type Row={civ:CivId;type:string;role?:Role;cls?:'child'|'elder'|'leader';gear?:RigGear;order?:string;node?:unknown;moving?:boolean;haulage?:string;carry?:number;target?:boolean;recipe?:string;farm?:{ripened?:boolean;planted?:number;tended?:number};id?:number;dieAt?:number;fish?:boolean};
 type Strip={civ:CivId;type:string;clip:string;phase:number;x:number;z:number;facing:number;gear?:RigGear;cls?:'child'|'elder'|'leader'};
-type Spec={strips?:Strip[];width:number;height:number;mode:'rig'|'legacy';season:string;era:number;seconds:number;cam:{pos:number[];target:number[];fov:number};people:{row:Row;x:number;z:number;facing:number}[];bg?:string;label?:string};
+type Spec={strips?:Strip[];width:number;height:number;mode:'rig'|'rig1'|'legacy';season:string;era:number;seconds:number;cam:{pos:number[];target:number[];fov:number};people:{row:Row;x:number;z:number;facing:number}[];bg?:string;label?:string};
 const GARMENT:Record<string,string>={worker:'lightClothes'};
 function lights(scene:THREE.Scene){
  scene.add(new THREE.HemisphereLight('#ffe6c4','#6e5a3c',1.25));
@@ -51,7 +52,7 @@ const cul=(civ:CivId)=>{let c=cultures.get(civ);if(!c){c=cultureForCiv(civ,3);cu
    layer.beginFrame(world,cam.position,'high',true);
    for(const st of S.strips){
     const t=TEAM_STYLE[CIV_IDS.indexOf(st.civ)%TEAM_STYLE.length],cls=st.cls||(st.type==='leader'?'leader':st.type==='spearman'||st.type==='swordsman'?'soldier':'adult');
-    const outfit=rigOutfit({type:st.type as never,bodyClass:cls,seed:3,gear:st.gear||{},culture:cul(st.civ),season:S.season as never,era:S.era,teamColor:t.unit,affiliation:t.unit}),clip=CLIPS[st.clip as ClipId];
+    const outfit=rigOutfit({type:st.type as never,bodyClass:cls,seed:3,gear:st.gear||{},culture:cul(st.civ),season:S.season as never,era:S.era,teamColor:t.unit,affiliation:t.unit,...(S.mode==='rig'?{look:LOOKS[st.civ],role:roleOf({type:st.type,bodyClass:cls})}:{})}),clip=CLIPS[st.clip as ClipId];
     const pose=stancePose(samplePose(clip,st.phase,{phaseOffset:0,speed:1,amplitude:1},st.clip==='carry'?.8:0),st.clip as ClipId,weaponOf(st.type));
     const tool=TOOL_FOR_CLIP[st.clip];
     layer.write({id:1,type:st.type,team:0,x:st.x,y:0,z:st.z,vx:0,vz:0,facing:st.facing,hp:1,order:'idle'},[1.65,st.type==='leader'?1.95:1.65,1.65],0,1,.5,{pose,sink:0,outfit,cls,items:{itemR:outfit.itemR||tool,itemL:outfit.itemL}});
@@ -59,10 +60,11 @@ const cul=(civ:CivId)=>{let c=cultures.get(civ);if(!c){c=cultureForCiv(civ,3);cu
    layer.endFrame();Object.assign(info,layer.stats);renderer.render(scene,cam);return info;
   }
   const alive=new Set<number>(),units:{u:UnitLike;p:Spec['people'][number];last:{x:number;z:number}}[]=[];let id=100;
-  for(const p of S.people){const r=p.row;const u:UnitLike&{cd:number;rof:number;ageT?:number}={id:r.id??id++,type:r.type,team:CIV_IDS.indexOf(r.civ)%TEAM_STYLE.length,x:p.x,y:0,z:p.z,vx:r.moving?Math.sin(p.facing)*2.4:0,vz:r.moving?Math.cos(p.facing)*2.4:0,facing:p.facing,hp:10,order:r.order||'idle',carry:r.carry||0,
+  for(const p of S.people){const r=p.row;const u:UnitLike&{cd:number;rof:number;ageT?:number}={id:r.id??id++,type:r.type,team:CIV_IDS.indexOf(r.civ),x:p.x,y:0,z:p.z,vx:r.moving?Math.sin(p.facing)*2.4:0,vz:r.moving?Math.cos(p.facing)*2.4:0,facing:p.facing,hp:10,order:r.order||'idle',carry:r.carry||0,
    node:r.node,haulage:r.haulage,target:r.target?{x:p.x+Math.sin(p.facing)*1.4,z:p.z+Math.cos(p.facing)*1.4,r:.4}:null,range:1.8,cd:0,rof:1.1,maturesAt:r.cls==='child'?1e9:undefined,ageT:r.cls==='elder'?1e9:undefined};
    units.push({u,p,last:{x:p.x,z:p.z}});alive.add(u.id);}
-  const world:PeopleWorld={time:0,season:S.season as never,era:S.era,identity:t=>({culture:cul(CIV_IDS[t%CIV_IDS.length]),teamColor:TEAM_STYLE[t%TEAM_STYLE.length].unit,affiliation:TEAM_STYLE[t%TEAM_STYLE.length].unit}),
+  const world:PeopleWorld={time:0,season:S.season as never,era:S.era,identity:t=>({culture:cul(CIV_IDS[t%CIV_IDS.length]),teamColor:TEAM_STYLE[t%TEAM_STYLE.length].unit,affiliation:TEAM_STYLE[t%TEAM_STYLE.length].unit,...(S.mode==='rig'?{look:LOOKS[CIV_IDS[t%CIV_IDS.length]]}:{})}),
+   roleOf:u=>{const r=units.find(x=>x.u.id===u.id)!.p.row;return r.role??roleOf({type:u.type,bodyClass:bodyClassFor(u,world.time)});},
    gearOf:u=>units.find(x=>x.u.id===u.id)!.p.row.gear||{},projectFor:u=>{const r=units.find(x=>x.u.id===u.id)!.p.row;return r.recipe?{phase:'working',recipe:r.recipe,progress:world.time}:undefined;},farmFor:u=>units.find(x=>x.u.id===u.id)!.p.row.farm||null,fireLitNear:()=>true,loadOf:u=>Math.min(1,(u.carry||0)/10),aliveIds:()=>alive,visible:()=>true};
   const dt=.05,frames=Math.round(S.seconds/dt);let dead=0;
   for(let f=0;f<=frames;f++){

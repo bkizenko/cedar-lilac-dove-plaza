@@ -7,9 +7,9 @@
  *  is worn or carried only when the matching real state says so (see peopleLook.roleOf). */
 import {hashSeed} from './buildingParts';
 import {dressFor,type Culture,type GarmentId,type Season} from './cultureGrammar';
-import {insigniaParts,mix,type UnitKind} from './unitAppearance';
+import {mix,type UnitKind} from './unitAppearance';
 import type {BodyClass,RigBone,RigGear,RigInput,RigOutfit,RigPart,RigSlot} from './characterRig';
-import {bodyParts,emptyBones,footParts,headParts,headwearParts,jewelParts,markParts,paletteFor,Q,shade,type KitCtx,type Palette} from './peopleKit';
+import {bodyParts,earthy,TB,frameOf,frontZ,emptyBones,footParts,headParts,headwearParts,jewelParts,markParts,paletteFor,Q,shade,type KitCtx,type Palette} from './peopleKit';
 import {garmentParts} from './peopleGarb';
 import {fibreOf,individualFor,lookForSkin,warmthOf,type ArmorStyle,type HelmStyle,type Individual,type PeopleLook,type Role,type ShieldShape} from './peopleLook';
 
@@ -21,23 +21,31 @@ export const PROTECTION_CLASS:Record<ArmorStyle,'padding'|'hide'|'wicker'|'bark'
 
 /** Torso armor of one protection type, then the society's colour. Spine and hips bones; shoulders sit on the spine. */
 export function armorParts(c:KitCtx,style:ArmorStyle):RigPart[]{
- const {look,pal,rich}=c,b=look.body,w=b.waist,ch=b.chest,sh=b.shoulder,base=mix(PADDED_BASE[style],pal.cloth,style==='quilted'||style==='felt'||style==='linen'?.3:style==='lamellar'?.1:.08),dark=shade(base,style==='quilted'?.84:.72),lite=shade(base,1.14),st=pal.accent;
+ const {look,pal,rich}=c,b=look.body,F=frameOf(b),{tw,ww,wd,cw,cd}=F,hp=b.hip,sh=b.shoulder,base=mix(PADDED_BASE[style],pal.cloth,style==='quilted'||style==='felt'||style==='linen'?.3:style==='lamellar'?.1:.08),dark=shade(base,style==='quilted'?.84:.72),lite=shade(base,1.14),st=pal.accent;
  const o:RigPart[]=[],sp=(p:RigPart)=>{o.push(p);return p;},R=(col:string,sh2:Parameters<typeof Q>[1],size:[number,number,number],pos:[number,number,number],lod:0|1|2,rot?:[number,number,number],sides?:number)=>sp(Q(col,sh2,size,pos,lod,rot,sides));
- const shellB=.32*w+.07,shellT=.37*ch+.06;
- const shoulders=(col:string,l:0|1|2=1)=>{for(const s of [-1,1])R(col,'box',[.15,.07,.22],[s*(.19*sh+.015),.82,0],l);};
+ const T=(col:string,bot:readonly [number,number],top:readonly [number,number],h:number,pos:[number,number,number],lod:0|1|2,rot?:[number,number,number])=>sp(TB(col,bot,top,h,pos,lod,rot));
+ // a cuirass cut to the trunk: tapered shell from the waist to a sloped shoulder line, tassets hanging over the hips
+ const tb=tw-.03,th=.8-tb+.01,fz=(y:number)=>frontZ(F,y)+.04,e=.04;
+ const shell=(col:string,grow=0,l:0|1|2=2)=>{T(col,[ww+.07+grow,wd+.065+grow],[cw+.08+grow,cd+.07+grow],th,[0,tb-.01,0],l);T(col,[F.sw+.01+grow,cd+.07+grow],[.19,.17],.09,[0,.78,0],l);};
+ const tassets=(col:string,grow=0,l:0|1|2=1,h=.2)=>T(col,[.46*hp+.04+grow,.33*hp+.03+grow],[ww+.07,wd+.065],h,[0,tw-.02-h,0],l);
+ const shoulders=(col:string,l:0|1|2=1)=>{for(const s of [-1,1])T(col,[.16,.22],[.13,.2],.07,[s*(.19*sh+.015),.8,0],l);};
+ const bands=(n:number,cols:[string,string],grow=0,l:0|1|2=1)=>{const hh=th/n;for(let i=0;i<n;i++)T(cols[i%2],[ww+.07+grow+(cw-ww)*(i/n),wd+.065+grow+(cd-wd)*(i/n)],[ww+.07+grow+(cw-ww)*((i+1)/n),wd+.065+grow+(cd-wd)*((i+1)/n)],hh+.004,[0,tb-.01+i*hh,0],l);};
+ const hline=(col:string,y:number,l:0|1|2=0,w=.9)=>R(col,'box',[cw*w,.014,.014],[0,y,fz(y)+.004],l);
+ const vline=(col:string,x:number,y0:number,y1:number,l:0|1|2=0)=>R(col,'box',[.014,y1-y0,.014],[x,y0,fz((y0+y1)/2)+.004],l,[Math.atan2(fz(y1)-fz(y0),y1-y0),0,0]);
+ const yTop=.78;
  switch(style){
-  case 'quilted':R(base,'cylinder',[shellB,.38,shellT],[0,.49,0],2,undefined,8);R(base,'cylinder',[.4*w+.12,.2,shellB],[0,.34,0],1,undefined,8);for(let i=0;i<4;i++)R(dark,'box',[.4*ch,.014,.014],[0,.52+i*.09,.186*ch+.045],0);for(let i=-2;i<=2;i++)R(dark,'box',[.014,.34,.014],[i*.07,.5,.186*ch+.045],0);shoulders(base);R(lite,'cylinder',[.2,.04,.19],[0,.86,0],1,undefined,8);break;
-  case 'felt':R(base,'cylinder',[shellB+.03,.4,shellT+.03],[0,.48,0],2,undefined,8);R(base,'cylinder',[.42*w+.12,.22,shellB+.03],[0,.32,0],1,undefined,8);R(st,'cylinder',[.42*w+.14,.035,.42*w+.14],[0,.32,0],0,undefined,8);R(dark,'cylinder',[.24,.07,.2],[0,.85,0],1,undefined,8);shoulders(base);R(st,'box',[.3*ch,.03,.012],[0,.64,.19*ch+.05],0);break;
-  case 'hide':R(base,'cylinder',[shellB,.38,shellT],[0,.49,0],2,undefined,8);R(base,'cylinder',[.42*w+.1,.18,shellB],[0,.35,0],1,undefined,8);shoulders(dark);for(let i=0;i<4;i++)R(lite,'box',[.02,.012,.012],[(i%2?.03:-.03),.56+i*.07,.19*ch+.05],0,[0,0,i%2?.5:-.5]);R(lite,'box',[.012,.3,.012],[0,.55,.19*ch+.05],0);ring(8,.22,(i,x,z)=>Q(dark,'cone',[.07,.1,.05],[x,.28,z],0,[Math.PI,0,0],3)).forEach(sp);break;
-  case 'wicker':for(let i=0;i<5;i++)R(i%2?dark:base,'cylinder',[shellB+.03-(i===4?.02:0),.085,shellT-(i<1?.04:0)],[0,.46+i*.085,0],1,undefined,8);R(base,'cylinder',[.38*w+.1,.18,shellB],[0,.34,0],1,undefined,8);for(let i=0;i<6;i++){const a=i/6*TAU;R(lite,'box',[.015,.4,.015],[Math.sin(a)*.2*ch,.46,Math.cos(a)*.2*ch],0);}shoulders(base,0);break;
-  case 'bark':R(dark,'cylinder',[shellB-.02,.38,shellT-.02],[0,.49,0],1,undefined,8);ring(8,.19*ch,(i,x,z,a)=>Q(i%2?base:lite,'box',[.12,.34,.035],[x,.5,z],1,[0,a,0])).forEach(sp);ring(8,.22,(i,x,z,a)=>Q(base,'box',[.1,.16,.03],[x,.32,z],0,[0.18,a,0])).forEach(sp);shoulders(base,0);R(st,'cylinder',[.38*w+.07,.03,.38*w+.07],[0,.55,0],0,undefined,8);break;
-  case 'linen':for(let i=0;i<4;i++)R(i%2?dark:base,'cylinder',[shellB+.02+i*.003,.1,shellT-.03+(i<1?-.02:0)],[0,.46+i*.1,0],1,undefined,8);for(const s of [-1,1])R(base,'box',[.14,.2,.025],[s*(.19*sh+.03),.64,.06],0);ring(10,.21,(i,x,z,a)=>Q(i%2?base:lite,'box',[.07,.17,.012],[x,.3,z],0,[0.12,a,0])).forEach(sp);R(st,'cylinder',[.34*w+.08,.04,.34*w+.08],[0,.5,0],0,undefined,8);shoulders(lite,0);break;
-  case 'scale':for(let i=0;i<5;i++)R(i%2?base:lite,'cylinder',[shellB+.03,.1,shellT-.015-i*.004],[0,.45+i*.088,0],1,undefined,8);R(base,'cylinder',[.42*w+.11,.14,shellB],[0,.34,0],1,undefined,8);R(dark,'cylinder',[.42*w+.12,.025,.42*w+.12],[0,.34,0],0,undefined,8);shoulders(lite);R(dark,'cylinder',[.2,.05,.19],[0,.86,0],1,undefined,8);break;
-  case 'lamellar':R(base,'cylinder',[shellB,.38,shellT],[0,.49,0],2,undefined,8);R(base,'cylinder',[.42*w+.1,.2,shellB],[0,.33,0],1,undefined,8);for(let i=0;i<8;i++){const a=i/8*TAU;R(i%2?st:lite,'box',[.025,.34,.012],[Math.sin(a)*.2*ch,.5,Math.cos(a)*.2*ch],0,[0,a,0]);}for(let i=0;i<3;i++)R(st,'cylinder',[shellB+.04,.016,shellT+.01],[0,.54+i*.11,0],0,undefined,8);ring(8,.23,(i,x,z,a)=>Q(i%2?base:dark,'box',[.08,.17,.02],[x,.22,z],0,[.2,a,0])).forEach(sp);shoulders(dark);break;
-  case 'mail':R(base,'cylinder',[shellB,.4,shellT],[0,.47,0],2,undefined,8);R(base,'cylinder',[.42*w+.1,.22,shellB],[0,.3,0],1,undefined,8);shoulders(dark,1);R(lite,'cylinder',[.22,.07,.2],[0,.85,0],1,undefined,8);for(let i=0;i<5;i++)R(i%2?lite:dark,'box',[.42*ch,.012,.012],[0,.52+i*.07,.19*ch+.055],0);R(dark,'cylinder',[.42*w+.12,.03,.42*w+.12],[0,.3,0],0,undefined,8);break;
-  case 'plate':R(base,'sphere',[.4*ch,.4,.3*ch],[0,.47,.015],2);R(base,'cylinder',[shellB-.03,.3,shellT-.04],[0,.5,-.02],1,undefined,8);R(lite,'cylinder',[.4*w+.1,.1,shellB+.02],[0,.4,0],1,undefined,8);R(base,'cylinder',[.44*w+.13,.1,.4*w+.1],[0,.32,0],1,undefined,8);for(const s of [-1,1])R(lite,'sphere',[.17,.12,.2],[s*(.19*sh+.03),.78,0],1);R(dark,'cylinder',[.2,.06,.19],[0,.86,0],1,undefined,8);R(st,'cylinder',[.4*ch+.01,.02,.3*ch+.01],[0,.58,.01],0,undefined,8);break;
+  case 'quilted':shell(base);tassets(base);for(let i=0;i<4;i++)hline(dark,tb+.05+i*.06);for(let i=-2;i<=2;i++)vline(dark,i*.07,tb+.02,yTop);shoulders(base);R(lite,'box',[.2,.04,.19],[0,.855,0],1);break;
+  case 'felt':shell(base,.01);tassets(base,.01);T(st,[.46*hp+.06,.33*hp+.05],[.46*hp+.06,.33*hp+.05],.03,[0,tw-.22,0],0);R(dark,'box',[.24,.06,.2],[0,.85,0],1);shoulders(base);hline(st,.64,0,.8);break;
+  case 'hide':shell(base);tassets(base);shoulders(dark);for(let i=0;i<4;i++)R(lite,'box',[.045,.012,.012],[(i%2?.025:-.025),tb+.06+i*.055,fz(tb+.06+i*.055)+.004],0,[0,0,i%2?.5:-.5]);vline(lite,0,tb+.02,yTop);ring(8,.2,(i,x,z)=>Q(dark,'cone',[.07,.1,.05],[x*1.05,tw-.2,z*.72],0,[Math.PI,0,0],3)).forEach(sp);break;
+  case 'wicker':bands(4,[base,dark]);tassets(base,0,1,.18);for(let i=0;i<5;i++)vline(lite,(i-2)*.07,tb+.02,yTop,0);shoulders(base,0);break;
+  case 'bark':shell(dark,0,1);for(let i=-1;i<=1;i++)T(i%2?lite:base,[.12,.04],[.11,.036],.3,[i*.13*cw/.4,tb,fz(.65)-.02],1);tassets(base,0,1);shoulders(base,0);R(st,'box',[ww+.09,.03,wd+.08],[0,tw-.03,0],0);break;
+  case 'linen':bands(3,[base,dark]);tassets(base,0,1,.18);for(const s of [-1,1])R(base,'box',[.14,.2,.025],[s*(.19*sh+.03),.6,.06],0);ring(8,.2,(i,x,z,a)=>Q(i%2?base:lite,'box',[.07,.15,.012],[x*1.1,tw-.34,z*.78],0,[0.12,a,0])).forEach(sp);R(st,'box',[ww+.1,.04,wd+.09],[0,tw-.04,0],0);shoulders(lite,0);break;
+  case 'scale':bands(4,[base,lite]);tassets(base,0,1,.16);shoulders(lite);R(dark,'box',[.2,.05,.19],[0,.855,0],1);break;
+  case 'lamellar':shell(base);tassets(dark);for(let i=0;i<6;i++)vline(i%2?st:lite,(i-2.5)*.065*cw/.4,tb+.02,yTop);for(let i=0;i<3;i++)hline(st,tb+.06+i*.07,0);ring(8,.22,(i,x,z,a)=>Q(i%2?base:dark,'box',[.08,.15,.02],[x*1.0,tw-.3,z*.74],0,[.2,a,0])).forEach(sp);shoulders(dark);break;
+  case 'mail':shell(base);tassets(base);shoulders(dark,1);R(lite,'box',[.22,.05,.2],[0,.85,0],1);for(let i=0;i<5;i++)hline(i%2?lite:dark,tb+.04+i*.05);R(dark,'box',[.46*hp+.07,.03,.33*hp+.06],[0,tw-.22,0],0);break;
+  case 'plate':T(base,[ww+.07,wd+.065],[cw+.09,cd+.08],th,[0,tb-.01,0],2);T(base,[F.sw+.02,cd+.08],[.19,.17],.09,[0,.78,0],2);tassets(lite,0,1,.12);T(base,[.4*hp+.07,.3*hp+.06],[ww+.07,wd+.065],.1,[0,tw-.2,0],1);for(const s of [-1,1])T(lite,[.19,.25],[.15,.22],.1,[s*(.19*sh+.02),.78,0],1);R(dark,'box',[.21,.06,.2],[0,.855,0],1);R(st,'box',[cw*.5,.02,.012],[0,.66,fz(.66)+.006],0);break;
  }
- void rich;
+ void rich;void e;
  return o;
 }
 
@@ -48,9 +56,9 @@ export function wornGearParts(c:KitCtx,kind:'armor'|'helm',cond:number,col:strin
  if(!Number.isFinite(cond)||cond>=.75)return [];
  const wear=Math.min(1,(.75-Math.max(0,cond))/.75),n=Math.min(6,1+Math.floor(wear*6)),b=c.look.body,ch=b.chest,dark=shade(col,.55),lite=shade(col,1.22),o:RigPart[]=[];
  for(let i=0;i<n;i++){const h=hashSeed(`${kind}-wear-${c.v}-${i}`),u=(h%97)/97,v=((h>>>7)%89)/89;
-  if(kind==='armor')o.push(Q(i%3===2?lite:dark,'box',[.06+u*.07,.03+v*.04,.012],[(u-.5)*.3*ch,.46+v*.3,.19*ch+.058],0,[0,0,(u-.5)*1.4]));
+  if(kind==='armor')o.push(Q(i%3===2?lite:dark,'box',[.06+u*.07,.03+v*.04,.012],[(u-.5)*.3*ch,.58+v*.2,frontZ(frameOf(c.look.body),.58+v*.2)+.05],0,[0,0,(u-.5)*1.4]));
   else o.push(Q(i%3===2?lite:dark,'box',[.05+u*.06,.03,.02],[(u-.5)*.2,.99+(v-.2)*.18,.15+v*.03],0,[0,0,(u-.5)*1.2]));}
- if(wear>.55){if(kind==='armor')o.push(Q('#1c1712','box',[.09,.1,.02],[.1*ch,.62,.19*ch+.06],0,[0,0,.3]),Q(dark,'box',[.012,.16,.012],[.12*ch,.38,.19*ch+.06],0,[0,0,.1]));
+ if(wear>.55){if(kind==='armor')o.push(Q('#1c1712','box',[.09,.1,.02],[.1*ch,.6,frontZ(frameOf(c.look.body),.62)+.052],0,[0,0,.3]),Q(dark,'box',[.012,.16,.012],[.12*ch,.44,frontZ(frameOf(c.look.body),.5)+.05],0,[0,0,.1]));
   else o.push(Q('#1c1712','box',[.06,.05,.02],[-.1,1.04,.15],0));}
  return o;
 }
@@ -111,17 +119,17 @@ export function staffParts(look:PeopleLook,pal:{accent:string;trim:string;metal:
 // ---------------------------------------------------------------- role kit (worn or carried only when the matching real state says so)
 export type RoleFlags={roleKit:boolean};
 function roleKit(c:KitCtx,role:Role,type:UnitKind){
- const {pal,bones,look,ind}=c,b=look.body,ch=b.chest,tw=.57+b.torso*.5;
+ const {pal,bones,look,ind}=c,b=look.body,ch=b.chest,F=frameOf(b),tw=F.tw,fz=(y:number)=>frontZ(F,y)+.03,bz=-(F.cd/2+.05),sd=ind.hand;
  switch(role){
-  case 'smith':bones.spine.push(Q(pal.leather,'box',[.28*ch,.42,.03],[0,tw-.34,.19*ch],2),Q(shade(pal.leather,.7),'box',[.02,.2,.012],[-.1,.78,.17],1,[0,0,.5]),Q(shade(pal.leather,.7),'box',[.02,.2,.012],[.1,.78,.17],1,[0,0,-.5]));break;
-  case 'hunter':bones.spine.push(Q(pal.leather,'cylinder',[.1,.46,.09],[-.1,.38,-.2],1,[.15,0,.15],6),...[0,1,2].map(i=>Q(pal.accent,'box',[.012,.1,.012],[-.1+i*.025-.025,.82,-.215],0,[0,0,.1])),Q(shade(pal.leather,.7),'box',[.02,.5,.012],[0,.55,.18],1,[0,0,.7]));break;
-  case 'scout':bones.spine.push(Q(pal.cloth2,'box',[.3,.34,.12],[0,.5,-.22],2),Q(shade(pal.cloth2,.75),'cylinder',[.1,.36,.1],[0,.86,-.24],1,[0,0,Math.PI/2],6),Q(pal.leather,'box',[.02,.5,.012],[0,.55,.18],1,[0,0,.7]));break;
-  case 'merchant':bones.spine.push(Q(pal.leather,'box',[.2,.18,.08],[.2*ind.hand,.46,.15],1,[0,0,0]),Q(shade(pal.leather,.7),'box',[.02,.5,.012],[0,.55,.18],1,[0,0,-.7*ind.hand]),Q(pal.cloth2,'box',[.3,.26,.14],[0,.52,-.22],2),Q(pal.accent,'box',[.31,.04,.15],[0,.66,-.22],0),Q(pal.metal,'sphere',[.05,.05,.04],[-.2*ind.hand,.4,.16],0));break;
-  case 'farmer':bones.hips.push(Q(pal.leather,'box',[.14,.1,.07],[-.18*ind.hand,.38,.16],1));break;
-  case 'priest':bones.spine.push(Q(pal.trim,'box',[.1,.74,.03],[-.08,.12,.2*ch],2),Q(pal.trim,'box',[.1,.74,.03],[.08,.12,.2*ch],2),Q(pal.accent,'box',[.1,.03,.032],[-.08,.2,.2*ch],0),Q(pal.accent,'box',[.1,.03,.032],[.08,.2,.2*ch],0),Q(pal.metal,'sphere',[.06,.06,.04],[0,.8,.19],0));break;
-  case 'soldier':if(type==='archer')bones.spine.push(Q(pal.leather,'cylinder',[.1,.46,.09],[-.1,.38,-.2],1,[.15,0,.15],6));bones.spine.push(Q(pal.leather,'box',[.025,.55,.012],[0,.52,.19],1,[0,0,type==='swordsman'?-.7:.7]));break;
-  case 'ruler':bones.spine.push(Q(pal.trim,'box',[.025,.55,.012],[0,.52,.19],1,[0,0,.7]),Q(pal.metal,'sphere',[.06,.06,.04],[-.12,.84,.15],0));break;
-  case 'elder':bones.spine.push(Q(pal.cloth2,'box',[.42,.14,.28],[0,.74,-.02],1));break;
+  case 'smith':bones.spine.push(TB(pal.leather,[.3*ch,.04],[.26*ch,.04],.44,[0,tw-.4,fz(tw-.1)-.005],2),Q(shade(pal.leather,.7),'box',[.02,.2,.012],[-.1,.74,fz(.78)],1,[0,0,.5]),Q(shade(pal.leather,.7),'box',[.02,.2,.012],[.1,.74,fz(.78)],1,[0,0,-.5]));break;
+  case 'hunter':bones.spine.push(Q(pal.leather,'cylinder',[.1,.46,.09],[-.1,.38,bz],1,[.15,0,.15],6),...[0,1,2].map(i=>Q(pal.accent,'box',[.012,.1,.012],[-.1+i*.025-.025,.82,bz-.015],0,[0,0,.1])),Q(shade(pal.leather,.7),'box',[.02,.5,.012],[0,.55,fz(.7)],1,[0,0,.7]));break;
+  case 'scout':bones.spine.push(TB(pal.cloth2,[.3,.12],[.26,.1],.34,[0,.5,bz-.02],2),Q(shade(pal.cloth2,.75),'cylinder',[.1,.36,.1],[0,.86,bz-.04],1,[0,0,Math.PI/2],6),Q(pal.leather,'box',[.02,.5,.012],[0,.55,fz(.7)],1,[0,0,.7]));break;
+  case 'merchant':bones.spine.push(Q(pal.leather,'box',[.2,.18,.08],[.2*sd,.46,fz(.5)+.02],1,[0,0,0]),Q(shade(pal.leather,.7),'box',[.02,.5,.012],[0,.55,fz(.7)],1,[0,0,-.7*sd]),TB(pal.cloth2,[.3,.14],[.26,.12],.26,[0,.52,bz-.02],2),Q(pal.accent,'box',[.31,.04,.15],[0,.66,bz-.02],0),Q(pal.metal,'sphere',[.05,.05,.04],[-.2*sd,.4,fz(.45)+.02],0));break;
+  case 'farmer':bones.hips.push(Q(pal.leather,'box',[.07,.1,.12],[-.2*sd,.34,.03],1));break;
+  case 'priest':bones.spine.push(TB(pal.trim,[.1,.03],[.1,.03],.78,[-.08,.1,fz(.7)+.012],2),TB(pal.trim,[.1,.03],[.1,.03],.78,[.08,.1,fz(.7)+.012],2),Q(pal.accent,'box',[.1,.03,.032],[-.08,.2,fz(.5)+.02],0),Q(pal.accent,'box',[.1,.03,.032],[.08,.2,fz(.5)+.02],0),Q(pal.metal,'sphere',[.06,.06,.04],[0,.78,fz(.78)+.012],0));break;
+  case 'soldier':if(type==='archer')bones.spine.push(Q(pal.leather,'cylinder',[.1,.46,.09],[-.1,.38,bz],1,[.15,0,.15],6));bones.spine.push(Q(pal.leather,'box',[.025,.55,.012],[0,.52,fz(.7)+.01],1,[0,0,type==='swordsman'?-.7:.7]));for(const s of [-1,1])bones[s<0?'armL':'armR'].push(Q(pal.leather,'cylinder',[.075,.1,.075],[s*(.17+.04*b.shoulder),.56,0],0,undefined,6));break;
+  case 'ruler':bones.spine.push(Q(pal.trim,'box',[.025,.55,.012],[0,.52,fz(.7)+.01],1,[0,0,.7]),Q(pal.metal,'sphere',[.06,.06,.04],[-.12,.8,fz(.8)+.01],0));break;
+  case 'elder':break;
   default:break;
  }
 }
@@ -145,7 +153,7 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
  if(role==='child')cut={...cut,mantle:cold?cut.mantle:'none',belt:cut.belt==='wide'?'cord':cut.belt};
  if(!cold&&!seasonCold&&cut.mantle!=='none'&&role!=='ruler')cut={...cut,mantle:cut.mantle==='feather'?'feather':'none'};
  if(!g)cut={torso:'bare',hem:.3,sleeve:'none',lower:'kilt',mantle:'none',belt:'cord'};
- const pal=paletteFor(look,ind,bodyClass,fibre,look.dyes.cloth[0]||dress.body,dress.trim||look.dyes.trim);
+ const pal=paletteFor(look,ind,bodyClass,fibre,look.dyes.cloth[0]||dress.body,dress.trim||look.dyes.trim,role);
  if(!g){pal.cloth=mix(input.teamColor,pal.skin,.3);pal.cloth2=pal.cloth;}
  const bones=emptyBones();
  const c:KitCtx={look,ind,cls:bodyClass,role,item,fibre,cond:g?.condition??1,season,rich,cut,pal,bones,v:ind.variant,cold};
@@ -161,14 +169,18 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
  headParts(c,hairCovered||hasHelm);
  footParts(c,cold?look.foot.cold:look.foot.warm);
  if(bodyClass!=='child'){jewelParts(c,ind.jewel);if(ind.mark)markParts(c,ind.mark);}
- // insignia (worker sash, soldier shoulder cloth, chest patch) from the owned garment's cloth, as the first rig
- if(g&&type!=='worker'){const ins=insigniaParts(type,rich,ind.variant).filter(p=>!(type==='leader'&&(p.slot==='wood'||p.pos[1]>1.2||p.pos[0]<-.2))).map(p=>({...p,slot:p.slot as RigSlot}));if(ins.length){rendered.insignia=type;for(const q of ins)bones.spine.push(q);}}
+ // insignia from the owned garment's cloth, cut to the new trunk: soldier shoulder cloth, a chest patch, a leader's collar badge
+ if(g&&type!=='worker'){const F=frameOf(look.body),side=ind.variant%2?1:-1;const ins:RigPart[]=[];
+  if(type==='spearman'||type==='archer'||type==='ranger'){ins.push(Q(pal.trim,'box',[.17,.04,.2],[-side*.2,.835,0],0));if(rich>=2)ins.push(Q(pal.trim,'box',[.17,.015,.21],[-side*.2,.875,0],0));}
+  else if(type==='swordsman'||type==='warden')ins.push(Q(pal.trim,'box',[.14,.14,.02],[0,.6,frontZ(F,.67)+.02],0));
+  else if(type==='leader')ins.push(Q(pal.trim,'box',[.15,.15,.02],[0,.6,frontZ(F,.67)+.02],0));
+  if(ins.length){rendered.insignia=type;for(const q of ins)bones.spine.push(q);}}
  roleKit(c,role,type);
  // armor: owned padded torso built in the society's padded style; other protection kinds draw by kind
  if(gear.armor){
   const k=gear.armor.kind as string,style:ArmorStyle|null=k==='paddedTorso'?look.armor.padded:k==='hideCuirass'?'hide':k==='scaleCuirass'?'scale':k==='lamellar'?'lamellar':k==='mail'?'mail':k==='plate'?'plate':null;
   if(style&&gear.armor.condition>0){rendered.armor='paddedTorso';for(const q of armorParts(c,style)){bones[(q.pos[1]+(q.shape==='box'||q.shape==='sphere'?q.size[1]/2:0))<.5?'hips':'spine'].push(q);}for(const q of wornGearParts(c,'armor',gear.armor.condition,PADDED_BASE[style]))bones.spine.push(q);
-   bones.spine.push(Q(input.affiliation??'#c2b080','box',[.2,.2,.03],[0,.58,.2],1));}
+   bones.spine.push(Q(input.affiliation??'#c2b080','box',[.2,.2,.03],[0,.58,frontZ(frameOf(look.body),.68)+.058],1,[.1,0,0]));}
   else ignored.push(`armor kind '${k}' is not a known asset kind`);
  }
  const hm=hasHelm?gear.helmet!:undefined;
@@ -176,7 +188,7 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
  // ruler: cloak and circlet from the society's flag, as the first rig, on top of the society's rank headwear
  const flag=culture.flag;
  if(type==='leader'){
-  bones.spine.push(Q(mix(flag.fields[0] as string,'#000000',.12),'cone',[.62,.78,.5],[0,.2,-.1],2,[.12,0,0],8),Q(pal.metal,'box',[.06,.07,.02],[0,.82,.14],1));
+  bones.spine.push(TB(earthy(mix(flag.fields[0] as string,'#000000',.12),.45),[.56,.08],[.34,.06],.78,[0,.08,-(frameOf(look.body).cd/2+.05)],2,[.1,0,0]),Q(pal.metal,'box',[.06,.07,.02],[0,.8,frontZ(frameOf(look.body),.8)+.03],1));
  }
  // sockets
  const itemR=type==='leader'?'standard':type==='spearman'?'spear':type==='swordsman'?'blade':type==='warden'?'axe':role==='priest'?'staff':undefined,itemL=type==='archer'||type==='ranger'?'bow':gear.shield&&gear.shield.condition>0?'shield':undefined;
