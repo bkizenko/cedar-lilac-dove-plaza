@@ -1,7 +1,7 @@
 /** RANGED ITEMS: self bows, composite war bows, crossbows, slings, atlatls, arrows and quivers. Limbs taper in width and thickness, nocks are bone or
  *  horn, strings are served at the nocking point, composites show their horn belly and sinew back, crossbows have a real tiller, nut, stirrup and prod.
  *  Frames: bows have the grip at the origin, limbs along Y, belly bulging +Z (toward the target), string toward -Z. */
-import {TAU,v3,hexRgb,rgbMix,type V3,type Paint} from './itemMesh';
+import {TAU,v3,hexRgb,rgbMix,likePaint,type V3,type Paint} from './itemMesh';
 import {type Ctx,splinters,lashing,gripWrap,decorPaint,makerMark,tassel} from './itemKit';
 
 // ---------------------------------------------------------------------------------------------------------------- bow
@@ -12,8 +12,8 @@ export function bow(c:Ctx,composite=false){
  const wood=c.wood2(1.4,{len:H}),tipP=c.paint(composite?'horn':'bone',{len:.1});
  const widthAt=(u:number)=>(composite?.017:.0155)*(1-.62*Math.abs(u)),thickAt=(u:number)=>(composite?.0095:.0105)*(1-.5*Math.abs(u))+.0035;
  const sinewBack=hexRgb('#b6a074'),hornBelly=hexRgb('#43341f');
- const compositePaint:Paint=(p,nn,t,a)=>{const base=wood(p,nn,t,a);if(!composite)return base;const back=Math.sin(a*TAU)>0;
-  const m=back?rgbMix(sinewBack,hexRgb(c.st.cordColour),(((p[1]*22)%1+1)%1)<.18&&Math.abs(p[1])>.18?.7:0):hornBelly;return rgbMix(base,m,.8);};
+ const compositePaint:Paint=likePaint((p,nn,t,a)=>{const base=wood(p,nn,t,a);if(!composite)return base;const back=Math.sin(a*TAU)>0;
+  const m=back?rgbMix(sinewBack,hexRgb(c.st.cordColour),(((p[1]*22)%1+1)%1)<.18&&Math.abs(p[1])>.18?.7:0):hornBelly;return rgbMix(base,m,.8);},wood);
  const lim=(s:1|-1,from:number,to:number,paint:Paint)=>b.tube(limbPath(s,from,to),t=>{const u=from+(to-from)*t;return [widthAt(u),thickAt(u)];},c.sd(8),paint,{caps:true});
  const broken=c.broken;
  // limbs: grip riser is a little thicker; the upper limb snaps when broken

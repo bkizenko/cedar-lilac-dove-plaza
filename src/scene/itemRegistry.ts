@@ -63,7 +63,7 @@ export function transformMesh(m:ItemMesh,pose:Pose):ItemMesh{
   for(let k=0;k<3;k++){pos[i+k]=p[k]*pose.scale+pose.offset[k];nor[i+k]=q[k];min[k]=Math.min(min[k],pos[i+k]);max[k]=Math.max(max[k],pos[i+k]);}
  }
  if(!n){for(let k=0;k<3;k++){min[k]=0;max[k]=0;}}
- return {positions:pos,normals:nor,colors:m.colors,triangles:m.triangles,bounds:{min,max}};
+ return {positions:pos,normals:nor,colors:m.colors,triangles:m.triangles,bounds:{min,max},uvs:m.uvs,decals:m.decals,accents:m.accents};
 }
 /** How a model lies on the ground: long hand items on their side (resting on their thickest part), world items as they stand. Bottom at y=0. */
 export function groundPose(def:ItemDef,m:ItemMesh,yaw=0):Pose{
