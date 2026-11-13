@@ -1086,3 +1086,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 00:21 ET Claude(gaps): shipped caravan escort capture + gear/animal rob adapters (robGear, robCarriedArmor, robFarmTool, seizeLoanWeapon; 3 new tests) / now on gap 5 raiders target waystations + Menu toggle / blocked: none
 
 00:50 ET Claude(gaps): shipped raiders target waystations + Menu routes/waystations toggles (4 tests) / now on gap 6 stones from geologyAt / blocked: none
+
+01:20 ET Claude(gaps): shipped stone placement from geology (hard rock/thin soil weighting, geologyVersion 1 only, 2 tests) / now on final report / blocked: none
