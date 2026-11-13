@@ -13,6 +13,7 @@ import{gameSnapshot,validateGameSave}from'./persistence';import{foodInventory}fr
 import{reconcilePenWater,adoptHerdWaterLoad}from'./penWater';import{cropTrialWorkplace}from'./cultivation';
 import{agreeSocietyTruce}from'./societyRelations';import{recordDiplomaticLegal}from'./diplomaticKnowledge';
 import{WorkBoard}from'./settlement';
+import{noteArrivals,noteDepartures}from'./societyCivicRuntime';
 const live=(p:{phase:string})=>!['complete','completed','lost'].includes(p.phase);
 const asset=(p:HandoverProvenance&{team:number},r:CommunityHandover)=>{p.originTeam??=p.team;p.handoverId=r.id;p.team=r.toTeam;};
 const anchor=(p:ReturnType<typeof cropTrialWorkplace>):HandoverAnchor|undefined=>p?{kind:p.kind==='camp'?'camp':'building',...('id'in p?{id:p.id}:{}),x:p.x,y:p.y,z:p.z}:undefined;
@@ -96,6 +97,8 @@ export function prepareOwnedHandover(g:Game,fromTeam:number,toTeam=0,local?:Loca
   // projects settled above. A former player cannot carry that UI-only intent
   // into a non-player society (nor bypass its strict save ownership rule).
   if(fromTeam===0&&toTeam!==0)for(const u of people)delete u.constructionQueue;
+  // community identity (M2-11): the people who actually changed hands are arrivals here and departures there; no goods move through this record
+  noteArrivals(draft,toTeam,people.length,false);if(local)noteDepartures(draft,fromTeam,people.length);
   validateGameSave(gameSnapshot(draft));return{accepted:true,state:s,record:r};
  }catch(e){return{accepted:false,reason:e instanceof Error?e.message:'The community handover could not preserve its owned work'};}
 }

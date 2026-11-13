@@ -184,6 +184,15 @@ function reviewTeam(g:Game,c:CivicState,team:number){
 }
 const CIVIC_CAP=PROPOSAL_RULES.maxHistory;
 
+/** M2-14: an inhabited-world start records its bounded prehistory once, on the first rulers tick of a new game, over the REAL start sizes,
+ * so the asymmetry disclosure is visible from the opening instead of after the first year. Writes only the civic record and history; no goods. */
+export function beginCivic(g:Game){
+ if(!decisionsEnabled(g)||peekCivic(g)?.prehistory)return;
+ const teams=liveTeams(g);if(!teams.includes(0)||!teams.some(t=>livingPeople(g,t)>0))return;
+ const c=ensureCivic(g);if(!c||c.prehistory)return;
+ for(const t of teams)if(!c.identity[String(t)])c.identity[String(t)]=seedIdentity(seedOf(g),t,Math.max(1,livingPeople(g,t)));
+ startPrehistory(g,c);
+}
 /** Yearly entry point, called once from advanceRulers after yearlySocieties. */
 export function yearlyCivic(g:Game){
  const c=ensureCivic(g);if(!c)return;
