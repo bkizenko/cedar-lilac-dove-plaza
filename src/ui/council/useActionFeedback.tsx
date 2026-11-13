@@ -7,7 +7,7 @@ export function useActionFeedback(engine:Engine){
  const [items,setItems]=useState<Feedback[]>([]),n=useRef(0),alive=useRef(true);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
  const push=useCallback((ok:boolean,text:string)=>{try{engine.audio?.play(ok?'trade':'invalid');}catch{/* cue is optional */}if(alive.current)setItems(p=>[{id:++n.current,ok,text},...p].slice(0,3));},[engine]);
- const send=useCallback(async(command:Command)=>{try{const r=await engine.dispatch(command);push(r.accepted,r.reason);return r.accepted;}catch(e){push(false,e instanceof Error?e.message:'Unavailable');return false;}},[engine,push]);
+ const send=useCallback(async(command:Command)=>{try{const r=await engine.dispatch(command,undefined,{notice:false});push(r.accepted,r.reason);return r.accepted;}catch(e){push(false,e instanceof Error?e.message:'Unavailable');return false;}},[engine,push]);
  useEffect(()=>{if(!items.length)return;const t=setTimeout(()=>setItems(p=>p.slice(0,-1)),9000);return()=>clearTimeout(t);},[items]);
  return {items,send};
 }

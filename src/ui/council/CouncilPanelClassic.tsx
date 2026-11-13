@@ -11,7 +11,7 @@ export function CouncilPanelClassic({engine}:{engine:Engine}){
  const [feedback,setFeedback]=useState('');
  if(!c)return <p className="text-xs text-parchment-dim">{res.issue}</p>;
  if(!c.enabled)return <p className="text-xs text-parchment-dim">This village predates ruling houses.</p>;
- const marry=async(team:number)=>{try{const r=await engine.dispatch({kind:'marry-houses',team});setFeedback(r.reason);}catch(e){setFeedback(e instanceof Error?e.message:'Unavailable');}};
+ const marry=async(team:number)=>{try{const r=await engine.dispatch({kind:'marry-houses',team},undefined,{notice:false});setFeedback(r.reason);}catch(e){setFeedback(e instanceof Error?e.message:'Unavailable');}};
  return <section aria-label="Council" className="mt-2 space-y-3 text-xs">
   <p className="text-parchment-dim">{STAGE_NOTE[c.stage]}</p>
   {c.ruler&&<article aria-label="Ruler">

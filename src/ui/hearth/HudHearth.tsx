@@ -10,6 +10,7 @@ import {TradeProposal} from '../TradeProposal';
 import {ExcavationControls} from '../ExcavationControls';
 import {TowerPlatformControls} from '../TowerPlatformControls';
 import {GateRotationControl} from '../GateRotationControl';
+import {RotateButtons} from './RotateButtons';
 import {TradeBlock} from '../Hud';
 import {UiThemeBoot} from '../uiTheme';
 import {StartupHint} from './StartupHint';
@@ -56,7 +57,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
       {hud.placing==='trench'&&engine&&<ExcavationControls engine={engine}/>}
       {hud.placing==='watchtower'&&engine&&<TowerPlatformControls engine={engine}/>}
       {hud.placing==='gate'&&engine&&<GateRotationControl facing={engine.gateFacing} onChange={f=>engine.setGateFacing(f)}/>}
-      {hud.placing!=='gate'&&engine?.canRotatePlacement()&&<button type="button" className="hw-btn-wide" aria-pressed={engine.quarterTurn} title="Quarter turn (R)" onClick={()=>engine.rotatePlacement()}>Rotate ↻</button>}</>}/>
+      {engine?.canRotateAnyPlacement()&&<RotateButtons engine={engine} gate={hud.placing==='gate'}/>}</>}/>
      :tray&&<BuildTray hud={hud} engine={engine} tab={tab} setTab={setTab} onPick={()=>setTray(false)}/>}
     <SelectionCard hud={hud} engine={engine} onOffer={t=>setTrade(t)}/>
     <Dock active={screen?.k==='village'?'village':screen?.k==='ages'?'ages':screen?.k==='council'?'council':tray?'build':map?'map':null} onPick={open} onHome={()=>engine?.focusHome()} hasMap alerts={{}}/>

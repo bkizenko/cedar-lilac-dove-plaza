@@ -19,3 +19,13 @@ export function wheelZoomFactor(e:{deltaY:number;deltaMode?:number}):number{
  if(!Number.isFinite(px)||px===0)return 1;
  return Math.exp(Math.max(-1,Math.min(1,px/100))*0.08);
 }
+
+/** The camera takes a wheel/touch gesture only when it lands on the world canvas itself, or on bare page (body/html). Every other
+ * element, including HUD classes this selector has never heard of, keeps its own scrolling. */
+export function cameraOwnsWheel(target:unknown,canvas:unknown):boolean{
+ if(!target)return false;
+ if(target===canvas)return !eventInsideUi(target);
+ const t=target as {tagName?:string};
+ const tag=(t.tagName||'').toUpperCase();
+ return (tag==='BODY'||tag==='HTML')&&!eventInsideUi(target);
+}

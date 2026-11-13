@@ -6,7 +6,8 @@ import {WorldView} from '@/scene/world';
 import {wearTrail} from '@/game/trails';
 import {traceStep,tickRouteWear,setRoutesEnabled} from '@/game/routeWear';
 import {findPath} from '@/game/navigation';
-type Spec={seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
+import {galleryScene,galleryPose} from '@/scene/mapGallery';
+type Spec={gallery?:string;seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
  prep?:{buildings?:{type:string;x:number;z:number}[];farms?:{x:number;z:number;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
  routes?:{from:[number,number];to:[number,number];trips:number;team?:number;jitter?:number}[];routesFresh?:boolean;routesIdle?:number;routesLegacy?:boolean;stations?:{x:number;z:number;stage:0|1|2|3;form?:string;team?:number;hp?:number}[];
@@ -93,6 +94,10 @@ w.renderMap=async(S:Spec)=>{
  view.renderer.setSize(S.width,S.height,false);view.renderer.setPixelRatio(1);view.camera.aspect=S.width/S.height;if(S.fov)view.camera.fov=S.fov;view.camera.updateProjectionMatrix();
  view.composer?.setSize(S.width,S.height);
  const c0=game.world.camps.find(c=>c.team===0)||game.world.camps[0]||{x:0,z:0};
+ if(S.gallery){const sc=galleryScene(S.gallery);if(sc){const gc=game.campOf(0),p=galleryPose({size:game.world.size,height:(x,z)=>game.height(x,z),waterAt:(x,z)=>game.waterAt(x,z),camp:{x:gc.x,z:gc.z}},sc);
+  if(sc.farm&&!(game.state.buildings as {type:string}[]).some(b=>b.type==='farm')){const t=game.tribe(0);Object.assign(t,{food:900,wood:300,stone:100,seeds:40,cultivated:['grain','pulses','tubers']});game.vision.fill(2);
+   const n=game.state.buildings.length;if(game.placeBuilding('farm',p.x,p.z)){const b=game.state.buildings[n] as unknown as {build:number;plannedCost?:unknown;cropType?:string;crop?:unknown};b.build=1;delete b.plannedCost;b.cropType='grain';b.crop={kind:'grain',planted:.45,tended:.2,ripened:false,remaining:1};view.rebuild(game);}}
+  S.look=[p.x,p.z];S.lookY=p.lookY-game.height(p.x,p.z);}}
  const lx=S.look?S.look[0]:c0.x,lz=S.look?S.look[1]:c0.z;
 (view as unknown as {cameraGround:unknown}).cameraGround=null;
  view.look.set(lx,game.height(lx,lz)+(S.lookY??.55),lz);view.yaw=S.yaw;view.pitch=S.pitch;view.dist=S.dist;
