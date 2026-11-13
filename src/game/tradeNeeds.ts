@@ -1,3 +1,4 @@
+import {planFoodWithdrawal,commitFoodWithdrawal,receiveFoodLots,setCarriedFood,carriedFoodLots,validFoodLots,type CarriedFoodLots} from './tradeFood';
 import {packCapacityMultiplier} from './packAnimalState';
 import type {Game} from './sim';
 import type {GameState,Livestock,ResKind,Unit} from './types';
@@ -10,7 +11,7 @@ import {equipCaravan} from './caravans';
 import {isRivalTeam} from './factions';
 import {isDependent} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
-import {receiveFood} from './pantry';
+import {receiveFood,FOOD_KINDS} from './pantry';
 import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import {penHousingCapacity} from './penGeometry';
 import type {ItemKind} from './production';
@@ -47,8 +48,8 @@ export const TRADE_NEEDS_RULES={version:1,reviewSeconds:240,firstReviewSeconds:6
 
 export type TradeOfferPhase='proposed'|'loading'|'outbound'|'returning'|'aborting'|'complete'|'declined'|'failed';
 export type TradeReceiptStage='loaded'|'paid'|'delivered'|'refunded'|'lost';
-export type TradeLine={unitId:number;kind:GoodKind;amount:number;animals?:Livestock[]};
-export type TradeSide={kind:GoodKind;amount:number;animals?:Livestock[];penId?:number};
+export type TradeLine={unitId:number;kind:GoodKind;amount:number;animals?:Livestock[];foodLots?:CarriedFoodLots};
+export type TradeSide={kind:GoodKind;amount:number;animals?:Livestock[];penId?:number;foodLots?:CarriedFoodLots};
 export type TradeOffer={id:number;from:number;to:number;give:TradeSide;get:TradeSide;fairGet:number;spread:number;phase:TradeOfferPhase;createdAt:number;answerAt:number;startedAt?:number;hall:{x:number;z:number};
  reserved:boolean;carriers:number[];escorts:number[];ready:number[];lines:TradeLine[];risk:number;trust:number;escortsWanted:number;escortsArmed:number;escortsLost:number;carriersLost:number;paid:boolean;reason:string;lostAmount:number;lostToParcel:number;
  giveDelivered?:number;getDelivered?:number;needAmount:number;volume:number};
@@ -86,16 +87,16 @@ function penRoom(g:Game,team:number,hall?:{x:number;z:number},exclude:number[]=[
   const held=(g.state.livestock||[]).filter(a=>a.pen===b.id&&a.hp>0).length+(g.state.tradeNeeds?.offers||[]).filter(o=>OPEN.includes(o.phase)&&o.reserved).reduce((n,o)=>n+[o.give,o.get].filter(s=>s.penId===b.id).reduce((m,s)=>m+s.amount,0),0);
   if(held<penHousingCapacity(b)&&!exclude.includes(b.id))return b;}
  return undefined;}
-function addStock(g:Game,team:number,k:GoodKind,n:number,animals?:Livestock[],penId?:number){const t=g.tribe(team);if(!t||n<=0)return;
+function addStock(g:Game,team:number,k:GoodKind,n:number,animals?:Livestock[],penId?:number,foodLots?:CarriedFoodLots){const t=g.tribe(team);if(!t||n<=0)return;
  if(k==='goat'){const pen=g.state.buildings.find(b=>b.id===penId&&b.team===team&&b.type==='pen'&&b.hp>0)||penRoom(g,team);
   for(const a of animals||[]){a.team=team;if(pen){a.pen=pen.id;a.x=pen.x;a.z=pen.z;}(g.state.livestock??=[]).push(a);}return;}
- if(k==='food'){receiveFood(g,team,n,'provisions');return;}
+ if(k==='food'){if(foodLots)receiveFoodLots(g,team,foodLots);else receiveFood(g,team,n,'provisions');return;}
  if(WEAPONS.includes(k)){(t as unknown as Record<string,number>)[k]=((t as unknown as Record<string,number>)[k]||0)+n;return;}
  if(ITEMS.includes(k)){const items=t.items??={};items[k as ItemKind]=(items[k as ItemKind]||0)+n;return;}
  (t as unknown as Record<string,number>)[k]+=n;}
-function removeStock(g:Game,team:number,k:GoodKind,n:number):{ok:boolean;animals?:Livestock[]}{const t=g.tribe(team);if(!t||tradeStock(g,team,k)<n)return{ok:false};
+function removeStock(g:Game,team:number,k:GoodKind,n:number):{ok:boolean;animals?:Livestock[];foodLots?:CarriedFoodLots}{const t=g.tribe(team);if(!t||tradeStock(g,team,k)<n)return{ok:false};
  if(k==='goat'){const list=(g.state.livestock||[]).filter(a=>a.team===team&&a.hp>0&&a.species==='goat'&&!a.pregnancy).sort((a,b)=>a.id-b.id).slice(0,n);g.state.livestock=(g.state.livestock||[]).filter(a=>!list.includes(a));return{ok:true,animals:list};}
- if(k==='food'){g.spend(team,{food:n});return{ok:true};}
+ if(k==='food'){const foodLots=planFoodWithdrawal(g,team,n);return foodLots&&commitFoodWithdrawal(g,team,foodLots)?{ok:true,foodLots}:{ok:false};}
  if(WEAPONS.includes(k)){(t as unknown as Record<string,number>)[k]-=n;return{ok:true};}
  if(ITEMS.includes(k)){t.items![k as ItemKind]=(t.items![k as ItemKind]||0)-n;return{ok:true};}
  (t as unknown as Record<string,number>)[k]-=n;return{ok:true};}
@@ -207,8 +208,8 @@ function commit(g:Game,o:TradeOffer){
  const t=g.tribe(o.from),plan=commitPlan(g,o);if(plan.blocker!=='')return plan.blocker;
  const {home,pool,carriers,pg,pt}=plan as CommitReady;
  const gs=removeStock(g,o.from,o.give.kind,o.give.amount);if(!gs.ok)return'proposer-short';
- const ts=removeStock(g,o.to,o.get.kind,o.get.amount);if(!ts.ok){addStock(g,o.from,o.give.kind,o.give.amount,gs.animals);return'partner-short';}
- o.give.animals=gs.animals;o.get.animals=ts.animals;o.give.penId=pt;o.get.penId=pg;o.reserved=true;
+ const ts=removeStock(g,o.to,o.get.kind,o.get.amount);if(!ts.ok){addStock(g,o.from,o.give.kind,o.give.amount,gs.animals,undefined,gs.foodLots);return'partner-short';}
+ o.give.animals=gs.animals;o.get.animals=ts.animals;o.give.foodLots=gs.foodLots;o.get.foodLots=ts.foodLots;o.give.penId=pt;o.get.penId=pg;o.reserved=true;
  // The proposer's escorts: existing free militia first; otherwise a worker is armed from real stock at the cache.
  const escorts=g.state.units.filter(u=>u.team===o.from&&u.hp>0&&u.militia&&!u.caravanArmed&&free(g,u,o.from)&&!carriers.includes(u)).sort((x,y)=>dist(x,home)-dist(y,home)||x.id-y.id).slice(0,o.escortsWanted);
  const spare=pool.filter(u=>!carriers.includes(u)&&!escorts.includes(u));while(escorts.length<o.escortsWanted&&spare.length&&(t.spears>0||t.bows>0||(t.blades||0)>0)&&homeAdultCount(g,o.from)-carriers.length-escorts.length-1>=TRADE_NEEDS_RULES.minimumHomeAdults)escorts.push(spare.shift()!);
@@ -226,16 +227,29 @@ function evaluate(g:Game,o:TradeOffer){if(o.to===0){if(g.state.time>=o.answerAt+
 const unitOf=(g:Game,id:number)=>g.state.units.find(u=>u.id===id);
 const alive=(g:Game,o:TradeOffer,id:number)=>{const u=unitOf(g,id);return!!u&&u.hp>0&&u.team===o.from&&!u.prisoner&&u.tradeNeedsId===o.id;};
 function release(g:Game,u:Unit){u.tradeNeedsId=undefined;if(u.carry>0&&!u.carryType)u.carry=0;u.order=u.militia&&!u.caravanArmed?'hold':'idle';u.target=null;u.node=null;u.workReason='Home from trading';}
-function setCarry(u:Unit,lines:TradeLine[]){const l=lines.find(l=>l.unitId===u.id&&TRADE_GOODS[l.kind].cat==='resource');if(l){u.carry=l.amount;u.carryType=l.kind as ResKind;u.carryFood=l.kind==='food'?'provisions':undefined;}else{u.carry=0;u.carryType=null;u.carryFood=undefined;}
+function setCarry(u:Unit,lines:TradeLine[]){delete u.carryFoodLots;const l=lines.find(l=>l.unitId===u.id&&TRADE_GOODS[l.kind].cat==='resource');if(l){if(l.kind==='food'&&l.foodLots)setCarriedFood(u,l.foodLots);else{u.carry=l.amount;u.carryType=l.kind as ResKind;u.carryFood=l.kind==='food'?'provisions':undefined;}}else{u.carry=0;u.carryType=null;u.carryFood=undefined;}
  const items=lines.filter(l=>l.unitId===u.id&&TRADE_BULK_ITEMS.includes(l.kind));if(items.length){const cargo:Partial<Record<ItemKind,number>>={};for(const x of items)cargo[x.kind as ItemKind]=(cargo[x.kind as ItemKind]||0)+x.amount;u.itemCargo=cargo;}else if(u.tradeNeedsId!==undefined)u.itemCargo=undefined;}
+/** Allocate the exact escrow before handing anything over. Capacity may have
+ * changed since acceptance; a short allocation refunds rather than losing stock. */
+function allocateSide(g:Game,ids:number[],side:TradeSide):TradeLine[]|null{
+ const lines:TradeLine[]=[],animals=side.animals?[...side.animals]:undefined;
+ const food=side.foodLots?{...side.foodLots}:undefined;let left=side.amount;
+ if(food&&(side.kind!=='food'||!validFoodLots(food,left)))return null;
+ for(const id of ids){const u=unitOf(g,id);if(!u)return null;const take=Math.min(left,capacity(u,side.kind));if(take<=0)continue;
+  let foodLots:CarriedFoodLots|undefined;
+  if(food){foodLots={};let need=take;for(const kind of FOOD_KINDS){const n=Math.min(food[kind]||0,need);if(n>0){foodLots[kind]=n;food[kind]!-=n;need-=n;}if(need<=1e-9)break;}if(need>1e-7)return null;}
+  lines.push({unitId:id,kind:side.kind,amount:take,animals:animals?animals.splice(0,take):undefined,...(foodLots?{foodLots}:{})});left-=take;
+ }
+ return left<=1e-7?lines:null;
+}
 function finishOffer(g:Game,o:TradeOffer,phase:'complete'|'failed',reason:string){o.phase=phase;o.reason=reason;for(const id of [...o.carriers,...o.escorts]){const u=unitOf(g,id);if(u&&u.tradeNeedsId===o.id)release(g,u);}o.carriers=[];o.escorts=[];o.ready=[];if(phase==='complete')row(g,o.from).completed++;else{row(g,o.from).failed++;note(g,o.from,'failed-'+reason);}}
-function refundEscrow(g:Game,o:TradeOffer,side:'give'|'get'){const s=o[side],team=side==='give'?o.from:o.to;if(s.amount>0)addStock(g,team,s.kind,s.amount,s.animals);if(s.amount>0)receipt(g,o,'refunded',team,s.kind,s.amount);s.amount=0;s.animals=undefined;}
+function refundEscrow(g:Game,o:TradeOffer,side:'give'|'get'){const s=o[side],team=side==='give'?o.from:o.to;if(s.amount>0)addStock(g,team,s.kind,s.amount,s.animals,undefined,s.foodLots);if(s.amount>0)receipt(g,o,'refunded',team,s.kind,s.amount);s.amount=0;s.animals=undefined;delete s.foodLots;}
 function abort(g:Game,o:TradeOffer,reason:string){
  o.reason=reason;note(g,o.from,'abort-'+reason);
  if(!o.paid&&o.get.amount>0)refundEscrow(g,o,'get');
  if(o.phase==='loading'||!o.lines.length){if(o.phase==='loading'&&o.give.amount>0)refundEscrow(g,o,'give');finishOffer(g,o,'failed',reason);return;}
  o.phase='aborting';}
-function unload(g:Game,o:TradeOffer,u:Unit){for(const l of o.lines.filter(l=>l.unitId===u.id)){addStock(g,o.from,l.kind,l.amount,l.animals,o.get.penId);receipt(g,o,l.kind===o.get.kind&&o.paid?'delivered':'refunded',o.from,l.kind,l.amount,u.id,l.kind===o.get.kind&&o.paid?o.fairGet:undefined);if(o.paid)o.getDelivered=(o.getDelivered||0)+l.amount;}
+function unload(g:Game,o:TradeOffer,u:Unit){for(const l of o.lines.filter(l=>l.unitId===u.id)){addStock(g,o.from,l.kind,l.amount,l.animals,o.get.penId,l.foodLots);receipt(g,o,l.kind===o.get.kind&&o.paid?'delivered':'refunded',o.from,l.kind,l.amount,u.id,l.kind===o.get.kind&&o.paid?o.fairGet:undefined);if(o.paid)o.getDelivered=(o.getDelivered||0)+l.amount;}
  o.lines=o.lines.filter(l=>l.unitId!==u.id);setCarry(u,o.lines);}
 function reconcile(g:Game,o:TradeOffer){
  const before=o.carriersLost;
@@ -255,9 +269,8 @@ export function tickTradeNeeds(g:Game,_dt:number){
    // Readiness is re-checked at the handoff: every carrier must be standing at a cache right now.
    if(o.carriers.every(id=>o.ready.includes(id))&&o.escorts.every(id=>o.ready.includes(id)||!alive(g,o,id))&&!o.carriers.every(id=>atCacheNow(g,unitOf(g,id)!,o.from))){o.ready=o.ready.filter(id=>atCacheNow(g,unitOf(g,id)!,o.from));continue;}
    if(o.carriers.every(id=>o.ready.includes(id))&&o.escorts.every(id=>o.ready.includes(id)||!alive(g,o,id))){
-    const lines:TradeLine[]=[];let left=o.give.amount,animals=o.give.animals?[...o.give.animals]:undefined;
-    for(const id of o.carriers){const u=unitOf(g,id)!;const take=Math.min(left,capacity(u,o.give.kind));if(take<=0)continue;lines.push({unitId:id,kind:o.give.kind,amount:take,animals:animals?animals.splice(0,take):undefined});left-=take;}
-    o.lines=lines;for(const l of lines)receipt(g,o,'loaded',o.from,l.kind,l.amount,l.unitId);o.give.amount=0;o.give.animals=undefined;for(const id of o.carriers)setCarry(unitOf(g,id)!,o.lines);
+    const lines=allocateSide(g,o.carriers,o.give);if(!lines){abort(g,o,'loading-capacity-changed');continue;}
+    o.lines=lines;for(const l of lines)receipt(g,o,'loaded',o.from,l.kind,l.amount,l.unitId);o.give.amount=0;o.give.animals=undefined;delete o.give.foodLots;for(const id of o.carriers)setCarry(unitOf(g,id)!,o.lines);
     o.escortsArmed=o.escorts.filter(id=>unitOf(g,id)?.militia).length;o.phase='outbound';o.startedAt=g.state.time;o.ready=[];o.reason='Walking to the partner hall with the reserved goods';}
    continue;}
   if(age>TRADE_NEEDS_RULES.journeySeconds&&(o.phase==='outbound'||o.phase==='returning')){if(o.phase==='outbound')abort(g,o,'journey-timeout');else{abort(g,o,'journey-timeout');}continue;}
@@ -265,11 +278,11 @@ export function tickTradeNeeds(g:Game,_dt:number){
   if(o.phase==='outbound'){const us=o.carriers.map(id=>unitOf(g,id)!);
    if(us.every(u=>localSettlementHall(g,u,o.to))){
     observePartnerStock(g,o.from,o.to,us[0]);
+    const paymentLines=allocateSide(g,o.carriers,o.get);if(!paymentLines){abort(g,o,'return-capacity-changed');continue;}
     // Meeting: partner receives the offered goods and pays from its reserved escrow.
-    for(const l of o.lines){addStock(g,o.to,l.kind,l.amount,l.animals,o.give.penId);receipt(g,o,'paid',o.to,l.kind,l.amount,l.unitId);o.giveDelivered=(o.giveDelivered||0)+l.amount;}
-    o.lines=[];let left=o.get.amount,animals=o.get.animals?[...o.get.animals]:undefined;
-    for(const u of us){const take=Math.min(left,capacity(u,o.get.kind));if(take<=0)continue;o.lines.push({unitId:u.id,kind:o.get.kind,amount:take,animals:animals?animals.splice(0,take):undefined});left-=take;receipt(g,o,'loaded',o.to,o.get.kind,take,u.id,o.fairGet);}
-    o.get.amount=0;o.get.animals=undefined;o.paid=true;for(const u of us)setCarry(u,o.lines);o.phase='returning';o.ready=[];o.reason='Carrying the partner’s payment home';o.startedAt=g.state.time;}
+    for(const l of o.lines){addStock(g,o.to,l.kind,l.amount,l.animals,o.give.penId,l.foodLots);receipt(g,o,'paid',o.to,l.kind,l.amount,l.unitId);o.giveDelivered=(o.giveDelivered||0)+l.amount;}
+    o.lines=paymentLines;for(const l of paymentLines)receipt(g,o,'loaded',o.to,o.get.kind,l.amount,l.unitId,o.fairGet);
+    o.get.amount=0;o.get.animals=undefined;delete o.get.foodLots;o.paid=true;for(const u of us)setCarry(u,o.lines);o.phase='returning';o.ready=[];o.reason='Carrying the partner’s payment home';o.startedAt=g.state.time;}
    continue;}
   if(o.phase==='returning'||o.phase==='aborting'){
    if(!o.lines.length){finishOffer(g,o,o.phase==='returning'?'complete':'failed',o.phase==='returning'?'Delivered':o.reason);continue;}}
@@ -335,7 +348,8 @@ export function validTradeNeedsState(s:GameState){
   if(!phases.includes(o.phase)||!Number.isInteger(o.from)||!Number.isInteger(o.to)||o.from<0||o.from>=teams||o.to<0||o.to>=teams||o.from===o.to||!TRADE_GOODS[o.give.kind]||!TRADE_GOODS[o.get.kind]||!fin(o.give.amount)||!fin(o.get.amount)||!fin(o.fairGet)||!fin(o.spread,1)||!fin(o.risk,1)||!fin(o.trust,1)||!fin(o.createdAt)||!fin(o.answerAt)||!o.hall||!Number.isFinite(o.hall.x)||!Number.isFinite(o.hall.z)||Math.abs(o.hall.x)>1e5||Math.abs(o.hall.z)>1e5)return false;
   if(!Array.isArray(o.carriers)||!Array.isArray(o.escorts)||!Array.isArray(o.lines)||!Array.isArray(o.ready)||o.carriers.length>TRADE_NEEDS_RULES.maximumCarriers||o.escorts.length>TRADE_NEEDS_RULES.maximumEscorts)return false;
   const open=ACTIVE.includes(o.phase);if(!open&&(o.carriers.length||o.escorts.length||o.lines.length))return false;if(open&&!o.reserved)return false;
-  for(const l of o.lines)if(!o.carriers.includes(l.unitId)||!TRADE_GOODS[l.kind]||!fin(l.amount))return false;
+  for(const side of [o.give,o.get])if(side.foodLots!==undefined&&(side.kind!=='food'||!validFoodLots(side.foodLots,side.amount)))return false;
+  for(const l of o.lines){if(!o.carriers.includes(l.unitId)||!TRADE_GOODS[l.kind]||!fin(l.amount)||l.foodLots!==undefined&&(l.kind!=='food'||!validFoodLots(l.foodLots,l.amount)))return false;if(l.foodLots){const u=s.units.find(u=>u.id===l.unitId);if(!u||u.carryFoodLots===undefined||FOOD_KINDS.some(k=>Math.abs((carriedFoodLots(u)[k]||0)-(l.foodLots![k]||0))>1e-7))return false;}}
   for(const id of [...o.carriers,...o.escorts]){const u=s.units.find(u=>u.id===id);if(!u||u.tradeNeedsId!==o.id)return false;}}
  if(t.observations!==undefined){if(!Array.isArray(t.observations)||t.observations.length>TRADE_NEEDS_RULES.maximumObservations)return false;const pairs=new Set<string>();
   for(const r of t.observations){if(!r||!Number.isInteger(r.viewer)||!Number.isInteger(r.partner)||r.viewer<0||r.partner<0||r.viewer>=teams||r.partner>=teams||r.viewer===r.partner||!fin(r.observedAt)||r.observedAt>s.time+1e-6||!Number.isSafeInteger(r.observerId)||r.observerId<1||r.observerId>=s.nextId||!r.stock||typeof r.stock!=='object'||Array.isArray(r.stock))return false;
