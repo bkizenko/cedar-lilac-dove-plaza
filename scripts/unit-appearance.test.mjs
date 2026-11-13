@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {unitAppearance,appearanceTriangles,APPEARANCE_RULES,mix,unitFit} from '../src/scene/unitAppearance.ts';
+import {unitAppearance,appearanceTriangles,APPEARANCE_RULES,mix,unitFit,standardWear} from '../src/scene/unitAppearance.ts';
 import {generateCulture,contrast,SEASONS,GARMENT_HEAT} from '../src/scene/cultureGrammar.ts';
 import {partBounds} from '../src/scene/buildingParts.ts';
 import {GARMENT_KINDS} from '../src/game/textiles.ts';
@@ -58,4 +58,12 @@ test('colours: culture dyes light cloth strongly and hides barely; trim reads ag
  const light=unitAppearance({type:'worker',seed:1,gear:{garment:{item:'lightClothes',condition:1}},culture:c,season:'summer'}),hide=unitAppearance({type:'worker',seed:1,gear:{garment:{item:'hideCoat',condition:1}},culture:c,season:'summer'});
  const body=c.dress.summer.body,dist=(a,b)=>{const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));return Math.hypot(...p(a).map((v,i)=>v-p(b)[i]));};assert.ok(dist(light.slotColors.garment,body)<dist(hide.slotColors.garment,body)||dist(body,APPEARANCE_RULES.baseColor.lightClothes)<40,'dye takes more strongly on light cloth than on hide');assert.equal(mix('#000000','#ffffff',.5),'#808080');
  for(const cu of cultures)for(const item of GARMENT_KINDS){const a=unitAppearance({type:'worker',seed:2,gear:{garment:{item,condition:1}},culture:cu,season:'spring'});assert.ok(contrast(a.slotColors.garment,a.slotColors.trim)>=1.1,'trim distinguishable');}
+});
+
+test('a leader standard wears from real garment condition: none when sound, bounded and near-only when worn, no stat change',()=>{
+  assert.equal(standardWear(1,0).length,0);assert.equal(standardWear(.6,1).length,0);
+  const w=standardWear(.5,0),r=standardWear(.2,1);
+  assert.ok(w.length===1&&r.length===3,'tear first, thread and fade when ruined');
+  for(const p of [...w,...r])assert.equal(p.lod,0,'wear is near LOD only');
+  assert.equal(standardWear(NaN,0).length,0);
 });

@@ -30,7 +30,9 @@ test('mid-water saved carriers retain their canoe, position, orders and load',()
  work(copy,sailor,90,(g,u,dt)=>{if(u.order==='move')g.workerAI(u,dt);});assert.ok(sailor.z>30);
  const nav=waterNavigation(copy);assert.equal(waterNavigation(copy),nav);copy.rebuildWalk();assert.notEqual(waterNavigation(copy),nav);
 });
-function goat(g){const c={id:g.id(),species:'goat',x:4,y:4,z:-32,facing:0,vx:0,vz:0,wanderT:30,hp:30,maxHp:30,fly:0,scale:1};g.state.wildlife=[c];g.state.buildings=[g.makeBld('townhall',12,-35,0)];g.rebuildWalk();return c;}
+// Legacy transport checks assert the success path; paid domestication trials (domestication.test.mjs) own refusal. Pick a goat id whose frozen trial roll succeeds for this seed.
+function willAccept(g,id){const c={id:id,species:'goat',x:4,y:4,z:-32,facing:0,vx:0,vz:0,wanderT:30,hp:30,maxHp:30,fly:0,scale:1};g.state.wildlife=[c];g.state.buildings=[g.makeBld('townhall',12,-35,0)];g.rebuildWalk();const copy=decodeGame(encodeGame(g));terrain(copy);copy.vision.fill(2);if(!beginPackTaming(copy,copy.state.buildings[0].id))return false;const t=copy.state.units.find(x=>x.tamingWork?.trial)?.tamingWork.trial;return !!t&&t.roll<t.chance;}
+function goat(g){let id=g.id();for(let k=0;k<200&&!willAccept(g,id);k++)id=g.id();const c={id,species:'goat',x:4,y:4,z:-32,facing:0,vx:0,vz:0,wanderT:30,hp:30,maxHp:30,fly:0,scale:1};g.state.wildlife=[c];g.state.buildings=[g.makeBld('townhall',12,-35,0)];g.rebuildWalk();return c;}
 test('taming transfers one discovered goat into a real carrier and costs feed, harness and time',()=>{
  const {g,u}=fixture(),c=goat(g),hall=g.state.buildings[0];assert.equal(beginPackTaming(g,hall.id),true);assert.equal(g.tribe(0).food,90);assert.equal(g.tribe(0).wood,98);
  assert.equal(u.haulage,undefined);assert.equal(g.state.wildlife.length,1);
@@ -147,7 +149,7 @@ test('hunters respect their own taming reservation while other tribes remain abl
 test('a tamed goat retains its original identity and condition through saves and release',()=>{
  const {g,u}=fixture(),c=goat(g);c.hp=17;c.scale=1.3;
  assert.equal(beginPackTaming(g,g.state.buildings[0].id),true);work(g,u,100,packTamingAI);
- const {packHarness,...animal}=u.packAnimal;assert.deepEqual(animal,{id:c.id,hp:17,maxHp:30,scale:1.3,species:'goat',hunger:0,thirstSeconds:0,foodConsumed:0,waterConsumedLiters:0});
+ const {packHarness,domestication,...animal}=u.packAnimal;assert.equal(domestication.recent[0].outcome,'success');assert.deepEqual(animal,{id:c.id,hp:17,maxHp:30,scale:1.3,species:'goat',hunger:0,thirstSeconds:0,foodConsumed:0,waterConsumedLiters:0});
  assert.equal(packHarness.version,1);assert.equal(packHarness.wood,2);assert.equal(packHarness.workSeconds,60);assert.ok(packHarness.preparedAt>=0&&packHarness.preparedAt<=g.state.time);
  const copy=decodeGame(encodeGame(g)),handler=copy.state.units.find(p=>p.id===u.id);handler.hp=0;
  releasePackAnimal(copy,handler);const freed=copy.state.wildlife.find(p=>p.id===c.id);
