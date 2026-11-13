@@ -587,3 +587,14 @@ test('kinDealRefusal: no envoy crosses the lines while the houses are at war',as
  g.isFoe=(a,b)=>(a===0&&b===1)||(a===1&&b===0)?true:orig(a,b);
  assert.match(kinDealRefusal(g,1),/at war/);
 });
+
+test('partyRisk (CAT-97): hostile people near the road raise risk and demand escorts; quiet road none; off for old saves',async()=>{
+ const {partyRisk}=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();const a={x:0,z:0},b={x:100,z:0};
+ const quiet=partyRisk(g,0,a,b);assert.ok(quiet);
+ const foe=g.state.units.find(u=>u.team!==0&&u.hp>0&&g.isFoe(0,u.team));
+ if(foe){for(let i=0;i<3;i++)g.state.units.push({...foe,id:g.state.units.length+7000+i,x:50,z:5});
+  const r=partyRisk(g,0,a,b);assert.ok(r.risk>quiet.risk&&r.escort>=1&&r.foes>=3);}
+ assert.ok(quiet.risk>=0&&quiet.risk<=1);
+ delete g.state.worldOptions.rulersVersion;assert.equal(partyRisk(g,0,a,b),null);
+});

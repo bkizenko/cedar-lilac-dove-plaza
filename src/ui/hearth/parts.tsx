@@ -163,7 +163,7 @@ function MilitaryPanel({hud,engine}:{hud:HudSnapshot;engine:Engine}){
   {c?.enabled&&c.flags.guardDuty&&units.length>0&&<div className="hw-row" role="group" aria-label="Guard duty">
    <IconBtn label="Stand watch here" tip="Armed adults hold this spot" active={units.every(u=>duty(u.id)==='post')} onClick={()=>units.forEach(u=>send({kind:'guard-duty',unitId:u.id,duty:'post'}))}><Shield size={24}/></IconBtn>
    <IconBtn label="Patrol here" tip="Walk a loop around this spot" active={units.every(u=>duty(u.id)==='patrol')} onClick={()=>units.forEach(u=>send({kind:'guard-duty',unitId:u.id,duty:'patrol'}))}><Footprints size={24}/></IconBtn>
-   <IconBtn label="Stand down" tip="Back to ordinary work" disabled={!units.some(u=>duty(u.id))} onClick={()=>units.forEach(u=>send({kind:'release-guard',unitId:u.id}))}><X size={24}/></IconBtn>
+   <IconBtn label="Stand down" tip={units.some(u=>duty(u.id))?"Back to ordinary work":"Nobody selected is on guard or patrol"} disabled={!units.some(u=>duty(u.id))} onClick={()=>units.forEach(u=>send({kind:'release-guard',unitId:u.id}))}><X size={24}/></IconBtn>
    {units.some(u=>duty(u.id)==='escort')&&<span className="hw-chip">Escort</span>}</div>}
   </div>
   {c?.enabled&&<GroupChips groups={c.groups}/>}

@@ -156,3 +156,10 @@ test('feed collapses adjacent repeats into a counted row, keeps order',async()=>
  assert.deepEqual(dedupeFeed([...log].reverse()),[{text:'A trader came',count:1,key:'A trader came'},{text:'Wolves took a lamb',count:3,key:'Wolves took a lamb'}]);
  for(const C of [FameFeed,HF]){const html=renderToStaticMarkup(h(C,{log}));assert.match(html,/×3/);assert.equal((html.match(/Wolves took a lamb/g)||[]).length,1);}
 });
+
+test('faction chips explain the ruler traits and demand that drive their mood',async()=>{
+ const {FactionsStrip:FS}=await import('../src/ui/council/CouncilParts.tsx');const {factionReason}=await import('../src/ui/council/factionReason.ts');
+ assert.match(factionReason('priests','shrines',50),/piety and tradition/);
+ const html=renderToStaticMarkup(h(FS,{factions:[{kind:'warriors',power:40,loyalty:20,demand:'raids'}],coalitionLoss:40}));
+ assert.match(html,/boldness, cruelty and ambition/);assert.match(html,/turning against you/);
+});

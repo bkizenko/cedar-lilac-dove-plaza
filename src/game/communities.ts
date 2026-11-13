@@ -4,7 +4,7 @@ import type { Unit } from "./types";
 import { isDependent, reserveSeconds } from "./settlement";
 import { receiveFood, takeFoodLot } from "./pantry";
 import { soilQuality } from "./ecology";
-import { expansionParty } from './rulersRuntime';
+import { expansionParty, partyRisk } from './rulersRuntime';
 import { noteSettlement } from './societyRuntime';
 import { hasTaskCommitment } from './workCommitments';
 export function lifeEvent(g: Game, team: number, text: string, x?: number, z?: number) {
@@ -156,6 +156,19 @@ export function tickCommunities(g: Game, dt: number) {
     if (!crew.length) continue;
     const site = settlementSite(g, crew[0], expansion);
     if (!site) continue;
+    if (expansion) {
+      // CAT-97: a risky road needs a real armed escort from an organised polity; otherwise the party waits at home.
+      const home = halls[0], risk = partyRisk(g, t.id, home, site);
+      if (risk && risk.escort > 0) {
+        const tier = g.state.rulers?.societies?.[String(t.id)]?.civ.polity.tier ?? "band";
+        const guards = tier === "band" ? [] : g.state.units.filter(
+          (u) => u.team === t.id && u.hp >= u.maxHp * 0.6 && u.militia && !isDependent(g, u) && !hasTaskCommitment(u) &&
+            !u.envoy && !u.expedition && !u.scout && !u.visit && !u.foundingJourney && !u.recalled && !u.emergency && u.carry === 0,
+        ).slice(0, risk.escort);
+        if (guards.length < Math.min(risk.escort, 2)) continue;
+        crew.push(...guards);
+      }
+    }
     t.wood -= timber;
     t.lastSettlement = g.state.time;
     if (expansion) noteSettlement(g, t.id, crew.length);
