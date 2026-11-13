@@ -32,6 +32,7 @@ export function duneSandWeight(features:{kind:string;x:number;z:number;shape?:{r
  }
  return weight;
 }
+import {emptyRouteTexture} from './routeField';
 const EMPTY_CONTACT=new THREE.DataTexture(new Uint8Array([0]),1,1,THREE.RedFormat,THREE.UnsignedByteType);EMPTY_CONTACT.needsUpdate=true;
 export class TerrainSurface {
  readonly bankColors?:THREE.DataTexture;readonly banks?:BankSurface;readonly bankCuts?:ExcavationSurface;
@@ -41,7 +42,7 @@ export class TerrainSurface {
  readonly snow={value:0};
  /** Painterly map look: baked light field (AO, soft hill shadow, shore distance) shared by terrain, vegetation and props. */
  lightmap?:TerrainLightmap;
- readonly painter={terrainLight:{value:null as THREE.Texture|null},pCloud:{value:new THREE.Vector4(.2,0,0,0)},pSunDir:{value:new THREE.Vector3(.4,.7,.3)},pSunColor:{value:new THREE.Color('#fff0cf')},pWind:{value:new THREE.Vector2(.8,.6).normalize()},pSnowCfg:{value:new THREE.Vector4(34,-6,0,0)},pContactMap:{value:EMPTY_CONTACT},pContactStrength:{value:.9}};
+ readonly painter={terrainLight:{value:null as THREE.Texture|null},pCloud:{value:new THREE.Vector4(.2,0,0,0)},pSunDir:{value:new THREE.Vector3(.4,.7,.3)},pSunColor:{value:new THREE.Color('#fff0cf')},pWind:{value:new THREE.Vector2(.8,.6).normalize()},pSnowCfg:{value:new THREE.Vector4(34,-6,0,0)},pContactMap:{value:EMPTY_CONTACT},pContactStrength:{value:.9},pTrailMap:{value:emptyRouteTexture as THREE.Texture},pTrailCfg:{value:new THREE.Vector4(0,1,0,0)}};
  constructor(heights:Float32Array,size:number,seed:number,banks?:BankTerrain,colors?:Float32Array){
   if(banks){this.banks=new BankSurface(size);this.banks.update(banks);this.bankCuts=new ExcavationSurface(size);if(colors){this.bankColors=new THREE.DataTexture(colors,Math.round(Math.sqrt(heights.length)),Math.round(Math.sqrt(heights.length)),THREE.RGBFormat,THREE.FloatType);this.bankColors.minFilter=this.bankColors.magFilter=THREE.NearestFilter;this.bankColors.generateMipmaps=false;this.bankColors.needsUpdate=true;}}
   this.size=size;this.segments=Math.round(Math.sqrt(heights.length))-1;
@@ -59,7 +60,7 @@ export class TerrainSurface {
   painterly=painterly&&!!this.lightmap;if(painterly)this.painter.terrainLight.value=this.lightmap!.texture;
   if(this.banks||material.userData.hearthBankSurface){material.userData.hearthBankSurface=!!this.banks;material.needsUpdate=true;}
   material.flatShading=false;
-  material.customProgramCacheKey=()=>`hearth-terrain-surface-v3-${biomes?'ecology':'legacy'}${painterly?'-painter-v2':''}${this.bankColors?`-banks-v19-${this.size}-${this.segments}`:''}`;
+  material.customProgramCacheKey=()=>`hearth-terrain-surface-v3-${biomes?'ecology':'legacy'}${painterly?'-painter-v3':''}${this.bankColors?`-banks-v19-${this.size}-${this.segments}`:''}`;
   material.onBeforeCompile=shader=>{
    if(this.bankColors){shader.uniforms.bankColors={value:this.bankColors};shader.vertexShader=`attribute float surfaceBank;uniform sampler2D bankColors;
 vec3 bankGroundColor(vec2 p){vec2 grid=clamp((p/${this.size.toFixed(1)}+.5)*${this.segments.toFixed(1)},vec2(0.),vec2(${this.segments.toFixed(1)}));vec2 cell=min(floor(grid),vec2(${(this.segments-1).toFixed(1)})),f=grid-cell,uv=(cell+.5)/${(this.segments+1).toFixed(1)},d=vec2(1./${(this.segments+1).toFixed(1)});vec3 a=texture2D(bankColors,uv).rgb,b=texture2D(bankColors,uv+vec2(d.x,0.)).rgb,c=texture2D(bankColors,uv+vec2(0.,d.y)).rgb,e=texture2D(bankColors,uv+d).rgb;return f.x+f.y<=1.?a+(b-a)*f.x+(c-a)*f.y:e+(c-e)*(1.-f.x)+(b-e)*(1.-f.y);}
