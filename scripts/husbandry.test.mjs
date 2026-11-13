@@ -100,7 +100,12 @@ test('a pen sends one scout and starts a real capture when the scout spots a rea
  assert.equal(first.accepted,true,first.reason);
  const scout=g.state.units.find(u=>u.goatSearchPen===pen.id);
  assert.ok(scout);
- const afterDeparture=g.tribe(0).food;
+ // A queued scout must physically load its journey before the exploration
+ // executor can spend that packet on capture. No instant remote provisions.
+ const {queuedExplorationAI}=await import('../src/game/explorationOrders.ts');
+ for(let i=0;i<2000&&!scout.expedition;i++){g.state.time+=.1;g.navBudget=20;queuedExplorationAI(g,scout,.1);}
+ assert.ok(scout.expedition,scout.workReason);
+ const afterDeparture=g.tribe(0).food,journeyFood=scout.expedition.food;
  assert.equal(searchForWildGoats(g,pen.id).accepted,true);
  assert.equal(g.tribe(0).food,afterDeparture);
  g.visibleAt=()=>true;
@@ -110,5 +115,5 @@ test('a pen sends one scout and starts a real capture when the scout spots a rea
  const handler=g.state.units.find(u=>u.tamingWork?.animal===goat.id);
  assert.equal(handler,scout);
  assert.equal(g.tribe(0).food,afterDeparture,'capture feed comes from the scout’s already packed provisions');
- assert.equal(scout.expedition.food,24-HERD.tamingFood);
+ assert.equal(scout.expedition.food,journeyFood-HERD.tamingFood);
 });
