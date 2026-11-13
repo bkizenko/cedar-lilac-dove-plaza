@@ -1,3 +1,4 @@
+import {withdrawCarriedFood,receiveFoodLots} from './tradeFood';
 import type {Game} from './sim';
 import type {GameState,Unit,ResKind,FoodKind} from './types';
 import {PRODUCTION_RECIPES,type ProductionRecipe,type ProductionProject} from './production';
@@ -78,8 +79,8 @@ export function beginTradedTeaching(g:Game,r:{learnerId:number;teacherId:number;
 export function cancelTradedTeaching(g:Game,learnerId:number){const u=g.state.units.find(u=>u.id===learnerId&&u.team===0),o=u&&getOffer(g,u);if(!o)return false;finish(g,o,'cancelled','Lesson cancelled; undelivered cargo stays with its carrier, delivered payment is not refunded');return true;}
 /** Formal terms settlement happens here, at actual arrival, never at agreement. */
 function deliverPayment(g:Game,u:Unit,o:TeachingOffer){const t=o.consideration[0];if(u.carryType!==t.good||u.carry<t.qty||(t.good==='food'&&(u.carryFood||'provisions')!==t.foodKind))return false;
- if(t.good==='food')receiveFood(g,o.teacher.team,t.qty,t.foodKind);else g.tribe(o.teacher.team)[t.good]+=t.qty;
- u.carry-=t.qty;if(u.carry<=1e-8){u.carry=0;u.carryType=null;delete u.carryFood;}o.paidAt=g.state.time;o.phase='armed';return true;
+ if(t.good==='food'){const lots=withdrawCarriedFood(u,t.qty);if(!lots)return false;receiveFoodLots(g,o.teacher.team,lots);}else{g.tribe(o.teacher.team)[t.good]+=t.qty;u.carry-=t.qty;}
+ if(u.carry<=1e-8){u.carry=0;u.carryType=null;delete u.carryFood;}o.paidAt=g.state.time;o.phase='armed';return true;
 }
 export function tradedTeachingAI(g:Game,u:Unit,dt:number){if(!u.tradedTeaching)return false;const o=getOffer(g,u);if(!o)return false;
  if(!free(g,u)||u.team!==o.learner.team){finish(g,o,'lost','The learner cannot report this lesson');return false;}

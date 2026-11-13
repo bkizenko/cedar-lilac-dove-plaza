@@ -1,3 +1,4 @@
+import {withdrawCarriedFood,setCarriedFood,receiveCarriedFood} from './tradeFood';
 import{finiteCampGuardAI,campTripAI,beginCampTrip,FINITE_CAMP_RULES}from'./finiteCamp';
 import{limitedRaidAI,observeRaidIntent,RAID_INTENT_RULES,raidThreateningDefender}from'./raidIntent';
 import {explicitArmedOrder,hasLocalLootPursuer} from './defense';
@@ -219,7 +220,7 @@ export function campRaidAI(g: Game, u: Unit, dt: number) {
     u.workReason = "Carrying supplies to the raider camp";
     if (!g.buildingWorkReached(u, camp)) g.steer(u, dt);
     else {
-      if (u.carryType === "food") receiveFood(g, 3, u.carry, u.carryFood);
+      if (u.carryType === "food") receiveCarriedFood(g,3,u);
       else g.tribe(3)[u.carryType] += u.carry;
       u.carry = 0; u.carryType = null; u.carryFood = undefined; u.target = null; u.node = null;
       u.order = "hold"; u.wanderT = 5;
@@ -241,9 +242,8 @@ export function campRaidAI(g: Game, u: Unit, dt: number) {
       else if (!stolenMarkRoom(g, u)) { u.order = "hold"; u.workReason = "Cannot keep track of another stolen load"; }
       else {
         const stolen = Math.min(4, victim.carry);
-        victim.carry -= stolen;
-        u.carry = stolen; u.carryType = victim.carryType; u.carryFood = victim.carryFood;
-        if (victim.carry === 0) { victim.carryType = null; victim.carryFood = undefined; }
+        if(victim.carryType==='food'){const lots=withdrawCarriedFood(victim,stolen);if(!lots)return;setCarriedFood(u,lots);}
+        else{victim.carry -= stolen;u.carry = stolen;u.carryType = victim.carryType;u.carryFood = undefined;if(victim.carry===0)victim.carryType=null;}
         markStolenLoad(g, u, victim.team);
         if (victim.team === 0) g.banner(`A raider stole ${stolen} goods from a carrier — escort the route or clear the camp`, 5);
       }
