@@ -8,7 +8,14 @@ export type V3=[number,number,number];
 export type RGB=[number,number,number];
 export type LodTier=0|1|2;
 /** colour at a surface point: local position, surface normal, t = 0..1 along the primitive's length, a = 0..1 around it (blades: |x|/halfwidth) */
-export type Paint=(p:V3,n:V3,t:number,a:number)=>RGB;
+export type TexMeta={/** layer of the detail atlas (itemTexture.ts TILE) */layer:number;/** repeats per metre across (u) and along (v) the surface */du:number;dv:number;
+ /** up to two painted decals (cells of the decal atlas) mapped planar from the local position */
+ decal?:{cellA:number;cellB:number;uv:(p:V3)=>[number,number];accA:RGB;accB:RGB}};
+export type Paint=((p:V3,n:V3,t:number,a:number)=>RGB)&{tex?:TexMeta};
+/** attach (or copy) surface-texture metadata onto a paint */
+export const withTex=<P extends Paint>(p:P,tex:TexMeta|undefined):P=>{if(tex)p.tex=tex;return p;};
+/** a derived paint keeps the texture of the paint it was made from */
+export const likePaint=(f:(p:V3,n:V3,t:number,a:number)=>RGB,from:Paint):Paint=>withTex(f as Paint,from.tex);
 export const TAU=Math.PI*2;
 export const v3={
  add:(a:V3,b:V3):V3=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub:(a:V3,b:V3):V3=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul:(a:V3,k:number):V3=>[a[0]*k,a[1]*k,a[2]*k],
@@ -45,8 +52,10 @@ export function alignY(dir:V3):M{
  const ax=v3.norm(v3.cross([0,1,0],d)),c=d[1],s=Math.sqrt(1-c*c),t=1-c,[x,y,z]=ax;
  return [t*x*x+c,t*x*y-s*z,t*x*z+s*y,t*x*y+s*z,t*y*y+c,t*y*z-s*x,t*x*z-s*y,t*y*z+s*x,t*z*z+c];
 }
-export type ItemMesh={positions:Float32Array;normals:Float32Array;colors:Float32Array;triangles:number;/** min/max corner, metres */bounds:{min:V3;max:V3}};
-export type GridOpts={smooth?:boolean;capA?:boolean;capB?:boolean;flip?:boolean;/** wrap the ring around */closed?:boolean};
+export type ItemMesh={positions:Float32Array;normals:Float32Array;colors:Float32Array;triangles:number;/** min/max corner, metres */bounds:{min:V3;max:V3};
+ /** surface texture: (u,v,layer) per vertex; decal (u,v,cellA,cellB) per vertex; accents rgba8 x2 per vertex (decal colours). Absent on hand-built meshes. */
+ uvs?:Float32Array;decals?:Float32Array;accents?:Uint8Array};
+export type GridOpts={tex?:TexMeta;smooth?:boolean;capA?:boolean;capB?:boolean;flip?:boolean;/** wrap the ring around */closed?:boolean};
 export type BladeOpts={
  /** along +Y from y0 to y1 */y0:number;y1:number;
  /** half-width at t (0 base..1 tip) */w:(t:number)=>number;
@@ -60,7 +69,7 @@ const PAIRS=(n:number)=>Array.from({length:n},(_,i)=>i);
 
 /** The builder. Every primitive is transformed by the current matrix stack, so a part can be authored in its own frame. */
 export class MeshBuilder{
- P:number[]=[];N:number[]=[];C:number[]=[];
+ P:number[]=[];N:number[]=[];C:number[]=[];U:number[]=[];D:number[]=[];A:number[]=[];
  private stack:{m:M;t:V3}[]=[{m:I,t:[0,0,0]}];
  readonly rnd:()=>number;
  readonly seed:number;readonly lod:LodTier;
@@ -74,10 +83,14 @@ export class MeshBuilder{
  pop(){if(this.stack.length>1)this.stack.pop();return this;}
  with(t:V3,rot:V3,fn:()=>void){this.push(t,rot);fn();this.pop();}
  world(p:V3):V3{return v3.add(apply(this.m.m,p),this.m.t);}
- private tri(a:V3,b:V3,c:V3,na:V3,nb:V3,nc:V3,ca:RGB,cb:RGB,cc:RGB){
-  const {m,t}=this.m;
+ private tri(a:V3,b:V3,c:V3,na:V3,nb:V3,nc:V3,ca:RGB,cb:RGB,cc:RGB,ua?:[number,number],ub?:[number,number],uc?:[number,number],tex?:TexMeta){
+  const {m,t}=this.m,layer=tex?tex.layer:0,dc=tex?.decal;
+  const us=[ua,ub,uc];let i=0;
   for(const [p,n,k] of [[a,na,ca],[b,nb,cb],[c,nc,cc]] as [V3,V3,RGB][]){
-   const w=v3.add(apply(m,p),t),wn=apply(m,n);this.P.push(w[0],w[1],w[2]);this.N.push(wn[0],wn[1],wn[2]);this.C.push(k[0],k[1],k[2]);
+   const w=v3.add(apply(m,p),t),wn=apply(m,n),uv=us[i++]??[0,0];this.P.push(w[0],w[1],w[2]);this.N.push(wn[0],wn[1],wn[2]);this.C.push(k[0],k[1],k[2]);
+   this.U.push(uv[0],uv[1],layer);
+   if(dc){const d=dc.uv(p);this.D.push(d[0],d[1],dc.cellA,dc.cellB);this.A.push(Math.round(dc.accA[0]*255),Math.round(dc.accA[1]*255),Math.round(dc.accA[2]*255),255,Math.round(dc.accB[0]*255),Math.round(dc.accB[1]*255),Math.round(dc.accB[2]*255),255);}
+   else{this.D.push(0,0,0,0);this.A.push(0,0,0,0,0,0,0,0);}
   }
  }
  get triangles(){return this.P.length/9;}
@@ -92,10 +105,20 @@ export class MeshBuilder{
   for(let i=0;i<R-1;i++)for(let j=0;j<cols;j++){const a=idx(i,j),b=idx(i,j+1),c=idx(i+1,j),n=fn(a,b,c);vote+=v3.dot(n,v3.sub(a,cen))>0?1:-1;}
   const sgn=o.flip===undefined?(vote>=0?1:-1):(o.flip?-1:1),smooth=o.smooth!==false;
   const nrm:V3[][]=rings.map(r=>r.map(()=>[0,0,0] as V3));
-  const faces:{a:[number,number];b:[number,number];c:[number,number];n:V3}[]=[];
+  const tex=o.tex??paint.tex,du=tex?.du??1,dv=tex?.dv??1;
+  // metric surface coordinates: v = distance along the rows, u = distance around each ring (the closing column gets its own unwrapped value)
+  const rowV:number[]=[0],colU:number[][]=[];
+  for(let i=0;i<R;i++){
+   const row=rings[i],cu=[0];for(let j=1;j<Cn;j++)cu.push(cu[j-1]+v3.len(v3.sub(row[j],row[j-1])));
+   cu.push(cu[Cn-1]+v3.len(v3.sub(row[0],row[Cn-1])));colU.push(cu);
+   if(i>0){const a=rings[i-1],cx0=a.reduce((s,p)=>s+p[0],0)/Cn,cy0=a.reduce((s,p)=>s+p[1],0)/Cn,cz0=a.reduce((s,p)=>s+p[2],0)/Cn,cx1=row.reduce((s,p)=>s+p[0],0)/Cn,cy1=row.reduce((s,p)=>s+p[1],0)/Cn,cz1=row.reduce((s,p)=>s+p[2],0)/Cn;
+    rowV.push(rowV[i-1]+Math.hypot(cx1-cx0,cy1-cy0,cz1-cz0));}
+  }
+  const uvOf=(r:number,uc:number):[number,number]=>[colU[r][uc]*du,rowV[r]*dv];
+  const faces:{a:[number,number,number];b:[number,number,number];c:[number,number,number];n:V3}[]=[];
   for(let i=0;i<R-1;i++)for(let j=0;j<cols;j++){
-   const j1=(j+1)%Cn,q=[[i,j],[i,j1],[i+1,j1],[i+1,j]] as [number,number][];
-   for(const tri of [[q[0],q[1],q[2]],[q[0],q[2],q[3]]] as [number,number][][]){
+   const j1=(j+1)%Cn,q=[[i,j,j],[i,j1,j+1],[i+1,j1,j+1],[i+1,j,j]] as [number,number,number][];
+   for(const tri of [[q[0],q[1],q[2]],[q[0],q[2],q[3]]] as [number,number,number][][]){
     const n=v3.mul(fn(rings[tri[0][0]][tri[0][1]],rings[tri[1][0]][tri[1][1]],rings[tri[2][0]][tri[2][1]]),sgn);
     faces.push({a:tri[0],b:tri[1],c:tri[2],n});for(const [r,c] of tri){const t=nrm[r][c];t[0]+=n[0];t[1]+=n[1];t[2]+=n[2];}
    }
@@ -105,8 +128,9 @@ export class MeshBuilder{
    const nf=v3.norm(f.n),pa=rings[f.a[0]][f.a[1]],pb=rings[f.b[0]][f.b[1]],pc=rings[f.c[0]][f.c[1]];
    const na=smooth?v3.norm(nrm[f.a[0]][f.a[1]]):nf,nb=smooth?v3.norm(nrm[f.b[0]][f.b[1]]):nf,nc=smooth?v3.norm(nrm[f.c[0]][f.c[1]]):nf;
    if(v3.len(v3.cross(v3.sub(pb,pa),v3.sub(pc,pa)))<1e-12)continue; // degenerate (tip rings)
-   if(sgn>0)this.tri(pa,pb,pc,na,nb,nc,col(f.a[0],f.a[1],nf),col(f.b[0],f.b[1],nf),col(f.c[0],f.c[1],nf));
-   else this.tri(pa,pc,pb,na,nc,nb,col(f.a[0],f.a[1],nf),col(f.c[0],f.c[1],nf),col(f.b[0],f.b[1],nf));
+   const ua=uvOf(f.a[0],f.a[2]),ub=uvOf(f.b[0],f.b[2]),uc=uvOf(f.c[0],f.c[2]);
+   if(sgn>0)this.tri(pa,pb,pc,na,nb,nc,col(f.a[0],f.a[1],nf),col(f.b[0],f.b[1],nf),col(f.c[0],f.c[1],nf),ua,ub,uc,tex);
+   else this.tri(pa,pc,pb,na,nc,nb,col(f.a[0],f.a[1],nf),col(f.c[0],f.c[1],nf),col(f.b[0],f.b[1],nf),ua,uc,ub,tex);
   }
   const cap=(ri:number,t:number)=>{
    const ring=rings[ri];let sx=0,sy=0,sz=0;for(const p of ring){sx+=p[0];sy+=p[1];sz+=p[2];}const c:V3=[sx/Cn,sy/Cn,sz/Cn];
@@ -117,7 +141,8 @@ export class MeshBuilder{
     const a=ring[j],b=ring[(j+1)%Cn];if(v3.len(v3.cross(v3.sub(b,a),v3.sub(c,a)))<1e-12)continue;
     const w=v3.dot(v3.cross(v3.sub(b,a),v3.sub(c,a)),n)>0;
     const k=paint(c,n,t,.5),ka=paint(a,n,t,j/Cn),kb=paint(b,n,t,(j+1)/Cn);
-    if(w)this.tri(a,b,c,n,n,n,ka,kb,k);else this.tri(a,c,b,n,n,n,ka,k,kb);
+    const e1=v3.norm(v3.sub(ring[0],c)),e2=v3.norm(v3.cross(n,e1)),cuv=(p:V3):[number,number]=>{const d=v3.sub(p,c);return [v3.dot(d,e1)*du,v3.dot(d,e2)*dv];};
+    if(w)this.tri(a,b,c,n,n,n,ka,kb,k,cuv(a),cuv(b),cuv(c),tex);else this.tri(a,c,b,n,n,n,ka,k,kb,cuv(a),cuv(c),cuv(b),tex);
    }
   };
   if(o.capA&&closed)cap(0,0);if(o.capB&&closed)cap(R-1,1);
@@ -178,7 +203,7 @@ export class MeshBuilder{
   for(let i=0;i<=steps;i++){const t=i/steps,y=o.y0+(o.y1-o.y0)*t,w=Math.max(0,o.w(t)),th=Math.max(.0004,o.th(t)),bz=o.bend?.(t)??0,sx=o.sweep?.(t)??0;
    const ch=chip>0&&i>0&&i<steps?[(R()-.5)*chip,(R()-.5)*chip]:[0,0];jit.push(ch);
    rings.push(prof.map(([u,v])=>{const side=u<0?0:1,e=Math.abs(u)>.9?ch[side]:0;return [cx[0]+sx+u*(w+e),cx[1]+y,cx[2]+bz+v*th] as V3;}));}
-  return this.grid(rings,(p,n,t,a)=>paint(p,n,t,Math.min(1,Math.abs(p[0]-cx[0])/Math.max(.001,o.w(t)||.001))),{smooth:false,capA:true,capB:false});
+  return this.grid(rings,(p,n,t,a)=>paint(p,n,t,Math.min(1,Math.abs(p[0]-cx[0])/Math.max(.001,o.w(t)||.001))),{smooth:false,capA:true,capB:false,tex:paint.tex});
  }
  /** Helical lashing from a to b around radius r. Near: a real wound cord; mid: fewer turns; far: a dark band. */
  lash(a:V3,b:V3,r:number,turns:number,cord:number,paint:Paint){
@@ -205,13 +230,13 @@ export class MeshBuilder{
   const min:V3=[Infinity,Infinity,Infinity],max:V3=[-Infinity,-Infinity,-Infinity];
   for(let i=0;i<positions.length;i+=3)for(let k=0;k<3;k++){min[k]=Math.min(min[k],positions[i+k]);max[k]=Math.max(max[k],positions[i+k]);}
   if(!positions.length){for(let k=0;k<3;k++){min[k]=0;max[k]=0;}}
-  return {positions,normals,colors,triangles:positions.length/9,bounds:{min,max}};
+  return {positions,normals,colors,triangles:positions.length/9,bounds:{min,max},uvs:new Float32Array(this.U),decals:new Float32Array(this.D),accents:new Uint8Array(this.A)};
  }
 }
 export function meshIsFinite(m:ItemMesh){for(const a of [m.positions,m.normals,m.colors])for(let i=0;i<a.length;i++)if(!Number.isFinite(a[i]))return false;return true;}
 export function mergeMeshes(parts:ItemMesh[]):ItemMesh{
- const n=parts.reduce((s,p)=>s+p.positions.length,0),positions=new Float32Array(n),normals=new Float32Array(n),colors=new Float32Array(n);let o=0;
- for(const p of parts){positions.set(p.positions,o);normals.set(p.normals,o);colors.set(p.colors,o);o+=p.positions.length;}
- const b=new MeshBuilder(0);b.P=Array.from(positions);return {...b.finish(),normals,colors};
+ const n=parts.reduce((s,p)=>s+p.positions.length,0),nv=n/3,positions=new Float32Array(n),normals=new Float32Array(n),colors=new Float32Array(n),uvs=new Float32Array(nv*3),decals=new Float32Array(nv*4),accents=new Uint8Array(nv*8);let o=0,ov=0;
+ for(const p of parts){positions.set(p.positions,o);normals.set(p.normals,o);colors.set(p.colors,o);if(p.uvs)uvs.set(p.uvs,ov*3);if(p.decals)decals.set(p.decals,ov*4);if(p.accents)accents.set(p.accents,ov*8);o+=p.positions.length;ov+=p.positions.length/3;}
+ const b=new MeshBuilder(0);b.P=Array.from(positions);return {...b.finish(),normals,colors,uvs,decals,accents};
 }
 void PAIRS;
