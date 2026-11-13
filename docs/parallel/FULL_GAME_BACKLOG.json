@@ -9369,6 +9369,15 @@
       "liveCommit": "3a92d065040aa83ca2d14f2502e510d1a9d69b29",
       "evidence": "docs/metrics/approved-art-integration-release-2026-11-12.json",
       "scope": "45/45 scoped; actual original53 real held shader and trees, remembered quality/Classic controls and exact durable continuity; full visual/performance and37/98 unchanged."
+    },
+    {
+      "id": "CODEX-PACK-CARAVAN-CARE-AND-LOAD-ADMISSION",
+      "owner": "Codex W1/platform",
+      "state": "live-partial",
+      "sourceCommit": "ad6eece3968f7a117b3714629fa6ba2e89e59814",
+      "liveCommit": "ad6eece3968f7a117b3714629fa6ba2e89e59814",
+      "evidence": "docs/metrics/pack-trade-care-release-2026-11-12.json",
+      "scope": "29/30 scoped: real finite care/equipment/cargo cache admission and fallback;27native+2built PASS, true foreign horse trade1pending. Typed FOOD merchandise and Claude offer/interception remain open;37/98 unchanged."
     }
   ],
   "status_update_policy": {

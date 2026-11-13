@@ -11,7 +11,7 @@
     "docs/GEOGRAPHY_AND_BIOME_CATALOGUE.md",
     "AGENTS.project.md"
   ],
-  "verifiedPublishedCodeBaseline": "3a92d065040aa83ca2d14f2502e510d1a9d69b29 published as 2026-11-13T00-41-23-522Z-3a92d06 on8086/8101.45/45 scoped (43native/shared+2actualbuilt), full tsc/buildPASS: Claude textured held/dropped equipment and inventory models, botanical crowns/stand detail, UI wheel isolation and compact Council fix; root native-compatible constructor and original sapper LOD budgets retained. Actual original53 archer13040 bow uses item-surface/aTex and compiled atlas shader; Low/Medium/High warmed resources stable, public Classic reload/durable exact, original file unchanged/no browser or shader errors. Oldassets5/5 separately.37/98 frozen; full visual fidelity/campaign/100-resident performance remain open.",
+  "verifiedPublishedCodeBaseline": "ad6eece3968f7a117b3714629fa6ba2e89e59814 published as 2026-11-13T01-30-46-182Z-ad6eece on8086/8101.29/30 scoped (27native+2built passed;1trueforeignhorse-tradejourney pending), full tsc/buildPASS. Physical cache loading preflights finite animal feed/water, merchandise on both legs and real borrowedweapon capacity before payment; refusal refunds loan/no goods paid; any-transport route tries a valid foot carrier. New local quotations respect actual remaining cargo capacity; return supplies keep exact kinds/no newfoodincome. Actual earnedhorse publicExplore/Recall and original53 strictdurable unchanged. Genuine contact/foreignroundtrip remains unqualified, typedFOODmerchandise and tradeNeeds interception remain separate. Oldassets5/5 separate.37/98 frozen; newer Claude drawdistance/armor source excluded.",
   "planningHeadAtAudit": "ba2f2e2",
   "unpublishedIntegration": [
     "Remaining metallurgy/textile/repair chains and full institutions",
@@ -243,6 +243,11 @@
       "path": "docs/metrics/approved-art-integration-release-2026-11-12.json",
       "kind": "executed native/compiler/frozen-build/actual built/publication checks",
       "scope": "45/45 scoped; no full visual or campaign/FPS gate credit"
+    },
+    "packTradeCare20261112": {
+      "path": "docs/metrics/pack-trade-care-release-2026-11-12.json",
+      "kind": "executed focused native/compiler/frozen-build/built/publication evidence",
+      "scope": "29/30 scoped; true foreign horse trade1pending/0credit; no new gate claim"
     }
   },
   "gates": [
