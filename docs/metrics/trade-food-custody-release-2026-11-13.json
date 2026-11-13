@@ -1,0 +1,92 @@
+{
+  "release": {
+    "release": "2026-11-13T06-57-43-047Z-7b4854c",
+    "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T06-57-43-047Z-7b4854c",
+    "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T05-53-59-102Z-ea3fb1d",
+    "commit": "7b4854cea2cff9f0c674318572ea949e218867fa",
+    "retained": {
+      "linked": 1483,
+      "copied": 0,
+      "existing": 14
+    }
+  },
+  "artifactBuiltAtCommit": "8e54ea830e9319e5b02eed25f5a3287c3b8cc14a",
+  "scriptOnlyFollowup": "7b4854cea2cff9f0c674318572ea949e218867fa product source/package/vite identical to built commit",
+  "batch": {
+    "passed": 12,
+    "total": 12,
+    "nativeFoodConservation": 4,
+    "nativePhysicalTrade": 2,
+    "nativePaidTeaching": 1,
+    "nativeInventoryUI": 2,
+    "nativeDomesticationUI": 2,
+    "builtCompatibility": 1
+  },
+  "supporting": {
+    "passed": 25,
+    "total": 25
+  },
+  "nativeCombined": {
+    "passed": 36,
+    "total": 36,
+    "log": "/tmp/hearthwild-trade-food-final-native.log"
+  },
+  "compiler": "PASS full tsc --noEmit",
+  "build": "PASS npm run build",
+  "builtEvidence": {
+    "passed": 1,
+    "total": 1,
+    "scope": "Built public Inventory & activity renders existing36 fresh fish; read-only selection and durable save retain original53 IDs/stocks/cargo. No mixed-trade browser journey claim, screenshots, added goods or terrain/fog changes.",
+    "original53Unchanged": true,
+    "residents": 53,
+    "errors": []
+  },
+  "network": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T06-57-43-047Z-7b4854c",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "diagnostics": [
+    "Initial import failed due duplicate FOOD_KINDS import, fixed before final36/36",
+    "Old legacy reservation test also fails unchanged baseline because its new carrier capacity is28 timber, requested30; new proposal now minimum1, immutable legacy30 escrow unchanged",
+    "New journey assertions respect actual locally quoted amounts and smaller-offer refusal; no forced quote/outcome"
+  ],
+  "limitations": [
+    "Conventional trade physical movement tests use declared existing flat controlled fixtures; not native terrain/campaign acquisition acceptance",
+    "Mixed lesson uses declared finite payment fixture on actual native contact/route",
+    "Built check covers original53 existing cargo/read-only UI/strict save, not a new public mixed-trade journey",
+    "Food lots have no new freshness clock; optional lot metadata refines existing scalar count, not extra stock",
+    "Separate TradeNeeds executor, fair price balance and full W5 migration remain open",
+    "37/98 unchanged"
+  ],
+  "additionalNativeAudit": {
+    "passed": 5,
+    "total": 5,
+    "routePlanner": 3,
+    "refusedOrderNotice": 2,
+    "scope": "Existing published native ground detours/planner-budget and refused-notice control; separate from feature batch",
+    "harness": "Node24 --experimental-transform-types needed for imported scene parameter properties; initial strip-only import failed, corrected run passed2/2"
+  }
+}
