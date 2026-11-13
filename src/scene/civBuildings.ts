@@ -432,6 +432,10 @@ HOUSE.nilemark=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,h=range(r,2.5,3);
  g.B('wall2',[W+.2,.3,D+.2],[0,0,0],2);g.B('wall',[W,h,D],[0,.3,0],2);
  for(const [x,z,sx,sz] of[[0,D/2-.12,W+.1,.25],[0,-D/2+.12,W+.1,.25],[W/2-.12,0,.25,D],[-W/2+.12,0,.25,D]] as number[][])g.B('wall',[sx,.4,sz],[x,.3+h,z],1);
  P(g,'wedge','wall',[1.0,h*.95,2.4],[W*.5+.55,.3,-D*.1],[0,Math.PI/2,0],undefined,1);
+ // near-only mud-brick detail: vertical corner torus rolls, a flared cavetto cornice and palm-log ends poking through the front parapet
+ for(const sx of[-1,1])for(const sz of[-1,1])P(g,'cylinder','wall2',[.3,h+.35,.3],[sx*(W/2+.02),.3,sz*(D/2+.02)],undefined,8,0);
+ g.B('wall2',[W+.5,.12,D+.5],[0,.3+h+.4,0],0);g.B('trim',[W+.3,.1,D+.3],[0,.3+h+.34,0],0);
+ for(let i=0;i<7;i++)g.B('trim',[.17,.17,.55],[-W*.42+i*W*.14,.3+h-.28,D*.5+.02],0);
  for(const sx of[-1,1])for(const sz of[-1,1])g.post('wall2',sx*W*.28,sz*D*.25,h+1.9,.12,1);g.B('roof',[W*.7,.12,D*.62],[0,.3+h+1.85,0],1);
  g.B('trim',[1.15,.14,.14],[g.off*.3,.3+1.75,D*.5+.04],0);for(const s of[-1,1])g.B('trim',[.14,1.8,.14],[g.off*.3+s*.53,.3,D*.5+.04],0);g.B('accent',[.92,1.65,.08],[g.off*.3,.3,D*.5+.03],0);
  for(let i=0;i<3;i++)g.B('accent',[.3,.34,.06],[-W*.3+i*W*.3,.3+h*.72,D*.5+.03],0);for(const s of[-1,1])g.Cy('wall2',.5,.7,[g.off*.3+s*1.2,.3,D*.5+.4],0,8,.35);
