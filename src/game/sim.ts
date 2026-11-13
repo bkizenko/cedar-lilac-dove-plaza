@@ -1,3 +1,5 @@
+import {returnExpeditionProvisions} from './expeditionProvisions';
+import {returnPackJourneyCare} from './packJourneyCare';
 import {reviewRivalMethodRecords} from './rivalMethodRecords';
 import {cancelMethodRecordPickup,methodRecordPickupAI} from './methodRecordPickup';
 import {reconcileMethodRecords} from './methodRecords';
@@ -4478,7 +4480,7 @@ export class Game {
       deliverWaterCargo(this,u);
       if(!deliverProductionCargo(this,u))return;
       if(u.carryType&&u.carry>0){if(!deliverSamples(this,u))return;recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
-      if(u.expedition){receiveFood(this,u.team,u.expedition.food);u.expedition=undefined;}
+      if(u.expedition){returnPackJourneyCare(this,u);returnExpeditionProvisions(this,u);}
       finishRepatriation(this,u);
       const joinWork=u.stationOnArrival===false;u.recalled=undefined;u.stationOnArrival=undefined;u.order=joinWork?"idle":"hold";u.workReason=joinWork?"Arrived home — joining village work":"Home after the recall horn — awaiting orders";
       return;

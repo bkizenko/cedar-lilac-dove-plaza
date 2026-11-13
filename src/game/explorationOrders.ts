@@ -1,3 +1,4 @@
+import {expeditionAtOwnCache} from './expeditionProvisions';
 import {goatSearchPen,goatSearchTarget} from './animalOrders';
 import{productionOwnershipIssue}from'./productionOwnership';
 import{unloadProductionProject,productionAI}from'./production';
@@ -14,7 +15,7 @@ export function startExploration(g:Game,u:Unit,target?:{x:number;z:number}|null)
 export function orderExploration(g:Game,u:Unit,target?:{x:number;z:number}){const issue=explorationOrderIssue(g,u);if(issue)return issue;delete u.goatSearchPen;if(productionOwnershipIssue(g,u)&&u.productionProjectId!==undefined){if(!unloadProductionProject(g,u.productionProjectId)){
  const project=g.state.production?.projects.find(p=>p.id===u.productionProjectId);
  return project?.blockedReason||'The paid batch needs its original living carrier and a reachable cache';
-}u.exploreAfterDelivery=true;u.workReason='Explore queued — physically unloading the paid batch first';nextAttempt.delete(u);return null;}if(!explorationLoad(u))return startExploration(g,u,target);g.interruptMission(u);u.exploreAfterDelivery=true;u.recalled=true;u.stationOnArrival=false;u.order='return';u.target=null;u.node=null;u.pillage=-1;u.attackDestination=null;u.workReason='Explore queued — carrying existing supplies home first';nextAttempt.delete(u);return null;}
+}u.exploreAfterDelivery=true;u.workReason='Explore queued — physically unloading the paid batch first';nextAttempt.delete(u);return null;}if(!explorationLoad(u)&&(u.expedition||expeditionAtOwnCache(g,u)))return startExploration(g,u,target);g.interruptMission(u);u.exploreAfterDelivery=true;u.recalled=true;u.stationOnArrival=false;u.order='return';u.target=null;u.node=null;u.pillage=-1;u.attackDestination=null;u.workReason=explorationLoad(u)?'Explore queued — carrying existing supplies home first':'Explore queued — returning to cache to pack journey provisions';nextAttempt.delete(u);return null;}
 /** The existing recall executor unloads at a reachable physical cache. Only
  * afterwards do we pack provisions and issue Explore; paid jobs stay paused. */
 export function queuedExplorationAI(g:Game,u:Unit,dt:number){if(!u.exploreAfterDelivery||u.demobilizing)return false;if(u.productionProjectId!==undefined){productionAI(g,u,dt);if(u.exploreAfterDelivery)u.workReason='Explore queued — '+(u.workReason||'unloading the paid batch at cache');return true;}if(u.recalled||explorationLoad(u)){u.recalled=true;g.workerAI(u,dt);if(u.exploreAfterDelivery)u.workReason='Explore queued — '+(u.recalled?((u.workReason?.includes('no reachable')||u.workReason?.includes('cache full'))?u.workReason:'returning and unloading existing supplies'):'supplies delivered; preparing the journey');return true;}

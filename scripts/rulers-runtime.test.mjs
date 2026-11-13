@@ -171,7 +171,8 @@ test('lane A: a party mid-expedition survives save/load with its packed food, an
  const {encodeGame,decodeGame}=await import('../src/game/persistence.ts');const {beginExpedition}=await import('../src/game/journeys.ts');
  const {foodDemand}=await import('../src/game/settlement.ts');
  const g=fixture(),u=g.state.units.find(u=>u.team===0&&u.type==='worker'&&u.maturesAt===undefined);
- g.tribe(0).food=200;assert.ok(beginExpedition(g,u));const packed=u.expedition.food,left=g.tribe(0).food;
+ {const {expeditionHome}=await import('../src/game/expeditionProvisions.ts');const {foodInventory}=await import('../src/game/pantry.ts');const t=g.tribe(0),h=expeditionHome(g,u);assert.ok(h,'a cache to load provisions at');u.x=h.spot.x;u.z=h.spot.z;const inv=foodInventory(t);inv.berries=200;t.foodLots=inv;t.food=200;}
+ assert.ok(beginExpedition(g,u));const packed=u.expedition.food,left=g.tribe(0).food;
  g.state.time=RULERS_YEAR_SECONDS*2+1;advanceRulers(g);
  g.state.rulers.wards=[{kind:'foster',person:'x',from:'0',to:'1',since:1}];
  const back=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));
@@ -421,4 +422,22 @@ test('lane A rival court read model: known neighbours show ruler, heir and regen
  for(const n of withCourt){const o=g.state.rulers.societies[String(n.team)].dynasty;assert.equal(n.court.ruler,o.people[o.rulerId].name);assert.equal(n.court.house,o.house);if(n.court.heir)assert.ok(n.court.heir.name&&n.court.heir.age>=0);assert.deepEqual(Object.keys(n.court).filter(k=>!['ruler','rulerAge','house','law','heir','regent','extinct','lastEvent'].includes(k)),[]);}
  JSON.parse(JSON.stringify(m));
  delete g.state.worldOptions.rulersVersion;delete g.state.rulers;assert.equal(councilModel(g,0).neighbours.length,0);
+});
+test('lane A long-run stylized facts: 200 dynastic years in a real game stay valid, bounded, goods-free and save-safe',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();R.ensureRulers(g);const units0=g.state.units.length,builds0=g.state.buildings.length;
+ let jumps=0;const unrestStages={};
+ for(let y=1;y<=200;y++){
+  g.state.time=R.RULERS_YEAR_SECONDS*y+1;R.advanceRulers(g);
+  if(y%50===0){const copy=JSON.parse(JSON.stringify(g.state.rulers));assert.ok(validRulersState(copy),'valid at year '+y);jumps++;}
+  for(let t=1;t<g.state.tribes.length;t++){if(t===3)continue;const u=R.unrestOf(g,t);if(u)unrestStages[u.stage]=(unrestStages[u.stage]||0)+1;}
+ }
+ assert.equal(jumps,4);const r=g.state.rulers;assert.equal(r.year,200);
+ for(const [id,sr] of Object.entries(r.societies)){const d=sr.dynasty;assert.ok(d.people[d.rulerId]||d.regent||d.log.length,'society '+id+' has a ruler, regent or logged gap');assert.ok(d.generation<=60,'no succession churn: '+d.generation);}
+ assert.ok((r.claims??[]).length<=60,'claims stay bounded');assert.ok((r.wards??[]).length<=40,'wards stay bounded');
+ for(const w of r.wards??[])assert.ok(r.societies[w.from]?.dynasty.people[w.person]?.alive,'wards are living kin');
+ for(const list of Object.values(r.decisions?.history??{}))assert.ok(list.length<=40,'history capped');
+ assert.equal(g.state.units.length,units0,'dynastic years conjure and remove no units');assert.equal(g.state.buildings.length,builds0,'and no buildings');
+ const total=Object.values(unrestStages).reduce((a,b)=>a+b,0),severe=(unrestStages.civilWar||0)+(unrestStages.uprising||0);
+ assert.ok(total>0&&severe/total<.5,'most society-years are not in uprising: '+JSON.stringify(unrestStages));
 });
