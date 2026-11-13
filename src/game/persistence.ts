@@ -1,3 +1,4 @@
+import {validCropTrialAnchor} from './cultivation';
 import {validExpeditionProvisions} from './expeditionProvisions';
 import {validPackJourneySupplies} from './packJourneyCare';
 import {validMethodRecordPickups} from './methodRecordPickup';
@@ -344,7 +345,7 @@ function validateGamePayload(raw: unknown) {
     if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
     const inheritedActors=new Set((t.inheritedCropTrials||[]).flatMap((q:any)=>q.actorIds||[]));
     if(s.units.filter((u:any)=>u.team===i&&u.hp>0&&u.studyCrop&&!inheritedActors.has(u.id)).length>CROP_TRIAL_RULES.maximumPeople)fail();
-    if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<30||p.duration>360||p.progress<0||p.progress>p.duration)fail();}
+    if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<30||p.duration>360||p.progress<0||p.progress>p.duration||p.anchor!==undefined&&!validCropTrialAnchor(s,p.anchor))fail();}
     if(rivalTeam(i)&&["Dunmere","Saltborn","Greyhaven","Mossfall","Redcliff","Ashfen","Harrow","Kest"].includes(t.name)) {
       t.name=prehistoricName(s.seed,i*977);t.short=t.name;
     }

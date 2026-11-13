@@ -1,3 +1,4 @@
+import {siteSlopeIssue} from './siteSlope';
 import {tradeCargoCapacity,PACK_TRADE_TRAVEL_RULES} from './tradeCargo';
 import {returnPackJourneyCare,packJourneyReturnBudgetLow} from './packJourneyCare';
 import {returnExpeditionProvisions} from './expeditionProvisions';
@@ -1251,6 +1252,8 @@ export class Game {
     if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
     if (type !== "dock" && type !== "aqueduct" && !this.dryFoundation(type, x, z,0,size??(quarterTurn?d:undefined))&&!(type==="trench"&&breachPlacementPermit(this,x,z,_team))) return "Can't raise that in the water"; // Grok W7: only a ready canal breach dig (canalBreach.ts). Aqueducts may finish on low delivery ground; the route query refuses a submerged target.
+    const slopeIssue=_team===0?siteSlopeIssue((px,pz)=>this.height(px,pz),type,x,z,d.w,d.d):null;
+    if(slopeIssue)return slopeIssue;
     const compactGrainSite = compactGrainWorkplace(type);
     if(size||scalablePlot(type)||compactGrainSite){
       const clearance = type === "farm" || type === "warehouse" || compactGrainSite ? 0.25 : 1;

@@ -45,9 +45,9 @@ export function TimeCard({hud,engine,onAges,onMenu}:{hud:HudSnapshot;engine:Engi
    <IconBtn label="Normal speed" active={!hud.paused&&speed===1} onClick={()=>engine?.setSpeed(1)}><Play size={24}/></IconBtn>
    <IconBtn label="Double speed" tip="The day runs twice as fast" active={!hud.paused&&speed===2} onClick={()=>engine?.setSpeed(2)}><FastForward size={24}/></IconBtn>
    <IconBtn label="Four times speed" active={!hud.paused&&speed===4} onClick={()=>engine?.setSpeed(4)}><span className="hw-x4">4×</span></IconBtn>
+   <MusicChip engine={engine}/>
    <IconBtn label="Menu" onClick={onMenu}><MenuIcon size={26}/></IconBtn>
   </div>
-  <MusicChip engine={engine}/>
  </div>;
 }
 
