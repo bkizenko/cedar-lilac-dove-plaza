@@ -58,12 +58,14 @@ const TRADITION:Record<string,{food:CarryStyleId[];stone:CarryStyleId[];ore:Carr
  steppan:{food:['sackBack','sackBack','headLoad'],stone:['sackBack','stoneFrame'],ore:['sackBack'],wood:['bundleBack','shoulderLog']},
  skoldar:{food:['sackBack','yoke'],stone:['stoneFrame','stoneFrame','sackBack'],ore:['sackBack','stoneFrame'],wood:['shoulderLog','bundleBack']},
 };
-const DEFAULT_TRADITION=TRADITION.brythen;
+const TRADITION_IDS=Object.keys(TRADITION);
+/** A society with no entry (a custom skin) takes a stable tradition from its key, so different societies still carry differently. */
+const traditionOf=(society:string|undefined)=>society?TRADITION[society]??TRADITION[TRADITION_IDS[(hashSeed(society,'tradition')>>>0)%TRADITION_IDS.length]]:TRADITION.brythen;
 export type CarryChoice={style:CarryStyleId;kind:CarryKind;/** 0..1 of capacity */load:number;/** 0..1 weight */mass:number;/** how many separate pieces (logs, stones) at this fill, 1..7 */pieces:number;/** stable 0..1 per unit, for variety inside a style */variety:number};
 /** The carry style for one person: pure and stable per (society, cargo, unit id); a fuller load moves wood from a lone shoulder log to a bound bundle. */
 export function carryStyleFor(a:{society?:string;kind:CarryKind|string;load:number;seed:number}):CarryChoice{
  const kind=(CARRY_KINDS as readonly string[]).includes(a.kind)?a.kind as CarryKind:'food',load=Math.max(0,Math.min(1,Number.isFinite(a.load)?a.load:0)),mass=carryMass(kind,load);
- const r=seededRandom(hashSeed(a.seed,'carry',kind)),t=(a.society&&TRADITION[a.society])||DEFAULT_TRADITION,pool=kind==='food'?t.food:kind==='stone'?t.stone:kind==='wood'?t.wood:t.ore;
+ const r=seededRandom(hashSeed(a.seed,'carry',kind)),t=traditionOf(a.society),pool=kind==='food'?t.food:kind==='stone'?t.stone:kind==='wood'?t.wood:t.ore;
  let style=pool[Math.floor(r()*pool.length)%pool.length];
  // a heavy timber load is bound into a bundle; a light one is a log or two on the shoulder
  if(kind==='wood'&&style==='shoulderLog'&&load>.62)style=pool.includes('bundleBack')?'bundleBack':'shoulderLog';
