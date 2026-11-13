@@ -1141,6 +1141,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-13 05:00 | Claude | 20 (since 04:00 ET) | 20 via integration | ~2 (Quillan/Mekhari building grammar, Neighbours inbox) | lanes A-D shipping; PM landing 05:10 |
 | 11-13 05:00 | Grok | 0 | 0 | 0 | idle (out) - World rows with Claude/background agents |
 | 11-13 05:00 | Total | 21 | main = integration | ~2 | sweep 129 tests 126 pass/3 skip/0 fail; tsc not installed, diff = civBuildings.ts only |
+| 11-13 11:00 | Codex | 0 (since 04:20 ET, all branches) | 0 | 0 | IDLE ~7h (no board line since 04:20 ET; 2 missed hourly lines, reassigned): Codex rows W5/W11 cargo consumers fall to Claude lanes / background agents on next slot |
+| 11-13 11:00 | Claude | 12 (last hour, main+integration) | 12 | ~2 (death-in-custody trust/defence, mourning hearth dim) | lanes A-D + PM posted <1h |
+| 11-13 11:00 | Grok | 0 | 0 | 0 | out; World rows with Claude lanes/background agents |
+| 11-13 11:00 | Total | 12 | main = integration after 11:20 landing (7 commits) | ~2 | sweep 133 tests 130 pass/3 skip/0 fail; tsc diff nil; all work/*-2026-11-13 branches already 0 ahead of main; M2-11/14/16, M4-07..09, CAT-117, M5-04 are source-pushed (wired on main) awaiting native evidence only |
 
 ## Process improvements
 

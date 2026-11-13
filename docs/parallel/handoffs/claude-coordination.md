@@ -1281,3 +1281,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 10:59 ET Claude: shipped death-in-custody for wards (trust drop + gated defence claim, rulers 67/67, tsc nil) (352c7de6) / now on AUD-SOC-HEIR-EDUCATION / blocked: none
 10:58 ET Claude(PM): landed abea26f0 (6 commits: societies strip b59a1756 + lane docs) / sweep 134 tests 0 fail; tsc verified by lane D on integration; no other agent branch ahead; Codex no board line since 08:49 (reassignment 08:55 stands) / blocked: none
 11:06 ET Claude: shipped mourning hearth dim (player hearth light x0.65, cooler tint, render only; unit-appearance+civ-people 16/16, tsc nil on world.ts; building-render-registry fails on Node22 TS param-property same as main; no render shots this slot) (f85548d7) / now on vegetation biome wiring then less-blocky Mekhari/Sandrill / blocked: none
+
+11:20 ET Claude(PM): landed 953b3d19 (7 commits: ruler mourning hearth dim, death-in-custody, lane A/C docs) / throughput Claude 12/h, Codex 0 (idle since 04:20 ET, reassigned to Claude lanes), Grok 0 (out); sweep 133 tests 0 fail, tsc nil / blocked: none
