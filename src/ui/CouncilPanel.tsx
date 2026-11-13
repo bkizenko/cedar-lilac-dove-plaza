@@ -5,6 +5,7 @@ import {CouncilPanelClassic} from './council/CouncilPanelClassic';
 import {PartiesCard,HandoverCard,FameFeed,NeighbourNews,FactionsStrip,GloryBars,Card} from './council/CouncilParts';
 import {CapitulationTerms} from './council/CapitulationTerms';
 import {SocietiesStrip,focusKnownSettlement} from './council/SocietiesStrip';
+import {AttentionInbox} from './council/AttentionInbox';
 import {DiplomacySheet} from './council/DiplomacySheet';
 import {useCouncilLayout} from './council/councilLayout';
 const QUERY={kind:'rulers-council'} as const;
@@ -29,6 +30,7 @@ export function CouncilPanel({engine}:{engine:Engine}){
    {c.ruler.wants.length>0&&<p className="text-parchment-dim">Wants: {c.ruler.wants.join(', ')}. Fears: {c.ruler.fears}.</p>}
    {c.house&&<ul className="grid grid-cols-2 gap-x-3 border-t border-parchment/10 pt-1.5">{c.house.family.map(p=><li key={p.name+p.age}>{p.name} <span className="text-parchment-dim">{p.role}, {p.age}</span></li>)}</ul>}
   </Card>}
+  <AttentionInbox council={c} onFocus={t=>focusKnownSettlement(engine,t)}/>
   <SocietiesStrip neighbours={c.neighbours} onFocus={t=>focusKnownSettlement(engine,t)}/>
   {c.handover&&<HandoverCard h={c.handover}/>}
   {c.showFactions&&<FactionsStrip factions={c.factions} coalitionLoss={c.coalitionLoss}/>}
