@@ -8,7 +8,7 @@ import {SocietyFlag} from '../SocietyFlag';
 import {cx,IconBtn} from './kit';
 import {FoldHandle,FoldMin,useFold} from './fold';
 import {RES_ICON,RES_NAME} from './icons';
-import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,infoVisible,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
+import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,budgetNotes,infoVisible,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
 import {detectAlerts,foodDays,waterDays,workloadOf,winterOutlook} from './glanceReads';
 import {firstNeeds,firstNeedsVisible,type FirstNeed,type FirstNeedKind} from './firstNeeds';
 import {OVERLAY_KEYS,paintOverlays,type OverlayKey} from './overlayModel';
@@ -106,6 +106,7 @@ export function PriorityStack({hud,engine,alerts,onOpen,hidden,extra}:{hud:HudSn
   info.push({id:'route',sticky:true,icon:<Package size={26}/>,title:o.rival,chips:<><span className="hw-chip" title={`Give ${o.giveAmt}`}><G size={24}/>{o.giveAmt}</span><ChevronRight size={24}/><span className="hw-chip" title={`Get ${o.getAmt}`}><T size={24}/>{o.getAmt}</span></>,action:{label:'Accept',onClick:()=>engine?.acceptRoute()},dismiss:()=>engine?.declineRoute()});}
  if(hud.banner&&!hud.placing&&!isKeyTip(hud.banner))info.push({id:'banner:'+hud.banner,sticky:false,icon:<Bell size={26}/>,title:hud.banner,dismiss:()=>setGone(g=>[...g,'banner:'+hud.banner])});
  const shown=useInfoClock(info.filter(n=>!gone.includes(n.id)));
+ const budget=budgetNotes(shown.map(x=>({...x,id:x.n.id,sticky:x.n.sticky,title:x.n.title})));
  const idle=hud.idleWorkers>0&&hud.selection.kind==='none';
  const fa=useFold('alerts'),fn=useFold('notes');
  const alertCount=(critical?1:0)+chips.length+(idle?1:0);
@@ -128,7 +129,8 @@ export function PriorityStack({hud,engine,alerts,onOpen,hidden,extra}:{hud:HudSn
    </div>}
   </div>}
   {fn.showPanel&&<div className={cx('hw-fold-group',fn.cls)} data-fold="notes">
-   {shown.map(({n,fading})=><InfoCard key={n.id} n={n} fading={fading}/>)}
+   {budget.rows.map(({note:{n,fading},count,title})=><InfoCard key={n.id} n={count>1&&title===n.title?{...n,title:`${n.title} ×${count}`}:{...n,title}} fading={fading}/>)}
+   {budget.hidden>0&&<p className="hw-note-more" role="status">+{budget.hidden} more, see the chronicle</p>}
    {extra}
   </div>}
  </aside>;

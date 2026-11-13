@@ -72,6 +72,11 @@ export function neighbourMemory(g:Game,team:number,other:number):MemoryLine[]{
   const who=r.societies[w.from]?.dynasty.people[w.person]?.name??'a kinsman';
   push(w.kind,theirs?`They sent ${who} to us as ${w.kind==='foster'?'a foster child':'a hostage'}`:`We sent ${who} to them as ${w.kind==='foster'?'a foster child':'a hostage'}`,w.since);
  }
+ for(const gr of r.grudges??[]){ // remembered wrongs, kept by the house and already faded/weakened by succession in rulersRuntime
+  const mine=Number(gr.holder)===team&&Number(gr.target)===other,theirs=Number(gr.holder)===other&&Number(gr.target)===team;if(!mine&&!theirs)continue;
+  const weight=Math.round(gr.w*100);if(weight<MEMORY_FLOOR)continue;
+  out.push({kind:'grudge',text:mine?(gr.cause==='custody'?'Our house has not forgotten a kinsman who died in their hall':'Our house remembers the claim they pressed on us'):(gr.cause==='custody'?'Their house holds a grudge for a kinsman who died with us':'Their house remembers the claim we pressed on them'),year:gr.since,weight});
+ }
  return out.sort((a,b)=>b.year-a.year||b.weight-a.weight).slice(0,8);
 }
 export function councilModel(g:Game,team=0):CouncilModel{
