@@ -1330,3 +1330,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 16:15 ET Claude(PM): landed 0eb02faa (8 commits: Tigrane civic discs, lane D audit rows, lane docs) / throughput Claude 27/h, Codex 0 (idle since ~08:49, reassigned), Grok 0 (out); sweep 137/137 pass, tsc nil on civBuildings / no agent branch ahead; nobody silent >2h except Codex (reassigned) / blocked: none
 
 16:15 ET Claude: shipped lane A house grudges (custody death or pressed claim saved as rulers.grudges, fade 7%/yr, x0.6 at each succession, lower the grounds-claim bar; derived only, old saves none; rulers 72/72, tsc-diff nil ts5.6) (91e07665) / now on AUD-SOC-HUNGER-REFUGEES / blocked: none
+
+16:16 ET Claude: shipped lane A grudge read in neighbourMemory (our/their house remembers a kinsman dead in custody or a pressed claim, hidden once faded; rulers-grudge 2/2, rulers suite pass, tsc-diff nil) (d04c8b8a) / now on AUD-SOC-HUNGER-REFUGEES / blocked: none
