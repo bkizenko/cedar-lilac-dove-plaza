@@ -25,6 +25,7 @@ export function visibleGoatsForPen(g: Game, pen: Building) {
 /** Only observed animals or genuinely unknown reachable ground guide a search. */
 export function goatSearchTarget(g: Game, u: Unit, pen: Building) {
   const goat = visibleGoatsForPen(g, pen).find(a => g.workBoard.connected(g, u.x, u.z, a.x, a.z));
+  const retry=pen.goatSearch?.retryTarget;if(!goat&&retry){if(Math.hypot(u.x-retry.x,u.z-retry.z)>6)return{x:retry.x,z:retry.z};delete pen.goatSearch!.retryTarget;}
   return goat ? { x: goat.x, z: goat.z } : pen.goatSearch?goatSurveyTarget(g,u,pen):g.findExploreTarget(u, pen);
 }
 
@@ -111,7 +112,7 @@ function attemptGoatSearch(g: Game, penId?: number, quiet=false) {
 }
 
 export const GOAT_QUEUE_RULES={retrySeconds:5} as const;
-export type GoatSearchOrder={requestedAt:number;nextAttemptAt:number;state:'waiting'|'searching'|'capturing'|'complete'|'exhausted';reason?:'adult'|'food'|'space'|'paused'|'route'|'refused'|'cooldown';paidTrials?:number;returningHandlerId?:number;animal?:number;searchedCells?:number[]};
+export type GoatSearchOrder={requestedAt:number;nextAttemptAt:number;state:'waiting'|'searching'|'capturing'|'complete'|'exhausted';reason?:'adult'|'food'|'space'|'paused'|'route'|'refused'|'cooldown';paidTrials?:number;returningHandlerId?:number;retryAfter?:number;retryTarget?:{x:number;z:number};animal?:number;searchedCells?:number[]};
 export function goatSearchOrderLabel(b:Building){const q=b.goatSearch;if(!q)return null;return q.state==='exhausted'&&q.reason==='refused'?'Two taming attempts refused — start a new search to try again':q.returningHandlerId!==undefined?'Handler returning after refusal':q.state==='waiting'?q.reason==='refused'?'Taming refused — waiting for the handler to return':q.reason==='cooldown'?'Animals need time before another attempt':q.reason==='food'?'Waiting for journey food':q.reason==='space'?'Waiting for pen space':'Waiting for an available adult':q.state==='searching'?'Searching for wild goats':q.state==='capturing'?q.reason==='paused'?'Capture paused':'Capturing and leading goat home':q.state==='complete'?'Goat brought home':q.reason==='route'?'Search route blocked':'Nearby search exhausted';}
 /** A pen owns one explicit search request. Nothing is paid until real dispatch. */
 export function searchForWildGoats(g:Game,penId?:number){
@@ -137,10 +138,12 @@ function tickGoatSearchOrder(g:Game,pen:Building){
  const scout=g.state.units.find(u=>u.hp>0&&u.goatSearchPen===pen.id&&(u.order==='explore'||u.exploreAfterDelivery));
  if(scout){q.state='searching';delete q.reason;return;}
  if((q.paidTrials||0)>=DOMESTICATION_RULES.maximumSearchTrials){q.state='exhausted';q.reason='refused';return;}
+ if(g.state.time<q.nextAttemptAt)return;
+ q.nextAttemptAt=g.state.time+GOAT_QUEUE_RULES.retrySeconds;
+ if(q.retryAfter!==undefined&&g.state.time<q.retryAfter){q.state='waiting';q.reason='cooldown';return;}
  const cooling=g.state.wildlife.filter(a=>a.hp>0&&a.species==='goat'&&g.visibleAt(a.x,a.z)&&Math.hypot(a.x-pen.x,a.z-pen.z)<HERD.searchRadiusMeters);
  if(cooling.length&&!cooling.some(a=>domesticationReady(g,a))){q.state='waiting';q.reason='cooldown';return;}
- if(g.state.time<q.nextAttemptAt)return;
- q.nextAttemptAt=g.state.time+GOAT_QUEUE_RULES.retrySeconds;q.state='waiting';delete q.reason;
+ q.state='waiting';delete q.reason;
  const reserved=penPlacesReserved(g,pen.id);
  if(penPlacesOccupied(g,pen.id)+reserved>=surveyPenPasture(g,pen).eligibleCapacity){q.reason='space';return;}
  if(g.tribe(0).food<HERD.tamingFood){q.reason='food';return;}
@@ -152,6 +155,6 @@ function tickGoatSearchOrder(g:Game,pen:Building){
 export function tickGoatSearchOrders(g:Game){for(const pen of g.state.buildings)if(pen.team===0&&pen.type==='pen'&&g.finished(pen)&&pen.goatSearch)tickGoatSearchOrder(g,pen);}
 export function validGoatSearchOrder(value:unknown,time:number,nextId:number){
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
- const q=value as Record<string,unknown>;if(Object.keys(q).some(k=>!['requestedAt','nextAttemptAt','state','reason','animal','searchedCells','paidTrials','returningHandlerId'].includes(k)))return false;
- return typeof q.requestedAt==='number'&&Number.isFinite(q.requestedAt)&&q.requestedAt>=0&&q.requestedAt<=time&&typeof q.nextAttemptAt==='number'&&Number.isFinite(q.nextAttemptAt)&&q.nextAttemptAt>=q.requestedAt&&q.nextAttemptAt<=time+GOAT_QUEUE_RULES.retrySeconds+1e-6&&['waiting','searching','capturing','complete','exhausted'].includes(q.state as string)&&(q.reason===undefined||['adult','food','space','paused','route','refused','cooldown'].includes(q.reason as string))&&(q.paidTrials===undefined||Number.isSafeInteger(q.paidTrials)&&Number(q.paidTrials)>=0&&Number(q.paidTrials)<=DOMESTICATION_RULES.maximumSearchTrials)&&(q.returningHandlerId===undefined||Number.isSafeInteger(q.returningHandlerId)&&Number(q.returningHandlerId)>0&&Number(q.returningHandlerId)<nextId)&&(q.searchedCells===undefined||Array.isArray(q.searchedCells)&&q.searchedCells.length<=2048&&new Set(q.searchedCells).size===q.searchedCells.length&&q.searchedCells.every(i=>Number.isSafeInteger(i)&&i>=0&&i<FOW*FOW))&&(q.animal===undefined||Number.isSafeInteger(q.animal)&&Number(q.animal)>0&&Number(q.animal)<nextId);
+ const q=value as Record<string,unknown>;if(Object.keys(q).some(k=>!['requestedAt','nextAttemptAt','state','reason','animal','searchedCells','paidTrials','returningHandlerId','retryAfter','retryTarget'].includes(k)))return false;
+ return typeof q.requestedAt==='number'&&Number.isFinite(q.requestedAt)&&q.requestedAt>=0&&q.requestedAt<=time&&typeof q.nextAttemptAt==='number'&&Number.isFinite(q.nextAttemptAt)&&q.nextAttemptAt>=q.requestedAt&&q.nextAttemptAt<=time+GOAT_QUEUE_RULES.retrySeconds+1e-6&&['waiting','searching','capturing','complete','exhausted'].includes(q.state as string)&&(q.reason===undefined||['adult','food','space','paused','route','refused','cooldown'].includes(q.reason as string))&&(q.retryAfter===undefined||typeof q.retryAfter==='number'&&Number.isFinite(q.retryAfter)&&q.retryAfter>=q.requestedAt&&q.retryAfter<=time+DOMESTICATION_RULES.cooldownSeconds+1e-6)&&(q.retryTarget===undefined||!!q.retryTarget&&typeof q.retryTarget==='object'&&!Array.isArray(q.retryTarget)&&Object.keys(q.retryTarget).every(k=>k==='x'||k==='z')&&['x','z'].every(k=>typeof(q.retryTarget as any)[k]==='number'&&Number.isFinite((q.retryTarget as any)[k])&&Math.abs((q.retryTarget as any)[k])<1e4))&&(q.paidTrials===undefined||Number.isSafeInteger(q.paidTrials)&&Number(q.paidTrials)>=0&&Number(q.paidTrials)<=DOMESTICATION_RULES.maximumSearchTrials)&&(q.returningHandlerId===undefined||Number.isSafeInteger(q.returningHandlerId)&&Number(q.returningHandlerId)>0&&Number(q.returningHandlerId)<nextId)&&(q.searchedCells===undefined||Array.isArray(q.searchedCells)&&q.searchedCells.length<=2048&&new Set(q.searchedCells).size===q.searchedCells.length&&q.searchedCells.every(i=>Number.isSafeInteger(i)&&i>=0&&i<FOW*FOW))&&(q.animal===undefined||Number.isSafeInteger(q.animal)&&Number(q.animal)>0&&Number(q.animal)<nextId);
 }
