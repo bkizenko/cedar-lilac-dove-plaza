@@ -12,6 +12,9 @@ import {commissionWaterEngineering,previewWaterEngineering,type WaterEngineering
 import {turnableBuilding} from "./footprints";
 import {planFieldArea,placeFieldArea,type FieldAreaPlan} from './fieldArea';
 import {fertilityPreview} from './fertilityPreview';
+import {advanceTide} from './tides';
+import {weatherWaterLevel} from './hydrology';
+import {seaSurfaceY} from './localWater';
 import {surveyReachFish,waterReachAt} from './waterReach';
 import { compactGrainWorkplace } from './cerealRules';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
@@ -215,6 +218,13 @@ export class Engine {
     const d=this.waterDraft;if(!d?.source||!d.target||d.state!==this.game.state)return{ok:false,reason:'Choose the source and destination first'};
     const result=commissionWaterEngineering(this.game,d.kind,d.source,d.target);
     if(result.ok)this.waterDraft=null;else d.plan=previewWaterEngineering(this.game,d.kind,d.source,d.target);this.pushHud();return result;
+  }
+  setWorldFeature(feature:'flow'|'tides',enabled:boolean){
+    const options=this.game.state.worldOptions??this.game.world.options;if(!options)return;
+    const next={...options};if(feature==='flow'){if(enabled)next.flowFieldVersion=1;else delete next.flowFieldVersion;}else{if(enabled)next.tideVersion=2;else delete next.tideVersion;}
+    this.game.state.worldOptions=next;this.game.world.options=next;this.game.configureFlowFields();
+    if(feature==='tides'&&!enabled){this.game.world.seaTideY=0;this.game.world.waterY=weatherWaterLevel(this.game.world.baseWaterY,this.game.state.weather);this.game.rebuildWalk();}
+    else if(feature==='tides')advanceTide(this.game);this.pushHud();
   }
 
   readonly profile = new RuntimeProfile();
@@ -668,7 +678,7 @@ export class Engine {
     const people = this.game.selectedUnits();
     if (!people.length || !people.every(u => u.haulage === 'canoe') ||
       this.game.height(ground.x,ground.z) >= this.game.waterAt(ground.x,ground.z)) return ground;
-    const water = this.view.waterAt(cx,cy,this.game.world.waterY);
+    const water = this.view.waterAt(cx,cy,seaSurfaceY(this.game.world));
     return water && this.game.height(water.x,water.z) < this.game.waterAt(water.x,water.z) ? water : ground;
   }
 
@@ -685,7 +695,7 @@ export class Engine {
     }
     if(this.waterDraft){const point=this.view.groundAt(cx,cy);if(point)this.chooseWaterEngineeringPoint(point);return;}
     const boatOrder=this.game.selectedBoat!==null&&!this.game.state.placing;
-    const g = boatOrder ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
+    const g = boatOrder ? this.view.waterAt(cx,cy,seaSurfaceY(this.game.world)) : this.view.groundAt(cx, cy);
     if (!g) {
       if (this.game.state.placing) this.game.banner("Aim at the valley floor", 1.2);
       return;
@@ -738,7 +748,7 @@ export class Engine {
         this.game.issueMove(target.x,target.z);
       }
       else {
-        const surface=this.view.waterAt(cx,cy,this.game.world.waterY);
+        const surface=this.view.waterAt(cx,cy,seaSurfaceY(this.game.world));
         const camera=this.view.camera.position;
         const reach=surface&&surface.distanceTo(camera)<=g.distanceTo(camera)+.2?waterReachAt(this.game,surface):null;
         if(reach){this.game.clearSelect();this.game.selectedWaterReach=reach;surveyReachFish(this.game,reach);}
@@ -750,7 +760,7 @@ export class Engine {
 
   rightClick(cx: number, cy: number,queue=false) {
     if(this.workerHost){const point=this.view.groundAt(cx,cy);if(point&&this.game.selectedUnits().length)void this.dispatch({kind:'move',unitIds:this.game.selectedUnits().map(u=>u.id),x:point.x,z:point.z}).catch(console.error);return;}
-    const g = this.game.selectedBoat!==null ? this.view.waterAt(cx,cy,this.game.world.waterY) : this.view.groundAt(cx, cy);
+    const g = this.game.selectedBoat!==null ? this.view.waterAt(cx,cy,seaSurfaceY(this.game.world)) : this.view.groundAt(cx, cy);
     if (!g) return;
     if (this.game.state.placing) {
       this.game.state.placing = null;

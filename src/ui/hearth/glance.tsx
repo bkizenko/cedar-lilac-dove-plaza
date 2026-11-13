@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useReducer,useRef,useState,type ReactNode} from 'react';
-import {ArrowUp,ArrowDown,ArrowRight,Minus,Swords,Droplets,Wheat,Snowflake,Package,ClipboardList,Users,BookOpen,Bell,ChevronRight,X,Flag,Radar,Gem} from 'lucide-react';
+import {ArrowUp,ArrowDown,ArrowRight,Minus,Swords,Droplets,Wheat,Snowflake,Package,ClipboardList,Users,BookOpen,Bell,ChevronRight,X,Flag,Radar,Gem,Footprints} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import type {HudSnapshot} from '@/game/types';
 import {readyFoodStock} from '../FoodStoreReadout';
@@ -50,7 +50,7 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
 /* ====================== alerts: detection hook, priority stack ====================== */
 export const ALERT_ICON:Record<AlertKind,(p:{size:number})=>ReactNode>={
  raiders:p=><Swords {...p}/>,thirsty:p=><Droplets {...p}/>,starving:p=><Wheat {...p}/>,freezing:p=><Snowflake {...p}/>,
- full:p=><Package {...p}/>,exposed:p=><Droplets {...p}/>,harvest:p=><Wheat {...p}/>,backlog:p=><ClipboardList {...p}/>,
+ full:p=><Package {...p}/>,exposed:p=><Droplets {...p}/>,harvest:p=><Wheat {...p}/>,backlog:p=><ClipboardList {...p}/>,wild:p=><Footprints {...p}/>,
 };
 const CRIT_TITLE:Partial<Record<AlertKind,string>>={raiders:'Raiders near',thirsty:'Thirsty',starving:'Starving',freezing:'Freezing'};
 /** Alerts for this frame's HUD render. Positions refresh about twice a second; the workload sum about every two. */

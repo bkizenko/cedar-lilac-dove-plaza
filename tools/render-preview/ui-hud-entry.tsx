@@ -8,6 +8,7 @@ import {applyEngineCommand} from '@/game/engineDispatch';
 import {appointCommander,assignToCommander} from '@/game/commanders';
 import {ensureNaval} from '@/game/navalPorts';
 import {enableWildCraft,wildStock,beginWildWork} from '@/game/wildCraft';
+import {generateSites} from '@/game/wildStores';
 import {HudHearth} from '@/ui/hearth/HudHearth';
 import {Hud} from '@/ui/Hud';
 import {lookAtCamera} from '@/ui/hearth/glanceModel';
@@ -26,9 +27,9 @@ w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number})=>{
   const bs=g.state.buildings.filter((b:any)=>b.team===0);for(const b of bs){b.build=1;b.hp=b.maxHp*.8;}const b=bs.find((b:any)=>b.type==='hearth')||bs[0];if(b){b.selected=true;g.state.selBld=b;}}
  if(sc==='army'){clear();const t=g.tribe(0);t.wood+=40;const arm=mine.filter((u:any)=>u.age!==undefined||true).slice(0,4);arm.forEach((u:any)=>{u.militia=true;u.selected=true;});const r=appointCommander(g,arm[0].id,'army',{team:0,free:true});void r;const c=g.state.commanders?.roster?.[0];if(c)assignToCommander(g,c.id,arm.slice(1).map((u:any)=>u.id));}
  if(sc==='wild'){clear();g.state.autoWorkEnabled=false;const freeUp=()=>{for(const u of workers){g.interruptMission(u);delete u.buildOrder;u.order='idle';u.jobLock=false;u.resting=false;delete u.shelterId;u.recalled=false;u.emergency=false;}};const c=g.campOf(0),t=g.tribe(0);t.wood+=200;t.stone+=100;g.vision.fill(2);
-  for(const [ty,dx,dz] of [['hearth',9,8],['tanner',-10,8],['dryrack',12,-8]] as const){g.placeBuilding(ty,c.x+dx,c.z+dz,0);}
+  for(const [ty,dx,dz] of [['hearth',9,8],['tanner',-10,8],['dryrack',12,-8],['pen',-22,-14]] as const){g.placeBuilding(ty,c.x+dx,c.z+dz,0);}
   for(const b of g.state.buildings.filter((b:any)=>b.team===0)){b.build=1;b.hp=b.maxHp;}freeUp();
-  enableWildCraft(g);const wc=g.state.wildCraft!,st=wildStock(g,0);Object.assign(st,{fat:3,sinew:2,brain:2,horn:1,tannedHide:1,soakedHide:2});t.items={...(t.items||{}),cordage:4,cleanHide:2};
+  enableWildCraft(g);const wc=g.state.wildCraft!,st=wildStock(g,0);wc.sites=generateSites(g);for(const x of wc.sites)x.left=Math.floor(x.cap*.6);Object.assign(st,{salt:2,hay:8,fat:3,sinew:2,brain:2,horn:1,tannedHide:1,soakedHide:2});t.items={...(t.items||{}),cordage:4,cleanHide:2};
   const critter=(sp:string,dx:number,hp:number,carc:boolean)=>{const x=c.x+dx,z=c.z+12,a:any={id:g.id(),species:sp,x,z,y:g.height(x,z),hp,maxHp:6,facing:0,vx:0,vz:0,wanderT:10000,fly:0,scale:1};if(carc)a.carcass={meat:30,diedAt:g.state.time,prepared:true,preparationWork:2};g.state.wildlife.push(a);return a;};
   const bleeding=critter('deer',20,3,false);wc.wounds[bleeding.id]={since:g.state.time,trail:[{x:bleeding.x-6,z:bleeding.z},{x:bleeding.x-3,z:bleeding.z},{x:bleeding.x,z:bleeding.z}],bleed:.01};critter('boar',-14,0,true);
   wc.traps.push({id:wc.nextId++,team:0,kind:'snare',x:c.x+16,z:c.z-14,placedAt:g.state.time,uses:2,catches:1,nextCheck:g.state.time+4,setBy:workers[0].id});
