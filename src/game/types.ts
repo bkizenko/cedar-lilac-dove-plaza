@@ -254,6 +254,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   carry: number;
   carryType: ResKind | null;
   carryFood?: FoodKind;
+  carryFoodLots?:import("./tradeFood").CarriedFoodLots;
   seedSamples?: Partial<Record<CropKind,number>>;
   studyCrop?: CropKind;
   methodRecordCargoId?:number;
@@ -295,7 +296,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   tradeLoading?:true;
   foodRole?:true;
   tradeTeam: number;
-  tradeReservation?: {team:number;kind:ResKind;amount:number};
+  tradeReservation?: {team:number;kind:ResKind;amount:number;foodLots?:import("./tradeFood").CarriedFoodLots};
   ageT: number;
   hunger?: number;
   customOffer?: boolean;

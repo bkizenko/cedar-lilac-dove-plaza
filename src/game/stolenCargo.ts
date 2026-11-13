@@ -1,3 +1,5 @@
+import {FOOD_KINDS} from './pantry';
+import {withdrawCarriedFood,receiveCarriedFood} from './tradeFood';
 import type {Game} from './sim';
 import {noteRaidDefenseRecovery} from './warPrestige';
 import type {FoodKind,GameState,ResKind,Unit} from './types';
@@ -91,6 +93,7 @@ function dropExpeditionFood(g:Game,u:Unit){
 // ---- Creation: only from a dead carrier's exact hands.
 function dropFrom(g:Game,u:Unit){
  const kind=u.carryType;if(!kind||!(u.carry>0)||!Number.isFinite(u.carry))return;
+ if(kind==='food'&&u.carryFoodLots){const owner=cargoOwner(g,u);for(const food of FOOD_KINDS){const units=u.carryFoodLots?.[food]||0;if(!units)continue;const dropped=dropFoodUnits(g,u,food,units,owner);if(dropped>0)withdrawCarriedFood(u,dropped,food);}return;}
  const s=root(g),owner=cargoOwner(g,u),amount=u.carry,food=kind==='food'?u.carryFood:undefined,raidBandId=markOf(g,u.id)?.raidBandId;
  const near=s.parcels.find(p=>p.claimedBy===undefined&&p.kind===kind&&p.food===food&&p.originalOwnerTeam===owner&&p.raidBandId===raidBandId&&distance(p,u)<=R.mergeMeters);
  // Only a LOCAL merge or a free parcel slot may take the goods. When the cap is full the exact goods
@@ -222,7 +225,7 @@ function deposit(g:Game,u:Unit,trip:CargoTrip){
  const kind=u.carryType,amount=u.carry;if(!kind||!(amount>0)){endTrip(g,trip);return;}
  recordSimulationEvent(g,'cargo_delivered',u.team,kind,amount,u.id);
  const provenance=markOf(g,u.id);noteRaidDefenseRecovery(g,provenance?.raidBandId,trip.owner,u.team,amount);
- if(kind==='food')receiveFood(g,u.team,amount,u.carryFood);else g.tribe(u.team)[kind]+=amount;
+ if(kind==='food')receiveCarriedFood(g,u.team,u);else g.tribe(u.team)[kind]+=amount;
  u.carry=0;u.carryType=null;u.carryFood=undefined;s.ledger.deposited+=amount;
  if(trip.finder)s.ledger.depositedByFinder+=amount;else s.ledger.depositedByOwner+=amount;
  if(holds(u))return;// a robbed load can hold a resource and bulk items: finish the rest at the same cache

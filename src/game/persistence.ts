@@ -1,3 +1,4 @@
+import {validCarriedFood,validFoodLots} from './tradeFood';
 import {validDomesticationState} from './domestication';
 import {validCropTrialAnchor} from './cultivation';
 import {validExpeditionProvisions} from './expeditionProvisions';
@@ -476,6 +477,7 @@ function validateGamePayload(raw: unknown) {
     if(u.resting!==undefined&&typeof u.resting!=="boolean")fail();
     if(u.huntTrail!==undefined){const h=u.huntTrail;if(!obj(h)||!Number.isSafeInteger(h.animal)||h.animal<1||h.animal>=s.nextId||![h.x,h.z,h.seenAt,h.expiresAt].every(num)||Math.abs(h.x)>HALF+40||Math.abs(h.z)>HALF+40||h.seenAt<0||h.seenAt>s.time||h.expiresAt<h.seenAt||h.expiresAt>h.seenAt+HUNTING_TRACKING_RULES.memorySeconds+.001||(h.searchStartedAt!==undefined&&(!num(h.searchStartedAt)||h.searchStartedAt<h.seenAt||h.searchStartedAt>s.time)))fail();}
     if(u.shelterId!==undefined&&(!Number.isSafeInteger(u.shelterId)||u.shelterId<1))fail();
+    if(!validCarriedFood(u))fail();
     if(u.carryFood!==undefined&&!FOOD_KINDS.includes(u.carryFood))fail();
     if(u.seedSamples!==undefined)cropAmounts(u.seedSamples,100);
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
@@ -508,7 +510,7 @@ function validateGamePayload(raw: unknown) {
     if(u.customOffer!==undefined&&typeof u.customOffer!=="boolean")fail();
     if(u.procurement!==undefined&&(!obj(u.procurement)||!Number.isSafeInteger(u.procurement.minimum)||u.procurement.minimum<1||u.procurement.minimum>200||u.team!==0))fail();
     if(u.tradeReservation!==undefined){
-      const r=u.tradeReservation;
+      const r=u.tradeReservation;if(r?.foodLots!==undefined&&(r.kind!=="food"||!validFoodLots(r.foodLots,r.amount)))fail();
       if(!obj(r)||u.team!==0||!rivalTeam(r.team)||r.team!==u.tradeTeam||
         !["food","wood","stone","copper","iron"].includes(r.kind)||!Number.isSafeInteger(r.amount)||r.amount<1||r.amount>200||
         !u.trade||r.kind!==u.trade.get||r.amount!==u.trade.getAmt||u.customOffer||u.procurement)fail();

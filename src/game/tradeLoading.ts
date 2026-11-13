@@ -1,3 +1,4 @@
+import {planFoodWithdrawal,commitFoodWithdrawal,setCarriedFood} from './tradeFood';
 import {quotePackTradeCare,commitPackJourneyCare} from './packJourneyCare';
 import {tradeCargoCapacity,packTradeCareSeconds} from './tradeCargo';
 import {equipCaravan,recoverCaravanEquipment} from './caravans';
@@ -33,7 +34,8 @@ function payAtCache(g:Game,u:LoadingUnit){
   return refuseLoading(g,u,care?'Trade load exceeds capacity after equipment, feed and water; nothing paid':'Animal trip needs delivered feed/water or a nearer depot; nothing paid',borrowed);
  }
  if(!commitPackJourneyCare(g,u,care))return refuseLoading(g,u,'Animal supplies changed before loading; nothing paid',borrowed);
- g.spend(u.team,{[deal.give]:deal.giveAmt});u.carry=deal.giveAmt;u.carryType=deal.give;u.carryFood=deal.give==='food'?'provisions':undefined;
+ if(deal.give==='food'){const lots=planFoodWithdrawal(g,u.team,deal.giveAmt);if(!lots||!commitFoodWithdrawal(g,u.team,lots))return refuseLoading(g,u,'Food lots changed before loading; actual supplies retained',borrowed);setCarriedFood(u,lots);}
+ else{g.spend(u.team,{[deal.give]:deal.giveAmt});u.carry=deal.giveAmt;u.carryType=deal.give;u.carryFood=undefined;}
  delete u.tradeLoading;other.tradeCd=32;u.tx=hall.x;u.tz=hall.z;u.workReason='Carrying a trade proposal to '+other.name;g.invalidateRoute(u);return true;
 }
 /** Reserve only intent until an empty-handed carrier physically reaches a cache. */
