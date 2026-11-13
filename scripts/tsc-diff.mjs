@@ -3,7 +3,7 @@
 // (TS2307/7016/7006/7026/2875/2882, Node `process`/`Buffer`, ImportMeta env, react-stub UI noise).
 // Usage: node scripts/tsc-diff.mjs [--tsc path/to/typescript/bin/tsc] [--baseline file] [--out file] [--ui]
 // Pin: run with typescript@5.6 (the sandbox default 7.x rejects baseUrl, TS5102):
-//   npm i --prefix /tmp/ts5 typescript@5.6 three@0.170 @types/three@0.170 && ln -s /tmp/ts5/node_modules node_modules
+//   npm i --prefix /tmp/ts5 typescript@5.6 three@0.185.1 @types/three@0.185 && ln -s /tmp/ts5/node_modules node_modules
 // Without --baseline it prints real errors in src/game and src/scene (and src/ui with --ui).
 // With --baseline it prints only errors not in that earlier output (line numbers ignored).
 import { spawnSync } from "node:child_process";
