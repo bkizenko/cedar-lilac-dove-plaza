@@ -19,7 +19,7 @@ type Out={entry?:{x:number;z:number;width:number}};
 /** Per-civ banner shapes (original grammar): each society hangs its cloth its own way so villages read apart at a glance. 'flag' is the first-generation look and stays the legacy default. */
 export type BannerStyle='flag'|'swallow'|'hanging'|'streamers'|'pennant'|'twin';
 export const BANNER_STYLE:Record<CivId,BannerStyle>={sandrill:'hanging',nilemark:'streamers',tigrane:'swallow',hanrei:'twin',vedara:'streamers',aureline:'pennant',sahelan:'hanging',quillan:'swallow',kaaltun:'twin',mekhari:'streamers',brythen:'pennant',rusvolt:'flag',steppan:'swallow',skoldar:'pennant'};
-function bannerFor(parts:Part[],civ:CivId,m:(s:Slot)=>Part['mat'],x:number,z:number,h:number,mourning=false,style?:BannerStyle){
+function bannerFor(parts:Part[],civ:CivId,m:(s:Slot)=>Part['mat'],x:number,z:number,h:number,mourning=false,style?:BannerStyle,wear=0){
  const i0=parts.length;
  const st=style??BANNER_STYLE[civ],T=m('trim'),C=m('cloth'),A=m('accent'),top=h-.15;
  /** pole + main cloth are mid-tier; tails, bars, trim bands and finial are near-only so the mid/far budgets hold */
@@ -33,14 +33,23 @@ function bannerFor(parts:Part[],civ:CivId,m:(s:Slot)=>Part['mat'],x:number,z:num
   default:parts.push(part('box',C,[.7,.95,.03],[x+.38,h-1.05,z],1));
  }
  if(mourning){const drop=Math.min(.55,h*.2);for(let i=i0+2;i<parts.length;i++){const q=parts[i];parts[i]={...q,pos:[q.pos[0],q.pos[1]-drop,q.pos[2]]};}parts.push(part('box',T,[.05,.9,.05],[x+.02,top-.8-drop,z+.04],0),part('box',T,[.5,.07,.04],[x+.34,top-drop,z+.03],0));}
+ weatherBanner(parts,m,x,z,top-(mourning?Math.min(.55,h*.2):0),wear);
 }
+/** Weathered banners (original grammar, near-only, cosmetic): from about half wear a faded, torn patch that grows with wear. Deterministic from the pole position. */
+function weatherBanner(parts:Part[],m:(s:Slot)=>Part['mat'],x:number,z:number,top:number,wear:number){
+ if(!Number.isFinite(wear)||wear<.55)return;
+ const w=Math.min(1,(wear-.55)/.45),T=m('trim'),C=m('cloth'),u=(Math.abs(Math.round(x*7+z*13))%7)/7;
+ /** one torn/faded patch per banner so the near budget holds on multi-banner halls */
+ parts.push(part('box',T,[.1+.08*w+u*.05,.1+.12*w,.036],[x+.2+u*.3,top-.55-u*.4,z+.012],0,[0,0,(u-.5)*.8]));
+}
+
 const mk=(civ:CivId,ctx:CivContext,r:Rng):G=>{const parts:Part[]=[],m=(s:Slot)=>matId(civ,s) as Part['mat'];
  const g:G={civ,...(ctx.look?{look:ctx.look}:{}),r,w:ctx.footprint.w,d:ctx.footprint.d,era:ctx.era,wealth:ctx.wealth,wear:ctx.wear,parts,off:range(r,-.35,.35),
   B:(s,size,pos,lod=1,rot)=>void parts.push(part('box',m(s),size,pos,lod,rot)),
   Cy:(s,dia,h,pos,lod=1,sides=10,top)=>void parts.push(part('cylinder',m(s),[dia,h,top??dia],pos,lod,undefined,sides)),
   Pr:(shape,s,size,pos,lod=1,rot,sides)=>void parts.push(part(shape,m(s),size,pos,lod,rot,sides)),
   post:(s,x,z,h,t=.16,lod=2)=>void parts.push(beam(m(s),[x,0,z],[x,h,z],t,lod)),
-  banner:(x,z,h)=>{if(grammarSet==='original')return void bannerFor(parts,civ,m,x,z,h,ctx.mourning,ctx.look?.banner);parts.push(beam(m('trim'),[x,0,z],[x,h,z],.08,1),part('box',m('cloth'),[.7,.95,.03],[x+.38,h-1.05,z],1));},
+  banner:(x,z,h)=>{if(grammarSet==='original')return void bannerFor(parts,civ,m,x,z,h,ctx.mourning,ctx.look?.banner,ctx.wear);parts.push(beam(m('trim'),[x,0,z],[x,h,z],.08,1),part('box',m('cloth'),[.7,.95,.03],[x+.38,h-1.05,z],1));},
   door:(x,z,wd=.9,h=1.8)=>void parts.push(part('box',m('accent'),[wd,h,.08],[x,0,z],0))};return g;};
 const jit=(r:Rng,a:number)=>1+(r()-.5)*2*a;
 /** Poorest local dwelling per civ (era 0-1). */

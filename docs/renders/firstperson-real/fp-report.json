@@ -1,0 +1,178 @@
+{
+ "a-street": {
+  "eye": [
+   223.6,
+   8.5,
+   -360
+  ],
+  "ground": 6.95,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.0012364285714285715,
+  "exposure": 1.0928357319114044,
+  "sun": [
+   2.718655085042412,
+   512,
+   110,
+   false,
+   false,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 608670,
+  "calls": 142,
+  "meanLuminance255": 123.9,
+  "meanLuminanceSrgbOfLinearMean": 140.1,
+  "threshold": 70,
+  "pass": true,
+  "hud": {
+   "sel": "none",
+   "name": "Holushuur",
+   "pop": 5,
+   "mine": 5
+  }
+ },
+ "b-farmer": {
+  "eye": [
+   242,
+   8.91,
+   -384
+  ],
+  "ground": 7.36,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.0012364285714285715,
+  "exposure": 1.0928357319114044,
+  "sun": [
+   2.718655085042412,
+   512,
+   110,
+   false,
+   false,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 670053,
+  "calls": 139,
+  "meanLuminance255": 117,
+  "meanLuminanceSrgbOfLinearMean": 140,
+  "threshold": 70,
+  "pass": true,
+  "hud": {
+   "sel": "unit",
+   "name": "Holushuur",
+   "pop": 5,
+   "mine": 5
+  }
+ },
+ "c-hall-door": {
+  "eye": [
+   223.9,
+   8.71,
+   -406.4
+  ],
+  "ground": 7.16,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.0012364285714285715,
+  "exposure": 1.0851842879602167,
+  "sun": [
+   2.578378612603972,
+   512,
+   110,
+   false,
+   false,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 586507,
+  "calls": 145,
+  "meanLuminance255": 108.1,
+  "meanLuminanceSrgbOfLinearMean": 129.8,
+  "threshold": 70,
+  "pass": true,
+  "hud": {
+   "sel": "building",
+   "name": "Town Hall",
+   "pop": 5,
+   "mine": 5
+  }
+ },
+ "d-river": {
+  "eye": [
+   213,
+   9.1,
+   -224
+  ],
+  "ground": 7.55,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.0012364285714285715,
+  "exposure": 1.0978377716417511,
+  "sun": [
+   2.810359146765439,
+   512,
+   110,
+   false,
+   false,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 842390,
+  "calls": 131,
+  "meanLuminance255": 153.7,
+  "meanLuminanceSrgbOfLinearMean": 165.3,
+  "threshold": 70,
+  "pass": true,
+  "hud": {
+   "sel": "none",
+   "name": "No selection",
+   "pop": 5,
+   "mine": 5
+  }
+ }
+}
