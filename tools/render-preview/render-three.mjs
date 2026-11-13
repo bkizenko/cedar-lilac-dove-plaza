@@ -47,7 +47,7 @@ async function renderOne(name, outPath, tone = flags.tone || 'neutral') {
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2 });
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.error('[page]', m.text()); });
   page.on('pageerror', e => console.error('[pageerror]', e.message));
-  await page.goto(base + (fs.existsSync(path.join(root, 'node_modules/three/examples/jsm/postprocessing/EffectComposer.js')) ? '/tools/render-preview/three.html' : '/tools/render-preview/three-lite.html'));
+  await page.goto(base + ((fs.existsSync(path.join(root, 'node_modules/three/examples/jsm/postprocessing/EffectComposer.js')) && !process.env.THREE_LITE) ? '/tools/render-preview/three.html' : '/tools/render-preview/three-lite.html'));
   await page.waitForFunction(() => window.threeReady === true, null, { timeout: 60000 });
   const res = await page.evaluate(([s, o]) => window.renderSceneThree(s, o), [{ ...scene, width: W, height: H, pixelRatio: 2 }, { tone, ao: !flags['no-ao'] }]);
   console.error('[three]', name, JSON.stringify(res));

@@ -6,8 +6,10 @@ import { rigFor } from './rigs.mjs';
 import { CIVS, civScene, civLineupScene } from './civ.mjs';
 import { civBuildingsScene } from './civ-bldgs.mjs';
 import { hutSheetScene } from './hut-sheet.mjs';
+import { hutVarietyScene } from './hut-variety.mjs';
 import { slopeScene, villagesScene } from './placement-demo.mjs';
 import { slopeTiersScene } from './slope-tiers.mjs';
+import { terraceFarmScene, slopeNuanceScene } from './terraces.mjs';
 
 const B = constants.BUILDINGS;
 const WORLD = 1207;
@@ -305,10 +307,23 @@ export const SCENES = {
   'civ-lineup': civLineupScene,
   'placement-slope': slopeScene(),
   'slope-tiers': slopeTiersScene(),
+  'terrace-farm': terraceFarmScene(),
+  'slope-nuance': slopeNuanceScene(),
   'placement-villages': villagesScene(),
   'hut-sheet': hutSheetScene(),
   'hut-sheet-a': hutSheetScene({ civs: ['sandrill','nilemark','tigrane','hanrei','vedara','aureline','sahelan'] }),
   'hut-sheet-b': hutSheetScene({ civs: ['quillan','kaaltun','mekhari','brythen','rusvolt','steppan','skoldar'] }),
+  'hut-variety-mid-a': hutVarietyScene({ civs: ['sandrill','nilemark','tigrane','hanrei','vedara','aureline','sahelan'] }),
+  'hut-variety-mid-b': hutVarietyScene({ civs: ['quillan','kaaltun','mekhari','brythen','rusvolt','steppan','skoldar'] }),
+  'hut-variety-close-1': hutVarietyScene({ close: true, civs: ['sandrill','nilemark'] }),
+  'hut-variety-close-2': hutVarietyScene({ close: true, civs: ['tigrane','hanrei'] }),
+  'hut-variety-close-3': hutVarietyScene({ close: true, civs: ['vedara','aureline'] }),
+  'hut-variety-close-4': hutVarietyScene({ close: true, civs: ['sahelan','quillan'] }),
+  'hut-variety-close-5': hutVarietyScene({ close: true, civs: ['kaaltun','mekhari'] }),
+  'hut-variety-close-6': hutVarietyScene({ close: true, civs: ['brythen','rusvolt'] }),
+  'hut-variety-close-7': hutVarietyScene({ close: true, civs: ['steppan','skoldar'] }),
+  'house-variety-mid-a': hutVarietyScene({ type: 'house', era: 3, per: 4, civs: ['sandrill','nilemark','tigrane','hanrei','vedara','aureline','sahelan'] }),
+  'house-variety-mid-b': hutVarietyScene({ type: 'house', era: 3, per: 4, civs: ['quillan','kaaltun','mekhari','brythen','rusvolt','steppan','skoldar'] }),
   'civ-bldgs': civBuildingsScene(),
   'civ-bldgs-b': civBuildingsScene(['sandrill', 'tigrane']),
   'civ-bldgs-c': civBuildingsScene(['nilemark', 'hanrei', 'aureline']),

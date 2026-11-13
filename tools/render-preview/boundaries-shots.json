@@ -1,0 +1,90 @@
+{
+ "stone": {
+  "width": 1280,
+  "height": 760,
+  "rows": [
+   {
+    "kind": "stone",
+    "detail": 0,
+    "rock": "granite"
+   },
+   {
+    "kind": "stone",
+    "detail": 0,
+    "rock": "sandstone"
+   },
+   {
+    "kind": "stone",
+    "detail": 0,
+    "rock": "limestone"
+   },
+   {
+    "kind": "stone",
+    "detail": 0,
+    "rock": "basalt"
+   },
+   {
+    "kind": "stone",
+    "detail": 1,
+    "rock": "granite"
+   },
+   {
+    "kind": "stone",
+    "detail": "lo",
+    "rock": "granite"
+   }
+  ],
+  "dist": 16,
+  "yaw": 0.3,
+  "pitch": 0.42
+ },
+ "other": {
+  "width": 1280,
+  "height": 900,
+  "rows": [
+   {
+    "kind": "wattle",
+    "detail": 0
+   },
+   {
+    "kind": "wattle",
+    "detail": 1
+   },
+   {
+    "kind": "wattle",
+    "detail": "lo"
+   },
+   {
+    "kind": "hedge",
+    "detail": 0
+   },
+   {
+    "kind": "hedge",
+    "detail": 1
+   },
+   {
+    "kind": "hedge",
+    "detail": "lo"
+   },
+   {
+    "kind": "bank",
+    "detail": 0
+   },
+   {
+    "kind": "bank",
+    "detail": 1
+   },
+   {
+    "kind": "bank",
+    "detail": "lo"
+   },
+   {
+    "kind": "gate",
+    "detail": 0
+   }
+  ],
+  "dist": 20,
+  "yaw": 0.3,
+  "pitch": 0.45
+ }
+}
