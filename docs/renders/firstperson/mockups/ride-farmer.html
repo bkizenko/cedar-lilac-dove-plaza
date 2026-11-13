@@ -1,0 +1,85 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Ride along: farmer (mockup)</title><link rel="stylesheet" href="fp.css"><script src="fp.js"></script></head>
+<body><div id="stage">
+<div class="mock-tag">DESIGN MOCKUP, not an in-game render. Ride along: read-only camera on a farmer's eyes. Needs are shown through the body and the world, not bars.</div>
+<svg class="scene" id="sc" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg"></svg>
+<div class="topbar">
+ <div class="pill" id="p0"></div>
+ <div class="pill">Day 12 · Midday · 1x</div>
+</div>
+<div class="crosshair" style="opacity:.0"></div>
+<div class="hint" style="right:28px;top:100px"><span class="key">Tab</span>Leave <span class="key">Space</span>Pause <span class="key">Q</span>Look at waterskin</div>
+<div class="note" style="left:28px;top:300px;max-width:300px"><b>Design annotation (not in game)</b>
+<span style="display:block;margin-bottom:6px"><strong>1 Dry vignette and a flat waterskin.</strong> Only when <code>thirstSeconds</code> passes the grace limit. Sound: dry swallow.</span>
+<span style="display:block;margin-bottom:6px"><strong>2 Hand tremor, slower swing.</strong> Only when <code>hunger</code> is 60 or more. Sound: stomach.</span>
+<span style="display:block"><strong>3 Real task.</strong> The tool and the row are what the sim says the farmer is doing (<code>order</code>, farm tool, plot). No cue shows for a state the person does not have.</span></div>
+<script>
+const {person,tree,tufts,icon,rng,shade}=FP;const sc=document.getElementById('sc');const H=372,VX=720;
+let s=`<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b7cad2"/><stop offset="1" stop-color="#eadcb4"/></linearGradient>
+<linearGradient id="soil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8f7c52"/><stop offset=".5" stop-color="#6e5a3a"/><stop offset="1" stop-color="#4d3d27"/></linearGradient>
+<radialGradient id="dry" cx=".5" cy=".5" r=".72"><stop offset=".3" stop-color="#6b2d12" stop-opacity="0"/><stop offset="1" stop-color="#3a1608" stop-opacity=".82"/></radialGradient>
+<radialGradient id="dry2" cx=".5" cy=".5" r=".8"><stop offset=".5" stop-color="#1a0d05" stop-opacity="0"/><stop offset="1" stop-color="#1a0d05" stop-opacity=".7"/></radialGradient><filter id="blur2"><feGaussianBlur stdDeviation="2.2"/></filter>
+<filter id="blurS"><feGaussianBlur stdDeviation="6"/></filter></defs>
+<rect width="1440" height="${H}" fill="url(#sky)"/>
+<path d="M0 ${H} L0 330 Q140 296 270 326 Q420 280 560 330 Q760 292 900 326 Q1100 286 1260 324 Q1360 302 1440 322 L1440 ${H} Z" fill="#9db0a6"/>
+<path d="M0 ${H} L0 352 Q200 330 400 352 Q700 322 980 352 Q1200 336 1440 350 L1440 ${H} Z" fill="#86a08a"/>
+<rect y="${H}" width="1440" height="530" fill="url(#soil)"/>`;
+// tree line far
+for(let i=0;i<20;i++)s+=tree(30+i*74,H+4,34+(i%4)*8,'#4d6a3a',20+i);
+// far house and well
+s+=`<g transform="translate(1120 ${H+2})"><rect x="-34" y="-30" width="68" height="30" fill="#c4a374"/><path d="M-44 -28 L0 -58 L44 -28 Z" fill="#b8943f"/><rect x="-7" y="-20" width="12" height="20" fill="#4a3522"/></g>`;
+s+=`<g transform="translate(360 ${H+3})"><rect x="-10" y="-8" width="20" height="8" fill="#8a8574"/><rect x="-9" y="-22" width="2" height="15" fill="#5b4126"/><rect x="7" y="-22" width="2" height="15" fill="#5b4126"/><path d="M-12 -22 L0 -30 L12 -22 Z" fill="#9a7b3c"/></g>`;
+// crop rows converging to the vanishing point
+const rows=34;
+for(let i=-rows;i<=rows;i++){
+  const bx=VX+i*150,w=8+Math.abs(i)*0.2;
+  s+=`<path d="M${VX+i*3} ${H+2} L${bx-34} 900 L${bx+34} 900 Z" fill="${i%2?'#5f4a2e':'#76603b'}" opacity=".9"/>`;
+  s+=`<path d="M${VX+i*3+ (i%2?3:-3)} ${H+2} L${bx} 900" stroke="#7da148" stroke-width="${1.2+Math.abs(i)*.06}" opacity=".75"/>`;
+}
+// sprouts in rows
+const r=rng(11);
+for(let i=0;i<420;i++){const t=Math.pow(r(),1.5);const y=H+10+t*500;const k=(y-H)/520;const row=Math.round((r()-.5)*2*rows*Math.max(.12,k*1.4));const x=VX+row*150*k+ (r()-.5)*4;const h=3+k*34;
+ s+=`<path d="M${x} ${y} l${-h*.22} ${-h} M${x} ${y} l${h*.02} ${-h*1.15} M${x} ${y} l${h*.24} ${-h*.95}" stroke="${shade('#7aa44a',.7+r()*.5)}" stroke-width="${1+k*2.4}" stroke-linecap="round" fill="none"/>`;}
+// clods near
+for(let i=0;i<90;i++){const t=Math.pow(r(),.7);const y=640+t*260;const x=r()*1440;const rx=6+t*20;s+=`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${rx*.42}" fill="${r()>.5?'#5a4529':'#8a7448'}" opacity=".85"/>`;}
+// freshly tilled patch under the hoe blade
+s+=`<path d="M470 700 Q650 660 850 705 Q820 780 640 790 Q500 780 470 700 Z" fill="#4a3a24" opacity=".8"/>`;
+for(let i=0;i<30;i++){s+=`<ellipse cx="${500+r()*330}" cy="${705+r()*70}" rx="${5+r()*12}" ry="${3+r()*5}" fill="${r()>.5?'#3d2f1c':'#6d5936'}"/>`;}
+// hoe, hands and sleeves. tremor ghost first (hunger cue 2)
+function forearm(x0,y0,x1,y1,wid){ // from the bottom edge (x0,y0) to the wrist (x1,y1)
+ const dx=x1-x0,dy=y1-y0,L=Math.hypot(dx,dy),nx=-dy/L,ny=dx/L;
+ const p=(x,y,k)=>`${x+nx*k},${y+ny*k}`;
+ const cuffx=x0+dx*.3,cuffy=y0+dy*.3;
+ return `<polygon points="${p(x0,y0,wid*.62)} ${p(x1,y1,wid*.42)} ${p(x1,y1,-wid*.42)} ${p(x0,y0,-wid*.62)}" fill="#c08963"/>
+ <polygon points="${p(x0,y0,wid*.1)} ${p(x1,y1,wid*.05)} ${p(x1,y1,-wid*.42)} ${p(x0,y0,-wid*.62)}" fill="#a87650" opacity=".55"/>
+ <polygon points="${p(x0,y0,wid*.74)} ${p(cuffx,cuffy,wid*.62)} ${p(cuffx,cuffy,-wid*.62)} ${p(x0,y0,-wid*.74)}" fill="#a8593e"/>
+ <line x1="${cuffx+nx*wid*.62}" y1="${cuffy+ny*wid*.62}" x2="${cuffx-nx*wid*.62}" y2="${cuffy-ny*wid*.62}" stroke="#2b2016" stroke-width="7"/>`;
+}
+function fist(cx,cy,ang){ // a hand wrapped round the shaft: palm block plus four finger bars
+ let o=`<g transform="translate(${cx} ${cy}) rotate(${ang})"><rect x="-26" y="-24" width="54" height="48" rx="16" fill="#c08963"/><rect x="-26" y="-24" width="54" height="20" rx="10" fill="#d4a37c"/>`;
+ for(let i=0;i<4;i++)o+=`<rect x="${-22+i*13}" y="6" width="12" height="26" rx="6" fill="${i%2?'#b57e58':'#c08963'}" stroke="#7a5239" stroke-width="1.4"/>`;
+ o+=`<ellipse cx="-24" cy="-4" rx="9" ry="16" fill="#cf9a72" stroke="#7a5239" stroke-width="1.4"/><circle cx="3" cy="-8" r="3.2" fill="#e7b9a2" opacity=".85"/></g>`;return o;
+}
+function hoe(dx,dy,op,blur){
+ return `<g transform="translate(${dx} ${dy})" opacity="${op}" ${blur?'filter="url(#blur2)"':''}>
+ <path d="M690 672 L1330 974" stroke="#4a3220" stroke-width="32" stroke-linecap="round"/>
+ <path d="M690 672 L1330 974" stroke="#8a6a3c" stroke-width="22" stroke-linecap="round"/>
+ <path d="M690 666 L1330 968" stroke="#b08a52" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+ <path d="M640 640 L742 690 L706 756 L598 698 Z" fill="#5b5b57"/><path d="M640 640 L742 690 L728 716 L628 664 Z" fill="#85857d"/><path d="M742 690 L706 756" stroke="#3b3b38" stroke-width="5"/>
+ <rect x="684" y="662" width="30" height="22" transform="rotate(25 699 673)" fill="#3e2c19"/>
+ ${forearm(690,980,885,772,86)}${fist(885,766,24)}
+ ${forearm(1300,985,1075,858,92)}${fist(1072,852,24)}</g>`;
+}
+s+=hoe(8,-6,.26,true);s+=hoe(0,0,1,false);
+// blisters (a real, worn-hand detail)
+s+=``;
+// waterskin at the hip, slack and flat (thirst cue 1)
+s+=`<g transform="translate(120 770) rotate(-8)"><path d="M0 -90 Q-6 -30 -2 20 L120 36 Q132 -30 110 -96 Z" fill="#7b5a36"/><path d="M12 -80 Q4 -20 8 14 L100 28 Q108 -26 98 -84 Z" fill="#6a4c2c"/><path d="M-2 20 L120 36" stroke="#3e2c19" stroke-width="5"/><rect x="22" y="-118" width="54" height="30" rx="8" fill="#4a3522"/><path d="M-60 -120 Q40 -160 120 -112" stroke="#3e2c19" stroke-width="6" fill="none"/><path d="M30 -50 L90 -44 M26 -20 L96 -14" stroke="#4e381f" stroke-width="3" opacity=".6"/></g>`;
+s+=`<rect width="1440" height="900" fill="url(#dry)"/><rect width="1440" height="900" fill="url(#dry2)"/>`;
+// dust haze in the air
+for(let i=0;i<24;i++)s+=`<circle cx="${r()*1440}" cy="${380+r()*400}" r="${1+r()*2}" fill="#fff0c8" opacity=".28"/>`;
+// marker dots for the annotation
+s+=`<g font-family="Trebuchet MS,sans-serif" font-size="20" font-weight="700"><g transform="translate(160 640)"><circle r="17" fill="#e3ad4f" stroke="#2b2016" stroke-width="2"/><text y="7" text-anchor="middle" fill="#2b2016">1</text></g><g transform="translate(1120 790)"><circle r="17" fill="#e3ad4f" stroke="#2b2016" stroke-width="2"/><text y="7" text-anchor="middle" fill="#2b2016">2</text></g><g transform="translate(560 610)"><circle r="17" fill="#e3ad4f" stroke="#2b2016" stroke-width="2"/><text y="7" text-anchor="middle" fill="#2b2016">3</text></g></g>`;
+sc.innerHTML=s;
+document.getElementById('p0').innerHTML=icon.wheat.replace('<svg','<svg width="24" height="24"')+' Farmer · Tilling plot 2';
+</script></div></body></html>
