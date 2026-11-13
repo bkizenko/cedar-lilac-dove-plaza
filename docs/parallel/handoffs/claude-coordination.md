@@ -1047,3 +1047,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 22:21 ET Claude: shipped lane D: merged main + all fresh agent branches (none unmerged; AUTOPILOT conflict resolved keeping both row sets), tsc diff nil vs main (real tsc 7 needs baseUrl stripped; 93 noise lines both sides), focused sweep 44/56 files clean, 2 baseline fails identical on main (riverboats captain-death save, diplomatic-voice-privacy), 11 heavy files time out at 60s so Codex native must run them (all in AUD-TEST-BASELINE-FAILS), T4/T5/T7/T8/T9 already DONE in source, 6 new AUTOPILOT audit rows (41eec34a) / now on riverboat captain-death save triage / blocked: none
 
 22:28 ET Claude: shipped lane B refused-order feedback (any refused HUD command shows reason banner + cue, council keeps own list; test 2/2, council-ui 18/18, tsc nil) (7cd9ca29) / now on tooltip reasons for disabled buttons / blocked: none
+
+23:02 ET Claude(gaps): shipped society proposal accept/decline (answer-proposal command, player-addressed proposals with ask flag, Council UI buttons, 7 tests) / now on gap 2 wonders / blocked: none

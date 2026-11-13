@@ -208,6 +208,7 @@
 .hw-plain{list-style:none}
 .hw-stack{display:grid;gap:var(--hw-s4)}
 .hw-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.hw-proposal{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}
 .hw-list{display:grid;gap:var(--hw-s2)}
 .hw-meters{display:grid;gap:6px}
 .hw-meter-row{display:flex;align-items:center;gap:var(--hw-s3);width:100%}
