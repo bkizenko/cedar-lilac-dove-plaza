@@ -15,7 +15,7 @@ import type {Foot} from './peopleLook';
 export const NEAR_PEOPLE={enabled:true,/** triangles this layer may add per person (face + hands + feet + cloth), measured and tested */maxTris:760} as const;
 const L0:LodTier=0;
 /** near triangles the bones carry so far; this layer yields when the person is already rich in gear (armour, helmet, shield), keeping RIG_BUDGET.near */
-const bonesNear=(c:KitCtx)=>Object.values(c.bones).reduce((n,l)=>n+l.reduce((m,p)=>m+tris(p),0),0),CAP=1700;
+const bonesNear=(c:KitCtx)=>Object.values(c.bones).reduce((n,l)=>n+l.reduce((m,p)=>m+tris(p),0),0),CAP=1850;
 const fits=(c:KitCtx,n:number)=>bonesNear(c)+n<=CAP;
 type V3=[number,number,number];
 const tris=(p:RigPart)=>p.shape==='box'?12:p.shape==='cone'?(p.sides??8)*2:p.shape==='cylinder'?(p.sides??8)*4:12;
