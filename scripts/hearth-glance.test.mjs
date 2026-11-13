@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {avoidPinControls,SUPPLY_RULES,TrendTracker,supplyLevel,supplyFill,daysText,rankAlerts,pinSet,infoVisible,INFO_RULES,isKeyTip,projectToScreen,edgeArrow,lookAtCamera,ALERT_RANK,MAX_PINS,budgetNotes,budgetKey,ALERT_BUDGET} from '../src/ui/hearth/glanceModel.ts';
+import {avoidPinControls,SUPPLY_RULES,TrendTracker,supplyLevel,supplyFill,daysText,rankAlerts,pinSet,infoVisible,INFO_RULES,isKeyTip,projectToScreen,edgeArrow,lookAtCamera,ALERT_RANK,MAX_PINS,budgetNotes,budgetKey,ALERT_BUDGET,seasonPhaseOf,seasonCueTitle} from '../src/ui/hearth/glanceModel.ts';
 import {paintOverlays,TERRITORY_NONE,TERRITORY_CONTESTED,RESOURCE_COLOR} from '../src/ui/hearth/overlayModel.ts';
 import {influenceGradientModel} from '../src/game/terrainInfluenceView.ts';
 // Docs: docs/UIUX_PROPOSAL.md changes 7 (supply meters), 8 (priority stack), 9 (map overlays), 10 (pins and edge arrows). Pure models only: no DOM, no lucide.
@@ -189,4 +189,15 @@ test('alert budget: a burst merges same-kind lines, caps timed cards, keeps stic
  assert.deepEqual(budgetNotes(burst.slice(0,1)).rows.length,1);
  assert.equal(budgetNotes([]).hidden,0);
  assert.equal(burst.length,7,'input untouched');
+});
+
+/* ---------- season cue ---------- */
+test('season cue: phase from calendar seconds, advice per season, real food days only in autumn and winter',()=>{
+ const Y=400;
+ assert.deepEqual([0,99,100,199,200,299,300,399,400,-1].map(t=>seasonPhaseOf(t,Y)),[0,0,1,1,2,2,3,3,0,3]);
+ assert.equal(seasonCueTitle(0,5),'Spring: sow and mend');
+ assert.equal(seasonCueTitle(1,null),'Summer: tend the fields');
+ assert.equal(seasonCueTitle(2,12.7),'Autumn: bring in the harvest and fill the stores. Food for 12 days');
+ assert.equal(seasonCueTitle(3,null),'Winter: ration food and keep warm');
+ assert.equal(seasonCueTitle(3,Infinity),'Winter: ration food and keep warm');
 });
