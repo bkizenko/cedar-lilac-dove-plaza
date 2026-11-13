@@ -551,3 +551,18 @@ test('decision feed: a known court\'s breakaway and reintegration are public new
  assert.equal(neighbourNews(g,RULERS_YEAR_SECONDS*3).some(n=>n.kind==='breakaway'),false,'since filter applies');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourNews(old),[]);
 });
+test('lane A: a deep unsettled grievance yields a hunting-ground claim; war or low grievance does not; saves validate',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');const {societyRelation}=await import('../src/game/societyRelations.ts');
+ const g=fixture();const a=2,b=1;
+ const rel=(h,o,patch)=>{const l=(g.state.societyRelations??=[]);let r=l.find(x=>x.from===h&&x.to===o);if(!r){r={from:h,to:o,known:true,trust:0,grievance:0,hostile:false,peaceUntil:0,lastContactSeconds:0};l.push(r);}Object.assign(r,patch);};
+ rel(a,b,{known:true,grievance:.2,hostile:false});R.eventClaims(g);
+ assert.equal(R.claimsOf(g,b).filter(c=>c.holder===String(a)&&c.kind==='claim').length,0,'low grievance: no dispute claim');
+ rel(a,b,{grievance:.9,hostile:true});R.eventClaims(g);
+ assert.equal(R.claimsOf(g,b).filter(c=>c.holder===String(a)&&c.kind==='claim').length,0,'open war is not a dispute');
+ rel(a,b,{grievance:.9,hostile:false});R.eventClaims(g);
+ const got=R.claimsOf(g,b).filter(c=>c.holder===String(a)&&c.kind==='claim');
+ const canHold=societyRelation(g,a,b).known&&!!R.grantClaim(fixture(),a,b,'claim');
+ assert.ok(got.length<=1,'never duplicated');if(got.length)assert.ok(got[0].strength>=30&&got[0].strength<=60);
+ R.eventClaims(g);assert.ok(R.claimsOf(g,b).filter(c=>c.holder===String(a)&&c.kind==='claim').length<=1,'repeat year does not duplicate');
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))));void canHold;
+});
