@@ -9378,6 +9378,15 @@
       "liveCommit": "ad6eece3968f7a117b3714629fa6ba2e89e59814",
       "evidence": "docs/metrics/pack-trade-care-release-2026-11-12.json",
       "scope": "29/30 scoped: real finite care/equipment/cargo cache admission and fallback;27native+2built PASS, true foreign horse trade1pending. Typed FOOD merchandise and Claude offer/interception remain open;37/98 unchanged."
+    },
+    {
+      "id": "CODEX-TYPED-LIVESTOCK-AND-DISTANCE-INTEGRATION",
+      "owner": "Codex W1/Claude visuals-societies integration",
+      "state": "live-partial",
+      "sourceCommit": "054b6809b866f22c9ada59e91a706175e58b92e3",
+      "liveCommit": "054b6809b866f22c9ada59e91a706175e58b92e3",
+      "evidence": "docs/metrics/livestock-controls-distance-release-2026-11-12.json",
+      "scope": "46/46 scoped +11 queue/handoff regressions. Actual publicgoatsearch/capture/escort/pen andsamehorse/harness return; typedbait/save/cancel continuity;12graphics/distance choices+realpicker+original53. Foreignpacktrade/fullW1/campaign/FPS and37/98 unchanged."
     }
   ],
   "status_update_policy": {
