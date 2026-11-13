@@ -1252,4 +1252,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
   blocked: none
 
 09:10 ET claude: shipped era-true voice layer (vocab.ts, eraText at banner, docs/LANGUAGE_AUDIT.md) and the First Contact ledger dialog with genome-etched portrait, before/after renders in docs/renders/first-contact/ (e861fe9d) / now on merging, then converting remaining static UI strings from the audit / blocked: none
+09:08 ET Claude(animal-models): shipped rigged animal models, fish shoals, canoe hull (see git log) / now on handoff / blocked: none
 - 09:05 ET Claude: shipped foundation grounding fix (ef658bef, b11a34c4, merged 57542de0): footings follow real model outline, floor at mean ground, steps at carved door, post platforms only steep/flood, staddle columns; audit in docs/FOUNDATION_AUDIT.md / now on real-game before/after PNGs (harness tools/render-preview/foundations.mjs; headless browser OOM-killed by shared memory) / blocked: render memory

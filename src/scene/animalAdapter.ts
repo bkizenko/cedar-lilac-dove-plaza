@@ -62,6 +62,9 @@ export class FishAdapter{
   this.ripples=new THREE.InstancedMesh(g,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.55,depthWrite:false,blending:THREE.AdditiveBlending}),this.cap);
   this.ripples.frustumCulled=false;this.ripples.renderOrder=4;this.ripples.count=0;this.ripples.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(this.cap*3),3);scene.add(this.ripples);
  }
+ private wakes:{x:number;y:number;z:number;facing:number}[]=[];
+ /** A moving boat leaves a short wake: three expanding rings behind the stern (drawn on the next frame). */
+ wake(x:number,y:number,z:number,facing:number){if(this.wakes.length<48)this.wakes.push({x,y,z,facing});}
  private m=new THREE.Matrix4();private q=new THREE.Quaternion();private e=new THREE.Euler();private p=new THREE.Vector3();private s=new THREE.Vector3();private col=new THREE.Color();
  frame(nodes:readonly {id:number;x:number;z:number;amount:number;maxAmt?:number;scale?:number}[],water:Water,camera:THREE.Vector3,now:number,visible:(x:number,z:number)=>boolean){
   const L=this.layer;L.beginFrame();let ri=0;
@@ -78,6 +81,11 @@ export class FishAdapter{
     this.p.set(r.x,surf+.03,r.z);this.s.set(rad,1,rad);this.q.identity();this.m.compose(this.p,this.q,this.s);this.ripples.setMatrixAt(ri,this.m);
     const a=Math.max(0,1-k)*.9;this.col.setRGB(a,a,a);this.ripples.setColorAt(ri,this.col);ri++;}
   }
+  for(const w of this.wakes)for(let k=0;k<3&&ri<this.cap;k++){
+   const back=1.7+k*.8,fx=Math.sin(w.facing),fz=Math.cos(w.facing),rad=.5+k*.4+.15*Math.sin(now*3+k);
+   this.p.set(w.x-fx*back,w.y+.03,w.z-fz*back);this.s.set(rad,1,rad*.8);this.q.setFromAxisAngle(new THREE.Vector3(0,1,0),w.facing);this.m.compose(this.p,this.q,this.s);this.ripples.setMatrixAt(ri,this.m);
+   const a=(1-k/3)*.6;this.col.setRGB(a,a,a);this.ripples.setColorAt(ri,this.col);ri++;}
+  this.wakes.length=0;
   L.endFrame();this.ripples.count=ri;this.ripples.visible=ri>0;this.ripples.instanceMatrix.needsUpdate=true;if(this.ripples.instanceColor)this.ripples.instanceColor.needsUpdate=true;
  }
  dispose(){this.layer.dispose();this.scene.remove(this.ripples);this.ripples.geometry.dispose();(this.ripples.material as THREE.Material).dispose();}

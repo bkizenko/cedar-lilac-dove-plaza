@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {GraphicsSettings,GRAPHICS_CHOICES,DRAW_CHOICES,TREE_CHOICES,TREE_STEPS,TREE_DETAIL,SETTINGS_RULES,resolveChoices,renderConfig,treeBudget,loadChoices,rememberChoice,initialEffective,DEFAULT_CHOICES} from '../src/game/graphicsSettings.ts';
+import {DETAIL_RULES} from '../src/game/detailLevel.ts';
 import {GRAPHICS_RULES} from '../src/game/graphics.ts';
 import {DRAW_DISTANCE_RULES,drawBands} from '../src/game/drawDistance.ts';
 import {botanicalTree} from '../src/scene/treeBotany.ts';
@@ -64,11 +65,11 @@ test('mixed: explicit graphics stays, Auto knobs ease; picking a level clears ea
  assert.ok(g.notice);g.choose('draw','ultra');assert.equal(g.notice,null,'choosing resets');assert.equal(g.effective.draw,'ultra');assert.equal(g.effective.trees,5,'Auto knobs return to their start');
 });
 
-test('with an explicit graphics tier and trees on Auto, trees follow the tier; Low trees are cheaper than the old Low, Medium and High equal the old radii',()=>{
+test('with an explicit graphics tier and trees on Auto, trees follow the tier; Low trees keep the Low radius with fewer cards, Medium and High equal the Medium and High radii',()=>{
  assert.equal(resolveChoices({graphics:'low',draw:'auto',trees:'auto'}).trees,2);
  assert.equal(resolveChoices({graphics:'med',draw:'auto',trees:'auto'}).trees,4);
  assert.equal(resolveChoices({graphics:'high',draw:'auto',trees:'auto'}).trees,5);
- assert.equal(TREE_DETAIL[4].nearMetres,75);assert.equal(TREE_DETAIL[5].nearMetres,115);assert.equal(TREE_DETAIL[2].nearMetres,28);
+ assert.equal(TREE_DETAIL[4].nearMetres,DETAIL_RULES.treeNear.med);assert.equal(TREE_DETAIL[5].nearMetres,DETAIL_RULES.treeNear.high);assert.equal(TREE_DETAIL[2].nearMetres,DETAIL_RULES.treeNear.low);
  assert.ok(TREE_DETAIL[2].cardScale<1,'Low draws fewer leaf cards than before');
 });
 
@@ -77,7 +78,7 @@ test('tree detail is monotonic across the five steps in every knob, with a step 
  for(const k of keys)for(let s=1;s<5;s++)assert.ok(TREE_DETAIL[s][k]<=TREE_DETAIL[s+1][k],`${k} step ${s}->${s+1}`);
  for(const k of ['nearMetres','farScale','fillerCap','cardScale'])assert.ok(TREE_DETAIL[2][k]<TREE_DETAIL[3][k]&&TREE_DETAIL[3][k]<TREE_DETAIL[4][k],`${k}: default step 3 sits strictly between Low (2) and Medium (4)`);
  const b=drawBands('medium',1040),tri=s=>{const t=treeBudget(b,s);return t.fillerMaxTrees+t.fillerMaxBlobs;};
- for(let s=1;s<5;s++)assert.ok(tri(s)<=tri(s+1));assert.equal(tri(1),0);assert.equal(treeBudget(drawBands('low'),5).fillerMaxTrees,0,'draw Low has no filler at any step');
+ for(let s=1;s<5;s++)assert.ok(tri(s)<=tri(s+1));assert.ok(tri(1)>0&&tri(1)<tri(2),'step 1 keeps a token filler so sim trees beyond the detail radius draw as cheap crowns');assert.equal(treeBudget(drawBands('low'),5).fillerMaxTrees,0,'draw Low has no filler at any step');
  assert.equal(TREE_STEPS.length,5);
 });
 
