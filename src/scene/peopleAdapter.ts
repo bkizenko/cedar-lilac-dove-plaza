@@ -7,6 +7,7 @@
  *
  * Gear shown is the gear a unit really owns: Unit.garment, the armor asset it holds (wornArmor); helmets and shields are drawn
  * only if a future simulation owns them (RigGear). A team dresses in its society's CivSkin (state.skins); `civForTeam` remains the fallback for games without skins. */
+import {DETAIL_RULES,getDetailLevel,personLodDistances} from '../game/detailLevel';
 import type * as THREE from 'three';
 import {wornArmor} from '../game/armor';
 import {farmToolCondition} from '../game/farmTools';
@@ -75,6 +76,8 @@ export class PeopleAdapter{
   try{
    this.game=game;this.projects.clear();this.alive.clear();for(const u of living)this.alive.add(u.id);
    for(const p of game.state.production?.projects||[])if(p.actorId!==null&&p.phase!=='lost'&&p.phase!=='complete')this.projects.set(p.actorId,{phase:p.phase,recipe:p.recipe,progress:p.progress,blockedReason:p.blockedReason});
+   {const cap=DETAIL_RULES.maxNearPeople[getDetailLevel()],r0=personLodDistances()[0],ds:number[]=[];for(const u of living){const q=Math.hypot(u.x-camera.x,(u.y??0)-camera.y,u.z-camera.z);if(q<r0)ds.push(q);}
+    if(ds.length>cap){ds.sort((a,b)=>a-b);this.layer!.nearLimit=ds[cap-1]+1e-3;}else this.layer!.nearLimit=Infinity;}
    this.world=this.build(game);this.layer!.beginFrame(this.world,camera,quality,shadows);
   }catch(e){this.fail(e);}
  }

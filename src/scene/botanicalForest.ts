@@ -1,3 +1,4 @@
+import {detailScale,getDetailLevel,DETAIL_RULES} from '../game/detailLevel';
 import * as THREE from 'three';
 import {BOTANICAL_SPECIES,DEFAULT_SITE,VARIANTS_PER_SPECIES,pickSpecies,pickVariant,stableUnit,type BaseForm,type BotanicalSpecies,type TreeSite} from './botanicalSpecies';
 import {botanicalTree,botanicalStump,type TreeGeometry} from './treeBotany';
@@ -93,7 +94,10 @@ export class BotanicalForest{
  sync(nodes:readonly ForestNode[],ctx:ForestContext){
   for(const b of this.batches.values()){b.n=0;b.ids.length=0;}
   if(this.stumps){this.stumps.n=0;this.stumps.ids.length=0;}
-  this.setCardScale(ctx.detail?.cardScale??1);const near=ctx.detail?ctx.detail.nearMetres:this.o.nearMetres[ctx.quality],d0=near*FOREST_LOD.fullFraction,d1=near*FOREST_LOD.midFraction,cullFar=ctx.farMetres!==undefined?ctx.farMetres*(ctx.quality==='low'&&!ctx.detail?this.o.lowFarMetres/this.o.farMetres:1):ctx.quality==='low'?this.o.lowFarMetres:this.o.farMetres,fadeM=Math.max(0,ctx.fadeMetres??0);
+  this.setCardScale(ctx.detail?.cardScale??1);const near=(ctx.detail?ctx.detail.nearMetres:this.o.nearMetres[ctx.quality])*detailScale();let d0=near*FOREST_LOD.fullFraction;const d1=near*FOREST_LOD.midFraction,cullFar=ctx.farMetres!==undefined?ctx.farMetres*(ctx.quality==='low'&&!ctx.detail?this.o.lowFarMetres/this.o.farMetres:1):ctx.quality==='low'?this.o.lowFarMetres:this.o.farMetres,fadeM=Math.max(0,ctx.fadeMetres??0);
+  // Detail: at most `maxFullTrees` are drawn at the full tier, nearest first (the M1 triangle budget); the rest of the ring uses the mid tier
+  {const cap=DETAIL_RULES.maxFullTrees[getDetailLevel()],ds:number[]=[];for(const node of nodes){if(node.amount<=0&&!node.planted)continue;const q=Math.hypot(node.x-ctx.camera.x,node.z-ctx.camera.z);if(q<=d0&&ctx.known(node.x,node.z))ds.push(q);}
+   if(ds.length>cap){ds.sort((a,b)=>a-b);d0=Math.min(d0,ds[cap-1]);}}
   // with the cosmetic filler on, sim trees beyond the individual-detail radius draw as one cheap low-poly crown (hand-over is a dithered cross-fade); the budget's real reach bounds both
   const detailEff=ctx.filler?ctx.filler.detailEff:Infinity;this.cheapIds[0].length=this.cheapIds[1].length=0;
   const reach=ctx.filler?Math.min(cullFar,ctx.filler.farEff):cullFar;
@@ -106,7 +110,7 @@ export class BotanicalForest{
    if(!ctx.known(node.x,node.z))continue;
    const dx=node.x-ctx.camera.x,dz=node.z-ctx.camera.z,distance=Math.hypot(dx,dz);if(distance>reach)continue;
    const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=node.scale*growth;
-   const tier:0|1|2=distance<=d0?0:distance<=d1?1:2;
+   const tier:0|1|2=node.filler?2:distance<=d0?0:distance<=d1?1:2; // cosmetic filler never uses the pickable individual tiers
    if(tier===2&&ctx.inView&&!ctx.inView(node.x,node.z,10))continue;
    if(node.filler)fillerCounts.trees++;
    if(stump){
@@ -126,7 +130,7 @@ export class BotanicalForest{
    const snow=ctx.snow>.15?Math.min(1,ctx.snow*(sp.evergreen?1.05:.9)):0;if(snow>0&&density>.3)this.color.lerp(this.snowColor,snow*.25);
    this.color.multiplyScalar(1.04+.2*rec.hue[2]);
    if(ctx.marked?.(node.id))this.color.set('#c58e43');
-   if(distance<=near*2.2&&!stump){blobs=this.blob(node,s,sp.crownR*rec.sx*(sp.arch==='palm'?.5:.85),blobs);}
+   if(distance<=Math.min(near*2.2,165)&&!stump){blobs=this.blob(node,s,sp.crownR*rec.sx*(sp.arch==='palm'?.5:.85),blobs);}
    if(tier!==2){
     const key=(rec.sp*VARIANTS_PER_SPECIES+rec.v)*2+tier,need=(tally.get(key)??0)+1;tally.set(key,need);
     const b=this.batch(rec.sp,rec.v,tier as 0|1,need),i=b.n++;b.ids.push(node.id);

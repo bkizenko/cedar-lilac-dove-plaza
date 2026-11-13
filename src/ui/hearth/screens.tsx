@@ -5,6 +5,7 @@ import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {X,Crown,Users,Heart,Handshake,Shield,BookOpen,Settings,Swords,Route,Skull,TriangleAlert,Target,Clock,Eye,Home,Scroll,Scale,Hammer,Wheat,Package,Landmark,Check,CircleHelp} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import {GraphicsSettingsPanel} from '@/ui/GraphicsSettingsPanel';
+import {DETAIL_LEVELS,DETAIL_LABELS,type DetailLevel} from '@/game/detailLevel';
 import type {HudSnapshot} from '@/game/types';
 import {AGES,BUILDINGS,BUILD_ORDER} from '@/game/constants';
 import {YEAR_SECONDS} from '@/game/settlement';
@@ -224,6 +225,7 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
    <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}<SaveStatus engine={engine} refresh={lifecycle.busy?0:1}/><div className="hw-row"><RestartControl busy={!engine||lifecycle.busy} onRestart={()=>void lifecycle.run(()=>engine!.restart(undefined,21,true))}/></div></section>
    <section className="hw-card"><h3>Display</h3><div className="hw-form">
     <GraphicsSettingsPanel engine={engine} variant="hearth"/>
+    <label>Detail<select aria-label="Detail" value={engine?.view.getDetailLevel?.()??'standard'} onChange={e=>{engine?.setDetailLevel(e.target.value as DetailLevel);engine?.pushHud();}}>{DETAIL_LEVELS.map(l=><option key={l} value={l}>{DETAIL_LABELS[l]}</option>)}</select></label>
     <label>World style<select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village (new buildings)</option><option value="optionH">Carved honey (legacy)</option><option value="current">Original blocks (legacy)</option></select></label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.gfx.effective.graphics);engine.pushHud();}}}/>Shadows</label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/>Selection rings</label>
