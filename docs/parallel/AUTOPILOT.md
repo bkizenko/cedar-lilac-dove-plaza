@@ -250,6 +250,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 
 | ID | Source | Title | Owner | Queue | Status | Evidence |
 |---|---|---|---|---|---|---|
+| UI-TESTLAB-1 | Boris 11-13 ('Test lab should be on the main screen for now') | Visible Test lab button on the Hearth main HUD (52px tap, 16px text, left column under rail, clear of map/music/speed/alerts at 1440x900 and 390x844), kept in Menu Tools, setting 'Show Test lab on main screen' default on | Claude | Tonight | done in source (6ddcae53) | scripts/test-lab-button.test.mjs, hearth-size-floor pass; docs/renders/test-lab-button before/after 1440+390; no near-black |
 | BLD-DETAIL-1 | Boris playtest 11-13 (Codex hut richer, ours cookie-cutter) | Detail and variety pass on dwellings, granaries, craft sheds for 14 civs: construction-detail layer (buildingDetail.ts), per-building hut forms, id-keyed dwelling variants, opt-in muted tone | Claude | Tonight | done in source (3ac2e22f) | docs/BUILDING_DETAIL_NOTES.md; docs/renders/building-detail/ before/after/muted sheets; civ-architecture, civ-skin, carved-* tests pass; no near-black |
 | M0-01 | gate | Gather/job-assignment physical actor eligibility gives one rejection reason and bounded actor assessments | Codex | — (done) | done/live | batch1 |
 | M0-02 | gate | Direct gather/drill interruption preserves already-paid transport progress and material charges | Codex | — (done) | done/live | batch1; batch4 |
