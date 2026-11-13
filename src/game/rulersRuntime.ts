@@ -248,6 +248,12 @@ export function eventClaims(g:Game):Claim[]{
   if(!(t.bond>0))continue;const [x,y]=key.split('|').map(Number);if(!Number.isInteger(x)||!Number.isInteger(y))continue;
   for(const [h,o] of [[x,y],[y,x]]){const d=r.societies[String(o)]?.dynasty,sp=r.societies[String(o)]?.civ.polity.succession;if(!d||!sp)continue;
    if(!heir(d,sp,makeRng(hash32('claim-preview',d.generation,d.rulerId)))&&!d.regent){const c=grantClaim(g,h,o,'succession',45,15);if(c)out.push(c);}}}
+ // Hunting-ground and harvest disputes: a known house with a deep unsettled grievance (not yet open war) holds a grounds claim on the other.
+ // Strength follows the real recorded grievance; grantClaim still gates by tier/feature/known and refuses duplicates.
+ for(const key of Object.keys(r.societies)){const h=Number(key);if(!Number.isInteger(h))continue;
+  for(const okey of Object.keys(r.societies)){const o=Number(okey);if(h===o||!Number.isInteger(o))continue;
+   const rel=societyRelation(g,h,o);if(!rel.known||rel.hostile||!(rel.grievance>=.5))continue;
+   const c=grantClaim(g,h,o,'claim',Math.round(30+30*Math.min(1,rel.grievance)),10);if(c)out.push(c);}}
  return out;
 }
 /** Using a claim as casus belli: spends it and the legitimacy cost is returned for the caller to charge to the holder's glory/unrest. */
