@@ -9,7 +9,7 @@ const button='min-h-9 rounded border border-bronze/40 px-2 py-1 text-xs disabled
 const field='min-h-9 max-w-full rounded border border-bronze/40 bg-ink p-1 text-parchment';
 
 /** Terms and stores come only from the owner read model; the engine validates orders. */
-function TradeSheet({model,inboxOnly,busy,run}:{model:PlayerTradeModel;inboxOnly:boolean;busy:boolean;run:(command:PlayerTradeCommand)=>void}){
+export function NeedsTradeSheet({model,inboxOnly,busy,run}:{model:PlayerTradeModel;inboxOnly:boolean;busy:boolean;run:(command:PlayerTradeCommand)=>void}){
  const [give,setGive]=useState<GoodKind>('food'),[get,setGet]=useState<GoodKind>('wood'),[amount,setAmount]=useState('20');
  const offered=model.goods.find(g=>g.kind===give),received=model.goods.find(g=>g.kind===get),quantity=Number(amount);
  const maxAmount=offered?Math.max(0,Math.floor(Math.min(offered.held,offered.maxOffer))):0;
@@ -51,10 +51,10 @@ export function NeedsTradeControls({engine,team,inboxOnly=false}:{engine:Engine;
    setFeedback({epoch,team,text:reply.reason});engine.pushHud();
   });
  };
- if(inboxOnly&&!read.model?.offers.some(o=>o.to===0&&o.canAnswer))return null;
  const message=feedback?.epoch===epoch&&feedback.team===team?feedback.text:'';
+ if(inboxOnly&&!read.model?.offers.some(o=>o.to===0&&o.canAnswer)&&!message&&!action.error)return null;
  return <>
-  {read.model?<TradeSheet key={`${epoch}:${team??'all'}`} model={read.model} inboxOnly={inboxOnly} busy={action.busy} run={run}/>:<p className="text-xs text-parchment-dim">{read.issue}</p>}
+  {read.model?<NeedsTradeSheet key={`${epoch}:${team??'all'}`} model={read.model} inboxOnly={inboxOnly} busy={action.busy} run={run}/>:<p className="text-xs text-parchment-dim">{read.issue}</p>}
   {(message||action.error)&&<p role="status" className="text-xs text-parchment-dim">{action.error||message}</p>}
  </>;
 }

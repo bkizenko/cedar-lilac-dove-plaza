@@ -1,3 +1,4 @@
+import {NeedsTradeControls} from './NeedsTradeControls';
 import {CommanderControls} from './CommanderControls';
 import {DRAW_DISTANCE_LEVELS,DRAW_DISTANCE_LABELS,type DrawDistance} from '../game/drawDistance';
 import {foodExperienceReport} from '@/game/foodExperience';
@@ -696,6 +697,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                 ))}
             </div>
             )}
+            {engine&&!founding&&<div className="px-2 pb-2"><NeedsTradeControls engine={engine} inboxOnly/></div>}
             {hud.trade && !founding ? (
               <div className="px-2 pb-2">
                 <TradeBlock hud={hud} engine={engine} onOffer={setTradeOpen} />

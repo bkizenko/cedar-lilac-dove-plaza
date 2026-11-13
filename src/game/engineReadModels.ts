@@ -1,3 +1,4 @@
+import {playerTradeModel,type PlayerTradeModel} from './playerTrade';
 import {navalOwnerControls,type NavalOwnerControlsModel} from './navalOwnerControls';
 import {commanderControlsModel} from './commanderControls';
 import {draftCartChoices} from './draftCart';
@@ -29,6 +30,7 @@ import {capitulationOffers} from './capitulation';
 
 export const ENGINE_READ_MODEL_RULES={maximumSources:128,maximumCacheEntries:256,cacheMilliseconds:500,maximumMeasurements:240} as const;
 export type EngineReadQuery=
+ |{kind:'needs-trade';team?:number}
  |{kind:'naval-controls';dockId?:number;boatId?:number;builderId?:number}
  |{kind:'commander-controls';unitIds:number[];boatIds:number[]}
  |{kind:'draft-cart-choices';unitId:number}
@@ -52,6 +54,7 @@ export type EngineReadQuery=
  |{kind:'captives'};
 export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
+ |PlayerTradeModel
  |({kind:'naval-controls'}&NavalOwnerControlsModel)
  |({kind:'commander-controls'}&ReturnType<typeof commanderControlsModel>)
  |({kind:'draft-cart-choices';unitId:number}&ReturnType<typeof draftCartChoices>)
@@ -79,6 +82,7 @@ const id=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&
 export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const q=value as Record<string,unknown>,list=(v:unknown)=>Array.isArray(v)&&v.length<=ENGINE_READ_MODEL_RULES.maximumSources&&Array.from(v).every(id)&&new Set(v).size===v.length;
+ if(q.kind==='needs-trade')return Object.keys(q).every(k=>['kind','team'].includes(k))&&(q.team===undefined||id(q.team));
  if(q.kind==='naval-controls')return Object.keys(q).every(k=>['kind','dockId','boatId','builderId'].includes(k))&&['dockId','boatId','builderId'].every(k=>q[k]===undefined||id(q[k]));
  if(q.kind==='commander-controls')return Object.keys(q).every(k=>['kind','unitIds','boatIds'].includes(k))&&Array.isArray(q.unitIds)&&Array.isArray(q.boatIds)&&list(q.unitIds)&&list(q.boatIds)&&q.unitIds.length<=32&&q.boatIds.length<=32;
  if(q.kind==='combat-matchup')return Object.keys(q).every(k=>['kind','attackerId','targetId'].includes(k))&&id(q.attackerId)&&id(q.targetId);
@@ -99,6 +103,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
 /** Authoritative native read model. Routing/ownership caches never initialize on the display copy. */
 export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadModel{
  if(!isEngineReadQuery(query))throw new Error('Unsupported or malformed owner read query');
+ if(query.kind==='needs-trade')return playerTradeModel(g,query.team);
  if(query.kind==='copper-study-issues')return{kind:query.kind,workplaceId:query.workplaceId,logs:copperStudyIssue(g,query.workplaceId,0,'logs'),charcoal:copperStudyIssue(g,query.workplaceId,0,'charcoal')};
  if(query.kind==='traded-teaching-offers'){
   const teacher=g.state.units.find(u=>u.id===query.teacherId&&u.hp>0),owned=g.state.units.filter(u=>u.team===0&&u.hp>0);
