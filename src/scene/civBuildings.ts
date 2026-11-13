@@ -309,7 +309,11 @@ HOUSE.kaaltun=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,ph=range(r,.8,1.1),h
  for(let i=0;i<3;i++)g.B('wall',[2.0-i*.0,.28,.5],[g.off*.3,i*.28*(ph/.85),D*.5+.25+(2-i)*.45],1);
  g.B('wall',[W*.86,h,D*.78],[0,ph,0],2);for(const s of[-1,1])g.post('wall2',s*W*.43,D*.39,h+ph,.2,1);
  g.B('wall2',[W*.88,.28,.2],[0,ph+h-.28,D*.39+.05],1);g.B('accent',[.9,1.55,.08],[g.off*.3,ph,D*.39+.03],0);
- P(g,'prism','roof',[W*1.2,range(r,1.7,2.1),D*1.12],[0,ph+h,0]);P(g,'cone','accent',[.3,.6,.3],[0,ph+h+1.8,D*.56],undefined,6,1);P(g,'cone','accent',[.3,.6,.3],[0,ph+h+1.8,-D*.56],undefined,6,1);
+ const rh=range(r,1.7,2.1);P(g,'prism','roof',[W*1.2,rh,D*1.12],[0,ph+h,0]);P(g,'cone','accent',[.3,.6,.3],[0,ph+h+1.8,D*.56],undefined,6,1);P(g,'cone','accent',[.3,.6,.3],[0,ph+h+1.8,-D*.56],undefined,6,1);
+ // carved lintel frieze, corner stelae, stepped roof-comb and a lit doorway, all original Kaaltun grammar
+ g.B('accent',[W*.8,.22,.1],[0,ph+h*.78,D*.39+.07],0);for(let i=0;i<5;i++)g.B('trim',[.2,.14,.12],[-W*.32+i*W*.16,ph+h*.78+.04,D*.39+.1],0);
+ for(const s of[-1,1]){g.B('wall2',[.3,h*.9,.3],[s*W*.47,ph,-D*.39],1);g.B('accent',[.4,.2,.4],[s*W*.47,ph+h*.9,-D*.39],0);g.B('accent',[.7,.5,.1],[s*W*.3,ph+h*.45,D*.39+.04],0);}
+ for(let i=0;i<3;i++)g.B('wall2',[W*.3-i*.07,.2,.3],[0,ph+h+rh-.1+i*.2,0],0);
  return {entry:{x:g.off*.3,z:D*.5+1,width:1.2}};};
 CIVIC.kaaltun=g=>{const {w,d,r}=g;let y=0;
  for(let i=0;i<3;i++){const k=1-i*.2;g.B(i%2?'wall':'wall2',[w*.92*k,1.0,d*.88*k],[0,y,-d*.02*i],2);g.B('trim',[w*.92*k+.12,.12,d*.88*k+.12],[0,y+1.0,-d*.02*i],1);y+=1.12;}
