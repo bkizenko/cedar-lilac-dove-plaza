@@ -1,0 +1,18 @@
+{
+ "v1-summer": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"lobed","season":"summer","hour":16.0,
+   "light":{"sun":1.15,"sunColor":"#ffd49a","hemi":0.95,"sky":"#f1e0c2","ground":"#8a6a48"}},
+ "v1-winter": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"lobed","season":"winter","hour":12.4,
+   "light":{"sun":1.15,"sunColor":"#ffe0b4","hemi":1.0,"sky":"#e9e2d6","ground":"#7d6a58"}},
+ "v2-summer": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"lobed","season":"summer","hour":15.0,
+   "light":{"sun":1.0,"sunColor":"#ffe2b8","hemi":1.0,"sky":"#e6dccb","ground":"#6f6048"}},
+ "v2-winter": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"lobed","season":"winter","hour":12.4,
+   "light":{"sun":1.0,"sunColor":"#fff0d4","hemi":1.05,"sky":"#e4dfd8","ground":"#6e6258"}},
+ "v3-summer": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"lobed","season":"summer","hour":18.2,
+   "light":{"sun":1.35,"sunColor":"#ffb868","hemi":0.85,"sky":"#f0c99a","ground":"#6a4c34"}},
+ "v3-winter": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"lobed","season":"winter","hour":15.3,
+   "light":{"sun":1.35,"sunColor":"#ffc283","hemi":0.9,"sky":"#e8cfb0","ground":"#6a5848"}},
+ "v4-summer": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"lobed","season":"summer","hour":19.2,
+   "light":{"sun":1.3,"sunColor":"#ff9a44","hemi":0.8,"sky":"#d8a47c","ground":"#4c3b3a"}},
+ "v4-winter": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"lobed","season":"winter","hour":15.8,
+   "light":{"sun":1.3,"sunColor":"#ff9f55","hemi":0.8,"sky":"#d3a88a","ground":"#4c3e3e"}}
+}
