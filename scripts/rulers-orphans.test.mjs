@@ -1,0 +1,31 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {Game} from '../src/game/sim.ts';
+import {orphanCare} from '../src/game/orphans.ts';
+import {ensureRulers,settleOrphans,neighbourNews} from '../src/game/rulersRuntime.ts';
+import {councilModel} from '../src/game/rulersView.ts';
+import {rulersOf} from '../src/game/rulersState.ts';
+const P=(id,o)=>({id,name:id.toUpperCase(),age:30,sex:'m',alive:true,houseOf:'0',legit:true,claimStrength:50,...o});
+const dyn=(people,rulerId)=>({id:'d',house:'0',people:Object.fromEntries(people.map(p=>[p.id,p])),rulerId,generation:0,log:[]});
+test('orphan care: sibling, then grandparent, then uncle/aunt, then the hall; living parents or spouse mean no orphan',()=>{
+ const base=[P('gp',{age:70}),P('par',{parent:'gp',alive:false}),P('unc',{parent:'gp',age:40,sex:'f'}),P('k',{parent:'par',age:6}),P('ruler',{parent:'gp',age:35})];
+ assert.deepEqual(orphanCare(dyn(base,'ruler')).map(o=>[o.child,o.kind]),[['k','grandparent']]);
+ assert.equal(orphanCare(dyn(base.map(p=>p.id==='gp'?{...p,alive:false}:p),'ruler'))[0].relation,'aunt');
+ const noKin=[P('par',{alive:false}),P('k',{parent:'par',age:6}),P('ruler',{age:40})];
+ assert.deepEqual(orphanCare(dyn(noKin,'ruler')).map(o=>o.kind),['hall']);
+ assert.deepEqual(orphanCare(dyn([...noKin,P('sib',{parent:'par',age:20,sex:'f'})],'ruler')).map(o=>[o.child,o.kind]),[['k','sibling']]);
+ assert.equal(orphanCare(dyn(noKin.map(p=>p.id==='par'?{...p,spouse:'ruler'}:p),'ruler')).length,0,'a living spouse of the dead parent still raises the child');
+ assert.equal(orphanCare(dyn(noKin.map(p=>p.id==='par'?{...p,alive:true}:p),'ruler')).length,0);
+});
+test('orphans in the game: no new people, saved record validates, old saves load, news and card read it',()=>{
+ const g=new Game();g.reset(123456,10);g.enterIsland();g.state.worldOptions={...(g.state.worldOptions||{}),rulersVersion:1};const r=ensureRulers(g);
+ const d=r.societies['0'].dynasty,ruler=d.people[d.rulerId],dead={...P('dead',{alive:false,age:50}),houseOf:d.house},kid={...P('kid',{parent:'dead',age:5}),houseOf:d.house};
+ d.people.dead=dead;d.people.kid=kid;const n=Object.keys(d.people).length,units=g.state.units.length;
+ settleOrphans(g);const rec=g.state.rulers.orphanCare;assert.equal(rec.length,1);assert.equal(rec[0].guardian,ruler.id);assert.equal(rec[0].kind,'hall');
+ assert.equal(Object.keys(d.people).length,n,'nobody spawned');assert.equal(g.state.units.length,units);
+ assert.ok(rulersOf(JSON.parse(JSON.stringify({rulers:g.state.rulers}))),'round trip valid');
+ assert.equal(rulersOf({rulers:{...g.state.rulers,orphanCare:[{society:'0',child:'x',guardian:'y',kind:'bogus',since:1}]}}),null);
+ assert.ok(neighbourNews(g,0,20).some(x=>x.kind==='orphan-care'&&/KID/.test(x.text)));
+ assert.match(councilModel(g,0).house.family.find(f=>f.name==='KID').care,/raised by/);
+ delete g.state.rulers.orphanCare;assert.ok(rulersOf(g.state),'old save without field loads');
+ settleOrphans(g);assert.equal(g.state.rulers.orphanCare[0].since,g.state.rulers.year,'resolved on load');
+});

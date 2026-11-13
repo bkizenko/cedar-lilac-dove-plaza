@@ -16,6 +16,7 @@ import {settleGate,raidGate,growthBias,tradeCadenceBias,breakawayLoss,noteRaid,n
 import {liveClaims,cbLegitimacyCost,unrest,stageOf,type Claim,type CasusBelli,type Stage as UnrestStage} from './unrest';
 import {wonderEffect} from './wonderEffects';
 import {sendRefugees} from './refugees';
+import {orphanCare,orphanLine} from './orphans';
 
 /** Compressed clock: one dynastic year per this many sim seconds (an 80-year life is about two hours of play). */
 export const RULERS_YEAR_SECONDS=90;
@@ -40,7 +41,7 @@ export function advanceRulers(g:Game){
  sampleClimate(g,r);
  if(decisionsEnabled(g))beginCivic(g); // M2-14: prehistory recorded once at the start (cheap no-op afterwards)
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){const genBefore:Record<string,number>={};for(const [k,v] of Object.entries(s.rulers!.societies))genBefore[k]=v.dynasty.generation;s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);fadeGrudges(g,genBefore);npcMarriages(g);expireClaims(g);harvestGathering(g);sendRefugees(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
+ while(s.rulers!.year<target&&guard++<4){const genBefore:Record<string,number>={};for(const [k,v] of Object.entries(s.rulers!.societies))genBefore[k]=v.dynasty.generation;s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);settleOrphans(g);fadeGrudges(g,genBefore);npcMarriages(g);expireClaims(g);harvestGathering(g);sendRefugees(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -156,6 +157,16 @@ export function settleWards(g:Game){
  // Death in the other house's custody: trust drops (breakPact tie change) and the home house holds a 'defence' claim on the host (no legitimacy cost;
  // grantClaim still gates by era/feature/known and refuses duplicates).
  for(const w of diedInCustody){const a=Number(w.from),b=Number(w.to);tieChange(g,a,b,'breakPact',livingPeople(g,a),livingPeople(g,b));grantClaim(g,a,b,'defence',40,12);addGrudge(g,a,b,.6,'custody');}
+}
+
+/** Yearly: record who is in orphan care (derived from each dynasty; refreshed so a guardian's death moves the child on, grown or dead children drop off).
+ * Keeps each orphan's first year. Nothing is spawned and no goods move; the child eats at the guardian's table, the same household stores. */
+export function settleOrphans(g:Game){
+ const r=ensureRulers(g);if(!r)return;
+ const prev=r.orphanCare??[],next:import('./rulersState').OrphanRecord[]=[];
+ for(const [id,sr] of Object.entries(r.societies))for(const o of orphanCare(sr.dynasty)){const was=prev.find(x=>x.society===id&&x.child===o.child);next.push({society:id,child:o.child,guardian:o.guardian,kind:o.kind,since:was?.since??r.year});}
+ const capped=next.slice(-24);
+ if(JSON.stringify(capped)!==JSON.stringify(prev))st(g).rulers={...st(g).rulers!,orphanCare:capped};
 }
 
 /** Rival societies wed each other: every 4th dynastic year each non-player society tries the nearest-numbered peaceful, mutually known neighbour
@@ -461,6 +472,7 @@ export function neighbourNews(g:Game,sinceTime=0,limit=8):NeighbourNews[]{
   const home=g.tribe(a)?.name??`Society ${a}`,host=g.tribe(b)?.name??`Society ${b}`,what=w.kind==='foster'?'fosterling':'hostage';
   const text=w.how==='died'?`${w.name}, ${what} of ${home} at ${host}, died in the other house`:w.how==='war'?`${w.name}, ${what} of ${home}, was sent home from ${host} as war broke the pledge`:w.how==='grown'?`${w.name} of ${home} came home from ${host} grown (age ${Math.floor(w.age)}), bound by the kin ties of the fosterage`:`${w.name}, ${what} of ${home}, was released by ${host} after the term`;
   out.push({time,kind:'ward-return',a,b,text});}
+ if(rulersEnabled(g)){const rr=rulersOf(st(g)),d0=rr?.societies['0']?.dynasty;if(rr&&d0)for(const o of rr.orphanCare??[]){if(o.society!=='0')continue;const time=o.since*RULERS_YEAR_SECONDS;if(time<sinceTime)continue;const line=orphanLine(d0,o);if(line)out.push({time,kind:'orphan-care',a:0,b:0,text:line});}}
  const sees=(a:number,b:number)=>a===0||b===0;
  for(const ag of d?.agreements??[]){if(ag.since>=sinceTime&&sees(ag.a,ag.b))out.push({time:ag.since,kind:ag.kind,a:ag.a,b:ag.b,text:ag.note});}
  const roster=(st(g) as unknown as {commanders?:{roster:{id:number;unitId:number;team:number;name:string;status:string;fellAt?:number;capturedAt?:number;capturedBy?:number;replacedBy?:number;replaces?:number;seenByPlayer?:boolean;appointedAt:number}[]}}).commanders?.roster??[];
