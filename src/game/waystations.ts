@@ -29,7 +29,7 @@ export const WAYSTATION_RULES={
  reserve:{wood:30,stone:10,food:60},
  maxPerCorridor:3,maxPerTeam:12,maxTotal:40,
  spacingFraction:.85,
- usageRadius:9,raidRadius:12,raidSeconds:6,raidDamage:.34,
+ usageRadius:9,raidRadius:12,raidBiasRadius:60,raidSeconds:6,raidDamage:.34,
  tollFood:1,restockFood:5,restockAbove:150,
  planEvery:10,workEvery:2,
 } as const;
@@ -41,13 +41,26 @@ export type Station={
  store:{food:number;wood:number};water:boolean;
  visits:number;nights:number;sheltered:number;income:number;raided:number;lastRaidAt:number;waiting?:string;
 };
-export type WaystationState={version:1;enabled:boolean;nextId:number;stations:Station[];sustain:Record<string,number>;clock:{plan:number;work:number;use:number}};
+export type WaystationState={version:1;enabled:boolean;raidBias?:boolean;nextId:number;stations:Station[];sustain:Record<string,number>;clock:{plan:number;work:number;use:number}};
 type WState={waystations?:WaystationState};
 const st=(g:Pick<Game,'state'>)=>g.state as Game['state']&WState;
 const FORMS:StationForm[]=['reed','timber','stone','hide'];
-function state(g:Pick<Game,'state'>){return st(g).waystations??={version:1,enabled:true,nextId:1,stations:[],sustain:{},clock:{plan:0,work:0,use:0}};}
+function state(g:Pick<Game,'state'>){return st(g).waystations??={version:1,enabled:true,raidBias:true,nextId:1,stations:[],sustain:{},clock:{plan:0,work:0,use:0}};}
 export const waystationsEnabled=(g:Pick<Game,'state'>)=>routesEnabled(g)&&st(g).waystations?.enabled!==false;
 export function setWaystationsEnabled(g:Game,on:boolean){state(g).enabled=!!on;}
+export function setRaidersTargetStops(g:Game,on:boolean){state(g).raidBias=!!on;}
+/** ROUTE-4: raiders prefer the player's reports that sit by a built stop (its store is plunderable). Seeded, no randomness; off for saves
+ * made before the switch and whenever routes/waystations are off, so the old order (as observed) stays the legacy behaviour. */
+export const raidersTargetStops=(g:Pick<Game,'state'>)=>waystationsEnabled(g)&&st(g).waystations?.raidBias===true;
+export function biasReportsToStops<T extends {x:number;z:number;team:number}>(g:Pick<Game,'state'>,reports:T[]):T[]{
+ if(!raidersTargetStops(g))return reports;
+ const stops=stationsOf(g).filter(t=>t.stage>=1&&t.team===0);
+ if(!stops.length)return reports;
+ const near=(r:T)=>Math.min(...stops.map(t=>Math.hypot(t.x-r.x,t.z-r.z)));
+ const keyed=reports.map((r,i)=>({r,i,d:near(r)}));
+ const by=(a:typeof keyed[number],b:typeof keyed[number])=>(a.d<=WAYSTATION_RULES.raidBiasRadius?0:1)-(b.d<=WAYSTATION_RULES.raidBiasRadius?0:1)||(a.d<=WAYSTATION_RULES.raidBiasRadius?a.d-b.d:0)||a.i-b.i;
+ return keyed.sort(by).map(k=>k.r);
+}
 export const stationsOf=(g:Pick<Game,'state'>):readonly Station[]=>st(g).waystations?.stations??[];
 export const stationLabel=(s:Pick<Station,'stage'|'form'>)=>s.stage<=0?'Site':s.stage===1?'Lean-to':s.stage===2?'Rest hut':s.form==='stone'||s.form==='hide'?'Caravanserai':'Inn';
 export const stationBuilt=(s:Station)=>s.stage>=1;
@@ -237,7 +250,7 @@ export function stationViews(g:Game,team=0):StationView[]{
 export function validWaystations(s:any):boolean{
  const w=s?.waystations;if(w===undefined)return true;
  const n=(v:unknown)=>typeof v==='number'&&Number.isFinite(v);
- if(!w||typeof w!=='object'||w.version!==1||typeof w.enabled!=='boolean'||!Number.isSafeInteger(w.nextId)||w.nextId<1||!Array.isArray(w.stations)||w.stations.length>WAYSTATION_RULES.maxTotal||!w.sustain||typeof w.sustain!=='object'||!w.clock)return false;
+ if(!w||typeof w!=='object'||w.version!==1||typeof w.enabled!=='boolean'||(w.raidBias!==undefined&&typeof w.raidBias!=='boolean')||!Number.isSafeInteger(w.nextId)||w.nextId<1||!Array.isArray(w.stations)||w.stations.length>WAYSTATION_RULES.maxTotal||!w.sustain||typeof w.sustain!=='object'||!w.clock)return false;
  const ids=new Set();
  for(const t of w.stations){
   if(!t||!Number.isSafeInteger(t.id)||t.id<1||ids.has(t.id)||!Number.isSafeInteger(t.team)||t.team<0||t.team>16||!Number.isSafeInteger(t.corridor)||!n(t.x)||!n(t.z)||![0,1,2,3].includes(t.stage)||!FORMS.includes(t.form)||!n(t.hp)||t.hp<0||t.hp>1)return false;

@@ -36,6 +36,8 @@ import {beginPortWork,resumePortWork,resupplyVessel} from './navalPorts';
 import {commissionVessel,resumeVesselCommission,beginBoarding,boardNearest,attackBoat} from './navalFleet';
 import {PORT_WORK_IDS,DESIGN_IDS,type PortWork} from './navalClasses';
 import {appointCommander,assignToCommander,releaseFromCommander,promoteCommander,commandersOf} from './commanders';
+import {setRoutesEnabled} from './routeWear';
+import {setWaystationsEnabled,setRaidersTargetStops} from './waystations';
 import {assignGuardDuty,releaseGuardDuty,type GuardDutyKind} from './guardDuty';
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
@@ -73,7 +75,7 @@ export type EngineDispatchCommand=
  |{kind:'garment-repair';unitId:number;slot:GarmentSlot;workplaceId?:number}
  |{kind:'garment-repair-control';unitId:number;action:'pause'|'resume'|'cancel'}
  |{kind:'equip-clothing';unitId:number;item:GarmentKind}
- |{kind:'set-auto-work';enabled:boolean}|{kind:'defense-horn'}|{kind:'recall'}
+ |{kind:'set-auto-work';enabled:boolean}|{kind:'set-route-switches';routes?:boolean;waystations?:boolean;raiders?:boolean}|{kind:'defense-horn'}|{kind:'recall'}
  |{kind:'production-control';projectId:number;action:'pause'|'resume'|'unload';unitId?:number}
  |{kind:'dairy-clean';projectId:number;unitId?:number}|{kind:'dairy-discard';projectId:number}
  |{kind:'answer-proposal';proposalId:number;accept:boolean}|{kind:'found-wonder';family:(typeof WONDER_FAMILIES)[number]}|{kind:'marry-houses';team:number}|{kind:'foster-houses';team:number}|{kind:'exchange-hostages';team:number}
@@ -166,6 +168,12 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
    case 'survey-fibre':case 'return-fibre':case 'equip-basket':case 'survey-clay':case 'equip-water-vessel':case 'swap-clothing':case 'gather-fibre':case 'gather-clay':case 'equip-clothing':{
     const accepted=command.kind==='survey-fibre'?surveyFibre(g,command.unitId):command.kind==='return-fibre'?returnFibreLoad(g,command.unitId):command.kind==='equip-basket'?equipBasket(g,command.unitId):command.kind==='survey-clay'?surveyClay(g,command.unitId):command.kind==='equip-water-vessel'?equipWaterVessel(g,command.unitId):command.kind==='swap-clothing'?swapClothing(g,command.unitId):command.kind==='gather-fibre'?beginFibreGather(g,command.unitId,command.patchId):command.kind==='gather-clay'?beginClayGather(g,command.unitId,command.depositId):equipClothing(g,command.unitId,command.item);
     return{accepted,reason:accepted?'Original resident and goods updated':g.state.banner||'Physical request refused'};
+   }
+   case 'set-route-switches':{
+    if(command.routes!==undefined)setRoutesEnabled(g,command.routes);
+    if(command.waystations!==undefined)setWaystationsEnabled(g,command.waystations);
+    if(command.raiders!==undefined)setRaidersTargetStops(g,command.raiders);
+    return{accepted:true,reason:'Routes and waystations updated'};
    }
    case 'set-auto-work':g.setAutoWork(command.enabled);return{accepted:true,reason:'Auto work updated'};
    case 'defense-horn':g.soundDefenseHorn();return{accepted:true,reason:g.state.banner||'Defense horn sounded'};
@@ -273,7 +281,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'garment-repair':{unitId:id,slot:v=>v==='worn'||v==='spare',workplaceId:optionalId},'garment-repair-control':{unitId:id,action:v=>v==='pause'||v==='resume'||v==='cancel'},
   'equip-armor':{unitId:id,armorId:id},'unequip-armor':{unitId:id},
   'survey-fibre':{unitId:id},'return-fibre':{unitId:id},'equip-basket':{unitId:id},'survey-clay':{unitId:id},'equip-water-vessel':{unitId:id},'swap-clothing':{unitId:id},'gather-fibre':{unitId:id,patchId:id},'gather-clay':{unitId:id,depositId:id},'equip-clothing':{unitId:id,item:v=>GARMENT_KINDS.includes(v as GarmentKind)},
-  'set-auto-work':{enabled:bool},'defense-horn':{},recall:{},
+  'set-auto-work':{enabled:bool},'set-route-switches':{routes:v=>v===undefined||bool(v),waystations:v=>v===undefined||bool(v),raiders:v=>v===undefined||bool(v)},'defense-horn':{},recall:{},
   'production-control':{projectId:id,action,unitId:optionalId},'dairy-clean':{projectId:id,unitId:optionalId},'dairy-discard':{projectId:id},
   'answer-proposal':{proposalId:id,accept:bool},'found-wonder':{family:v=>(WONDER_FAMILIES as readonly string[]).includes(v as string)},
   'set-formation':{formation:v=>validFormationKind(v)},'guard-duty':{unitId:id,duty:v=>v==='post'||v==='patrol'},'release-guard':{unitId:id},
