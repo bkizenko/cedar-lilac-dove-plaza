@@ -1,6 +1,7 @@
 import {planFoodWithdrawal,commitFoodWithdrawal,setCarriedFood,receiveCarriedFood,carriedFoodLots} from './tradeFood';
 import {siteSlopeIssue} from './siteSlope';
-import {assessSite,siteRecord,type SiteAssessment} from './slopeTiers';
+import {assessSite,siteRecord,floodSite,pileDwellingClass,slopeClassOf,type SiteAssessment} from './slopeTiers';
+import {provinceAt} from './ecologicalProvinces';
 import {assessSiteV2} from './siteAssessmentV2';
 import {terrainV2,terrainV3,terraceCapability,altitudeAt} from './terraceRuntime';
 import {TERRACE_CLIFF_GRADE} from './terraceFarming';
@@ -1243,8 +1244,9 @@ export class Game {
   siteAssessment(type:BldType,x:number,z:number,w:number,d:number,hint=false):SiteAssessment{
     let ground:{rockName?:string;hardness?:number;soilDepthMeters?:number;landformTag?:string}|null=null;
     try{const r=geologyAt({size:this.world.size,mapgen:this.world.mapgen as never},x,z);if(r)ground={rockName:r.rockName,hardness:r.hardness,soilDepthMeters:r.soilDepthMeters,landformTag:r.landformTag};}catch{ground=null;}
-    if(terrainV2(this))return assessSiteV2((px,pz)=>this.height(px,pz),type,x,z,w,d,{model:terrainV3(this)?'v3':'v2',ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d}),capability:type==='farm'?terraceCapability(this,0):undefined,altitude:altitudeAt(this,x,z),waterDistance:riverDistance(this,x,z),hint});
-    return assessSite((px,pz)=>this.height(px,pz),type,x,z,w,d,{ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d})});
+    const pile=pileDwellingClass(slopeClassOf(type),type),wetland=pile&&!!this.world.ecology&&provinceAt(this.world.ecology,x,z).kind==='wetland',flood=pile&&floodSite((px,pz)=>this.height(px,pz),(px,pz)=>this.waterAt(px,pz),x,z,w,d,wetland);
+    if(terrainV2(this))return assessSiteV2((px,pz)=>this.height(px,pz),type,x,z,w,d,{flood,model:terrainV3(this)?'v3':'v2',ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d}),capability:type==='farm'?terraceCapability(this,0):undefined,altitude:altitudeAt(this,x,z),waterDistance:riverDistance(this,x,z),hint});
+    return assessSite((px,pz)=>this.height(px,pz),type,x,z,w,d,{flood,ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d})});
   }
 
   placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan,quarterTurn=false): string | null {

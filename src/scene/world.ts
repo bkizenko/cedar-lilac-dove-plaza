@@ -20,6 +20,8 @@ import {FixedOrbitCameraCollision} from './fixedOrbitCollision';
 import {survivalFireActive} from '@/game/survivalNeeds';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
+import {AnimalAdapter,FishAdapter,readAnimalSet,type AnimalRow} from './animalAdapter';
+import {YEAR_SECONDS} from '@/game/settlement';
 import {FibreWorkLayer} from './fibreWorkLayer';
 import {BasketLayer} from './basketLayer';
 import {PenFenceLayer} from './penFenceLayer';
@@ -84,7 +86,8 @@ import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall}
 import {seaSurfaceY} from '../game/localWater';
 import {CampVisual} from './campVisual';
 import {landscapeSample,LANDSCAPE_ART_RULES,ATMOSPHERE_RULES,atmosphericDensity} from './landscapeArt';
-import {foundationProfile,terrainLaidWorkplace} from './foundations';
+import {foundationProfile,terrainLaidWorkplace,setGroundPlanProvider,type DrawnGroundPlan} from './foundations';
+import {groundPlanOf,type GroundPlan} from './groundPlan';
 import {FieldSurface} from "./fieldSurface";
 import {daylightArt} from './daylightArt';
 import {shorelineAt} from './shoreline';
@@ -99,7 +102,7 @@ import {buildingQuarterTurns,turnedFootprint} from "@/game/footprints";
 import {siteRecord} from "@/game/slopeTiers";
 import {foundationBoxes} from "@/game/siteFoundation";
 import {hillFieldLines,HILL_RULES} from "@/game/hillFarming";
-import {carvedVariantFor,variantSpec} from './buildingStyleMap';
+import {carvedVariantFor,variantSpec,carvedBuildingSpec} from './buildingStyleMap';
 import {buildCarvedMesh} from './carvedMesh';
 import {buildingGroundSupports} from './buildingGrounding';
 import * as THREE from "three";
@@ -382,6 +385,8 @@ export class WorldView {
   domesticSheep: THREE.InstancedMesh | null = null;
   domesticGoats: THREE.InstancedMesh | null = null;
   birds: THREE.InstancedMesh | null = null;
+  /** ?animals=legacy keeps the old merged animal meshes; otherwise the jointed rig layer draws animals and the old meshes stay as invisible picking proxies. */
+  private animalSet=readAnimalSet();private animals:AnimalAdapter|null=null;private fishAdapter:FishAdapter|null=null;
   private tmpCam = new THREE.Vector3();
   private disposed = false;
   private treeCount = 0;
@@ -1095,6 +1100,8 @@ export class WorldView {
     });
     this.fish.count = nFish;
     this.scene.add(this.fish);
+    this.fishAdapter?.dispose();this.fishAdapter=null;
+    if(this.animalSet==='rig'){try{this.fishAdapter=new FishAdapter(this.scene);this.fish.visible=false;}catch(e){console.error('fish rig disabled:',e);this.fishAdapter=null;}}
 
     const sites = game.world.dockSites || [];
     if (sites.length) {
@@ -1140,6 +1147,7 @@ export class WorldView {
 
   private buildBuildings() {
     this.foundations=new BuildingGroundingLayer(this.scene,this.mats.stone);
+    setGroundPlanProvider((g,b)=>this.carvedPlanFor(g,b));
     this.eraDetails=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94}),1600);
     this.eraDetails.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.eraDetails.count=0;this.eraDetails.castShadow=true;this.eraDetails.receiveShadow=true;this.eraDetails.frustumCulled=false;
@@ -1325,6 +1333,28 @@ export class WorldView {
     this.domesticCattle = mkHerd(cattleGeo(), cattleMat, 24);
     this.packCattle = mkHerd(cattleGeo(true), cattleMat, 24);
     this.birds = mkHerd(birdGeo(), birdMat, 16);
+    this.animals?.dispose();this.animals=null;
+    if(this.animalSet==='rig'){try{this.animals=new AnimalAdapter(this.scene);this.hideLegacyAnimals();}catch(e){console.error('animal rig disabled, legacy animals restored:',e);this.animals=null;this.animalSet='legacy';}}
+  }
+
+  private hideLegacyAnimals(){
+    const on=this.animalSet==='legacy'||!this.animals;
+    for(const m of [this.deer,this.boars,this.wildGoats,this.domesticGoats,this.wildSheep,this.domesticSheep,this.wildHorses,this.domesticHorses,this.wildCattle,this.domesticCattle,this.birds])if(m)m.visible=on;
+  }
+
+  /** Draw every wild and domestic animal through the rig layer (positions and state read from the game, nothing written back). */
+  private drawAnimalRig(game:Game){
+    const ad=this.animals;if(!ad)return;
+    this.hideLegacyAnimals();
+    const cal=calendar(game),within=Math.max(0,Math.min(1,1-cal.remaining/(YEAR_SECONDS/4))),rows:AnimalRow[]=[];
+    const shore=(c:{x:number;z:number;facing:number})=>{const x=c.x+Math.sin(c.facing)*1.6,z=c.z+Math.cos(c.facing)*1.6;return game.waterAt(x,z)>game.height(x,z)-.02;};
+    for(const list of this.wildlifeOwners.values())for(const c of list)rows.push({c,domestic:false,season:cal.phase,within,shore:c.hp>0&&c.species!=='bird'&&shore(c)});
+    for(const a of game.state.livestock||[]){
+      if(a.hp<=0||(a.team!==0&&!game.visibleAt(a.x,a.z)))continue;
+      if(a.species!=='horse'&&a.species!=='cattle'&&a.species!=='goat'&&a.species!=='sheep')continue;
+      rows.push({c:a,domestic:true,season:cal.phase,within,shore:shore(a)});
+    }
+    ad.frame(rows,this.camera.position,game.state.time);
   }
 
   updateCamera(dt: number) {
@@ -1721,7 +1751,7 @@ export class WorldView {
     const stamp = (key: 'deer'|'boars'|'wildGoats'|'wildSheep'|'wildHorses'|'wildCattle'|'birds', species: string) => {
       const old=this[key];if(!old)return;
       const list=wildlifeInstanceAnimals(game.state.wildlife,species,(x,z)=>game.visibleAt(x,z),(x,z)=>game.exploredAt(x,z),c=>carcassAvailable(game,c));
-      const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;
+      const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;if(this.animals)mesh.visible=false;
       for(let i=0;i<list.length;i++){
         const c=list[i],corpse=c.hp<=0;
         _p.set(c.x,c.y+(corpse?.3*c.scale:0),c.z);
@@ -1762,6 +1792,7 @@ export class WorldView {
       mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
     }
     }
+    this.drawAnimalRig(game);
   }
 
   private trailAlpha() {
@@ -1905,6 +1936,7 @@ export class WorldView {
       }
       this.fish.count = nFish;
       this.fish.instanceMatrix.needsUpdate = true;
+      if(this.fishAdapter){this.fish.visible=false;this.fishAdapter.frame(game.state.fish.slice(0,nFish),{waterAt:(x,z)=>game.waterAt(x,z)},this.camera.position,game.state.time,(x,z)=>game.exploredAt(x,z));}
     }
   }
 
@@ -2067,11 +2099,42 @@ export class WorldView {
 
   /** The ONE place a roofed building becomes carved-generator input. The finished building (syncBuildings) and the placement ghost (setGhost) both call it, so the preview is the same model, skin, heraldry and facing as what gets built. */
   private carvedInputFor(game:Game,b:import("@/game/types").Building,type:BldType,ys:number):CarvedInstance{
+    return {...this.carvedInputBase(game,b,type,ys),y:foundationProfile(game,b).level};
+  }
+  /** carvedInputFor without the floor level (which itself needs the ground plan of this very input). */
+  private carvedInputBase(game:Game,b:import("@/game/types").Building,type:BldType,ys:number):CarvedInstance{
     const fab=fabricContext(b),mill=type==='watermill'||type==='windmill';
     const skin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,mourn=!!skin&&(this.mourning.get(b.team)?.until??0)>game.state.time;
     return {worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
-      settlementSeed:b.team,...(()=>{const h=game.world.ecology?habitatForProvince(provinceAt(game.world.ecology,b.x,b.z).kind):habitatForBaseKind(habitatKindAt(game,b.x,b.z));return h?{habitat:h}:{};})(),lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,
+      settlementSeed:b.team,...(()=>{const h=game.world.ecology?habitatForProvince(provinceAt(game.world.ecology,b.x,b.z).kind):habitatForBaseKind(habitatKindAt(game,b.x,b.z));return h?{habitat:h}:{};})(),lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:b.y,z:b.z,
       ...(skin?{skin,heraldry:villageHeraldry(game.state.seed,b.team),...(mourn?{mourning:true}:{}),...(b.build>=1&&b.maxHp>0?{condition:b.hp/b.maxHp}:{})}:{}),yaw:type==='watermill'?this.millFacing(game,b):this.dwellingYaw(game,b),progress:ys,...(mill&&b.build>=1?{spin:this.millSpin(game,b)}:{})};
+  }
+
+  private planCache=new WeakMap<import("@/game/types").Building,{t:number;plan:DrawnGroundPlan|null}>();
+  private planByKey=new Map<string,DrawnGroundPlan>();
+  /** Where a finished carved building really touches the ground (groundPlan.ts), in its drawn orientation; null when the classic kit draws it. Cached per sim tick and per variant. */
+  private carvedPlanFor(game:Game,b:import("@/game/types").Building):DrawnGroundPlan|null{
+    const hit=this.planCache.get(b);if(hit&&hit.t===game.state.time)return hit.plan;
+    const type=b.type;let plan:DrawnGroundPlan|null=null;
+    const noPlan=this.renderStyle!=='carved'||b.bridge||!CARVED_TYPES.includes(type)||CARVED_KEEP_CURRENT.has(type)||terrainLaidWorkplace(type)||['palisade','gate','stonewall','trench','moat','dock','aqueduct','quarry','cornerstone','cairn','grove','canal','farm','pen','bridge','lumber'].includes(type)||type==='watchtower'&&!!b.towerPlatform||type!=='warehouse'&&expandedGrainWorkplace(b);
+    if(!noPlan){
+      const keep=(key:string,make:()=>DrawnGroundPlan)=>{let p=this.planByKey.get(key);if(!p){if(this.planByKey.size>600)this.planByKey.clear();p=make();this.planByKey.set(key,p);}return p;};
+      if(type==='warehouse'){
+        const skin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,era=fabricContext(b)?.built.era??(game.tribe(b.team)?.age||0);
+        const inputs=plotModules(b).map(m=>({m,input:{worldSeed:game.state.seed,type,id:b.id*16+Math.abs(Math.round(m.x*3+m.z*7))%13,era,footprint:{w:BUILDINGS.warehouse.w*m.sx,d:BUILDINGS.warehouse.d*m.sz},settlementSeed:b.team,...(skin?{skin,heraldry:villageHeraldry(game.state.seed,b.team)}:{})}}));
+        const variants=inputs.map(({m,input})=>({m,v:carvedVariantFor(input)}));
+        if(variants.every(q=>q.v)){
+          plan=keep(variants.map(q=>q.v!.key+'@'+q.m.x+','+q.m.z).join('|'),()=>{
+            const polys:GroundPlan['polys'][number][]=[],lifts:number[]=[],piers:GroundPlan['piers'][number][]=[];let entry:GroundPlan['entry'],round=false,raised=false;
+            for(const {m,v} of variants){const gp=groundPlanOf(variantSpec(v!));gp.polys.forEach((q,qi)=>{polys.push(q.map(pt=>({x:pt.x+m.x,z:pt.z+m.z})));lifts.push(gp.lifts[qi]??0);});for(const pr of gp.piers)piers.push({x:pr.x+m.x,z:pr.z+m.z,r:pr.r});entry??=gp.entry&&{x:gp.entry.x+m.x,z:gp.entry.z+m.z,width:gp.entry.width};round=round||gp.round;raised=raised||gp.raised;}
+            return {polys,lifts,piers,...(entry?{entry}:{}),round,raised,yaw:0};});
+        }
+      }else{
+        const input=this.carvedInputBase(game,b,type,1),v=carvedVariantFor(input);
+        if(v)plan=keep(v.key+'|'+input.yaw,()=>({...groundPlanOf(variantSpec(v)),yaw:input.yaw}));
+      }
+    }
+    this.planCache.set(b,{t:game.state.time,plan});return plan;
   }
 
   /** Quarter-turn yaw of a carved building. Dwellings the player did not turn explicitly swing their door toward the village's plaza (placementFacing.ts). */
@@ -2202,6 +2265,8 @@ export class WorldView {
         _p.set(0,(kind==='cart'?.7:kind==='pack'?(horse?1.40:bovine?1.46:1.05):.34)+height*.5,kind==='canoe'?-.85:0).applyMatrix4(_haulMatrix);
         _s.set(1.25,height/.55,1.65);_m.compose(_p,_q,_s);
       }else{
+        // people v2 carry their load on the body (logs on the shoulder, baskets on the back, jars on the head): see carryLoads.ts
+        if(this.people?.active&&!u.haulage&&!u.boat)continue;
         _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
         _e.set(0,u.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);
       }
@@ -3184,11 +3249,12 @@ export class WorldView {
   }
 
   private disposeWorld() {
-    this.foundations?.dispose();this.foundations=null;this.contactMap?.dispose();this.contactMap=null;this.routeField?.dispose();this.routeField=null;if(this.waystations){this.scene.remove(this.waystations.group);this.waystations.dispose();this.waystations=null;}
+    this.foundations?.dispose();this.foundations=null;setGroundPlanProvider(null);this.contactMap?.dispose();this.contactMap=null;this.routeField?.dispose();this.routeField=null;if(this.waystations){this.scene.remove(this.waystations.group);this.waystations.dispose();this.waystations=null;}
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
     this.wornArmor?.dispose();this.wornArmor=null;
     this.people?.dispose();this.people=null;
+    this.animals?.dispose();this.animals=null;this.fishAdapter?.dispose();this.fishAdapter=null;
     this.siegeRamLayer?.dispose();this.siegeRamLayer=null;
     this.housingPackets?.dispose();this.housingPackets=null;
     this.draftCarts?.dispose();this.draftCarts=null;

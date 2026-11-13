@@ -189,3 +189,57 @@ test('v2 save record: tags and terrace are optional, validated, and only on v2',
   const withTags=siteRecord(assessSiteV2(shelfHill(30),'hut',1.1,0,5.4,5.2));assert.equal(withTags,undefined,'a level shelf stores nothing');
   assert.ok(validSiteRecord({...siteRecord(hut(22)),tags:['Sun slope']}));
 });
+
+// ---- foundation audit 2026-11-13: buildings sit on the ground; posts only where history puts them --------------------------------------------------
+import {floodSite,pileDwellingClass} from '../src/game/slopeTiers.ts';
+import {FOUNDATION_RULES} from '../src/game/siteFoundation.ts';
+import {groundPlanOf,offsetPolygon} from '../src/scene/groundPlan.ts';
+import {carvedVariantFor,variantSpec} from '../src/scene/buildingStyleMap.ts';
+import {presetSkin} from '../src/scene/civSkin.ts';
+test('post platforms are never chosen below 18 degrees on dry ground, for any class, nor for fire work or civic stone',()=>{
+  for(const type of['hut','house','dryrack','potter','tailor','kiln','oven','forge','smokehouse','warehouse','townhall','temple','well','watchtower','barracks','stables'])for(let deg=0;deg<18;deg+=1){
+    const a=at(type,deg,5.4,5.2);assert.notEqual(a.foundation,'stilts',`${type} at ${deg} degrees must not be on posts on dry ground`);
+  }
+  for(const deg of[0,3,6,10,14])assert.ok(['none','pad'].includes(hut(deg).foundation),`hut ${deg}: ${hut(deg).foundation}`);
+  assert.equal(hut(22).foundation,'stilts','the steep tier still offers a platform for a hut');
+});
+test('pile dwellings: posts on marsh or a low bank for dwellings and shelters only, whatever the tilt; never for kilns, stores, halls',()=>{
+  for(const deg of[0,3,8]){const a=at('hut',deg,5.4,5.2,{flood:true});assert.equal(a.foundation,'stilts',`hut ${deg}`);assert.match(a.label,/Pile dwelling/);assert.ok(a.ok&&a.extraWood>0);}
+  assert.equal(at('house',0,5.4,5.2,{flood:true}).foundation,'stilts');
+  for(const type of['kiln','forge','oven','smokehouse','warehouse','townhall','temple','well','watchtower'])assert.notEqual(at(type,0,5.4,5.2,{flood:true}).foundation,'stilts',type);
+  assert.ok(pileDwellingClass('dwelling','hut')&&!pileDwellingClass('dwelling','kiln')&&!pileDwellingClass('storage','warehouse'));
+  const rec=siteRecord(at('hut',0,5.4,5.2,{flood:true}));assert.ok(rec&&rec.foundation==='stilts'&&validSiteRecord(rec),'a pile dwelling on level ground is recorded');
+  assert.equal(siteRecord(hut(0)),undefined,'dry level ground stores nothing');
+  // flood detection: a footprint with water lapping 2 m away is flood country, dry upland is not
+  const water=()=>9.8,high=()=>12,bank=(x)=>x>1.5?9.5:10.4;
+  assert.equal(floodSite(high,water,0,0,5.4,5.2),false);assert.equal(floodSite(bank,water,0,0,5.4,5.2),true);assert.equal(floodSite(high,water,0,0,5.4,5.2,true),true,'wetland province');
+});
+test('floor level: cut and fill takes the mean ground on level/pad sites, an uphill door is not buried, posts and outcrops keep the highest contact',()=>{
+  const F=foundationLevel;
+  assert.equal(F('pad',12,10,undefined,11),11.03);assert.equal(F('none',12,10,undefined,11),11.03);assert.equal(F(undefined,12,10,undefined,11),11.03);
+  assert.equal(F('pad',12,10,undefined,undefined),12.03,'no mean known (classic kit): highest, as before');
+  assert.equal(F('pad',12,10,11.9,11),11.9-FOUNDATION_RULES.doorBuryMetres+.03,'an uphill door lifts the floor to meet it');
+  assert.equal(F('pad',12,10,10.2,11),11.03,'a downhill door keeps the mean (steps down)');
+  assert.equal(F('terrace',12,10,undefined,11),11.03,'a terrace is a cut bench: half the fall');assert.equal(F('terrace',12,10),12.03);assert.equal(F('stilts',12,10,undefined,11),12.03);assert.equal(F('outcrop',12,10,undefined,11),12.03);
+  assert.equal(F('stilts',12,10,undefined,11,.9),12.93,'pile dwellings stand clear of the flood line');
+});
+const planOf=(type,civ,era=1,w=5.4,d=5.2)=>groundPlanOf(variantSpec(carvedVariantFor({worldSeed:4,type,id:5,era,footprint:{w,d},settlementSeed:0,...(civ?{skin:presetSkin(civ)}:{})})));
+test('ground plan: read from the real generated spec - walls for huts and houses, legs for the staddle granary, no empty plan',()=>{
+  for(const civ of['sandrill','nilemark','tigrane','hanrei','vedara','aureline','sahelan'])for(const type of['hut','house'])for(const era of[0,1,2]){
+    const p=planOf(type,civ,era);assert.ok(p.polys.length>=1||p.piers.length>=1,`${civ} ${type} era ${era} has a plan`);
+    for(const poly of p.polys)assert.ok(poly.length>=4&&poly.every(q=>Math.abs(q.x)<4&&Math.abs(q.z)<4),'outline inside the plot');
+  }
+  let granary=0;for(const civ of[null,'sandrill','nilemark','tigrane','hanrei','vedara','aureline','sahelan'])for(const era of[0,1,2]){const p=planOf('warehouse',civ,era,6.6,6);if(p.raised){granary++;assert.ok(p.piers.length>=4&&p.polys.length===0,'a raised granary has staddle stones and no wall ring');}}
+  assert.ok(granary>=2,'at least one civ builds the granary on staddle stones');
+  const sq=[{x:-1,z:-1},{x:1,z:-1},{x:1,z:1},{x:-1,z:1}],o=offsetPolygon(sq,.5);assert.ok(o.every(q=>Math.abs(Math.abs(q.x)-1.5)<1e-9&&Math.abs(Math.abs(q.z)-1.5)<1e-9),'mitred offset of a square');
+});
+test('footings follow the real wall outline and stand clear of the posts: a ring under every wall, sunk to the terrain, never above the floor',()=>{
+  const H=tilt(8),level=10+Math.tan(8*Math.PI/180)*0+.03,hut=planOf('hut','aureline',1);
+  const boxes=foundationBoxes('none',{x:0,z:0,w:5.4,d:5.2,yaw:0},{height:H,level:level+.02,downhill:{x:-1,z:0},plan:hut});
+  assert.ok(boxes.length>0&&boxes.every(b=>b.kind==='footing'),'gentle slope: a small footing only');
+  for(const b of boxes){assert.ok(b.y-b.height/2<=H(b.x,b.z)+1e-6,'sunk into the ground');assert.ok(b.y+b.height/2<=level+.02-.02+1e-6,'below the floor');assert.ok(b.width<=FOUNDATION_RULES.footingThickness+1e-9,'small');}
+  assert.equal(foundationBoxes('none',{x:0,z:0,w:5.4,d:5.2},{height:()=>10,level:10.03,downhill:{x:0,z:1},plan:hut}).length,0,'flat ground: no footing at all');
+  // stilts: squared posts on stone pads, thick enough to read as timber
+  const st=foundationBoxes('stilts',{x:0,z:0,w:5.4,d:5.2},{height:tilt(22),level:11.5,downhill:{x:-1,z:0},plan:hut}),posts=st.filter(b=>b.kind==='post'),pads=st.filter(b=>b.kind==='footing');
+  assert.ok(posts.length>=4&&pads.length===posts.length,'every post stands on a stone pad');assert.ok(posts.every(b=>b.width>=.3),'posts are not spindly');assert.ok(st.some(b=>b.kind==='beam'));
+});
