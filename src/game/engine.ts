@@ -11,6 +11,7 @@ import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,
 import {commissionWaterEngineering,previewWaterEngineering,type WaterEngineeringKind,type WaterEngineeringPoint} from './waterEngineering';
 import {turnableBuilding} from "./footprints";
 import {planFieldArea,placeFieldArea,type FieldAreaPlan} from './fieldArea';
+import {snapFieldRect,snapFieldPoint,type SnapResult} from './fieldSnap';
 import {fertilityPreview} from './fertilityPreview';
 import {advanceTide} from './tides';
 import {weatherWaterLevel} from './hydrology';
@@ -293,6 +294,7 @@ export class Engine {
   quarterTurn=false;
   /** GW-02 / T9 (Grok): a farm drag wider than one field becomes several fields with headlands. */
   fieldArea:FieldAreaPlan|null=null;
+  fieldSnap:SnapResult|null=null;
   private fertilityKey='';
   /** Toggle the quarter turn for a turnable building (R key or the Rotate button). */
   rotatePlacement(){const t=this.game.state.placing;if(!t||!turnableBuilding(t)||(scalablePlot(t)&&this.plotSize))return false;this.quarterTurn=!this.quarterTurn;this.updateGhost(true);this.pushHud();return true;}
@@ -723,7 +725,7 @@ export class Engine {
         this.pushHud();return;
       }
       if(this.game.state.placing==='farm'&&this.fieldArea&&this.plotStart){
-        const plan=planFieldArea(this.game,this.plotStart,g,0),placed=placeFieldArea(this.game,plan,0);
+        const plan=planFieldArea(this.game,this.fieldStart()??this.plotStart,g,0,{merge:true}),placed=placeFieldArea(this.game,plan,0);
         this.fieldArea=null;this.view.setLinePreview([]);
         this.game.banner(placed.length?`${placed.length} field${placed.length>1?'s':''} laid out${placed.length<plan.valid?' · ran short of seeds':''}`:'No field could be laid out there',3);
         this.updateGhost();this.pushHud();return;
@@ -813,7 +815,7 @@ export class Engine {
     // A 131m field has 4,489 full-footprint survey points. Preview at most 5Hz;
     // clicks always refresh the exact pointer and validate again in placeBuilding.
     if(this.game.state.placing==='farm'){const now=performance.now();if(!force&&now<this.nextFieldPreviewAt)return;this.nextFieldPreviewAt=now+200;}
-    this.view.setLinePreview([]);
+    this.view.setLinePreview([]);this.view.setFieldSnap([]);
     const type = this.game.state.placing;
     if (!type) {
       const b=this.game.state.selBld;
@@ -834,12 +836,13 @@ export class Engine {
       }
     }
     this.plotSize=scalablePlot(type)&&(this.plotWidth>1||this.plotDepth>1)?{w:BUILDINGS[type].w*this.plotWidth,d:BUILDINGS[type].d*this.plotDepth}:undefined;
-    if(this.plotStart&&scalablePlot(type)&&plotDragIntent(this.plotPointerStart,this.pointer,this.plotStart,g)){
-      const plot=dragPlot(type,this.plotStart,g);x=plot.x;z=plot.z;this.plotSize={w:plot.w,d:plot.d};
+    const dragStart=type==='farm'?this.fieldStart()??this.plotStart:this.plotStart;
+    if(dragStart&&scalablePlot(type)&&plotDragIntent(this.plotPointerStart,this.pointer,dragStart,g)){
+      const plot=dragPlot(type,dragStart,g);x=plot.x;z=plot.z;this.plotSize={w:plot.w,d:plot.d};
     }
     this.fieldArea=null;
     if(type==='farm'&&this.plotStart&&plotDragIntent(this.plotPointerStart,this.pointer,this.plotStart,g)&&(Math.abs(g.x-this.plotStart.x)>BUILDINGS.farm.w*3||Math.abs(g.z-this.plotStart.z)>BUILDINGS.farm.d*3)){
-      const plan=planFieldArea(this.game,this.plotStart,g,0);
+      const plan=planFieldArea(this.game,dragStart!,g,0,{merge:true});
       if(plan.tiles.length>1){
         this.fieldArea=plan;this.view.setLinePreview(plan.tiles.map(t=>({x:t.x,z:t.z,y:this.game.height(t.x,t.z),ok:!t.issue})));
         const fert=fertilityPreview(this.game,{x:(this.plotStart.x+g.x)/2,z:(this.plotStart.z+g.z)/2,w:Math.abs(g.x-this.plotStart.x),d:Math.abs(g.z-this.plotStart.z)});
@@ -847,6 +850,13 @@ export class Engine {
         if(key!==this.plotPreviewKey){this.plotPreviewKey=key;this.game.banner(`${plan.valid}/${plan.tiles.length} fields · ${plan.seeds} seeds · headlands between${fert.summary?` · ${fertilityText(fert)}`:''}${plan.valid<plan.tiles.length?' · red plots blocked':''}`,4);}
       }
     }
+    this.fieldSnap=null;
+    const dragging=!!dragStart&&plotDragIntent(this.plotPointerStart,this.pointer,dragStart,g);
+    if(type==='farm'&&!this.fieldArea&&!dragging){
+      const size=this.plotSize??{w:BUILDINGS.farm.w,d:BUILDINGS.farm.d},snap=snapFieldRect(this.game,{x,z,w:size.w,d:size.d},0);
+      if(snap.snapped){x=snap.rect.x;z=snap.rect.z;this.fieldSnap=snap;}
+    }
+    this.view.setFieldSnap(this.fieldSnap?this.fieldSnap.edges:[]);
     if(type==='farm'&&!this.fieldArea){
       const fert=fertilityPreview(this.game,{x,z,w:this.plotSize?.w,d:this.plotSize?.d}),key=fert.summary?fertilityText(fert):'';
       if(key&&key!==this.fertilityKey&&!this.plotStart){this.fertilityKey=key;this.game.banner(`Field · ${key}`,2);}
@@ -883,6 +893,8 @@ export class Engine {
     const bridge=type==="bridge"?(this.bridgeSpan??planBridge(this.game,x,z)):null;
     this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):type==='fibreWorkshop'?fibreWorkshopPlacementLevel(this.game,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined,type==='watchtower'?towerBuildConfiguration(this.game,0):undefined,this.placementTurn());
   }
+  /** Field drags start from a neighbouring field's edge or corner when pressed close to it. */
+  private fieldStart(){return this.plotStart&&this.game.state.placing==='farm'?snapFieldPoint(this.game,this.plotStart,0):null;}
   /** The quarter turn only applies to turnable, unsized placements (same rule as placementIssue). */
   private placementTurn(){const t=this.game.state.placing;return this.quarterTurn&&!!t&&!this.plotSize&&turnableBuilding(t);}
 

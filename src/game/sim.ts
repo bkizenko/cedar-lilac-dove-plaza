@@ -1259,7 +1259,7 @@ export class Game {
       const clearance = type === "farm" || type === "warehouse" || compactGrainSite ? 0.25 : 1;
       if(_team===0&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return "Explore the whole plot first";
       if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&!prep?.clearable.includes(n)&&Math.abs(n.x-x)<d.w/2+clearance&&Math.abs(n.z-z)<d.d/2+clearance))return "Clear resources from the plot first";
-      if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+clearance&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+clearance))return "Too close to another building";
+      if(this.state.buildings.some(b=>{if(b.id===ignoreId||b.hp<=0)return false;const gap=type==='farm'&&b.type==='farm'&&b.team===_team?-1e-4:clearance;return Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+gap&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+gap;}))return "Too close to another building";
       if(type==="farm")return fieldTopographyIssue(this,{x,z,w:d.w,d:d.d});
       if(compactGrainSite)return null;
     }

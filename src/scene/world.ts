@@ -63,6 +63,7 @@ import {millPowerKw,MILL_RULES} from '@/game/millPower';
 import {watermillSite} from '@/game/waterWorks';
 import {setCarvedPalette} from './carvedPalette';
 import {ContourFields} from './contourFields';
+import {FieldSnapMarks} from './fieldSnapMarks';
 import {BiomeSceneLayer,biomeSurfaceAttributes} from './biomeSceneLayer';
 import type {EcologicalProvinceGrid} from '../game/ecologicalProvinces';
 import {TerrainSurface,duneSandWeight} from './terrainSurface';
@@ -2375,6 +2376,14 @@ export class WorldView {
     this.ghostGame=_game; /* ghost visibility is owned by Engine.updateGhost / setGhost */
   }
 
+  private fieldSnapMarks:FieldSnapMarks|null=null;
+  /** Highlight the seams a field being placed snaps to. Empty clears. */
+  setFieldSnap(edges:readonly import('@/game/fieldSnap').SnapEdge[]){
+    if(!edges.length){this.fieldSnapMarks?.set([]);return;}
+    if(!this.fieldSnapMarks&&this.ghostGame)this.fieldSnapMarks=new FieldSnapMarks(this.scene,(x,z)=>this.ghostGame!.height(x,z));
+    this.fieldSnapMarks?.set(edges);
+  }
+
   setLinePreview(points:{x:number;z:number;y:number;ok:boolean}[]){
     if(!points.length){if(this.linePreview)this.linePreview.visible=false;return;}
     if(!this.linePreview){
@@ -3130,7 +3139,7 @@ export class WorldView {
     this.hullFleet?.dispose();this.hullFleet=null;
     this.sailRigs?.dispose();this.sailRigs=null;
     this.towerPlatforms?.dispose();this.towerPlatforms=null;
-    this.contourFields?.dispose();this.contourFields=null;
+    this.contourFields?.dispose();this.contourFields=null;this.fieldSnapMarks?.dispose();this.fieldSnapMarks=null;
     this.biomeScene?.dispose();this.biomeScene=null;
     this.wildlifeOwners.clear();this.packHorseOwners=[];this.domesticHorseOwners=[];this.packCattleOwners=[];this.domesticCattleOwners=[];this.woodenArdOwners=[];
     if(!this.lost)this.woodenArds?.dispose();
