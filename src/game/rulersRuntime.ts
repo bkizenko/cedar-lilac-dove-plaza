@@ -15,6 +15,7 @@ import {yearlyCivic,beginCivic} from './societyCivicRuntime';
 import {settleGate,raidGate,growthBias,tradeCadenceBias,breakawayLoss,noteRaid,noteMarriage,noteSettlement,yearlySocieties,decisionsEnabled} from './societyRuntime';
 import {liveClaims,cbLegitimacyCost,unrest,stageOf,type Claim,type CasusBelli,type Stage as UnrestStage} from './unrest';
 import {wonderEffect} from './wonderEffects';
+import {sendRefugees} from './refugees';
 
 /** Compressed clock: one dynastic year per this many sim seconds (an 80-year life is about two hours of play). */
 export const RULERS_YEAR_SECONDS=90;
@@ -39,7 +40,7 @@ export function advanceRulers(g:Game){
  sampleClimate(g,r);
  if(decisionsEnabled(g))beginCivic(g); // M2-14: prehistory recorded once at the start (cheap no-op afterwards)
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){const genBefore:Record<string,number>={};for(const [k,v] of Object.entries(s.rulers!.societies))genBefore[k]=v.dynasty.generation;s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);fadeGrudges(g,genBefore);npcMarriages(g);expireClaims(g);harvestGathering(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
+ while(s.rulers!.year<target&&guard++<4){const genBefore:Record<string,number>={};for(const [k,v] of Object.entries(s.rulers!.societies))genBefore[k]=v.dynasty.generation;s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);fadeGrudges(g,genBefore);npcMarriages(g);expireClaims(g);harvestGathering(g);sendRefugees(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */

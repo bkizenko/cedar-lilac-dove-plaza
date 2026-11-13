@@ -8,12 +8,12 @@ import {SocietyFlag} from '../SocietyFlag';
 import {cx,IconBtn} from './kit';
 import {FoldHandle,FoldMin,useFold} from './fold';
 import {RES_ICON,RES_NAME} from './icons';
-import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,budgetNotes,infoVisible,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
+import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,budgetNotes,infoVisible,seasonPhaseOf,seasonCueTitle,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
 import {detectAlerts,foodDays,waterDays,workloadOf,winterOutlook} from './glanceReads';
 import {firstNeeds,firstNeedsVisible,type FirstNeed,type FirstNeedKind} from './firstNeeds';
 import {OVERLAY_KEYS,paintOverlays,type OverlayKey} from './overlayModel';
 import {hasInfluenceGradient,overlaySourcesOf} from './overlayReads';
-import {simulationDaySeconds} from '@/game/calendarPacing';
+import {simulationDaySeconds,SIM_CALENDAR_RULES} from '@/game/calendarPacing';
 import {MINIMAP_RULES} from '../minimapModel';
 
 /* ====================== top bar: supply meters ====================== */
@@ -53,6 +53,19 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
  </div>;
 }
 
+/** Season turn cue: fires once when the calendar phase changes in the running game, never on load or at the first render. */
+function useSeasonCue(engine:Engine|null){
+ const game=engine?.game,phase=game?seasonPhaseOf(game.state.time,SIM_CALENDAR_RULES.yearSeconds):null;
+ const last=useRef<{game:unknown;phase:number|null}>({game,phase});
+ const [cue,setCue]=useState<{id:string;title:string}>();
+ useEffect(()=>{
+  const prev=last.current;last.current={game,phase};
+  if(!game||phase===null||prev.game!==game||prev.phase===null||prev.phase===phase)return;
+  const fd=foodDays(game);
+  setCue({id:`season:${Math.floor(game.state.time/SIM_CALENDAR_RULES.yearSeconds)}:${phase}`,title:seasonCueTitle(phase,fd)});
+ },[game,phase]);
+ return cue;
+}
 /* ====================== alerts: detection hook, priority stack ====================== */
 export const ALERT_ICON:Record<AlertKind,(p:{size:number})=>ReactNode>={
  raiders:p=><Swords {...p}/>,thirsty:p=><Droplets {...p}/>,starving:p=><Wheat {...p}/>,freezing:p=><Snowflake {...p}/>,
@@ -105,6 +118,8 @@ export function PriorityStack({hud,engine,alerts,onOpen,hidden,extra}:{hud:HudSn
  if(hud.routeOffer&&!hud.pendingAge){const o=hud.routeOffer,G=RES_ICON[o.give as keyof typeof RES_ICON],T=RES_ICON[o.get as keyof typeof RES_ICON];
   info.push({id:'route',sticky:true,icon:<Package size={26}/>,title:o.rival,chips:<><span className="hw-chip" title={`Give ${o.giveAmt}`}><G size={24}/>{o.giveAmt}</span><ChevronRight size={24}/><span className="hw-chip" title={`Get ${o.getAmt}`}><T size={24}/>{o.getAmt}</span></>,action:{label:'Accept',onClick:()=>engine?.acceptRoute()},dismiss:()=>engine?.declineRoute()});}
  if(hud.banner&&!hud.placing&&!isKeyTip(hud.banner))info.push({id:'banner:'+hud.banner,sticky:false,icon:<Bell size={26}/>,title:hud.banner,dismiss:()=>setGone(g=>[...g,'banner:'+hud.banner])});
+ const season=useSeasonCue(engine);
+ if(season)info.push({id:season.id,sticky:false,icon:<Snowflake size={26}/>,title:season.title});
  const shown=useInfoClock(info.filter(n=>!gone.includes(n.id)));
  const budget=budgetNotes(shown.map(x=>({...x,id:x.n.id,sticky:x.n.sticky,title:x.n.title})));
  const idle=hud.idleWorkers>0&&hud.selection.kind==='none';

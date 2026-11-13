@@ -116,6 +116,17 @@ export function budgetNotes<T extends BudgetNote>(notes:readonly T[],max=ALERT_B
  return {rows:out,hidden};
 }
 
+/** Season cue: one short timed card when the season turns, saying what to plan for. Display only; the sim's calendar is the source of the phase. */
+export const SEASON_CUE_NAMES=['Spring','Summer','Autumn','Winter'] as const;
+const SEASON_CUE_ADVICE=['sow and mend','tend the fields','bring in the harvest and fill the stores','ration food and keep warm'] as const;
+/** Season phase 0-3 from calendar seconds and the year length. */
+export const seasonPhaseOf=(time:number,yearSeconds:number)=>Math.floor((((time%yearSeconds)+yearSeconds)%yearSeconds)/(yearSeconds/4))%4;
+/** Title for the card. In autumn and winter it adds the real days of food when that is known. */
+export function seasonCueTitle(phase:number,foodDays:number|null){
+ const p=((phase%4)+4)%4,base=`${SEASON_CUE_NAMES[p]}: ${SEASON_CUE_ADVICE[p]}`;
+ return p>=2&&foodDays!==null&&Number.isFinite(foodDays)?`${base}. Food for ${daysText(foodDays)} days`:base;
+}
+
 /* ---------- screen projection ---------- */
 export type CameraMatrices={matrixWorldInverse:{elements:ArrayLike<number>};projectionMatrix:{elements:ArrayLike<number>}};
 export type ScreenPoint={x:number;y:number;/** True when the point is in front of the camera and inside the viewport. */onScreen:boolean;behind:boolean;/** NDC, flipped through the camera when the point is behind it, for edge arrows. */dx:number;dy:number};

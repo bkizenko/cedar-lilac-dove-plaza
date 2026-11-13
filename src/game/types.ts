@@ -308,6 +308,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   homeHall?: number;
   parents?: number[];
   foundingJourney?: {x:number;z:number;leader:boolean;timber?:number;rations?:number};
+  /** hunger refugee of another society walking to the player's hall (src/game/refugees.ts); rides the foundingJourney slot */
+  refugee?: {home:number;phase:'walking'|'waiting'|'home';year:number};
   packJourneySupplies?:PackJourneySupplies;
   expedition?: {food:number;returning:boolean;forage:number;foodUsed?:number;foodCustody?:PackedFoodCustody};
   scout?: {legs:number;returning:boolean;preparing?:true};
