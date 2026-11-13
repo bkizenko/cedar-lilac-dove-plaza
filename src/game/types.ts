@@ -1,3 +1,5 @@
+import type {PackJourneySupplies} from './packJourneyCare';
+import type {PackedFoodCustody} from './packedFoodCustody';
 import type {WildPlantState} from "./ecology";
 import type {ConflictIntent,OccupationControl} from './conflictIntent';
 import type {PrisonerCustody} from './captivity';
@@ -298,7 +300,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   homeHall?: number;
   parents?: number[];
   foundingJourney?: {x:number;z:number;leader:boolean;timber?:number;rations?:number};
-  expedition?: {food:number;returning:boolean;forage:number};
+  packJourneySupplies?:PackJourneySupplies;
+  expedition?: {food:number;returning:boolean;forage:number;foodUsed?:number;foodCustody?:PackedFoodCustody};
   scout?: {legs:number;returning:boolean;preparing?:true};
   scoutProvisions?: import('./scoutProvisions').ScoutProvisions;
   fatigue?: number;

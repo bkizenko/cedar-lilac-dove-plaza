@@ -1,3 +1,5 @@
+import {quotePackJourneyCare,commitPackJourneyCare,returnPackJourneyCare,packJourneyReturnBudgetLow} from './packJourneyCare';
+import {planExpeditionProvisions,commitExpeditionProvisions,expeditionProvisionCapacity,expeditionHome,expeditionAtOwnCache,expeditionProvisionNourishment,consumeExpeditionProvisions,returnExpeditionProvisions,addExpeditionForage,expeditionForageRoom} from './expeditionProvisions';
 import {rivalFoodConstructionActive} from './rivalFoodProcessing';
 import {workdayAt} from "./daylight";
 import {applyForagePressure,harvestWildPlant,wildPlantsEnabled} from "./ecology";
@@ -7,69 +9,56 @@ import { foodDemand, FOOD_PER_PERSON_SECOND, reserveSeconds } from "./settlement
 import { predisposition } from "./people";
 export function beginExpedition(g: Game, u: Unit) {
   if (u.expedition) return true;
-  const t = g.tribe(u.team),
-    available = Math.max(0, t.food - foodDemand(g, u.team) * 90);
-  const food = Math.min(24, Math.floor(available));
-  if (food < 6) return false;
-  t.food -= food;
-  u.expedition = { food, returning: false, forage: 0 };
-  return true;
+  const care=quotePackJourneyCare(g,u,expeditionProvisionCapacity(u));if(!care)return false;
+  const plan=planExpeditionProvisions(g,u,care.reservedUnits,care.stockAfterCare,care.maximumHumanUnits);
+  if(!plan||!commitPackJourneyCare(g,u,care))return false;
+  return commitExpeditionProvisions(g,u,plan);
 }
 export function expeditionAI(g: Game, u: Unit, dt: number) {
   const e = u.expedition;
   if (!e) return false;
-  const halls = g.state.buildings.filter(
-    (b) => b.team === u.team && b.type === "townhall" && g.finished(b),
-  );
-  const home =
-    halls.find((b) => b.id === u.homeHall) ||
-    halls.sort((a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0];
-  if (!home) {e.food=Math.max(0,e.food-dt*FOOD_PER_PERSON_SECOND);return false;}
-  const distance = Math.hypot(u.x - home.x, u.z - home.z);
-  if (distance < Math.max(home.w, home.d) * 0.55 + 3 && (e.returning || u.order !== "explore")) {
-    g.tribe(u.team).food += e.food;
-    u.expedition = undefined;
-    if (e.returning) {
-      u.order = "idle";
-      u.node = null;
-      u.workReason = "Expedition home — unused provisions returned";
-    }
+  const home=expeditionHome(g,u);
+  if(expeditionAtOwnCache(g,u)&&(e.returning||u.order!=="explore")){
+    returnPackJourneyCare(g,u);returnExpeditionProvisions(g,u);
+    if(e.returning){u.order="idle";u.node=null;u.workReason="Expedition home — unused provisions returned";}
     return false;
   }
-  e.food = Math.max(0, e.food - dt * FOOD_PER_PERSON_SECOND * predisposition(u).appetite);
-  if (e.returning && (u.order !== "move" || Math.hypot(u.tx - home.x, u.tz - home.z) > 1))
+  consumeExpeditionProvisions(u,dt*FOOD_PER_PERSON_SECOND*predisposition(u).appetite);
+  if(!home){u.workReason="Expedition has no reachable home cache";return false;}
+  const distance=Math.hypot(u.x-home.spot.x,u.z-home.spot.z);
+  if (e.returning && (u.order !== "move" || Math.hypot(u.tx - home.spot.x, u.tz - home.spot.z) > 1))
     e.returning = false;
   if (u.order !== "explore" && !e.returning) return false;
   const threat = g.state.units.some(
     (p) => p.hp > 0 && g.isFoe(u.team, p.team) && Math.hypot(p.x - u.x, p.z - u.z) < 20,
   );
-  if (!threat && !e.returning && e.food > 2 && e.food < 12) {
+  if (expeditionForageRoom(u)>1e-9 && !threat && !e.returning && expeditionProvisionNourishment(u) > 2 && expeditionProvisionNourishment(u) < 12) {
     const patch = g.state.forage.find((n) => n.amount >= 1 && Math.hypot(n.x - u.x, n.z - u.z) < 5);
     if (patch) {
       e.forage += dt;
       u.workReason = "Foraging nearby wild food for the journey";
       if (e.forage >= 8) {
         e.forage -= 8;
-        const taken=harvestWildPlant(g,patch,1);
+        const taken=harvestWildPlant(g,patch,Math.min(1,expeditionForageRoom(u)));
         if(!wildPlantsEnabled(g)){patch.amount-=taken;applyForagePressure(patch,taken);if(patch.amount<=0)patch.regenT=240+(patch.pressure||0)*900;}
-        e.food += taken;
+        addExpeditionForage(g,u,taken,patch.x,patch.z);
       }
       if (e.forage > 0) return true;
     }
   }
   const returnNeed = Math.max(2, (distance / Math.max(1, u.speed)) * FOOD_PER_PERSON_SECOND * 1.4);
-  if (e.food <= returnNeed || threat || u.stuckT > 8) e.returning = true;
+  if (expeditionProvisionNourishment(u) <= returnNeed || packJourneyReturnBudgetLow(g,u,distance/Math.max(1,u.speed)) || threat || u.stuckT > 8) e.returning = true;
   const offShift = !workdayAt(g.state.time,g.dayPhase()*24).working;
-  if (offShift && !g.state.nightWork && !threat && !e.returning && e.food>2 && distance > 18) {
+  if (offShift && !g.state.nightWork && !threat && !e.returning && expeditionProvisionNourishment(u)>2 && distance > 18) {
     u.fatigue = Math.max(0, (u.fatigue || 0) - dt / 15);
     u.workReason = "Night camp — resting with journey provisions";
     return true;
   }
-  if(e.returning&&e.food<2){const patch=g.state.forage.find(n=>n.amount>=1&&Math.hypot(n.x-u.x,n.z-u.z)<4);if(patch){e.forage+=dt;if(e.forage>=8){e.forage=0;const taken=harvestWildPlant(g,patch,1);if(!wildPlantsEnabled(g)){patch.amount-=taken;applyForagePressure(patch,taken);if(patch.amount<=0)patch.regenT=240+(patch.pressure||0)*900;}e.food+=taken;}}}
+  if(expeditionForageRoom(u)>1e-9&&e.returning&&expeditionProvisionNourishment(u)<2){const patch=g.state.forage.find(n=>n.amount>=1&&Math.hypot(n.x-u.x,n.z-u.z)<4);if(patch){e.forage+=dt;if(e.forage>=8){e.forage=0;const taken=harvestWildPlant(g,patch,Math.min(1,expeditionForageRoom(u)));if(!wildPlantsEnabled(g)){patch.amount-=taken;applyForagePressure(patch,taken);if(patch.amount<=0)patch.regenT=240+(patch.pressure||0)*900;}addExpeditionForage(g,u,taken,patch.x,patch.z);}}}
   if (e.returning) {
     u.order = "move";
-    u.tx = home.x;
-    u.tz = home.z;
+    u.tx = home.spot.x;
+    u.tz = home.spot.z;
     u.workReason = "Returning before journey provisions run out";
     g.steer(u, dt);
     return true;
