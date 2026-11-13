@@ -25,16 +25,25 @@ const FIELD_GLSL_COLOUR=`
           float fEdge=fIn-(.6+(1.+.22*fHalfMin)*(.5+.5*fWave))-(fNoise(vFieldWorldXZ*1.3)-.5)*.35;
           if(fEdge<0.)discard;
           // Ridge and furrow: meanders slightly; strong on bare ground, soft under a crop.
-          float fAcrossW=fieldAcross+(fNoise(vFieldWorldXZ*.16)-.5)*1.1;
-          float fBand=.5+.5*cos(fAcrossW/max(.3,vFieldRows.w)*6.28318530718);
+          // Each furrow drifts and wobbles on its own and varies in depth (per-field seed), so it never reads as even corrugation.
+          float fSp=max(.3,vFieldRows.w),fSeed=vFieldLook.z*91.7,fAlong=dot(vFieldWorldXZ,fRowT),fRowIx=fieldAcross/fSp;
+          float fWarp=(fNoise(vFieldWorldXZ*.16)-.5)*1.1+(fNoise(vec2(fAlong*.45+fSeed,fRowIx*1.3))-.5)*.5*fSp+(fNoise(vec2(fAlong*1.7,fRowIx*.7+fSeed*.3))-.5)*.18*fSp;
+          float fAcrossW=fieldAcross+fWarp;
+          float fBand=.5+.5*cos(fAcrossW/fSp*6.28318530718);
+          float fDepth=.4+.95*fNoise(vec2(fAlong*.22+fSeed*.5,fRowIx*.85+fSeed));
           float fFar=1.-smoothstep(45.,150.,length(vViewPosition));
           float fAmp=fStage<.5?1.:fStage<1.5?.8:fStage<2.5?.45:fStage<3.5?.35:fStage<4.5?.8:.3;
+          fAmp=min(1.,fAmp*fDepth);
           float fRidge=mix(.5,smoothstep(.1,.95,fBand),fFar*fAmp);
           vec3 fSoilC=fLin(vFieldSoil.rgb);
           vec3 fCol=fSoilC*mix(.88,1.1,fRidge);
           vec2 fCell=floor(vFieldWorldXZ*vec2(2.3,2.3));
           float fClod=fHash(fCell);
           fCol*=.92+.12*mix(.5,fClod,fFar)+.07*(fNoise(vFieldWorldXZ*.21)-.5)*2.;
+          // Clods: lumpy light and shade, plus the odd pale stone chip; fades out with distance.
+          float fLump=fNoise(vFieldWorldXZ*vec2(4.1,5.3)+fSeed)*.6+fNoise(vFieldWorldXZ*9.7+fSeed*2.)*.4;
+          fCol*=1.+(fLump-.5)*.55*fFar;
+          fCol=mix(fCol,fCol*1.55+.02,step(.94,fHash(floor(vFieldWorldXZ*7.+fSeed)))*fFar*.45);
           // Stage: faint seedling dust, a crop-coloured understorey, straw stubble, weedy fallow. Plants themselves are separate instances.
           float fDots=smoothstep(.55,.8,fNoise(vFieldWorldXZ*6.+vFieldLook.z*13.));
           // Plants are small at RTS range, so the stage also tints the whole plot (muted, ridge-modulated).
@@ -86,7 +95,7 @@ export class FieldSurface {
   }
 
   bind(material: THREE.Material,options:{furrows?:boolean;painterly?:boolean}={}) {
-    material.customProgramCacheKey = () => (options.furrows?(options.painterly?'hearth-contour-field-painter-v2-cuts':'hearth-contour-field-v3-cuts'):'hearth-field-surface-v2-cuts')+(this.banks?`-banks-v19-${this.size}-${this.banks.gridSubdivisions}`:'');
+    material.customProgramCacheKey = () => (options.furrows?(options.painterly?'hearth-contour-field-painter-v3-cuts':'hearth-contour-field-v3-cuts'):'hearth-field-surface-v2-cuts')+(this.banks?`-banks-v19-${this.size}-${this.banks.gridSubdivisions}`:'');
     material.onBeforeCompile = shader => {
       this.excavations.bind(shader);this.banks?.bind(shader);
       shader.uniforms.fieldHeights = {value: this.texture};

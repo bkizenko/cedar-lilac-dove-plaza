@@ -3,6 +3,7 @@
  *  Four tiers by mean slope AND by fall across the footprint, tolerances per building class, a foundation that will be built,
  *  and a bill of real goods (wood, stone) plus extra worker-seconds. Nothing is teleported: the extra goods are spent like any other cost. */
 import type {BldType} from './types';
+import {validTerraceRecord,validSiteTags,type TerraceRecord} from './terraceRecord';
 
 export type SlopeTier='level'|'moderate'|'steep'|'severe';
 export type SlopeClass='dwelling'|'shelter'|'light'|'workshop'|'storage'|'civic'|'wonder'|'tower'|'field'|'dock'|'exempt';
@@ -10,7 +11,8 @@ export type SlopeClass='dwelling'|'shelter'|'light'|'workshop'|'storage'|'civic'
  *  stilts: post platform; dugout: cut into the slope; outcrop: footing keyed into bare rock; strips: terraced field strips. */
 export type FoundationKind='none'|'pad'|'terrace'|'stilts'|'dugout'|'outcrop'|'strips';
 export type SiteGround={rockName?:string;hardness?:number;soilDepthMeters?:number;landformTag?:string}|null|undefined;
-export type SiteRecord={v:1;tier:SlopeTier;foundation:FoundationKind;slope:number;fall:number;extraWork:number;wood:number;stone:number};
+/** `terrace` and `tags` exist only on terrain-model v2 saves (terraceFarming.ts, slopeNuance.ts); both optional and validated. */
+export type SiteRecord={v:1;tier:SlopeTier;foundation:FoundationKind;slope:number;fall:number;extraWork:number;wood:number;stone:number;terrace?:TerraceRecord;tags?:string[]};
 
 export const SLOPE_MODEL_VERSION=1;
 export const SLOPE_COLOURS:Record<SlopeTier,string>={level:'#4caf50',moderate:'#e0a020',steep:'#e0701c',severe:'#c0392b'};
@@ -104,8 +106,10 @@ export type SiteAssessment={
  model:'graded';type:string;slopeClass:SlopeClass;tier:SlopeTier;foundation:FoundationKind;ok:boolean;issue:string|null;
  label:string;detail:string;colour:string;meanSlopeDeg:number;maxStepDeg:number;fall:number;area:number;
  extraWood:number;extraStone:number;extraWork:number;workPct:number;ground:GroundKind;downhill:{x:number;z:number};
+ /** terrain-model v2 only (siteAssessmentV2.ts) */terrace?:TerraceRecord;tags?:string[];shelfHint?:string;
 };
-export type AssessOptions={ground?:SiteGround;water?:(x:number,z:number)=>number;baseWork?:number};
+/** `adjust` reshapes the survey before tiering (a natural shelf is credited, terrain-model v2); `billScale` multiplies the foundation bill (a shelf is half built, a hollow costs more drainage). */
+export type AssessOptions={ground?:SiteGround;water?:(x:number,z:number)=>number;baseWork?:number;adjust?:(s:SiteSurvey)=>SiteSurvey;billScale?:{wood:number;stone:number;work:number}};
 const r1=(n:number)=>Math.round(n*10)/10;
 /** Tier of a survey for a class: slope and fall, the worse wins; a ledge steeper than 50 degrees is severe. Loose ground lowers the ceilings 15%. */
 export function tierFor(cls:Exclude<SlopeClass,'exempt'>,s:SiteSurvey,kind:GroundKind='plain'):SlopeTier{
@@ -142,7 +146,7 @@ function candidates(cls:Exclude<SlopeClass,'exempt'>,tier:SlopeTier,type:string,
 const score=(b:Bill)=>b.wood+b.stone+b.work/4;
 /** Assess a site: tier, foundation, goods and labour. Class 'exempt' types (walls, bridges, camps...) are returned level and free. */
 export function assessSite(height:(x:number,z:number)=>number,type:BldType|string,x:number,z:number,w:number,d:number,opts:AssessOptions={}):SiteAssessment{
- const cls=slopeClassOf(type),s=surveySite(height,x,z,w,d,cls==='dock'?opts.water:undefined),gk=groundKind(opts.ground),hardness=opts.ground?.hardness??0;
+ const cls=slopeClassOf(type),s0=surveySite(height,x,z,w,d,cls==='dock'?opts.water:undefined),s=opts.adjust?opts.adjust(s0):s0,gk=groundKind(opts.ground),hardness=opts.ground?.hardness??0;
  const base:SiteAssessment={model:'graded',type,slopeClass:cls,tier:'level',foundation:'none',ok:true,issue:null,label:TIER_WORD.level,detail:'',colour:SLOPE_COLOURS.level,meanSlopeDeg:r1(s.meanSlopeDeg),maxStepDeg:r1(s.maxStepDeg),fall:Math.round(s.fall*100)/100,area:w*d,extraWood:0,extraStone:0,extraWork:0,workPct:0,ground:gk,downhill:s.downhill};
  if(cls==='exempt')return base;
  const p=CLASS_PROFILES[cls],tier=tierFor(cls,s,gk);
@@ -153,8 +157,9 @@ export function assessSite(height:(x:number,z:number)=>number,type:BldType|strin
  if((tier==='steep'||tier==='severe')&&base.area>p.steepMaxArea&&cls!=='field')return refuse(`a building this large (${label}) — choose a smaller footprint or gentler ground`);
  const options=candidates(cls,tier,type,s,opts.ground);
  if(!options.length)return refuse(`this building (${label}) — pick a gentler slope${cls==='dwelling'&&tier==='severe'?' or soft rock to dig into':''}`);
- let best=options[0],bestBill=foundationBill(best,w,d,s.fall,gk,hardness);
- for(const k of options.slice(1)){const b=foundationBill(k,w,d,s.fall,gk,hardness);if(score(b)<score(bestBill)){best=k;bestBill=b;}}
+ const bs=opts.billScale,scaled=(b:Bill):Bill=>bs?bill(b.wood*bs.wood,b.stone*bs.stone,b.work*bs.work):b;
+ let best=options[0],bestBill=scaled(foundationBill(best,w,d,s.fall,gk,hardness));
+ for(const k of options.slice(1)){const b=scaled(foundationBill(k,w,d,s.fall,gk,hardness));if(score(b)<score(bestBill)){best=k;bestBill=b;}}
  const slow=tier==='steep'||tier==='severe'?COST_RULES.steepSlowdown:1,work=r1(bestBill.work*slow);
  base.foundation=best;base.extraWood=bestBill.wood;base.extraStone=bestBill.stone;base.extraWork=work;base.workPct=Math.round(work/Math.max(1,opts.baseWork??16)*100);
  const extras=[bestBill.wood?`+${bestBill.wood} wood`:'',bestBill.stone?`+${bestBill.stone} stone`:'',`+${base.workPct}% labour time`].filter(Boolean).join(' · ');
@@ -163,9 +168,13 @@ export function assessSite(height:(x:number,z:number)=>number,type:BldType|strin
  return base;
 }
 /** Compact record stored on a building (optional save field). Level sites store nothing. */
-export function siteRecord(a:SiteAssessment):SiteRecord|undefined{return a.ok&&a.tier!=='level'?{v:1,tier:a.tier,foundation:a.foundation,slope:a.meanSlopeDeg,fall:a.fall,extraWork:a.extraWork,wood:a.extraWood,stone:a.extraStone}:undefined;}
+export function siteRecord(a:SiteAssessment):SiteRecord|undefined{
+ if(!a.ok||(a.tier==='level'&&!a.terrace))return undefined;
+ const r:SiteRecord={v:1,tier:a.tier==='level'?'moderate':a.tier,foundation:a.foundation,slope:a.meanSlopeDeg,fall:a.fall,extraWork:a.extraWork,wood:a.extraWood,stone:a.extraStone};
+ if(a.terrace)r.terrace=a.terrace;if(a.tags?.length)r.tags=a.tags;return r;
+}
 export function validSiteRecord(r:unknown):r is SiteRecord{
  const o=r as SiteRecord|null;if(!o||typeof o!=='object'||o.v!==1)return false;
  const n=(v:unknown,max:number)=>typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=max;
- return SLOPE_TIERS.includes(o.tier)&&o.tier!=='level'&&SLOPE_FOUNDATIONS.includes(o.foundation)&&o.foundation!=='none'&&n(o.slope,90)&&n(o.fall,200)&&n(o.extraWork,1e6)&&n(o.wood,1e5)&&n(o.stone,1e5);
+ return SLOPE_TIERS.includes(o.tier)&&o.tier!=='level'&&SLOPE_FOUNDATIONS.includes(o.foundation)&&o.foundation!=='none'&&n(o.slope,90)&&n(o.fall,200)&&n(o.extraWork,1e6)&&n(o.wood,1e5)&&n(o.stone,1e5)&&(o.terrace===undefined||validTerraceRecord(o.terrace))&&(o.tags===undefined||validSiteTags(o.tags));
 }

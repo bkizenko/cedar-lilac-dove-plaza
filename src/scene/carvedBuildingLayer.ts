@@ -17,6 +17,7 @@ import * as THREE from 'three';
 import {carvedSnowUniform,patchSnowShader} from './roofSnow';
 import {partsAtLod,renderTierForDistance,type BuildingSpec,type LodTier,type PartAnim,type RenderTier} from './buildingParts';
 import {getBuildingGrammar} from './buildingFamilies';
+import {getBuildingMute} from './buildingDetail';
 import {carvedVariantFor,prosperityTier,skinKeyPart,variantSpec,type CarvedBuildingInput} from './buildingStyleMap';
 import {buildCarvedMesh,impostorCard,type CarvedMeshData} from './carvedMesh';
 import {CARVED_GRAIN,CARVED_LIGHT_RIG,getCarvedPalette,specSwatch,woodGrainPixels} from './carvedPalette';
@@ -64,7 +65,7 @@ export function createCarvedMaterial():THREE.MeshStandardMaterial{
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vGrain;').replace('#include <map_fragment>','#ifdef USE_MAP\n vec4 sampledDiffuseColor=texture2D(map,vMapUv);\n diffuseColor.rgb*=mix(vec3(1.0),sampledDiffuseColor.rgb,vGrain);\n#endif');
   patchSnowShader(shader);
  };
- m.customProgramCacheKey=()=>'carved-h-grain-snow-v2';
+ m.customProgramCacheKey=()=>'carved-h-grain-snow-v2'+(m.bumpMap?'-bump':'');
  return m;
 }
 
@@ -101,10 +102,12 @@ export class CarvedBuildingLayer{
  }
  /** Season snow cover 0..1 (game.seasonMix().snow): whitens upward faces of drawn buildings and tints far impostor cards. */
  setSnow(snow:number){const v=Math.max(0,Math.min(1,snow));carvedSnowUniform.value=v<.02?0:v;this.snow=carvedSnowUniform.value;}
- private snow=0;
+ private snow=0;private bump=false;
+ /** High/Ultra Detail: the grain map also drives a small bump so wood, thatch and stone read as relief (no extra geometry). */
+ setBump(on:boolean){if(on===this.bump)return;this.bump=on;const m=this.material;m.bumpMap=on?carvedGrainTexture():null;m.bumpScale=on?1.6:0;m.needsUpdate=true;}
  /** Stable variant key for an instance, cached per generator-relevant input. */
  private keyFor(b:CarvedInstance){
-  const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.join??''}:${b.gateOpen?'o':''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getCarvedPalette()}:${skinKeyPart(b)}`;
+  const k=`${b.worldSeed}:${b.type}:${b.id}:${b.era}:${b.habitat??''}:${b.footprint.w}x${b.footprint.d}:${b.waterSide??''}:${b.wallAxis??''}:${b.join??''}:${b.gateOpen?'o':''}:${b.settlementSeed??''}:${prosperityTier(b.prosperity)}:${b.reviewWatermill?'mill':''}:${b.lit===false?'cold':'lit'}:${getBuildingGrammar()}:${getBuildingMute()?'mute':''}:${getCarvedPalette()}:${skinKeyPart(b)}`;
   if(!this.keys.has(k)){const v=carvedVariantFor(b);this.keys.set(k,v?v.key:null);if(v&&!this.specs.has(v.key))this.specs.set(v.key,variantSpec(v));}
   return this.keys.get(k)??null;
  }
