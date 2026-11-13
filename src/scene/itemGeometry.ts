@@ -29,7 +29,7 @@ export function disposeItemGeometries(){for(const v of geos.values())v?.dispose(
 // ---------------------------------------------------------------------------------------------------------------- the one material
 /** Live knobs of the shared item material. `env` scales the painted sky reflection that makes metal read as metal (no env map needed);
  *  `normal` scales the grain/hammer relief. Callers (a day/night driver) may change them at any time. */
-export const ITEM_SURFACE={env:{value:1.05},normal:{value:1}};
+export const ITEM_SURFACE={env:{value:2.6},normal:{value:1}};
 let atlas:Atlas|null=null,texs:{detail:THREE.DataArrayTexture;mat:THREE.DataArrayTexture;decal:THREE.DataTexture}|null=null;
 /** Build the atlas and its three GPU textures once (seeded; no network). */
 export function itemTextures(){

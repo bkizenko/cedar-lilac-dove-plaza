@@ -72,10 +72,14 @@ export function spearFamily(c:Ctx,kind:'spear'|'javelin'|'pike'){
 }
 
 // ---------------------------------------------------------------------------------------------------------------- hafted head helpers
-/** a wedge/axe head extending along +Z from the haft, edge at the far end; heights and thicknesses taper to the edge */
+/** An axe or adze head extending along +Z from the haft, edge at the far end: a slab with chamfered spines whose cheeks stay thick over the first half and are ground down
+ *  to a convex bevel and a thin edge, with rounded edge corners and an optional beard (`drop`). `w0` is the thickness at the eye, `w1` at the edge, `h0`/`h1` the height. */
 export function wedge(c:Ctx,y:number,z0:number,z1:number,o:{w0:number;w1:number;h0:number;h1:number;drop?:number;paint:Paint;shape?:'oct'|'rect'}){
- const n=c.b.pick(12,8,4),corner=(t:number)=>t<.84?1:Math.sqrt(Math.max(.05,1-Math.pow((t-.84)/.16,2)*.8)),secs=Array.from({length:n+1},(_,i)=>{const t=i/n,h=(o.h0+(o.h1-o.h0)*Math.pow(t,.8))*corner(t);return {c:[0,y-(o.drop??0)*t*t,z0+(z1-z0)*t] as V3,w:Math.max(.0016,o.w0+(o.w1-o.w0)*Math.pow(t,.9)),h};});
- c.b.loft(secs,'z',edgeGlint(o.paint,.82),{shape:o.shape??'oct'});
+ const L=z1-z0,corner=(t:number)=>t<.8?1:Math.sqrt(Math.max(.08,1-Math.pow((t-.8)/.2,2)*.7)),thick=Math.max(o.w0,.012)/2,edge=Math.max(.0011,o.w1/2);
+ const th=(t:number)=>t<.45?thick*(1-.16*t/.45):edge+(thick*.84-edge)*Math.pow(1-(t-.45)/.55,1.7),hh=(t:number)=>(o.h0+(o.h1-o.h0)*Math.pow(t,.8))/2*corner(t);
+ c.b.push([0,y,z0],[0,0,0],[0,0,1,1,0,0,0,1,0] as never);
+ c.b.blade({y0:0,y1:L,w:hh,th,sweep:o.drop?t=>-o.drop!*t*t:undefined,section:'slab',steps:c.b.pick(16,10,6),capEnd:true},edgeGlint(o.paint,.8,.32));
+ c.b.pop();
 }
 /** a hafted tool's handle with a butt swell; returns top y */
 export function haft(c:Ctx,y0:number,y1:number,r:number,o:{knob?:boolean;crook?:number}={}){

@@ -62,7 +62,7 @@ export type BladeOpts={
  /** half-thickness at t */th:(t:number)=>number;
  /** sideways bend (Z) at t */bend?:(t:number)=>number;
  /** sideways sweep (X) at t, for curved sabres */sweep?:(t:number)=>number;
- section?:'lens'|'diamond'|'flat'|'hollow';steps?:number;
+ section?:'lens'|'diamond'|'flat'|'hollow'|'slab';steps?:number;/** close the far end too (axe heads, chisels) */capEnd?:boolean;
  /** edge jitter in metres (knapped chips) */chip?:number;seed?:number;center?:V3;
 };
 const PAIRS=(n:number)=>Array.from({length:n},(_,i)=>i);
@@ -195,7 +195,8 @@ export class MeshBuilder{
  blade(o:BladeOpts,paint:Paint){
   const steps=o.steps??this.pick(14,9,5),R=rng(o.seed??this.seed),rings:V3[][]=[],cx=o.center??[0,0,0],chip=this.lod===2?0:(o.chip??0);
   const sec=o.section??'lens';
-  const prof:[number,number][]=sec==='flat'?[[-1,0],[-1,.9],[0,1],[1,.9],[1,0],[1,-.9],[0,-1],[-1,-.9]]
+  const prof:[number,number][]=sec==='slab'?[[-1,-.86],[-1,.86],[-.9,1],[.9,1],[1,.86],[1,-.86],[.9,-1],[-.9,-1]]
+   :sec==='flat'?[[-1,0],[-1,.9],[0,1],[1,.9],[1,0],[1,-.9],[0,-1],[-1,-.9]]
    :sec==='diamond'?[[-1,0],[-.5,.62],[0,1],[.5,.62],[1,0],[.5,-.62],[0,-1],[-.5,-.62]]
    :sec==='hollow'?[[-1,0],[-.62,.55],[-.2,.62],[.2,.62],[.62,.55],[1,0],[.62,-.55],[.2,-.62],[-.2,-.62],[-.62,-.55]]
    :[[-1,0],[-.72,.72],[0,1],[.72,.72],[1,0],[.72,-.72],[0,-1],[-.72,-.72]];
@@ -203,7 +204,7 @@ export class MeshBuilder{
   for(let i=0;i<=steps;i++){const t=i/steps,y=o.y0+(o.y1-o.y0)*t,w=Math.max(0,o.w(t)),th=Math.max(.0004,o.th(t)),bz=o.bend?.(t)??0,sx=o.sweep?.(t)??0;
    const ch=chip>0&&i>0&&i<steps?[(R()-.5)*chip,(R()-.5)*chip]:[0,0];jit.push(ch);
    rings.push(prof.map(([u,v])=>{const side=u<0?0:1,e=Math.abs(u)>.9?ch[side]:0;return [cx[0]+sx+u*(w+e),cx[1]+y,cx[2]+bz+v*th] as V3;}));}
-  return this.grid(rings,(p,n,t,a)=>paint(p,n,t,Math.min(1,Math.abs(p[0]-cx[0])/Math.max(.001,o.w(t)||.001))),{smooth:false,capA:true,capB:false,tex:paint.tex});
+  return this.grid(rings,(p,n,t,a)=>paint(p,n,t,Math.min(1,Math.abs(p[0]-cx[0])/Math.max(.001,o.w(t)||.001))),{smooth:false,capA:true,capB:!!o.capEnd,tex:paint.tex});
  }
  /** Helical lashing from a to b around radius r. Near: a real wound cord; mid: fewer turns; far: a dark band. */
  lash(a:V3,b:V3,r:number,turns:number,cord:number,paint:Paint){
