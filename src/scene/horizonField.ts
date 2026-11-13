@@ -16,9 +16,9 @@ export const HORIZON_RULES={
  /** vertices per side, radial rings, radial growth factor, and the most canopy blobs per level; the ring is part of the frame so it scales with the draw distance level */
  tiers:{
   low:{side:72,rings:20,growth:1.2,canopyCap:0},
-  medium:{side:128,rings:26,growth:1.15,canopyCap:2600},
-  high:{side:160,rings:30,growth:1.12,canopyCap:4400},
-  ultra:{side:192,rings:34,growth:1.11,canopyCap:7200},
+  medium:{side:128,rings:26,growth:1.15,canopyCap:1800},
+  high:{side:160,rings:30,growth:1.12,canopyCap:2800},
+  ultra:{side:192,rings:34,growth:1.11,canopyCap:4500},
  } as Record<HorizonTierName,HorizonTier>,
  /** metres over which the carried edge heights give way to the far field */
  blendMetres:600,carryDecayMetres:170,
@@ -31,10 +31,10 @@ export const HORIZON_RULES={
  /** ground heights above water for the snowline and tree line */
  snowlineMetres:250,treelineMetres:190,
  mountainMetres:210,hillMetres:34,
- /** triangle cost of one canopy blob (open 6-sided cone) */
- canopyTriangles:6,
+ /** triangle cost of one canopy blob (open hemisphere, 7 segments, 2 rings: a rounded mound, never a pyramid) */
+ canopyTriangles:21,
  /** a forest mass stands about as tall as a canopy (m), however wide the blob: far masses read as a low dark mat, never as peaks */
- canopyMaxHeight:26,
+ canopyMaxHeight:24,
 } as const;
 export type HorizonInput={
  seed:number;half:number;

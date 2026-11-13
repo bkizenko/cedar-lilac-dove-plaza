@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type {Game} from '../game/sim';
 import type {DrawBands,DrawDistance} from '../game/drawDistance';
 import {seaSurfaceY} from '../game/localWater';
-import {buildHorizon,type HorizonGeometry} from './horizonField';
+import {buildHorizon,HORIZON_RULES,type HorizonGeometry} from './horizonField';
 /** The land, sea and forest beyond the playable square (see horizonField.ts for the rules). One ground mesh (Lambert, vertex colours, painter fog, sea
  * Fresnel/sun glitter injected into the same material) and one InstancedMesh of canopy blobs: two draw calls, never pickable, no collider. */
 export class HorizonRing{
@@ -60,10 +60,10 @@ export class HorizonRing{
   g.setIndex(new THREE.BufferAttribute(geo.indices,1));g.computeVertexNormals();g.computeBoundingSphere();
   this.ground=new THREE.Mesh(g,this.groundMat);this.ground.name='horizon-ring-ground';this.ground.raycast=()=>{};this.ground.frustumCulled=false;this.ground.renderOrder=0;this.group.add(this.ground);
   if(geo.canopies.length){
-   const cone=new THREE.ConeGeometry(1,1,6,1,true);cone.translate(0,.5,0);
+   const cone=new THREE.SphereGeometry(1,7,2,0,Math.PI*2,0,Math.PI/2);
    const m=new THREE.InstancedMesh(cone,this.canopyMat,geo.canopies.length),mat=new THREE.Matrix4(),q=new THREE.Quaternion(),p=new THREE.Vector3(),s=new THREE.Vector3(),c=new THREE.Color();
    geo.canopies.forEach((k,i)=>{
-    p.set(k.x,k.y,k.z);q.setFromAxisAngle(new THREE.Vector3(0,1,0),k.tone*6.28);s.set(k.r,k.h,k.r);mat.compose(p,q,s);m.setMatrixAt(i,mat);
+    p.set(k.x,k.y,k.z);q.setFromAxisAngle(new THREE.Vector3(0,1,0),k.tone*6.28);s.set(k.r,k.h*1.1,k.r);mat.compose(p,q,s);m.setMatrixAt(i,mat);
     const hi=Math.max(0,Math.min(1,(k.y-seaY-30)/130)),r=.13+k.tone*.06-hi*.02,gr=.27+k.tone*.1-hi*.06,b=.14+k.tone*.04;
     c.setRGB(r,gr,b);m.setColorAt(i,c);
    });
@@ -76,7 +76,7 @@ export class HorizonRing{
   this.groundMat.color.copy(tint);this.canopyMat.color.copy(tint);
  }
  /** Scene-graph counts for the report. */
- counts(){return {triangles:(this.stats?.triangles??0)+(this.canopy?this.canopy.count*6:0),instances:this.canopy?.count??0,drawCalls:(this.ground?1:0)+(this.canopy?1:0)};}
+ counts(){return {triangles:(this.stats?.triangles??0)+(this.canopy?this.canopy.count*HORIZON_RULES.canopyTriangles:0),instances:this.canopy?.count??0,drawCalls:(this.ground?1:0)+(this.canopy?1:0)};}
  private clear(){
   for(const m of [this.ground,this.canopy]){if(!m)continue;this.group.remove(m);m.geometry.dispose();if((m as THREE.InstancedMesh).isInstancedMesh)(m as THREE.InstancedMesh).dispose();}
   this.ground=null;this.canopy=null;this.stats=null;
