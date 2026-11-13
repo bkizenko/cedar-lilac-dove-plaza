@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: 027dfae3bddc661e0e83b3b21fb6534e927aa93e published as 2026-11-13T00-18-33-207Z-027dfae on8086/8101.52/52 scoped checks (49native/shared+3actualbuilt), compiler/buildPASS: genuinely earned horse shares finite carrying budget with typed human meals and animal feed/water; physical cache loading/return, ordinaryRecall, real food/water consumption, retained food kinds and no duplicate income. Same paid NPC author resumes original work without recharging. Raw wild cereal cannot become ready journey berries. Original53/legacy scalar packets and durable state preserved;46Low shader programs compiled, no browser errors. Oldassets5/5 separate.37/98 frozen; full husbandry/trade/campaign/performance remain open.
+Verified baseline: 3a92d065040aa83ca2d14f2502e510d1a9d69b29 published as 2026-11-13T00-41-23-522Z-3a92d06 on8086/8101.45/45 scoped (43native/shared+2actualbuilt), full tsc/buildPASS: Claude textured held/dropped equipment and inventory models, botanical crowns/stand detail, UI wheel isolation and compact Council fix; root native-compatible constructor and original sapper LOD budgets retained. Actual original53 archer13040 bow uses item-surface/aTex and compiled atlas shader; Low/Medium/High warmed resources stable, public Classic reload/durable exact, original file unchanged/no browser or shader errors. Oldassets5/5 separately.37/98 frozen; full visual fidelity/campaign/100-resident performance remain open.
 
 ## Milestone counts
 

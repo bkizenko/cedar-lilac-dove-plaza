@@ -9360,6 +9360,15 @@
       "liveCommit": "027dfae3bddc661e0e83b3b21fb6534e927aa93e",
       "evidence": "docs/metrics/pack-expedition-release-2026-11-12.json",
       "scope": "Actual captured/trained horse -> physical ready-food/feed/water pack -> ordinarytrip/Recall/typedreturn; existing paid NPCauthor recovery;52/52scoped, broader packtrade/husbandry/campaign/performance and37/98 unchanged."
+    },
+    {
+      "id": "CODEX-APPROVED-ART-INTEGRATION",
+      "owner": "Claude art/Codex integration",
+      "state": "live-partial",
+      "sourceCommit": "3a92d065040aa83ca2d14f2502e510d1a9d69b29",
+      "liveCommit": "3a92d065040aa83ca2d14f2502e510d1a9d69b29",
+      "evidence": "docs/metrics/approved-art-integration-release-2026-11-12.json",
+      "scope": "45/45 scoped; actual original53 real held shader and trees, remembered quality/Classic controls and exact durable continuity; full visual/performance and37/98 unchanged."
     }
   ],
   "status_update_policy": {

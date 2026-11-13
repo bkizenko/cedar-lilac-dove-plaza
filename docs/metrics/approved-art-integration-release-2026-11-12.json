@@ -1,0 +1,1235 @@
+{
+  "release": "2026-11-13T00-41-23-522Z-3a92d06",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T00-41-23-522Z-3a92d06",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T00-18-33-207Z-027dfae",
+  "commit": "3a92d065040aa83ca2d14f2502e510d1a9d69b29",
+  "retained": {
+    "linked": 1442,
+    "copied": 0,
+    "existing": 15
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 45,
+    "total": 45,
+    "nativeAndShared": {
+      "itemModelsAndAtlas": 18,
+      "actualCartRenderAndRecovery": 5,
+      "UIInputIsolation": 5,
+      "botanicalTreesAndStand": 15
+    },
+    "built": {
+      "passed": 2,
+      "total": 2,
+      "scope": "Original53 real owners/trees, public quality/style preferences, bounded paused renderer resources, Classic/durable compatibility; actual gameplay item-atlas shader proof. Private capped presentation, no screenshots, new goods/vision,100-person FPS or full-art acceptance.",
+      "actualProfileDiagnostics": {
+        "low": {
+          "quality": "low",
+          "viewQuality": "low",
+          "style": "village",
+          "map": "painterly",
+          "pose": {
+            "look": [
+              -290.7305633026496,
+              8.63697102944318,
+              -412.9979169676057
+            ],
+            "eye": [
+              -268.997385625631,
+              19.48090323418073,
+              -402.47824208244094
+            ],
+            "distance": 26,
+            "yaw": 1.12,
+            "pitch": 0.38
+          },
+          "memory": {
+            "geometries": 406,
+            "textures": 33
+          },
+          "programs": 98,
+          "itemPrograms": 2,
+          "linked": true,
+          "metrics": {
+            "calls": 157,
+            "triangles": 1283247,
+            "lines": 0,
+            "points": 24,
+            "geometries": 406,
+            "textures": 33,
+            "programs": 98
+          },
+          "finite": true,
+          "held": [
+            {
+              "name": "people:t0|bow|c0|bow|civ:steppan|2||",
+              "count": 1,
+              "vertices": 9201,
+              "material": "item-surface"
+            }
+          ],
+          "rigActive": true,
+          "people": {
+            "people": 52,
+            "corpses": 0,
+            "variants": 72,
+            "draws": 64,
+            "triangles": 38887,
+            "tiers": [
+              23,
+              29,
+              0
+            ],
+            "fallbacks": 0
+          },
+          "actualArcher": [
+            {
+              "id": 13040,
+              "distance": 26.698619116287293
+            }
+          ],
+          "treeSources": [
+            {
+              "name": "resource-poplar-v0-t1",
+              "count": 5,
+              "ids": 5
+            },
+            {
+              "name": "resource-birch-v0-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-willow-v0-t0",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-willow-v0-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-far-rooted-trunk",
+              "count": 513,
+              "ids": 513
+            },
+            {
+              "name": "resource-far-crown",
+              "count": 475,
+              "ids": 475
+            },
+            {
+              "name": "resource-far-needle",
+              "count": 38,
+              "ids": 38
+            }
+          ],
+          "realTrees": true,
+          "lost": false,
+          "errors": []
+        },
+        "med": {
+          "quality": "med",
+          "viewQuality": "med",
+          "style": "village",
+          "map": "painterly",
+          "pose": {
+            "look": [
+              -290.7305633026496,
+              8.63697102944318,
+              -412.9979169676057
+            ],
+            "eye": [
+              -268.997385625631,
+              19.48090323418073,
+              -402.47824208244094
+            ],
+            "distance": 26,
+            "yaw": 1.12,
+            "pitch": 0.38
+          },
+          "memory": {
+            "geometries": 407,
+            "textures": 46
+          },
+          "programs": 105,
+          "itemPrograms": 2,
+          "linked": true,
+          "metrics": {
+            "calls": 212,
+            "triangles": 1409412,
+            "lines": 0,
+            "points": 24,
+            "geometries": 407,
+            "textures": 46,
+            "programs": 105
+          },
+          "finite": true,
+          "held": [
+            {
+              "name": "people:t0|bow|c0|bow|civ:steppan|2||",
+              "count": 1,
+              "vertices": 9201,
+              "material": "item-surface"
+            }
+          ],
+          "rigActive": true,
+          "people": {
+            "people": 52,
+            "corpses": 0,
+            "variants": 72,
+            "draws": 64,
+            "triangles": 38887,
+            "tiers": [
+              23,
+              29,
+              0
+            ],
+            "fallbacks": 0
+          },
+          "actualArcher": [
+            {
+              "id": 13040,
+              "distance": 26.698619116287293
+            }
+          ],
+          "treeSources": [
+            {
+              "name": "resource-oak-v0-t1",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-hawthorn-v2-t1",
+              "count": 3,
+              "ids": 3
+            },
+            {
+              "name": "resource-poplar-v0-t1",
+              "count": 12,
+              "ids": 12
+            },
+            {
+              "name": "resource-birch-v0-t1",
+              "count": 3,
+              "ids": 3
+            },
+            {
+              "name": "resource-willow-v0-t0",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-willow-v0-t1",
+              "count": 14,
+              "ids": 14
+            },
+            {
+              "name": "resource-poplar-v0-t0",
+              "count": 4,
+              "ids": 4
+            },
+            {
+              "name": "resource-birch-v0-t0",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-poplar-v2-t1",
+              "count": 3,
+              "ids": 3
+            },
+            {
+              "name": "resource-hawthorn-v0-t1",
+              "count": 4,
+              "ids": 4
+            },
+            {
+              "name": "resource-willow-v1-t1",
+              "count": 5,
+              "ids": 5
+            },
+            {
+              "name": "resource-hawthorn-v1-t1",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-maple-v1-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-acacia-v0-t1",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-willow-v2-t1",
+              "count": 5,
+              "ids": 5
+            },
+            {
+              "name": "resource-beech-v0-t1",
+              "count": 3,
+              "ids": 3
+            },
+            {
+              "name": "resource-beech-v2-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-birch-v1-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-coconutPalm-v2-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-birch-v2-t1",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-juniper-v1-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-tamarisk-v0-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-stumps",
+              "count": 15,
+              "ids": 15
+            },
+            {
+              "name": "resource-far-rooted-trunk",
+              "count": 448,
+              "ids": 448
+            },
+            {
+              "name": "resource-far-crown",
+              "count": 411,
+              "ids": 411
+            },
+            {
+              "name": "resource-far-needle",
+              "count": 37,
+              "ids": 37
+            }
+          ],
+          "realTrees": true,
+          "lost": false,
+          "errors": []
+        },
+        "high": {
+          "quality": "high",
+          "viewQuality": "high",
+          "style": "village",
+          "map": "painterly",
+          "pose": {
+            "look": [
+              -290.7305633026496,
+              8.63697102944318,
+              -412.9979169676057
+            ],
+            "eye": [
+              -268.997385625631,
+              19.48090323418073,
+              -402.47824208244094
+            ],
+            "distance": 26,
+            "yaw": 1.12,
+            "pitch": 0.38
+          },
+          "memory": {
+            "geometries": 407,
+            "textures": 46
+          },
+          "programs": 105,
+          "itemPrograms": 2,
+          "linked": true,
+          "metrics": {
+            "calls": 225,
+            "triangles": 1483418,
+            "lines": 0,
+            "points": 24,
+            "geometries": 407,
+            "textures": 46,
+            "programs": 105
+          },
+          "finite": true,
+          "held": [
+            {
+              "name": "people:t0|bow|c0|bow|civ:steppan|2||",
+              "count": 1,
+              "vertices": 9201,
+              "material": "item-surface"
+            }
+          ],
+          "rigActive": true,
+          "people": {
+            "people": 52,
+            "corpses": 0,
+            "variants": 72,
+            "draws": 64,
+            "triangles": 38887,
+            "tiers": [
+              23,
+              29,
+              0
+            ],
+            "fallbacks": 0
+          },
+          "actualArcher": [
+            {
+              "id": 13040,
+              "distance": 26.698619116287293
+            }
+          ],
+          "treeSources": [
+            {
+              "name": "resource-oak-v0-t1",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-hawthorn-v2-t1",
+              "count": 6,
+              "ids": 6
+            },
+            {
+              "name": "resource-poplar-v0-t1",
+              "count": 24,
+              "ids": 24
+            },
+            {
+              "name": "resource-birch-v0-t1",
+              "count": 6,
+              "ids": 6
+            },
+            {
+              "name": "resource-willow-v0-t0",
+              "count": 3,
+              "ids": 3
+            },
+            {
+              "name": "resource-willow-v0-t1",
+              "count": 35,
+              "ids": 35
+            },
+            {
+              "name": "resource-poplar-v0-t0",
+              "count": 9,
+              "ids": 9
+            },
+            {
+              "name": "resource-birch-v0-t0",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-poplar-v2-t1",
+              "count": 4,
+              "ids": 4
+            },
+            {
+              "name": "resource-hawthorn-v0-t1",
+              "count": 5,
+              "ids": 5
+            },
+            {
+              "name": "resource-willow-v1-t1",
+              "count": 8,
+              "ids": 8
+            },
+            {
+              "name": "resource-hawthorn-v1-t1",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-maple-v1-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-acacia-v0-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-willow-v2-t1",
+              "count": 6,
+              "ids": 6
+            },
+            {
+              "name": "resource-beech-v0-t1",
+              "count": 5,
+              "ids": 5
+            },
+            {
+              "name": "resource-beech-v2-t1",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-coconutPalm-v2-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-birch-v2-t1",
+              "count": 5,
+              "ids": 5
+            },
+            {
+              "name": "resource-juniper-v1-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-tamarisk-v0-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-oak-v0-t0",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-hawthorn-v2-t0",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-snag-v0-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-juniper-v0-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-hawthorn-v0-t0",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-tamarisk-v2-t1",
+              "count": 3,
+              "ids": 3
+            },
+            {
+              "name": "resource-juniper-v2-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-poplar-v2-t0",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-poplar-v1-t1",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-willow-v2-t0",
+              "count": 2,
+              "ids": 2
+            },
+            {
+              "name": "resource-acacia-v0-t0",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-maple-v0-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-birch-v1-t0",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-maple-v2-t1",
+              "count": 1,
+              "ids": 1
+            },
+            {
+              "name": "resource-stumps",
+              "count": 15,
+              "ids": 15
+            },
+            {
+              "name": "resource-far-rooted-trunk",
+              "count": 373,
+              "ids": 373
+            },
+            {
+              "name": "resource-far-crown",
+              "count": 338,
+              "ids": 338
+            },
+            {
+              "name": "resource-far-needle",
+              "count": 35,
+              "ids": 35
+            }
+          ],
+          "realTrees": true,
+          "lost": false,
+          "errors": []
+        }
+      },
+      "village": {
+        "profiles": {
+          "low": {
+            "quality": "low",
+            "viewQuality": "low",
+            "style": "village",
+            "map": "painterly",
+            "pose": {
+              "look": [
+                -290.7305633026496,
+                8.63697102944318,
+                -412.9979169676057
+              ],
+              "eye": [
+                -268.997385625631,
+                19.48090323418073,
+                -402.47824208244094
+              ],
+              "distance": 26,
+              "yaw": 1.12,
+              "pitch": 0.38
+            },
+            "memory": {
+              "geometries": 406,
+              "textures": 33
+            },
+            "programs": 98,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 157,
+              "triangles": 1283247,
+              "lines": 0,
+              "points": 24,
+              "geometries": 406,
+              "textures": 33,
+              "programs": 98
+            },
+            "finite": true,
+            "held": [
+              {
+                "name": "people:t0|bow|c0|bow|civ:steppan|2||",
+                "count": 1,
+                "vertices": 9201,
+                "material": "item-surface"
+              }
+            ],
+            "rigActive": true,
+            "people": {
+              "people": 52,
+              "corpses": 0,
+              "variants": 72,
+              "draws": 64,
+              "triangles": 38887,
+              "tiers": [
+                23,
+                29,
+                0
+              ],
+              "fallbacks": 0
+            },
+            "actualArcher": [
+              {
+                "id": 13040,
+                "distance": 26.698619116287293
+              }
+            ],
+            "treeSources": [
+              {
+                "name": "resource-poplar-v0-t1",
+                "count": 5,
+                "ids": 5
+              },
+              {
+                "name": "resource-birch-v0-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-willow-v0-t0",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-willow-v0-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-far-rooted-trunk",
+                "count": 513,
+                "ids": 513
+              },
+              {
+                "name": "resource-far-crown",
+                "count": 475,
+                "ids": 475
+              },
+              {
+                "name": "resource-far-needle",
+                "count": 38,
+                "ids": 38
+              }
+            ],
+            "realTrees": true,
+            "lost": false,
+            "errors": []
+          },
+          "med": {
+            "quality": "med",
+            "viewQuality": "med",
+            "style": "village",
+            "map": "painterly",
+            "pose": {
+              "look": [
+                -290.7305633026496,
+                8.63697102944318,
+                -412.9979169676057
+              ],
+              "eye": [
+                -268.997385625631,
+                19.48090323418073,
+                -402.47824208244094
+              ],
+              "distance": 26,
+              "yaw": 1.12,
+              "pitch": 0.38
+            },
+            "memory": {
+              "geometries": 407,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 212,
+              "triangles": 1409412,
+              "lines": 0,
+              "points": 24,
+              "geometries": 407,
+              "textures": 46,
+              "programs": 105
+            },
+            "finite": true,
+            "held": [
+              {
+                "name": "people:t0|bow|c0|bow|civ:steppan|2||",
+                "count": 1,
+                "vertices": 9201,
+                "material": "item-surface"
+              }
+            ],
+            "rigActive": true,
+            "people": {
+              "people": 52,
+              "corpses": 0,
+              "variants": 72,
+              "draws": 64,
+              "triangles": 38887,
+              "tiers": [
+                23,
+                29,
+                0
+              ],
+              "fallbacks": 0
+            },
+            "actualArcher": [
+              {
+                "id": 13040,
+                "distance": 26.698619116287293
+              }
+            ],
+            "treeSources": [
+              {
+                "name": "resource-oak-v0-t1",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-hawthorn-v2-t1",
+                "count": 3,
+                "ids": 3
+              },
+              {
+                "name": "resource-poplar-v0-t1",
+                "count": 12,
+                "ids": 12
+              },
+              {
+                "name": "resource-birch-v0-t1",
+                "count": 3,
+                "ids": 3
+              },
+              {
+                "name": "resource-willow-v0-t0",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-willow-v0-t1",
+                "count": 14,
+                "ids": 14
+              },
+              {
+                "name": "resource-poplar-v0-t0",
+                "count": 4,
+                "ids": 4
+              },
+              {
+                "name": "resource-birch-v0-t0",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-poplar-v2-t1",
+                "count": 3,
+                "ids": 3
+              },
+              {
+                "name": "resource-hawthorn-v0-t1",
+                "count": 4,
+                "ids": 4
+              },
+              {
+                "name": "resource-willow-v1-t1",
+                "count": 5,
+                "ids": 5
+              },
+              {
+                "name": "resource-hawthorn-v1-t1",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-maple-v1-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-acacia-v0-t1",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-willow-v2-t1",
+                "count": 5,
+                "ids": 5
+              },
+              {
+                "name": "resource-beech-v0-t1",
+                "count": 3,
+                "ids": 3
+              },
+              {
+                "name": "resource-beech-v2-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-birch-v1-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-coconutPalm-v2-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-birch-v2-t1",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-juniper-v1-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-tamarisk-v0-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-stumps",
+                "count": 15,
+                "ids": 15
+              },
+              {
+                "name": "resource-far-rooted-trunk",
+                "count": 448,
+                "ids": 448
+              },
+              {
+                "name": "resource-far-crown",
+                "count": 411,
+                "ids": 411
+              },
+              {
+                "name": "resource-far-needle",
+                "count": 37,
+                "ids": 37
+              }
+            ],
+            "realTrees": true,
+            "lost": false,
+            "errors": []
+          },
+          "high": {
+            "quality": "high",
+            "viewQuality": "high",
+            "style": "village",
+            "map": "painterly",
+            "pose": {
+              "look": [
+                -290.7305633026496,
+                8.63697102944318,
+                -412.9979169676057
+              ],
+              "eye": [
+                -268.997385625631,
+                19.48090323418073,
+                -402.47824208244094
+              ],
+              "distance": 26,
+              "yaw": 1.12,
+              "pitch": 0.38
+            },
+            "memory": {
+              "geometries": 407,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 225,
+              "triangles": 1483418,
+              "lines": 0,
+              "points": 24,
+              "geometries": 407,
+              "textures": 46,
+              "programs": 105
+            },
+            "finite": true,
+            "held": [
+              {
+                "name": "people:t0|bow|c0|bow|civ:steppan|2||",
+                "count": 1,
+                "vertices": 9201,
+                "material": "item-surface"
+              }
+            ],
+            "rigActive": true,
+            "people": {
+              "people": 52,
+              "corpses": 0,
+              "variants": 72,
+              "draws": 64,
+              "triangles": 38887,
+              "tiers": [
+                23,
+                29,
+                0
+              ],
+              "fallbacks": 0
+            },
+            "actualArcher": [
+              {
+                "id": 13040,
+                "distance": 26.698619116287293
+              }
+            ],
+            "treeSources": [
+              {
+                "name": "resource-oak-v0-t1",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-hawthorn-v2-t1",
+                "count": 6,
+                "ids": 6
+              },
+              {
+                "name": "resource-poplar-v0-t1",
+                "count": 24,
+                "ids": 24
+              },
+              {
+                "name": "resource-birch-v0-t1",
+                "count": 6,
+                "ids": 6
+              },
+              {
+                "name": "resource-willow-v0-t0",
+                "count": 3,
+                "ids": 3
+              },
+              {
+                "name": "resource-willow-v0-t1",
+                "count": 35,
+                "ids": 35
+              },
+              {
+                "name": "resource-poplar-v0-t0",
+                "count": 9,
+                "ids": 9
+              },
+              {
+                "name": "resource-birch-v0-t0",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-poplar-v2-t1",
+                "count": 4,
+                "ids": 4
+              },
+              {
+                "name": "resource-hawthorn-v0-t1",
+                "count": 5,
+                "ids": 5
+              },
+              {
+                "name": "resource-willow-v1-t1",
+                "count": 8,
+                "ids": 8
+              },
+              {
+                "name": "resource-hawthorn-v1-t1",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-maple-v1-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-acacia-v0-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-willow-v2-t1",
+                "count": 6,
+                "ids": 6
+              },
+              {
+                "name": "resource-beech-v0-t1",
+                "count": 5,
+                "ids": 5
+              },
+              {
+                "name": "resource-beech-v2-t1",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-coconutPalm-v2-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-birch-v2-t1",
+                "count": 5,
+                "ids": 5
+              },
+              {
+                "name": "resource-juniper-v1-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-tamarisk-v0-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-oak-v0-t0",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-hawthorn-v2-t0",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-snag-v0-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-juniper-v0-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-hawthorn-v0-t0",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-tamarisk-v2-t1",
+                "count": 3,
+                "ids": 3
+              },
+              {
+                "name": "resource-juniper-v2-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-poplar-v2-t0",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-poplar-v1-t1",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-willow-v2-t0",
+                "count": 2,
+                "ids": 2
+              },
+              {
+                "name": "resource-acacia-v0-t0",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-maple-v0-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-birch-v1-t0",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-maple-v2-t1",
+                "count": 1,
+                "ids": 1
+              },
+              {
+                "name": "resource-stumps",
+                "count": 15,
+                "ids": 15
+              },
+              {
+                "name": "resource-far-rooted-trunk",
+                "count": 373,
+                "ids": 373
+              },
+              {
+                "name": "resource-far-crown",
+                "count": 338,
+                "ids": 338
+              },
+              {
+                "name": "resource-far-needle",
+                "count": 35,
+                "ids": 35
+              }
+            ],
+            "realTrees": true,
+            "lost": false,
+            "errors": []
+          }
+        },
+        "boundedPausedResources": true,
+        "realExistingObjects": true
+      },
+      "classic": {
+        "style": "village",
+        "map": "classic",
+        "quality": "low",
+        "strictDurable": true,
+        "optionalFieldsUnchanged": true
+      },
+      "originalUnchanged": true,
+      "errors": [],
+      "shaderErrors": []
+    }
+  },
+  "compiler": "PASS full tsc",
+  "build": "PASS frozen3a92d065",
+  "oldAssetNetwork": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T00-41-23-522Z-3a92d06",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "frozenAcceptance": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  },
+  "limits": [
+    "Private paused renderer qualification is not100-resident frame-time/FPS acceptance.",
+    "Ground items remain presentation-only; existing pickup controls unchanged.",
+    "Ground model cap edge case and jar icon mismatch queued on shared board.",
+    "Newer Claude armor/banner source after3a92 is outside this frozen artifact."
+  ]
+}
