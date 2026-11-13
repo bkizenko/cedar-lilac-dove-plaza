@@ -18,6 +18,7 @@ import {AlertPins,useGlanceAlerts} from './glance';
 import {HelpScreen} from './helpScreen';
 import {RoadsCard} from './roadsCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
+import {MinimapReopen,useMinimapCollapsed} from './minimapToggle';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
 import './hearth.css';
 import './glance.css';
@@ -28,6 +29,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const lifecycle=useLifecycleAction(engine);
  const [screen,setScreen]=useState<null|{k:'village'|'council'|'ages'|'menu'|'trade'|'help';tab?:string}>(null);
  const [tray,setTray]=useState(false),[tab,setTab]=useState('Village'),[map,setMap]=useState(false),[test,setTest]=useState(false),[hidden,setHidden]=useState(false),[trade,setTrade]=useState<number|null>(null);
+ const [mapCollapsed,setMapCollapsed]=useMinimapCollapsed();
  const founding=hud.founding;
  const alerts=useGlanceAlerts(hud.started&&!hud.awaitingStart?engine:null);
  useEffect(()=>{if(hud.placing)setTray(false);},[hud.placing]);
@@ -63,7 +65,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
     <Dock active={screen?.k==='village'?'village':screen?.k==='ages'?'ages':screen?.k==='council'?'council':tray?'build':map?'map':null} onPick={open} onHome={()=>engine?.focusHome()} hasMap alerts={{}}/>
    </>}
   </div>
-  <div className="hw-map-wrap"><MinimapCard hud={hud} engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})}/>
+  <div className={cx('hw-map-wrap',mapCollapsed&&'is-collapsed')}>{mapCollapsed?<MinimapReopen onClick={()=>setMapCollapsed(false)}/>:<MinimapCard hud={hud} engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})} onCollapse={()=>setMapCollapsed(true)}/>}
    {map&&<MinimapCard phone hud={hud} engine={engine} onNeighbours={()=>{setMap(false);setScreen({k:'council',tab:'neighbours'});}} onClose={()=>setMap(false)}/>}</div>
 
   {engine&&<VisitingTrader engine={engine}/>}
