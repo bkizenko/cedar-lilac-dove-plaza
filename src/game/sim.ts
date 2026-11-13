@@ -153,6 +153,7 @@ import {scenicStartReport} from "./scenicBeauty";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
 import {tickWaterEngineering} from "./waterEngineering";
+import {tickIrrigation,effectiveDroughtWater} from "./irrigation";
 import {millSummary} from "./millPower";
 import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
 import {waterWorksPlacementIssue,waterWorksLabour,isWaterWorksType} from "./waterWorksBuildings";
@@ -3237,6 +3238,7 @@ export class Game {
   }
 
   tickEvents(dt: number) {
+    tickIrrigation(this,dt);
     tickWaterEngineering(this); // Grok T3: lay deferred canal/aqueduct stages, keep digs queued
     this.tickWeather(dt);
     advanceTide(this); // Grok W5/W6: no-op unless worldOptions.tideVersion is 1 (shared channel) or 2 (sea only)
@@ -5886,7 +5888,7 @@ export class Game {
           if (b.type === "farm" && this.finished(b)) {
             const c=crop(this,b);
             if(calendar(this).phase<2)c.water=Math.max(.35,Math.min(1,(c.water??1)+
-              (this.state.weather==="drought" ? -(1-fieldTerrain(this,b).droughtWater)*sdt/600 : sdt/(this.state.weather==="rain"?300:1800))));
+              (this.state.weather==="drought" ? -(1-effectiveDroughtWater(this,b))*sdt/600 : sdt/(this.state.weather==="rain"?300:1800))));
           }
         for (const tr of this.state.tribes) {
           if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);
