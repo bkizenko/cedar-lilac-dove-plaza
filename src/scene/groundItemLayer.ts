@@ -7,16 +7,12 @@
 import * as THREE from 'three';
 import type {Game} from '../game/sim';
 import {itemGeometry,meshGeometry,ItemInstancer} from './itemGeometry';
-import {requestFor,groundItemMesh,itemEraForAge,conditionBucket,CONDITION_BUCKET_MID,FARM_TOOL_ERA,lodForDistance,CARGO_MODEL} from './itemRegistry';
+import {requestFor,groundItemMesh,itemEraForAge,conditionBucket,CONDITION_BUCKET_MID,FARM_TOOL_ERA,lodForDistance,CARGO_MODEL,GROUND_ITEM_RULES,FARM_TOOL_MODEL,shownCount} from './itemRegistry';
 import {hash32} from './itemMesh';
 import {skinOfTeam} from '../game/skinState';
 import type {LodTier} from './itemMesh';
 
-export const GROUND_ITEM_RULES={maxPerKind:8,maxInstancers:96,viewMetres:{low:150,med:220,high:300},maxPlacements:1500} as const;
-/** the tool shown for a game farm-tool kind */
-export const FARM_TOOL_MODEL:Readonly<Record<string,string>>=Object.freeze({woodenArd:'ard',stoneHoe:'hoe',copperTools:'hoe',ironTools:'hoe'});
-/** how many of `n` real items a pile draws: all of the first few, then one more per doubling, never more than the cap */
-export const shownCount=(n:number)=>n<=0?0:n<=3?n:Math.min(GROUND_ITEM_RULES.maxPerKind,3+Math.ceil(Math.log2(n/3)));
+export {GROUND_ITEM_RULES,FARM_TOOL_MODEL,shownCount};
 
 type Slot={inst:ItemInstancer;n:number;key:string};
 export class GroundItemLayer{

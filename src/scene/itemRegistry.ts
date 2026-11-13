@@ -102,3 +102,11 @@ export function heldItemMesh(rigItem:string,o:{skin?:string|null;era?:number;lod
 export const heldKey=(rigItem:string,skin:string|undefined,era:number|undefined,shieldKind?:string)=>`${rigItem}|${skin??''}|${era??'-'}|${shieldKind??''}`;
 export const ITEM_CATALOGUE=()=>Object.values(ITEM_DEFS).map(d=>({id:d.id,name:d.name,category:d.category,frame:d.frame,weapon:d.weapon??null,budget:[...d.budget]}));
 void TAU;
+
+/* ground-item display rules (pure, so tests can load them without three) */
+export const GROUND_ITEM_RULES={maxPerKind:8,maxInstancers:96,viewMetres:{low:150,med:220,high:300},maxPlacements:1500} as const;
+/** the tool shown for a game farm-tool kind */
+export const FARM_TOOL_MODEL:Readonly<Record<string,string>>=Object.freeze({woodenArd:'ard',stoneHoe:'hoe',copperTools:'hoe',ironTools:'hoe'});
+/** how many of `n` real items a pile draws: all of the first few, then one more per doubling, never more than the cap */
+export const shownCount=(n:number)=>n<=0?0:n<=3?n:Math.min(GROUND_ITEM_RULES.maxPerKind,3+Math.ceil(Math.log2(n/3)));
+
