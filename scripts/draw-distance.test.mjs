@@ -69,3 +69,16 @@ test('adaptive reduction: sustained over-budget frames ease one level at a time,
  g.choose('high');assert.equal(g.level,'high');assert.equal(g.chosen,'high');assert.ok(!g.eased,'choosing a level resets the governor');
  assert.equal(easeDrawDistance('low'),'low');assert.equal(easeDrawDistance('medium'),'low');
 });
+
+const {WorldView}=await import('../src/scene/world.ts');
+test('WorldView applies a level: camera far plane, haze scale, chosen vs effective level; Low is exactly the original camera',()=>{
+ const camera={far:0,n:0,updateProjectionMatrix(){this.n++;}};
+ const view={drawGovernor:new DrawDistanceGovernor('medium'),mapSize:1040,camera,lastRenderAt:5,drawBandsNow:null};
+ view.applyDrawBands=WorldView.prototype.applyDrawBands;
+ WorldView.prototype.setDrawDistance.call(view,'low');assert.equal(camera.far,860);assert.equal(view.drawBandsNow.fogScale,1);assert.equal(WorldView.prototype.getDrawDistance.call(view),'low');
+ WorldView.prototype.setDrawDistance.call(view,'ultra');assert.ok(camera.far>=1500&&camera.far<=3200,'Ultra reaches the world corner '+camera.far);assert.ok(view.drawBandsNow.fillerFar>0);
+ // governor eases the effective level only; the chosen level (and so the stored preference) is untouched
+ view.drawGovernor.level='medium';assert.equal(WorldView.prototype.getDrawDistance.call(view),'ultra');assert.equal(WorldView.prototype.getEffectiveDrawDistance.call(view),'medium');
+ view.mapSize=400;WorldView.prototype.setDrawDistance.call(view,'high');assert.ok(Math.abs(camera.far-Math.max(860,Math.hypot(400,400)*1.04))<1e-6,'small worlds shorten the plane to their own corner');
+ assert.equal(camera.n,3,"projection refreshed for each change");
+});

@@ -23,6 +23,7 @@ import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
 import {advanceFrameSimulation} from './frameSimulation';
 import {towerBuildConfiguration} from './towerPlatforms';
 import {rememberGraphicsQuality,rememberRenderStyle,type RenderStyle} from './graphics';
+import {rememberDrawDistance,DRAW_DISTANCE_LABELS,type DrawDistance} from './drawDistance';
 import {gateFacing as normalizeGateFacing,rotateGateFacing,snapGate,suggestGateSnap,placeFacingGate,type GateFacing} from './gateGeometry';
 import {RuntimeProfile,RUNTIME_PROFILE_RULES} from './runtimeProfile';
 import {projectedTreeInBox} from './treeDesignation';
@@ -320,6 +321,8 @@ export class Engine {
     this.profile.setAutosaveReporter(()=>this.autosave.report(),()=>this.autosave.resetMeasurements());
     this.game.quality = this.view.quality;
     this.bindNativeCallbacks(this.game);
+    // frames stayed over budget: the view eased the draw distance one level (before graphics quality is touched)
+    this.view.onDrawDistanceEased = level => { try { this.game.banner(`Draw distance eased to ${DRAW_DISTANCE_LABELS[level]} to keep the village responsive`, 3.2); } catch { /* the banner is a courtesy */ } };
     this.view.onContextLost = () => {
       if (this.game.quality !== "low")
         this.setQuality(this.game.quality === "high" ? "med" : "low");
@@ -1108,6 +1111,12 @@ export class Engine {
     if(style!=='current'&&style!=='optionH'&&style!=='village')return;
     this.view.setStyle(style);
     rememberRenderStyle(style);
+  }
+
+  /** Draw distance (how far the world is drawn): render-only, browser preference, never part of a save. Choosing a level also resets the automatic easing. */
+  setDrawDistance(level: DrawDistance) {
+    this.view.setDrawDistance(level);
+    rememberDrawDistance(level);
   }
 
   setQuality(q: "low" | "med" | "high") {

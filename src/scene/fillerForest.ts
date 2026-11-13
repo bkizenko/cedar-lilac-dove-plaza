@@ -124,7 +124,7 @@ export class FillerForest{
    list.push({cx,cz,d});
   }
   list.sort((a,b)=>a.d-b.d);
-  const t0=nowMs(),budget=p.buildMs??Infinity;let deferred=0;const afford=(cx:number,cz:number,level:0|1|2|-1)=>{if(this.has(cx,cz)&&(level<0||this.chunk(cx,cz).blobs[level]))return true;if(nowMs()-t0<=budget)return true;deferred++;return false;};
+  const t0=nowMs(),budget=p.buildMs??Infinity;let deferred=0,fresh=0;const afford=(cx:number,cz:number,level:0|1|2|-1)=>{if(this.has(cx,cz)&&(level<0||this.chunk(cx,cz).blobs[level]))return true;if(fresh===0||nowMs()-t0<=budget){fresh++;return true;}deferred++;return false;};
   let detailEff=p.detail,farEff=far,treeCapped=false;const cells=DRAW_DISTANCE_RULES.blobCells;
   for(const c of list){
    if(c.d-C*.71<=detailEff&&!treeCapped){
@@ -134,6 +134,8 @@ export class FillerForest{
     else for(const t of ch.trees){const d=Math.hypot(t.x-camera.x,t.z-camera.z);if(d<=detailEff&&!(p.exclude&&p.exclude(t.x,t.z)))out.trees.push(t);}
    }
   }
+  // chunks are sorted by their centres, so a capped pass can hold trees a little beyond the radius it stopped at: trim them so every individual tree lies inside detailEff (blobs take over from there)
+  if(treeCapped){let w=0;for(const t of out.trees)if(Math.hypot(t.x-camera.x,t.z-camera.z)<=detailEff)out.trees[w++]=t;out.trees.length=w;}
   // blobs: from the hand-over band outward, resolution by distance
   const start=Math.max(0,detailEff-p.fade);let blobCapped=false;
   for(const c of list){
