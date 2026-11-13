@@ -1,0 +1,75 @@
+{
+ "a-street": {
+  "eye": [
+   "$C.x+1.6",
+   "$C.z+20"
+  ],
+  "yaw": 3.1416,
+  "pitch": -0.03,
+  "fov": 62,
+  "hour": 10.5,
+  "season": "summer",
+  "stage": {
+   "case": "a"
+  },
+  "select": "steward",
+  "report": {
+   "who": "Steward",
+   "role": "Steward",
+   "basis": "witnessed this morning",
+   "line": "Two are dry. The brook is cut off.",
+   "stat": "2 dry",
+   "tone": "bad",
+   "replies": [
+    "Dig a well",
+    "Show me",
+    "Later"
+   ]
+  }
+ },
+ "b-farmer": {
+  "eye": [
+   "$C.x+20",
+   "$C.z-4"
+  ],
+  "yaw": 1.5708,
+  "pitch": -0.1,
+  "fov": 62,
+  "hour": 10.5,
+  "season": "summer",
+  "stage": {
+   "case": "b"
+  },
+  "select": "farmer"
+ },
+ "c-hall-door": {
+  "eye": [
+   "$C.x+1.9",
+   "$C.z-26.4"
+  ],
+  "yaw": 3.1416,
+  "pitch": -0.03,
+  "fov": 62,
+  "hour": 9.5,
+  "season": "summer",
+  "stage": {
+   "case": "c"
+  },
+  "select": "hall"
+ },
+ "d-river": {
+  "eye": [
+   213,
+   -224
+  ],
+  "yaw": -0.2,
+  "pitch": 0.0,
+  "fov": 62,
+  "hour": 11.5,
+  "season": "summer",
+  "stage": {
+   "case": "d"
+  },
+  "select": "none"
+ }
+}

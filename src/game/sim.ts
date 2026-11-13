@@ -163,6 +163,8 @@ import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
 import {beginExpedition,expeditionAI,routineRest} from "./journeys";
 import {wearTrail,pathPace,fadeTrails} from "./trails";
+import {traceStep,tickRouteWear} from "./routeWear";
+import {tickWaystations} from "./waystations";
 import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
@@ -4352,7 +4354,7 @@ export class Game {
     }
     u.vx = (nx - u.x) / dt;
     u.vz = (nz - u.z) / dt;
-    if(this.height(nx,nz)>this.waterAt(nx,nz)+.3)wearTrail(this,nx,nz,nx-u.x,nz-u.z);
+    if(this.height(nx,nz)>this.waterAt(nx,nz)+.3&&!traceStep(this,u,nx,nz,route.tx,route.tz))wearTrail(this,nx,nz,nx-u.x,nz-u.z);
     recordDraftCartStep(this,u,nx,nz);
     if(u.haulage==="canoe")recordWaterStep(this,u,nx,nz);
     u.x = nx;
@@ -5991,6 +5993,7 @@ export class Game {
         tickCommunities(this,sdt);
         tickScouts(this,sdt);
         fadeTrails(this,sdt);
+        tickRouteWear(this,sdt);tickWaystations(this,sdt);
         tickVisitors(this,sdt);
         phases?.mark('economy');
         this.tickRoutes(sdt);

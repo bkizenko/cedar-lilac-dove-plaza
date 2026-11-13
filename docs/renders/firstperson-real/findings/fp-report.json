@@ -1,0 +1,275 @@
+{
+ "f4a-shadows-default-off": {
+  "eye": [
+   223.9,
+   8.82,
+   -404
+  ],
+  "ground": 7.27,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.001236570464794172,
+  "exposure": 1.0753818758029676,
+  "sun": [
+   2.3965637775217203,
+   512,
+   110,
+   false,
+   false,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 591687,
+  "calls": 142,
+  "meanLuminance255": 101.5,
+  "meanLuminanceSrgbOfLinearMean": 123.4,
+  "threshold": 70,
+  "pass": true,
+  "hud": null
+ },
+ "f4b-shadows-med-110": {
+  "eye": [
+   223.9,
+   8.82,
+   -404
+  ],
+  "ground": 7.27,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.001236570464794172,
+  "exposure": 1.0753818758029676,
+  "sun": [
+   2.3965637775217203,
+   512,
+   110,
+   true,
+   true,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 893785,
+  "calls": 226,
+  "meanLuminance255": 95.5,
+  "meanLuminanceSrgbOfLinearMean": 120.4,
+  "threshold": 70,
+  "pass": true,
+  "hud": null
+ },
+ "f4c-shadows-high-110": {
+  "eye": [
+   223.9,
+   8.82,
+   -404
+  ],
+  "ground": 7.27,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.001236570464794172,
+  "exposure": 1.0753818758029676,
+  "sun": [
+   2.3965637775217203,
+   1024,
+   110,
+   true,
+   true,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 1056042,
+  "calls": 236,
+  "meanLuminance255": 94.8,
+  "meanLuminanceSrgbOfLinearMean": 120.2,
+  "threshold": 70,
+  "pass": true,
+  "hud": null
+ },
+ "f4d-shadows-high-40": {
+  "eye": [
+   223.9,
+   8.82,
+   -404
+  ],
+  "ground": 7.27,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.001236570464794172,
+  "exposure": 1.0753818758029676,
+  "sun": [
+   2.3965637775217203,
+   1024,
+   40,
+   true,
+   true,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 1056042,
+  "calls": 236,
+  "meanLuminance255": 94.6,
+  "meanLuminanceSrgbOfLinearMean": 120.2,
+  "threshold": 70,
+  "pass": true,
+  "hud": null
+ },
+ "f5-groundcover-fills-view": {
+  "eye": [
+   221.4,
+   8.48,
+   -360
+  ],
+  "ground": 6.93,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.0012364285714285715,
+  "exposure": 1.0928357319114044,
+  "sun": [
+   2.718655085042412,
+   1024,
+   40,
+   true,
+   true,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 1079729,
+  "calls": 257,
+  "meanLuminance255": 73.8,
+  "meanLuminanceSrgbOfLinearMean": 86.8,
+  "threshold": 70,
+  "pass": true,
+  "hud": null
+ },
+ "f6-eye-under-water": {
+  "eye": [
+   208,
+   10.02,
+   -278
+  ],
+  "ground": 8.47,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.0012364285714285715,
+  "exposure": 1.0978377716417511,
+  "sun": [
+   2.810359146765439,
+   1024,
+   40,
+   true,
+   true,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 1243294,
+  "calls": 210,
+  "meanLuminance255": 159.5,
+  "meanLuminanceSrgbOfLinearMean": 175.4,
+  "threshold": 70,
+  "pass": true,
+  "hud": null
+ },
+ "f7-black-rectangle": {
+  "eye": [
+   213,
+   9.1,
+   -224
+  ],
+  "ground": 7.55,
+  "near": 0.1,
+  "far": 1400,
+  "fog": -0.0012364285714285715,
+  "exposure": 1.0978377716417511,
+  "sun": [
+   2.810359146765439,
+   1024,
+   40,
+   true,
+   true,
+   1
+  ],
+  "bands": {
+   "cameraFar": 1400,
+   "fogScale": 0.8242857142857143,
+   "treeFar": 1100,
+   "fillerFar": 1100,
+   "fillerDetail": 260,
+   "fillerMaxTrees": 450,
+   "fillerMaxBlobs": 2200,
+   "fadeMetres": 70,
+   "peopleFar": 900
+  },
+  "dd": "medium",
+  "tris": 1455155,
+  "calls": 227,
+  "meanLuminance255": 141.6,
+  "meanLuminanceSrgbOfLinearMean": 157.4,
+  "threshold": 70,
+  "pass": true,
+  "hud": null
+ }
+}

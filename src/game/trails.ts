@@ -1,5 +1,6 @@
 import type { Game } from "./sim";
 import { HALF, MAP } from "./constants";
+import { routePace } from "./routeWear";
 export const TRAIL_GRID = 256,
   TRAIL_CELL = MAP / TRAIL_GRID;
 export type Trail = { cell: number; wear: number; last: number; angle: number; x?:number; z?:number };
@@ -20,9 +21,10 @@ function map(g: Game) {
   return cache.map;
 }
 export function pathPace(g: Game, x: number, z: number) {
-  if(!g.state.trails?.length)return 1; // A speed query must not initialize saved state.
+  const routes=routePace(g,x,z); // Repeated-journey routes; a pure read.
+  if(!g.state.trails?.length)return routes; // A speed query must not initialize saved state.
   const t = map(g).get(trailCell(x, z,g.world.size));
-  return t ? 1 + Math.max(0, t.wear - 0.4) * 0.2 : 1;
+  return routes*(t ? 1 + Math.max(0, t.wear - 0.4) * 0.2 : 1);
 }
 export function wearTrail(g: Game, x: number, z: number, dx: number, dz: number) {
   const cell = trailCell(x, z,g.world.size),

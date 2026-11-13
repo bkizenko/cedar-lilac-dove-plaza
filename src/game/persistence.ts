@@ -57,6 +57,8 @@ import {validCombatDoctrine} from './combatDoctrine';
 import {validGuardDuties} from './guardDuty';
 import {validRaidReports} from './raidReports';
 import {validTransit} from './transit';
+import {validRouteWear} from './routeWear';
+import {validWaystations} from './waystations';
 import {validTerrainInfluence} from './terrainInfluenceRuntime';
 import {validCommanders} from './commanders';
 import {validNaval} from './navalPorts';
@@ -211,7 +213,7 @@ function validateGamePayload(raw: unknown) {
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
   if(!validPenWaterState(s)||!validPenBeddingState(s))fail();
   if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validMethodRecords(s)||!validMethodRecordPickups(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
-  if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s)||!validTerrainInfluence(s)||!validCommanders(s)||!validNaval(s))fail();
+  if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s)||!validRouteWear(s)||!validWaystations(s)||!validTerrainInfluence(s)||!validCommanders(s)||!validNaval(s))fail();
   if(!validBoatPractice(s)||!validSailingState(s))fail();
   if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
@@ -473,7 +475,7 @@ function validateGamePayload(raw: unknown) {
     if(u.combatXP!==undefined&&(!num(u.combatXP)||u.combatXP<0||u.combatXP>150))fail();
     if(u.tributeJourney!==undefined){const m=u.tributeJourney;if(!obj(m)||!rivalTeam(u.team)||!['pickup','deliver','return'].includes(m.phase)||!num(m.amount)||m.amount<0||m.amount>20||(m.phase==='deliver'&&(u.carryType!=='wood'||u.carry<m.amount)))fail();}
     if(u.husbandryWork!==undefined){const w=u.husbandryWork;if(!obj(w)||(w.stable!==undefined&&(!Number.isSafeInteger(w.stable)||w.stable<1||w.stable>=s.nextId||w.action!=='pack'||s.buildings.some((b:any)=>b.id===w.stable&&b.type!=='stables')))||!Number.isSafeInteger(w.pen)||w.pen<1||!num(w.progress)||w.progress<0||w.progress>1e8||!["care","slaughter","pack","shear"].includes(w.action)||!["pen","fetch","feed","deliver","waterFetch","waterDeliver","waterReturn","beddingFetch","beddingDeliver","beddingLay","beddingReturn"].includes(w.phase)||(w.animal!==undefined&&(!Number.isSafeInteger(w.animal)||w.animal<1))||(w.paused!==undefined&&typeof w.paused!=="boolean"))fail();}
-    if(u.tamingWork!==undefined){const w=u.tamingWork;if(w?.penGateReached!==undefined&&(w.pen===undefined||typeof w.penGateReached!=='boolean'))fail();if(!obj(w)||(w.pen!==undefined&&(!Number.isSafeInteger(w.pen)||w.pen<1))||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>(w.pen!==undefined?herdRules(s.wildlife.find((a:any)=>a.id===w.animal)?.species??s.livestock?.find((a:any)=>a.id===w.animal)?.species??'cattle').tamingSeconds:60)||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined)fail();}
+    if(u.tamingWork!==undefined){const w=u.tamingWork;if(w?.penGateReached!==undefined&&(w.pen===undefined||typeof w.penGateReached!=='boolean'))fail();if(!obj(w)||(w.pen!==undefined&&(!Number.isSafeInteger(w.pen)||w.pen<1))||!Number.isSafeInteger(w.animal)||w.animal<1||!num(w.progress)||w.progress<0||w.progress>(w.pen!==undefined?herdRules(s.wildlife.find((a:any)=>a.id===w.animal)?.species??s.livestock?.find((a:any)=>a.id===w.animal)?.species??'cattle').tamingSeconds:60)||(w.paused!==undefined&&typeof w.paused!=='boolean')||u.haulage!==undefined&&(!u.expedition||!['sled','cart','pack'].includes(u.haulage)))fail();}
     if(u.caravanRoute!==undefined&&(!Number.isSafeInteger(u.caravanRoute)||!s.routes.some((r:any)=>r.id===u.caravanRoute&&r.caravan)))fail();
     if(u.boat!==undefined){
       const ride=u.boat,b=s.boats?.find((b:any)=>b.id===ride.id);

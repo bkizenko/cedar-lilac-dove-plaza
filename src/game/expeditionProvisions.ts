@@ -40,6 +40,12 @@ export function commitExpeditionProvisions(g:Game,u:Unit,plan:NonNullable<Return
 }
 export function loadExpeditionProvisions(g:Game,u:Unit,reservedUnits=0){const plan=planExpeditionProvisions(g,u,reservedUnits);return !!plan&&commitExpeditionProvisions(g,u,plan);}
 export function consumeExpeditionProvisions(u:Unit,demand:number){const e=u.expedition;if(!e)return 0;const p=view(e),taken=consumePackedFood(p,demand,EXPEDITION_FOOD_CATALOGUE);e.food=p.food;if(e.foodCustody)e.foodUsed=p.foodUsed;return taken.nourishment;}
+/** Paid journey supplies (for example capture bait) leave the same typed lots.
+ * This is a withdrawal, not a human meal or newly received village food. */
+export function withdrawExpeditionFood(u:Unit,units:number){
+ const e=u.expedition;if(!e||!Number.isFinite(units)||units<0||units>e.food+1e-9)return null;
+ const p=view(e),taken=withdrawPackedFood(p,units,EXPEDITION_FOOD_CATALOGUE);e.food=p.food;return taken;
+}
 /** Returns are storage movement, not new harvest/production/received-food income. */
 export function returnExpeditionProvisions(g:Game,u:Unit){
  const e=u.expedition;if(!e||!expeditionAtOwnCache(g,u))return false;
