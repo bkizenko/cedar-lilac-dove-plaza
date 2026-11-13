@@ -1,3 +1,4 @@
+import {regencyOf} from './dynasty';
 import {societyIdentity} from './societyIdentity';
 import {diplomaticVoice,type DiplomaticVoice} from './diplomaticVoice';
 /** Plain-JSON council view of a society's ruling house for the UI. Pure read of game state; safe to post across the worker. */
@@ -30,7 +31,7 @@ export type CouncilModel={
  /** Agreements the player is party to (marriages, pacts, fosterage), newest first; optional so old callers and empty models stay valid. */
  news?:{time:number;kind:string;with:number;text:string}[];
  mourning?:{from:string;to:string;relation:string;contested:boolean;kind:string;secondsLeft:number;carried:number;strained:number;lapsed:number};
- handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
+ handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;regency?:{yearsLeft:number;limits:string[]};rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
 };
 /** What a known neighbour's court shows the outside world: who rules, who would follow, who stands in as regent. Read-only; unknown societies get none. */
 export type RivalCourt={ruler:string;rulerAge:number;house:string;law:string;heir?:{name:string;age:number;adult:boolean;legit:boolean};regent?:string;extinct:boolean;lastEvent?:string};
@@ -86,7 +87,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
    means:[im.willJoinDefensiveWar&&'would join a defensive war',im.willDemandSeatInSuccession&&'may claim a seat in the line',im.vendettaRisk&&'a vendetta is brewing',im.cbAvailable&&`grounds for a ${im.cbAvailable} claim`].filter(Boolean) as string[]};
  });
  const hp=f.showSuccessionUI&&head?heir(d,me.civ.polity.succession,makeRng(hash32('handover-preview',d.generation,d.rulerId))):undefined;
- const handover:CouncilModel['handover']=f.showSuccessionUI&&head?{law:me.civ.polity.succession,rulerAge:head.age,yearlyRisk:Math.round(yearlyDeathChance(head.age)*100),extinct:!hp&&!d.regent,regent:d.regent?d.people[d.regent]?.name:undefined,
+ const handover:CouncilModel['handover']=f.showSuccessionUI&&head?{law:me.civ.polity.succession,rulerAge:head.age,yearlyRisk:Math.round(yearlyDeathChance(head.age)*100),extinct:!hp&&!d.regent,regent:d.regent?d.people[d.regent]?.name:undefined,regency:regencyOf(d)?{yearsLeft:regencyOf(d)!.yearsLeft,limits:regencyOf(d)!.limits}:undefined,
   heir:hp?{name:hp.name,age:hp.age,role:role(hp.id),adult:hp.age>=16,legit:hp.legit,claim:hp.claimStrength,headline:hp.ruler?dossier(hp.ruler).headline:'untested'}:undefined,
   others:Object.values(d.people).filter(p=>p.alive&&p.id!==d.rulerId&&p.id!==hp?.id&&p.parent===d.rulerId).map(p=>({name:p.name,age:p.age,role:role(p.id)})),
   rivals:Object.values(d.people).filter(p=>p.alive&&p.id!==d.rulerId&&p.id!==hp?.id&&p.age>=16&&p.claimStrength>0).sort((x,y)=>y.claimStrength-x.claimStrength).slice(0,3).map(p=>({name:p.name,age:p.age,role:role(p.id),claim:p.claimStrength,legit:p.legit})),

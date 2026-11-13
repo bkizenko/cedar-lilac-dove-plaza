@@ -3,7 +3,7 @@
 import type {Game} from './sim';
 import {initRulers,stepRulersYear,rulersOf,type RulersState,type Ward,type WardReturn,type Gathering} from './rulersState';
 import {familyStage,familyFeatures,kinshipEffectScale} from './familyScale';
-import {marry,heir} from './dynasty';
+import {marry,heir,regencyOf,REGENCY_LEGIT_PENALTY} from './dynasty';
 import {hash32,makeRng} from './rulerCore';
 import {assess,type Drivers,type DriverInputs} from './expansionDrivers';
 import {expansionPressure} from './polityModel';
@@ -308,6 +308,7 @@ export function eventClaims(g:Game):Claim[]{
 /** Using a claim as casus belli: spends it and the legitimacy cost is returned for the caller to charge to the holder's glory/unrest. */
 export function citeClaim(g:Game,holder:number,target:number,kind:CasusBelli):{cost:number}|null{
  const r=ensureRulers(g);if(!r?.claims)return null;
+ const hd=r.societies[String(holder)]?.dynasty;if(hd&&regencyOf(hd))return null; // a regent has no standing to open a cause for a minor
  const i=r.claims.findIndex(c=>c.holder===String(holder)&&c.target===String(target)&&c.kind===kind&&c.expiresTick>r.year);if(i<0)return null;
  st(g).rulers={...r,claims:r.claims.filter((_,j)=>j!==i)};
  const cost=cbLegitimacyCost(kind),cur=st(g).rulers!,debt={...(cur.cbDebt??{})};
@@ -344,7 +345,7 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
  const others=g.state.tribes.map((_,i)=>i).filter(i=>i!==team&&i!==3&&!!g.tribe(i));
  const wars=others.filter(i=>societyRelation(g,team,i).hostile).length;
  const against=claimsOf(g,team).filter(c=>Number(c.target)===team).reduce((t,c)=>t+c.strength,0);
- const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.max(0,Math.min(100,30+100*Math.max(0,...lg)+wonderEffect(g.state,team,'concord')-cbDebtOf(g,team))); // source weights sum to ~1; the strongest pillar carries the house
+ const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.max(0,Math.min(100,30+100*Math.max(0,...lg)+wonderEffect(g.state,team,'concord')-cbDebtOf(g,team)-(regencyOf(me.dynasty)?REGENCY_LEGIT_PENALTY:0))); // source weights sum to ~1; the strongest pillar carries the house
  const v=unrest({legitimacy:legit,warWeariness:Math.min(100,Math.max(wars*35,wearinessOf(g,team))+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:20,faithDivergence:0,coalitionLoss:breakawayLoss(g,team),rulerPopularity:60},me.civ.polity);
  const why:string[]=[];if(wars)why.push('at war');if(wearinessOf(g,team)>=50)why.push('the war has worn the people down');if(against>0)why.push('claims press on the house');if(cbDebtOf(g,team)>0)why.push('the house spent its standing on a cause');if(hunger>.5)why.push('food is short');
  return {value:v,stage:stageOf(v),why};

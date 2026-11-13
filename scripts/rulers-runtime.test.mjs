@@ -633,3 +633,26 @@ test('neighbour memory feeds casus belli: remembered fosterage delays and soften
  warm.state.rulers.year+=40;assert.ok(R.memoryGoodwill(warm,ids[0],ids[1])<.1);
  delete warm.state.worldOptions.rulersVersion;delete warm.state.rulers;assert.equal(R.memoryGoodwill(warm,ids[0],ids[1]),0);
 });
+
+test('lane A: child-ruler regency has a regent, a handover year, real limits (no casus belli, legitimacy dip), ends at majority, replaces a dead regent; old saves unchanged',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const D=await import('../src/game/dynasty.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();g.state.time=R.RULERS_YEAR_SECONDS*2+1;R.advanceRulers(g);
+ const dyn=g.state.rulers.societies['1'].dynasty;assert.equal(D.regencyOf(dyn),null,'adult ruler: no regency');
+ const adult=dyn.people[dyn.rulerId];const kid={...adult,id:'1-minor',name:'Little One',age:9,parent:adult.id,spouse:undefined,legit:true};
+ dyn.people[kid.id]=kid;dyn.rulerId=kid.id;dyn.regent=adult.id;
+ const rg=D.regencyOf(dyn);assert.ok(rg&&rg.yearsLeft===7&&rg.regent===adult.name&&rg.limits.length===2,'regent, handover years and limits');
+ const before=R.unrestOf(g,1).value;dyn.regent=undefined;const after=R.unrestOf(g,1).value;dyn.regent=adult.id;
+ assert.ok(before>=after-1e-9&&R.unrestOf(g,1),'regency never lowers unrest pressure below the regent-free read');
+ g.state.rulers.claims=[{holder:'1',target:'2',kind:'claim',strength:60,expiresTick:99999}];
+ assert.equal(R.citeClaim(g,1,2,'claim'),null,'a regent cannot cite a casus belli');assert.equal(g.state.rulers.claims.length,1,'claim kept, not spent');
+ // regent dies: another adult takes over, or the court holds the seat; logged
+ const kin2={...adult,id:'1-uncle',name:'Uncle',age:40,parent:undefined,spouse:undefined};dyn.people[kin2.id]=kin2;dyn.people[adult.id]={...adult,alive:false};
+ const d2=D.stepYear(dyn,7,'state','primogenitureAny',50);
+ assert.equal(d2.regent,'1-uncle');assert.ok(d2.log.some(l=>/takes the regency/.test(l)));
+ // majority: regent hands over
+ let d3=d2;d3={...d3,people:{...d3.people,[kid.id]:{...d3.people[kid.id],age:15}}};d3=D.stepYear(d3,7,'state','primogenitureAny',60);
+ if(d3.people[kid.id].alive){assert.equal(d3.regent,undefined);assert.ok(d3.log.some(l=>/comes of age/.test(l)),'handover logged');assert.equal(D.regencyOf(d3),null);}
+ dyn.regent=adult.id;dyn.people[adult.id]={...adult,alive:true};
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'regency survives a save round-trip');
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.equal(R.unrestOf(old,1),null);
+});

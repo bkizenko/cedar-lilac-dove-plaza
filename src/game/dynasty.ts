@@ -54,6 +54,13 @@ export function stepYear(d0:Dynasty,seed:number,tier:'band'|'chiefdom'|'state',l
    }
   }
  }
+ // Regency lifecycle: a minor on the seat is held by a regent until majority; a dead or missing regent is replaced by the ablest adult kin, and
+ // the handover is logged on the day the ruler comes of age. Adult rulers carry no regent (old saves with adult heirs are untouched).
+ {const ruler=d.people[d.rulerId];
+  if(ruler?.alive&&d.regent){
+   if(ruler.age>=ADULT){d.log.push(`${year}: ${ruler.name} comes of age; ${d.people[d.regent]?.name??'the regent'} hands over the seat`);d.regent=undefined;}
+   else if(!d.people[d.regent]?.alive||d.people[d.regent].age<ADULT){const nr=f.regency?regentFor(d,ruler):undefined;d.log.push(`${year}: the regent is lost; ${nr?d.people[nr]?.name+' takes the regency':'the court holds the seat for '+ruler.name}`);d.regent=nr;}
+  }else if(ruler?.alive&&ruler.age<ADULT&&!d.regent&&f.regency){const nr=regentFor(d,ruler);if(nr){d.regent=nr;d.log.push(`${year}: ${d.people[nr]?.name} is named regent for ${ruler.name}`);}}}
  const cur=d.people[d.rulerId];
  if(!cur||!cur.alive){
   let next=heir(d,law,r);
@@ -76,6 +83,12 @@ function inherit(a?:Ruler,b?:Ruler){
 function regentFor(d:Dynasty,child:Person):string|undefined{
  const kin=Object.values(d.people).filter(p=>p.alive&&p.age>=ADULT&&p.id!==child.id);
  return kin.sort((a,b)=>(b.ruler?.comp.statecraft??0)-(a.ruler?.comp.statecraft??0))[0]?.id;
+}
+/** Regency read model: who stands in for a minor ruler, how many years remain until majority, and the real limits on the regent's hand. Null when the ruler is an adult. */
+export const REGENCY_LEGIT_PENALTY=12;
+export function regencyOf(d:Dynasty):{regentId:string;regent:string;ruler:string;yearsLeft:number;limits:string[]}|null{
+ const ruler=d.people[d.rulerId];if(!d.regent||!ruler||!ruler.alive||ruler.age>=ADULT)return null;
+ return {regentId:d.regent,regent:d.people[d.regent]?.name??'the court',ruler:ruler.name,yearsLeft:Math.max(1,ADULT-ruler.age),limits:['no new casus belli may be cited',`legitimacy -${REGENCY_LEGIT_PENALTY} until majority`]};
 }
 /** Pick the heir under a law. Returns undefined when the line is extinct (caller handles claimant/regent). */
 export function heir(d:Dynasty,law:SuccessionLaw,r:Rng):Person|undefined{
