@@ -270,7 +270,13 @@ export function tickHusbandry(g:Game,dt:number) {
     if(male&&occupied+reserved+herdRules(a.species).places<=r.eligibleCapacity)a.pregnancy=Math.min(herdRules(a.species).gestation,a.pregnancy+dt);
     if(a.pregnancy>=herdRules(a.species).gestation&&occupied+reserved+herdRules(a.species).places<=r.eligibleCapacity&&livestock.length<PEN_RULES.maximumAnimalsTotal){
      a.pregnancy=0;a.lactatingUntil=g.state.time+HERD.lactation;
-     const id=g.id();livestock.push({...a,id,sex:id%2?'female':'male',born:g.state.time,tamedAt:g.state.time,milk:0,pregnancy:0,lactatingUntil:0,hp:a.maxHp,hunger:5,thirstSeconds:0,adultScale:a.adultScale??1,scale:(a.adultScale??1)*.6,...(a.species==='sheep'?{fleece:newFleece()}: {})});occupied+=herdRules(a.species).places;
+     // Birth inherits biology, not the dam's paid equipment, consumption or task state.
+     const id=g.id();livestock.push({id,species:a.species,team:a.team,pen:pen.id,
+      x:a.x,y:a.y,z:a.z,facing:a.facing,vx:0,vz:0,wanderT:0,fly:0,
+      sex:id%2?'female':'male',born:g.state.time,tamedAt:g.state.time,
+      milk:0,pregnancy:0,lactatingUntil:0,hp:a.maxHp,maxHp:a.maxHp,hunger:5,thirstSeconds:0,
+      foodConsumed:0,waterConsumedLiters:0,adultScale:a.adultScale??1,scale:(a.adultScale??1)*.6,
+      ...(a.species==='sheep'?{fleece:newFleece()}: {})});occupied+=herdRules(a.species).places;
      if(a.team===0)g.banner(a.species==='cattle'?'A calf was born':a.species==='horse'?'A foal was born':a.species==='sheep'?'A lamb was born':'A kid was born',4);
     }
     if(herdRules(a.species).milkPerSecond>0&&(a.lactatingUntil||0)>g.state.time)a.milk=Math.min(herdRules(a.species).milkCapacity,a.milk+dt*herdRules(a.species).milkPerSecond);
