@@ -1,5 +1,5 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
-import {Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints} from 'lucide-react';
+import {Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import {MusicChip} from './MusicControls';
 import type {HudSnapshot} from '@/game/types';
@@ -65,13 +65,14 @@ export function Rail({hud,engine,workOpen,onWork}:{hud:HudSnapshot;engine:Engine
 }
 
 /* ---------- dock ---------- */
-export type DockKey='build'|'village'|'ages'|'council'|'map';
+export type DockKey='build'|'village'|'ages'|'council'|'wonders'|'map';
 export function Dock({active,onPick,onHome,hasMap,alerts}:{active:DockKey|null;onPick:(k:DockKey)=>void;onHome:()=>void;hasMap:boolean;alerts:Partial<Record<DockKey,number>>}){
  const items:{k:DockKey;label:string;icon:ReactNode;tip:string}[]=[
   {k:'build',label:'Build',icon:<Hammer size={30}/>,tip:'Place buildings and fields'},
   {k:'village',label:'Village',icon:<Users size={30}/>,tip:'Stores, work, food, craft, camp (L)'},
   {k:'ages',label:'Ages',icon:<BookOpen size={30}/>,tip:'Knowledge and the next age'},
   {k:'council',label:'Council',icon:<Crown size={30}/>,tip:'Ruler, house, neighbours'},
+  {k:'wonders',label:'Wonders',icon:<Landmark size={30}/>,tip:'Great works, suggestions and ruins'},
  ];
  return <nav className="hw-dock" aria-label="Main menu">
   {items.map(i=><GameTooltip key={i.k} title={i.label} description={i.tip}><button type="button" className={cx('hw-dock-btn',active===i.k&&'is-on')} aria-pressed={active===i.k} aria-label={i.label} onClick={()=>onPick(i.k)}>{i.icon}<span>{i.label}</span>{!!alerts[i.k]&&<i className="hw-badge">{alerts[i.k]}</i>}</button></GameTooltip>)}

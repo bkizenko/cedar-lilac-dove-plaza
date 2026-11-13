@@ -20,6 +20,7 @@ import {RoadsCard} from './roadsCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
 import {MinimapReopen,useMinimapCollapsed} from './minimapToggle';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
+import {WondersScreen} from './wondersScreen';
 import './hearth.css';
 import './glance.css';
 import './wildPanel.css';
@@ -27,7 +28,7 @@ import './wildPanel.css';
 /** The Hearth interface: calm parchment-and-wood chrome, big icons and numbers, a contextual command card and a small number of full screens. */
 export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const lifecycle=useLifecycleAction(engine);
- const [screen,setScreen]=useState<null|{k:'village'|'council'|'ages'|'menu'|'trade'|'help';tab?:string}>(null);
+ const [screen,setScreen]=useState<null|{k:'village'|'council'|'ages'|'wonders'|'menu'|'trade'|'help';tab?:string}>(null);
  const [tray,setTray]=useState(false),[tab,setTab]=useState('Village'),[map,setMap]=useState(false),[test,setTest]=useState(false),[hidden,setHidden]=useState(false),[trade,setTrade]=useState<number|null>(null);
  const [mapCollapsed,setMapCollapsed]=useMinimapCollapsed();
  const founding=hud.founding;
@@ -62,7 +63,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
       {engine?.canRotateAnyPlacement()&&<RotateButtons engine={engine} gate={hud.placing==='gate'}/>}</>}/>
      :tray&&<BuildTray hud={hud} engine={engine} tab={tab} setTab={setTab} onPick={()=>setTray(false)}/>}
     <SelectionCard hud={hud} engine={engine} onOffer={t=>setTrade(t)}/>
-    <Dock active={screen?.k==='village'?'village':screen?.k==='ages'?'ages':screen?.k==='council'?'council':tray?'build':map?'map':null} onPick={open} onHome={()=>engine?.focusHome()} hasMap alerts={{}}/>
+    <Dock active={screen?.k==='village'?'village':screen?.k==='ages'?'ages':screen?.k==='council'?'council':screen?.k==='wonders'?'wonders':tray?'build':map?'map':null} onPick={open} onHome={()=>engine?.focusHome()} hasMap alerts={{}}/>
    </>}
   </div>
   <div className={cx('hw-map-wrap',mapCollapsed&&'is-collapsed')}>{mapCollapsed?<MinimapReopen onClick={()=>setMapCollapsed(false)}/>:<MinimapCard hud={hud} engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})} onCollapse={()=>setMapCollapsed(true)}/>}
@@ -72,6 +73,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {test&&engine&&<TestPanel engine={engine} close={()=>setTest(false)}/>}
   {screen?.k==='village'&&engine&&<VillageScreen hud={hud} engine={engine} initial={screen.tab} onClose={close} onKnowledge={()=>setScreen({k:'ages'})} onOffer={t=>setTrade(t)}/>}
   {screen?.k==='council'&&engine&&<CouncilScreen engine={engine} initial={screen.tab} onClose={close}/>}
+  {screen?.k==='wonders'&&engine&&<WondersScreen engine={engine} initial={screen.tab} onClose={close}/>}
   {screen?.k==='ages'&&<AgesScreen hud={hud} engine={engine} onClose={close}/>}
   {screen?.k==='help'&&<HelpScreen onClose={close}/>}
   {screen?.k==='menu'&&<MenuScreen hud={hud} engine={engine} lifecycle={lifecycle as never} onClose={close} onTest={()=>setTest(true)} onHide={()=>setHidden(true)}/>}

@@ -31,6 +31,7 @@ export function growthFoodNeed(g:Game,team:number) {
   return Math.ceil(food*1.12*(team===0?difficulty(g).food:1)+20);
 }
 import { climateAt } from "./ecology";
+import { wonderEffect } from "./wonderEffects";
 
 export function storehouses(g: Game, team: number) {
   return g.state.buildings.filter(b => b.team === team && b.type === "warehouse" && g.finished(b));
@@ -82,7 +83,7 @@ function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:b
   const {temperature,humidity}=climateAt(g,home.x,home.z,time);
   const climate=Math.max(.12,Math.min(2.8,Math.pow(2,(temperature-12)/12)*(.65+humidity*.7)));
   const protectedRate=(1-indoor)+(indoor-prepared)*.25+prepared*.05;
-  const knowledge=(team===0&&g.state.agePicks[0]==="econ"?.35:1)*(team===0&&hasTradition(g,"winter-stores")?.75:1);
+  const knowledge=(team===0&&g.state.agePicks[0]==="econ"?.35:1)*(team===0&&hasTradition(g,"winter-stores")?.75:1)*(1-wonderEffect(g.state,team,'storage'));
   const base:Record<FoodKind,number>={provisions:.00012,berries:.00024,fish:.00055,meat:.0004,grain:.00006,pulses:.00007,tubers:.00013,milk:.00065,bread:.00018,driedMeat:.000045,driedFish:.000045,smokedMeat:.000065,smokedFish:.000065,cookedFish:.0004,porridge:.0005,fermentedMilk:DAIRY_RULES.spoilPerSecond,freshCurd:CURD_RULES.curdSpoilPerSecond,whey:CURD_RULES.wheySpoilPerSecond,smallBeer:BREWING_RULES.spoilRates.smallBeer,beer:BREWING_RULES.spoilRates.beer,driedBerries:.00005,jam:.00008,tallow:.00007};
   const outside=includeOverflow?Math.max(0,food-g.stockCap(team))/Math.max(1,food):0;
   return Object.fromEntries(FOOD_KINDS.map(k=>[k,(base[k]*protectedRate+outside*.0005)*climate*knowledge*(team===0?difficulty(g).spoil:1)])) as Record<FoodKind,number>;

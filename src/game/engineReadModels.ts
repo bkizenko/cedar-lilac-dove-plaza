@@ -1,4 +1,5 @@
 import {playerTradeModel,type PlayerTradeModel} from './playerTrade';
+import {wondersModel} from './wonderPanelModel';
 import {navalOwnerControls,type NavalOwnerControlsModel} from './navalOwnerControls';
 import {commanderControlsModel} from './commanderControls';
 import {draftCartChoices} from './draftCart';
@@ -51,7 +52,8 @@ export type EngineReadQuery=
  |{kind:'wild-craft'}
  |{kind:'combat-matchup';attackerId:number;targetId:number}
  |{kind:'capitulation-offers'}
- |{kind:'captives'};
+ |{kind:'captives'}
+ |{kind:'wonders';focus?:string};
 export type FabricUpgradeChoice={mode:EraUpgradeMode;side?:ExtensionSide;issue:string|null;quote:HousingMaterials;workSeconds:number;target?:FabricRect};
 export type EngineReadModel=
  |PlayerTradeModel
@@ -75,7 +77,8 @@ export type EngineReadModel=
  |{kind:'wild-craft';wild:WildCraftModel&{plan:WildPlan}}
  |{kind:'combat-matchup';attackerId:number;targetId:number;multiplier:number;reasons:string[]}
  |{kind:'capitulation-offers';offers:(ReturnType<typeof capitulationOffers>[number]&{defenderName:string})[]}
- |{kind:'captives';captives:{id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean;custody?:'escorting'|'custody';food?:number;waterLiters?:number}[]};
+ |{kind:'captives';captives:{id:number;name:string;fromTeam:number;fromName:string;resistance:number;guarded:boolean;canEscort:boolean;custody?:'escorting'|'custody';food?:number;waterLiters?:number}[]}
+ |{kind:'wonders';wonders:import('./wonderPanelModel').WondersModel};
 export type EngineReadReply={model:EngineReadModel;epoch:number;requestId:number;stateRevision:number;navigationRevision:number;cpuMilliseconds:number};
 export type EngineReadReplyFor<Q extends EngineReadQuery>=Omit<EngineReadReply,'model'>&{model:Extract<EngineReadModel,{kind:Q['kind']}>};
 const id=(v:unknown):v is number=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0;
@@ -87,6 +90,7 @@ export function isEngineReadQuery(value:unknown):value is EngineReadQuery{
  if(q.kind==='commander-controls')return Object.keys(q).every(k=>['kind','unitIds','boatIds'].includes(k))&&Array.isArray(q.unitIds)&&Array.isArray(q.boatIds)&&list(q.unitIds)&&list(q.boatIds)&&q.unitIds.length<=32&&q.boatIds.length<=32;
  if(q.kind==='combat-matchup')return Object.keys(q).every(k=>['kind','attackerId','targetId'].includes(k))&&id(q.attackerId)&&id(q.targetId);
  if(q.kind==='rulers-council'||q.kind==='society-decisions'||q.kind==='society-civic'||q.kind==='combat-doctrine'||q.kind==='wild-craft'||q.kind==='capitulation-offers'||q.kind==='captives')return Object.keys(q).length===1;
+ if(q.kind==='wonders')return Object.keys(q).every(k=>['kind','focus'].includes(k))&&(q.focus===undefined||typeof q.focus==='string'&&/^[a-zA-Z]{2,24}$/.test(q.focus));
  if(q.kind==='traded-teaching-offers')return Object.keys(q).every(k=>['kind','teacherId','learnerIds'].includes(k))&&id(q.teacherId)&&list(q.learnerIds);
  if(q.kind==='copper-study-issues')return Object.keys(q).every(k=>['kind','workplaceId'].includes(k))&&id(q.workplaceId);
  if(q.kind==='building-fabric')return Object.keys(q).every(k=>['kind','buildingId'].includes(k))&&id(q.buildingId);
@@ -122,6 +126,7 @@ export function applyEngineReadQuery(g:Game,query:EngineReadQuery):EngineReadMod
  if(query.kind==='combat-matchup')return{kind:query.kind,attackerId:query.attackerId,targetId:query.targetId,...matchupModel(g,query.attackerId,query.targetId)};
  if(query.kind==='society-decisions')return{kind:query.kind,societies:societyDecisionsModel(g)};
  if(query.kind==='society-civic')return{kind:query.kind,civic:civicModel(g)};
+ if(query.kind==='wonders')return{kind:query.kind,wonders:wondersModel(g,query.focus)};
  if(query.kind==='captives'){const guards=captiveGuardCoverage(g);return{kind:query.kind,captives:g.state.units.filter(u=>u.team===0&&u.hp>0&&(u.enslavedFrom!==undefined||u.prisoner?.captorTeam===0&&u.prisoner.phase!=='released')).map(u=>{const p=u.prisoner,from=p?.originTeam??u.enslavedFrom!;return{id:u.id,name:personName(u),fromTeam:from,fromName:g.tribe(from)?.name||'a former settlement',resistance:p?Math.min(100,Math.round(p.unguardedSeconds/PRISONER_RULES.unguardedEscapeSeconds*100)):Math.round(u.captivityUnrest||0),guarded:p?!!presentPrisonerGuard(g,u):guards.has(u.id),canEscort:p?true:!!u.recalled,...(p&&p.phase!=='released'?{custody:p.phase,food:p.food,waterLiters:p.waterLiters}:{})};})};}
  if(query.kind==='capitulation-offers')return{kind:query.kind,offers:capitulationOffers(g).map(o=>({...o,defenderName:g.tribe(o.defenderTeam)?.name??'A community'}))};
  if(query.kind==='building-fabric'){

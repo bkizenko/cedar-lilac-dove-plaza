@@ -1,5 +1,6 @@
 import type {Game} from './sim';
 import type {BldType} from './types';
+import {wonderPrestige} from './wonderEffects';
 
 export const CIVIC_PRESTIGE_RULES = {
   duplicateMultiplier: .55,
@@ -20,5 +21,6 @@ export function civicPrestige(g:Game,team=0){
   const landmarks=[...values].map(([type,group])=>({
     type,count:group.length,points:group.sort((a,b)=>b-a).reduce((sum,value,index)=>sum+value*CIVIC_PRESTIGE_RULES.duplicateMultiplier**index,0),
   }));
-  return {total:Math.round(landmarks.reduce((sum,row)=>sum+row.points,0)),landmarks};
+  const wonders=wonderPrestige(g.state,team);
+  return {total:Math.round(landmarks.reduce((sum,row)=>sum+row.points,0))+wonders.total,landmarks,wonders:wonders.rows};
 }

@@ -6,7 +6,8 @@ import {buildingTierAt} from '../game/detailLevel';
 import {partsAtLod,type BuildingSpec,type LodTier} from './buildingParts';
 import {buildCarvedMesh} from './carvedMesh';
 import {carvedGeometry,createCarvedMaterial} from './carvedBuildingLayer';
-import {generateWonderKit,type WonderFunction,type WonderOptions} from './wonderKit';
+import {generateWonderKit,type WonderOptions} from './wonderKit';
+import {stageOfLabour,STAGE_COUNT} from '../game/wonderDefs';
 import {skinSignature,type CivSkin} from './civSkin';
 import type {CivId} from './civStyles';
 import {hashSeed} from './buildingParts';
@@ -18,26 +19,28 @@ const m4=new THREE.Matrix4(),q4=new THREE.Quaternion(),p3=new THREE.Vector3(),s3
 export class WonderLayer{
  private scene:THREE.Scene;private material=createCarvedMaterial();private entries=new Map<string,Entry>();private frame=0;
  constructor(scene:THREE.Scene){this.scene=scene;}
- /** The kit spec for a record under a skin (pure; exported for tests and the harness). */
- static specFor(r:WonderRecord,skin:CivSkin|null):BuildingSpec{
-  const civ:CivId=skin?.grammar??'aureline',options:WonderOptions={footprint:{w:r.w,d:r.d},era:r.era??3,wealth:r.wealth??.6,...(skin?.palette?{palette:skin.palette,signature:skin.wonder.signature}:{})};
+ /** Stages completed (0..4): what the crews have raised so far. A finished wonder is 4. */
+ static levelOf(r:WonderRecord){return r.project?Math.min(STAGE_COUNT-1,stageOfLabour(r.progress,1)):STAGE_COUNT;}
+ /** The kit spec for a record under a skin at a construction level (pure; exported for tests and the harness). Level 4 is the finished wonder. */
+ static specFor(r:WonderRecord,skin:CivSkin|null,level=WonderLayer.levelOf(r)):BuildingSpec{
+  const civ:CivId=skin?.grammar??'aureline',options:WonderOptions={footprint:{w:r.w,d:r.d},era:r.era??3,wealth:r.wealth??.6,...(r.look??{}),...(skin?.palette?{palette:skin.palette,signature:skin.wonder.signature}:{}),...(level<STAGE_COUNT?{stage:level}:{})};
   const plan=generateWonderKit({v:1,seed:hashSeed(r.seed,'wonder',r.id),civ,family:r.family,options});
-  return {...plan.spec,variantKey:`wonder.${r.id}.${skin?skinSignature(skin):'-'}`,materials:plan.materials};
+  return {...plan.spec,variantKey:`wonder.${r.id}.${level}.${skin?skinSignature(skin):'-'}`,materials:plan.materials};
  }
  sync(records:readonly WonderRecord[],camera:THREE.Vector3,skinOf:(team:number)=>CivSkin|null,groundAt:(x:number,z:number)=>number,seen:(x:number,z:number)=>boolean=()=>true){
   this.frame++;
   for(const e of this.entries.values())for(const m of e.meshes.values())m.visible=false;
   for(const r of records){
-   if(!seen(r.x,r.z))continue;
-   const skin=skinOf(r.team),key=`${r.id}|${skin?skinSignature(skin):'-'}`;
-   let e=this.entries.get(key);if(!e){e={spec:WonderLayer.specFor(r,skin),meshes:new Map(),used:this.frame};this.entries.set(key,e);}
+   if(r.fallen!==undefined||!seen(r.x,r.z))continue;
+   const skin=skinOf(r.team),level=WonderLayer.levelOf(r),key=`${r.id}|${skin?skinSignature(skin):'-'}|${level}|${r.look?JSON.stringify(r.look):''}`;
+   let e=this.entries.get(key);if(!e){e={spec:WonderLayer.specFor(r,skin,level),meshes:new Map(),used:this.frame};this.entries.set(key,e);}
    e.used=this.frame;
    // a landmark stays visible from far away: the far tier keeps the core and crown silhouette
    const tier=Math.min(2,buildingTierAt(Math.hypot(r.x-camera.x,r.z-camera.z))) as LodTier;
    let mesh=e.meshes.get(tier);
    if(!mesh){mesh=new THREE.InstancedMesh(carvedGeometry(buildCarvedMesh(e.spec,tier)),this.material,1);mesh.name=`wonder-${key}#${tier}`;mesh.frustumCulled=false;mesh.castShadow=tier<2;mesh.receiveShadow=true;this.scene.add(mesh);e.meshes.set(tier,mesh);}
    const hw=r.w/2,hd=r.d/2,y=Math.min(groundAt(r.x,r.z),groundAt(r.x-hw,r.z-hd),groundAt(r.x+hw,r.z-hd),groundAt(r.x-hw,r.z+hd),groundAt(r.x+hw,r.z+hd));
-   q4.setFromAxisAngle(up,r.yaw);p3.set(r.x,y,r.z);s3.set(1,Math.max(.12,Math.min(1,r.progress)),1);m4.compose(p3,q4,s3);
+   q4.setFromAxisAngle(up,r.yaw);p3.set(r.x,y,r.z);s3.set(1,1,1);m4.compose(p3,q4,s3);
    mesh.setMatrixAt(0,m4);mesh.count=1;mesh.instanceMatrix.needsUpdate=true;mesh.visible=true;
   }
   // drop stale stages and tiers that were not used for a while

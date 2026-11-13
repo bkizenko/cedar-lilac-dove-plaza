@@ -58,6 +58,8 @@ import {painterAtmosphere,makePainterSky,PAINTER_GRADE_SHADER} from './painterAt
 import {setBuildingGrammar} from './buildingFamilies';
 import {skinOfTeam} from '@/game/skinState';
 import {WonderLayer} from './wonderLayer';
+import {RuinLayer} from './ruinLayer';
+import {ruinViews} from '../game/ruinsWorld';
 /** Banners hang at half-mast this many sim seconds after a succession (two dynastic years). */
 const MOURNING_SECONDS=180;
 import {millPowerKw,MILL_RULES} from '@/game/millPower';
@@ -2016,6 +2018,7 @@ export class WorldView {
     }
     this.syncCarvedBuildings(carvedList);
     this.syncWonders(game);
+    this.syncRuins(game);
     this.penFences?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     if(!this.irrigationLayer&&(game.state as {irrigation?:unknown}).irrigation){this.irrigationLayer=new IrrigationLayer(this.scene,(x,z)=>game.height(x,z));this.irrigationLayer.setPreview(this.ditchPreview);}
@@ -2048,6 +2051,14 @@ export class WorldView {
     return -Math.min(1.6,.3+.9*kw/MILL_RULES.maxWindKw);
   }
 
+  private ruinLayer:RuinLayer|null=null;private ruinTick=0;
+  /** Ruins and ancient sites (state.ruins) drawn as aged variants; decay follows game time. Nothing is built until a ruin has been explored. */
+  private syncRuins(game:Game){
+    const list=game.state.ruins?.sites;if(!list?.length&&!this.ruinLayer)return;
+    if(this.ruinLayer&&(this.ruinTick++)%30!==0)return;
+    const layer=this.ruinLayer||(this.ruinLayer=new RuinLayer(this.scene));
+    layer.sync(ruinViews(game),this.camera.position,(x,z)=>game.height(x,z));
+  }
   private wonderLayer:WonderLayer|null=null;
   /** Wonders (state.wonders) drawn through the owner's skin; nothing is built until a record exists. */
   private syncWonders(game:Game){
@@ -3247,7 +3258,7 @@ export class WorldView {
       (meshes.timber.material as THREE.Material).dispose();
       (meshes.roof.material as THREE.Material).dispose();
     }
-    this.carvedLayer?.dispose();this.carvedLayer=null;this.wonderLayer?.dispose();this.wonderLayer=null;this.carvedOwners.clear();
+    this.carvedLayer?.dispose();this.carvedLayer=null;this.wonderLayer?.dispose();this.wonderLayer=null;this.ruinLayer?.dispose();this.ruinLayer=null;this.carvedOwners.clear();
     this.bldMeshes.clear();this.buildingInstances.clear();
     this.unitMeshes.clear();this.unitInstanceOwners.clear();
     this.haulageMeshes.clear();
