@@ -120,6 +120,7 @@ export type Region = {
 export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "horse" | "cattle" | "bird";
 
 export type Critter = {
+  domestication?:import("./domestication").DomesticationMemory;
   huntDefense?:{hunterId:number;expiresAt:number;nextAttackAt:number;lastX:number;lastZ:number};
   grazing?: {x:number;z:number};
   carcass?: {meat:number;diedAt:number;hides?:number;bones?:number;prepared?:true;preparationWork?:number;skinningWork?:number};
@@ -151,6 +152,7 @@ export type Livestock = Critter & {
 };
 
 export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
+  domesticationPractice?:import("./domestication").DomesticationPractice;
   waterCargoEvidence?:import('./boatPractice').WaterCargoEvidence;
   practicalHelper?:import('./practicalHelpers').PracticalHelper;
   structureReportCargo?:import('./structureKnowledge').StructureReport[];
@@ -269,7 +271,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   draftCartOrder?:import('./draftCart').DraftCartOrder;
   draftCartPartner?:number;
   packPastureOrder?:{version:1;pen:number;animal:number;requestedAt:number;phase:'queued'|'unloading'|'returning';reason?:string};
-  tamingWork?: {animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
+  tamingWork?: {trial?:import("./domestication").DomesticationTrial;animal:number;progress:number;paused?:boolean;pen?:number;penGateReached?:boolean};
   husbandryWork?: {stable?:number;pen:number;progress:number;action:"care"|"slaughter"|"pack"|"shear";phase:"pen"|"fetch"|"feed"|"deliver"|"waterFetch"|"waterDeliver"|"waterReturn"|"beddingFetch"|"beddingDeliver"|"beddingLay"|"beddingReturn";beddingUnits?:number;beddingProgress?:number;releaseAfterBedding?:true;waterLiters?:number;waterTeam?:number;releaseAfterWater?:true;animal?:number;paused?:boolean};
   haulage?: HaulageKind;
   haulageWork?: HaulageWork;
@@ -433,6 +435,7 @@ export type Projectile = {
 export type PeaceTerm = "whitePeace" | "tribute" | "forcedLabor" | "puppet" | "annexation";
 
 export type Tribe = {
+  domestication?:import("./domestication").DomesticationHistory;
   copperMetallurgyVersion?:1;
   ironMetallurgyVersion?:1;
   foodExperience?:import("./foodExperience").FoodExperience;

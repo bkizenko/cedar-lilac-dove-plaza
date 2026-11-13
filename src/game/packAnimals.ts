@@ -1,3 +1,4 @@
+import {domesticationReady,beginDomesticationTrial,practiceDomestication,finishDomesticationTrial} from './domestication';
 import {consumePackJourneyCare,reconcilePackJourneyCare} from './packJourneyCare';
 import {herdRules} from './animalSpecies';
 import {packAnimalFrom,PACK_ANIMAL_RULES,packAnimalPosition} from './packAnimalState';
@@ -17,12 +18,14 @@ export function beginPackTaming(g:Game,buildingId:number,team=0,unitId?:number){
   if(u.tamingWork?.pen!==undefined)continue;
   if(u.tamingWork?.paused){u.tamingWork.paused=false;u.order='hold';return true;}
   if(u.tamingWork)continue; // Keep the animal, feed and progress already reserved by this handler.
-  const animal=g.state.wildlife.filter(c=>c.species==='goat'&&c.hp>0&&(team===0?g.visibleAt(c.x,c.z):rivalKnows(g,team,c.x,c.z))&&Math.hypot(c.x-home.x,c.z-home.z)<220&&!g.state.units.some(p=>p.hp>0&&p.tamingWork?.animal===c.id)&&g.workBoard.connected(g,u.x,u.z,c.x,c.z))
+  const animal=g.state.wildlife.filter(c=>c.species==='goat'&&c.hp>0&&domesticationReady(g,c,team)&&(team===0?g.visibleAt(c.x,c.z):rivalKnows(g,team,c.x,c.z))&&Math.hypot(c.x-home.x,c.z-home.z)<220&&!g.state.units.some(p=>p.hp>0&&p.tamingWork?.animal===c.id)&&g.workBoard.connected(g,u.x,u.z,c.x,c.z))
    .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   if(!animal)continue;
   if(g.tribe(team).food<10||g.tribe(team).wood<2){if(team===0)g.banner('Taming needs 10 food and 2 logs for feed and a carrying harness',4);return false;}
-  g.interruptMission(u);g.tribe(team).food-=10;g.tribe(team).wood-=2;
-  u.tamingWork={animal:animal.id,progress:0};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();
+  const lots=foodInventory(g.tribe(team));let need=10;
+  if(Object.values(lots).reduce((n,v)=>n+v,0)<need)return false;
+  g.interruptMission(u);for(const kind of Object.keys(lots) as (keyof typeof lots)[]){const n=Math.min(lots[kind],need);if(n>0){takeFoodLot(g,team,kind,n);need-=n;}if(need<1e-8)break;}g.tribe(team).wood-=2;
+  u.tamingWork={animal:animal.id,progress:0,trial:beginDomesticationTrial(g,u,animal,'pack')};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();
   if(team===0)g.banner('One adult is approaching a wild goat with feed. Taming and fitting its pack takes a minute.',5);return true;
  }
  if(team===0)g.banner('Explore to find a living wild goat and an available empty-handed adult with a clear route',5);return false;
@@ -37,9 +40,11 @@ export function packTamingAI(g:Game,u:Unit,dt:number){
   if(u.stuckT>8){work.paused=true;u.order='idle';u.workReason='Taming paused — goat is unreachable';}
   return true;
  }
- animal.vx=0;animal.vz=0;work.progress=Math.min(PACK_TAMING_SECONDS,work.progress+dt);
+ animal.vx=0;animal.vz=0;const before=work.progress;work.progress=Math.min(PACK_TAMING_SECONDS,work.progress+dt);if(work.trial)practiceDomestication(u,work.trial,work.progress-before);
  u.facing=Math.atan2(animal.x-u.x,animal.z-u.z);u.workReason=`Taming a pack goat · ${Math.floor(work.progress/PACK_TAMING_SECONDS*100)}%`;
  if(work.progress>=PACK_TAMING_SECONDS){
+  if(work.trial&&work.trial.roll>=work.trial.chance){finishDomesticationTrial(g,u,'refused');u.tamingWork=undefined;u.order='return';u.recalled=true;u.node=null;u.target=null;u.workReason='The goat refused pack training — paid feed and harness materials spent; returning with actual remaining supplies';g.workBoard.reset();g.invalidateRoute(u);if(u.team===0)g.banner(u.workReason,5);return true;}
+  finishDomesticationTrial(g,u,'success');
   // Transfer this existing animal out of the wild population, without a carcass or respawn slot.
   g.state.wildlife=g.state.wildlife.filter(c=>c.id!==animal.id);
   u.packAnimal={...packAnimalFrom(animal),packHarness:{version:1,preparedAt:g.state.time,wood:2,workSeconds:PACK_TAMING_SECONDS}};

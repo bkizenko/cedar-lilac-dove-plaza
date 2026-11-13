@@ -14,7 +14,7 @@ export function validPackHarness(h:unknown,now=Infinity):h is PackHarness|undefi
 }
 /** The same physical follow point used by the working-animal renderer. */
 export function packAnimalPosition(u:Pick<Unit,'x'|'z'|'facing'|'boat'>){const offset=u.boat?.phase==='aboard'?0:PACK_ANIMAL_RULES.followMeters;return{x:u.x-Math.sin(u.facing)*offset,z:u.z-Math.cos(u.facing)*offset};}
-export type PackAnimal={id:number;hp:number;maxHp:number;scale:number;species?:'goat'|'horse'|'cattle';
+export type PackAnimal={domestication?:import('./domestication').DomesticationMemory;id:number;hp:number;maxHp:number;scale:number;species?:'goat'|'horse'|'cattle';
  sex?:'female'|'male';born?:number;tamedAt?:number;hunger?:number;thirstSeconds?:number;
  foodConsumed?:number;waterConsumedLiters?:number;
  packHarness?:PackHarness;milk?:number;pregnancy?:number;lactatingUntil?:number;adultScale?:number};
@@ -23,7 +23,7 @@ export type PackAnimal={id:number;hp:number;maxHp:number;scale:number;species?:'
  * the state already earned while they lived in pasture. */
 export function packAnimalFrom(a:Critter&Partial<Pick<Livestock,'sex'|'born'|'tamedAt'|'hunger'|'thirstSeconds'|'milk'|'pregnancy'|'lactatingUntil'|'adultScale'|'packHarness'>>):PackAnimal {
  const prior=a as typeof a&Partial<PackAnimal>;
- return {...(a.packHarness?{packHarness:{...a.packHarness}}:{}),...Object.fromEntries((['milk','pregnancy','lactatingUntil','adultScale'] as const).filter(k=>a[k]!==undefined).map(k=>[k,a[k]])),id:a.id,hp:a.hp,maxHp:a.maxHp,scale:a.scale,species:a.species==='horse'||a.species==='cattle'?a.species:'goat',
+ return {...(a.domestication?{domestication:structuredClone(a.domestication)}:{}),...(a.packHarness?{packHarness:{...a.packHarness}}:{}),...Object.fromEntries((['milk','pregnancy','lactatingUntil','adultScale'] as const).filter(k=>a[k]!==undefined).map(k=>[k,a[k]])),id:a.id,hp:a.hp,maxHp:a.maxHp,scale:a.scale,species:a.species==='horse'||a.species==='cattle'?a.species:'goat',
  ...(a.sex!==undefined?{sex:a.sex}:{}),...(a.born!==undefined?{born:a.born}:{}),...(a.tamedAt!==undefined?{tamedAt:a.tamedAt}:{}),
  hunger:a.hunger??0,thirstSeconds:a.thirstSeconds??0,foodConsumed:prior.foodConsumed??0,waterConsumedLiters:prior.waterConsumedLiters??0};
 }
