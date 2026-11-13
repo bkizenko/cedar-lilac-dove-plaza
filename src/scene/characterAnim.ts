@@ -8,7 +8,7 @@
  *  - `DeathTracker` notices a unit that really died (it leaves the simulation, or sits at hp<=0) and plays the fall from its
  *    last real position, facing and momentum, then leaves a bounded number of bodies that sink away.
  * Nothing here scripts a performance: no unit animates a job it is not doing. */
-import {CLIPS,clipForActivity,phaseFor,samplePose,unitVariation,gaitFor,sampleDeath,deathClipFor,DEATH_SECONDS,stancePose,type Activity,type ClipId,type DeathClipId,type Pose,type Variation} from './animationClips';
+import {CLIPS,clipForActivity,phaseFor,samplePose,blendPoses,gaitBlend,gaitStride,unitVariation,gaitFor,sampleDeath,deathClipFor,DEATH_SECONDS,stancePose,type Activity,type ClipId,type DeathClipId,type Pose,type Variation} from './animationClips';
 import {TOOL_FOR_CLIP,type ItemId} from './characterRig';
 
 /** The Unit fields read (all optional so tests and the archive can build partial units). */
@@ -38,8 +38,8 @@ export function activityFor(u:UnitLike,ctx:AnimContext):Activity{
  a.warming=(!!u.warming||u.workReason==='Warming up by the lit hearth')&&!moving;a.fireLit=ctx.fireLit;
  return a;
 }
-export type AnimState={x:number;z:number;dist:number;work:number;time:number;variation:Variation;clip:ClipId;seen:number};
-export const newAnimState=(u:UnitLike,time:number):AnimState=>({x:u.x,z:u.z,dist:0,work:0,time,variation:unitVariation(u.id),clip:'idle',seen:time});
+export type AnimState={x:number;z:number;dist:number;/** walk cycles accumulated at the speed-blended stride (continuous phase through walk->run) */gait:number;/** smoothed 0..1 walk->run blend */run:number;work:number;time:number;variation:Variation;clip:ClipId;seen:number};
+export const newAnimState=(u:UnitLike,time:number):AnimState=>({x:u.x,z:u.z,dist:0,gait:0,run:0,work:0,time,variation:unitVariation(u.id),clip:'idle',seen:time});
 export type AnimFrame={clip:ClipId;phase:number;pose:Pose;load:number;reason:string;itemR?:ItemId;itemL?:ItemId};
 /** Advance one unit's animation from real state. `moved` clamps teleports (a unit placed elsewhere does not slide its feet). */
 export function stepAnimator(st:AnimState,u:UnitLike,ctx:AnimContext):AnimFrame{
@@ -50,8 +50,14 @@ export function stepAnimator(st:AnimState,u:UnitLike,ctx:AnimContext):AnimFrame{
  if(act.productionPhase==='working'&&ctx.project)work=ctx.project.progress;
  else if((sel.clip==='thrust'||sel.clip==='shoot'||sel.clip==='slash'||sel.clip==='fight')&&(u.rof??0)>0&&(u.cd??-1)>=0)work=(1-Math.min(1,Math.max(0,(u.cd??0)/(u.rof as number))))*clip.period/st.variation.speed;
  else{st.work+=dt;work=st.work;}
- const phase=phaseFor(clip,{workSeconds:work,distanceMetres:st.dist,timeSeconds:ctx.time},st.variation,sel.load);
- let pose=samplePose(clip,phase,st.variation,sel.load);
+ let phase=phaseFor(clip,{workSeconds:work,distanceMetres:st.dist,timeSeconds:ctx.time},st.variation,sel.load),pose:Pose;
+ if(sel.clip==='walk'){
+  // walk -> run by the unit's real speed; the blend eases with sim time (dt), the phase advances with metres moved at the blended stride
+  const target=gaitBlend(Math.hypot(u.vx,u.vz));
+  st.run+=(target-st.run)*Math.min(1,dt*6);if(Math.abs(target-st.run)<1e-4)st.run=target;
+  st.gait+=moved/gaitStride(st.run);const ph=st.gait+st.variation.phaseOffset;phase=ph-Math.floor(ph);
+  pose=st.run>.001?blendPoses(samplePose(CLIPS.walk,phase,st.variation,sel.load),samplePose(CLIPS.run,phase,st.variation,sel.load),st.run):samplePose(clip,phase,st.variation,sel.load);
+ }else{st.run=0;pose=samplePose(clip,phase,st.variation,sel.load);}
  pose=stancePose(pose,sel.clip,WEAPON[u.type]);
  return {clip:sel.clip,phase,pose,load:sel.load,reason:sel.reason,itemR:TOOL_FOR_CLIP[sel.clip]};
 }
