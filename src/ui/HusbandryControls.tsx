@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {domesticationReport} from '../game/domestication';
+import {DOMESTICATION_RULES,domesticationReport} from '../game/domestication';
 import {useLifecycleAction} from './useLifecycleAction';
 import type {HusbandryCommand} from '../game/husbandryCommands';
 import {penBeddingReport} from '../game/penBedding';
@@ -64,14 +64,14 @@ function HusbandryControlsInner({engine,pen}:{engine:Engine;pen:number}) {
    <button type="button" disabled={!returnHandlers.length} onClick={()=>run({action:'return-pack',unitId:returnHandlers[0]?.id})}>Return working animal<span>Nearest handler · current work and carried supplies come first</span></button>
    <button type="button" disabled={searchActive} onClick={()=>run({action:'search'})}>
     {searchActive?'Goat search queued':'Search for goats'}
-    <span>{known?`${known} visible within reach`:`Hills and woodland within ${HERD.searchRadiusMeters} m`}</span>
+    <span>{known?`${known} visible within reach`:`Hills and woodland within ${HERD.searchRadiusMeters} m`} · up to {DOMESTICATION_RULES.maximumSearchTrials} paid tries</span>
    </button>
    {searchActive&&<button type="button" onClick={()=>run({action:'cancel-search'})}>Cancel search</button>}
    {searchStatus&&<span role="status">{searchStatus}</span>}
-   <button type="button" disabled={!paused&&penPlacesOccupied(g,pen)+reserved>=capacity} onClick={()=>run({action:'capture',species:'goat'})}>{paused?'Resume capture':'Capture goat'}<span>{paused?'Paid progress preserved':`${HERD.tamingFood} food · ${HERD.tamingSeconds}s at the goat, plus travel`}</span></button>
-   <button type="button" disabled={!pausedSheep&&penPlacesOccupied(g,pen)+reserved>=capacity} onClick={()=>run({action:'capture',species:'sheep'})}>{pausedSheep?'Resume sheep capture':'Capture sheep'}<span>6 food · approach a discovered wild sheep</span></button>
-   <button type="button" disabled={!pausedHorse&&penPlacesOccupied(g,pen)+reserved+3>capacity} onClick={()=>run({action:'capture',species:'horse'})}>{pausedHorse?'Resume horse capture':'Capture horse'}<span>12 food · 120s · discovered wild horse · 3 pasture places</span></button>
-   <button type="button" disabled={!pausedCattle&&penPlacesOccupied(g,pen)+reserved+4>capacity} onClick={()=>run({action:'capture',species:'cattle'})}>{pausedCattle?'Resume cattle capture':'Capture cattle'}<span>18 food · 150s · discovered wild cattle · 4 pasture places</span></button>
+   <button type="button" disabled={!paused&&penPlacesOccupied(g,pen)+reserved>=capacity} onClick={()=>run({action:'capture',species:'goat'})}>{paused?'Resume capture':'Capture goat'}<span>{paused?'Paid progress preserved':`${HERD.tamingFood} food · ${HERD.tamingSeconds}s · may refuse`}</span></button>
+   <button type="button" disabled={!pausedSheep&&penPlacesOccupied(g,pen)+reserved>=capacity} onClick={()=>run({action:'capture',species:'sheep'})}>{pausedSheep?'Resume sheep capture':'Capture sheep'}<span>6 food · may refuse</span></button>
+   <button type="button" disabled={!pausedHorse&&penPlacesOccupied(g,pen)+reserved+3>capacity} onClick={()=>run({action:'capture',species:'horse'})}>{pausedHorse?'Resume horse capture':'Capture horse'}<span>12 food · 120s · may refuse · 3 pasture places</span></button>
+   <button type="button" disabled={!pausedCattle&&penPlacesOccupied(g,pen)+reserved+4>capacity} onClick={()=>run({action:'capture',species:'cattle'})}>{pausedCattle?'Resume cattle capture':'Capture cattle'}<span>18 food · 150s · may refuse · 4 pasture places</span></button>
    <button type="button" disabled={!pausedShearer&&!animals.some(a=>a.species==='sheep'&&(a.fleece?.units||0)>=1&&g.state.time-a.born>=herdRules(a.species).maturity)} onClick={()=>run({action:'shear'})}>{pausedShearer?'Resume fleece delivery':'Clip sheep fleece'}<span>Raw fleece must be carried, washed, spun or felted, then sewn.</span></button>
    <button type="button" disabled={!pausedKeeper&&(report?.keepers||0)>=(report?.keepersNeeded||1)} onClick={()=>run({action:'care'})}>{pausedKeeper?'Resume keeper':keeper?'Assign another keeper':'Assign keeper'}</button>
    <button type="button" disabled={goatPack.disabled} onClick={()=>run({action:'pack',species:'goat'})}>{goatPack.label}<span>{goatPack.detail}</span></button>
