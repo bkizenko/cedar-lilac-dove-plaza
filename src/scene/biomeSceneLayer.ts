@@ -1,3 +1,4 @@
+import {DETAIL_RULES} from '../game/detailLevel';
 import * as THREE from 'three';
 import {provinceAt,ecologicalConditionsAt,PROVINCE_KINDS,type EcologicalProvinceGrid,type ProvinceKind} from '../game/ecologicalProvinces';
 import {BiomeVegetation,BiomeDressing,resourceTreeForm,BIOME_VEGETATION_RULES,type ResourceTree,type DressingPoint,type VegetationContext,type VegetationStyle} from './biomeVegetation';
@@ -198,7 +199,7 @@ export class BiomeSceneLayer {
   this.grid=grid;this.style=style;this.treeSet=treeSet;const seed=game.state.seed,profileAt=(x:number,z:number)=>provinceAt(grid,x,z);
   if(style==='painterly'&&treeSet==='botanical'){const w=game.world.mapgen?.wind,wl=w?Math.hypot(w.x,w.z)||1:0;
    this.trees=new BotanicalForest(scene,{seed,siteAt:(x,z)=>treeSiteAt(game,grid,x,z),baseFormAt:(id,x,z)=>{const p=profileAt(x,z);return {base:toBaseForm(resourceTreeForm(id,p,seed)),kind:p.kind};},wind:w?[w.x/wl,w.z/wl]:undefined,
-    nearMetres:BIOME_VEGETATION_RULES.nearMetres,farMetres:BIOME_VEGETATION_RULES.farMetres,lowFarMetres:BIOME_VEGETATION_RULES.lowFarMetres,stumpHeightScale:BIOME_VEGETATION_RULES.stumpHeightScale});
+    nearMetres:DETAIL_RULES.treeNear,farMetres:BIOME_VEGETATION_RULES.farMetres,lowFarMetres:BIOME_VEGETATION_RULES.lowFarMetres,stumpHeightScale:BIOME_VEGETATION_RULES.stumpHeightScale});
    this.filler=new FillerForest({seed,size:game.world.size,height:(x,z)=>game.height(x,z),waterAt:(x,z)=>game.waterAt(x,z),
     provinceAt:(x,z)=>{const p=provinceAt(grid,x,z);return {kind:p.kind,treeDensityPerHectare:p.treeDensityPerHectare};},
     soilAt:(x,z)=>{const geo=peekGeology(game.world as never),q=geo?geo.rockAt(x,z):null;return q?Math.max(0,Math.min(1,q.soil*(1-.7*q.scree))):null;},

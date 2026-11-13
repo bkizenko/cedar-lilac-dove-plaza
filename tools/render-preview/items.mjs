@@ -95,11 +95,20 @@ async function detail() {
     await sheet(path.join(outDir, `det-${ch.join('-')}.png`), `detail: ${ch.join(', ')} (${skin})`, rows, { cols: eras.length, heads: eras.map(e => ERAS[e]), tw: 520, th: 460, el: 12, az: 30 });
   }
 }
+/** the item tier a ground item showed at the default camera under the old thresholds (mid, lod 1) next to the near tier it now shows (lod 0): same items, era 2 */
+async function lodPair() {
+  const ids = (idsOpt ? idsOpt.split(',') : ['spear', 'bow', 'handAxe', 'shield', 'pot', 'hoe']).filter(i => DEFS.some(d => d.id === i));
+  const rows = ids.map(id => { const d = DEFS.find(x => x.id === id); return { label: d.name, tilt: tiltOf(d, true), ground: d.frame === 'world', reqs: [R(id, 2, { lod: 2 }), R(id, 2, { lod: 1 }), R(id, 2, { lod: 0 })] }; });
+  const info = await sheet(path.join(outDir, 'lod-tiers.png'), 'Item tiers, bronze age: far (lod 2) | mid (lod 1, shown at the default zoom before) | near (lod 0, shown now)', rows, { heads: ['far', 'mid (before, default zoom)', 'near (after)'], cols: 3, tw: 300, th: 280 });
+  console.log(JSON.stringify(Object.fromEntries(ids.map(i => [i, (stats[i] || []).map(s => s.tris)]))));
+  return info;
+}
 const targets = pos.length ? pos : ['all'];
 for (const t of targets) {
   if (t === 'wear') await wear();
   else if (t === 'detail') await detail();
   else if (t === 'civs') await civs();
+  else if (t === 'lod') await lodPair();
   else if (t === 'all') { for (const c of ['weapons', 'farm', 'craft', 'hunt', 'fish', 'carry', 'ship', 'light']) await category(c); await wear(); await civs(); }
   else await category(t);
 }

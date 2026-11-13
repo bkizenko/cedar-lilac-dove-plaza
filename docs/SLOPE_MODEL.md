@@ -21,6 +21,10 @@ Goods and labour: extra wood/stone are added to the placement bill and spent lik
 
 Rendering: foundation level is the highest contact (dugout: ground at the door). Every box is sunk to the terrain beneath it (tested), so corners do not float. Ladder sheet: `docs/renders/slope-tiers/slope-ladder.png` (`tools/render-preview/slope-tiers.mjs`).
 
+## Terrain model v2
+
+New villages also carry `state.terrainModel==='v2'`: fields are never refused below a cliff and become terrace strips (`docs/TERRACE_FARMING.md`); every building also reads curvature, aspect, roughness, drainage and natural shelves (a shelf is credited, so a steep hillside with a ledge is not refused). The tier table above is unchanged on plain slopes. Saves without the switch keep the 22 degree field rule.
+
 ## Sources
 
 No external sources were fetched for this change. Every number above is a DESIGN VALUE chosen for game feel, informed by general knowledge of terracing, drystone retaining walls, pole platforms and dugouts; none is a cited engineering figure. Stone units follow the stone wall section in `constants.ts` (about 4 units per m3, a design assumption).

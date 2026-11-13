@@ -30,6 +30,8 @@ export type Part={shape:PartShape;size:readonly [number,number,number];pos:reado
  onlyFrom?:LodTier;
  /** Hip roof: ridge shortening at each end in metres (shape 'hip' only). */
  inset?:number;
+ /** Box only: the top face's width and depth as a fraction of the base (a frustum: tapered torso, flared skirt, sloped yoke). Same 12 triangles as a box. */
+ taper?:readonly [number,number];
  /** Beam endpoints, kept so footprint fitting can rebuild the beam exactly. */
  ends?:readonly [readonly [number,number,number],readonly [number,number,number]];
  /** Present when this part belongs to a rotor that the layer turns (water wheel, sails). */

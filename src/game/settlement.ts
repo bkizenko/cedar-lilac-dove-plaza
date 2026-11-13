@@ -28,6 +28,7 @@ import {fishingBank,fishingGrounds} from "./fishing";
 import { predisposition } from "./people";
 import { readyNourishment, preservationAvailable } from "./pantry";
 import {fieldTerrain} from "./fieldTerrain";
+import {terraceYieldFor,applyYearErosion} from "./terraceRuntime";
 import { habitatAt } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
@@ -73,11 +74,12 @@ export function farmHarvestEstimate(g:Game,b:Building,planted=1,tended=1,water=b
   const fields=b.team===0&&g.state.agePicks[3]==="econ"?1.2:1;
   const land=fieldTerrain(g,b),kind=b.crop?.kind||b.cropType||"grain";
   const yieldFactor=kind==="tubers"?land.tubers:land.grain*(kind==="pulses"?.85:1);
-  return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*water*yieldFactor*irrigationYield(g,b));
+  return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*water*yieldFactor*irrigationYield(g,b)*terraceYieldFor(g,b,kind));
 }
 export function crop(g: Game, b: Building) {
   const { year, phase } = calendar(g);
   if (!b.crop || b.crop.year !== year) {
+    if (b.crop)applyYearErosion(g,b,b.crop.planted>0);
     if (b.crop)
       b.fertility = Math.max(
         0.5,

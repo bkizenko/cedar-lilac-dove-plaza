@@ -9,6 +9,7 @@ import {beam,chance,far,fitToFootprint,part,pick,range,seededRandom,type Buildin
 import type {CarvedMaterialId} from './carvedPalette';
 
 import {partBounds,partsAtLod,floatingParts} from './buildingParts';
+import {dressDwelling} from './buildingDetail';
 import {door,windowAt,gableRoof,roofPitch,roofMaterial,wallMaterial,maxStoreys,type FamilyContext,type Generator,type FamilyId,type CoreFamilyId} from './buildingHelpers';
 export {roofPitch,roofMaterial,maxStoreys,NEUTRAL_TRADITION} from './buildingHelpers';
 export type {BuildMaterial,Climate,Trade,WallAxis,Tradition,FamilyContext,FamilyId,CoreFamilyId,ExtraFamilyId} from './buildingHelpers';
@@ -337,6 +338,7 @@ export function ensureTierSupport(parts:Part[],footprint:{w:number;d:number}):Pa
  return out;
 }
 
+const DRESSED=new Set<FamilyId>(['roundhouse','cottage','longhouse','granary','storehouse','workshop']);
 export function generateFamily(family:FamilyId,ctx:FamilyContext,variantKey:string):BuildingSpec{
  const def=activeDef(family),r=seededRandom(ctx.seed);
  // Families authored along one axis: turn them to the real water side / span axis.
@@ -349,6 +351,11 @@ export function generateFamily(family:FamilyId,ctx:FamilyContext,variantKey:stri
  let parts=ctx.lit===false?out.parts.filter(p=>p.mat!=='fire'):out.parts,entry=out.entry;
  if(q){parts=rotateParts(parts,q);
   if(entry){const a=q*Math.PI/2,c=Math.round(Math.cos(a)),s=Math.round(Math.sin(a));entry={x:entry.x*c+entry.z*s,z:-entry.x*s+entry.z*c,width:entry.width};}}
+ // Hand-built dwellings, stores and craft sheds get the same construction detail and seeded wear as the civ grammars.
+ if(DRESSED.has(family)){
+  const roofPart=parts.find(p=>(p.shape==='prism'||p.shape==='hip'||p.shape==='cone')&&p.lod>=2),roofMat=(roofPart?.mat??'thatch') as CarvedMaterialId;
+  parts=[...parts];dressDwelling(parts,{wall:'plaster',wall2:'woodLight',roof:roofMat,trim:'woodDark',accent:'woodEdge',cloth:'cloth',ground:'stoneDark',dark:'recess'},seededRandom(ctx.seed^0x2f1b7a5),{wear:.12+(1-ctx.wealth)*.3,wealth:ctx.wealth,era:ctx.era,footprint:ctx.footprint,kind:family==='workshop'?'shed':family==='granary'||family==='storehouse'?'granary':'house'});
+ }
  // Wall segments, gates, earthwork cells and bridges run to the cell edge so neighbours join
  // without gaps; everything else keeps a 10 cm clearance inside its footprint.
  const margin=family==='palisade'||family==='gate'||family==='stoneWall'||family==='trench'||family==='moat'||family==='bridge'?.02:.1;
