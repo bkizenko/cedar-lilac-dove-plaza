@@ -37,6 +37,7 @@ import {excavationTerrain} from '../game/excavation';
 import {WildPlantLayer} from './wildPlants';
 import {wildPlantsEnabled,habitatKindAt} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
+import {HorizonRing} from './horizonRing';
 import {TowerPlatformLayer} from './towerPlatformLayer';
 import {CarvedBuildingLayer,carvedGeometry,createCarvedMaterial,type CarvedInstance} from './carvedBuildingLayer';
 import {carvedDaylightGrade,CARVED_LIGHT_RIG} from './carvedPalette';
@@ -311,6 +312,9 @@ export class WorldView {
   private contourFields: ContourFields | null = null;
   private wildPlantLayer:WildPlantLayer|null=null;
   private landContinuation:LandContinuation|null=null;
+  /** land, sea and forest masses beyond the playable square (horizonRing.ts) */
+  horizon:HorizonRing|null=null;
+  private horizonTint=new THREE.Color();
   private bankLayer:BankTerrainLayer|null=null;
   private excavationLayer:ExcavationLayer|null=null;
   private fieldSurface: FieldSurface | null = null;
@@ -736,7 +740,9 @@ export class WorldView {
     this.drawBandsNow = drawBands(this.drawGovernor.level, this.mapSize);
     this.camera.far = this.drawBandsNow.cameraFar;
     this.camera.updateProjectionMatrix();
+    if(this.horizon&&this.horizonGame)this.horizon.build(this.horizonGame,this.drawGovernor.level,this.drawBandsNow);
   }
+  private horizonGame:Game|null=null;
   /** What the tree layers need each sync: the bands, a conservative frustum test for far trees (camera frustum widened sideways so a quick turn does not show a hole
    * before the next refresh), and a key that changes when the camera moved or turned enough to need a fresh far list. */
   private treeView(prime: boolean) {
@@ -798,6 +804,7 @@ export class WorldView {
     this.seasonAcc = 1;
     this.buildTerrain(game);
     if(game.world.landContinuation&&this.terrainSurface)this.landContinuation=new LandContinuation(this.scene,game,this.terrainSurface,this.mats.ground as THREE.MeshStandardMaterial);
+    this.horizon??=new HorizonRing(this.scene);this.horizon.build(game,this.drawGovernor.level,this.drawBandsNow);this.horizonGame=game;
     this.cameraGround={size:game.world.size,height:(x,z)=>Math.max(game.height(x,z),game.waterAt(x,z))};
     this.cameraGroundRevision=()=>game.navigationRevision();this.cameraCollision.invalidate();
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size,this.terrainSurface?.banks,this.terrainSurface?.bankCuts);
@@ -1739,6 +1746,7 @@ export class WorldView {
       u.uZenith.value.set(painter.skyZenith);u.uMid.value.set(painter.skyMid);u.uHorizon.value.set(painter.skyHorizon);u.uGround.value.set(painter.skyGround);u.uSun.value.set(painter.sun);
       u.uSunDir.value.copy(sunDir);u.uTime.value=game.state.time;u.uCover.value=painter.cloudCover;u.uNight.value=night?1:0;
       for(const material of this.waterMaterials){const w=(material as THREE.ShaderMaterial).uniforms;if(w?.uSkyHorizon){(w.uSkyHorizon.value as THREE.Color).set(painter.skyHorizon);(w.uSkyZenith.value as THREE.Color).set(painter.skyZenith);(w.uSunColor.value as THREE.Color).set(painter.sun);}}
+      if(this.horizon){const t=this.horizonTint.setRGB(1,1,1);if(sn.autumn>.15)t.lerp(_c.set('#ffd9a8'),sn.autumn*.45);if(sn.winter>.15||sn.snow>.3)t.lerp(_c.set('#e9eef5'),Math.max(sn.winter*.5,sn.snow*.75));this.horizon.sync({horizon:painter.skyHorizon,zenith:painter.skyZenith},sunDir,painter.sun,night?.3:Math.min(1,.4+painter.sunIntensity*.3),t);}
       if(this.terrainSurface)this.terrainSurface.setAtmosphere(sunDir,painter.cloudShadow,game.state.time,painter.sun,painter.haze);
       this.biomeScene?.setSun(sunDir,night?0:Math.min(1,painter.sunIntensity/2.2)*(1-.6*(painter.cloudCover>.8?1:0)),this.renderer.shadowMap.enabled);
       const g=this.gradePass?.uniforms;
@@ -3265,7 +3273,7 @@ export class WorldView {
     this.baskets?.dispose();this.baskets=null;
     this.fibreWork?.dispose();this.fibreWork=null;
     this.wildPlantLayer?.dispose();this.wildPlantLayer=null;
-    this.landContinuation?.dispose();this.landContinuation=null;
+    this.landContinuation?.dispose();this.landContinuation=null;this.horizon?.dispose();this.horizon=null;this.horizonGame=null;
     this.bankLayer?.dispose();this.bankLayer=null;
     this.excavationLayer?.dispose();this.excavationLayer=null;
     this.hullFleet?.dispose();this.hullFleet=null;
