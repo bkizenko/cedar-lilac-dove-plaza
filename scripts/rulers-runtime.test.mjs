@@ -478,3 +478,22 @@ test('AUD-SOC-SAVE-ROUNDTRIP: a multi-unit founding party survives encode/decode
  assert.deepEqual(expansionParties(back,1),before,'read model identical after reload');
  assert.equal(back.tribe(1).food,food0,'pantry unchanged by reload');
 });
+
+test('AUD-SOC-HOSTAGE-RETURN: a fosterling coming home or a pledge broken by war is chronicled for the player, saved, validated, and old saves have none',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
+ const g=fixture();R.ensureRulers(g);
+ for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<45;i++)g.state.units.push({...u,id:g.state.units.length+9800+i+t*100});}
+ for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);
+  d.people[t+'-kid']={...k,id:t+'-kid',name:'Kid'+t,age:5,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:1};}
+ assert.deepEqual(R.neighbourNews(g).filter(n=>n.kind==='ward-return'),[],'old save / no wards: nothing');
+ const f=R.fosterHouses(g,0,1);assert.ok(f,'fixture must allow fosterage');
+ g.state.rulers.societies['0'].dynasty.people['0-kid'].age=16;
+ R.settleWards(g);
+ const ret=g.state.rulers.wardReturns;assert.equal(ret.length,1);assert.equal(ret[0].how,'grown');
+ const news=R.neighbourNews(g).filter(n=>n.kind==='ward-return');assert.equal(news.length,1);assert.match(news[0].text,/came home .* grown/);
+ assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'return log survives a save');
+ assert.equal(validRulersState({...JSON.parse(JSON.stringify(g.state.rulers)),wardReturns:[{kind:'x'}]}),false,'malformed log rejected');
+ assert.equal(R.wardsOf(g,0).some(w=>w.person==='0-kid'),false,'the ward is really gone, not just reported');
+ g.tribe(1).hostile=true;R.settleWards(g);
+ assert.ok(g.state.rulers.wardReturns.some(w=>w.how==='war'),'war ending the other pledge is logged');
+});
