@@ -12,6 +12,10 @@ import { ITEM_KINDS, ITEM_NAMES, PRODUCTION_RECIPES } from '../game/production';
 import { productionPracticeRate } from '../game/productionPractice';
 import type { Game } from '../game/sim';
 import { WorkerActivity } from './WorkerActivity';
+import { ItemIcon } from './ItemIcon';
+import { itemEraForAge, FARM_TOOL_ERA, type EquipmentState } from '../scene/itemRegistry';
+import { skinOfTeam } from '../game/skinState';
+import { farmToolCondition } from '../game/farmTools';
 
 const amount = (value: number) => Number(value.toFixed(2));
 
@@ -54,8 +58,26 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       const armor=game&&wornArmor(game,resident);if(armor)equipped.push(`Padded armor (${Math.round(armor.condition*100)}%)`);
       if (resident.garment) equipped.push(`${ITEM_NAMES[resident.garment.item]} (${Math.round(resident.garment.condition * 100)}%)`);
       if (resident.spareGarment) carried.push(`Spare ${ITEM_NAMES[resident.spareGarment.item]}`);
+      // pictures of the real equipment: each icon is that item's own model in this society's skin, in its age's material and real condition
+      const icons:{eq:EquipmentState;label:string}[]=[];
+      if(game){
+        const era=itemEraForAge(game.state.age),skin=skinOfTeam(game.state,resident.team)?.id??null;
+        if (resident.type === 'archer') icons.push({eq:{kind:'bow',era,skin},label:'Bow'});
+        else if (resident.type === 'swordsman') icons.push({eq:{kind:'bladeSword',era,skin},label:'Blade'});
+        else if (resident.militia || resident.type === 'spearman') icons.push({eq:{kind:'spear',era,skin},label:'Spear'});
+        if (resident.farmTool) icons.push({eq:{kind:resident.farmTool==='woodenArd'?'ard':'hoe',era:FARM_TOOL_ERA[resident.farmTool]??era,skin,condition:farmToolCondition(resident)},label:resident.farmTool});
+        if (resident.basket) icons.push({eq:{kind:'basket',era,skin,condition:resident.basket.condition},label:'Woven basket'});
+        if (resident.waterVessel) icons.push({eq:{kind:'waterskin',era,skin},label:'Water vessel'});
+        for (const [k,model] of [['spears','spear'],['bows','bow'],['blades','bladeSword']] as const) {
+          const n = resident.weaponCargo?.[k] ?? 0;
+          if (n > 0) icons.push({eq:{kind:model,era,skin},label:`${n} ${k} carried`});
+        }
+        if ((resident.itemCargo?.pottery ?? 0) > 0) icons.push({eq:{kind:'pot',era,skin},label:'Pottery carried'});
+        if ((resident.itemCargo?.cordage ?? 0) > 0) icons.push({eq:{kind:'ropeCoil',era,skin},label:'Cordage carried'});
+      }
       return <li key={resident.id}>
         <strong>{personName(resident)}</strong>
+        {icons.length > 0 && <div className="flex flex-wrap items-center gap-1">{icons.map((i,n) => <ItemIcon key={n} eq={i.eq} label={i.label}/>)}</div>}
         <div>{carried.length ? carried.join(' · ') : 'Empty hands'}</div>
         {equipped.length > 0 && <div>Equipped · {equipped.join(' · ')}</div>}
         {resident.packAnimal&&<div title={`Feed consumed ${amount(resident.packAnimal.foodConsumed??0)} · Water drunk ${amount(resident.packAnimal.waterConsumedLiters??0)} L. Feed and water are available at a reached village cache.`}>{resident.packAnimal.species==='cattle'?'Cattle':resident.packAnimal.species==='horse'?'Horse':'Goat'} · Health {Math.round(resident.packAnimal.hp/resident.packAnimal.maxHp*100)}% · Hunger {Math.round(resident.packAnimal.hunger??0)}%{game?.state.survivalVersion===1?` · Thirst ${Math.round(resident.packAnimal.thirstSeconds??0)}s`:''}</div>}
