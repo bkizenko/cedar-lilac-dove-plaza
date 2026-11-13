@@ -32,6 +32,7 @@ import { habitatAt } from "./ecology";
 import type { Game } from "./sim";
 import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
 import { LUMBER_R, QUARRY_R, DOCK_R, GATHER_WORK_RATE } from "./constants";
+import { irrigationYield } from "./irrigation";
 
 export const YEAR_SECONDS = SIM_CALENDAR_RULES.yearSeconds;
 export const FOOD_PER_PERSON_SECOND = 0.036;
@@ -72,7 +73,7 @@ export function farmHarvestEstimate(g:Game,b:Building,planted=1,tended=1,water=b
   const fields=b.team===0&&g.state.agePicks[3]==="econ"?1.2:1;
   const land=fieldTerrain(g,b),kind=b.crop?.kind||b.cropType||"grain";
   const yieldFactor=kind==="tubers"?land.tubers:land.grain*(kind==="pulses"?.85:1);
-  return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*water*yieldFactor);
+  return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*water*yieldFactor*irrigationYield(g,b));
 }
 export function crop(g: Game, b: Building) {
   const { year, phase } = calendar(g);

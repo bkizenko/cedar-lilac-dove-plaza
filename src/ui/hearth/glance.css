@@ -104,3 +104,4 @@
  .hw-paused{display:none}
  .hw-time-pause{display:block;position:absolute;right:-6px;bottom:-6px;padding:2px;border-radius:50%;background:var(--hw-gold);color:var(--hw-gold-ink)}
 }
+.hw-pin-label{font-size:16px;font-weight:650;white-space:nowrap}

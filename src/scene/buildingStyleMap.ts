@@ -8,6 +8,7 @@
  * handful of distinct cottages, not 60 unique meshes. */
 import {hashSeed,type BuildingSpec} from './buildingParts';
 import {generateCivBuilding,type CivContext,type CivRole} from './civBuildings';
+import {heraldryKey,BANNER_ORDER,type Heraldry} from './villageIdentity';
 import {formsOf,lookOf,roleForType,skinSignature,villageRetint,type CivSkin} from './civSkin';
 import type {CivId} from './civStyles';
 import {generateFamily,getBuildingGrammar,type BuildMaterial,type Climate,type FamilyContext,type FamilyId,type Trade,type Tradition,type WallAxis} from './buildingFamilies';
@@ -31,6 +32,8 @@ export type CarvedBuildingInput={worldSeed:number;type:string;id:number;era:numb
  lit?:boolean;
  /** The society's CivSkin (civSkin.ts): its grammar draws houses, halls and markets, its palette repaints every other family. Absent/neutral = the plain Village grammar. */
  skin?:CivSkin|null;
+ /** This village's heraldry (villageIdentity.ts): finial, rim trim and banner cut that tell same-colour villages apart. Skin grammars only. */
+ heraldry?:Heraldry;
  /** A ruler has just died: this society's banners hang at half-mast (skin grammars only). */
  mourning?:boolean;
  /** Building condition 0..1 (hp/maxHp); quantised to three wear tiers for skin grammars. */
@@ -121,9 +124,9 @@ export function prosperityTier(p:number|undefined){return p===undefined?-1:p<.34
 export function variantIndexFor(worldSeed:number,id:number,count:number){return hashSeed(worldSeed,'variant',id)%count;}
 
 /** Cache-key fragment for the skin-dependent inputs of a building (empty without a skin). */
-export function skinKeyPart(b:Pick<CarvedBuildingInput,'skin'|'mourning'|'condition'|'type'>){
+export function skinKeyPart(b:Pick<CarvedBuildingInput,'skin'|'mourning'|'condition'|'type'|'heraldry'>){
  const k=b.skin&&b.skin.grammar?skinSignature(b.skin):'';
- return k?`${k}:${b.mourning?'m':''}:${b.condition===undefined||b.condition>=.7?0:b.condition>=.4?1:2}`:'';
+ return k?`${k}:${b.mourning?'m':''}:${b.condition===undefined||b.condition>=.7?0:b.condition>=.4?1:2}${heraldryKey(b.heraldry)}`:'';
 }
 export type CarvedVariantKey={key:string;family:FamilyId;ctx:FamilyContext;
  /** Skin grammar variant: drawn by generateCivBuilding instead of the Village family. */civ?:{grammar:CivId;role:CivRole;ctx:CivContext};
@@ -142,11 +145,11 @@ export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|nul
  const tradition=traditionFor(input.worldSeed,input.settlementSeed);
  const fw=Math.round(input.footprint.w*100)/100,fd=Math.round(input.footprint.d*100)/100;
  const skin=input.skin&&input.skin.grammar?input.skin:null,role=skin?roleForType(input.type):null,wearTier=input.condition===undefined||input.condition>=.7?0:input.condition>=.4?1:2,mourn=!!(skin&&input.mourning);
- const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.join??'',input.gateOpen?'open':'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier,getBuildingGrammar(),...(skin?['skin',skinSignature(skin),role??'-',wearTier,mourn?'mourn':'']:[])].join('|');
+ const key=[input.type,map.family,map.trade??'',map.scale??'',era,material,climate,index,input.reviewWatermill||input.type!=='grindingStone'?input.waterSide??'':'',input.wallAxis??'',input.join??'',input.gateOpen?'open':'',input.lit===false?'cold':'lit',fw,fd,input.settlementSeed??'',tier,getBuildingGrammar(),...(skin?['skin',skinSignature(skin),role??'-',wearTier,mourn?'mourn':'',...(input.heraldry?[heraldryKey(input.heraldry)]:[])]:[])].join('|');
  const ctx:FamilyContext={seed:hashSeed(input.worldSeed,key),era,material,climate,wealth,tradition,footprint:{w:fw,d:fd},
   ...(map.trade?{trade:map.trade}:{}),...(map.scale?{scale:map.scale}:{}),...(input.waterSide&&(input.reviewWatermill||input.type!=='grindingStone')?{waterSide:input.waterSide}:{}),...(input.wallAxis?{wallAxis:input.wallAxis}:{}),...(input.join!==undefined?{join:input.join}:{}),...(input.gateOpen?{gateOpen:true}:{}),...(skin?{form:formsOf(skin)}:{}),...(input.lit===false?{lit:false}:{})};
  if(skin&&role){
-  const look=lookOf(skin),cctx:CivContext={seed:ctx.seed,era,wealth,wear:[.1,.35,.6][wearTier],footprint:{w:fw,d:fd},eraMode:'fixed',built:{era,wealth},...(input.lit===false?{lit:false}:{}),...(mourn?{mourning:true}:{}),...(look?{look}:{})};
+  const look=lookOf(skin),cctx:CivContext={seed:ctx.seed,era,wealth,wear:[.1,.35,.6][wearTier],footprint:{w:fw,d:fd},eraMode:'fixed',built:{era,wealth},...(input.lit===false?{lit:false}:{}),...(mourn?{mourning:true}:{}),...(input.heraldry?{heraldry:input.heraldry}:{}),...(look||input.heraldry?{look:{...(look||{}),...(input.heraldry?{banner:BANNER_ORDER[input.heraldry.banner%BANNER_ORDER.length]}:{})}}:{})};
   return {key,family:map.family,ctx,civ:{grammar:skin.grammar!,role,ctx:cctx}};
  }
  return skin?{key,family:map.family,ctx,tint:villageRetint(skin)}:{key,family:map.family,ctx};

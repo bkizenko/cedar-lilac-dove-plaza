@@ -1,3 +1,4 @@
+import {siteSlopeIssue} from './siteSlope';
 import {tradeCargoCapacity,PACK_TRADE_TRAVEL_RULES} from './tradeCargo';
 import {returnPackJourneyCare,packJourneyReturnBudgetLow} from './packJourneyCare';
 import {returnExpeditionProvisions} from './expeditionProvisions';
@@ -153,6 +154,7 @@ import {scenicStartReport} from "./scenicBeauty";
 import {advanceTide} from "./tides";
 import {breachPlacementPermit} from "./canalBreach";
 import {tickWaterEngineering} from "./waterEngineering";
+import {tickIrrigation,effectiveDroughtWater} from "./irrigation";
 import {millSummary} from "./millPower";
 import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
 import {waterWorksPlacementIssue,waterWorksLabour,isWaterWorksType} from "./waterWorksBuildings";
@@ -1250,12 +1252,14 @@ export class Game {
     if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
     if (type !== "dock" && type !== "aqueduct" && !this.dryFoundation(type, x, z,0,size??(quarterTurn?d:undefined))&&!(type==="trench"&&breachPlacementPermit(this,x,z,_team))) return "Can't raise that in the water"; // Grok W7: only a ready canal breach dig (canalBreach.ts). Aqueducts may finish on low delivery ground; the route query refuses a submerged target.
+    const slopeIssue=_team===0?siteSlopeIssue((px,pz)=>this.height(px,pz),type,x,z,d.w,d.d):null;
+    if(slopeIssue)return slopeIssue;
     const compactGrainSite = compactGrainWorkplace(type);
     if(size||scalablePlot(type)||compactGrainSite){
       const clearance = type === "farm" || type === "warehouse" || compactGrainSite ? 0.25 : 1;
       if(_team===0&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return "Explore the whole plot first";
       if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&!prep?.clearable.includes(n)&&Math.abs(n.x-x)<d.w/2+clearance&&Math.abs(n.z-z)<d.d/2+clearance))return "Clear resources from the plot first";
-      if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+clearance&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+clearance))return "Too close to another building";
+      if(this.state.buildings.some(b=>{if(b.id===ignoreId||b.hp<=0)return false;const gap=type==='farm'&&b.type==='farm'&&b.team===_team?-1e-4:clearance;return Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+gap&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+gap;}))return "Too close to another building";
       if(type==="farm")return fieldTopographyIssue(this,{x,z,w:d.w,d:d.d});
       if(compactGrainSite)return null;
     }
@@ -3237,6 +3241,7 @@ export class Game {
   }
 
   tickEvents(dt: number) {
+    tickIrrigation(this,dt);
     tickWaterEngineering(this); // Grok T3: lay deferred canal/aqueduct stages, keep digs queued
     this.tickWeather(dt);
     advanceTide(this); // Grok W5/W6: no-op unless worldOptions.tideVersion is 1 (shared channel) or 2 (sea only)
@@ -5886,7 +5891,7 @@ export class Game {
           if (b.type === "farm" && this.finished(b)) {
             const c=crop(this,b);
             if(calendar(this).phase<2)c.water=Math.max(.35,Math.min(1,(c.water??1)+
-              (this.state.weather==="drought" ? -(1-fieldTerrain(this,b).droughtWater)*sdt/600 : sdt/(this.state.weather==="rain"?300:1800))));
+              (this.state.weather==="drought" ? -(1-effectiveDroughtWater(this,b))*sdt/600 : sdt/(this.state.weather==="rain"?300:1800))));
           }
         for (const tr of this.state.tribes) {
           if (tr.tradeCd > 0) tr.tradeCd = Math.max(0, tr.tradeCd - sdt);

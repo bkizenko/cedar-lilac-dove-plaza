@@ -52,6 +52,8 @@ export const ALERT_ICON:Record<AlertKind,(p:{size:number})=>ReactNode>={
  raiders:p=><Swords {...p}/>,thirsty:p=><Droplets {...p}/>,starving:p=><Wheat {...p}/>,freezing:p=><Snowflake {...p}/>,
  full:p=><Package {...p}/>,exposed:p=><Droplets {...p}/>,harvest:p=><Wheat {...p}/>,backlog:p=><ClipboardList {...p}/>,wild:p=><Footprints {...p}/>,
 };
+/** Visible words on each world pin: the icon alone (a crate for full stores) never has to be guessed. */
+export const ALERT_LABEL:Record<AlertKind,string>={raiders:'Raiders',thirsty:'Thirsty',starving:'Hungry',freezing:'Cold',full:'Stores full',exposed:'Spoiling',harvest:'Harvest',backlog:'Work backlog',wild:'Wild craft'};
 const CRIT_TITLE:Partial<Record<AlertKind,string>>={raiders:'Raiders near',thirsty:'Thirsty',starving:'Starving',freezing:'Freezing'};
 /** Alerts for this frame's HUD render. Positions refresh about twice a second; the workload sum about every two. */
 export function useGlanceAlerts(engine:Engine|null):Alert[]{
@@ -161,7 +163,7 @@ export function AlertPins({engine,alerts}:{engine:Engine|null;alerts:readonly Al
  return <div ref={box} className="hw-pins" aria-hidden={false}>
   {pins.map(a=><button key={a.kind} ref={el=>{if(el)els.current.set(a.kind,el);else els.current.delete(a.kind);}} type="button" className={cx('hw-pin','k-'+a.kind,a.severity==='critical'&&'is-crit')} style={{visibility:'hidden'}} aria-label={`${a.tip}. Go there`} title={a.tip} onClick={()=>alertAction(a,engine)}>
    <span className="hw-pin-ring" aria-hidden="true"/>
-   <span className="hw-pin-chip">{ALERT_ICON[a.kind]({size:26})}<b>{a.count}</b></span>
+   <span className="hw-pin-chip">{ALERT_ICON[a.kind]({size:26})}<span className="hw-pin-label">{ALERT_LABEL[a.kind]}</span><b>{a.count}</b></span>
    <i className="hw-pin-arrow" aria-hidden="true" ref={el=>{if(el)arrows.current.set(a.kind,el);else arrows.current.delete(a.kind);}}><ArrowRight size={26}/></i>
   </button>)}
  </div>;

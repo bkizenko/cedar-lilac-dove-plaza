@@ -1,3 +1,4 @@
+import {validCropTrialAnchor} from './cultivation';
 import {validExpeditionProvisions} from './expeditionProvisions';
 import {validPackJourneySupplies} from './packJourneyCare';
 import {validMethodRecordPickups} from './methodRecordPickup';
@@ -51,6 +52,7 @@ import {penHousingCapacity,penFeedCapacity} from './penGeometry';
 import{validClayState}from'./pottery';
 import {EXCAVATION_RULES,validExcavations,migratePaidTrenches} from './excavation';
 import {validWaterEngineering} from './waterEngineering';
+import {validIrrigation} from './irrigation';
 import {validCoastalTradeState,migrateCoastalSettlementEndpoints} from './coastalTrade';
 import {validSocietyRelations} from './societyRelations';
 import {validCombatDoctrine} from './combatDoctrine';
@@ -192,6 +194,7 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions?.flowFieldVersion!==undefined&&s.worldOptions.flowFieldVersion!==1)fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   if(!validWaterEngineering(s,HALF*2))fail();
+  if(!validIrrigation(s,HALF*2))fail();
   const excavationSegs=s.worldgenVersion>=7?Math.round(HALF*2/1040*256):256;
   if(!validExcavations(s.excavations,HALF*2,excavationSegs)||s.excavationDepth!==undefined&&!EXCAVATION_RULES.depths.includes(s.excavationDepth))fail();
   if(!validWaterEngineering(s,HALF*2))fail(); // includes validCanalWorks
@@ -342,7 +345,7 @@ function validateGamePayload(raw: unknown) {
     if(t.cultivated!==undefined&&(!Array.isArray(t.cultivated)||t.cultivated.length>3||new Set(t.cultivated).size!==t.cultivated.length||t.cultivated.some((k:unknown)=>!CROPS.includes(k as any))))fail();
     const inheritedActors=new Set((t.inheritedCropTrials||[]).flatMap((q:any)=>q.actorIds||[]));
     if(s.units.filter((u:any)=>u.team===i&&u.hp>0&&u.studyCrop&&!inheritedActors.has(u.id)).length>CROP_TRIAL_RULES.maximumPeople)fail();
-    if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<30||p.duration>360||p.progress<0||p.progress>p.duration)fail();}
+    if(t.cropTrial!==undefined){const p=t.cropTrial;if(!obj(p)||!CROPS.includes(p.kind)||!num(p.progress)||!num(p.duration)||p.duration<30||p.duration>360||p.progress<0||p.progress>p.duration||p.anchor!==undefined&&!validCropTrialAnchor(s,p.anchor))fail();}
     if(rivalTeam(i)&&["Dunmere","Saltborn","Greyhaven","Mossfall","Redcliff","Ashfen","Harrow","Kest"].includes(t.name)) {
       t.name=prehistoricName(s.seed,i*977);t.short=t.name;
     }

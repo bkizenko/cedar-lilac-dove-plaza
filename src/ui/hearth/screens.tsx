@@ -1,3 +1,5 @@
+import {RestartControl} from './RestartControl';
+import {MusicPanel} from './MusicControls';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {X,Crown,Users,Heart,Handshake,Shield,BookOpen,Settings,Swords,Route,Skull,TriangleAlert,Target,Clock,Eye,Home,Scroll,Scale,Hammer,Wheat,Package,Landmark,Check,CircleHelp} from 'lucide-react';
 import type {Engine} from '@/game/engine';
@@ -176,7 +178,7 @@ export function AgesScreen({hud,engine,onClose}:{hud:HudSnapshot;engine:Engine|n
 /* ---------- menu ---------- */
 function AudioSliders({engine}:{engine:Engine|null}){
  const [,bump]=useState(0);const st=engine?.audio.settings;if(!engine||!st)return null;
- return <>{(['master','music','sfx','ambience'] as const).map(b=><label key={b}>{b==='sfx'?'Effects':b[0].toUpperCase()+b.slice(1)}<input type="range" min={0} max={100} value={Math.round(st[b]*100)} aria-label={b+' volume'} onChange={e=>{engine.audio.setVolume(b,+e.target.value/100);bump(n=>n+1);}}/></label>)}</>;
+ return <>{(['master','sfx'] as const).map(b=><label key={b}>{b==='sfx'?'Effects':b[0].toUpperCase()+b.slice(1)}<input type="range" min={0} max={100} value={Math.round(st[b]*100)} aria-label={b+' volume'} onChange={e=>{engine.audio.setVolume(b,+e.target.value/100);bump(n=>n+1);}}/></label>)}</>;
 }
 /** Map look switch. Terrain is built once, so the choice is remembered and applies after a reload. */
 function MapStyleToggle({engine}:{engine:Engine|null}){
@@ -205,16 +207,17 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
  return <Screen title="Menu" icon={<Settings size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab}>
   {tab==='play'&&<div className="hw-stack">
    <section className="hw-card"><h3>Interface</h3><div className="hw-legacy hw-ui-switch"><UiThemeToggle/></div><MapStyleToggle engine={engine}/></section>
-   <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}<SaveStatus engine={engine} refresh={lifecycle.busy?0:1}/></section>
+   <section className="hw-card"><h3>Music and nature sounds</h3><MusicPanel engine={engine}/></section>
+   <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}<SaveStatus engine={engine} refresh={lifecycle.busy?0:1}/><div className="hw-row"><RestartControl busy={!engine||lifecycle.busy} onRestart={()=>void lifecycle.run(()=>engine!.restart(undefined,21,true))}/></div></section>
    <section className="hw-card"><h3>Display</h3><div className="hw-form">
     <label>Graphics<select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
     <label>Draw distance<select aria-label="Draw distance" value={engine?.view.getDrawDistance()??'medium'} onChange={e=>{engine?.setDrawDistance(e.target.value as DrawDistance);engine?.pushHud();}}>{DRAW_DISTANCE_LEVELS.map(l=><option key={l} value={l}>{DRAW_DISTANCE_LABELS[l]}</option>)}</select>{engine&&engine.view.getEffectiveDrawDistance()!==engine.view.getDrawDistance()&&<span className="hw-chip t-warn" title="Frame time stayed over budget, so the view was shortened automatically. Choose a level again to retry.">Eased to {DRAW_DISTANCE_LABELS[engine.view.getEffectiveDrawDistance()]}</span>}</label>
     <label>World style<select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village (new buildings)</option><option value="optionH">Carved honey (legacy)</option><option value="current">Original blocks (legacy)</option></select></label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/>Shadows</label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/>Selection rings</label>
-    <label className="hw-check"><input type="checkbox" checked={!hud.muted} onChange={()=>engine?.toggleMute()}/>Sound</label>
+    <label className="hw-check"><input type="checkbox" checked={!hud.muted} onChange={()=>engine?.toggleMute()}/>All sound</label>
     <AudioSliders engine={engine}/></div>
-    <div className="hw-row"><button type="button" className="hw-btn-wide" onClick={()=>{engine?.audio.score.skip();engine?.pushHud();}}>Skip music</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.help=true;engine.pushHud();}onClose();}}>Controls · H</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}onClose();}}>Ledger · L</button></div></section>
+    <div className="hw-row"><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.help=true;engine.pushHud();}onClose();}}>Controls · H</button><button type="button" className="hw-btn-wide" onClick={()=>{if(engine){engine.keyboard.ledger=true;engine.pushHud();}onClose();}}>Ledger · L</button></div></section>
   </div>}
   {tab==='help'&&<HelpBody/>}
   {tab==='world'&&<div className="hw-stack">
@@ -227,6 +230,6 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
    <button type="button" className="hw-btn-wide" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),(o:unknown)=>{if(o){onClose();onTest();}})}>Test lab</button>
    <button type="button" className="hw-btn-wide" onClick={()=>{onClose();onHide();}}>Hide interface</button>
    <button type="button" className="hw-btn-wide" onClick={()=>{engine?.game.planReturnCrossing();engine?.pushHud();}} title="Plan a bridge on explored banks for cut-off residents">Return crossing</button>
-   <button type="button" className="hw-btn-wide" onClick={()=>void lifecycle.run(()=>engine!.restart(undefined,21,true))}>Restart</button></div></section></div>}
+   <RestartControl busy={!engine||lifecycle.busy} onRestart={()=>void lifecycle.run(()=>engine!.restart(undefined,21,true))}/></div></section></div>}
  </Screen>;
 }

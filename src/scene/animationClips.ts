@@ -17,69 +17,112 @@ export const PARTS:readonly Part[]=['hips','spine','head','armL','armR','legL','
 export type Pose={parts:Record<Part,[number,number,number]>;root:[number,number,number];
  /** whole-body rotation about the feet (rx,ry,rz): only the death clips use it */rootRot:[number,number,number];
  /** held-item rotation relative to the TORSO (not the arm), so a spear stays a spear while the arm swings: main hand / off hand */itemR:[number,number,number];itemL:[number,number,number]};
-export type ClipId='idle'|'walk'|'carry'|'row'|'fight'|'thresh'|'winnow'|'grind'|'bake'|'tend'|'chop'|'quarry'|'plant'|'harvest'|'craft'|'build'|'haul'|'fish'|'till'|'thrust'|'shoot'|'slash';
+export type ClipId='idle'|'walk'|'carry'|'row'|'fight'|'thresh'|'winnow'|'grind'|'bake'|'tend'|'chop'|'quarry'|'plant'|'harvest'|'craft'|'build'|'haul'|'fish'|'till'|'thrust'|'shoot'|'slash'|'run';
 export type EffectKind='dust'|'chaff'|'smoke'|'steam';
 type Deg=Partial<Record<Part|'root'|'rootRot'|'itemR'|'itemL',number[]>>;
 type Key={t:number;pose:Deg};
-export type Clip={id:ClipId;/** seconds per cycle at jitter 1 (work clips) */period:number;/** metres of travel per cycle (walk, carry, row) */strideMetres?:number;
+export type Clip={id:ClipId;/** 0..1: how much of the height a planted foot loses to leg splay/angle is taken off the hips (see samplePose); rigid legs, so this is what bends the knees */lock?:number;/** seconds per cycle at jitter 1 (work clips) */period:number;/** metres of travel per cycle (walk, carry, row) */strideMetres?:number;
  keys:Key[];/** events fire when the phase crosses `at` (0..1) */events:{at:number;kind:EffectKind;count:number;needsFire?:boolean;needsDrySurface?:boolean;/** offset from the unit in metres, unit frame */at3:[number,number,number]}[]};
 const k=(t:number,pose:Deg):Key=>({t,pose});
 const d=Math.PI/180;
+/** Both feet planted at once. The rig's legs are single rigid bones (no knee joint), so a bent-knee stance is faked the way a
+ * rigid leg can: the legs splay (rz) and angle (rx, negative = forward) and `lock` (see samplePose) drops the hips by exactly the height
+ * the planted foot loses. `xL`/`xR` are the leg pitches in degrees; the leg with the larger pitch takes spread `s`, the other
+ * gets the spread that puts its foot at the same height, so neither foot floats and neither sinks. Left leg splays -x, right +x. */
+const plant=(xL:number,xR:number,s:number):Deg=>{
+ const c=Math.cos(s*d),aL=Math.abs(xL)>=Math.abs(xR),big=Math.cos((aL?xL:xR)*d)*c,small=aL?xR:xL,sm=Math.acos(Math.min(1,big/Math.max(.2,Math.cos(small*d))))/d,sL=aL?s:sm,sR=aL?sm:s;
+ return {legL:[xL,0,-sL],legR:[xR,0,sR]};
+};
+const J=(...parts:Deg[]):Deg=>Object.assign({},...parts);
+const S2=(a:number,b:number)=>({spine:[a,b,0]});
 export const CLIPS:Record<ClipId,Clip>={
  idle:{id:'idle',period:4,events:[],keys:[k(0,{spine:[0,0,0],head:[0,0,0]}),k(.5,{spine:[-1.5,0,0],head:[1,0,0],root:[0,.006,0]}),k(1,{spine:[0,0,0],head:[0,0,0]})]},
- walk:{id:'walk',period:1,strideMetres:1.3,events:[{at:.0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
-  k(0,{legL:[30,0,0],legR:[-30,0,0],armL:[-24,0,0],armR:[24,0,0],root:[0,0,0]}),k(.25,{legL:[0,0,0],legR:[0,0,0],armL:[0,0,0],armR:[0,0,0],root:[0,.03,0]}),
-  k(.5,{legL:[-30,0,0],legR:[30,0,0],armL:[24,0,0],armR:[-24,0,0],root:[0,0,0]}),k(.75,{legL:[0,0,0],legR:[0,0,0],armL:[0,0,0],armR:[0,0,0],root:[0,.03,0]}),k(1,{legL:[30,0,0],legR:[-30,0,0],armL:[-24,0,0],armR:[24,0,0],root:[0,0,0]})]},
- carry:{id:'carry',period:1,strideMetres:1.1,events:[{at:0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
-  k(0,{legL:[24,0,0],legR:[-24,0,0],armL:[-55,0,8],armR:[-55,0,-8],spine:[6,0,0],root:[0,0,0]}),k(.25,{legL:[0,0,0],legR:[0,0,0],armL:[-58,0,8],armR:[-58,0,-8],spine:[8,0,0],root:[0,.04,0]}),
-  k(.5,{legL:[-24,0,0],legR:[24,0,0],armL:[-55,0,8],armR:[-55,0,-8],spine:[6,0,0],root:[0,0,0]}),k(.75,{legL:[0,0,0],legR:[0,0,0],armL:[-58,0,8],armR:[-58,0,-8],spine:[8,0,0],root:[0,.04,0]}),k(1,{legL:[24,0,0],legR:[-24,0,0],armL:[-55,0,8],armR:[-55,0,-8],spine:[6,0,0],root:[0,0,0]})]},
+ // Walk: hips and shoulders counter-rotate, the planted foot sets the hip height (lock), no flight.
+ walk:{id:'walk',period:1,strideMetres:1.6,lock:1,events:[{at:.0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
+  k(0,{legL:[26,0,0],legR:[-26,0,0],armL:[-22,0,3],armR:[22,0,-3],hips:[0,-5,0],spine:[2,5,0]}),k(.25,{legL:[0,0,0],legR:[0,0,0],armL:[0,0,0],armR:[0,0,0],hips:[0,0,0],spine:[3,0,0]}),
+  k(.5,{legL:[-26,0,0],legR:[26,0,0],armL:[22,0,3],armR:[-22,0,-3],hips:[0,5,0],spine:[2,-5,0]}),k(.75,{legL:[0,0,0],legR:[0,0,0],armL:[0,0,0],armR:[0,0,0],hips:[0,0,0],spine:[3,0,0]}),k(1,{legL:[26,0,0],legR:[-26,0,0],armL:[-22,0,3],armR:[22,0,-3],hips:[0,-5,0],spine:[2,5,0]})]},
+ // Run: forward lean, longer stride, high front knee (the forward leg swings further than the trailing one), bent-arm pump, hips/shoulder twist,
+ // and a flight phase (root rises twice a cycle while both feet are off the ground). Phase from distance like the walk; blended by speed (see gaitBlend).
+ run:{id:'run',period:1,strideMetres:2.6,lock:1,events:[{at:.0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
+  k(0,{legL:[-42,0,-4],legR:[34,0,4],armR:[-64,0,-12],armL:[42,0,10],hips:[0,-9,0],spine:[14,9,0],head:[-9,0,0],root:[0,0,0]}),
+  k(.25,{legL:[18,0,-3],legR:[-68,0,3],armR:[-14,0,-10],armL:[-14,0,10],hips:[0,0,0],spine:[15,0,0],head:[-9,0,0],root:[0,.12,.02]}),
+  k(.5,{legL:[34,0,-4],legR:[-42,0,4],armL:[-64,0,12],armR:[42,0,-10],hips:[0,9,0],spine:[14,-9,0],head:[-9,0,0],root:[0,0,0]}),
+  k(.75,{legL:[-68,0,-3],legR:[18,0,3],armR:[-14,0,-10],armL:[-14,0,10],hips:[0,0,0],spine:[15,0,0],head:[-9,0,0],root:[0,.12,.02]}),
+  k(1,{legL:[-42,0,-4],legR:[34,0,4],armR:[-64,0,-12],armL:[42,0,10],hips:[0,-9,0],spine:[14,9,0],head:[-9,0,0],root:[0,0,0]})]},
+ carry:{id:'carry',period:1,strideMetres:1.1,lock:1,events:[{at:0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
+  k(0,{legL:[20,0,0],legR:[-20,0,0],armL:[-55,0,8],armR:[-55,0,-8],spine:[4,0,0],root:[0,0,0]}),k(.25,{legL:[0,0,0],legR:[0,0,0],armL:[-58,0,8],armR:[-58,0,-8],spine:[5,0,0],root:[0,.02,0]}),
+  k(.5,{legL:[-20,0,0],legR:[20,0,0],armL:[-55,0,8],armR:[-55,0,-8],spine:[4,0,0],root:[0,0,0]}),k(.75,{legL:[0,0,0],legR:[0,0,0],armL:[-58,0,8],armR:[-58,0,-8],spine:[5,0,0],root:[0,.02,0]}),k(1,{legL:[20,0,0],legR:[-20,0,0],armL:[-55,0,8],armR:[-55,0,-8],spine:[4,0,0],root:[0,0,0]})]},
  row:{id:'row',period:2.4,strideMetres:2.6,events:[],keys:[
-  k(0,{spine:[-18,0,0],armL:[-80,0,10],armR:[-80,0,-10],legL:[-40,0,0],legR:[-40,0,0],root:[0,0,.02]}),k(.45,{spine:[22,0,0],armL:[-20,0,25],armR:[-20,0,-25],legL:[-40,0,0],legR:[-40,0,0],root:[0,0,-.04]}),
-  k(.6,{spine:[24,0,0],armL:[-10,0,30],armR:[-10,0,-30],legL:[-40,0,0],legR:[-40,0,0],root:[0,0,-.04]}),k(1,{spine:[-18,0,0],armL:[-80,0,10],armR:[-80,0,-10],legL:[-40,0,0],legR:[-40,0,0],root:[0,0,.02]})]},
- fight:{id:'fight',period:1.1,events:[{at:.4,kind:'dust',count:2,needsDrySurface:true,at3:[0,0,.3]}],keys:[
-  k(0,{spine:[0,-10,0],armR:[-120,0,-10],armL:[-30,0,20],legL:[15,0,0],legR:[-15,0,0],root:[0,0,0]}),k(.4,{spine:[18,12,0],armR:[40,0,-5],armL:[-50,0,20],legL:[-20,0,0],legR:[25,0,0],root:[0,-.03,.12]}),
-  k(.7,{spine:[6,0,0],armR:[-20,0,-10],armL:[-30,0,20],legL:[0,0,0],legR:[0,0,0],root:[0,0,.04]}),k(1,{spine:[0,-10,0],armR:[-120,0,-10],armL:[-30,0,20],legL:[15,0,0],legR:[-15,0,0],root:[0,0,0]})]},
- thresh:{id:'thresh',period:1.3,events:[{at:.45,kind:'chaff',count:3,at3:[0,0,.5]},{at:.45,kind:'dust',count:1,needsDrySurface:true,at3:[0,0,.5]}],keys:[
-  k(0,{spine:[-8,0,0],armL:[-150,0,0],armR:[-150,0,0],legL:[8,0,0],legR:[-8,0,0],root:[0,0,0]}),k(.45,{spine:[28,0,0],armL:[-30,0,0],armR:[-30,0,0],legL:[-6,0,0],legR:[6,0,0],root:[0,-.04,.1]}),
-  k(.7,{spine:[12,0,0],armL:[-70,0,0],armR:[-70,0,0],root:[0,0,.04]}),k(1,{spine:[-8,0,0],armL:[-150,0,0],armR:[-150,0,0],legL:[8,0,0],legR:[-8,0,0],root:[0,0,0]})]},
- winnow:{id:'winnow',period:1.8,events:[{at:.5,kind:'chaff',count:6,at3:[0,.9,.5]}],keys:[
-  k(0,{spine:[10,0,0],armL:[-30,0,25],armR:[-30,0,-25],head:[8,0,0],root:[0,-.02,0]}),k(.35,{spine:[-6,0,0],armL:[-95,0,15],armR:[-95,0,-15],head:[-8,0,0],root:[0,.03,0]}),
-  k(.6,{spine:[-4,0,0],armL:[-80,0,10],armR:[-80,0,-10],root:[0,.02,0]}),k(1,{spine:[10,0,0],armL:[-30,0,25],armR:[-30,0,-25],head:[8,0,0],root:[0,-.02,0]})]},
- grind:{id:'grind',period:1.6,events:[{at:.5,kind:'dust',count:1,at3:[0,.5,.4]}],keys:[
-  k(0,{spine:[22,0,0],armL:[-55,0,0],armR:[-55,0,0],legL:[14,0,0],legR:[-14,0,0],root:[0,-.03,.06]}),k(.5,{spine:[34,0,0],armL:[-20,0,0],armR:[-20,0,0],legL:[-6,0,0],legR:[6,0,0],root:[0,-.05,.18]}),k(1,{spine:[22,0,0],armL:[-55,0,0],armR:[-55,0,0],legL:[14,0,0],legR:[-14,0,0],root:[0,-.03,.06]})]},
- bake:{id:'bake',period:2.2,events:[{at:.5,kind:'steam',count:1,needsFire:true,at3:[0,.9,.6]}],keys:[
-  k(0,{spine:[12,0,0],armL:[-60,0,12],armR:[-60,0,-12],head:[10,0,0]}),k(.5,{spine:[24,0,0],armL:[-35,0,6],armR:[-35,0,-6],head:[16,0,0],root:[0,-.03,.04]}),k(1,{spine:[12,0,0],armL:[-60,0,12],armR:[-60,0,-12],head:[10,0,0]})]},
- tend:{id:'tend',period:3,events:[{at:.3,kind:'smoke',count:1,needsFire:true,at3:[0,.6,.6]},{at:.8,kind:'smoke',count:1,needsFire:true,at3:[0,.6,.6]}],keys:[
-  k(0,{spine:[28,0,0],armR:[-50,0,0],armL:[-20,0,0],head:[18,0,0],legL:[-18,0,0],legR:[10,0,0],root:[0,-.1,.1]}),k(.4,{spine:[34,0,0],armR:[-25,0,-10],armL:[-20,0,0],head:[20,0,0],legL:[-18,0,0],legR:[10,0,0],root:[0,-.12,.12]}),k(1,{spine:[28,0,0],armR:[-50,0,0],armL:[-20,0,0],head:[18,0,0],legL:[-18,0,0],legR:[10,0,0],root:[0,-.1,.1]})]},
- chop:{id:'chop',period:1.5,events:[{at:.4,kind:'dust',count:1,needsDrySurface:true,at3:[0,0,.6]}],keys:[
-  k(0,{spine:[-12,-15,0],armR:[-170,0,-10],armL:[-150,0,10],legL:[10,0,0],legR:[-10,0,0],itemR:[-30,0,0]}),k(.4,{spine:[34,10,0],armR:[10,0,-5],armL:[20,0,5],legL:[-8,0,0],legR:[8,0,0],root:[0,-.05,.1],itemR:[125,0,0]}),k(.7,{spine:[14,0,0],armR:[-40,0,0],armL:[-30,0,0],itemR:[60,0,0]}),k(1,{spine:[-12,-15,0],armR:[-170,0,-10],armL:[-150,0,10],legL:[10,0,0],legR:[-10,0,0],itemR:[-30,0,0]})]},
- quarry:{id:'quarry',period:1.7,events:[{at:.4,kind:'dust',count:2,at3:[0,.1,.6]}],keys:[
-  k(0,{spine:[-6,0,0],armR:[-140,0,0],armL:[-100,0,0],itemR:[-20,0,0]}),k(.4,{spine:[26,0,0],armR:[15,0,0],armL:[10,0,0],root:[0,-.04,.08],itemR:[115,0,0]}),k(1,{spine:[-6,0,0],armR:[-140,0,0],armL:[-100,0,0],itemR:[-20,0,0]})]},
- plant:{id:'plant',period:2.4,events:[],keys:[k(0,{spine:[8,0,0],armR:[-20,0,0],head:[10,0,0]}),k(.35,{spine:[55,0,0],armR:[40,0,0],armL:[10,0,0],head:[25,0,0],legL:[-10,0,0],legR:[14,0,0],root:[0,-.12,.15]}),k(.7,{spine:[50,0,0],armR:[60,0,0],legL:[-10,0,0],legR:[14,0,0],root:[0,-.12,.15]}),k(1,{spine:[8,0,0],armR:[-20,0,0],head:[10,0,0]})]},
- harvest:{id:'harvest',period:1.8,events:[{at:.5,kind:'chaff',count:1,at3:[0,.3,.4]}],keys:[k(0,{spine:[20,0,0],armR:[-60,0,0],armL:[-30,0,0]}),k(.4,{spine:[50,0,0],armR:[30,0,0],armL:[-10,0,0],root:[0,-.1,.12]}),k(.7,{spine:[30,0,0],armR:[-40,0,0],armL:[-20,0,0]}),k(1,{spine:[20,0,0],armR:[-60,0,0],armL:[-30,0,0]})]},
- craft:{id:'craft',period:2.6,events:[],keys:[k(0,{spine:[16,0,0],armL:[-60,0,10],armR:[-60,0,-10],head:[14,0,0]}),k(.5,{spine:[20,0,0],armL:[-48,0,6],armR:[-72,0,-6],head:[18,0,0]}),k(1,{spine:[16,0,0],armL:[-60,0,10],armR:[-60,0,-10],head:[14,0,0]})]},
+  k(0,{spine:[-14,0,0],armL:[-80,0,10],armR:[-80,0,-10],legL:[-40,0,0],legR:[-40,0,0],root:[0,0,.02]}),k(.45,{spine:[16,0,0],armL:[-20,0,25],armR:[-20,0,-25],legL:[-40,0,0],legR:[-40,0,0],root:[0,0,-.04]}),
+  k(.6,{spine:[17,0,0],armL:[-10,0,30],armR:[-10,0,-30],legL:[-40,0,0],legR:[-40,0,0],root:[0,0,-.04]}),k(1,{spine:[-14,0,0],armL:[-80,0,10],armR:[-80,0,-10],legL:[-40,0,0],legR:[-40,0,0],root:[0,0,.02]})]},
+ fight:{id:'fight',period:1.1,lock:1,events:[{at:.4,kind:'dust',count:2,needsDrySurface:true,at3:[0,0,.3]}],keys:[
+  k(0,J(S2(2,-10),{armR:[-120,0,-10],armL:[-30,0,20],root:[0,0,0]},plant(-16,14,14))),k(.4,J(S2(12,12),{armR:[40,0,-5],armL:[-50,0,20],root:[0,0,.12]},plant(-28,22,16))),
+  k(.7,J(S2(6,0),{armR:[-20,0,-10],armL:[-30,0,20],root:[0,0,.04]},plant(-12,12,14))),k(1,J(S2(2,-10),{armR:[-120,0,-10],armL:[-30,0,20],root:[0,0,0]},plant(-16,14,14)))]},
+ thresh:{id:'thresh',period:1.3,lock:1,events:[{at:.45,kind:'chaff',count:3,at3:[0,0,.5]},{at:.45,kind:'dust',count:1,needsDrySurface:true,at3:[0,0,.5]}],keys:[
+  k(0,J(S2(-6,0),{armL:[-150,0,0],armR:[-150,0,0],head:[2,0,0],root:[0,0,0]},plant(-6,10,12))),k(.45,J(S2(14,0),{armL:[-30,0,0],armR:[-30,0,0],head:[-6,0,0],root:[0,0,.08]},plant(-24,12,14))),
+  k(.7,J(S2(8,0),{armL:[-70,0,0],armR:[-70,0,0],root:[0,0,.03]},plant(-14,10,12))),k(1,J(S2(-6,0),{armL:[-150,0,0],armR:[-150,0,0],head:[2,0,0],root:[0,0,0]},plant(-6,10,12)))]},
+ winnow:{id:'winnow',period:1.8,lock:1,events:[{at:.5,kind:'chaff',count:6,at3:[0,.9,.5]}],keys:[
+  k(0,J(S2(6,0),{armL:[-30,0,25],armR:[-30,0,-25],head:[4,0,0]},plant(-8,8,12))),k(.35,J(S2(-4,0),{armL:[-95,0,15],armR:[-95,0,-15],head:[-6,0,0]},plant(-6,6,10))),
+  k(.6,J(S2(-2,0),{armL:[-80,0,10],armR:[-80,0,-10]},plant(-6,6,10))),k(1,J(S2(6,0),{armL:[-30,0,25],armR:[-30,0,-25],head:[4,0,0]},plant(-8,8,12)))]},
+ grind:{id:'grind',period:1.6,lock:1,events:[{at:.5,kind:'dust',count:1,at3:[0,.5,.4]}],keys:[
+  k(0,J(S2(12,0),{armL:[-55,0,0],armR:[-55,0,0],head:[2,0,0],root:[0,0,.05]},plant(-16,12,12))),k(.5,J(S2(16,0),{armL:[-20,0,0],armR:[-20,0,0],head:[0,0,0],root:[0,0,.12]},plant(-24,12,14))),k(1,J(S2(12,0),{armL:[-55,0,0],armR:[-55,0,0],head:[2,0,0],root:[0,0,.05]},plant(-16,12,12)))]},
+ bake:{id:'bake',period:2.2,lock:1,events:[{at:.5,kind:'steam',count:1,needsFire:true,at3:[0,.9,.6]}],keys:[
+  k(0,J(S2(8,0),{armL:[-60,0,12],armR:[-60,0,-12],head:[6,0,0]},plant(-8,8,10))),k(.5,J(S2(14,0),{armL:[-35,0,6],armR:[-35,0,-6],head:[8,0,0],root:[0,0,.04]},plant(-12,8,10))),k(1,J(S2(8,0),{armL:[-60,0,12],armR:[-60,0,-12],head:[6,0,0]},plant(-8,8,10)))]},
+ // Tending a fire: a low squat, torso mostly upright, head up toward the flame.
+ tend:{id:'tend',period:3,lock:1,events:[{at:.3,kind:'smoke',count:1,needsFire:true,at3:[0,.6,.6]},{at:.8,kind:'smoke',count:1,needsFire:true,at3:[0,.6,.6]}],keys:[
+  k(0,J(S2(14,0),{armR:[-50,0,0],armL:[-20,0,0],head:[-6,0,0],root:[0,0,.06]},plant(-34,-34,32))),k(.4,J(S2(17,0),{armR:[-25,0,-10],armL:[-20,0,0],head:[-9,0,0],root:[0,0,.08]},plant(-38,-38,36))),k(1,J(S2(14,0),{armR:[-50,0,0],armL:[-20,0,0],head:[-6,0,0],root:[0,0,.06]},plant(-34,-34,32)))]},
+ // Chop: weight goes from the back foot to the front foot as the shoulders and arms bring the axe down; the spine stays within ~14 degrees.
+ chop:{id:'chop',period:1.5,lock:1,events:[{at:.4,kind:'dust',count:1,needsDrySurface:true,at3:[0,0,.6]}],keys:[
+  k(0,J(S2(-6,-14),{hips:[0,8,0],head:[2,0,0],armR:[-168,0,-10],armL:[-150,0,10],root:[0,0,-.04],itemR:[-30,0,0]},plant(-8,14,12))),
+  k(.4,J(S2(14,10),{hips:[0,-8,0],head:[-6,0,0],armR:[-38,0,-5],armL:[-30,0,6],root:[0,0,.12],itemR:[125,0,0]},plant(-30,16,14))),
+  k(.7,J(S2(8,0),{hips:[0,-2,0],head:[-2,0,0],armR:[-60,0,0],armL:[-52,0,0],root:[0,0,.05],itemR:[60,0,0]},plant(-18,14,12))),
+  k(1,J(S2(-6,-14),{hips:[0,8,0],head:[2,0,0],armR:[-168,0,-10],armL:[-150,0,10],root:[0,0,-.04],itemR:[-30,0,0]},plant(-8,14,12)))]},
+ quarry:{id:'quarry',period:1.7,lock:1,events:[{at:.4,kind:'dust',count:2,at3:[0,.1,.6]}],keys:[
+  k(0,J(S2(-4,-12),{hips:[0,6,0],head:[2,0,0],armR:[-140,0,-8],armL:[-100,0,8],root:[0,0,-.03],itemR:[-20,0,0]},plant(-10,14,14))),
+  k(.4,J(S2(12,8),{hips:[0,-6,0],head:[-6,0,0],armR:[-24,0,-4],armL:[-18,0,4],root:[0,0,.1],itemR:[115,0,0]},plant(-28,16,16))),
+  k(1,J(S2(-4,-12),{hips:[0,6,0],head:[2,0,0],armR:[-140,0,-8],armL:[-100,0,8],root:[0,0,-.03],itemR:[-20,0,0]},plant(-10,14,14)))]},
+ // Forage and farm-gather clips: the only natural squats. Legs splay, hips drop, torso ~16 degrees, head held up.
+ plant:{id:'plant',period:2.4,lock:1,events:[],keys:[
+  k(0,J(S2(6,0),{armR:[-20,0,0],armL:[-8,0,0],head:[-2,0,0]},plant(-10,-10,10))),
+  k(.35,J(S2(16,0),{armR:[-30,0,-6],armL:[-20,0,6],head:[-12,0,0],root:[0,0,.06]},plant(-38,-38,38))),
+  k(.7,J(S2(18,0),{armR:[-38,0,-6],armL:[-22,0,6],head:[-12,0,0],root:[0,0,.06]},plant(-38,-38,38))),
+  k(1,J(S2(6,0),{armR:[-20,0,0],armL:[-8,0,0],head:[-2,0,0]},plant(-10,-10,10)))]},
+ harvest:{id:'harvest',period:1.8,lock:1,events:[{at:.5,kind:'chaff',count:1,at3:[0,.3,.4]}],keys:[
+  k(0,J(S2(6,0),{armR:[-50,0,0],armL:[-30,0,0],head:[-4,0,0]},plant(-24,-24,26))),
+  k(.4,J(S2(16,0),{armR:[-24,0,-4],armL:[-14,0,4],head:[-12,0,0],root:[0,0,.06]},plant(-40,-40,38))),
+  k(.7,J(S2(10,0),{armR:[-45,0,0],armL:[-24,0,0],head:[-8,0,0]},plant(-32,-32,32))),
+  k(1,J(S2(6,0),{armR:[-50,0,0],armL:[-30,0,0],head:[-4,0,0]},plant(-24,-24,26)))]},
+ craft:{id:'craft',period:2.6,lock:1,events:[],keys:[k(0,J(S2(6,0),{armL:[-60,0,10],armR:[-60,0,-10],head:[12,0,0]},plant(-4,4,8))),k(.5,J(S2(8,0),{armL:[-48,0,6],armR:[-72,0,-6],head:[14,0,0]},plant(-4,4,8))),k(1,J(S2(6,0),{armL:[-60,0,10],armR:[-60,0,-10],head:[12,0,0]},plant(-4,4,8)))]},
  // ---- Job and weapon clips (ASTRA-12). Loop seamlessly; `itemR`/`itemL` are torso-relative item angles.
- build:{id:'build',period:1.8,events:[{at:.4,kind:'dust',count:1,needsDrySurface:true,at3:[0,.1,.5]}],keys:[
-  k(0,{spine:[20,0,0],armR:[-105,0,-8],armL:[-50,0,10],head:[10,0,0],itemR:[-20,0,0]}),k(.4,{spine:[34,0,0],armR:[-8,0,-5],armL:[-46,0,10],head:[18,0,0],root:[0,-.04,.08],itemR:[70,0,0]}),
-  k(.7,{spine:[26,0,0],armR:[-55,0,-6],armL:[-48,0,10],head:[14,0,0],itemR:[20,0,0]}),k(1,{spine:[20,0,0],armR:[-105,0,-8],armL:[-50,0,10],head:[10,0,0],itemR:[-20,0,0]})]},
- haul:{id:'haul',period:1,strideMetres:1.0,events:[{at:0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
-  k(0,{legL:[26,0,0],legR:[-26,0,0],armL:[-38,0,8],armR:[-38,0,-8],spine:[20,0,0],head:[-8,0,0],root:[0,0,.03]}),k(.25,{legL:[0,0,0],legR:[0,0,0],armL:[-40,0,8],armR:[-40,0,-8],spine:[23,0,0],head:[-8,0,0],root:[0,.03,.03]}),
-  k(.5,{legL:[-26,0,0],legR:[26,0,0],armL:[-38,0,8],armR:[-38,0,-8],spine:[20,0,0],head:[-8,0,0],root:[0,0,.03]}),k(.75,{legL:[0,0,0],legR:[0,0,0],armL:[-40,0,8],armR:[-40,0,-8],spine:[23,0,0],head:[-8,0,0],root:[0,.03,.03]}),k(1,{legL:[26,0,0],legR:[-26,0,0],armL:[-38,0,8],armR:[-38,0,-8],spine:[20,0,0],head:[-8,0,0],root:[0,0,.03]})]},
- fish:{id:'fish',period:3.2,events:[],keys:[
-  k(0,{spine:[4,0,0],armR:[-35,0,-10],armL:[-25,0,8],head:[6,0,0],itemR:[40,0,0]}),k(.3,{spine:[-10,0,0],armR:[-150,0,-8],armL:[-40,0,8],head:[-4,0,0],itemR:[110,0,0]}),
-  k(.5,{spine:[16,0,0],armR:[-40,0,-8],armL:[-30,0,8],head:[10,0,0],root:[0,-.02,.05],itemR:[20,0,0]}),k(1,{spine:[4,0,0],armR:[-35,0,-10],armL:[-25,0,8],head:[6,0,0],itemR:[40,0,0]})]},
- till:{id:'till',period:2,events:[{at:.45,kind:'dust',count:1,needsDrySurface:true,at3:[0,.05,.6]}],keys:[
-  k(0,{spine:[30,0,0],armR:[-110,0,-6],armL:[-92,0,6],head:[16,0,0],legL:[8,0,0],legR:[-8,0,0],itemR:[-10,0,0]}),k(.45,{spine:[48,0,0],armR:[25,0,-4],armL:[10,0,4],head:[24,0,0],legL:[-8,0,0],legR:[8,0,0],root:[0,-.06,.12],itemR:[80,0,0]}),
-  k(.75,{spine:[40,0,0],armR:[-20,0,-4],armL:[-12,0,4],head:[20,0,0],itemR:[50,0,0]}),k(1,{spine:[30,0,0],armR:[-110,0,-6],armL:[-92,0,6],head:[16,0,0],legL:[8,0,0],legR:[-8,0,0],itemR:[-10,0,0]})]},
- thrust:{id:'thrust',period:1.1,events:[{at:.45,kind:'dust',count:1,needsDrySurface:true,at3:[0,0,.4]}],keys:[
-  k(0,{spine:[0,-18,0],armR:[-55,0,-10],armL:[-40,0,15],legL:[16,0,0],legR:[-16,0,0],itemR:[30,0,0]}),k(.3,{spine:[-6,-26,0],armR:[-30,0,-12],armL:[-45,0,15],legL:[14,0,0],legR:[-14,0,0],root:[0,0,-.03],itemR:[55,0,0]}),
-  k(.45,{spine:[14,8,0],armR:[-92,0,-4],armL:[-72,0,10],legL:[-18,0,0],legR:[26,0,0],root:[0,-.02,.14],itemR:[84,0,0]}),k(.75,{spine:[4,-6,0],armR:[-60,0,-8],armL:[-45,0,12],legL:[0,0,0],legR:[0,0,0],root:[0,0,.04],itemR:[45,0,0]}),k(1,{spine:[0,-18,0],armR:[-55,0,-10],armL:[-40,0,15],legL:[16,0,0],legR:[-16,0,0],itemR:[30,0,0]})]},
- shoot:{id:'shoot',period:2,events:[],keys:[
-  k(0,{spine:[0,-34,0],armL:[-86,0,6],armR:[-60,0,-30],head:[0,24,0],legL:[10,0,0],legR:[-10,0,0],itemL:[0,0,0]}),k(.55,{spine:[0,-38,0],armL:[-88,0,6],armR:[-30,0,-62],head:[0,26,0],legL:[10,0,0],legR:[-10,0,0],itemL:[0,0,0]}),
-  k(.62,{spine:[0,-30,0],armL:[-84,0,6],armR:[-58,0,-24],head:[0,22,0],legL:[10,0,0],legR:[-10,0,0],root:[0,0,-.02],itemL:[0,0,0]}),k(1,{spine:[0,-34,0],armL:[-86,0,6],armR:[-60,0,-30],head:[0,24,0],legL:[10,0,0],legR:[-10,0,0],itemL:[0,0,0]})]},
- slash:{id:'slash',period:1,events:[{at:.4,kind:'dust',count:1,needsDrySurface:true,at3:[0,0,.4]}],keys:[
-  k(0,{spine:[-4,-14,0],armR:[-150,0,-20],armL:[-30,0,22],legL:[14,0,0],legR:[-14,0,0],itemR:[160,0,0]}),k(.38,{spine:[20,16,0],armR:[-20,0,10],armL:[-45,0,20],legL:[-20,0,0],legR:[26,0,0],root:[0,-.04,.12],itemR:[20,0,0]}),
-  k(.7,{spine:[8,2,0],armR:[-50,0,0],armL:[-30,0,20],legL:[0,0,0],legR:[0,0,0],root:[0,0,.04],itemR:[60,0,0]}),k(1,{spine:[-4,-14,0],armR:[-150,0,-20],armL:[-30,0,22],legL:[14,0,0],legR:[-14,0,0],itemR:[160,0,0]})]},
+ build:{id:'build',period:1.8,lock:1,events:[{at:.4,kind:'dust',count:1,needsDrySurface:true,at3:[0,.1,.5]}],keys:[
+  k(0,J(S2(4,-8),{hips:[0,6,0],head:[2,0,0],armR:[-100,0,-8],armL:[-50,0,10],itemR:[-20,0,0]},plant(-12,12,12))),
+  k(.4,J(S2(12,6),{hips:[0,-5,0],head:[-2,0,0],armR:[-30,0,-5],armL:[-46,0,10],root:[0,0,.06],itemR:[70,0,0]},plant(-24,18,14))),
+  k(.7,J(S2(8,0),{head:[0,0,0],armR:[-55,0,-6],armL:[-48,0,10],itemR:[20,0,0]},plant(-18,14,14))),
+  k(1,J(S2(4,-8),{hips:[0,6,0],head:[2,0,0],armR:[-100,0,-8],armL:[-50,0,10],itemR:[-20,0,0]},plant(-12,12,12)))]},
+ haul:{id:'haul',period:1,strideMetres:1.0,lock:1,events:[{at:0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
+  k(0,{legL:[24,0,0],legR:[-24,0,0],armL:[-38,0,8],armR:[-38,0,-8],spine:[12,0,0],head:[-6,0,0],root:[0,0,.03]}),k(.25,{legL:[0,0,0],legR:[0,0,0],armL:[-40,0,8],armR:[-40,0,-8],spine:[13,0,0],head:[-6,0,0],root:[0,.015,.03]}),
+  k(.5,{legL:[-24,0,0],legR:[24,0,0],armL:[-38,0,8],armR:[-38,0,-8],spine:[12,0,0],head:[-6,0,0],root:[0,0,.03]}),k(.75,{legL:[0,0,0],legR:[0,0,0],armL:[-40,0,8],armR:[-40,0,-8],spine:[13,0,0],head:[-6,0,0],root:[0,.015,.03]}),k(1,{legL:[24,0,0],legR:[-24,0,0],armL:[-38,0,8],armR:[-38,0,-8],spine:[12,0,0],head:[-6,0,0],root:[0,0,.03]})]},
+ fish:{id:'fish',period:3.2,lock:1,events:[],keys:[
+  k(0,J(S2(2,0),{armR:[-35,0,-10],armL:[-25,0,8],head:[4,0,0],itemR:[40,0,0]},plant(-6,6,10))),
+  k(.3,J(S2(-8,0),{armR:[-150,0,-8],armL:[-40,0,8],head:[-2,0,0],itemR:[110,0,0]},plant(-4,10,10))),
+  k(.5,J(S2(8,0),{armR:[-40,0,-8],armL:[-30,0,8],head:[4,0,0],root:[0,0,.04],itemR:[20,0,0]},plant(-14,8,10))),
+  k(1,J(S2(2,0),{armR:[-35,0,-10],armL:[-25,0,8],head:[4,0,0],itemR:[40,0,0]},plant(-6,6,10)))]},
+ // Dig/till: wide lunge, torso ~18 degrees at the bite, hoe pulled back with the arms.
+ till:{id:'till',period:2,lock:1,events:[{at:.45,kind:'dust',count:1,needsDrySurface:true,at3:[0,.05,.6]}],keys:[
+  k(0,J(S2(8,-8),{hips:[0,6,0],head:[0,0,0],armR:[-110,0,-6],armL:[-92,0,6],root:[0,0,-.02],itemR:[-10,0,0]},plant(-12,16,18))),
+  k(.45,J(S2(18,6),{hips:[0,-6,0],head:[-6,0,0],armR:[-18,0,-4],armL:[-8,0,4],root:[0,0,.1],itemR:[80,0,0]},plant(-34,18,20))),
+  k(.75,J(S2(14,0),{head:[-4,0,0],armR:[-40,0,-4],armL:[-34,0,4],root:[0,0,.05],itemR:[50,0,0]},plant(-26,18,20))),
+  k(1,J(S2(8,-8),{hips:[0,6,0],head:[0,0,0],armR:[-110,0,-6],armL:[-92,0,6],root:[0,0,-.02],itemR:[-10,0,0]},plant(-12,16,18)))]},
+ thrust:{id:'thrust',period:1.1,lock:1,events:[{at:.45,kind:'dust',count:1,needsDrySurface:true,at3:[0,0,.4]}],keys:[
+  k(0,J(S2(0,-18),{armR:[-55,0,-10],armL:[-40,0,15],itemR:[30,0,0]},plant(-14,14,14))),k(.3,J(S2(-4,-26),{armR:[-30,0,-12],armL:[-45,0,15],root:[0,0,-.03],itemR:[55,0,0]},plant(-8,16,16))),
+  k(.45,J(S2(10,8),{armR:[-92,0,-4],armL:[-72,0,10],root:[0,0,.14],itemR:[84,0,0]},plant(-30,26,18))),k(.75,J(S2(4,-6),{armR:[-60,0,-8],armL:[-45,0,12],root:[0,0,.04],itemR:[45,0,0]},plant(-10,10,14))),
+  k(1,J(S2(0,-18),{armR:[-55,0,-10],armL:[-40,0,15],itemR:[30,0,0]},plant(-14,14,14)))]},
+ shoot:{id:'shoot',period:2,lock:1,events:[],keys:[
+  k(0,J(S2(0,-34),{armL:[-86,0,6],armR:[-60,0,-30],head:[0,24,0],itemL:[0,0,0]},plant(10,-10,16))),k(.55,J(S2(0,-38),{armL:[-88,0,6],armR:[-30,0,-62],head:[0,26,0],itemL:[0,0,0]},plant(10,-10,16))),
+  k(.62,J(S2(0,-30),{armL:[-84,0,6],armR:[-58,0,-24],head:[0,22,0],root:[0,0,-.02],itemL:[0,0,0]},plant(10,-10,16))),k(1,J(S2(0,-34),{armL:[-86,0,6],armR:[-60,0,-30],head:[0,24,0],itemL:[0,0,0]},plant(10,-10,16)))]},
+ slash:{id:'slash',period:1,lock:1,events:[{at:.4,kind:'dust',count:1,needsDrySurface:true,at3:[0,0,.4]}],keys:[
+  k(0,J(S2(-2,-14),{armR:[-150,0,-20],armL:[-30,0,22],itemR:[160,0,0]},plant(-10,14,14))),k(.38,J(S2(12,16),{armR:[-20,0,10],armL:[-45,0,20],root:[0,0,.12],itemR:[20,0,0]},plant(-28,24,16))),
+  k(.7,J(S2(6,2),{armR:[-50,0,0],armL:[-30,0,20],root:[0,0,.04],itemR:[60,0,0]},plant(-10,10,14))),k(1,J(S2(-2,-14),{armR:[-150,0,-20],armL:[-30,0,22],itemR:[160,0,0]},plant(-10,14,14)))]},
 };
 
 // ---- Selecting a clip from real state.
@@ -133,7 +176,21 @@ export function samplePose(clip:Clip,phase:number,v:Variation={phaseOffset:0,spe
  for(let c=0;c<3;c++)out.root[c]=lerp((a.pose.root?.[c]??0),(b.pose.root?.[c]??0))*v.amplitude;
  for(const x of['itemR','itemL','rootRot'] as const){const A=rad(a.pose[x]),B=rad(b.pose[x]);out[x]=[lerp(A[0],B[0]),lerp(A[1],B[1]),lerp(A[2],B[2])];}
  if(clip.id==='carry'){for(const p of['legL','legR'] as Part[])out.parts[p][0]*=g.strideScale;out.root[1]*=g.bobScale;out.parts.spine[0]+=g.leanDeg*d;}
+ if(clip.lock){const lo=Math.min(legRaise(out.parts.legL),legRaise(out.parts.legR));if(lo>0)out.root[1]-=lo*clip.lock;}
  return out;
+}
+/** How far a rigid leg's foot rises above the ground when the leg is rotated (rx forward/back, rz splay); leg length .5. */
+export const LEG_LENGTH=.5;
+const legRaise=(r:readonly number[])=>LEG_LENGTH*(1-Math.cos(r[0])*Math.cos(r[2]));
+/** Walk-to-run by real speed (metres/s of actual movement; sim workers cover ~4-6 on open ground, loaded or climbing walkers less). 0 = walk, 1 = run. */
+export const GAIT_SPEEDS={walkBelow:3.4,runAbove:5.0} as const;
+export const gaitBlend=(speed:number)=>{const t=Math.max(0,Math.min(1,(speed-GAIT_SPEEDS.walkBelow)/(GAIT_SPEEDS.runAbove-GAIT_SPEEDS.walkBelow)));return t*t*(3-2*t);};
+/** Metres per cycle while blending walk to run, so the phase advance (and therefore the feet) stays continuous with speed. */
+export const gaitStride=(b:number)=>CLIPS.walk.strideMetres!+(CLIPS.run.strideMetres!-CLIPS.walk.strideMetres!)*b;
+/** Linear blend of two poses (a at 0, b at 1). Allocates one Pose. */
+export function blendPoses(a:Pose,b:Pose,t:number):Pose{
+ const o=blank(),m=(x:number,y:number)=>x+(y-x)*t,v3=(x:readonly number[],y:readonly number[]):[number,number,number]=>[m(x[0],y[0]),m(x[1],y[1]),m(x[2],y[2])];
+ for(const p of PARTS)o.parts[p]=v3(a.parts[p],b.parts[p]);o.root=v3(a.root,b.root);o.rootRot=v3(a.rootRot,b.rootRot);o.itemR=v3(a.itemR,b.itemR);o.itemL=v3(a.itemL,b.itemL);return o;
 }
 export type AnimTier=0|1|2;
 /** Distance rule: near full, mid reduced, far none. */
