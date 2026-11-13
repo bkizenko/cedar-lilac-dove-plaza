@@ -19,6 +19,8 @@ import {HelpScreen} from './helpScreen';
 import {RoadsCard} from './roadsCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
 import {MinimapReopen,useMinimapCollapsed} from './minimapToggle';
+import {useHudHotkeys,Foldable} from './fold';
+import {layout,PANELS} from './hudLayout';
 import {useTestLabButton} from './useTestLabButton';
 import {FlaskConical} from 'lucide-react';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
@@ -36,6 +38,12 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const founding=hud.founding;
  const alerts=useGlanceAlerts(hud.started&&!hud.awaitingStart?engine:null);
  useEffect(()=>{if(hud.placing)setTray(false);},[hud.placing]);
+ // O: sound effects, U: hide or show the interface, Shift+U: minimise or show every panel. M (mute) and Shift+M (map) are handled elsewhere.
+ useHudHotkeys({
+  sfx:()=>{engine?.audio?.toggleSfxOff();engine?.pushHud?.();},
+  hide:()=>setHidden(v=>!v),
+  allPanels:()=>{const shown=PANELS.some(p=>!layout.isCollapsed(p.id)&&!['testlab','wonders','skills'].includes(p.id));layout.setAll(shown,PANELS.filter(p=>!['testlab','wonders','skills'].includes(p.id)).map(p=>p.id));},
+ },hud.started&&!hud.awaitingStart);
  if(!hud.started||hud.awaitingStart)return null;
  if(hidden)return <button type="button" className="hw hw-restore" onClick={()=>setHidden(false)}>Show interface</button>;
  const close=()=>setScreen(null);
@@ -50,7 +58,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {!founding&&!screen&&<AlertPins engine={engine} alerts={alerts}/>}
   {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})} onOpenHelp={()=>setScreen({k:'help'})}/>}
   <header className="hw-top"><ResourceBar hud={hud} engine={engine} onOpen={k=>setScreen(k==='council'?{k:'council'}:{k:'village',tab:'stores'})}/><TimeCard hud={hud} engine={engine} onAges={()=>setScreen({k:'ages'})} onMenu={()=>setScreen({k:'menu'})}/></header>
-  {!founding&&showTestLab&&<button type="button" className="hw-testlab" aria-label="Test lab" title="Open the Test lab" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),(o:unknown)=>{if(o)setTest(true);})}><FlaskConical size={24}/><span>Test lab</span></button>}
+  {!founding&&showTestLab&&<Foldable id="testlab" icon={<FlaskConical size={24}/>} className="hw-testlab-fold"><button type="button" className="hw-testlab" aria-label="Test lab" title="Open the Test lab" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),(o:unknown)=>{if(o)setTest(true);})}><FlaskConical size={24}/><span>Test lab</span></button></Foldable>}
   {!founding&&<Rail hud={hud} engine={engine} workOpen={screen?.k==='village'&&screen.tab==='work'} onWork={()=>setScreen({k:'village',tab:'work'})}/>}
   <NotesStack hud={hud} engine={engine} onOpen={open} hidden={false} alerts={alerts}/>
   {!founding&&!screen&&<RoadsCard engine={engine}/>}

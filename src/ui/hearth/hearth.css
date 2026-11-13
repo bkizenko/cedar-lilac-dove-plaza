@@ -503,7 +503,63 @@
 .hw-music-panel label{display:grid;gap:var(--hw-s1,4px);font-size:16px}
 .hw-music-panel .hw-btn-wide{min-height:52px;font-size:16px}
 
+/* ===== Minimise: every HUD panel folds into a labelled handle (src/ui/hearth/fold.tsx, hudLayout.ts) =====
+   A minimised panel is not rendered, so no invisible box is left over the world. Handles and minimise buttons: 52 px tap, 16 px text, 24 px icons. */
+.hw-fold-min,.hw-fold-handle{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:none;min-width:52px;min-height:52px;padding:0;border-radius:var(--hw-r-m);font:650 16px/1 var(--font-sans);cursor:pointer;transition:background-color .15s,border-color .15s,transform .15s var(--hw-ease)}
+.hw-fold-min svg,.hw-fold-handle svg{width:24px;height:24px;min-width:24px;min-height:24px;flex:none}
+.hw-fold-min{border:1px solid var(--hw-line);background:rgba(255,236,190,.07);color:var(--hw-dim)}
+.hw-fold-min:hover{background:rgba(255,236,190,.18);border-color:var(--hw-line-strong);color:var(--hw-text)}
+.hw-fold-min.has-text{padding:0 var(--hw-s3)}
+.hw-fold-handle{position:relative;padding:0 var(--hw-s4) 0 var(--hw-s3);border:1px solid var(--hw-line-strong);background:var(--hw-panel);box-shadow:var(--hw-shadow);color:var(--hw-text);animation:hw-handle-in .22s var(--hw-ease)}
+.hw-fold-handle svg{color:var(--hw-gold-2)}
+.hw-fold-handle:hover{border-color:var(--hw-gold-2)}
+.hw-fold-handle.t-bad{border-color:rgba(244,162,135,.7)}.hw-fold-handle.t-bad svg{color:var(--hw-bad)}
+.hw-fold-handle.t-warn{border-color:rgba(242,199,107,.7)}.hw-fold-handle.t-warn svg{color:var(--hw-warn)}
+.hw-fold-badge{min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:var(--hw-gold);color:var(--hw-gold-ink);font:800 16px/24px var(--font-sans);font-style:normal;text-align:center}
+.hw-fold-handle.t-bad .hw-fold-badge{background:var(--hw-bad)}
+.hw .is-folding{animation:hw-fold-out .2s var(--hw-ease) forwards;pointer-events:none!important}
+.hw .is-folding *{pointer-events:none!important}
+.hw .is-unfolding{animation:hw-fold-in .2s var(--hw-ease)}
+@keyframes hw-fold-out{to{opacity:0;scale:.9}}
+@keyframes hw-fold-in{from{opacity:0;scale:.9}}
+@keyframes hw-handle-in{from{opacity:0;scale:.85}}
+.hw-top-left.is-folding,.hw-rail.is-folding{transform-origin:top left}.hw-time.is-folding{transform-origin:top right}.hw-dock.is-folding,.hw-hint.is-folding{transform-origin:bottom center}.hw-sel.is-folding{transform-origin:bottom left}
+.hw-top-left{align-items:center}
+.hw-top-left>.hw-fold-min{align-self:stretch}
+/* where each handle sits (the rest are in the flow of the bar or stack that held the panel) */
+.hw-fold-handle.at-rail{position:absolute;left:var(--hw-s3);top:92px}
+.hw-bottom>.hw-fold-handle.at-dock{grid-area:dock;justify-self:center}
+.hw-bottom>.hw-fold-handle.at-selection{grid-area:sel;justify-self:start}
+.hw-fold-handle.at-tips{position:absolute;left:50%;translate:-50% 0;bottom:calc(var(--hw-dock-h,88px) + var(--hw-s3));z-index:5}
+.hw-top>.hw-fold-handle.at-resources{align-self:flex-start}
+.hw-speed .hw-fold-handle{box-shadow:none;background:rgba(255,236,190,.07)}
+.hw-speed .hw-fold-min{align-self:center}
+.hw-speed-set{display:inline-flex;gap:6px;align-items:center}
+.hw-top-right{align-items:flex-end}
+/* alerts and news: one small bar of minimise buttons / handles above the cards */
+.hw-fold-bar{display:flex;flex-wrap:wrap;gap:var(--hw-s2);justify-content:flex-end}
+.hw-fold-group{display:grid;gap:var(--hw-s2);min-width:0}
+.hw-fold-group:not(:has(*)){display:none}
+.hw-hint-x{flex:none}
+/* sound: the chip sits in the clock bar; the menu rows pair a switch with its slider */
+.hw-music{display:inline-flex;gap:6px;align-items:center}
+.hw-audio-row{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:var(--hw-s3);align-items:center}
+.hw-audio-row .hw-btn-wide{justify-content:flex-start;width:100%}
+.hw-audio-row .hw-btn-wide em{margin-left:auto;font-style:normal;color:var(--hw-dim)}
+.hw-audio-row .hw-btn-wide[aria-pressed=false]{opacity:.8;border-style:dashed}
+.hw-audio-row input:disabled{opacity:.45}
+.hw-layout-list{display:flex;flex-wrap:wrap;gap:var(--hw-s2)}
+.hw-layout-list .hw-chip-btn{min-height:52px;font-size:16px;cursor:pointer;color:inherit}
+.hw-layout-list .hw-chip-btn[aria-pressed=false]{border-style:dashed;opacity:.85}
+@media (max-width:760px){
+ .hw-fold-handle.at-rail{left:8px;top:132px}
+ .hw-audio-row{grid-template-columns:1fr}
+}
 /* Test lab shortcut: left column under the village rail (rail ends ~450px at desktop, ~440px on phones); clear of map, music, speed, alerts. */
 .hw-testlab{position:absolute;left:var(--hw-s3);top:462px;z-index:2;pointer-events:auto;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:var(--hw-s2);min-width:52px;min-height:52px;padding:0 var(--hw-s3);border-radius:var(--hw-r-m);font-size:16px;font-weight:700;color:var(--hw-text);border:1px solid var(--hw-line-strong);background:var(--hw-panel);box-shadow:var(--hw-shadow)}
 .hw-testlab:hover{border-color:var(--hw-gold-2)}.hw-testlab:disabled{opacity:.6;cursor:default}
 @media (max-width:760px){.hw-testlab{left:8px;top:452px}}
+
+.hw-testlab-fold{position:absolute;left:var(--hw-s3);top:462px;z-index:2;display:flex;align-items:center;gap:6px;pointer-events:none}
+.hw-testlab-fold>.hw-testlab{position:static}
+.hw-fold-handle.hw-testlab-fold{pointer-events:auto}

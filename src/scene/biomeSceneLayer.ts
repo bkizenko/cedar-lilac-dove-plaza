@@ -5,13 +5,14 @@ import {BiomeVegetation,BiomeDressing,resourceTreeForm,BIOME_VEGETATION_RULES,ty
 import type {DressingForm} from './vegetationKit';
 import {peekGeology} from './painterGeology';
 import {BotanicalForest} from './botanicalForest';
+import {treeBudget,type TreeDetail} from '../game/graphicsSettings';
 import {FillerForest,type FillerTree,type FillerBlob} from './fillerForest';
 import {DRAW_DISTANCE_RULES,type DrawBands} from '../game/drawDistance';
 import {loadTreeSet,type TreeSet} from './treeSet';
 import type {TreeSite,BaseForm} from './botanicalSpecies';
 /** Read-only adapter contract. Integrator can pass Game directly after the
  * versioned ecology grid is attached to its generated world. */
-export type BiomeSceneGame={chopMarks?:ReadonlySet<number>;world:{size:number;camps?:{x:number;z:number}[];mapgen?:{wind?:{x:number;z:number}}};state:{seed:number;trees:ResourceTree[];buildings:{hp:number;x:number;z:number;w:number;d:number}[]};
+export type BiomeSceneGame={chopMarks?:ReadonlySet<number>;world:{size:number;camps?:{x:number;z:number}[];mapgen?:{wind?:{x:number;z:number}}};state:{seed:number;trees:ResourceTree[];buildings:{hp:number;x:number;z:number;w:number;d:number;type?:string}[]};
  height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;
  seasonMix:()=>{winter:number;autumn:number;snow:number}};
 export const BIOME_SCENE_RULES={treeRefreshSeconds:.1,dressingRefreshSeconds:.5,dressingCellMetres:6,dressingRadiusMetres:65,
@@ -98,6 +99,26 @@ export function painterForm(kind:ProvinceKind,r:number,bank:boolean,moisture:num
   default:return pick([['grass',38],['shrub',16],['flowers',12],['fern',8],['tallgrass',12],['pebbles',5],['rocks',2]]);
  }
 }
+/** Village lawn: the open ground between a settlement's own buildings gets a light, deterministic scatter of grass, tall grass and flower tufts so it never reads as a bare
+ * green sheet. Painterly dressing only in the sense of look: points are nonblocking, take no ResourceNode, navigation or product, and use the same dry/gentle/outside-footprint
+ * test as every other dressing point. Linear works, water works, fields, pens and quarries are left alone. Wild biomes keep their own scatter untouched. */
+export const VILLAGE_LAWN_RULES={reachMetres:11,perBuilding:16,maxPoints:520,skip:['palisade','gate','stonewall','trench','moat','canal','aqueduct','dock','bridge','farm','pen','quarry','cairn','grove','cornerstone','watermill','windmill'] as readonly string[]} as const;
+export function villageLawnPoints(game:BiomeSceneGame,camera:{x:number;z:number},style:VegetationStyle='classic'){
+ const rules=BIOME_SCENE_RULES,lawn=VILLAGE_LAWN_RULES,points:DressingPoint[]=[],seed=game.state.seed,painterly=style==='painterly';
+ for(const b of game.state.buildings){
+  if(b.hp<=0||(b.type&&lawn.skip.includes(b.type)))continue;
+  const reach=Math.hypot(b.w||0,b.d||0)/2+lawn.reachMetres;if(Math.hypot(b.x-camera.x,b.z-camera.z)>rules.dressingRadiusMetres+reach)continue;
+  const bx=Math.round(b.x*4),bz=Math.round(b.z*4);
+  for(let k=0;k<lawn.perBuilding;k++){
+   const a=hash(bx+k*17,bz,seed,701)*Math.PI*2,edge=Math.min(b.w||4,b.d||4)/2+1.1,r=edge+Math.pow(hash(bx,bz+k*29,seed,709),.8)*lawn.reachMetres,x=b.x+Math.cos(a)*r,z=b.z+Math.sin(a)*r;
+   if(Math.hypot(x-camera.x,z-camera.z)>rules.dressingRadiusMetres||!game.exploredAt(x,z)||!dressingGroundAllowed(game,x,z))continue;
+   const u=hash(bx+k,bz-k*13,seed,719),kind:DressingPoint['kind']=u<.5?'grass':u<.76?(painterly?'tallgrass':'grass'):u<.93?'flowers':(painterly?'pebbles':'grass');
+   points.push({x,y:game.height(x,z),z,kind,scale:.95+hash(bx+k,bz,seed,727)*.4,tone:.22,hue:hash(Math.floor(x/9),Math.floor(z/9),seed,977)*.82+hash(bx+k,bz+k,seed,733)*.18});
+   if(points.length>=lawn.maxPoints)return points;
+  }
+ }
+ return points;
+}
 function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camera:{x:number;z:number},floor?:{cover:(x:number,z:number)=>number}){
  const rules=BIOME_SCENE_RULES,cell=rules.painterCellMetres,cx=Math.floor(camera.x/cell),cz=Math.floor(camera.z/cell),radius=Math.ceil(rules.dressingRadiusMetres/cell),points:DressingPoint[]=[];
  for(let dz=-radius;dz<=radius;dz++)for(let dx=-radius;dx<=radius;dx++){
@@ -122,6 +143,7 @@ function painterCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camer
   const form=painterForm(profile.kind,hash(ix,iz,game.state.seed,157),bank,cond.moisture,site);
   points.push({x,y:game.height(x,z),z,kind:form,rockTint:gq&&(form==='rocks'||form==='pebbles')?gq.tint:undefined,scale:.72+hash(ix,iz,game.state.seed,211)*.5,tone:Math.pow(Math.max(0,Math.min(1,.95-cond.moisture*1.5+(hash(ix,iz,game.state.seed,331)-.5)*.3)),1.4),hue:patch*.82+hash(ix,iz,game.state.seed,401)*.18});
  }
+ points.push(...villageLawnPoints(game,camera,'painterly'));
  return points.sort((a,b)=>Math.hypot(a.x-camera.x,a.z-camera.z)-Math.hypot(b.x-camera.x,b.z-camera.z)).slice(0,rules.painterMaxCandidates);
 }
 export function biomeDressingCandidates(game:BiomeSceneGame,grid:EcologicalProvinceGrid,camera:{x:number;z:number},quality:VegetationContext['quality'],style:VegetationStyle='classic',floor?:{cover:(x:number,z:number)=>number}){
@@ -129,7 +151,7 @@ export function biomeDressingCandidates(game:BiomeSceneGame,grid:EcologicalProvi
  if(style==='painterly')return painterCandidates(game,grid,camera,floor);
  const rules=BIOME_SCENE_RULES,cell=rules.dressingCellMetres,cx=Math.floor(camera.x/cell),cz=Math.floor(camera.z/cell),radius=Math.ceil(rules.dressingRadiusMetres/cell),points:DressingPoint[]=[];
  for(let dz=-radius;dz<=radius;dz++)for(let dx=-radius;dx<=radius;dx++){
-  if(points.length>=rules.dressingMaxCandidates)return points;
+  if(points.length>=rules.dressingMaxCandidates)break;
   const ix=cx+dx,iz=cz+dz,x=(ix+.16+hash(ix,iz,game.state.seed)*.68)*cell,z=(iz+.16+hash(ix,iz,game.state.seed,59)*.68)*cell;
   if(Math.hypot(x-camera.x,z-camera.z)>rules.dressingRadiusMetres||!game.exploredAt(x,z)||!dressingGroundAllowed(game,x,z))continue;
   const profile=provinceAt(grid,x,z),art=BIOME_SURFACE_PROFILES[profile.kind];if(hash(ix,iz,game.state.seed,103)>art.dressingDensity)continue;
@@ -139,7 +161,7 @@ export function biomeDressingCandidates(game:BiomeSceneGame,grid:EcologicalProvi
   }
   points.push({x,y:game.height(x,z),z,kind:dressingForm(profile.kind,hash(ix,iz,game.state.seed,157),bank),scale:.72+hash(ix,iz,game.state.seed,211)*.42});
  }
- return points;
+ return [...villageLawnPoints(game,camera,'classic'),...points].slice(0,rules.dressingMaxCandidates);
 }
 /** Canopy cover from the living trees, 6 m cells, smoothed: 0 open ground .. 1 closed canopy. Drives the forest floor (ferns, moss, fungi, deadwood under canopy,
  * grass and flowers in clearings, bushes on the edge). Rebuilt only when the living-tree set changes. */
@@ -172,7 +194,7 @@ export class BiomeSceneLayer {
  private treeIn=0;private dressingIn=0;private lastQuality='';private lastViewKey='';private lastBands:DrawBands|null=null;
  private style:VegetationStyle;
  /** cosmetic filler forest (painterly botanical set only); render-only, see fillerForest.ts */
- private filler:FillerForest|null=null;private fillerOut:{trees:FillerTree[];blobs:FillerBlob[]}={trees:[],blobs:[]};private buildingHash=new Map<number,{x:number;z:number;r:number}[]>();private buildingCount=-1;
+ private lastDetail:TreeDetail|undefined;private filler:FillerForest|null=null;private fillerOut:{trees:FillerTree[];blobs:FillerBlob[]}={trees:[],blobs:[]};private buildingHash=new Map<number,{x:number;z:number;r:number}[]>();private buildingCount=-1;
  lastFiller:{detailEff:number;farEff:number;trees:number;blobs:number;deferred:number;treeCapped:boolean;blobCapped:boolean}|null=null;
  constructor(scene:THREE.Scene,game:BiomeSceneGame,grid:EcologicalProvinceGrid,style:VegetationStyle='classic',treeSet:TreeSet=loadTreeSet()){
   this.grid=grid;this.style=style;this.treeSet=treeSet;const seed=game.state.seed,profileAt=(x:number,z:number)=>provinceAt(grid,x,z);
@@ -196,16 +218,16 @@ export class BiomeSceneLayer {
  }
  /** `view` carries the draw-distance bands and a conservative frustum test; its `key` changes when the camera moved or turned enough to need a fresh far list. `prime` lifts the per-frame
   * time budget for generating filler chunks (first build after a world loads). Without `view` the original radii apply and no filler is drawn. */
- sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number,view?:{bands:DrawBands;inView?:(x:number,z:number,r:number)=>boolean;key?:string;prime?:boolean}){
-  this.treeIn-=Math.max(0,dt);this.dressingIn-=Math.max(0,dt);const changed=quality!==this.lastQuality,treeChanged=changed||(view?.bands!==undefined&&view.bands!==this.lastBands)||(view?.key!==undefined&&view.key!==this.lastViewKey);this.lastQuality=quality;this.lastBands=view?.bands??null;this.lastViewKey=view?.key??'';
+ sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number,view?:{bands:DrawBands;inView?:(x:number,z:number,r:number)=>boolean;key?:string;prime?:boolean;detail?:TreeDetail}){
+  this.treeIn-=Math.max(0,dt);this.dressingIn-=Math.max(0,dt);const detail=view?.detail,changed=quality!==this.lastQuality,treeChanged=changed||detail!==this.lastDetail||(view?.bands!==undefined&&view.bands!==this.lastBands)||(view?.key!==undefined&&view.key!==this.lastViewKey);this.lastQuality=quality;this.lastDetail=detail;this.lastBands=view?.bands??null;this.lastViewKey=view?.key??'';
   let treeReport:ReturnType<BiomeVegetation['sync']>|undefined,dressingCount:number|undefined,changedAgain=false;
-  const context:VegetationContext={quality,camera,known:(x,z)=>game.exploredAt(x,z),marked:id=>game.chopMarks?.has(id)??false,...game.seasonMix()};
+  const context:VegetationContext={quality,detail:detail&&{nearMetres:detail.nearMetres,cardScale:detail.cardScale},camera,known:(x,z)=>game.exploredAt(x,z),marked:id=>game.chopMarks?.has(id)??false,...game.seasonMix()};
   if(this.treeIn<=0||treeChanged){
    const bands=view?.bands;
-   if(bands){const low=quality==='low'?.6:1;context.farMetres=bands.treeFar*low;context.fadeMetres=bands.fadeMetres;context.inView=view.inView;
-    if(this.filler&&bands.fillerFar>0){
+   if(bands){const tb=detail?treeBudget(bands,detail.step):null,low=detail?1:quality==='low'?.6:1;context.farMetres=tb?tb.treeFar:bands.treeFar*low;context.fadeMetres=bands.fadeMetres;context.inView=view.inView;
+    if(this.filler&&(tb?tb.fillerFar>0:bands.fillerFar>0)){
      this.filler.setSimTrees(game.state.trees);
-     const r=this.filler.collect(camera,{detail:bands.fillerDetail*low,far:bands.fillerFar*low,fade:bands.fadeMetres,maxTrees:Math.floor(bands.fillerMaxTrees*(quality==='low'?.5:1)),maxBlobs:Math.floor(bands.fillerMaxBlobs*(quality==='low'?.5:1)),buildMs:view.prime?Infinity:3,inView:view.inView,exclude:this.nearBuilding(game)},this.fillerOut);
+     const r=this.filler.collect(camera,{detail:tb?tb.fillerDetail:bands.fillerDetail*low,far:tb?tb.fillerFar:bands.fillerFar*low,fade:bands.fadeMetres,maxTrees:tb?tb.fillerMaxTrees:Math.floor(bands.fillerMaxTrees*(quality==='low'?.5:1)),maxBlobs:tb?tb.fillerMaxBlobs:Math.floor(bands.fillerMaxBlobs*(quality==='low'?.5:1)),buildMs:view.prime?Infinity:3,inView:view.inView,exclude:this.nearBuilding(game)},this.fillerOut);
      context.filler={trees:this.fillerOut.trees,blobs:this.fillerOut.blobs,detailEff:r.detailEff,farEff:r.farEff};
      this.lastFiller={detailEff:r.detailEff,farEff:r.farEff,trees:this.fillerOut.trees.length,blobs:this.fillerOut.blobs.length,deferred:r.deferred,treeCapped:r.treeCapped,blobCapped:r.blobCapped};
      // chunks still being generated: look again next frame instead of waiting a full refresh

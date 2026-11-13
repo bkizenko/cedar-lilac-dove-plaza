@@ -26,6 +26,9 @@ export const DETAIL_RULES={
  /** the most people drawn at the near rig tier (about 770-1,100 triangles each before held items), nearest first; the rest use the mid tier */
  maxNearPeople:{standard:140,high:220,ultra:350} as Record<DetailLevel,number>,
  maxFullTrees:{standard:900,high:1400,ultra:2200} as Record<DetailLevel,number>,
+ /** HERO trees: the nearest N trees inside heroTreeMetres draw the enriched near tier (twig sprays, bark relief, fruit; about 2,300-9,000 triangles each, treeHero.ts) */
+ maxHeroTrees:{standard:36,high:64,ultra:110} as Record<DetailLevel,number>,
+ heroTreeMetres:{standard:46,high:64,ultra:90} as Record<DetailLevel,number>,
  /** fidelity features by level */
  /** Standard has NO sun shadow map (cheap painterly contact shadows only); 0 = off */
  shadowMap:{standard:0,high:2048,ultra:2048} as Record<DetailLevel,number>,
