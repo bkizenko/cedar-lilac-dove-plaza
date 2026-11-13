@@ -1,5 +1,7 @@
 import {planFoodWithdrawal,commitFoodWithdrawal,setCarriedFood,receiveCarriedFood,carriedFoodLots} from './tradeFood';
 import {siteSlopeIssue} from './siteSlope';
+import {assessSite,siteRecord,type SiteAssessment} from './slopeTiers';
+import {geologyAt} from './mapgen/geology/read';
 import {tradeCargoCapacity,PACK_TRADE_TRAVEL_RULES} from './tradeCargo';
 import {returnPackJourneyCare,packJourneyReturnBudgetLow} from './packJourneyCare';
 import {returnExpeditionProvisions} from './expeditionProvisions';
@@ -310,6 +312,7 @@ export class Game {
     this.world = generateWorld(0xdae1);
     this.walk = new Uint8Array(WALK * WALK);
     this.state = this.blank();
+    this.state.slopeModel = "graded"; // new villages use the tiered slope model; saves without the field keep the earlier linear rule
     this.workBoard.reset();
   }
 
@@ -436,6 +439,7 @@ export class Game {
     this.world = generateWorld(s,worldgenVersion,request);
     this.configureFlowFields();
     this.state = this.blank();
+    this.state.slopeModel = "graded"; // new villages use the tiered slope model; saves without the field keep the earlier linear rule
     this.state.finiteRaiderCampVersion=1;
     enableCombatDoctrine(this);
     enableTerrainInfluence(this);
@@ -1230,6 +1234,13 @@ export class Game {
     return b;
   }
 
+  /** Graded slope model (slopeTiers.ts): tier, foundation, extra goods and labour for a footprint. Pure reads of terrain and geology. */
+  siteAssessment(type:BldType,x:number,z:number,w:number,d:number):SiteAssessment{
+    let ground:{rockName?:string;hardness?:number;soilDepthMeters?:number;landformTag?:string}|null=null;
+    try{const r=geologyAt({size:this.world.size,mapgen:this.world.mapgen as never},x,z);if(r)ground={rockName:r.rockName,hardness:r.hardness,soilDepthMeters:r.soilDepthMeters,landformTag:r.landformTag};}catch{ground=null;}
+    return assessSite((px,pz)=>this.height(px,pz),type,x,z,w,d,{ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d})});
+  }
+
   placementIssue(type: BldType, x: number, z: number, _team = 0, size?:PlotSize,ignoreId?:number,drawnSpan?:BridgeSpan,quarterTurn=false): string | null {
     if(_team===0&&this.state.campMove&&!['complete','cancelled'].includes(this.state.campMove.phase))return 'Finish or cancel the camp move before spending the cache on buildings';
     if(type==="house"){const learned=housingAdoptionIssue(this,_team);if(learned)return learned;}
@@ -1257,7 +1268,7 @@ export class Game {
     if (!this.world.options && type !== "dock" && Math.hypot(x, z) > this.world.islandR - 10)
       return "Too close to the shore";
     if (type !== "dock" && type !== "aqueduct" && !this.dryFoundation(type, x, z,0,size??(quarterTurn?d:undefined))&&!(type==="trench"&&breachPlacementPermit(this,x,z,_team))) return "Can't raise that in the water"; // Grok W7: only a ready canal breach dig (canalBreach.ts). Aqueducts may finish on low delivery ground; the route query refuses a submerged target.
-    const slopeIssue=_team===0?siteSlopeIssue((px,pz)=>this.height(px,pz),type,x,z,d.w,d.d):null;
+    const slopeIssue=_team===0?(this.state.slopeModel==='graded'?this.siteAssessment(type,x,z,d.w,d.d).issue:siteSlopeIssue((px,pz)=>this.height(px,pz),type,x,z,d.w,d.d)):null;
     if(slopeIssue)return slopeIssue;
     const compactGrainSite = compactGrainWorkplace(type);
     if(size||scalablePlot(type)||compactGrainSite){
@@ -1521,6 +1532,9 @@ export class Game {
     }
     const crossing=type==="bridge"?(span??planBridge(this,x,z)):undefined;
     const cost = founding ? {} : buildingCost(type,this,team,size,crossing??undefined);
+    // Graded slope model: levelling, terraces or posts are real goods and labour added to this bill (never for the free founding hall).
+    const dims=size??(quarterTurn?turnedFootprint(type):d),siteInfo=team===0&&!founding&&!crossing&&this.state.slopeModel==='graded'?this.siteAssessment(type,x,z,dims.w,dims.d):null;
+    if(siteInfo?.ok&&siteInfo.tier!=='level'){const c=cost as Record<string,number>;c.wood=(c.wood||0)+siteInfo.extraWood;c.stone=(c.stone||0)+siteInfo.extraStone;}
     const planned=type!=="farm"&&team===0&&!founding&&(!this.canAfford(team,cost)||this.state.weather==="storm");
     if(!planned&&!this.canAfford(team,cost)){if(type==="farm"&&team===0)this.banner(fieldSeedIssue(tribe.seeds||0,cost.seeds||0)!,4);return false;}
     if(planned&&!this.exploredAt(x,z)){this.banner("Explore the site before laying out a plan",3);return false;}
@@ -1537,6 +1551,7 @@ export class Game {
     const b = this.makeBld(type, spot.x, spot.z, team,undefined,span);
     configureTowerPlatform(this,b);
     configureExcavation(this,b);
+    const siteRec=siteInfo&&siteRecord(siteInfo);if(siteRec)b.site=siteRec;
     if(size){b.w=size.w;b.d=size.d;}
     if(quarterTurn){const t=turnedFootprint(type);b.w=t.w;b.d=t.d;}
     if(type==="farm"){b.cropType=tribe.cultivated?.[0]||"grain";crop(this,b);}
@@ -1645,7 +1660,7 @@ export class Game {
     u.vz = 0;
     u.stride += dt * 8;
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
-    const need = b.type==='trench'?excavationWorkNeed(this,b):waterWorksLabour(this,b)??towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b);
+    const need = b.type==='trench'?excavationWorkNeed(this,b):waterWorksLabour(this,b)??towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b)+(b.site?.extraWork||0);
     b.build = Math.min(1, b.build + dt * predisposition(u).strength / need);
     b.hp = Math.max(b.hp, Math.floor(b.maxHp * (0.14 + 0.86 * b.build)));
     if (u.team === 0 && Math.random() < 0.08) this.onSfx("hammer");
