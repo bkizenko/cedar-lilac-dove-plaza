@@ -11,7 +11,7 @@ function game(opts={rulersVersion:2}){const g=new Game();g.reset(5,10,opts);g.en
 function run(g,seconds){const end=g.state.time+seconds;while(g.state.time<end){g.state.paused=false;g.step(.5);}assert.deepEqual(g.simulationErrors,[]);}
 test('old saves and rulersVersion 1 have no civic layer at all',()=>{
  const g=game({rulersVersion:1});run(g,200);assert.equal(R.peekCivic(g),undefined);assert.equal(R.civicModel(g).enabled,false);assert.equal(R.civicEffects(g,1).decisionDelay,1);assert.equal(R.politicsLoss(g,1),0);
- const g2=game();run(g2,5);const d=S.ensureDecisions(g2);assert.equal(d.civic,undefined,'no civic record before the first year');assert.ok(validDecisionState(d));
+ const g2=game();run(g2,5);const d=S.ensureDecisions(g2);assert.ok(d.civic?.prehistory,'M2-14: the prehistory is recorded at the start');assert.deepEqual(d.civic.politics,{},'no yearly review before the first year');assert.ok(validDecisionState(d));
 });
 test('live: identity, prehistory, politics and the read model appear, stay valid and survive a save',()=>{
  const g=game();assert.ok(isEngineReadQuery({kind:'society-civic'}));assert.equal(isEngineReadQuery({kind:'society-civic',x:1}),false);

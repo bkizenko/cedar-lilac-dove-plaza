@@ -18,7 +18,7 @@ import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRe
 import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {buildSkins} from './skinState';
 import {reviewSociety} from './societyRuntime';
-import {noteArrivals} from './societyCivicRuntime';
+import {noteArrivals,noteDepartures} from './societyCivicRuntime';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
 import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
@@ -3441,7 +3441,7 @@ export class Game {
     let label = "A wanderer from the sea stays";
     const migrant = roll < 0.4 ? takeFrom(thriving) : roll < 0.7 ? takeFrom(failing) : null;
     if (migrant) {
-      const from = this.tribe(migrant.team);
+      const fromTeam = migrant.team, from = this.tribe(fromTeam);
       this.interruptMission(migrant);
       migrant.team = 0;
       migrant.order = "move";
@@ -3456,6 +3456,7 @@ export class Game {
           ? "Someone leaves " + (from?.name || "a village") + " and joins you"
           : "Refugees from " + (from?.name || "a failing village") + " ask to stay";
       noteArrivals(this,0,1,roll >= 0.4); // community identity (M2-11): who actually arrived
+      if(fromTeam!==3)noteDepartures(this,fromTeam,1); // ...and the village they left loses them
     } else {
       // Arrivals begin on a reachable dry approach, never in deep water across the map.
       const arrivals:{x:number;z:number}[]=[];

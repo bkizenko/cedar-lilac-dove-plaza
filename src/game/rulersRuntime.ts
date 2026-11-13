@@ -11,7 +11,7 @@ import {drive as personalDrive} from './rulerGenome';
 import {reserveSeconds} from './settlement';
 import {effects,apply,noTies,type Ties,type Effect} from './ties';
 import {nudgeSocietyRelation,societyRelation} from './societyRelations';
-import {yearlyCivic} from './societyCivicRuntime';
+import {yearlyCivic,beginCivic} from './societyCivicRuntime';
 import {settleGate,raidGate,growthBias,tradeCadenceBias,breakawayLoss,noteRaid,noteMarriage,noteSettlement,yearlySocieties,decisionsEnabled} from './societyRuntime';
 import {liveClaims,cbLegitimacyCost,unrest,stageOf,type Claim,type CasusBelli,type Stage as UnrestStage} from './unrest';
 
@@ -36,6 +36,7 @@ function sampleClimate(g:Game,r:RulersState){
 export function advanceRulers(g:Game){
  const r=ensureRulers(g);if(!r)return;const s=st(g),target=Math.floor(s.time/RULERS_YEAR_SECONDS);
  sampleClimate(g,r);
+ if(decisionsEnabled(g))beginCivic(g); // M2-14: prehistory recorded once at the start (cheap no-op afterwards)
  let guard=0;
  while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
