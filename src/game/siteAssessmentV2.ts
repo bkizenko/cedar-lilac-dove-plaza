@@ -8,7 +8,7 @@ import {terraceKindFor,terraceGate,terraceLayoutFor,terraceBill,terraceSoilDepth
 import type {TerraceRecord} from './terraceRecord';
 import type {BldType} from './types';
 
-export type V2Options={ground?:SiteGround;water?:(x:number,z:number)=>number;baseWork?:number;capability?:TerraceCapability;/** metres above the water level at the site */altitude?:number;waterDistance?:number;hemisphere?:1|-1;
+export type V2Options={flood?:boolean;ground?:SiteGround;water?:(x:number,z:number)=>number;baseWork?:number;capability?:TerraceCapability;/** metres above the water level at the site */altitude?:number;waterDistance?:number;hemisphere?:1|-1;
  /** also look for a natural shelf nearby (placement preview only: costs extra height reads) */hint?:boolean};
 const r1=(n:number)=>Math.round(n*10)/10,r2=(n:number)=>Math.round(n*100)/100;
 const KIND_TIER:Record<TerraceKind,SlopeTier>={bund:'moderate',stone:'steep',andean:'steep',stair:'steep'};
@@ -26,7 +26,7 @@ const riskWords=(n:SiteNuance)=>{const w:string[]=[];if(n.risks.landslip>=.4)w.p
 function assessBuilding(height:(x:number,z:number)=>number,type:BldType|string,x:number,z:number,w:number,d:number,o:V2Options,n:SiteNuance):SiteAssessment{
  const cls=slopeClassOf(type),shelfOn=cls!=='dock'&&cls!=='exempt'?shelfAdjust(n):undefined;
  const m=n.costMult,sc=shelfOn?.6:1;
- const a=assessSite(height,type,x,z,w,d,{ground:o.ground,water:o.water,baseWork:o.baseWork,adjust:shelfOn,billScale:cls==='exempt'?undefined:{wood:m.wood*sc,stone:m.stone*sc,work:m.work*sc}});
+ const a=assessSite(height,type,x,z,w,d,{flood:o.flood,ground:o.ground,water:o.water,baseWork:o.baseWork,adjust:shelfOn,billScale:cls==='exempt'?undefined:{wood:m.wood*sc,stone:m.stone*sc,work:m.work*sc}});
  if(cls==='exempt')return a;
  a.tags=[...n.tags];
  const extra=[...(shelfOn?[`natural shelf, ${Math.round(n.shelf!.flatFraction*100)}% flat: foundation work cut`]:[]),...riskWords(n)];
