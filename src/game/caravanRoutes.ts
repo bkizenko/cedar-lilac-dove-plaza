@@ -1,8 +1,8 @@
 import type {Game} from './sim';
 import type {ResKind,TradeRoute,Unit} from './types';
 import {eligibleTradeCarrier,knownSettlement} from './barter';
-import {carryingCapacity} from './haulage';
-import {equipCaravan,sendTradeEscort} from './caravans';
+import {tradeCargoCapacity} from './tradeCargo';
+import {sendTradeEscort} from './caravans';
 import {foodDemand,isDependent} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
 import {transitDeparture} from './transit';
@@ -30,18 +30,18 @@ function departure(g:Game,r:TradeRoute){
  if(g.tribe(0).food-(r.give==='food'?r.giveAmt:0)<foodDemand(g)*360){r.status='Keeping six minutes of food at home';return;}
  if(!g.canAfford(0,{[r.give]:r.giveAmt})){r.status='Waiting for trade goods';return;}
  const people=g.state.units.filter(u=>eligibleTradeCarrier(g,u,true)&&atHome(g,u)&&(c.transport==='any'||u.haulage===c.transport))
-  .sort((a,b)=>carryingCapacity(b,r.give)-carryingCapacity(a,r.give)).slice(0,c.size);
+  .sort((a,b)=>tradeCargoCapacity(b,r.give)-tradeCargoCapacity(a,r.give)).slice(0,c.size);
  if(people.length<c.size){r.status=c.transport==='any'?'Waiting for carriers at stores':`Waiting for ${c.size} ${c.transport} carriers at stores`;return;}
  if(guardsReady(g).length<c.guards){r.status=`Waiting for ${c.guards} armed guards at stores`;return;}
  const shares=people.map((u,i)=>({u,budget:Math.floor(r.giveAmt/c.size)+(i<r.giveAmt%c.size?1:0),minimum:Math.floor(r.getAmt/c.size)+(i<r.getAmt%c.size?1:0)}));
- if(shares.some(s=>s.budget>carryingCapacity(s.u,r.give))){r.status='Cargo too heavy — add carriers, pack animals or carts';return;}
+ if(shares.some(s=>s.budget>tradeCargoCapacity(s.u,r.give))){r.status='Cargo too heavy — add carriers, pack animals or carts';return;}
  c.workerIds=[];
  for(const s of shares){
-  if(!g.dispatchTrade(s.u,{give:r.give,get:r.get,giveAmt:s.budget,getAmt:s.minimum},r.team,false))continue;
+  if(!g.dispatchTrade(s.u,{give:r.give,get:r.get,giveAmt:s.budget,getAmt:s.minimum},r.team,false,r.id))continue;
   s.u.caravanRoute=r.id;s.u.procurement={minimum:s.minimum};s.u.customOffer=undefined;
-  equipCaravan(g,s.u);c.workerIds.push(s.u.id);
+  c.workerIds.push(s.u.id);
  }
- if(!c.workerIds.length){r.status='No route could depart';return;}
+ if(!c.workerIds.length){r.status=people[0]?.workReason||'No route could depart';return;}
  for(let i=0;i<c.guards;i++)sendTradeEscort(g,c.workerIds[0]);
  r.status=`${c.workerIds.length} carriers outbound · ${c.guards} guards`;
 }

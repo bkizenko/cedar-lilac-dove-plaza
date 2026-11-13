@@ -1,3 +1,6 @@
+import {quotePackTradeCare,commitPackJourneyCare} from './packJourneyCare';
+import {tradeCargoCapacity,packTradeCareSeconds} from './tradeCargo';
+import {equipCaravan,recoverCaravanEquipment} from './caravans';
 import type {Game} from './sim';
 import type {Unit,TradeDeal,Building} from './types';
 import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
@@ -10,8 +13,12 @@ function loadingCache(g:Game,u:Unit){
  return supplyDrops(g,u.team).map(drop=>({drop,spot:supplyApproach(g,u,drop)})).filter(p=>p.spot).sort((a,b)=>Math.hypot(a.spot!.x-u.x,a.spot!.z-u.z)-Math.hypot(b.spot!.x-u.x,b.spot!.z-u.z))[0];
 }
 function cancelLoading(g:Game,u:LoadingUnit,reason:string){
- delete u.tradeLoading;u.trade=null;u.procurement=undefined;u.customOffer=undefined;u.tradeTeam=0;
+ delete u.tradeLoading;u.caravanRoute=undefined;u.trade=null;u.procurement=undefined;u.customOffer=undefined;u.tradeTeam=0;
  if(u.order==='trade'){u.order=u.carry>0||looseCargo(u)?'return':'idle';u.node=null;u.target=null;u.workReason=reason;g.invalidateRoute(u);}
+}
+function refuseLoading(g:Game,u:LoadingUnit,reason:string,borrowed:boolean){
+ cancelLoading(g,u,reason);if(borrowed)recoverCaravanEquipment(g,u);
+ u.workReason=reason;return false;
 }
 function payAtCache(g:Game,u:LoadingUnit){
  const deal=u.trade,other=g.tribe(u.tradeTeam);
@@ -19,14 +26,22 @@ function payAtCache(g:Game,u:LoadingUnit){
  if(!g.canAfford(u.team,{[deal.give]:deal.giveAmt})){cancelLoading(g,u,'Trade budget no longer available at the cache; nothing was withdrawn');return false;}
  const hall=settlementJourneySite(g,u,u.tradeTeam);
  if(!hall){cancelLoading(g,u,'No known meeting site remains; nothing was withdrawn');return false;}
+ // The weapon is a real loan at home and must occupy load before payment.
+ const borrowed=u.caravanRoute!==undefined&&equipCaravan(g,u);
+ const care=quotePackTradeCare(g,u,packTradeCareSeconds(g,u,hall));
+ if(!care||deal.giveAmt>tradeCargoCapacity(u,deal.give,care.packet)||deal.getAmt>tradeCargoCapacity(u,deal.get,care.packet)||deal.give==='food'&&g.tribe(u.team).food-(care.existing?0:care.packet?.feedLoaded||0)<deal.giveAmt){
+  return refuseLoading(g,u,care?'Trade load exceeds capacity after equipment, feed and water; nothing paid':'Animal trip needs delivered feed/water or a nearer depot; nothing paid',borrowed);
+ }
+ if(!commitPackJourneyCare(g,u,care))return refuseLoading(g,u,'Animal supplies changed before loading; nothing paid',borrowed);
  g.spend(u.team,{[deal.give]:deal.giveAmt});u.carry=deal.giveAmt;u.carryType=deal.give;u.carryFood=deal.give==='food'?'provisions':undefined;
  delete u.tradeLoading;other.tradeCd=32;u.tx=hall.x;u.tz=hall.z;u.workReason='Carrying a trade proposal to '+other.name;g.invalidateRoute(u);return true;
 }
 /** Reserve only intent until an empty-handed carrier physically reaches a cache. */
-export function beginTradeLoading(g:Game,u:LoadingUnit,deal:TradeDeal,team:number,hall:Building,accepted=true){
+export function beginTradeLoading(g:Game,u:LoadingUnit,deal:TradeDeal,team:number,hall:Building,accepted=true,caravanRoute?:number){
  if(u.carry!==0||looseCargo(u)||u.tradeLoading||u.tradeReservation||hall.team!==team)return false;
  const cache=loadingCache(g,u);if(!cache?.spot)return false;
  u.trade={...deal};u.tradeTeam=team;u.order='trade';u.customOffer=undefined;u.procurement=accepted?{minimum:deal.getAmt}:undefined;u.node=null;u.target=null;u.carryType=null;u.carryFood=undefined;u.tradeLoading=true;
+ if(caravanRoute!==undefined)u.caravanRoute=caravanRoute;
  beginSettlementJourney(g,u,hall);
  if(supplyReached(g,u,cache.drop,cache.spot))return payAtCache(g,u);
  u.tx=cache.spot.x;u.tz=cache.spot.z;u.workReason='Walking to load the trade budget at a real cache; nothing withdrawn yet';g.invalidateRoute(u);return true;
