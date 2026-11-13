@@ -9437,6 +9437,19 @@
       "supportingPassed": 16,
       "supportingTotal": 16,
       "firstReleaseGates": "37/98 unchanged"
+    },
+    {
+      "date": "2026-11-13",
+      "commit": "7b4854cea2cff9f0c674318572ea949e218867fa",
+      "release": "2026-11-13T06-57-43-047Z-7b4854c",
+      "status": "live-partial",
+      "summary": "7b4854cea2cff9f0c674318572ea949e218867fa published as 2026-11-13T06-57-43-047Z-7b4854c on 8086/8101. Focused12/12 (4 food conservation/strict-save cases, 2 physical conventional-trade paths, 1 mixed-food paid lesson, 2 inventory UI, 2 domestication expectation UI, 1 built original53 inventory/save scope); supporting25/25 existing trade/loading/reservation/theft/teaching cases; total native36/36, full tsc/build PASS. Food kinds remain exact through loading, seller escrow/payment/collection, physical return, partial feeding/teaching/theft and death drops; raid provenance retained. Inventories display real lots; existing absent metadata remains legacy-compatible. Built public Inventory & activity displayed original36 fresh fish without altering the53-person village or stocks, strict durable unchanged; both ports and retained assets5/5. Conventional-trade paths used declared controlled legacy geometry/endowments; no genuine built conventional-trade journey or full economy/campaign/FPS/gate claim. Newer canonical Claude source outside frozenartifact remains unqualified here.37/98 unchanged.",
+      "evidence": "docs/metrics/trade-food-custody-release-2026-11-13.json",
+      "batchPassed": 12,
+      "batchTotal": 12,
+      "supportingPassed": 25,
+      "supportingTotal": 25,
+      "firstReleaseGates": "37/98 unchanged"
     }
   ],
   "status_update_policy": {
