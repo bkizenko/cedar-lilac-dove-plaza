@@ -67,7 +67,7 @@ function frame(tan:V3,prev:V3|null):[V3,V3]{
 function tube(a:Acc,pts:V3[],radii:number[],sides:number,col:BarkFn,tint=1,leaf=0,cap=false){
  const n=pts.length;if(a.rec)a.rec.push({pts,radii});
  // hero tier: thick wood gets more sides and ridged relief (bark plates, fluting) so trunks and limbs read as bark, not tubes
- const rel=a.hero&&radii[0]>.06?a.relief:0;if(a.hero&&radii[0]>.06)sides=Math.max(sides,radii[0]>.2?15:11);let prev:V3|null=null;const base=a.n;
+ const wood=a.hero&&radii[0]>.06&&sides>=4,rel=wood?a.relief:0;if(wood)sides=Math.max(sides,radii[0]>.2?15:11);let prev:V3|null=null;const base=a.n;
  for(let i=0;i<n;i++){
   const tan=norm(sub(pts[Math.min(n-1,i+1)],pts[Math.max(0,i-1)])),[nx,bx]=frame(tan,prev);prev=nx;const t=i/(n-1);
   for(let s=0;s<=sides;s++){

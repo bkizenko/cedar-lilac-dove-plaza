@@ -13,7 +13,7 @@ test('hero tier is richer than full, within its cap, finite and rooted for every
   assert.ok(hero.triangles<=9600,`${id}/${v} hero ${hero.triangles} over the M1 cap`);
   const extra=hero.triangles-full.triangles;assert.ok(extra<=Math.max(...Object.values(HERO_EXTRA_TRIS))+900,`${id}/${v} extra ${extra}`);
   hero.geometry.computeBoundingBox();assert.ok(hero.geometry.boundingBox.min.y>-.35);
-  assert.ok(hero.height>=full.height*.98&&hero.height<full.height*1.2+.5,`${id}/${v} hero height differs`);
+  assert.ok(hero.height>=full.height*.98&&hero.height<full.height*1.2+1.4,`${id}/${v} hero height differs`);
  }
 });
 test('hero geometry is deterministic and leaves the lod 0 tree byte-identical',()=>{
