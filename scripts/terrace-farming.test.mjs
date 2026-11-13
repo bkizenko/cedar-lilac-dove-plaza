@@ -98,7 +98,7 @@ test('sim: a hillside field is allowed, costs real goods and time, needs the cap
   const {Game}=await import('../src/game/sim.ts');const {testAction}=await import('../src/game/testing.ts');const {encodeGame,decodeGame,validateGameSave}=await import('../src/game/persistence.ts');const {BUILDINGS,BUILD_TIME}=await import('../src/game/constants.ts');
   const st=await import('../src/game/settlement.ts');const rt=await import('../src/game/terraceRuntime.ts');
   const g=new Game();g.reset(1,undefined,{size:1040,layout:'pangaea'});g.enterIsland();g.testMode=true;testAction(g,'supplies');g.revealMap=true;g.updateVision(0);
-  assert.equal(g.state.terrainModel,'v2');assert.ok(rt.terrainV2(g));
+  assert.equal(g.state.terrainModel,'v3','new villages get the ordinary-hillside model');assert.ok(rt.terrainV2(g)&&rt.terrainV3(g));g.state.terrainModel='v2';assert.ok(rt.terrainV2(g)&&!rt.terrainV3(g),'a v2 save keeps automatic terraces');
   g.tribe(0).cultivated=['grain'];g.tribe(0).seeds=500;
   const home=g.campOf(0);let spot=null;for(let r=30;r<260&&!spot;r+=6)for(let k=0;k<24&&!spot;k++){const x=Math.round((home.x+Math.cos(k/24*6.283)*r)/2)*2,z=Math.round((home.z+Math.sin(k/24*6.283)*r)/2)*2;if(!g.placementIssue('farm',x,z))spot={x,z};}
   assert.ok(spot,'a flat field site exists');const orig=g.height.bind(g);

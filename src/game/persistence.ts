@@ -190,6 +190,7 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions?.openingSiteVersion!==undefined&&(![14,15,16,17,18,19,20,21].includes(s.worldgenVersion)||s.worldOptions.openingSiteVersion!==2))fail();
   if(s.worldOptions?.preset!==undefined&&(![20,21].includes(s.worldgenVersion)||!["archipelago","island","continents","pangaea","river-valley","highland","steppe","lakeland"].includes(s.worldOptions.preset)))fail();
   if(s.worldOptions?.mapgenVersion!==undefined&&(![20,21].includes(s.worldgenVersion)||s.worldOptions.mapgenVersion!==1))fail();
+  if(s.worldOptions?.chunkTerrainVersion!==undefined&&(s.worldgenVersion<21||s.worldOptions.chunkTerrainVersion!==1||(s.worldOptions.chunkTerrainScale!==undefined&&!(typeof s.worldOptions.chunkTerrainScale==='number'&&s.worldOptions.chunkTerrainScale>=1&&s.worldOptions.chunkTerrainScale<=64))))fail();
   if(s.worldOptions?.geologyVersion!==undefined&&(s.worldgenVersion!==21||s.worldOptions.geologyVersion!==1))fail();
   if(s.worldOptions?.riverProfileVersion!==undefined&&s.worldOptions.riverProfileVersion!==2)fail();
   if(s.worldOptions?.rulersVersion!==undefined&&s.worldOptions.rulersVersion!==1&&s.worldOptions.rulersVersion!==2)failRulers();
@@ -197,6 +198,7 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions?.tideVersion!==undefined&&s.worldOptions.tideVersion!==1&&s.worldOptions.tideVersion!==2)fail();
   if(s.worldOptions?.landformLabelVersion!==undefined&&s.worldOptions.landformLabelVersion!==2)fail();
   if(s.worldOptions?.flowFieldVersion!==undefined&&s.worldOptions.flowFieldVersion!==1)fail();
+  if(s.worldOptions?.forestEcologyVersion!==undefined&&(s.worldgenVersion!==21||s.worldOptions.forestEcologyVersion!==1))fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   if(!validWaterEngineering(s,HALF*2))fail();
   if(!validIrrigation(s,HALF*2))fail();
@@ -380,7 +382,7 @@ function validateGamePayload(raw: unknown) {
     }
   }
   if (s.slopeModel !== undefined && s.slopeModel !== "graded") fail();
-  if (s.terrainModel !== undefined && (s.terrainModel !== "v2" || s.slopeModel !== "graded")) fail();
+  if (s.terrainModel !== undefined && ((s.terrainModel !== "v2" && s.terrainModel !== "v3") || s.slopeModel !== "graded")) fail();
   if (s.growthPolicy !== undefined && !["stable", "welcome", "eager"].includes(s.growthPolicy)) fail();
   if (s.laborPolicy !== undefined && !["balanced", "food", "build", "wood", "stone", "hunt", "explore", "trade"].includes(s.laborPolicy)) fail();
   if (s.conflict !== undefined && !["quiet", "balanced", "dangerous"].includes(s.conflict)) fail();
@@ -560,9 +562,9 @@ function validateGamePayload(raw: unknown) {
     if (b.storeCare !== undefined && (!num(b.storeCare) || b.storeCare < 0 || b.storeCare > 1)) fail();
     if (b.fertility !== undefined && (!num(b.fertility) || b.fertility < 0.5 || b.fertility > 1))
       fail();
-    if (b.soilLoss !== undefined && (s.terrainModel !== "v2" || b.type !== "farm" || !num(b.soilLoss) || b.soilLoss < 0 || b.soilLoss > 0.6)) fail();
-    if (b.site?.terrace !== undefined && (s.terrainModel !== "v2" || b.type !== "farm")) fail();
-    if (b.site?.tags !== undefined && s.terrainModel !== "v2") fail();
+    if (b.soilLoss !== undefined && (!s.terrainModel || b.type !== "farm" || !num(b.soilLoss) || b.soilLoss < 0 || b.soilLoss > 0.6)) fail();
+    if (b.site?.terrace !== undefined && (!s.terrainModel || b.type !== "farm")) fail();
+    if (b.site?.tags !== undefined && !s.terrainModel) fail();
     if(b.raidLoot!==undefined){if(!obj(b.raidLoot))fail();for(const [kind,amount] of Object.entries(b.raidLoot))if(!["food","wood","stone","copper","iron"].includes(kind)||!num(amount)||amount<0||amount>200)fail();}
     if(b.lootTeam!==undefined&&(!Number.isInteger(b.lootTeam)||!s.tribes[b.lootTeam]))fail();
     if(b.lootClaimed!==undefined&&typeof b.lootClaimed!=="boolean")fail();

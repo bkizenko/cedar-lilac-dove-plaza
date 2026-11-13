@@ -6,9 +6,10 @@ import {assessSite,surveySite,groundKind,slopeClassOf,SLOPE_COLOURS,foundationTe
 import {surveyNuance,findShelf,compassWord,type SiteNuance} from './slopeNuance';
 import {terraceKindFor,terraceGate,terraceLayoutFor,terraceBill,terraceSoilDepth,erosionPerYear,fieldDownhill,extentAlong,geoSoilOf,mountainDiscount,TERRACE_RULES,OPEN_CAPABILITY,type TerraceCapability,type TerraceKind} from './terraceFarming';
 import type {TerraceRecord} from './terraceRecord';
+import {HILL_RULES,hillWorkFor,ordinaryErosion,ordinarySoilDepth,gullyRisk,handTillYield} from './hillFarming';
 import type {BldType} from './types';
 
-export type V2Options={ground?:SiteGround;water?:(x:number,z:number)=>number;baseWork?:number;capability?:TerraceCapability;/** metres above the water level at the site */altitude?:number;waterDistance?:number;hemisphere?:1|-1;
+export type V2Options={flood?:boolean;/** 'v3' (default farming on hills is ordinary, terraces optional) or 'v2' (terraces assigned by slope, the default here so earlier saves read the same) */model?:'v2'|'v3';ground?:SiteGround;water?:(x:number,z:number)=>number;baseWork?:number;capability?:TerraceCapability;/** metres above the water level at the site */altitude?:number;waterDistance?:number;hemisphere?:1|-1;
  /** also look for a natural shelf nearby (placement preview only: costs extra height reads) */hint?:boolean};
 const r1=(n:number)=>Math.round(n*10)/10,r2=(n:number)=>Math.round(n*100)/100;
 const KIND_TIER:Record<TerraceKind,SlopeTier>={bund:'moderate',stone:'steep',andean:'steep',stair:'steep'};
@@ -26,7 +27,7 @@ const riskWords=(n:SiteNuance)=>{const w:string[]=[];if(n.risks.landslip>=.4)w.p
 function assessBuilding(height:(x:number,z:number)=>number,type:BldType|string,x:number,z:number,w:number,d:number,o:V2Options,n:SiteNuance):SiteAssessment{
  const cls=slopeClassOf(type),shelfOn=cls!=='dock'&&cls!=='exempt'?shelfAdjust(n):undefined;
  const m=n.costMult,sc=shelfOn?.6:1;
- const a=assessSite(height,type,x,z,w,d,{ground:o.ground,water:o.water,baseWork:o.baseWork,adjust:shelfOn,billScale:cls==='exempt'?undefined:{wood:m.wood*sc,stone:m.stone*sc,work:m.work*sc}});
+ const a=assessSite(height,type,x,z,w,d,{flood:o.flood,ground:o.ground,water:o.water,baseWork:o.baseWork,adjust:shelfOn,billScale:cls==='exempt'?undefined:{wood:m.wood*sc,stone:m.stone*sc,work:m.work*sc}});
  if(cls==='exempt')return a;
  a.tags=[...n.tags];
  const extra=[...(shelfOn?[`natural shelf, ${Math.round(n.shelf!.flatFraction*100)}% flat: foundation work cut`]:[]),...riskWords(n)];
@@ -38,6 +39,26 @@ function assessBuilding(height:(x:number,z:number)=>number,type:BldType|string,x
  return a;
 }
 
+
+/** Terrain model v3: a field on a slope is ordinary farmland. No walls, no strips: furrows along the contour and a bank at the lower edge. Soil, aspect and frost still count; erosion is real but cheaper to keep in check. */
+function ordinaryField(base:SiteAssessment,o:V2Options,n:SiteNuance,mean:number,work:'plough'|'hoe'|'terrace-only',kind:TerraceKind|null,cap:TerraceCapability,geoSoil:number):SiteAssessment{
+ const hand=work==='hoe',eros=ordinaryErosion(mean,o.ground?.rockName),soil=r2(ordinarySoilDepth(mean,geoSoil));
+ const rec:TerraceRecord={k:'none',n:1,rise:0,tread:r2(Math.sqrt(base.area)),soil,sun:n.sun,frost:n.risks.frost,wet:n.wetness,eros,alt:Math.max(-5,Math.min(400,r1(o.altitude??0))),slope:r1(Math.min(90,mean))};
+ base.terrace=rec;base.foundation='strips';
+ const slopeWord=mean<HILL_RULES.minHillDeg?'Level field':hand?'Hillside plot (hand-tilled)':mean<8?'Gentle slope field':'Hillside field';
+ if(mean<HILL_RULES.minHillDeg){base.detail=`${base.meanSlopeDeg.toFixed(0)}° slope · soil ${soil.toFixed(1)} m`;if(n.tags.length)base.label=`Level field · ${n.label}`;return base;}
+ base.tier=hand?'steep':mean>=8?'moderate':'level';base.colour=SLOPE_COLOURS[base.tier];
+ const loss=Math.round(eros*1000)/10,words:string[]=[];
+ words.push(`${base.meanSlopeDeg.toFixed(0)}° slope`,hand?'hoed and dug along the contour, small plot':'furrows ploughed along the contour',`earth bank at the lower edge`,`soil ${soil.toFixed(1)} m`);
+ if(hand)words.push(`about ${Math.round((1-handTillYield(mean))*100)}% lower harvest`);
+ if(loss>=.5)words.push(`loses about ${loss}% of its soil a year${gullyRisk(eros)?' — gullies will cut this slope':''}`);
+ if(kind&&mean>=HILL_RULES.hintDeg){const g=terraceGate(kind,cap);words.push(g?`terraces later: ${g.replace(/^.* need /,'needs ')}`:`Terraces available: ${TERRACE_RULES.kinds[kind].word.toLowerCase()} can be added from the field card`);}
+ else if(kind&&mean>=TERRACE_RULES.kinds.bund.from+3)words.push('earth bunds can be added from the field card');
+ base.label=n.tags.length?`${slopeWord} · ${n.label}`:slopeWord;
+ base.detail=words.concat(riskWords(n)).join(' · ');
+ return base;
+}
+
 function assessField(height:(x:number,z:number)=>number,x:number,z:number,w:number,d:number,o:V2Options,n:SiteNuance):SiteAssessment{
  const plot={x,z,w,d},s0=surveySite(height,x,z,w,d),adj=shelfAdjust(n),s=adj?adj(s0):s0,gk=groundKind(o.ground),geoSoil=geoSoilOf(o.ground),cap=o.capability??OPEN_CAPABILITY;
  const mean=s.meanSlopeDeg,kind=terraceKindFor(mean),dir=fieldDownhill(height,plot);
@@ -45,6 +66,14 @@ function assessField(height:(x:number,z:number)=>number,x:number,z:number,w:numb
  const refuse=(why:string):SiteAssessment=>({...base,ok:false,issue:why,label:'Too steep to farm',tier:'severe',colour:SLOPE_COLOURS.severe,detail:why});
  if(mean>TERRACE_RULES.refuseMeanDeg||s.maxStepDeg>TERRACE_RULES.refuseStepDeg)return refuse(`Too steep to farm: a cliff face (${mean.toFixed(0)}° mean slope, ${s.maxStepDeg.toFixed(0)}° step)`);
  if(kind==='stair'&&gk==='rock'&&(o.ground?.soilDepthMeters??1)<=.3)return refuse('Bare rock face: nothing here to hold soil');
+ if(o.model==='v3'){
+  const work=hillWorkFor(mean,w*d);
+  if(work!=='terrace-only'||!kind)return ordinaryField(base,o,n,mean,work,kind,cap,geoSoil);
+  // beyond the hoe limit: only terraced ground can be farmed here, and only a people who can build that
+  const need=kind?terraceGate(kind,cap):null;
+  if(mean<=HILL_RULES.hoeDeg)return{...refuse(`Too steep to plough (${mean.toFixed(0)}°): hand-tilled plots stay under ${HILL_RULES.hoeMaxArea} m² — shrink the plot`),label:'Too steep to plough'};
+  if(need)return{...refuse(`Too steep to farm without terraces (${mean.toFixed(0)}°): ${need}`),label:'Needs terraces',detail:`${mean.toFixed(0)}° slope · ${need}`};
+ }
  const gate=kind?terraceGate(kind,cap):null;
  if(gate)return{...refuse(gate),label:kind?TERRACE_RULES.kinds[kind].word:'Terraces',detail:`${mean.toFixed(0)}° slope · ${gate}`};
  const alt=o.altitude??0,rec:TerraceRecord={k:kind??'none',n:1,rise:0,tread:r2(extentAlong(plot,dir)),soil:r2(terraceSoilDepth(kind,mean,geoSoil)),sun:n.sun,frost:n.risks.frost,wet:n.wetness,eros:erosionPerYear(mean,kind,o.ground?.rockName,true),alt:Math.max(-5,Math.min(400,r1(alt))),slope:r1(Math.min(90,mean))};
@@ -63,6 +92,7 @@ function assessField(height:(x:number,z:number)=>number,x:number,z:number,w:numb
  base.label=n.tags.length?`${K.word} · ${n.label}`:K.word;
  const extras=[...(n.shelf?['natural shelf: less wall to build']:[]),...riskWords(n)];
  base.detail=`${base.meanSlopeDeg.toFixed(0)}° slope · ${L.n} strip${L.n>1?'s':''} ${L.tread.toFixed(1)} m wide, ${L.rise.toFixed(1)} m risers · ${K.detail} · ${goods} · soil ${rec.soil.toFixed(1)} m${cap.mountain?' · mountain builders':''}`+(extras.length?` · ${extras.join(' · ')}`:'');
+ if(o.model==='v3')base.detail=`Beyond ${HILL_RULES.hoeDeg}°: only terraced fields can be farmed here · ${base.detail}`;
  void mountainDiscount;void foundationText;
  return base;
 }
