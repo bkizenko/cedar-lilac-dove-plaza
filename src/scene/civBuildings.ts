@@ -334,6 +334,8 @@ HOUSE.mekhari=g=>{const {w,d,r}=g,W=w*.76*jit(r,.05),D=d*.68,st=range(r,1.5,1.9)
  for(let i=1;i<5;i++)g.B('wall2',[.05,h*.9,.05],[-W*.38+i*W*.152,y+.05,D*.34+.02],0);
  g.B('accent',[.85,1.5,.08],[g.off*.3,y,D*.36+.03],0);for(const s of[-1,1])g.B('accent',[.55,.6,.06],[s*W*.3,y+1.0,D*.35+.03],0);
  saddle(g,W,D,y+h,range(r,1.4,1.7),range(r,.5,.8));
+ // near-only thatch fringe: a shaggy eave skirt hanging below the roof hull so the saddle reads as bundled reed, not a lid
+ P(g,'cylinder','roof',[W*1.02,.3,D*.99],[0,y+h-.22,0],undefined,10,1);
  g.B('wall2',[W+.4,.7,.07],[0,y,D*.5+.5],1);for(const s of[-1,1])pile(g,s*(W*.5+.1),D*.5+.5,y+.9,.05);
  P(g,'box','trim',[.5,st+.7,.08],[g.off*.3+W*.28,.03,D*.5+.9],[-.5,0,0],undefined,1);P(g,'sphere','wall2',[2.6,.5,.85],[-W*.8,0,D*.5+1.3],[0,.3,0],undefined,0);
  return {entry:{x:g.off*.3,z:D*.5+1,width:1}};};
