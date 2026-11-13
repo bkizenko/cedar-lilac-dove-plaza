@@ -84,7 +84,7 @@ export const isHardRock=(g:SiteGround)=>groundKind(g)==='rock';
 /** Any exposed bedrock a tower can be footed on. */
 export const isOutcrop=(g:SiteGround)=>{const k=groundKind(g);return k==='rock'||k==='soft-rock';};
 
-export const COST_RULES={stoneUnitsPerM3:4,woodUnitsPerMetreOfPost:.6,earthSecondsPerM3:.8,wallSecondsPerM3:3,steepSlowdown:1.25} as const;
+export const COST_RULES={stoneUnitsPerM3:4,woodUnitsPerMetreOfPost:.6,earthSecondsPerM3:.5,wallSecondsPerM3:1.5,steepSlowdown:1.25} as const;
 type Bill={wood:number;stone:number;work:number};
 const bill=(wood:number,stone:number,work:number):Bill=>({wood:Math.max(0,Math.ceil(wood-1e-9)),stone:Math.max(0,Math.ceil(stone-1e-9)),work:Math.round(work*10)/10});
 /** Cost of one foundation kind for a footprint w x d with fall F (metres). Geology scales stone and labour. */
@@ -93,8 +93,8 @@ export function foundationBill(kind:FoundationKind,w:number,d:number,fall:number
  if(kind==='none')return bill(0,0,0);
  if(kind==='pad'){const V=A*fall/4,kerbH=fall/2+.15,Vk=L*kerbH*.3;return bill(L/2.5,Vk*R.stoneUnitsPerM3*rockStone*slip,V*R.earthSecondsPerM3*earth*slip+Vk*R.wallSecondsPerM3);}
  if(kind==='terrace'){const V=A*fall/3,Lw=L*1.15,H=fall*.6+.35,T=.45+.12*H,Vw=Lw*H*T;return bill(Lw/3,Vw*R.stoneUnitsPerM3*rockStone*slip,V*R.earthSecondsPerM3*earth*slip+Vw*R.wallSecondsPerM3*slip);}
- if(kind==='stilts'){const n=(Math.ceil(w/2.7)+1)*(Math.ceil(d/2.7)+1),len=fall/2+.9,brace=1+.35*fall;return bill(n*len*R.woodUnitsPerMetreOfPost*1.3*brace*slip,n*.25,n*(1.5+len*.5)*brace*slip);}
- if(kind==='dugout'){const V=A*Math.min(fall+.8,2.4)/2;return bill(6+w/2,w*1.2,V*(.8+2.2*hardness));}
+ if(kind==='stilts'){const n=(Math.ceil(w/2.7)+1)*(Math.ceil(d/2.7)+1),len=fall/2+.9,brace=1+.35*fall;return bill(n*len*R.woodUnitsPerMetreOfPost*1.3*brace*slip,n*.25,n*(1.5+len*.5)*brace*slip*.5);}
+ if(kind==='dugout'){const V=A*Math.min(fall+.8,2.4)/2;return bill(6+w/2,w*1.2,V*(.3+1*hardness));}
  if(kind==='outcrop')return bill(2,A*.1*rockStone,A*.5*(1+hardness));
  const n=Math.max(1,Math.ceil(fall/.7)),Vs=n*L*.5*.4,walled=fall>1.8;
  return bill(0,walled?Vs*R.stoneUnitsPerM3*rockStone*slip:0,A*fall/4*R.earthSecondsPerM3*.8*earth+(walled?Vs*R.wallSecondsPerM3:0));

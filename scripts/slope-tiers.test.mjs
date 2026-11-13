@@ -60,7 +60,7 @@ test('foundations: pad, terrace, stilts, dugout, outcrop each chosen where they 
 });
 test('geology: rock quarries its own terrace stone; loose clay and shale lower the ceiling and raise the bill',()=>{
   assert.equal(groundKind(GRANITE),'rock');assert.equal(groundKind(SAND),'soft-rock');assert.equal(groundKind(SHALE),'unstable');assert.equal(groundKind(null),'plain');
-  const plain=hut(19),rock=hut(19,{ground:GRANITE}),clay=hut(19,{ground:SHALE});
+  const plain=hut(16),rock=hut(16,{ground:GRANITE}),clay=hut(16,{ground:SHALE});
   assert.equal(plain.foundation,'terrace');assert.ok(rock.extraStone<plain.extraStone,'rock is cheaper stone');assert.ok(foundationBill('terrace',5.4,5.2,2.2,'rock').stone<foundationBill('terrace',5.4,5.2,2.2,'plain').stone);
   assert.ok(clay.extraWork>=plain.extraWork&&clay.extraStone>=plain.extraStone);
   assert.equal(hut(13).tier,'moderate');assert.equal(hut(13,{ground:SHALE}).tier,'steep','wet clay slips: a 13 degree slope counts as steep');
