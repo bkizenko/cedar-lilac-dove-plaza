@@ -8,7 +8,8 @@ import {PACKED_FOOD_RULES,packedFoodNourishment,consumePackedFood,withdrawPacked
 import type {PackedFoodCustody,PackedFoodValidation} from './packedFoodCustody';
 
 export const EXPEDITION_PROVISION_RULES={personUnits:24,minimumNourishment:6,villageReserveSeconds:90,maximumUnits:100} as const;
-export const EXPEDITION_FOOD_CATALOGUE={kinds:FOOD_KINDS,nourishment:FOOD_NOURISHMENT,edible:(kind:FoodKind)=>kind!=='grain'&&kind!=='fish'};
+/** Getters, not values: pantry sits in an import cycle, so reading its tables at module load can hit the TDZ. */
+export const EXPEDITION_FOOD_CATALOGUE={get kinds(){return FOOD_KINDS;},get nourishment(){return FOOD_NOURISHMENT;},edible:(kind:FoodKind)=>kind!=='grain'&&kind!=='fish'};
 type Expedition=NonNullable<Unit['expedition']>;
 const view=(e:Expedition)=>({food:e.food,foodUsed:e.foodUsed??0,foodCustody:e.foodCustody});
 export function expeditionProvisionCapacity(u:Unit){return Math.min(EXPEDITION_PROVISION_RULES.maximumUnits,EXPEDITION_PROVISION_RULES.personUnits*(u.haulage==='pack'&&u.packAnimal?packCapacityMultiplier(u):1));}
