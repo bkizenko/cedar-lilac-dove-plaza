@@ -190,6 +190,7 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions?.openingSiteVersion!==undefined&&(![14,15,16,17,18,19,20,21].includes(s.worldgenVersion)||s.worldOptions.openingSiteVersion!==2))fail();
   if(s.worldOptions?.preset!==undefined&&(![20,21].includes(s.worldgenVersion)||!["archipelago","island","continents","pangaea","river-valley","highland","steppe","lakeland"].includes(s.worldOptions.preset)))fail();
   if(s.worldOptions?.mapgenVersion!==undefined&&(![20,21].includes(s.worldgenVersion)||s.worldOptions.mapgenVersion!==1))fail();
+  if(s.worldOptions?.chunkTerrainVersion!==undefined&&(s.worldgenVersion<21||s.worldOptions.chunkTerrainVersion!==1||(s.worldOptions.chunkTerrainScale!==undefined&&!(typeof s.worldOptions.chunkTerrainScale==='number'&&s.worldOptions.chunkTerrainScale>=1&&s.worldOptions.chunkTerrainScale<=64))))fail();
   if(s.worldOptions?.geologyVersion!==undefined&&(s.worldgenVersion!==21||s.worldOptions.geologyVersion!==1))fail();
   if(s.worldOptions?.riverProfileVersion!==undefined&&s.worldOptions.riverProfileVersion!==2)fail();
   if(s.worldOptions?.rulersVersion!==undefined&&s.worldOptions.rulersVersion!==1&&s.worldOptions.rulersVersion!==2)failRulers();

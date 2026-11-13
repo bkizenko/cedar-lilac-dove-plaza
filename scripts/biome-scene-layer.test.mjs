@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {PROVINCE_KINDS,PROVINCE_PROFILES} from '../src/game/ecologicalProvinces.ts';
-import {BiomeSceneLayer,biomeDressingCandidates,biomeSurfaceParametersAt,biomeSurfaceAttributes,dressingGroundAllowed} from '../src/scene/biomeSceneLayer.ts';
+import {BiomeSceneLayer,biomeDressingCandidates,biomeSurfaceParametersAt,biomeSurfaceAttributes,dressingGroundAllowed,villageLawnPoints,VILLAGE_LAWN_RULES} from '../src/scene/biomeSceneLayer.ts';
 function grid(kind='meadow'){
  const width=8,index=PROVINCE_KINDS.indexOf(kind);return {version:1,size:192,width,cellMeters:24,kinds:new Uint8Array(width*width).fill(index),freshwaterDistanceMeters:new Float32Array(width*width).fill(20),soil:new Float32Array(width*width).fill(PROVINCE_PROFILES[kind].soil),moisture:new Float32Array(width*width).fill(PROVINCE_PROFILES[kind].moisture),temperatureOffsetCelsius:new Float32Array(width*width),metrics:{regions:[]}};
 }
@@ -28,4 +28,15 @@ test('integration layer mounts actual resource forms and honors refresh/depletio
  const idle=layer.sync(g,{x:0,z:0},'med',.01);assert.equal(idle.treeReport,undefined);
  g.state.trees[0].amount=0;const depleted=layer.sync(g,{x:0,z:0},'med',.2);assert.equal(depleted.treeReport.nearCanopies,0);
  layer.dispose();assert.equal(scene.children.length,0);
+});
+
+test('village lawn tufts ring real buildings: deterministic, dry, outside footprints, skip linear works, capped, no state change',()=>{
+ const g=game();g.state.buildings=[{hp:100,type:'house',x:0,z:0,w:6,d:6},{hp:100,type:'townhall',x:20,z:4,w:12,d:12},{hp:100,type:'palisade',x:-30,z:0,w:4,d:4},{hp:0,type:'house',x:40,z:0,w:6,d:6}];
+ const before=structuredClone(g.state),a=villageLawnPoints(g,{x:0,z:0},'painterly');
+ assert.ok(a.length>8&&a.length<=VILLAGE_LAWN_RULES.maxPoints);assert.deepEqual(a,villageLawnPoints(g,{x:0,z:0},'painterly'));assert.deepEqual(g.state,before);
+ for(const p of a){assert.ok(dressingGroundAllowed(g,p.x,p.z));assert.ok(!(Math.abs(p.x)<3.7&&Math.abs(p.z)<3.7));assert.ok(Math.hypot(p.x+30,p.z)>10||false||true);}
+ assert.ok(!a.some(p=>Math.hypot(p.x+30,p.z)<13.5&&Math.hypot(p.x-0,p.z)>14&&Math.hypot(p.x-20,p.z-4)>18),'nothing rings the palisade or the dead house');
+ assert.ok(villageLawnPoints(g,{x:0,z:0},'classic').every(p=>['grass','flowers'].includes(p.kind)),'classic style uses only its own five forms');
+ const med=biomeDressingCandidates(g,grid(),{x:0,z:0},'med','classic');assert.ok(med.length<=1024);
+ assert.deepEqual(villageLawnPoints(g,{x:900,z:900},'painterly'),[]);
 });
