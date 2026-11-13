@@ -1,18 +1,26 @@
+import {useState} from 'react';
+import {useLifecycleAction} from './useLifecycleAction';
+import type {HusbandryCommand} from '../game/husbandryCommands';
 import {penBeddingReport} from '../game/penBedding';
 import {herdRules} from '../game/animalSpecies';
 import {insidePen} from '../game/penGeometry';
 import {personName} from '../game/people';
-import {requestPackPasture,cancelPackPasture} from '../game/packPasture';
 import {PACK_HARNESS_RULES} from '../game/packAnimalState';
-import{penWaterReport,releaseHusbandryKeeper}from'../game/penWater';
-import {searchForWildGoats, visibleGoatsForPen, cancelGoatSearch, goatSearchOrderLabel} from '../game/animalOrders';
+import{penWaterReport}from'../game/penWater';
+import {visibleGoatsForPen, goatSearchOrderLabel} from '../game/animalOrders';
 import {penPastureReport} from '../game/penPasture';
 import type {Engine} from '../game/engine';
-import {assignHusbandry,beginHerdTaming,HERD,penAnimals,penPlacesOccupied,penPlacesReserved} from '../game/husbandry';
+import {HERD,penAnimals,penPlacesOccupied,penPlacesReserved} from '../game/husbandry';
 import {calendar} from '../game/settlement';
 import {animalProcessingEnabled} from '../game/production';
 export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
- const g=engine.game,animals=penAnimals(g,pen),b=g.state.buildings.find(b=>b.id===pen);
+ return <HusbandryControlsInner key={`${engine.dispatchEpoch}:${pen}`} engine={engine} pen={pen}/>;
+}
+function HusbandryControlsInner({engine,pen}:{engine:Engine;pen:number}) {
+ const action=useLifecycleAction(engine),[feedback,setFeedback]=useState(''),epoch=engine.dispatchEpoch;
+ const g=engine.game,b=g.state.buildings.find(b=>b.id===pen&&b.team===0&&b.type==='pen'&&g.finished(b));
+ if(!b)return null;
+ const animals=penAnimals(g,pen);
  const away=(g.state.livestock??[]).filter(a=>a.pen===pen&&a.hp>0&&a.ledBy!==undefined).length;
  const water=b?penWaterReport(g,b):null,bedding=b?penBeddingReport(g,b):null;
  const report=b?penPastureReport(g,b):null,capacity=report?.eligibleCapacity??0;
@@ -31,15 +39,15 @@ export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
  const reserved=penPlacesReserved(g,pen);
  const herdSummary=(['goat','sheep','horse','cattle'] as const).map(species=>({species,count:animals.filter(a=>a.species===species).length})).filter(a=>a.count).map(a=>`${a.count} ${a.species==='sheep'||a.species==='cattle'?a.species:a.species+'s'}`).join(' · ');
  const pendingReturns=g.state.units.filter(u=>u.hp>0&&u.team===b?.team&&u.packPastureOrder?.pen===pen);
- const returnHandlers=g.state.units.filter(u=>u.hp>0&&u.team===b?.team&&u.haulage==='pack'&&u.packAnimal&&u.packAnimal.hp>0&&!u.packPastureOrder).sort((a,c)=>Math.hypot(a.x-(b?.x??0),a.z-(b?.z??0))-Math.hypot(c.x-(b?.x??0),c.z-(b?.z??0)));
+ const returnHandlers=g.state.units.filter(u=>u.hp>0&&u.team===b?.team&&u.type==='worker'&&!u.prisoner&&u.haulage==='pack'&&u.packAnimal&&u.packAnimal.hp>0&&!u.packPastureOrder).sort((a,c)=>Math.hypot(a.x-(b?.x??0),a.z-(b?.z??0))-Math.hypot(c.x-(b?.x??0),c.z-(b?.z??0)));
  const packAction=(species:'goat'|'horse'|'cattle',label:string,detail:string)=>{
   const paused=g.state.units.some(u=>u.hp>0&&u.husbandryWork?.pen===pen&&u.husbandryWork.action==='pack'&&u.husbandryWork.paused&&speciesOf(u.husbandryWork.animal!)===species);
   const animal=animals.filter(a=>a.species===species&&g.state.time-a.born>=herdRules(a.species).maturity&&!!b&&insidePen(b,a.x,a.z)&&!g.state.units.some(u=>u.hp>0&&u.husbandryWork?.animal===a.id)).sort((a,c)=>Number(a.sex==='female')-Number(c.sex==='female'))[0];
   return {disabled:!paused&&!animal,label:paused?(species==='goat'?'Resume pack harness':species==='horse'?'Resume horse training':'Resume cattle training'):animal?.packHarness?'Fit existing harness':label,detail:paused?'Current training progress retained':animal?.packHarness?`${PACK_HARNESS_RULES.refitSeconds}s · retained ${species} harness · no new logs`:detail};
  };
  const goatPack=packAction('goat','Fit pack harness','2 logs · uses one adult goat'),horsePack=packAction('horse','Train pack horse','Reachable stable · 6 logs · 60s · uses one adult horse'),cattlePack=packAction('cattle','Train draft cattle','Reachable stable · 8 logs · 90s · uses one adult');
- const run=(fn:()=>unknown)=>{fn();engine.pushHud();};
- return <div className="craft-group"><div className="craft-options">
+ const run=(command:Omit<HusbandryCommand,'kind'|'penId'>)=>{if(engine.disposed||engine.dispatchEpoch!==epoch)return;void action.run(()=>engine.dispatch({kind:'husbandry-order',penId:pen,...command}),reply=>{if(reply.epoch===epoch&&engine.dispatchEpoch===epoch)setFeedback(reply.reason);});};
+ return <div className="craft-group"><fieldset className="craft-options" disabled={action.busy} style={{border:0,margin:0,padding:0,minWidth:0}}>
   <strong>{animals.length} animals · {penPlacesOccupied(g,pen)}/{capacity} pasture places{herdSummary?` · ${herdSummary}`:''}{taming?` · ${taming} coming home`:''}{away?` · ${away} away (places reserved)`:''}</strong>
   <p>{female} female · {animals.length-female} male · {kids} young</p>
   <p>Usable pasture {Math.round(report?.usableAreaSquareMeters||0)} m² · Grass {Math.round((b?.pasture?.condition??1)*100)}%</p>
@@ -49,30 +57,30 @@ export function HusbandryControls({engine,pen}:{engine:Engine;pen:number}) {
   <p>Feed need {((report?.demandPerSecond||0)*60).toFixed(1)} / min · Pasture growth {((report?.regrowthPerSecond||0)*60).toFixed(1)} / min</p>
   {report&&capacity<report.housingCapacity&&<p>Wet or steep ground limits new animals. Existing animals stay in your herd.</p>}
   <p>{report?.keepers?`${report.keepers}/${report.keepersNeeded} keepers assigned`:'No keeper assigned'}{calendar(g).phase===3?' · Winter needs stored plant food':''}</p>
-  {pendingReturns.length>0&&<div role="status"><p>{pendingReturns.length} working {pendingReturns.length===1?'animal returning':'animals returning'}</p><ul className="boat-passengers">{pendingReturns.map(u=><li key={u.id}>{personName(u)} · {u.packPastureOrder?.reason||(u.packPastureOrder?.phase==='unloading'?'Delivering carried supplies':u.packPastureOrder?.phase==='returning'?'Leading animal to pasture':'Waiting for current work')}<button type="button" onClick={()=>run(()=>cancelPackPasture(g,u))}>Cancel return · {personName(u)}</button></li>)}</ul></div>}
+  {pendingReturns.length>0&&<div role="status"><p>{pendingReturns.length} working {pendingReturns.length===1?'animal returning':'animals returning'}</p><ul className="boat-passengers">{pendingReturns.map(u=><li key={u.id}>{personName(u)} · {u.packPastureOrder?.reason||(u.packPastureOrder?.phase==='unloading'?'Delivering carried supplies':u.packPastureOrder?.phase==='returning'?'Leading animal to pasture':'Waiting for current work')}<button type="button" onClick={()=>run({action:'cancel-return',unitId:u.id})}>Cancel return · {personName(u)}</button></li>)}</ul></div>}
   <div className="boat-actions">
-   <button type="button" disabled={!returnHandlers.length} onClick={()=>run(()=>{const result=requestPackPasture(g,pen,returnHandlers[0]?.id);if(!result.accepted)g.banner(result.reason,4);})}>Return working animal<span>Nearest handler · current work and carried supplies come first</span></button>
-   <button type="button" disabled={searchActive} onClick={()=>run(()=>searchForWildGoats(g,pen).accepted)}>
+   <button type="button" disabled={!returnHandlers.length} onClick={()=>run({action:'return-pack',unitId:returnHandlers[0]?.id})}>Return working animal<span>Nearest handler · current work and carried supplies come first</span></button>
+   <button type="button" disabled={searchActive} onClick={()=>run({action:'search'})}>
     {searchActive?'Goat search queued':'Search for goats'}
     <span>{known?`${known} visible within reach`:`Hills and woodland within ${HERD.searchRadiusMeters} m`}</span>
    </button>
-   {searchActive&&<button type="button" onClick={()=>run(()=>cancelGoatSearch(g,pen))}>Cancel search</button>}
+   {searchActive&&<button type="button" onClick={()=>run({action:'cancel-search'})}>Cancel search</button>}
    {searchStatus&&<span role="status">{searchStatus}</span>}
-   <button type="button" disabled={!paused&&penPlacesOccupied(g,pen)+reserved>=capacity} onClick={()=>run(()=>beginHerdTaming(g,pen))}>{paused?'Resume capture':'Capture goat'}<span>{paused?'Paid progress preserved':`${HERD.tamingFood} food · ${HERD.tamingSeconds}s at the goat, plus travel`}</span></button>
-   <button type="button" disabled={!pausedSheep&&penPlacesOccupied(g,pen)+reserved>=capacity} onClick={()=>run(()=>beginHerdTaming(g,pen,undefined,'sheep'))}>{pausedSheep?'Resume sheep capture':'Capture sheep'}<span>6 food · approach a discovered wild sheep</span></button>
-   <button type="button" disabled={!pausedHorse&&penPlacesOccupied(g,pen)+reserved+3>capacity} onClick={()=>run(()=>beginHerdTaming(g,pen,undefined,'horse'))}>{pausedHorse?'Resume horse capture':'Capture horse'}<span>12 food · 120s · discovered wild horse · 3 pasture places</span></button>
-   <button type="button" disabled={!pausedCattle&&penPlacesOccupied(g,pen)+reserved+4>capacity} onClick={()=>run(()=>beginHerdTaming(g,pen,undefined,'cattle'))}>{pausedCattle?'Resume cattle capture':'Capture cattle'}<span>18 food · 150s · discovered wild cattle · 4 pasture places</span></button>
-   <button type="button" disabled={!pausedShearer&&!animals.some(a=>a.species==='sheep'&&(a.fleece?.units||0)>=1&&g.state.time-a.born>=herdRules(a.species).maturity)} onClick={()=>run(()=>assignHusbandry(g,pen,'shear'))}>{pausedShearer?'Resume fleece delivery':'Clip sheep fleece'}<span>Raw fleece must be carried, washed, spun or felted, then sewn.</span></button>
-   <button type="button" disabled={!pausedKeeper&&(report?.keepers||0)>=(report?.keepersNeeded||1)} onClick={()=>run(()=>assignHusbandry(g,pen))}>{pausedKeeper?'Resume keeper':keeper?'Assign another keeper':'Assign keeper'}</button>
-   <button type="button" disabled={goatPack.disabled} onClick={()=>run(()=>assignHusbandry(g,pen,'pack','goat'))}>{goatPack.label}<span>{goatPack.detail}</span></button>
-   <button type="button" disabled={horsePack.disabled} onClick={()=>run(()=>assignHusbandry(g,pen,'pack','horse'))}>{horsePack.label}<span>{horsePack.detail}</span></button>
-   <button type="button" disabled={cattlePack.disabled} onClick={()=>run(()=>assignHusbandry(g,pen,'pack','cattle'))}>{cattlePack.label}<span>{cattlePack.detail}</span></button>
-   <button type="button" disabled={!animals.some(a=>g.state.time-a.born>=herdRules(a.species).maturity)} onClick={()=>run(()=>assignHusbandry(g,pen,'slaughter'))}>Slaughter one<span>{animalProcessingEnabled(g,0)?'Meat, one hide and two bones carried to stores':'Meat carried to stores'}</span></button>
-   {(keeper||pausedKeeper)&&<button type="button" onClick={()=>run(()=>{releaseHusbandryKeeper(g,(keeper||pausedKeeper)!);})}>Release keeper</button>}
+   <button type="button" disabled={!paused&&penPlacesOccupied(g,pen)+reserved>=capacity} onClick={()=>run({action:'capture',species:'goat'})}>{paused?'Resume capture':'Capture goat'}<span>{paused?'Paid progress preserved':`${HERD.tamingFood} food · ${HERD.tamingSeconds}s at the goat, plus travel`}</span></button>
+   <button type="button" disabled={!pausedSheep&&penPlacesOccupied(g,pen)+reserved>=capacity} onClick={()=>run({action:'capture',species:'sheep'})}>{pausedSheep?'Resume sheep capture':'Capture sheep'}<span>6 food · approach a discovered wild sheep</span></button>
+   <button type="button" disabled={!pausedHorse&&penPlacesOccupied(g,pen)+reserved+3>capacity} onClick={()=>run({action:'capture',species:'horse'})}>{pausedHorse?'Resume horse capture':'Capture horse'}<span>12 food · 120s · discovered wild horse · 3 pasture places</span></button>
+   <button type="button" disabled={!pausedCattle&&penPlacesOccupied(g,pen)+reserved+4>capacity} onClick={()=>run({action:'capture',species:'cattle'})}>{pausedCattle?'Resume cattle capture':'Capture cattle'}<span>18 food · 150s · discovered wild cattle · 4 pasture places</span></button>
+   <button type="button" disabled={!pausedShearer&&!animals.some(a=>a.species==='sheep'&&(a.fleece?.units||0)>=1&&g.state.time-a.born>=herdRules(a.species).maturity)} onClick={()=>run({action:'shear'})}>{pausedShearer?'Resume fleece delivery':'Clip sheep fleece'}<span>Raw fleece must be carried, washed, spun or felted, then sewn.</span></button>
+   <button type="button" disabled={!pausedKeeper&&(report?.keepers||0)>=(report?.keepersNeeded||1)} onClick={()=>run({action:'care'})}>{pausedKeeper?'Resume keeper':keeper?'Assign another keeper':'Assign keeper'}</button>
+   <button type="button" disabled={goatPack.disabled} onClick={()=>run({action:'pack',species:'goat'})}>{goatPack.label}<span>{goatPack.detail}</span></button>
+   <button type="button" disabled={horsePack.disabled} onClick={()=>run({action:'pack',species:'horse'})}>{horsePack.label}<span>{horsePack.detail}</span></button>
+   <button type="button" disabled={cattlePack.disabled} onClick={()=>run({action:'pack',species:'cattle'})}>{cattlePack.label}<span>{cattlePack.detail}</span></button>
+   <button type="button" disabled={!animals.some(a=>g.state.time-a.born>=herdRules(a.species).maturity)} onClick={()=>run({action:'slaughter'})}>Slaughter one<span>{animalProcessingEnabled(g,0)?'Meat, one hide and two bones carried to stores':'Meat carried to stores'}</span></button>
+   {(keeper||pausedKeeper)&&<button type="button" onClick={()=>run({action:'release-keeper',unitId:(keeper||pausedKeeper)!.id})}>Release keeper</button>}
   </div>
   <details><summary>Herd care</summary><p>Keep a male and female of the same species to breed. Sheep grow fleece only with pasture/feed, drinking water and keeper care. Fed, watered goat and cattle mothers produce milk after giving birth. A keeper brings plant food when pasture is depleted or winter comes, and carries milk home. Grass is a finite stock that regrows from usable ground, soil and seasonal moisture. More animals need more keeper trips. Keepers carry real drinking water from communal stores. Hungry or thirsty animals cannot breed or make milk; prolonged shortages harm health.</p>
    <p>Measured intake · Grazed {(b?.pasture?.grazedFood||0).toFixed(1)} · Feed delivered {(b?.pasture?.feedDelivered||0).toFixed(1)} · Feed eaten {(b?.pasture?.feedConsumed||0).toFixed(1)}</p>
    <ul className="boat-passengers">{animals.map(a=><li key={a.id}>{a.species==='cattle'?(g.state.time-a.born<herdRules(a.species).maturity?'Calf':a.sex==='female'?'Cow':'Bull'):a.species==='horse'?(g.state.time-a.born<herdRules(a.species).maturity?'Foal':a.sex==='female'?'Mare':'Stallion'):a.species==='sheep'?(g.state.time-a.born<herdRules(a.species).maturity?'Lamb':a.sex==='female'?'Ewe':'Ram'):(g.state.time-a.born<herdRules(a.species).maturity?'Kid':a.sex==='female'?'Doe':'Buck')}{a.species==='sheep'&&` · Fleece ${(a.fleece?.units||0).toFixed(1)} / 4`} · Hunger {Math.round(a.hunger)}%{water?.enabled?` · Thirst ${(a.thirstSeconds??0).toFixed(0)} s`:""} · Health {Math.round(a.hp/a.maxHp*100)}%{a.pregnancy?` · Gestation ${Math.floor(a.pregnancy/herdRules(a.species).gestation*100)}%`:''}</li>)}</ul>
   </details>
- </div></div>;
+ </fieldset>{(feedback||action.error)&&<p role="status">{action.error||feedback}</p>}</div>;
 }

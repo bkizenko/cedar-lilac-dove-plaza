@@ -1,3 +1,4 @@
+import {withdrawExpeditionFood} from './expeditionProvisions';
 import{penBeddingWorkAI,penNeedsBedding,usePenBedding,reconcilePenBedding,returnPenBeddingLoad}from'./penBedding';
 import {herdRules,isDraftSpecies} from './animalSpecies';
 import {packAnimalFrom,PACK_HARNESS_RULES} from './packAnimalState';
@@ -11,7 +12,7 @@ import type {Building,Livestock,Unit} from './types';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent,calendar} from './settlement';
 import {carryingCapacity} from './haulage';
-import {foodInventory,receiveFood} from './pantry';
+import {FOOD_KINDS,foodInventory,receiveFood,takeFoodLot} from './pantry';
 import {carcassAvailable,CARCASS_MEAT} from './hunting';
 import {animalProcessingEnabled,deliverProductionCargo,harvestAnimalMaterials} from './production';
 export const HERD={capacity:8,tamingFood:6,tamingSeconds:60,searchRadiusMeters:220,maturity:300,gestation:240,lactation:900};
@@ -63,7 +64,9 @@ export function beginHerdTaming(g:Game,penId:number,unitId?:number,species:'goat
   const rules=herdRules(species);
   const searchPack=u.goatSearchPen===penId&&u.expedition?u.expedition:undefined;
   if((searchPack?searchPack.food:g.tribe(0).food)<rules.tamingFood){g.banner(`Bring ${rules.tamingFood} food for taming`,4);return false;}
-  g.interruptMission(u);if(searchPack)searchPack.food-=rules.tamingFood;else g.tribe(0).food-=rules.tamingFood;
+  if(searchPack){if(!withdrawExpeditionFood(u,rules.tamingFood))return false;}
+  else{const stock=foodInventory(g.tribe(0));let need=rules.tamingFood;for(const kind of FOOD_KINDS){const n=Math.min(stock[kind],need);if(n>0){takeFoodLot(g,0,kind,n);need-=n;}if(need<1e-8)break;}}
+  g.interruptMission(u);
   u.tamingWork={animal:animal.id,pen:penId,progress:0};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();
   g.banner(`A handler is approaching a wild ${species}, then will lead it to the pen`,4);return true;
  }
