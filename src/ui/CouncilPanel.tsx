@@ -2,7 +2,7 @@ import {useActionFeedback,FeedbackList} from './council/useActionFeedback';
 import type {Engine} from '../game/engine';
 import {useOwnerReadModels} from './useOwnerReadModels';
 import {CouncilPanelClassic} from './council/CouncilPanelClassic';
-import {HandoverCard,FameFeed,NeighbourNews,FactionsStrip,GloryBars,Card} from './council/CouncilParts';
+import {PartiesCard,HandoverCard,FameFeed,NeighbourNews,FactionsStrip,GloryBars,Card} from './council/CouncilParts';
 import {CapitulationTerms} from './council/CapitulationTerms';
 import {DiplomacySheet} from './council/DiplomacySheet';
 import {useCouncilLayout} from './council/councilLayout';
@@ -35,6 +35,7 @@ export function CouncilPanel({engine}:{engine:Engine}){
   <NeighbourNews news={c.news??[]} nameOf={t=>c.neighbours.find(n=>n.team===t)?.name??'A neighbour'}/>
   {c.expansion&&<Card label="Expansion" title={MODE_LABEL[c.expansion.mode]??c.expansion.mode}>
    {c.expansion.why.length>0?<p className="text-parchment-dim">Because {c.expansion.why.join('; ')}.</p>:<p className="text-parchment-dim">Nothing presses the people to leave.</p>}</Card>}
+  {!!c.parties?.length&&<PartiesCard parties={c.parties}/>}
   <DiplomacySheet neighbours={c.neighbours} onAct={(t,k)=>void marry(t,k)}/>
   <FeedbackList items={fb.items}/>
  </section>;
