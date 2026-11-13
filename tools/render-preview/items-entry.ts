@@ -11,6 +11,10 @@ type Tile={req:ItemReq;tiltDeg?:number;az?:number;el?:number;ground?:boolean;zoo
 type Spec={width:number;height:number;cols:number;tiles:Tile[];bg?:string};
 const W=window as unknown as {renderItems:(s:Spec)=>Promise<unknown>;itemIds:()=>string[]};
 W.itemIds=()=>[...ITEM_IDS];
+(W as unknown as {dbgProg:(r:ItemReq)=>unknown}).dbgProg=(r)=>{const rd=new THREE.WebGLRenderer(),sc=new THREE.Scene(),g=itemGeometry(r)!,cam=new THREE.PerspectiveCamera(30,1,.1,10);sc.add(new THREE.Mesh(g,itemMaterial()));sc.add(new THREE.AmbientLight());cam.position.set(0,0,3);rd.render(sc,cam);
+ const out:unknown[]=[],gl=rd.getContext();for(const p of rd.info.programs??[]){const pr=(p as unknown as {program:WebGLProgram}).program,n=gl.getProgramParameter(pr,gl.ACTIVE_ATTRIBUTES);for(let i=0;i<n;i++){const a=gl.getActiveAttrib(pr,i)!;out.push([a.name,a.type,gl.getAttribLocation(pr,a.name)]);}}
+ return out;};
+(W as unknown as {dbgGeo:(r:ItemReq)=>unknown}).dbgGeo=(r)=>{const g=itemGeometry(r)!,a=g.getAttribute('aDec'),m=buildItem(r)!;return {n:a.count,first:[...(a.array as Float32Array).slice(0,8)],meshFirst:[...(m.decals as Float32Array).slice(0,8)],attrs:Object.keys(g.attributes)};};
 (W as unknown as {itemDefs:()=>unknown}).itemDefs=()=>ITEM_IDS.map(id=>{const d=itemDef(id)!;return {id,name:d.name,category:d.category,frame:d.frame};});
 (W as unknown as {skinIds:()=>string[]}).skinIds=()=>listSkins().filter(x=>x.id!=='neutral').map(x=>x.id);
 W.renderItems=async(S:Spec)=>{
