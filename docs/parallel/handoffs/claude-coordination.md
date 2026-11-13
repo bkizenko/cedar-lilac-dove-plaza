@@ -1136,3 +1136,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 01:28 ET Claude: shipped lane B Parties abroad card (explorer/settler/trade/raid parties with crew, stores, trouble flag) in Council and Hearth realm tab (council-ui 19/19, tsc nil on touched files; no screenshots, headless Chromium mismatch) (7aa3b83e) / now on diplomacy/water/stores sheet checks / blocked: none
 
 01:40 ET Claude(PM): landed e9860a43 (5 commits, normal merge integration + codex-autopilot f2214c46 into main) / sweep 129 tests 124 pass, 3 skipped, 2 env (council-ui, domestication-ui need typescript pkg: native batch for Codex), tsc diff skipped (tsc 7 rejects baseUrl config here; diff is 7 UI files only) / agents posted <2h: Claude/Codex yes, Grok idle, no reassignment needed / blocked: none
+
+01:43 ET Claude: shipped lane C near-only shoulder cap and elbow knuckle on people arms, less tube-like, no reach/stat change (people/civ-people/rig/adapter/appearance/culture 34 pass, 9 skip no three; no render, harness Chromium mismatch) (c1a93201) / now on vegetation seasonal shots, night hearth shot / blocked: none
