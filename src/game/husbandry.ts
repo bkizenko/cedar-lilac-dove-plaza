@@ -1,3 +1,4 @@
+import {domesticationReady,beginDomesticationTrial,practiceDomestication,finishDomesticationTrial,noteDomesticationArrival,reconcileDomestication,DOMESTICATION_RULES} from './domestication';
 import {withdrawExpeditionFood} from './expeditionProvisions';
 import{penBeddingWorkAI,penNeedsBedding,usePenBedding,reconcilePenBedding,returnPenBeddingLoad}from'./penBedding';
 import {herdRules,isDraftSpecies} from './animalSpecies';
@@ -50,13 +51,14 @@ export function beginHerdTaming(g:Game,penId:number,unitId?:number,species:'goat
  const returningOwned=paused&&(g.state.livestock||[]).some(a=>a.id===paused.tamingWork!.animal&&a.hp>0);
  if(!returningOwned&&(g.state.livestock?.length||0)>=PEN_RULES.maximumAnimalsTotal){g.banner('Care for the existing herds before capturing more animals',4);return false;}
  if(paused){paused.tamingWork!.paused=false;paused.order='hold';return true;}
+ const q=pen.goatSearch;if(species==='goat'&&q&&!['complete','exhausted'].includes(q.state)&&(q.paidTrials||0)>=DOMESTICATION_RULES.maximumSearchTrials){g.banner('Two paid taming attempts used — start a new search to try again',4);return false;}
  const reserved=penPlacesReserved(g,penId);
  if(penPlacesOccupied(g,penId)+reserved+herdRules(species).places>surveyPenPasture(g,pen).eligibleCapacity){g.banner('This enclosure has no unreserved usable places — enlarge it or restore dry pasture',4);return false;}
  for(const u of [...g.state.units].sort((a,b)=>Number(b.selected)-Number(a.selected))){
   if(unitId!==undefined&&u.id!==unitId||!available(g,u,'tamingWork',penId))continue;
   if(u.tamingWork?.pen===penId&&speciesOf(u.tamingWork.animal)===species&&u.tamingWork.paused){u.tamingWork.paused=false;u.order='hold';return true;}
   if(u.tamingWork)continue;
-  const animal=g.state.wildlife.filter(a=>a.hp>0&&a.species===species&&g.visibleAt(a.x,a.z)&&
+  const animal=g.state.wildlife.filter(a=>a.hp>0&&a.species===species&&domesticationReady(g,a)&&g.visibleAt(a.x,a.z)&&
    Math.hypot(a.x-pen.x,a.z-pen.z)<HERD.searchRadiusMeters&&!g.state.units.some(p=>p.hp>0&&p.tamingWork?.animal===a.id)&&
    g.workBoard.connected(g,u.x,u.z,a.x,a.z)&&g.workBoard.connected(g,a.x,a.z,pen.x,pen.z))
    .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
@@ -67,7 +69,8 @@ export function beginHerdTaming(g:Game,penId:number,unitId?:number,species:'goat
   if(searchPack){if(!withdrawExpeditionFood(u,rules.tamingFood))return false;}
   else{const stock=foodInventory(g.tribe(0));let need=rules.tamingFood;for(const kind of FOOD_KINDS){const n=Math.min(stock[kind],need);if(n>0){takeFoodLot(g,0,kind,n);need-=n;}if(need<1e-8)break;}}
   g.interruptMission(u);
-  u.tamingWork={animal:animal.id,pen:penId,progress:0};u.order='hold';u.node=null;u.target=null;g.workBoard.reset();
+  u.tamingWork={animal:animal.id,pen:penId,progress:0,trial:beginDomesticationTrial(g,u,animal)};
+  if(species==='goat'&&q&&!['complete','exhausted'].includes(q.state))q.paidTrials=(q.paidTrials||0)+1;u.order='hold';u.node=null;u.target=null;g.workBoard.reset();
   g.banner(`A handler is approaching a wild ${species}, then will lead it to the pen`,4);return true;
  }
  g.banner(`Find a living wild ${species} and a free adult with a clear route to this pen`,5);return false;
@@ -119,9 +122,18 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
    u.workReason=`Approaching a ${wild.species} with feed`;
    if(Math.hypot(u.x-wild.x,u.z-wild.z)>2.4){u.tx=wild.x;u.tz=wild.z;g.steer(u,dt);return true;}
    const rules=herdRules(wild.species);
-   wild.vx=wild.vz=0;tame.progress=Math.min(rules.tamingSeconds,tame.progress+dt);u.workReason=`Taming a herd ${wild.species} · ${Math.floor(tame.progress/rules.tamingSeconds*100)}%`;
+   wild.vx=wild.vz=0;const before=tame.progress;tame.progress=Math.min(rules.tamingSeconds,tame.progress+dt);
+   if(tame.trial)practiceDomestication(u,tame.trial,tame.progress-before);u.workReason=`Taming a herd ${wild.species} · ${Math.floor(tame.progress/rules.tamingSeconds*100)}%`;
    if(tame.progress<rules.tamingSeconds)return true;
    if(penPlacesOccupied(g,pen.id)+penPlacesReserved(g,pen.id,u.id)+rules.places>surveyPenPasture(g,pen).eligibleCapacity){tame.paused=true;u.order='idle';u.workReason='Pen full — taming paused';return true;}
+   if(tame.trial&&tame.trial.roll>=tame.trial.chance){
+    finishDomesticationTrial(g,u,'refused');
+    const q=pen.goatSearch;if(q){delete q.animal;q.returningHandlerId=u.id;q.state=(q.paidTrials||0)>=DOMESTICATION_RULES.maximumSearchTrials?'exhausted':'waiting';q.reason='refused';q.nextAttemptAt=g.state.time+5;}
+    finish(g,u);delete u.goatSearchPen;u.recalled=true;u.order='return';
+    u.workReason=`The ${wild.species} refused handling — bait spent; returning with remaining supplies`;
+    g.banner(u.workReason,5);return true;
+   }
+   finishDomesticationTrial(g,u,'success');
    a={...wild,adultScale:wild.scale,team:u.team,pen:pen.id,sex:wild.id%2?'female':'male',born:g.state.time-rules.maturity,tamedAt:g.state.time,hunger:5,milk:0,pregnancy:0};
    (g.state.livestock??=[]).push(a);
    // Existing hunters may still hold a reference to the former wild object.
@@ -137,7 +149,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
   const target=tame.penGateReached||insidePen(pen,a.x,a.z)?pen:gate;
   u.tx=target.x;u.tz=target.z;g.steer(u,dt);animalStep(g,a,u,u.x,u.z,dt);
   if(insidePen(pen,a.x,a.z,.25)){
-   finish(g,u);if(!u.expedition&&!keeper(g,pen.id)){u.husbandryWork={pen:pen.id,action:'care',phase:'pen',progress:0};u.order='hold';}
+   noteDomesticationArrival(g,u);finish(g,u);if(!u.expedition&&!keeper(g,pen.id)){u.husbandryWork={pen:pen.id,action:'care',phase:'pen',progress:0};u.order='hold';}
    g.banner(a.species==='cattle'?'Cattle brought home. Mothers need birth, feed, water and keeper care for milk; train draft work at a stable.':a.species==='horse'?'Horse brought home. Keep pasture, feed and water available; train packs at a stable.':a.species==='sheep'?'Sheep brought home. Keep it fed, watered and tended to grow fleece.':'Goat brought home. A fed breeding pair can raise kids; mothers provide milk.',5);
   }
   return true;
@@ -223,6 +235,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
  return true;
 }
 export function tickHusbandry(g:Game,dt:number) {
+ reconcileDomestication(g);
  reconcilePenBedding(g);
  reconcilePenWater(g);
  if(dt<=0)return;
