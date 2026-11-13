@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {SEGS} from '../src/game/constants.ts';
 import {knownSettlementSite} from '../src/game/barter.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
-import {TRADE_SELECTABLE_KINDS,proposeTradeOffer,answerTradeOffer,reviewTradeNeeds,tickTradeNeeds,tradeStock,tradeSpread,tradeReviewSeconds,marketCount,tradeNeedsDiagnostics,TRADE_NEEDS_RULES,TRADE_GOODS} from '../src/game/tradeNeeds.ts';
+import {TRADE_SELECTABLE_KINDS,proposeTradeOffer,answerTradeOffer,reviewTradeNeeds,tickTradeNeeds,tradeNeedsAI,tradeStock,tradeSpread,tradeReviewSeconds,marketCount,tradeNeedsDiagnostics,TRADE_NEEDS_RULES,TRADE_GOODS} from '../src/game/tradeNeeds.ts';
 
 function ground(g){const size=g.world.size;for(let z=0;z<=SEGS;z++)for(let x=0;x<=SEGS;x++)g.world.heights[z*(SEGS+1)+x]=4;g.world.rivers=[];g.world.features=[];g.rebuildWalk();for(const u of g.state.units)u.y=g.height(u.x,u.z);for(const b of g.state.buildings)b.y=g.height(b.x,b.z);void size;const clock=g.clockState.bind(g);g.clockState=()=>({...clock(),period:'Day'});}
 /** Flat dry world; halls 70 m apart; each rival has 10 adults and mutually observed halls. */
@@ -87,7 +87,7 @@ test('armed caravans: escort count and arming scale with observed risk and trust
  const raided=run(g=>{for(let i=0;i<3;i++){const r=g.spawnUnit('spearman',20+i,10,3);r.team=3;}for(let i=0;i<4;i++){g.state.tradeNeeds??={version:1,teams:[],offers:[],cooldowns:[],receipts:[]};}});
  const o2=raided.o;assert.ok(o2.risk>o1.risk,`${o2.risk} > ${o1.risk}`);assert.ok(o2.escortsWanted>=1);
  // Escorts walk to the cache and arm from real stock; the offer starts only once every escort is ready.
- let g=raided.g,o=o2;const spears=g.tribe(1).spears+g.tribe(1).bows;const end=g.state.time+300;while(g.state.time<end&&o.phase==='loading'){g.state.paused=false;g.step(.1);}
+ let g=raided.g,o=o2;const spears=g.tribe(1).spears+g.tribe(1).bows;const end=g.state.time+300;while(g.state.time<end&&o.phase==='loading'){g.state.time+=.1;for(const id of [...o.carriers,...o.escorts]){const u=g.state.units.find(u=>u.id===id);if(u)tradeNeedsAI(g,u,.1);}tickTradeNeeds(g,.1);}
  assert.equal(o.phase,'outbound',o.reason);assert.ok(o.escortsArmed>=1&&o.escortsArmed<=o.escortsWanted);assert.ok(g.tribe(1).spears+g.tribe(1).bows<spears,'weapons loaned from real stock');
  // More trust lowers the escort wish: a completed history raises trust.
  const trusted=run(g=>{g.state.tradeNeeds={version:1,teams:[],offers:[],cooldowns:[],receipts:[]};for(let i=0;i<4;i++)g.state.tradeNeeds.offers.push({id:9000+i,from:1,to:2,give:{kind:'wood',amount:0},get:{kind:'stone',amount:0},fairGet:0,spread:.2,phase:'complete',createdAt:0,answerAt:0,hall:{x:0,z:0},reserved:true,carriers:[],escorts:[],ready:[],lines:[],risk:0,trust:.5,escortsWanted:0,escortsArmed:0,escortsLost:0,carriersLost:0,paid:true,reason:'',lostAmount:0,lostToParcel:0,needAmount:1,volume:1});});
@@ -149,4 +149,29 @@ test('G11 personalities: seeded per society, deterministic, and they measurably 
  const rate=team=>3600/tradeReviewSeconds(g,team);const s1=villagePersonality(g,1).sociability,s2=villagePersonality(g,2).sociability;assert.equal(rate(1)>rate(2),s1>s2);assert.ok(Math.abs(rate(1)/rate(2)-s1/s2)<1e-9);
  // Boldness shows in escorts: same risk, bolder society wants no more escorts than a timid one.
  const risk=.55;assert.ok(villagePersonality(g,1).boldness!==villagePersonality(g,2).boldness);
+});
+
+// Controlled legacy geometry fixtures. Only the real trade executor is advanced
+// here so unrelated eating/spoilage/combat cannot hide exact lot conservation.
+function driveOffer(g,o,until,seconds=400){const end=g.state.time+seconds;while(!until()&&g.state.time<end){g.state.time+=.1;for(const id of [...o.carriers,...o.escorts]){const u=g.state.units.find(u=>u.id===id);if(u)tradeNeedsAI(g,u,.1);}tickTradeNeeds(g,.1);}assert.ok(until(),o.phase+': '+o.reason);}
+function foodOffer(getFood=false){const g=fixture({stock1:getFood?{food:0,foodLots:{},stone:220,wood:0}:{food:900,foodLots:{fish:2,bread:898},wood:0},stock2:getFood?{food:900,foodLots:{fish:2,bread:898},stone:0}:{food:0,foodLots:{},wood:320}});const r=proposeTradeOffer(g,1,2,getFood?'stone':'food',getFood?'food':'wood',16);assert.equal(r.ok,true,JSON.stringify(r));const o=r.offer;assert.equal(answerTradeOffer(g,o.id,true),true);assert.equal(o.phase,'loading',o.reason);return{g,o};}
+test('needs-based caravan keeps exact offered food through escrow, physical loading, payment and saved mirrors',()=>{
+ const{g,o}=foodOffer(),qty=o.give.amount;assert.deepEqual(o.give.foodLots,{fish:2,bread:qty-2});assert.doesNotThrow(()=>decodeGame(encodeGame(g)));driveOffer(g,o,()=>o.phase==='outbound');
+ const lines=o.lines.filter(l=>l.kind==='food');assert.equal(lines.reduce((n,l)=>n+l.amount,0),qty);for(const l of lines)assert.deepEqual(g.state.units.find(u=>u.id===l.unitId).carryFoodLots,l.foodLots);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ const bad=structuredClone(encodeGame(g));bad.state.tradeNeeds.offers.find(v=>v.id===o.id).lines[0].foodLots={provisions:lines[0].amount};assert.throws(()=>decodeGame(bad));
+ driveOffer(g,o,()=>o.phase==='complete');assert.equal(g.tribe(2).food,qty);assert.equal(g.tribe(2).foodLots.fish,2);assert.equal(g.tribe(2).foodLots.bread,qty-2);assert.equal(g.tribe(2).foodLots.provisions||0,0);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+test('needs-based caravan brings exact reserved food home and counts no food twice',()=>{
+ const{g,o}=foodOffer(true),qty=o.get.amount;assert.deepEqual(o.get.foodLots,{fish:2,bread:qty-2});driveOffer(g,o,()=>o.phase==='returning');assert.doesNotThrow(()=>decodeGame(encodeGame(g)));assert.equal(g.tribe(1).food,0);
+ driveOffer(g,o,()=>o.phase==='complete');assert.equal(g.tribe(1).food,qty);assert.equal(g.tribe(1).foodLots.fish,2);assert.equal(g.tribe(1).foodLots.bread,qty-2);assert.equal(g.tribe(2).food,900-qty);tickTradeNeeds(g,.1);assert.equal(g.tribe(1).food,qty);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});
+test('interrupted unpaid loading refunds identical food; interrupted paid travel keeps exact food on its original carrier',()=>{
+ const{g,o}=foodOffer(),before=o.give.amount;g.interruptMission(g.state.units.find(u=>u.id===o.carriers[0]));assert.equal(o.phase,'failed');assert.equal(g.tribe(1).food,900);assert.equal(g.tribe(1).foodLots.fish,2);assert.equal(g.tribe(1).foodLots.bread,898);tickTradeNeeds(g,.1);assert.equal(g.tribe(1).food,900);
+ const f=foodOffer();driveOffer(f.g,f.o,()=>f.o.phase==='outbound');const u=f.g.state.units.find(u=>u.id===f.o.carriers[0]),held=structuredClone(u.carryFoodLots),qty=u.carry;f.g.interruptMission(u);assert.equal(f.o.phase,'failed');assert.deepEqual(u.carryFoodLots,held);assert.equal(u.carry,qty);assert.equal(f.g.tribe(1).food,900-before);assert.doesNotThrow(()=>decodeGame(encodeGame(f.g)));
+});
+
+test('dead food caravan drops the exact physical kinds and refunds only the uncollected partner escrow',async()=>{
+ const{tickStolenCargo,droppedParcels}=await import('../src/game/stolenCargo.ts');const{g,o}=foodOffer(),qty=o.give.amount,partnerWood=g.tribe(2).wood+o.get.amount;
+ driveOffer(g,o,()=>o.phase==='outbound');const u=g.state.units.find(u=>u.id===o.carriers[0]);u.hp=0;tickStolenCargo(g,.1);tickTradeNeeds(g,.1);tickStolenCargo(g,.1);tickTradeNeeds(g,.1);
+ assert.equal(o.phase,'failed');assert.equal(g.tribe(2).wood,partnerWood);assert.equal(g.tribe(1).food,900-qty);const parcels=droppedParcels(g).filter(p=>p.originalOwnerTeam===1&&p.kind==='food');assert.equal(parcels.reduce((n,p)=>n+p.amount,0),qty);assert.equal(parcels.find(p=>p.food==='fish').amount,2);assert.equal(parcels.find(p=>p.food==='bread').amount,qty-2);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
