@@ -96,9 +96,9 @@
   "lookY": 6
  },
  "boreal-before": {
-  "seed": 23,
+  "seed": 3,
   "version": 21,
-  "preset": "lakeland",
+  "preset": "highland",
   "geology": true,
   "forestEcology": false,
   "width": 1280,
@@ -109,12 +109,16 @@
   "hour": 15.5,
   "quality": "med",
   "season": "summer",
-  "lookY": 6
+  "lookY": 6,
+  "look": [
+   -31,
+   -15
+  ]
  },
  "boreal-after": {
-  "seed": 23,
+  "seed": 3,
   "version": 21,
-  "preset": "lakeland",
+  "preset": "highland",
   "geology": true,
   "forestEcology": true,
   "width": 1280,
@@ -125,6 +129,10 @@
   "hour": 15.5,
   "quality": "med",
   "season": "summer",
-  "lookY": 6
+  "lookY": 6,
+  "look": [
+   -31,
+   -15
+  ]
  }
 }

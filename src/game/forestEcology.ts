@@ -103,6 +103,10 @@ export const BIOME_PRIORS:Record<string,Record<string,number>>={
 /** patch scale (m) of each species' own noise field: pioneers and riparian species form small patches, spruce, beech and pines big ones */
 const PATCH_SCALE:Record<string,number>={beech:170,spruce:190,fir:150,oak:140,maple:110,scotsPine:160,stonePine:140,cedar:130,cypress:100,juniper:110,krummholz:120,birch:70,poplar:75,willow:80,hawthorn:60,
  coconutPalm:130,datePalm:90,acacia:130,baobab:90,mangrove:90,tamarisk:70,olive:110,eucalyptus:120};
+/** The world's temperature offset is relative to that world's own median, so on its own it cannot say 'boreal' or 'tropical'. The province kind (which the biome generator derived from the real temperature and rainfall) carries the zone;
+ * the local offset only nudges within it. Design values. */
+export const KIND_WARMTH_SHIFT:Record<string,number>={alpine:-6,'conifer-forest':-4.5,'mixed-woodland':0,wetland:0,meadow:.3,'dry-scrub':1.8,'warm-coast':1.6,arid:3.5};
+export const effectiveWarmth=(kind:string,temp:number)=>(KIND_WARMTH_SHIFT[kind]??0)+.5*clamp(temp,-4,4);
 const SPECIES_ORDER=Object.keys(SPECIES_NICHE);
 const SALT:Record<string,number>=Object.fromEntries(SPECIES_ORDER.map((id,i)=>[id,1000+i*37]));
 const RIPARIAN=new Set(['willow','poplar']);
@@ -165,10 +169,10 @@ export class StandField{
   this.stats.misses++;if(this.cache.size>400000)this.cache.clear();
   const s=this.compute((ix+.5)*C,(iz+.5)*C);this.cache.set(k,s);return s;
  }
- /** Climate group of a site from warmth and wetness only (kind-independent, so it cannot jump at a province border): boreal below -3 C, temperate to +2 C, then a Mediterranean buffer to +4 C,
-  * beyond which dry ground is arid, wet ground tropical and the rest Mediterranean. Every boundary joins ADJACENT groups, so a cell never sees an incompatible pair. */
- static climateGroupOf(temp:number,moisture:number):ClimateGroup{
-  if(temp<-3)return 'boreal';if(temp<2)return 'temperate';if(temp<4)return 'mediterranean';
+ /** Climate group from the effective warmth E (see effectiveWarmth) and wetness only: boreal below -3, temperate to +2, a Mediterranean buffer to +3.5, beyond which dry ground is arid, wet ground tropical and the rest Mediterranean.
+  * Every boundary joins ADJACENT groups. */
+ static climateGroupOf(warmth:number,moisture:number):ClimateGroup{
+  if(warmth<-3)return 'boreal';if(warmth<2)return 'temperate';if(warmth<3.5)return 'mediterranean';
   return moisture<.3?'arid':moisture>.6?'tropical':'mediterranean';
  }
  /** Dominant group plus, near a boundary, the neighbouring group and its share (0 at 1 boundary-width away, .5 on the boundary): the ecotone gradient. */
@@ -181,7 +185,7 @@ export class StandField{
   * spatially correlated noise (patch scale 60 to 190 m, so some species form large patches and others small ones). Shade-tolerance dynamics shift old stands toward tolerant species. */
  private weights(x:number,z:number,site:StandSite,age:number){
   const R=STAND_RULES,prior=BIOME_PRIORS[site.kind]??BIOME_PRIORS.meadow,rip=clamp(1-site.waterDist/40)*clamp((site.moisture-.35)/.3);
-  const {g0,g1,share}=StandField.climateMix(site.temp,site.moisture);
+  const {g0,g1,share}=StandField.climateMix(effectiveWarmth(site.kind,site.temp),site.moisture);
   // a province prior that names nothing of the cell's climate group (kind and climate disagree) falls back to the group's union prior
   const has=(g:ClimateGroup)=>SPECIES_ORDER.some(id=>climateOf(id)===g&&(prior[id]??0)>0);
   const pr=(id:string)=>{const g=climateOf(id);let p=prior[id]??0;if(RIPARIAN.has(id)&&rip>0)p=Math.max(p,.9*rip);if(p<=0&&!has(g))p=.35*(GLOBAL_PRIOR[id]??0);return p;};
@@ -209,6 +213,12 @@ export class StandField{
   const share=(i:number)=>cum[i]?cum[i][1]-(i?cum[i-1][1]:0):0,p1=cum[0][0],sec=cum.length>1?cum[1][0]:null;
   return {primary:p1,secondary:sec,pMix:1-share(0),margin:Math.log(Math.max(1e-6,share(0))/Math.max(1e-6,share(1)||1e-6)),age:age*(p1==='krummholz'?.7:1),kind:site.kind,group:SPECIES_BY_ID[p1]?.group??'broadleaf',cum,groups,richness:cum.length};
  }
+ /** Climate groups present within two cells (the stand cell and its 24 neighbours). */
+ private nearGroups(x:number,z:number){
+  const C=STAND_RULES.cellMetres,set=new Set<ClimateGroup>();
+  for(let dz=-2;dz<=2;dz++)for(let dx=-2;dx<=2;dx++)for(const g of this.at(x+dx*C,z+dz*C).groups)set.add(g);
+  return [...set];
+ }
  /** Per-tree decision: species sampled from the local suitability weights, age cohort by shade tolerance, gap pioneers, size and variant. */
  plan(id:number,x:number,z:number,opts?:{planted?:boolean;filler?:boolean}):TreePlan{
   const stand=this.at(x,z),R=STAND_RULES,seed=this.seed,u1=unitFor(id,seed,41),u2=unitFor(id,seed,201),u3=unitFor(id,seed,203),u4=unitFor(id,seed,205),gap=gapAt(seed,x,z);
@@ -226,6 +236,12 @@ export class StandField{
    if(stand.age>.45&&unitFor(id,seed,209)<tol*.5*stand.age)age=clamp(.1+.3*u2);
    else if(tol<.3)age=clamp(Math.max(age,.4+.4*u2));
   }
+  // border guard: a tree must be climate-compatible with every group present within two cells of it (16 m), so even a hard province border reads as a gradient
+  {const near=this.nearGroups(x,z),fits=(sid:string)=>near.every(g=>g===climateOf(sid)||ADJACENT[g].includes(climateOf(sid)));
+   if(near.length>1&&!fits(species)){
+    const pick=stand.cum.find(e=>fits(e[0]))?.[0];
+    if(pick)species=pick;else{const bridge=CLIMATE_GROUPS.find(g=>near.every(h=>h===g||ADJACENT[h].includes(g)))??stand.groups[0];species=SPECIES_ORDER.filter(id=>climateOf(id)===bridge).sort((a,b)=>(GLOBAL_PRIOR[b]??0)-(GLOBAL_PRIOR[a]??0))[0];}
+   }}
   const sp=SPECIES_BY_ID[species];
   const snag=!opts?.planted&&!pioneer&&stand.age>.8&&u4<.035;
   const useId=snag?'snag':species,use=SPECIES_BY_ID[useId]??sp;

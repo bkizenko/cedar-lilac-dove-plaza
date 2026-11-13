@@ -56,6 +56,15 @@ test('no climate-incompatible pairs within 15 m over a boreal-to-tropical transe
  assert.ok(!climateCompatible('coconutPalm','spruce')&&!climateCompatible('acacia','fir')&&!climateCompatible('datePalm','krummholz')&&!climateCompatible('stonePine','spruce')&&climateCompatible('oak','spruce')&&climateCompatible('oak','olive')&&climateCompatible('olive','acacia'));
 });
 
+test('hard province borders between climatically neighbouring kinds still read as gradients: no incompatible species within 15 m',()=>{
+ // kinds in climate order with abrupt steps between them (the province grid is nearest-cell); a boreal kind never borders an arid one on a real map
+ const order=['alpine','conifer-forest','mixed-woodland','warm-coast','dry-scrub','arid'],tempOf={alpine:-4,'conifer-forest':-3,'mixed-woodland':0,'warm-coast':3.5,'dry-scrub':2,arid:5};
+ const fn=(x,z)=>{const i=Math.max(0,Math.min(5,Math.floor((x+300)/100)+(Math.floor(z/60)%2===0?0:0))),k=order[i];return site(k,{temp:tempOf[k],moisture:k==='arid'?.15:.7});};
+ const f=fieldOf(13,fn),pts=grid(f,-300,300,-200,200,3),near=nbrs(pts,3,15);let bad=0;const pairs=new Set();
+ for(const p of pts){if(p.snag)continue;for(const q of near(p))if(!q.snag&&!climateCompatible(p.species,q.species)){bad++;pairs.add(p.species+'+'+q.species);}}
+ assert.equal(bad,0,[...pairs].join(' '));
+});
+
 test('continuum, not blocks: local species richness is plausible and stands are mixed, yet spatially patchy beyond chance',()=>{
  const f=fieldOf(21,(x,z)=>site('mixed-woodland',{soil:.55+.35*Math.cos(x/120-z/200),moisture:.5+.2*Math.sin(x/150),acid:.5+.3*Math.sin(z/200)})),pts=grid(f,-300,300,-300,300,4);
  const near30=nbrs(pts,4,30);let rich=0,n=0,single=0;

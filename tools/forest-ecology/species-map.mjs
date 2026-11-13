@@ -12,13 +12,13 @@ function png(w,h,rgb){const crcT=(()=>{const t=new Uint32Array(256);for(let n=0;
  const raw=Buffer.alloc((w*3+1)*h);for(let y=0;y<h;y++){raw[y*(w*3+1)]=0;rgb.copy(raw,y*(w*3+1)+1,y*w*3,(y+1)*w*3);}
  const ih=Buffer.alloc(13);ih.writeUInt32BE(w,0);ih.writeUInt32BE(h,4);ih[8]=8;ih[9]=2;
  return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',ih),chunk('IDAT',deflateSync(raw)),chunk('IEND',Buffer.alloc(0))]);}
-const [seedS,preset,name,out='docs/renders/forest-ecology',eco='1']=process.argv.slice(2);
+const [seedS,preset,name,out='docs/renders/forest-ecology',eco='1',cxS,czS]=process.argv.slice(2);
 const seed=Number(seedS),request={size:1040,preset,geologyVersion:1,...(eco==='1'?{forestEcologyVersion:1}:{})};
 const world=generateWorld(seed,21,request),grid=world.ecology;
 const height=(x,z)=>sampleWorldHeight(world,x,z),water=(x,z)=>world.waterY;
 const site=(x,z)=>{const c=ecologicalConditionsAt(grid,x,z),g=Math.hypot((height(x+3,z)-height(x-3,z))/6,(height(x,z+3)-height(x,z-3))/6);
  return {kind:c.kind,moisture:c.moisture,temp:c.temperatureOffsetCelsius,slope:g,soil:Math.max(0,Math.min(1,c.soil)),aspect:0,waterDist:c.freshwaterDistanceMeters,alt:height(x,z)-water(x,z),acid:.5};};
-const field=new StandField(seed,site),camp=world.camps[0],R=160,S=2,W=R*2*S,rgb=Buffer.alloc(W*W*3);
+const field=new StandField(seed,site),camp=cxS!==undefined?{x:Number(cxS),z:Number(czS)}:world.camps[0],R=160,S=2,W=R*2*S,rgb=Buffer.alloc(W*W*3);
 const counts={};
 for(let py=0;py<W;py++)for(let px=0;px<W;px++){const x=camp.x-R+px/S,z=camp.z-R+py/S,h=height(x,z);let col;
  if(h<water(x,z)+.2)col=[40,70,120];else{const st=field.at(x,z),c=SPECIES_COLOURS[st.primary]??[128,128,128];col=c.map(v=>Math.round(90+v*.35));}
