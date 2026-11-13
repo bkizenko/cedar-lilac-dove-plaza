@@ -149,3 +149,10 @@ test('slow diplomacy events: new claim against us and new neighbour news raise a
  const t1=diplomacyEvents(first.next,mk([claim],[{time:9,kind:'treaty',with:2,text:'Truce sworn.'}]));assert.equal(t1.cue,'treaty');assert.match(t1.events[0].body,/Truce sworn/);
  assert.equal(diplomacyEvents({claims:new Set(),newsTime:0},mk([{...claim,byUs:true}],[])).cue,null);
 });
+
+test('feed collapses adjacent repeats into a counted row, keeps order',async()=>{
+ const {dedupeFeed}=await import('../src/ui/council/feedDedupe.ts');const {FameFeed}=await import('../src/ui/council/CouncilParts.tsx');const {FameFeed:HF}=await import('../src/ui/hearth/councilCards.tsx');
+ const log=['3: Wolves took a lamb','4: Wolves took a lamb','5: Wolves took a lamb','6: A trader came'];
+ assert.deepEqual(dedupeFeed([...log].reverse()),[{text:'A trader came',count:1,key:'A trader came'},{text:'Wolves took a lamb',count:3,key:'Wolves took a lamb'}]);
+ for(const C of [FameFeed,HF]){const html=renderToStaticMarkup(h(C,{log}));assert.match(html,/×3/);assert.equal((html.match(/Wolves took a lamb/g)||[]).length,1);}
+});

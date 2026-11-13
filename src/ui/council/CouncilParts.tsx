@@ -1,4 +1,5 @@
 import type {CouncilModel} from '../../game/rulersView';
+import {dedupeFeed,countLabel} from './feedDedupe';
 /** Lane B council parts: each one reads only the plain council model, so they survive the worker boundary. */
 type Faction=CouncilModel['factions'][number];
 export const FACTION_LABEL:Record<string,string>={kin:'Kin',warriors:'War-leaders',priests:'Priests',elders:'Elders',merchants:'Merchants',landholders:'Landholders',commons:'Common folk',assembly:'Assembly'};
@@ -33,7 +34,7 @@ export function NeighbourNews({news,nameOf}:{news:{time:number;kind:string;with:
 
 export function FameFeed({log}:{log:string[]}){
  if(!log.length)return null;
- return <Card label="Chronicle" title="Chronicle"><ol className="space-y-1">{[...log].reverse().map((l,i)=><li key={i} className={'border-l-2 pl-2 '+(i===0?'border-bronze-bright text-parchment':'border-parchment/15 text-parchment-dim')}>{l}</li>)}</ol></Card>;
+ return <Card label="Chronicle" title="Chronicle"><ol className="space-y-1">{dedupeFeed([...log].reverse(),false).map((r,i)=><li key={i} className={'border-l-2 pl-2 '+(i===0?'border-bronze-bright text-parchment':'border-parchment/15 text-parchment-dim')}>{r.text}{r.count>1&&<b className="ml-1 text-bronze-bright">{countLabel(r.count).trim()}</b>}</li>)}</ol></Card>;
 }
 
 /** One bar per faction: width is its weight in the realm, colour is its mood. Demands read on tap/hover and below. */

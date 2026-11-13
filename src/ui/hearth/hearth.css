@@ -344,6 +344,7 @@
 .hw-fame{display:grid;gap:var(--hw-s2)}
 .hw-fame li{display:flex;gap:var(--hw-s3);align-items:flex-start;padding:var(--hw-s3) var(--hw-s4);border-left:4px solid var(--hw-line-strong);background:rgba(255,236,190,.05);border-radius:0 var(--hw-r-s) var(--hw-r-s) 0;font-size:var(--hw-fs);line-height:1.35}
 .hw-fame li.is-new{border-left-color:var(--hw-gold);background:rgba(227,173,79,.13);font-size:var(--hw-fs-l);font-weight:650}
+.hw-count{margin-left:var(--hw-s2);color:var(--hw-gold);font-weight:700;white-space:nowrap}
 .hw-fame li.is-new svg{color:var(--hw-gold-2);flex:none;margin-top:2px}
 .hw-fame li.is-old{opacity:.65;font-size:var(--hw-fs-s)}
 .hw-strip{display:flex;height:18px;border-radius:9px;overflow:hidden;gap:2px;background:rgba(0,0,0,.4)}
