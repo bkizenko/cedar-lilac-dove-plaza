@@ -1,7 +1,7 @@
 /** Runtime glue for the rulers lane. One call from Game.step. Off unless worldOptions.rulersVersion===1 (set for new games).
  * Old saves have no `rulers` field and no option: nothing happens. Pure state in/out lives in rulersState.ts. */
 import type {Game} from './sim';
-import {initRulers,stepRulersYear,rulersOf,type RulersState,type Ward} from './rulersState';
+import {initRulers,stepRulersYear,rulersOf,type RulersState,type Ward,type WardReturn} from './rulersState';
 import {familyStage,familyFeatures,kinshipEffectScale} from './familyScale';
 import {marry,heir} from './dynasty';
 import {hash32,makeRng} from './rulerCore';
@@ -140,15 +140,15 @@ function exchangeKin(g:Game,a:number,b:number,action:'fosterage'|'hostageExchang
 /** Yearly: fosterlings go home at 16 (bond rises), hostages after a 8-year term; the dead are removed; war breaks the pledge with a grievance. */
 export function settleWards(g:Game){
  const r=ensureRulers(g);if(!r?.wards?.length)return;
- const keep:Ward[]=[],done:Ward[]=[];
+ const keep:Ward[]=[],done:Ward[]=[],back:WardReturn[]=[];
  for(const w of r.wards){
   const p=r.societies[w.from]?.dynasty.people[w.person];
-  if(!p||!p.alive){done.push(w);continue;}
+  if(!p||!p.alive){done.push(w);if(p)back.push({kind:w.kind,name:p.name,from:w.from,to:w.to,year:r.year,how:'died',age:p.age});continue;}
   const term=w.kind==='foster'?p.age>=16:r.year-w.since>=8,war=societyRelation(g,Number(w.from),Number(w.to)).hostile;
-  if(term||war){done.push(w);if(war)tieChange(g,Number(w.from),Number(w.to),'breakPact',livingPeople(g,Number(w.from)),livingPeople(g,Number(w.to)));}
+  if(term||war){done.push(w);back.push({kind:w.kind,name:p.name,from:w.from,to:w.to,year:r.year,how:war?'war':w.kind==='foster'?'grown':'term',age:p.age});if(war)tieChange(g,Number(w.from),Number(w.to),'breakPact',livingPeople(g,Number(w.from)),livingPeople(g,Number(w.to)));}
   else keep.push(w);
  }
- if(done.length)st(g).rulers={...st(g).rulers!,wards:keep};
+ if(done.length)st(g).rulers={...st(g).rulers!,wards:keep,wardReturns:[...(r.wardReturns??[]),...back].slice(-24)};
 }
 
 /** Rival societies wed each other: every 4th dynastic year each non-player society tries the nearest-numbered peaceful, mutually known neighbour
@@ -338,6 +338,11 @@ export function neighbourNews(g:Game,sinceTime=0,limit=8):NeighbourNews[]{
    out.push({time,kind:'succession',a:t,b:t,text:`${g.tribe(t).name}: ${m[1]} succeeded ${m[2]}${m[4]?', and the claim is disputed':''}`});
   }
  }
+ // Fosterlings and hostages coming home are told only where the player's house is on one side (the same walk-home, no remote receipts).
+ for(const w of (rulersOf(st(g))?.wardReturns??[])){const a=Number(w.from),b=Number(w.to);if(a!==0&&b!==0)continue;const time=w.year*RULERS_YEAR_SECONDS;if(time<sinceTime)continue;
+  const home=g.tribe(a)?.name??`Society ${a}`,host=g.tribe(b)?.name??`Society ${b}`,what=w.kind==='foster'?'fosterling':'hostage';
+  const text=w.how==='died'?`${w.name}, ${what} of ${home} at ${host}, died in the other house`:w.how==='war'?`${w.name}, ${what} of ${home}, was sent home from ${host} as war broke the pledge`:w.how==='grown'?`${w.name} of ${home} came home from ${host} grown (age ${Math.floor(w.age)}), bound by the kin ties of the fosterage`:`${w.name}, ${what} of ${home}, was released by ${host} after the term`;
+  out.push({time,kind:'ward-return',a,b,text});}
  const sees=(a:number,b:number)=>a===0||b===0;
  for(const ag of d?.agreements??[]){if(ag.since>=sinceTime&&sees(ag.a,ag.b))out.push({time:ag.since,kind:ag.kind,a:ag.a,b:ag.b,text:ag.note});}
  const roster=(st(g) as unknown as {commanders?:{roster:{id:number;unitId:number;team:number;name:string;status:string;fellAt?:number;capturedAt?:number;capturedBy?:number;replacedBy?:number;replaces?:number;seenByPlayer?:boolean;appointedAt:number}[]}}).commanders?.roster??[];

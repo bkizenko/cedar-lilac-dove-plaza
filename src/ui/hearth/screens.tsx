@@ -39,6 +39,7 @@ import {TradeBlock} from '../Hud';
 import {IconBtn,cx} from './parts';
 import {HelpBody} from './help';
 import {loadMapStyle,rememberMapStyle,MAP_STYLE_KEY,type MapStyle} from '@/scene/mapStyle';
+import {MAP_GALLERY,galleryPose} from '@/scene/mapGallery';
 import {PLAN_ICON,PLAN_NAME,POSTURE_ICON,POSTURE_NAME,AGREEMENT_ICON,AGREEMENT_NAME,ROUTE_ICON,ago,freshness} from './icons';
 import {courtLine} from '../council/courtLine';
 
@@ -188,6 +189,15 @@ function MapStyleToggle({engine}:{engine:Engine|null}){
   {([['painterly','Painterly'],['classic','Classic']] as const).map(([m,l])=><button key={m} type="button" className="hw-btn-wide" aria-pressed={pick===m} onClick={()=>go(m)}>{l}</button>)}
   {pending&&<button type="button" className="hw-chip t-warn" onClick={reload} title="Save first. The map is rebuilt on reload."><TriangleAlert size={16}/>Reload to apply</button>}</div>;
 }
+/** Map gallery: camera-only jumps to the ten review scenes (close/middle/wide, overcast, water, fall, cliff, dune, route, contour farm). */
+function MapGallery({engine,onClose}:{engine:Engine|null;onClose:()=>void}){
+ const [note,setNote]=useState('');
+ const go=(id:string)=>{const sc=MAP_GALLERY.find(s=>s.id===id);if(!engine||!sc)return;const g=engine.game,c=g.campOf(0);
+  const p=galleryPose({size:g.world.size,height:(x,z)=>g.height(x,z),waterAt:(x,z)=>g.waterAt(x,z),camp:{x:c.x,z:c.z}},sc),v=engine.view;
+  v.look.set(p.x,p.lookY,p.z);v.yaw=p.yaw;v.pitch=p.pitch;v.dist=p.dist;
+  setNote(`${sc.label}: ${p.found?'':'no such ground nearby, showing camp. '}${sc.weather?'Best in rain. ':''}${sc.season?'Best in autumn. ':''}${sc.check}`);onClose();};
+ return <div className="hw-map-gallery" role="group" aria-label="Map gallery"><div className="hw-row" style={{flexWrap:'wrap'}}>{MAP_GALLERY.map(s=><button key={s.id} type="button" className="hw-btn-wide" disabled={!engine} onClick={()=>go(s.id)}>{s.label}</button>)}</div>{note&&<p role="status">{note}</p>}</div>;
+}
 export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:{hud:HudSnapshot;engine:Engine|null;onClose:()=>void;lifecycle:{busy:boolean;error?:string|null;run:(f:()=>Promise<unknown>,after?:(r:any)=>void)=>unknown};onTest:()=>void;onHide:()=>void;onTrade?:()=>void}){
  const d=engine?.game.state.difficulty??'normal';
  const [tab,setTab]=useState('play');
@@ -210,6 +220,7 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
   {tab==='world'&&<div className="hw-stack">
    <section className="hw-card"><h3>This world</h3><div className="hw-chips"><span className="hw-chip">Seed {engine?.game.state.seed}</span><span className="hw-chip">Gen {engine?.game.state.worldgenVersion??1}</span><GameTooltip title={DIFFICULTIES[d].name} description={`${DIFFICULTIES[d].description} ${difficultyEffects(d)}`}><span className="hw-chip" tabIndex={0}>{DIFFICULTIES[d].name}</span></GameTooltip></div>{engine&&<div className="hw-legacy"><PerformanceReadout engine={engine}/></div>}</section>
    {engine&&<section className="hw-card"><h3>New world</h3><div className="hw-legacy"><WorldSetup engine={engine}/></div></section>}
+   {engine&&<section className="hw-card"><h3>Map gallery</h3><MapGallery engine={engine} onClose={onClose}/></section>}
    {engine&&<section className="hw-card"><h3>Water works</h3><div className="hw-legacy"><WaterEngineeringControls engine={engine}/></div></section>}
   </div>}
   {tab==='tools'&&<div className="hw-stack"><section className="hw-card"><div className="hw-row">

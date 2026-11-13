@@ -23,7 +23,14 @@ await esbuild.build({ entryPoints: [path.join(here, 'map-entry.ts')], bundle: tr
   alias: { three: path.join(three, 'build/three.module.js') }, plugins: [addons], define: { 'process.env.NODE_ENV': '"production"' } });
 const html = path.join(outDir, '.map.html');
 fs.writeFileSync(html, '<!doctype html><meta charset="utf-8"><body style="margin:0;background:#222"><script src="' + pathToFileURL(bundle).href + '"></script>');
-const shots = JSON.parse(fs.readFileSync(path.resolve(args.find(a => !a.startsWith('--'))), 'utf8'));
+// --gallery[=seed] renders the ten M5-04 review scenes (src/scene/mapGallery.ts) instead of a shots file.
+const galleryArg = args.find(a => a === '--gallery' || a.startsWith('--gallery='));
+let shots;
+if (galleryArg) {
+  const gb = path.join(outDir, '.gallery-shots.mjs');
+  await esbuild.build({ entryPoints: [path.join(root, 'src/scene/mapGallery.ts')], bundle: true, format: 'esm', outfile: gb, logLevel: 'error' });
+  shots = (await import(pathToFileURL(gb).href + '?t=' + Date.now())).galleryShots(Number(galleryArg.split('=')[1]) || 1);
+} else shots = JSON.parse(fs.readFileSync(path.resolve(args.find(a => !a.startsWith('--'))), 'utf8'));
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--js-flags=--max-old-space-size=4096'] });
 let page = null;
 for (const [name, spec0] of Object.entries(shots)) {
@@ -31,7 +38,7 @@ for (const [name, spec0] of Object.entries(shots)) {
   const spec = { width: 1280, height: 720, ...spec0 };
   if (!page) {
     page = await browser.newPage({ viewport: { width: spec.width, height: spec.height } });
-    page.on('console', m => { if (m.type() === 'error') console.error('[page]', m.text().slice(0, 300)); });
+    page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.error('[page]', m.text().slice(0, 300)); });
     page.on('pageerror', e => console.error('[pageerror]', e.message));
     await page.goto(pathToFileURL(html).href);
   }
