@@ -185,6 +185,19 @@ export function expansionParty(g:Game,team:number,raw=false):PartyPlan|null{
   minReserve:d.mode==='migrate'?300:600,why:allow?[...d.why,...(gate.crew<4?[gate.note]:[])]:sends&&council?[council.why,...d.why]:['the society stays at home',...d.why]};
 }
 
+/** Ambush risk on a founding journey (CAT-97): hostile people near the road from the home hall to the site. Pure read. Escorts are real
+ * militia drawn from the society, only organised polities send them, and a risky road without escort makes the party wait; nothing is
+ * created and nothing teleports. Null when rulers are off (old behaviour). */
+export type PartyRisk={risk:number;foes:number;escort:number;why:string};
+export function partyRisk(g:Game,team:number,from:{x:number;z:number},to:{x:number;z:number}):PartyRisk|null{
+ if(!rulersEnabled(g))return null;
+ const dx=to.x-from.x,dz=to.z-from.z,L2=dx*dx+dz*dz||1;let foes=0;
+ for(const u of g.state.units){if(u.hp<=0||u.team===team||!g.isFoe(team,u.team))continue;
+  const t=Math.max(0,Math.min(1,((u.x-from.x)*dx+(u.z-from.z)*dz)/L2)),px=from.x+dx*t-u.x,pz=from.z+dz*t-u.z;
+  if(px*px+pz*pz<=22*22)foes++;}
+ const risk=Math.min(1,foes*.2),escort=risk>=.6?3:risk>=.4?2:risk>=.2?1:0;
+ return {risk,foes,escort,why:foes?`${foes} hostile ${foes===1?'person':'people'} near the road`:'the road looks quiet'};
+}
 /** Read model of NPC parties on the road: the real units, where they are, what they carry. Pure read; nothing is created or moved here.
  * kind: settle (founding families), explore (a provisioned scout), trade (a caravan unit carrying real goods to a known hall), raid (fighters
  * on an attack-move toward a known site). Each is a real unit with its own order; status says why one is struggling, low on stores or turning home. */

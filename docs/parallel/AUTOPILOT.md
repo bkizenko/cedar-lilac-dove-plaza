@@ -490,7 +490,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | CAT-94 | catalogue | Pack animals, sledges/carts and capacity/speed tradeoffs. | Codex | Codex W1 | live-partial | 46217d4: real horse + paid ard for spring traction;1.4→2.2 practice/welfare/condition labor rate,wear/paid repair/cargo conservation;28/28scoped. Pack goats/horses live455cd37. Draft carts/riding remain open; no98gatecredit |
 | CAT-95 | catalogue | Local stores, carriers, hauling priorities and route reliability. | Codex | Codex W9 | not started | local stores / hauling priorities |
 | CAT-96 | catalogue | Bridges/fords/choke points as strategic constraints. | Grok | Grok W2 | not started |  |
-| CAT-97 | catalogue | Expedition escorts and raider ambush risk. | Claude | Claude W2 | not started | expedition escorts / ambush |
+| CAT-97 | catalogue | Expedition escorts and raider ambush risk. | Claude | Claude W2 | source-pushed-not-live | partyRisk (rulersRuntime) + escort gate in communities.ts: hostile people near road raise risk, organised polities send real militia escorts, otherwise the party waits; off for old saves; rulers 65/65, tsc nil on touched files |
 | CAT-98 | catalogue | Sea arrivals and raids grounded in actual movement. | Claude | Claude N6 | source-pushed-not-live | sea arrivals/raids; presentation leftovers |
 | CAT-99 | catalogue | **Accepted extension:** navigation knowledge and seasonal sailing conditions. | Codex | Codex N5 | source-pushed-not-live | sailing demo live; tacking/offshore/repair remain |
 | GEO-1 | geography | Connected mountain ranges with several summits and unequal silhouettes. | Grok | Grok W5 | not started | partially present in current generator; remaining organic form and prominence is Grok W5/W11 |
