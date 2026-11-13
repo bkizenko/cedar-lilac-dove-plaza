@@ -111,7 +111,7 @@ export class BotanicalForest{
    if(distance<=near*2.2&&!stump){blobs=this.blob(node,s,sp.crownR*rec.sx*(sp.arch==='palm'?.5:.85),blobs);}
    if(tier<2){
     const key=(rec.sp*VARIANTS_PER_SPECIES+rec.v)*2+tier,need=(tally.get(key)??0)+1;tally.set(key,need);
-    const b=this.batch(rec.sp,rec.v,tier,need),i=b.n++;b.ids.push(node.id);
+    const b=this.batch(rec.sp,rec.v,tier as 0|1,need),i=b.n++;b.ids.push(node.id);
     this.pos.set(node.x,node.y,node.z);this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);this.scale.set(s*rec.sx,s*rec.sy,s*rec.sx);this.matrix.compose(this.pos,this.quat,this.scale);
     b.mesh.setMatrixAt(i,this.matrix);b.mesh.setColorAt(i,this.color);b.state.setXY(i,density,snow);
     if(tier===0)fullTrees++;else midTrees++;if(density>.05||sp.evergreen)leafy++;
