@@ -1,6 +1,6 @@
 /** Quadruped pose solver: gait clips (idle, graze, alert, drink, walk, trot, gallop, dead) over the skeleton of animalModels.ts.
  * Pure maths: input is a state + a phase (from metres actually moved) + the frame time for breathing and ear flicks; output is one matrix per bone in
- * the torso frame and the height that puts the lowest hoof on the ground. No Math.random / Date.now. */
+ * the torso frame and the height that puts the lowest hoof on the ground. No ambient randomness or clock. */
 import * as THREE from 'three';
 import type {Bone,QuadModel} from './animalModels';
 import {boneMatrix} from './animalModels';

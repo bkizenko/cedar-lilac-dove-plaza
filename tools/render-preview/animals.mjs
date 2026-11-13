@@ -61,8 +61,17 @@ const chunks = (a, n) => a.reduce((o, x, i) => (i % n ? o[o.length - 1].push(x) 
 if (has('near')) for (const [i, g] of chunks([...QUAD], 4).entries()) await shoot(`near-${mode}-${i + 1}`, withMode(sheetsDef.near(g)));
 if (has('mid')) for (const [i, g] of chunks([...QUAD], 9).entries()) await shoot(`mid-${mode}-${i + 1}`, withMode(sheetsDef.lineup(1, g, 3.4)));
 if (has('far')) for (const [i, g] of chunks([...QUAD], 9).entries()) await shoot(`far-${mode}-${i + 1}`, withMode(sheetsDef.lineup(2, g, 3.4)));
-if (has('birds')) await shoot(`near-${mode}-birds`, withMode(sheetsDef.near(BIRD)));
-if (has('fish')) await shoot(`near-${mode}-fish`, { ...withMode(sheetsDef.near(FISH)), water: true });
+const flyRow = (gait, y = 0, o = {}) => BIRD.flatMap((b, i) => ['m', 'f'].map((sex, j) => A(b, (i * 2 + j - 2.5) * 1.25, 0, { gait, sex, id: 77 + i * 5 + j, tier: 0, facing: .5, y, phase: (i * 2 + j) * .17, ...o })));
+if (has('birds')) {
+  await shoot(`near-${mode}-birds-stand`, { width: 1500, height: 520, mode, cam: { pos: [0, 1.1, 6.2], target: [0, .3, 0], fov: 32 }, animals: flyRow('idle') });
+  await shoot(`near-${mode}-birds-fly`, { width: 1500, height: 520, mode, cam: { pos: [0, 2.2, 7.2], target: [0, 1.6, 0], fov: 34 }, animals: flyRow('fly', 1.4).map((a, i) => ({ ...a, facing: 1.2, z: (i % 2) * 1.2 })) });
+  await shoot(`near-${mode}-birds-swim`, { width: 1500, height: 520, mode, water: true, cam: { pos: [0, 1.0, 6.2], target: [0, 0, 0], fov: 32 }, animals: flyRow('swim') });
+}
+if (has('fish')) {
+  const fy = FISH.flatMap((f, i) => [0, .25, .5, .75].map((ph, j) => A(f, (i - 1.5) * 2.4 + (j - 1.5) * .0, (j - 1.5) * 0.7, { gait: 'swim', phase: ph, id: 5 + i, tier: 0, facing: 0, y: -.12 })));
+  await shoot(`near-${mode}-fish`, { width: 1500, height: 560, mode, water: true, cam: { pos: [0, 4.6, 5.4], target: [0, -.1, 0], fov: 34 }, animals: fy });
+  await shoot(`near-${mode}-fish-side`, { width: 1500, height: 400, mode, water: true, cam: { pos: [0, .5, 6.5], target: [0, -.1, 0], fov: 30 }, animals: FISH.map((f, i) => A(f, (i - 1.5) * 1.9, 0, { gait: 'swim', phase: .2, id: 5 + i, tier: 0, facing: 0, y: -.15 })) });
+}
 for (const sp of (args.find(a => a.startsWith('--species=')) || '--species=redDeer,wolf,horse,boar,cattle').slice(10).split(',')) {
   if (has('seasons')) await shoot(`seasons-${sp}`, withMode(sheetsDef.seasons(sp)));
   if (has('sexage')) await shoot(`sexage-${sp}`, withMode(sheetsDef.sexage(sp)));

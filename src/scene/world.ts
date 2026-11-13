@@ -20,6 +20,8 @@ import {FixedOrbitCameraCollision} from './fixedOrbitCollision';
 import {survivalFireActive} from '@/game/survivalNeeds';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
+import {AnimalAdapter,FishAdapter,readAnimalSet,type AnimalRow} from './animalAdapter';
+import {YEAR_SECONDS} from '@/game/settlement';
 import {FibreWorkLayer} from './fibreWorkLayer';
 import {BasketLayer} from './basketLayer';
 import {PenFenceLayer} from './penFenceLayer';
@@ -381,6 +383,8 @@ export class WorldView {
   domesticSheep: THREE.InstancedMesh | null = null;
   domesticGoats: THREE.InstancedMesh | null = null;
   birds: THREE.InstancedMesh | null = null;
+  /** ?animals=legacy keeps the old merged animal meshes; otherwise the jointed rig layer draws animals and the old meshes stay as invisible picking proxies. */
+  private animalSet=readAnimalSet();private animals:AnimalAdapter|null=null;private fishAdapter:FishAdapter|null=null;
   private tmpCam = new THREE.Vector3();
   private disposed = false;
   private treeCount = 0;
@@ -1094,6 +1098,8 @@ export class WorldView {
     });
     this.fish.count = nFish;
     this.scene.add(this.fish);
+    this.fishAdapter?.dispose();this.fishAdapter=null;
+    if(this.animalSet==='rig'){try{this.fishAdapter=new FishAdapter(this.scene);this.fish.visible=false;}catch(e){console.error('fish rig disabled:',e);this.fishAdapter=null;}}
 
     const sites = game.world.dockSites || [];
     if (sites.length) {
@@ -1324,6 +1330,28 @@ export class WorldView {
     this.domesticCattle = mkHerd(cattleGeo(), cattleMat, 24);
     this.packCattle = mkHerd(cattleGeo(true), cattleMat, 24);
     this.birds = mkHerd(birdGeo(), birdMat, 16);
+    this.animals?.dispose();this.animals=null;
+    if(this.animalSet==='rig'){try{this.animals=new AnimalAdapter(this.scene);this.hideLegacyAnimals();}catch(e){console.error('animal rig disabled, legacy animals restored:',e);this.animals=null;this.animalSet='legacy';}}
+  }
+
+  private hideLegacyAnimals(){
+    const on=this.animalSet==='legacy'||!this.animals;
+    for(const m of [this.deer,this.boars,this.wildGoats,this.domesticGoats,this.wildSheep,this.domesticSheep,this.wildHorses,this.domesticHorses,this.wildCattle,this.domesticCattle,this.birds])if(m)m.visible=on;
+  }
+
+  /** Draw every wild and domestic animal through the rig layer (positions and state read from the game, nothing written back). */
+  private drawAnimalRig(game:Game){
+    const ad=this.animals;if(!ad)return;
+    this.hideLegacyAnimals();
+    const cal=calendar(game),within=Math.max(0,Math.min(1,1-cal.remaining/(YEAR_SECONDS/4))),rows:AnimalRow[]=[];
+    const shore=(c:{x:number;z:number;facing:number})=>{const x=c.x+Math.sin(c.facing)*1.6,z=c.z+Math.cos(c.facing)*1.6;return game.waterAt(x,z)>game.height(x,z)-.02;};
+    for(const list of this.wildlifeOwners.values())for(const c of list)rows.push({c,domestic:false,season:cal.phase,within,shore:c.hp>0&&c.species!=='bird'&&shore(c)});
+    for(const a of game.state.livestock||[]){
+      if(a.hp<=0||(a.team!==0&&!game.visibleAt(a.x,a.z)))continue;
+      if(a.species!=='horse'&&a.species!=='cattle'&&a.species!=='goat'&&a.species!=='sheep')continue;
+      rows.push({c:a,domestic:true,season:cal.phase,within,shore:shore(a)});
+    }
+    ad.frame(rows,this.camera.position,game.state.time);
   }
 
   updateCamera(dt: number) {
@@ -1720,7 +1748,7 @@ export class WorldView {
     const stamp = (key: 'deer'|'boars'|'wildGoats'|'wildSheep'|'wildHorses'|'wildCattle'|'birds', species: string) => {
       const old=this[key];if(!old)return;
       const list=wildlifeInstanceAnimals(game.state.wildlife,species,(x,z)=>game.visibleAt(x,z),(x,z)=>game.exploredAt(x,z),c=>carcassAvailable(game,c));
-      const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;
+      const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;if(this.animals)mesh.visible=false;
       for(let i=0;i<list.length;i++){
         const c=list[i],corpse=c.hp<=0;
         _p.set(c.x,c.y+(corpse?.3*c.scale:0),c.z);
@@ -1761,6 +1789,7 @@ export class WorldView {
       mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
     }
     }
+    this.drawAnimalRig(game);
   }
 
   private trailAlpha() {
@@ -1904,6 +1933,7 @@ export class WorldView {
       }
       this.fish.count = nFish;
       this.fish.instanceMatrix.needsUpdate = true;
+      if(this.fishAdapter){this.fish.visible=false;this.fishAdapter.frame(game.state.fish.slice(0,nFish),{waterAt:(x,z)=>game.waterAt(x,z)},this.camera.position,game.state.time,(x,z)=>game.exploredAt(x,z));}
     }
   }
 
@@ -3180,6 +3210,7 @@ export class WorldView {
     this.wornGarments?.dispose();this.wornGarments=null;
     this.wornArmor?.dispose();this.wornArmor=null;
     this.people?.dispose();this.people=null;
+    this.animals?.dispose();this.animals=null;this.fishAdapter?.dispose();this.fishAdapter=null;
     this.siegeRamLayer?.dispose();this.siegeRamLayer=null;
     this.housingPackets?.dispose();this.housingPackets=null;
     this.draftCarts?.dispose();this.draftCarts=null;

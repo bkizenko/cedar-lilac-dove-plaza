@@ -1,7 +1,7 @@
 /** Quadruped model builder: anatomy numbers (animalSpecs.ts) -> jointed part geometries at three LOD tiers, plus the skeleton that poses them.
  * near (0): ~15 articulated part types (ungulate legs have 4 bones each: humerus/femur, radius/tibia, cannon, pastern+hoof) with eyes, nostrils,
  * hooves/claws, ears, horns, mane and fur tufts; mid (1): body / neck+head / fore leg / hind leg, rigid; far (2): one static merged silhouette.
- * Deterministic: variation comes only from the seed passed in, never from a clock or Math.random. */
+ * Deterministic: variation comes only from the seed passed in, never from a clock or ambient randomness. */
 import * as THREE from 'three';
 import {append,blob,counter,hex,loft,mix,mul,newMesh,plate,smooth,toGeometry,tube,tuft,triangles,xform,type Mesh,type Paint,type RGB,type Sec} from './animalGeo';
 import {QUADS,type QuadId,type QuadSpec,type Section} from './animalSpecs';
@@ -169,6 +169,9 @@ function hornCurve(m:Mesh,pts:[number,number,number][],r0:number,r1:number,sg:nu
 }
 function addHorns(m:Mesh,sp:QuadSpec,sg:number,o:Opts,k:number,t:Tier){
  const col=hex(sp.coat.horn??'#c8bca0'),seg=segs(t,6),sc=k,r=seededRandom(hashSeed(o.seed,'horn'));
+ if(t===2){ // far silhouette: one beam per side, no tines
+  const h=sp.id==='boar'?0:sp.id==='redDeer'?.7:sp.id==='fallowDeer'?.5:sp.id==='roeDeer'?.25:sp.id==='aurochs'||sp.id==='cattle'?.35:.3,fw=sp.id==='aurochs'||sp.id==='cattle'?.3:sp.id==='ibex'?-.3:0;
+  if(h>0)tube(m,[[0,0,0],[fw*.5,h*.5,.05*sg],[fw,h,.1*sg]],[[.02,.02],[.014,.014],[.006,.006]],{seg:4,paint:()=>col});return;}
  switch(sp.id){
   case 'redDeer':antlerRed(m,sg,.55+.5*r(),o.seed+sg,[8,10,12][o.seed%3],col,seg);break;
   case 'fallowDeer':antlerFallow(m,sg,.8+.35*r(),col,seg);break;

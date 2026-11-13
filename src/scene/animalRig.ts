@@ -8,6 +8,8 @@ export type RigModel={
  /** mid tier: rigid merged pieces, each drawn once per listed bone */
  mid:readonly {name:string;bones:readonly string[];geo:THREE.BufferGeometry}[];
  far:THREE.BufferGeometry;
+ /** birds: silhouette with spread wings for animals in flight */
+ farFly?:THREE.BufferGeometry;
  /** nominal body length / height in metres for LOD and bounds */
  size:number;
 };

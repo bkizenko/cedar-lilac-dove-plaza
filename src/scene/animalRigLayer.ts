@@ -8,7 +8,7 @@ import type {RigModel} from './animalRig';
 export type CoatState={spots:number;winter:number;seed:number;tint:[number,number,number];scale:number};
 export type Draw={model:RigModel;/** world position of the ground point under the animal */x:number;y:number;z:number;facing:number;size:number;
  /** bone matrices in the rig frame (near/mid); lift raises the rig so the feet stand on y */mats?:Map<string,THREE.Matrix4>;lift:number;coat:CoatState;
- tier:0|1|2;/** extra whole-body rotation before placement (corpse) */rx?:number;rz?:number;hidden?:readonly string[]};
+ tier:0|1|2;fly?:boolean;/** extra whole-body rotation before placement (corpse) */rx?:number;rz?:number;hidden?:readonly string[]};
 type Slot={mesh:THREE.InstancedMesh;n:number;cap:number;coat:THREE.InstancedBufferAttribute;geo:THREE.BufferGeometry;cast:boolean};
 export const ANIMAL_LOD_METRES=[34,80] as const;
 export const tierForDistance=(d:number):0|1|2=>d<ANIMAL_LOD_METRES[0]?0:d<ANIMAL_LOD_METRES[1]?1:2;
@@ -47,7 +47,9 @@ const _m=new THREE.Matrix4(),_b=new THREE.Matrix4(),_q=new THREE.Quaternion(),_e
 export class AnimalRigLayer{
  readonly material=animalMaterial();readonly slots=new Map<string,Slot>();stats={animals:0,instances:0,draws:0,triangles:[0,0,0] as [number,number,number],byTier:[0,0,0] as [number,number,number]};
  private touched=new Set<string>();
- constructor(private scene:THREE.Scene,private shadows=true){}
+ private scene:THREE.Scene;private shadows:boolean;
+ constructor(scene:THREE.Scene,shadows=true,opts:{opacity?:number;renderOrder?:number}={}){this.scene=scene;this.shadows=shadows;if(opts.opacity!==undefined){this.material.transparent=true;this.material.opacity=opts.opacity;this.material.depthWrite=false;}this.renderOrder=opts.renderOrder??0;}
+ private renderOrder=0;
  beginFrame(){for(const s of this.slots.values())s.n=0;this.touched.clear();this.stats={animals:0,instances:0,draws:0,triangles:[0,0,0],byTier:[0,0,0]};}
  private slot(key:string,geo:THREE.BufferGeometry,need:number,cast:boolean):Slot{
   let s=this.slots.get(key);
@@ -55,7 +57,7 @@ export class AnimalRigLayer{
   const cap=Math.max(need,s?s.cap*2:8);
   const old=s;
   const g=geo.clone();const coat=new THREE.InstancedBufferAttribute(new Float32Array(cap*4),4);coat.setUsage(THREE.DynamicDrawUsage);g.setAttribute('aCoat',coat);
-  const mesh=new THREE.InstancedMesh(g,this.material,cap);mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.frustumCulled=false;mesh.castShadow=cast&&this.shadows;mesh.receiveShadow=false;mesh.count=0;mesh.name='animal:'+key;
+  const mesh=new THREE.InstancedMesh(g,this.material,cap);mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);mesh.frustumCulled=false;mesh.castShadow=cast&&this.shadows;mesh.receiveShadow=false;mesh.count=0;mesh.name='animal:'+key;mesh.renderOrder=this.renderOrder;
   mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(cap*3),3);
   if(old){mesh.instanceMatrix.array.set(old.mesh.instanceMatrix.array.subarray(0,old.n*16));mesh.instanceColor!.array.set(old.mesh.instanceColor!.array.subarray(0,old.n*3));coat.array.set(old.coat.array.subarray(0,old.n*4));
    this.scene.remove(old.mesh);old.mesh.dispose();old.geo.dispose();}
@@ -74,7 +76,7 @@ export class AnimalRigLayer{
    s.n++;this.stats.instances++;this.touched.add(key);
    const idx=geo.index?geo.index.count:geo.getAttribute('position').count;this.stats.triangles[tier]+=idx/3;
   };
-  if(tier===2){put(model.key+'|2',model.far,null,false);return;}
+  if(tier===2){if(d.fly&&model.farFly)put(model.key+'|2f',model.farFly,null,false);else put(model.key+'|2',model.far,null,false);return;}
   if(!d.mats)return;
   if(tier===1){for(const p of model.mid)for(const b of p.bones){const mm=d.mats.get(b);if(mm)put(model.key+'|1|'+p.name,p.geo,mm,p.name==='body');}return;}
   for(const b of model.bones){const g=model.geo[b.part];if(!g||d.hidden?.includes(b.part))continue;const mm=d.mats.get(b.id);if(mm)put(model.key+'|0|'+b.part,g,mm,b.part==='torso'||b.part==='neck'||b.part==='head');}

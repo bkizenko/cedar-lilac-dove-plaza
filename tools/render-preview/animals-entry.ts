@@ -5,7 +5,8 @@ import {AnimalRigLayer,tierForDistance} from '@/scene/animalRigLayer';
 import {entryFor} from '@/scene/animalCatalog';
 import {lookFor} from '@/scene/animalLife';
 import {deerGeo,boarGeo,goatGeo,sheepGeo,horseGeo,cattleGeo,birdGeo,fishGeo} from '@/scene/meshes';
-import '@/scene/animalFlyers';
+import {birdTris} from '@/scene/animalFlyers';
+(window as unknown as {__b:unknown}).__b=birdTris;
 
 type A={species:string;sex?:'m'|'f';age?:number;x:number;z:number;facing:number;gait?:string;phase?:number;t?:number;season?:number;within?:number;tier?:0|1|2;id?:number;seed?:number;label?:string;y?:number;size?:number};
 type Spec={width:number;height:number;cam:{pos:number[];target:number[];fov:number};bg?:string;mode:'new'|'legacy';animals:A[];water?:boolean;ground?:string};

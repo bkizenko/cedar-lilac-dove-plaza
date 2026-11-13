@@ -1,5 +1,5 @@
 /** Geometry toolkit for the animal models: lofted bodies, swept tubes, tufts, merging. Pure maths over THREE.BufferGeometry, deterministic,
- * no clock, no Math.random. Everything is vertex-coloured; colours are authored in sRGB and converted to linear once. */
+ * no clock and no ambient randomness. Everything is vertex-coloured; colours are authored in sRGB and converted to linear once. */
 import * as THREE from 'three';
 
 export type RGB=[number,number,number];
