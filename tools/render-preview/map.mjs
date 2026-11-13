@@ -31,7 +31,7 @@ for (const [name, spec0] of Object.entries(shots)) {
   const spec = { width: 1280, height: 720, ...spec0 };
   if (!page) {
     page = await browser.newPage({ viewport: { width: spec.width, height: spec.height } });
-    page.on('console', m => { if (m.type() === 'error') console.error('[page]', m.text().slice(0, 300)); });
+    page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.error('[page]', m.text().slice(0, 300)); });
     page.on('pageerror', e => console.error('[pageerror]', e.message));
     await page.goto(pathToFileURL(html).href);
   }

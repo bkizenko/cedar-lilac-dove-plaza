@@ -15,6 +15,7 @@ import {UiThemeBoot} from '../uiTheme';
 import {StartupHint} from './StartupHint';
 import {AlertPins,useGlanceAlerts} from './glance';
 import {HelpScreen} from './helpScreen';
+import {RoadsCard} from './roadsCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
 import './hearth.css';
@@ -45,6 +46,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   <header className="hw-top"><ResourceBar hud={hud} engine={engine} onOpen={k=>setScreen(k==='council'?{k:'council'}:{k:'village',tab:'stores'})}/><TimeCard hud={hud} engine={engine} onAges={()=>setScreen({k:'ages'})} onMenu={()=>setScreen({k:'menu'})}/></header>
   {!founding&&<Rail hud={hud} engine={engine} workOpen={screen?.k==='village'&&screen.tab==='work'} onWork={()=>setScreen({k:'village',tab:'work'})}/>}
   <NotesStack hud={hud} engine={engine} onOpen={open} hidden={false} alerts={alerts}/>
+  {!founding&&!screen&&<RoadsCard engine={engine}/>}
   {hud.paused&&!hud.ended&&<div className="hw-paused" role="status"><Pause size={22}/>Paused</div>}
 
   <div className="hw-bottom">

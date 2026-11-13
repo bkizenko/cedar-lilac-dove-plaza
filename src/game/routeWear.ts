@@ -193,18 +193,18 @@ export function routePace(g:Game,x:number,z:number){
 }
 
 /* ---------------------------------------------------------------- render field (pure, no Game) */
-export type RouteField={res:number;texel:number;wear:Float32Array;core:Float32Array;hash:Float32Array};
+export type RouteField={res:number;texel:number;wear:Float32Array;core:Float32Array;hash:Float32Array;amp:Float32Array};
 const scratch=new Map<number,Float32Array>();
 /** Rasterise corridors into soft-edged strips: wear (strip profile x traffic), core (trodden centre of beaten tracks), hash (per-strand tone).
  * Strands combine as 1-(1-a)(1-b), so merging routes read as one wider, darker track and near-parallel ones braid through each other. */
 export function paintRouteField(corridors:readonly Corridor[],seed:number,size:number,texel:number,out?:RouteField):RouteField{
  const res=Math.max(8,Math.min(1536,Math.ceil(size/texel))),tx=size/res,N=res*res;
- const f=out&&out.res===res?out:{res,texel:tx,wear:new Float32Array(N),core:new Float32Array(N),hash:new Float32Array(N)};
- f.texel=tx;f.wear.fill(0);f.core.fill(0);f.hash.fill(.5);
+ const f=out&&out.res===res?out:{res,texel:tx,wear:new Float32Array(N),core:new Float32Array(N),hash:new Float32Array(N),amp:new Float32Array(N)};
+ f.texel=tx;f.wear.fill(0);f.core.fill(0);f.hash.fill(.5);f.amp.fill(0);
  let dist=scratch.get(N);if(!dist){dist=new Float32Array(N).fill(1e9);scratch.set(N,dist);}
  for(const c of corridors){
   const w=corridorWear(c);if(w<.04)continue;
-  const line=corridorLine(c,seed,Math.max(.6,tx*.8)),hw=.32+.95*w,feather=.35+.75*w,reach=hw+feather+tx,s=Math.pow(w,.8),h=(hash32('route-tone',seed,c.id)%1000)/1000;
+  const line=corridorLine(c,seed,Math.max(.6,tx*.8)),hw=.2+.5*w,feather=.6+1.5*w,reach=hw+feather+tx,s=Math.pow(w,.8),h=(hash32('route-tone',seed,c.id)%1000)/1000;
   const touched:number[]=[];
   for(let i=0;i<line.length;i+=2){
    const px=line[i]+size/2,pz=line[i+1]+size/2;
@@ -213,9 +213,9 @@ export function paintRouteField(corridors:readonly Corridor[],seed:number,size:n
   }
   for(const o of touched){
    const d=dist[o];dist[o]=1e9;
-   const t=Math.min(1,Math.max(0,(d-hw*.3)/(hw+feather-hw*.3))),prof=1-t*t*(3-2*t);
+   const t=Math.min(1,Math.max(0,(d-hw*.3)/(hw+feather-hw*.3))),prof=Math.pow(1-t,1.7);
    const v=s*prof;if(v<=.002)continue;
-   const prev=f.wear[o];if(v>prev)f.hash[o]=h;
+   const prev=f.wear[o];if(v>prev){f.hash[o]=h;f.amp[o]=s;}
    f.wear[o]=1-(1-prev)*(1-v);
    const core=w>=ROUTE_RULES.worn?Math.pow((w-ROUTE_RULES.worn)/(1-ROUTE_RULES.worn),.7)*(1-Math.min(1,Math.max(0,d/(hw*.7)))):0;
    if(core>f.core[o])f.core[o]=core;

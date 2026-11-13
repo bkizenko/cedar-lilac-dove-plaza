@@ -7,7 +7,7 @@ export const PAINTER_NOISE_GLSL=`
  float pFbm(vec2 p){return pNoise(p)*.55+pNoise(p*2.07+vec2(5.2,1.3))*.3+pNoise(p*4.3+vec2(1.7,9.2))*.15;}
 `;
 export const PAINTER_FRAGMENT_PARS=`
- uniform sampler2D terrainLight;uniform vec4 pCloud;uniform vec3 pSunDir;uniform vec3 pSunColor;uniform vec2 pWind;uniform vec4 pSnowCfg;uniform sampler2D pContactMap;uniform float pContactStrength;
+ uniform sampler2D terrainLight;uniform vec4 pCloud;uniform vec3 pSunDir;uniform vec3 pSunColor;uniform vec2 pWind;uniform vec4 pSnowCfg;uniform sampler2D pContactMap;uniform float pContactStrength;uniform sampler2D pTrailMap;uniform vec4 pTrailCfg;
  varying vec4 vGeoRock;varying vec4 vGeoState;
  ${PAINTER_NOISE_GLSL}
  ${rockPaletteGLSL()}
@@ -97,6 +97,20 @@ export function painterColor(size:number,biomes:boolean){const dbg=(globalThis a
     // geology: rock family weights, soil depth, scree, height above the local water, bed tilt
     vec4 pRW=vGeoRock;float pSoilD=clamp(vGeoState.x,0.,1.),pScree=clamp(vGeoState.y,0.,1.),pRel=vGeoState.z,pTilt=vGeoState.w;
     vec3 pBase=diffuseColor.rgb;
+    // 0. worn routes (routeWear.ts, one soft-edged field texture). Wear thins the grass first, then bares the local soil; it never adds geometry.
+    vec4 pTm=texture2D(pTrailMap,pW/${size.toFixed(1)}+.5);
+    float pTe=pTm.r*pTrailCfg.y*smoothstep(-.15,.4,pRel)*(1.-pSand*.45);
+    float pTj=(pNB-.5)*.9+(pNC-.5)*.7+(pND-.5)*.5+(pNoise(pW*4.3+vec2(7.,2.))-.5)*.4*pNear;
+    float pTedge=pTe*(1.-pTe)*4.;
+    float pTG=smoothstep(.03,.42,pTe+pTj*pTedge*.55)*(1.-pRock*.5);
+    float pTW=smoothstep(.2,.62,pTe+pTj*pTedge*.5)*(1.-pRock*.7);
+    float pTq=pTm.r/max(pTm.a,.02);
+    float pRutV=(1.-smoothstep(0.,.14,abs(pTq-.6)))*smoothstep(.9,.99,pTm.a)*pTW*(.5+pNC*.7)*(1.-pSnow*.5);
+    float pNND=pNoise(pW*6.3+vec2(4.,1.));
+    float pPud=pTrailCfg.x*(1.-smoothstep(.04,.16,pSlope))*pTW*clamp(pRutV*1.3+smoothstep(.56,.74,pNoise(pW*.95+vec2(2.,6.)))*.55,0.,1.);
+    pGrass*=1.-pTG*.92;
+    vec3 pTSoil=mix(pSoilOf(pRW),vec3(.55,.39,.24),.6);
+    pTSoil=mix(pTSoil,vec3(.64,.51,.35),pDry*.35);
     // 1. broad lush / dry patches and layered luminance mottle (soft painted wash, fades with distance)
     float pLush=smoothstep(.32,.7,pNA);
     vec3 pLushTint=mix(vec3(1.09,1.02,.74),vec3(.9,1.05,.96),pLush*(.55+pDamp*.5));
@@ -133,6 +147,17 @@ export function painterColor(size:number,biomes:boolean){const dbg=(globalThis a
      if(pSlope>.12){float pRill=smoothstep(.55,.85,pNoise(vec2(dot(pW,pTan)*2.1,vSurfaceWorld.y*.45)));pSoilCol*=1.-pRill*.14*smoothstep(.12,.4,pSlope);}
      if(pDry>.35&&pNear>.05){vec2 pCk=pCracks(pW*.62+pNoise(pW/5.)*.6);pSoilCol=mix(pSoilCol*(.9+pCk.y*.2),pSoilCol*.52,pCk.x*.8*pNear);}
      pBase=mix(pBase,pSoilCol,pBare*.82);
+    }
+    // 3a. the route surface: trampled fringe, then packed soil in the colour of the ground it wore through, damp in rain, ruts shadowed, puddles holding sky
+    if(pTG>.01){
+     pTSoil=mix(pTSoil,pBase*vec3(1.3,1.0,.6),.1)*(.9+pNC*.2+(pTm.b-.5)*.2+(pND-.5)*.12*pNear);
+     pTSoil=mix(pTSoil,vec3(.72,.62,.44)*(.9+pNC*.15),pSand*.7);
+     pTSoil*=1.-pTrailCfg.x*.3-pDamp*.1;
+     pBase=mix(pBase,pBase*vec3(1.12,1.02,.66),pTG*(1.-pTW)*.7);
+     float pTcov=pTW*mix(.6,.97,smoothstep(.45,.95,pTm.a))*(.78+.22*smoothstep(.25,.75,pNND));
+     pBase=mix(pBase,pTSoil,pTcov);
+     pBase*=1.-pTm.g*.07*pTW-pRutV*.06;
+     pBase=mix(pBase,pBase*vec3(.62,.64,.68)+vec3(.04,.05,.07),pPud*.6);
     }
     // 3c. desert pavement: dark varnished stones over pale fines on flat, dry, thin ground
     float pPave=pDry*smoothstep(.3,.0,pSoilD+pSlope*.8)*(1.-pRock)*(1.-pSand)*(1.-pSnow)*pNear;
@@ -205,7 +230,11 @@ export function painterColor(size:number,biomes:boolean){const dbg=(globalThis a
      float pPocket=(1.-pLm.r)*7.+(1.-pLm.g)*5.;
      pSnowAmt=pSnow*smoothstep(-2.,2.5,vSurfaceWorld.y+pPocket-pSnowLine)*(1.-smoothstep(.5,.95,pSlope)*.75)*(1.-pWet*.8)*(1.-pBed);
      pSnowAmt=clamp(pSnowAmt+pSnow*.28*smoothstep(.3,.0,pSlope),0.,1.);
+     float pTr=clamp(pTW*.75+pTG*.3,0.,1.);
+     pSnowAmt*=1.-pTr*.22;
      pBase=mix(pBase,vec3(.9,.93,.97)*(.93+pNC*.1),pSnowAmt*.92);
+     // compacted snow on a route: greyer and harder, bare soil showing through the beaten centre
+     pBase=mix(pBase,mix(vec3(.7,.74,.83),pTSoil*1.2,.08+pTm.g*.32),smoothstep(.12,.55,pTr)*pSnow*.85);
     }
     diffuseColor.rgb=${dbg==='vc'?'diffuseColor.rgb':dbg==='nrm'?'pN*.5+.5':dbg==='bank'?'vec3(0.,vSurfaceRock,vSurfaceSand)':dbg==='geo'?'vGeoRock.xyz*.8+vec3(vGeoState.y)':'pBase'};
     float pCloudShade=pCloud.x*smoothstep(.46,.64,pFbm((pW+vec2(pCloud.y*2.4,pCloud.y*1.1))/200.))*(1.-smoothstep(520.,1600.,pDist));
@@ -228,10 +257,12 @@ export const painterRoughness=`
     #include <roughnessmap_fragment>
     roughnessFactor=clamp(mix(.97,.82,pRock)-pWet*.26+(pND-.5)*.06,.62,1.);
     roughnessFactor=mix(roughnessFactor,.6,pSnow*.6);
+    roughnessFactor=mix(roughnessFactor,.2,pPud);roughnessFactor=mix(roughnessFactor,.58,pSnow*pTW*.7);
 `;
 export const painterNormal=(rockStrength:number,grassStrength:number)=>`
     #include <normal_fragment_maps>
     float pBumpFar=1.-smoothstep(60.,220.,pDist);
     float pBump=((pNC-.5)*.5+(pND-.5)*.35+(pNB-.5)*.2)*pNear*pGrass+((pNB-.5)*.5+(pNoise(pWu/2.3)-.5)*.16*pNear)*pRock*pMid+(pRip-.5)*.35*pSand*pNear;
+    pBump+=-pRutV*.35*pNear*(1.-pPud*.8);
     normal=surfacePerturb(-vViewPosition,normal,pBump*(1.-smoothstep(.4,.7,pSlope))*mix(${grassStrength.toFixed(3)},${rockStrength.toFixed(3)},pRock)*(1.-pSnow*.5));
 `;
