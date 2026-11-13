@@ -1,3 +1,5 @@
+import {carriedFoodLots} from '../game/tradeFood';
+import {FOOD_NAMES} from '../game/pantry';
 import {methodRecordTitle} from '../game/methodRecordRules';
 import {methodRecords} from '../game/methodRecords';
 import {draftCartCapacity} from '../game/draftCart';
@@ -29,7 +31,11 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       const craftSeconds = resident.craftingXP ?? 0;
       const skills = Object.entries(resident.productionSkills ?? {});
       if (resident.carry > 0 && resident.carryType) {
-        carried.push(`${amount(resident.carry)} ${resident.carryFood ?? resident.carryType}`);
+        if(resident.carryType==='food') {
+          for(const [kind,units] of Object.entries(carriedFoodLots(resident))) {
+            if(units&&units>0)carried.push(`${amount(units)} ${FOOD_NAMES[kind as keyof typeof FOOD_NAMES]}`);
+          }
+        } else carried.push(`${amount(resident.carry)} ${resident.carryType}`);
       }
       for (const item of ITEM_KINDS) {
         const count = resident.itemCargo?.[item] ?? 0;
