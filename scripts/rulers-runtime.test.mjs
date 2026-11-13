@@ -171,7 +171,8 @@ test('lane A: a party mid-expedition survives save/load with its packed food, an
  const {encodeGame,decodeGame}=await import('../src/game/persistence.ts');const {beginExpedition}=await import('../src/game/journeys.ts');
  const {foodDemand}=await import('../src/game/settlement.ts');
  const g=fixture(),u=g.state.units.find(u=>u.team===0&&u.type==='worker'&&u.maturesAt===undefined);
- g.tribe(0).food=200;assert.ok(beginExpedition(g,u));const packed=u.expedition.food,left=g.tribe(0).food;
+ {const {expeditionHome}=await import('../src/game/expeditionProvisions.ts');const {foodInventory}=await import('../src/game/pantry.ts');const t=g.tribe(0),h=expeditionHome(g,u);assert.ok(h,'a cache to load provisions at');u.x=h.spot.x;u.z=h.spot.z;const inv=foodInventory(t);inv.berries=200;t.foodLots=inv;t.food=200;}
+ assert.ok(beginExpedition(g,u));const packed=u.expedition.food,left=g.tribe(0).food;
  g.state.time=RULERS_YEAR_SECONDS*2+1;advanceRulers(g);
  g.state.rulers.wards=[{kind:'foster',person:'x',from:'0',to:'1',since:1}];
  const back=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));
