@@ -96,8 +96,10 @@ function measure(view:WorldView,game:Game,S:Spec){
   const g=m.geometry;if(!g)return;const per=((g.index?g.index.count:g.attributes.position?.count)||0)/3,n=m.isInstancedMesh?(m.count??0):1;if(n<=0)return;
   const name=o.name||'';const k=name==='terrain'?'terrain':name.startsWith('filler-horizon')?'filler horizon crowns':name.startsWith('filler-far')?'filler far crowns+trunks':/^resource-(far|.*-t[01]|stumps|contact)/.test(name)||name.startsWith('resource-')?(name.startsWith('resource-far')?'sim far crowns+trunks':'sim trees near/mid'):name.startsWith('people')?'people':name.startsWith('nonblocking')?'ground dressing':/water|river|sea/.test(name)?'water':'buildings, props, other';
   add(k,1,n,per*n);});
- const times:number[]=[];for(let i=0;i<3;i++){const t=performance.now();view.render();times.push(performance.now()-t);}times.sort((a,b)=>a-b);
+ const times:number[]=[];const gl=view.renderer.getContext();for(let i=0;i<3;i++){const t=performance.now();view.render();gl.finish();times.push(performance.now()-t);}times.sort((a,b)=>a-b);
+ // CPU cost of the scene sync (tree refresh included) as the camera pans, ms per sync: the real, device-independent half of the frame cost
+ const syncMs:number[]=[];{const lx=view.look.x,lz=view.look.z;for(let k=0;k<7;k++){view.look.x=lx+k*7;view.look.z=lz-k*5;view.updateCamera(0);const t=performance.now();view.sync(game,.12);syncMs.push(performance.now()-t);}view.look.x=lx;view.look.z=lz;view.updateCamera(0);view.sync(game,.12);}syncMs.sort((a,b)=>a-b);
  const mem=(performance as unknown as {memory?:{usedJSHeapSize:number}}).memory,i=view.renderer.info;
  const bs=(view as unknown as {biomeScene?:{lastFiller:unknown}}).biomeScene;
- return {groups,ms:Math.round(times[1]),msAll:times.map(Math.round),heapMB:mem?Math.round(mem.usedJSHeapSize/1048576):null,geometries:i.memory.geometries,textures:i.memory.textures,programs:i.programs?.length,filler:bs?.lastFiller,far:view.camera.far,fog:(view.scene.fog as THREE.FogExp2).density,bands:view.getDrawBands()};
+ return {groups,ms:Math.round(times[1]),syncMs:+syncMs[3].toFixed(2),msAll:times.map(Math.round),heapMB:mem?Math.round(mem.usedJSHeapSize/1048576):null,geometries:i.memory.geometries,textures:i.memory.textures,programs:i.programs?.length,filler:bs?.lastFiller,far:view.camera.far,fog:(view.scene.fog as THREE.FogExp2).density,bands:view.getDrawBands()};
 }
