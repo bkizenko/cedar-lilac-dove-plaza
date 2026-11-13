@@ -1218,3 +1218,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 07:52 ET Claude: shipped lane C village lawn ground cover around settlement buildings (grass/tall grass/flower tufts, nonblocking, capped; harness now renders at med quality, earlier shots had no ground dressing; biome/civ/people/era/wonder 50/50, tsc nil on touched file, SwiftShader docs/renders/visuals/village-lawn-2026-11-13.png) (0b6fca69) / now on Tigrane/Kaaltun civic polish, hearth glow on lawn / blocked: none
 
 13:20 ET Claude: shipped building detail + variety pass (every hut/house/granary/shed its own geometry per id, construction-detail layer, per-civ hut forms, opt-in muted tone; caps hold; sheets in docs/renders/building-detail) (3ac2e22f) / now on idle, ready for next item / blocked: none
+
+08:22 ET Claude: shipped Test lab button on the main HUD (left column under the village rail, 52px tap, 16px text, clear of map/music/speed/alerts at 1440x900 and 390x844) + Menu setting "Show Test lab on main screen" (default on, try/catch storage); Menu Tools Test lab kept; renders in docs/renders/test-lab-button (6ddcae53) / now on idle, ready for next item / blocked: none
