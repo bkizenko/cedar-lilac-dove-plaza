@@ -65,3 +65,7 @@ does not define one) and the `tuned` rig numbers.
 Only the stand-in renderer was run in its authoring sandbox. `render-three.mjs`
 and the Blender scripts were written without three/Blender available: they are
 syntax-checked, and the exporter was run in Node.
+
+## First-person (eye-level) frames of the real game
+
+`fp.mjs` (entry `fp-entry.tsx`, shots `fp-shots.json`, evidence shots `fp-findings.json`, crops `fp-crops.mjs`) renders the real `Game` + `WorldView` + `HudHearth` with the camera at an adult eye (1.55 m). Output is PNG with a mean-luminance guard (`--min-lum`, default 70). See `docs/FIRST_PERSON_DESIGN.md`, "Real eye-level renders".
