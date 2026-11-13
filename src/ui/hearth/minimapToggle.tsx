@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useState} from 'react';
 import {MINIMAP_KEY,readMinimapCollapsed,writeMinimapCollapsed,isMinimapShortcut} from './minimapPrefs';
-import {Map as MapIcon,ChevronsDownRight} from 'lucide-react';
+import {Map as MapIcon,Minimize2} from 'lucide-react';
 
 export {MINIMAP_KEY,readMinimapCollapsed,writeMinimapCollapsed,isMinimapShortcut};
 export function useMinimapCollapsed(){
@@ -17,5 +17,5 @@ export function MinimapReopen({onClick}:{onClick:()=>void}){
  return <button type="button" className="hw-map-reopen" aria-label="Show map (Shift+M)" title="Show map (Shift+M)" onClick={onClick}><MapIcon size={24}/><span>Map</span></button>;
 }
 export function MinimapCollapseButton({onClick}:{onClick:()=>void}){
- return <button type="button" className="hw-map-collapse" aria-label="Hide map (Shift+M)" title="Hide map (Shift+M)" onClick={onClick}><ChevronsDownRight size={24}/></button>;
+ return <button type="button" className="hw-map-collapse" aria-label="Hide map (Shift+M)" title="Hide map (Shift+M)" onClick={onClick}><Minimize2 size={24}/></button>;
 }

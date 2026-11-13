@@ -8,6 +8,7 @@ import {productionWorkplaceGeos} from './productionWorkplaces';
 import {timberGateKit} from './gateKit';
 import * as THREE from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { BUILDINGS } from "@/game/constants";
 import type { BldType, UnitType, ResKind } from "@/game/types";
 import type { HaulageKind } from "@/game/haulage";
 
@@ -156,7 +157,7 @@ export function buildingGeos(): Record<BldType, BldGeo> {
   const hut = thatchHut(2.6, 1.9, 2.5);
   const th = hall(5.4, 4.6, 2.6, 1.7, true);
   // A field is soil and individual plants, never a rigid wooden foundation.
-  const soil = new THREE.PlaneGeometry(7.4, 7.4, 24, 24);
+  const soil = new THREE.PlaneGeometry(BUILDINGS.farm.w, BUILDINGS.farm.d, 32, 32);
   soil.rotateX(-Math.PI / 2); soil.translate(0, .075, 0);
   const soilColors: number[] = [];
   for (let i = 0; i < soil.attributes.position.count; i++) {

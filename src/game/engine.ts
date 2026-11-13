@@ -210,6 +210,11 @@ export class Engine {
     this.waterDraft={state:this.game.state,kind,source:null,target:null,plan:null};this.updateGhost();this.pushHud();
   }
   cancelWaterEngineering(){this.waterDraft=null;this.pushHud();}
+  /** Field Water mode: irrigated and rain-fed plots tinted on the map. Display only. */
+  fieldWaterMode=false;
+  setFieldWaterMode(on:boolean){this.fieldWaterMode=on;this.view.setFieldWaterMode(on);this.pushHud();}
+  /** Planned irrigation ditch drawn on the terrain while the player reads the quote. */
+  previewDitch(plan:{from:{x:number;z:number};to:{x:number;z:number};ok:boolean;length:number}|null){this.view.setDitchPreview(plan&&plan.length>0?{x0:plan.from.x,z0:plan.from.z,x1:plan.to.x,z1:plan.to.z,ok:plan.ok}:null);}
   waterEngineeringStatus(){
     if(this.waterDraft&&this.waterDraft.state!==this.game.state)this.waterDraft=null;
     const d=this.waterDraft,p=d?.plan,issue=p?.issues[0]??null;
@@ -753,6 +758,7 @@ export class Engine {
     }
     const boat=this.view.pickBoat(cx,cy,this.game);
     if(boat&&boat.team===0){this.game.selectBoat(boat.id);this.pushHud();return;}
+    if(boat&&boat.team!==0){this.game.selectForeignBoat(boat.id);this.pushHud();return;}
     const entity = this.view.pickEntity(cx, cy, this.game);
     if(entity?.kind==="building"&&entity.team===0&&!this.game.finished(entity)&&!additive&&this.game.selectedUnits().length)this.game.orderConstruction(entity);
     else if (entity) this.game.selectEntity(entity, additive, true);
@@ -785,7 +791,12 @@ export class Engine {
       this.view.setGhost(null, 0, 0, 0, false);
       return;
     }
-    if(this.game.selectedBoat!==null){this.game.issueMove(g.x,g.z);this.pushHud();return;}
+    if(this.game.selectedBoat!==null){
+      // right-click on a visible foreign hull names it as the target; anywhere else on water it is a sailing order
+      const target=this.view.pickBoat(cx,cy,this.game),own=this.game.selectedBoat;
+      if(target&&target.team!==0){const original=this.game;void this.dispatch({kind:'naval-order',action:'attack',boatId:own,targetBoatId:target.id}).then(r=>{if(this.game===original)if(r.accepted)this.presentationNotice(r.reason,2);}).catch(er=>this.presentationNotice(er instanceof Error?er.message:String(er),4));this.pushHud();return;}
+      this.game.issueMove(g.x,g.z);this.pushHud();return;
+    }
     const record=this.view.pickMethodRecord?.(cx,cy,this.game);
     if(record){
       const actor=this.game.selectedUnits().find(u=>u.team===0&&u.hp>0);

@@ -2,6 +2,11 @@ import type {Game} from './sim';
 import type {GameState,Unit} from './types';
 import {isDependent} from './settlement';
 import {nudgeSocietyRelation,societyRelation} from './societyRelations';
+import {WEAPON_CARGO_KINDS,WEAPON_CARGO_RULES,WEAPON_CARGO_LOAD_UNITS,weaponCargoLoad,type WeaponCargoKind} from './weaponCargo';
+import {EQUIPMENT_LOAD_RULES} from './equipmentLoadRules';
+import {robCarriedArmor} from './armor';
+import {robFarmTool} from './farmToolCargo';
+import {UNITS} from './constants';
 
 /**
  * Hostile acts against foreign traders (attack, rob, capture, kill) resolve through the same physical sim as
@@ -103,6 +108,40 @@ export function validTraderIncidentState(value:unknown){
  const teams=Array.isArray(s.tribes)?s.tribes.length:32,ids=new Set<number>();
  for(const i of d.list){if(!i||!Number.isSafeInteger(i.id)||i.id<1||ids.has(i.id)||!Number.isInteger(i.victim)||i.victim<1||i.victim>=teams||!Number.isSafeInteger(i.trader)||i.trader<1||!['robbed','captured','killed'].includes(i.kind)||!Number.isFinite(i.at)||i.at<0||i.at>Number(s.time)+1e-6||!Array.isArray(i.witnesses)||i.witnesses.length>R.maximumWitnesses||i.witnesses.some(w=>!Number.isSafeInteger(w)||w<1)||i.deliveredAt!==undefined&&!Number.isFinite(i.deliveredAt)||i.suspectedAt!==undefined&&!Number.isFinite(i.suspectedAt))return false;ids.add(i.id);}
  return true;
+}
+/* ------------------------------------------------------------------ gear and animals carried by a trader (rob adapters) */
+/** Real holders a trader can be relieved of: weapon bundles, the weapon on loan to an armed escort, carried armor, a farm tool, a led pack animal.
+ * Counted only on traders and loan-armed escorts, so a farmer's own tool is not fair game here. Every transfer moves the existing record, exactly once. */
+export type GearCount={weapons:number;loanWeapon:WeaponCargoKind|null;armor:boolean;tool:boolean;animal:boolean;total:number};
+const loanKind=(u:Unit):WeaponCargoKind|null=>u.caravanArmed&&u.militia?u.type==='spearman'?'spears':u.type==='archer'?'bows':u.type==='swordsman'?'blades':null:null;
+export function heldGear(g:Game,u:Unit):GearCount{
+ const none:GearCount={weapons:0,loanWeapon:null,armor:false,tool:false,animal:false,total:0};
+ if(!u||u.hp<=0||u.team===0||u.team===3||!(isTraderUnit(g,u)||u.caravanArmed))return none;
+ const weapons=WEAPON_CARGO_KINDS.reduce((n,k)=>n+(u.weaponCargo?.[k]||0),0),loanWeapon=loanKind(u),armor=u.armorCargoId!==undefined,
+  tool=u.farmToolCargoId!==undefined||(!!u.farmTool&&!u.farmToolWork),animal=!!u.packAnimal&&u.packAnimal.hp>0&&u.haulage==='pack';
+ return {weapons,loanWeapon,armor,tool,animal,total:weapons+(loanWeapon?1:0)+(armor?1:0)+(tool?1:0)+(animal?1:0)};
+}
+const personalLoad=(u:Unit)=>weaponCargoLoad(u)+(u.armorCargoId===undefined?0:EQUIPMENT_LOAD_RULES.armor)+(u.farmToolCargoId===undefined?0:EQUIPMENT_LOAD_RULES.farmTool);
+/** Take a loan weapon off an armed escort into `taker`'s hands; the escort becomes the unarmed worker it was. Returns false (nothing moves) without room. */
+export function seizeLoanWeapon(victim:Unit,taker:Unit):WeaponCargoKind|null{
+ const kind=loanKind(victim);if(!kind)return null;
+ if(personalLoad(taker)+WEAPON_CARGO_LOAD_UNITS[kind]>WEAPON_CARGO_RULES.maximumCarrierUnits)return null;
+ (taker.weaponCargo??={})[kind]=(taker.weaponCargo?.[kind]||0)+1;
+ const d=UNITS.worker;victim.type='worker';victim.militia=false;victim.caravanArmed=undefined;victim.range=d.range;victim.dmg=d.dmg;victim.rof=d.rof;victim.target=null;
+ return kind;
+}
+/** Robbery of gear: bundles up to the taker's load, the loan weapon, carried armor, a farm tool, the led pack animal. Returns short labels of what moved. */
+export function robGear(g:Game,robber:Unit,victim:Unit):string[]{
+ const have=heldGear(g,victim);if(!have.total||robber.hp<=0)return [];const took:string[]=[];
+ for(const k of WEAPON_CARGO_KINDS){const n=victim.weaponCargo?.[k]||0;if(!n)continue;
+  const fit=Math.min(n,Math.floor((WEAPON_CARGO_RULES.maximumCarrierUnits-personalLoad(robber))/WEAPON_CARGO_LOAD_UNITS[k]));if(fit<=0)continue;
+  (robber.weaponCargo??={})[k]=(robber.weaponCargo?.[k]||0)+fit;victim.weaponCargo![k]=n-fit;if(victim.weaponCargo![k]!<=0)delete victim.weaponCargo![k];took.push(`${fit} ${k}`);}
+ if(victim.weaponCargo&&!WEAPON_CARGO_KINDS.some(k=>(victim.weaponCargo![k]||0)>0))delete victim.weaponCargo;
+ if(have.armor&&robber.armorCargoId===undefined){if(robCarriedArmor(g,victim.id,robber.id).accepted)took.push('armor');}
+ if(have.tool){const r=robFarmTool(g,victim,robber);if(r.accepted)took.push('a farm tool');}
+ if(have.animal&&!robber.packAnimal&&!robber.haulage){robber.packAnimal=victim.packAnimal;robber.haulage='pack';victim.packAnimal=undefined;victim.haulage=undefined;took.push('a pack animal');}
+ const loan=seizeLoanWeapon(victim,robber);if(loan)took.push(`a ${loan==='spears'?'spear':loan==='bows'?'bow':'blade'}`);
+ return took;
 }
 /** Consequence tags shown as icons beside a verb. */
 export type ConsequenceTag='war'|'grievance'|'witness'|'loot'|'custody'|'ransom';

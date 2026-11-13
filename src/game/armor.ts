@@ -34,6 +34,18 @@ function reachesPoint(g:Game,u:Unit,x:number,z:number){
 }
 /** Physical custody primitive. Caller authorizes the trade/capture; this function
  * never prices goods, creates assets, credits stock or changes provenance/condition. */
+/** Taking carried armor from someone by force, within the contact distance the demand already required. The same asset moves into the taker's hands
+ * (team follows the holder, condition and provenance stay); nothing is copied. A repair in progress or an already-loaded taker refuses. */
+export function robCarriedArmor(g:Game,victimId:number,robberId:number):ArmorMoveResult{
+ const no=(reason:string):ArmorMoveResult=>({accepted:false,reason}),s=(g.state as ArmorGameState).armor,victim=g.state.units.find(u=>u.id===victimId),robber=g.state.units.find(u=>u.id===robberId&&u.hp>0&&!u.prisoner);
+ const a=s?.assets.find(x=>x.holder.kind==='carried'&&x.holder.id===victimId);
+ if(!s||!a||!victim||!robber)return no('No carried armor to take');
+ if(repairClaimed(g,a.id))return no('Armor under repair stays with its owner');
+ if(robber.armorCargoId!==undefined||s.assets.some(o=>o.id!==a.id&&o.holder.kind==='carried'&&o.holder.id===robber.id))return no('The taker already carries armor');
+ if(Math.hypot(robber.x-victim.x,robber.z-victim.z)>ARMOR_RULES.pickupRadius*2.5)return no('Close in on the person first');
+ delete victim.armorCargoId;a.team=robber.team;a.holder={kind:'carried',id:robber.id,x:robber.x,z:robber.z};robber.armorCargoId=a.id;changed(s);
+ return{accepted:true,reason:'Their carried armor taken'};
+}
 export function moveArmorAsset(g:Game,armorId:number,next:ArmorHolder,targetTeam?:number):ArmorMoveResult{
  const no=(reason:string):ArmorMoveResult=>({accepted:false,reason}),s=(g.state as ArmorGameState).armor,a=s?.assets.find(a=>a.id===armorId);
  if(!s||!a)return no('Existing armor asset is unavailable');

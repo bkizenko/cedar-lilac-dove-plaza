@@ -200,6 +200,17 @@ function MapGallery({engine,onClose}:{engine:Engine|null;onClose:()=>void}){
   setNote(`${sc.label}: ${p.found?'':'no such ground nearby, showing camp. '}${sc.weather?'Best in rain. ':''}${sc.season?'Best in autumn. ':''}${sc.check}`);onClose();};
  return <div className="hw-map-gallery" role="group" aria-label="Map gallery"><div className="hw-row" style={{flexWrap:'wrap'}}>{MAP_GALLERY.map(s=><button key={s.id} type="button" className="hw-btn-wide" disabled={!engine} onClick={()=>go(s.id)}>{s.label}</button>)}</div>{note&&<p role="status">{note}</p>}</div>;
 }
+/** Menu > World: switches for worn routes, waystations and raiders' pull toward stops (each reads the save's own switch). */
+function RouteSwitches({engine}:{engine:Engine}){
+ const [,bump]=useState(0);const st=engine.game.state as any;
+ const routes=st.routeWear?.enabled!==false,stops=st.waystations?.enabled!==false,raid=st.waystations?.raidBias===true;
+ const set=(c:{routes?:boolean;waystations?:boolean;raiders?:boolean})=>{void engine.dispatch({kind:'set-route-switches',...c}).then(()=>bump(n=>n+1));};
+ return <section className="hw-card"><h3>Routes and waystations</h3><div className="hw-form">
+  <label className="hw-check"><input type="checkbox" checked={routes} onChange={e=>set({routes:e.target.checked})}/>Worn routes</label>
+  <label className="hw-check"><input type="checkbox" checked={routes&&stops} disabled={!routes} onChange={e=>set({waystations:e.target.checked})}/>Waystations on long routes</label>
+  <label className="hw-check"><input type="checkbox" checked={routes&&stops&&raid} disabled={!routes||!stops} onChange={e=>set({raiders:e.target.checked})}/>Raiders seek out stops</label></div></section>;
+}
+
 export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:{hud:HudSnapshot;engine:Engine|null;onClose:()=>void;lifecycle:{busy:boolean;error?:string|null;run:(f:()=>Promise<unknown>,after?:(r:any)=>void)=>unknown};onTest:()=>void;onHide:()=>void;onTrade?:()=>void}){
  const d=engine?.game.state.difficulty??'normal';
  const [tab,setTab]=useState('play');
@@ -223,6 +234,7 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade}:
   {tab==='world'&&<div className="hw-stack">
    <section className="hw-card"><h3>This world</h3><div className="hw-chips"><span className="hw-chip">Seed {engine?.game.state.seed}</span><span className="hw-chip">Gen {engine?.game.state.worldgenVersion??1}</span><GameTooltip title={DIFFICULTIES[d].name} description={`${DIFFICULTIES[d].description} ${difficultyEffects(d)}`}><span className="hw-chip" tabIndex={0}>{DIFFICULTIES[d].name}</span></GameTooltip></div>{engine&&<div className="hw-legacy"><PerformanceReadout engine={engine}/></div>}</section>
    {engine&&<section className="hw-card"><h3>New world</h3><div className="hw-legacy"><WorldSetup engine={engine}/></div></section>}
+   {engine&&<RouteSwitches engine={engine}/>}
    {engine&&<section className="hw-card"><h3>Map gallery</h3><MapGallery engine={engine} onClose={onClose}/></section>}
    {engine&&<section className="hw-card"><h3>Water works</h3><div className="hw-legacy"><WaterEngineeringControls engine={engine}/></div></section>}
   </div>}

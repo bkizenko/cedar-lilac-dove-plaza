@@ -88,9 +88,11 @@ test('capture takes an unarmed trader into custody with the knowledge snapshot t
  assert.equal(performContactAction(g,'release-prisoner',id,scout.id).accepted,true);
 });
 
-test('an armed trader cannot be captured; the reason is physical',()=>{
- const {g,trader,scout}=fixture(caravan,{guards:2});Object.assign(trader,{type:'spearman',militia:true,caravanArmed:true});
+test('an armed adult who is not a caravan escort cannot be captured; a healthy escort fights on; a beaten one can yield',()=>{
+ const {g,trader,scout}=fixture(caravan,{guards:2});Object.assign(trader,{type:'spearman',militia:true});
  assert.match(contactActions(g,trader.id,scout.id).capture.reason,/armed adult must be defeated/);
+ Object.assign(trader,{caravanArmed:true});assert.match(contactActions(g,trader.id,scout.id).capture.reason,/fights on until it is beaten/);
+ trader.hp=trader.maxHp*.4;assert.equal(contactActions(g,trader.id,scout.id).capture.reason,null);
 });
 
 test('a witness carries the news home on foot; only then does the victim society change attitude',()=>{
@@ -128,4 +130,40 @@ test('incidents and trade knowledge survive a save round trip; corrupt ones are 
  const bad=JSON.parse(JSON.stringify(saved));bad.state.traderIncidents.list[0].kind='bogus';assert.throws(()=>decodeGame(bad));
  const old=JSON.parse(JSON.stringify(saved));delete old.state.traderIncidents;const oldLoad=decodeGame(old);assert.equal(oldLoad.state.traderIncidents,undefined);
  const stripped=JSON.parse(JSON.stringify(saved));delete stripped.state.units.find(u=>u.id===trader.id).prisoner.knows.trade;assert.ok(decodeGame(stripped));
+});
+
+test('a beaten caravan escort is captured with the weapon it carried: the weapon goes into a guard\'s hands, the stores are untouched',()=>{
+ const {g,trader,scout,guard}=fixture(caravan,{guards:2});Object.assign(trader,{type:'spearman',militia:true,caravanArmed:true});trader.hp=trader.maxHp*.4;
+ const spears=g.tribe(1).spears,cap=performContactAction(g,'capture',trader.id,scout.id);assert.equal(cap.accepted,true,cap.reason);
+ drive(g,200,()=>trader.prisoner?.phase==='custody');assert.equal(trader.prisoner?.phase,'custody');
+ assert.equal(trader.type,'worker');assert.equal(trader.militia,false);assert.equal(trader.caravanArmed,undefined);
+ const holders=g.state.units.filter(u=>u.weaponCargo?.spears);assert.equal(holders.length,1,'exactly one guard holds the taken spear');assert.equal(holders[0].weaponCargo.spears,1);assert.equal(holders[0].team,0);
+ assert.equal(g.tribe(1).spears,spears,'the loan never touched anyone\'s stock: it was already out');assert.equal(trader.carry,10,'cargo stays on the same body');
+});
+
+function gearTrader(g,t){
+ Object.assign(t,{x:10,z:50,visit:{phase:'waiting',wait:0},weaponCargo:{spears:2,bows:1},farmTool:'stoneHoe',farmToolCondition:.8,haulage:'pack',packAnimal:{id:g.id(),hp:30,maxHp:30,scale:1,species:'goat',hunger:0,thirstSeconds:0,foodConsumed:0,waterConsumedLiters:0}});
+ const armorId=g.id(),projectId=g.id();g.state.armor={version:1,assets:[{id:armorId,team:1,kind:'paddedTorso',condition:.9,projectId,createdAt:0,holder:{kind:'carried',id:t.id,x:t.x,z:t.z}}],metrics:{crafted:1,damagePrevented:0}};t.armorCargoId=armorId;
+}
+test('rob takes the gear a trader carries: weapon bundles, armor, a farm tool and the led animal move exactly once to the robber',()=>{
+ const {g,scout,trader,guard}=fixture(gearTrader);const robber=guard[0];
+ const before={spears:2,bows:1},animalId=trader.packAnimal.id;assert.equal(contactActions(g,trader.id,scout.id).rob.reason,null,'gear alone is takeable');
+ const rob=performContactAction(g,'rob',trader.id,scout.id);assert.equal(rob.accepted,true,rob.reason);
+ drive(g,120,()=>!trader.packAnimal);
+ assert.deepEqual(robber.weaponCargo,before,'the exact bundles moved');assert.equal(trader.weaponCargo,undefined);
+ assert.equal(robber.armorCargoId!==undefined||g.state.armor.assets[0].holder.id===robber.id,true);assert.equal(g.state.armor.assets.length,1,'one armor asset, not copied');assert.equal(g.state.armor.assets[0].holder.id,robber.id);assert.equal(g.state.armor.assets[0].team,0);
+ assert.equal(trader.farmTool,undefined);assert.equal(g.state.farmToolCargo.tools.length,1,'one tool record');assert.equal(g.state.farmToolCargo.tools[0].holder.unitId,robber.id);assert.equal(g.state.farmToolCargo.tools[0].condition,.8,'condition kept');assert.equal(g.state.farmToolCargo.tools[0].originalOwnerTeam,1);
+ assert.equal(robber.packAnimal?.id,animalId);assert.equal(trader.packAnimal,undefined);assert.equal(trader.haulage,undefined);
+ assert.equal(g.tribe(1).hostile,true);assert.equal(trader.hp,trader.maxHp,'a robbery is not a killing');
+ assert.equal(traderIncidentCounts(g).pending+traderIncidentCounts(g).delivered+traderIncidentCounts(g).suspected>=1,true,'the robbery is on the ledger');
+ // a second robbery finds nothing left; nothing is duplicated by saving
+ assert.match(robContactIssue(g,trader.id),/nothing to take/);
+ const g2=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));assert.equal(g2.state.units.filter(u=>u.packAnimal?.id===animalId).length,1);
+});
+test('a robber without room takes what fits and leaves the rest on the trader; a farmer\'s own tool is not fair game',()=>{
+ const {g,scout,trader,guard}=fixture(gearTrader);guard[0].weaponCargo={blades:12};// 24 of 40 load units already carried
+ g.state.units.find(u=>u===guard[0]).armorCargoId=777;g.state.units.find(u=>u===guard[0]).farmToolCargoId=888;
+ performContactAction(g,'rob',trader.id,scout.id);drive(g,120,()=>trader.weaponCargo?.spears!==2);
+ const total=(guard[0].weaponCargo.spears||0)+(trader.weaponCargo?.spears||0);assert.equal(total,2,'no spear vanished or duplicated');
+ const farmer=g.spawnUnit('worker',70,52,1);farmer.farmTool='stoneHoe';farmer.y=4;assert.match(robContactIssue(g,farmer.id),/nothing to take/);
 });

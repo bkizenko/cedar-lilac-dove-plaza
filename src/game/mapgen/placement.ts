@@ -13,6 +13,8 @@ import type { LocalWaterBody } from '../localWater';
 import type { Terrain } from './terrain';
 import type { Hydrology } from './hydro';
 import type { PresetSpec } from './presets';
+import { geologyAt, type GeologyGrid } from './geology/read';
+import { ROCKS } from './geology/rocks';
 export type Camp = { x: number; z: number; team: number };
 export type StartCharacter = 'river-farmland' | 'lakeshore' | 'coastal' | 'upland-quarry' | 'woodland' | 'steppe-pasture' | 'wetland-delta' | 'valley';
 export type StartReport = { team: number; x: number; z: number; character: StartCharacter; quality: number; landmass: number; features: Record<string, number> };
@@ -30,6 +32,8 @@ export type PlacementCtx = {
   /** raw ridged ore potential noise */
   rivers: { pts: { x: number; z: number }[] }[];
   features: { kind: string; x: number; z: number }[];
+  /** fresh (geologyVersion 1) worlds only: stone outcrops then follow rock hardness and thin soil; absent keeps the legacy placement exactly */
+  geology?: GeologyGrid;
 };
 export type Placed = {
   trees: ResourceNode[]; stones: ResourceNode[]; forage: ResourceNode[]; fish: ResourceNode[]; copper: ResourceNode[]; iron: ResourceNode[];
@@ -125,10 +129,18 @@ export function placeWorld(ctx: PlacementCtx): Placed {
     trees.push(n);
     register(n);
   }
+  // Hard rock (granite, basalt, sandstone, limestone) breaks out as outcrops, soft alluvium and shale does not; thin soil shows the rock.
+  const geologyStone = (x: number, z: number) => {
+    if (!ctx.geology) return 1;
+    const r = geologyAt({ size, mapgen: { geology: ctx.geology } }, x, z);
+    if (!r || !r.rock) return 1;
+    const hard = ROCKS[r.rock]?.hardness ?? 0.5;
+    return clamp(0.45 + 0.95 * hard + 0.25 * (1 - Math.min(1, r.soilDepthMeters / 1.2)), 0.2, 1.5);
+  };
   // ---- stone: outcrop clusters where ground is steep, high, dry or rocky -------------------------------
   const rockiness = (x: number, z: number) => {
     const g = grade(x, z, 3), h = sample(x, z) - waterY, p = prov(x, z).resourceWeights.stone;
-    return clamp(g * 1.7 + h / 110 + (nz.fbm(x * 0.012, z * 0.012, 3) * 0.5 + 0.5) * 0.35) * (0.5 + 0.5 * p);
+    return clamp(g * 1.7 + h / 110 + (nz.fbm(x * 0.012, z * 0.012, 3) * 0.5 + 0.5) * 0.35) * (0.5 + 0.5 * p) * geologyStone(x, z);
   };
   const landHa = ecology.metrics.landAreaSquareMeters / 10000;
   const stoneClusters = Math.round(landHa / 2.4 * (0.9 + 0.2 * rand()));
