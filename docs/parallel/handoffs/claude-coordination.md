@@ -1096,3 +1096,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 23:45 ET Claude: shipped lane B fix: Hearth minimap collapse imported a nonexistent lucide icon (ChevronsDownRight), now Minimize2; council-ui 18/18, tsc 0 errors; lane B backlog otherwise already done (merged main, resolved persistence/AUTOPILOT conflicts keeping both sides) (ff20403b) / now on theme token audit + diplomacy/water/stores sheet checks / blocked: none
 
 00:50 ET Claude(gaps): shipped raiders target waystations + Menu routes/waystations toggles (4 tests) / now on gap 6 stones from geologyAt / blocked: none
+
+23:55 ET Claude(PM): landed 529502f6 (16 commits, main+integration normal merge; Claude lane A/B/gaps: waystation raids, minimap fix, event claims) / sweep 160 tests 157 pass 0 fail (3 skipped, three not installed), tsc diff nil (1 any-index artifact from missing deps in WaterControls.tsx) / agents posted <2h: Claude/Codex yes, Grok idle / blocked: none
