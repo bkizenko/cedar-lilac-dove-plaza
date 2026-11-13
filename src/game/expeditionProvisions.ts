@@ -1,5 +1,6 @@
+import {wildPlantSpecies,type WildPlantSpecies} from './ecology';
 import type {Game} from './sim';
-import type {FoodKind,Unit} from './types';
+import type {FoodKind,Unit,ResourceNode} from './types';
 import {FOOD_KINDS,FOOD_NOURISHMENT,foodInventory,takeFoodLot} from './pantry';
 import {foodDemand} from './settlement';
 import {packCapacityMultiplier} from './packAnimalState';
@@ -52,11 +53,15 @@ export function validExpeditionProvisions(e:unknown,bounds:PackedFoodValidation)
  return Number.isFinite(p.foodUsed)&&p.foodUsed!>=0&&p.food+p.foodUsed!<=PACKED_FOOD_RULES.maximumUnits+PACKED_FOOD_RULES.tolerance&&validPackedFoodCustody(p.foodCustody,p.food,EXPEDITION_FOOD_CATALOGUE,bounds)&&p.foodCustody.lots.every(l=>EXPEDITION_FOOD_CATALOGUE.edible(l.kind));
 }
 
+/** Prepared journey rations cannot be invented by relabelling a wild cereal. */
+export function readyExpeditionForageKind(species:WildPlantSpecies):FoodKind|null{return species==='wild-grain'?null:species==='wild-pulses'?'pulses':species==='wild-tubers'?'tubers':species==='spring-greens'?'provisions':'berries';}
+export function expeditionForageFood(g:Game,node:ResourceNode){return readyExpeditionForageKind((node as ResourceNode&{wildPlant?:{species:WildPlantSpecies}}).wildPlant?.species??wildPlantSpecies(g,node));}
+
 /** Only the quantity actually removed from this nearby standing plant is added. */
-export function addExpeditionForage(g:Game,u:Unit,units:number,x:number,z:number){
- const e=u.expedition;if(!e||units<=0)return;
+export function addExpeditionForage(g:Game,u:Unit,units:number,x:number,z:number,kind:FoodKind='provisions'){
+ const e=u.expedition;if(!e||units<=0||!EXPEDITION_FOOD_CATALOGUE.edible(kind))return false;
  if(!e.foodCustody){e.food+=units;return;}
  const origin={team:u.team,anchorKind:'forage' as const,x,z,loadedAt:g.state.time};
- e.foodCustody.lots.push({kind:'berries',units,origin});e.food+=units;
+ e.foodCustody.lots.push({kind,units,origin});e.food+=units;return true;
 }
 export function expeditionForageRoom(u:Unit){const e=u.expedition;return !e?0:e.foodCustody?e.foodCustody.lots.length>=PACKED_FOOD_RULES.maximumLots?0:Math.max(0,Math.min(expeditionProvisionCapacity(u)-e.food,PACKED_FOOD_RULES.maximumUnits-e.food-(e.foodUsed??0))):Math.max(0,24-e.food);}
