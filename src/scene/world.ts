@@ -50,6 +50,7 @@ import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
 import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
+import {buildingTierAt,getDetailLevel,setDetailLevel,loadDetailLevel,rememberDetailLevel,shadowHalfExtent,DETAIL_RULES,type DetailLevel} from '../game/detailLevel';
 import {DrawDistanceGovernor,drawBands,loadDrawDistance,type DrawBands,type DrawDistance} from '../game/drawDistance';
 import {currentRenderStyle,type RenderStyle} from './renderStyle';
 import {loadMapStyle,rememberMapStyle,type MapStyle} from './mapStyle';
@@ -438,6 +439,7 @@ export class WorldView {
 
   constructor(canvas: HTMLCanvasElement) {
     this.quality = loadGraphicsQuality();
+    setDetailLevel(loadDetailLevel());
     this.setStyle(this.styleId);
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -451,7 +453,7 @@ export class WorldView {
       graphicsPixelRatio(this.quality,canvas.clientWidth||800,canvas.clientHeight||600,window.devicePixelRatio||1),
     );
     this.renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 600, false);
-    this.renderer.shadowMap.enabled = this.shadowsEnabled;
+    this.renderer.shadowMap.enabled = this.sunShadows();
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.toneMappingExposure = 1.02;
@@ -473,7 +475,7 @@ export class WorldView {
     this.fill = new THREE.AmbientLight("#f1f1e6", 0.22);
     this.scene.add(this.fill);
     this.sun = new THREE.DirectionalLight("#fff1c4", 2.05);
-    this.sun.castShadow = this.shadowsEnabled;
+    this.sun.castShadow = this.sunShadows();
     this.sun.shadow.mapSize.set(
       this.quality === "high" ? 1024 : 512,
       this.quality === "high" ? 1024 : 512,
@@ -704,6 +706,17 @@ export class WorldView {
   getDrawDistance(): DrawDistance { return this.drawGovernor.chosen; }
   getEffectiveDrawDistance(): DrawDistance { return this.drawGovernor.level; }
   getDrawBands(): DrawBands { return this.drawBandsNow; }
+  /** Detail (detailLevel.ts): model-tier switch distances plus the High/Ultra fidelity features (sun shadow map, AgX grade, bump, MSAA). Render-only. */
+  getDetailLevel(): DetailLevel { return getDetailLevel(); }
+  setDetailLevel(level: DetailLevel) {
+    setDetailLevel(level);
+    this.applyQuality(this.quality);
+    this.carvedLayer?.setBump(DETAIL_RULES.bump[getDetailLevel()]);
+    this.setupComposer();
+    this.lastRenderAt = 0;
+  }
+  /** Effective sun-shadow switch: the user's Shadows checkbox, or any Detail level that carries a shadow map. */
+  private sunShadows(q: "low" | "med" | "high" = this.quality) { return (this.shadowsEnabled || DETAIL_RULES.shadowMap[getDetailLevel()] > 0) && q !== "low"; }
   /** Choose a draw distance (the UI persists it). Resets the automatic easing. */
   setDrawDistance(level: DrawDistance) { this.drawGovernor.choose(level); this.lastRenderAt = 0; this.applyDrawBands(); }
   private applyDrawBands() {
@@ -730,9 +743,11 @@ export class WorldView {
       graphicsPixelRatio(q,this.renderer.domElement?.clientWidth||800,this.renderer.domElement?.clientHeight||600,window.devicePixelRatio||1),
     );
     this.composer?.setPixelRatio(this.renderer.getPixelRatio?.()??graphicsPixelRatio(q,800,600,window.devicePixelRatio||1));
-    this.renderer.shadowMap.enabled = this.shadowsEnabled && q !== "low";
-    this.sun.castShadow = this.shadowsEnabled && q !== "low";
-    const map = q === "high" ? 1024 : 512;
+    this.renderer.shadowMap.enabled = this.sunShadows(q);
+    this.sun.castShadow = this.sunShadows(q);
+    const lv = getDetailLevel(), map = DETAIL_RULES.shadowMap[lv] || (q === "high" ? 1024 : 512);
+    this.renderer.toneMapping = DETAIL_RULES.grade[lv] === "agx" ? THREE.AgXToneMapping : THREE.NeutralToneMapping;
+    this.renderer.toneMappingExposure = DETAIL_RULES.grade[lv] === "agx" ? 1.12 : 1.02;
     this.sun.shadow.mapSize.set(map, map);
     this.sun.shadow.map?.dispose();
     this.sun.shadow.map = null;
@@ -1552,6 +1567,14 @@ export class WorldView {
       this.look.z + Math.sin(ang) * dist * 0.62,
     );
     this.sun.target.position.copy(this.look);
+    if (DETAIL_RULES.shadowMap[getDetailLevel()] > 0) {
+      // tight shadow box that follows the zoom: sharper texels when close; the focus is snapped to the texel grid so shadows do not crawl while panning
+      const half = shadowHalfExtent(this.dist), c = this.sun.shadow.camera;
+      if (c.right !== half) { c.left = -half; c.right = half; c.top = half; c.bottom = -half; c.updateProjectionMatrix(); }
+      const texel = (half * 2) / DETAIL_RULES.shadowMap[getDetailLevel()];
+      this.sun.target.position.x = Math.round(this.look.x / texel) * texel; this.sun.target.position.z = Math.round(this.look.z / texel) * texel;
+      this.sun.position.x += this.sun.target.position.x - this.look.x; this.sun.position.z += this.sun.target.position.z - this.look.z;
+    }
     this.bounce.position.set(this.look.x - 24, 20, this.look.z + 14);
     this.bounce.target.position.copy(this.look);
 
@@ -2055,8 +2078,8 @@ export class WorldView {
     if(!list.length&&!this.carvedLayer)return;
     const layer=this.carvedLayer||(this.carvedLayer=new CarvedBuildingLayer(this.scene));
     for(const mesh of this.carvedOwners.keys())this.buildingInstances.delete(mesh);this.carvedOwners.clear();
-    layer.setSnow(this.carvedSnow);
-    layer.sync(list,this.camera.position);
+    layer.setSnow(this.carvedSnow);layer.setBump(DETAIL_RULES.bump[getDetailLevel()]);
+    layer.sync(list,this.camera.position,m=>buildingTierAt(m));
     for(const [mesh,owners] of layer.pickSources()){
       const buildings=(owners as (CarvedInstance&{b:import("@/game/types").Building})[]).map(o=>o.b);
       this.carvedOwners.set(mesh,buildings);this.buildingInstances.set(mesh,buildings);
@@ -2801,7 +2824,9 @@ export class WorldView {
       const el = this.renderer.domElement;
       const w = el.clientWidth || 800;
       const h = el.clientHeight || 600;
-      this.composer = new EffectComposer(this.renderer);
+      const pr = this.renderer.getPixelRatio(), samples = DETAIL_RULES.msaaSamples[getDetailLevel()];
+      // the composer's own target is what the scene is drawn into, so the canvas antialias flag never applied on this path: MSAA must be asked for here
+      this.composer = new EffectComposer(this.renderer, new THREE.WebGLRenderTarget(Math.max(1, Math.floor(w * pr)), Math.max(1, Math.floor(h * pr)), { type: THREE.HalfFloatType, samples }));
       this.composer.addPass(new RenderPass(this.scene, this.camera));
       this.bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.14, 0.28, 0.92);
       this.composer.addPass(this.bloom);

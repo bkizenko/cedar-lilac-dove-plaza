@@ -5,6 +5,7 @@
  *  its society and era in its real condition; a ground bundle of `bows` gets a stack of bows; a tool a worker is using gets that tool. Everything
  *  is deterministic in (kind, era, skin, condition, seed) so identical items share one geometry and one instanced draw. */
 import {WEAPON_IDS} from '../game/weaponFamilies';
+import {itemTierAt} from '../game/detailLevel';
 import {buildItem,itemDef,ITEM_DEFS,type ItemDef} from './itemModels';
 import type {ItemMesh,LodTier,V3} from './itemMesh';
 import {hash32,TAU} from './itemMesh';
@@ -43,7 +44,7 @@ export const FARM_TOOL_ERA:Readonly<Record<string,number>>=Object.freeze({wooden
 /** Condition (0 ruined .. 1 new) as one of four buckets so shared draws stay few: new, used, worn, ruined. */
 export const conditionBucket=(c:number|undefined|null):0|1|2|3=>{const x=Number.isFinite(c as number)?(c as number):.85;return x>=.78?0:x>=.5?1:x>=.22?2:3;};
 export const CONDITION_BUCKET_MID:readonly number[]=Object.freeze([.92,.64,.36,.1]);
-export const lodForDistance=(d:number,quality:'low'|'med'|'high'='high'):LodTier=>{const k=quality==='high'?1:quality==='med'?.7:.5;return d<14*k?0:d<40*k?1:2;};
+export const lodForDistance=(d:number,quality:'low'|'med'|'high'='high'):LodTier=>itemTierAt(d,quality);
 /** The mesh request for a piece of equipment at a level of detail. */
 export function requestFor(eq:EquipmentState,lod:LodTier=0):ItemReq|null{
  const id=modelIdFor(eq.kind);if(!id)return null;
@@ -104,7 +105,7 @@ export const ITEM_CATALOGUE=()=>Object.values(ITEM_DEFS).map(d=>({id:d.id,name:d
 void TAU;
 
 /* ground-item display rules (pure, so tests can load them without three) */
-export const GROUND_ITEM_RULES={maxPerKind:8,maxInstancers:96,viewMetres:{low:150,med:220,high:300},maxPlacements:1500} as const;
+export const GROUND_ITEM_RULES={maxPerKind:8,maxInstancers:96,viewMetres:{low:150,med:220,high:300},maxPlacements:1500,/** placements drawn at the near (about 2,900 triangle) and mid (about 1,600) item tiers per frame; the rest fall to the next cheaper tier */maxNearPlacements:90,maxMidPlacements:360} as const;
 /** the tool shown for a game farm-tool kind */
 export const FARM_TOOL_MODEL:Readonly<Record<string,string>>=Object.freeze({woodenArd:'ard',stoneHoe:'hoe',copperTools:'hoe',ironTools:'hoe'});
 /** how many of `n` real items a pile draws: all of the first few, then one more per doubling, never more than the cap */

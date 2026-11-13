@@ -24,6 +24,7 @@ import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
 import {advanceFrameSimulation} from './frameSimulation';
 import {towerBuildConfiguration} from './towerPlatforms';
 import {rememberGraphicsQuality,rememberRenderStyle,type RenderStyle} from './graphics';
+import {rememberDetailLevel,type DetailLevel} from './detailLevel';
 import {rememberDrawDistance,DRAW_DISTANCE_LABELS,type DrawDistance} from './drawDistance';
 import {gateFacing as normalizeGateFacing,rotateGateFacing,snapGate,suggestGateSnap,placeFacingGate,type GateFacing} from './gateGeometry';
 import {RuntimeProfile,RUNTIME_PROFILE_RULES} from './runtimeProfile';
@@ -1161,6 +1162,12 @@ export class Engine {
   setDrawDistance(level: DrawDistance) {
     this.view.setDrawDistance(level);
     rememberDrawDistance(level);
+  }
+
+  /** Detail (model-tier distances and High/Ultra fidelity): render-only, browser preference, never part of a save. */
+  setDetailLevel(level: DetailLevel) {
+    this.view.setDetailLevel(level);
+    rememberDetailLevel(level);
   }
 
   setQuality(q: "low" | "med" | "high") {
