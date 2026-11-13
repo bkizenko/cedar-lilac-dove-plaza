@@ -787,6 +787,7 @@ Every source item is assigned to exactly one owner. The named owner builds the f
 | DRIFT-AT-HOOK | incentive | driftAt applies to boats | Grok | Grok T7 | source-pushed-not-live |  |
 | ERA-DEFAULT-FIXED | incentive | Flip DEFAULT_ERA_MODE to fixed | Claude | Claude T3 | not started | decided 11 Nov 18:08 ET |
 | SLOPE-TIERS | owner feedback | Graded slope model: tiers, classes, foundations, goods and labour, preview, tests, ladder render | Claude | World | landed on slope-tiers branch; see docs/SLOPE_MODEL.md | scripts/slope-tiers.test.mjs, docs/renders/slope-tiers/slope-ladder.png |
+| TERRACE-FARMING | owner feedback | Terrace agriculture (bunds, drystone, andenes, stairs; gates, cost, soil, aspect, frost, altitude, erosion) and slope nuance (curvature, aspect, roughness, natural shelf, wetness) behind `state.terrainModel` | Claude | World | landed (see docs/TERRACE_FARMING.md) | scripts/terrace-farming.test.mjs, scripts/slope-tiers.test.mjs, docs/renders/terraces/ |
 | FIXED-CAMERA-REVIEW | incentive | Review 13-line fixed-camera edit to src/scene/world.ts | Claude | Claude T2 | source-pushed-not-live | b86507f already in PR #1 |
 | FOOD-CUSTODY-PROTO | incentive | Disabled food-custody prototype; migrate all consumers before activation | Codex | Codex W11 | source-pushed-not-live | work/codex-food-custody-prototype-2026-11-11 26fe69b |
 | GRAPHIFY-WORKFLOW | incentive | Use Graphify to navigate the repo and save tokens | Grok | Grok T10 | done/live | docs/parallel/GRAPHIFY_WORKFLOW.md on main c619d08; standing practice |

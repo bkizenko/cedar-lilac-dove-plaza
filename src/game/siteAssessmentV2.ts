@@ -56,7 +56,7 @@ function assessField(height:(x:number,z:number)=>number,x:number,z:number,w:numb
  }
  const K=TERRACE_RULES.kinds[kind],extent=extentAlong(plot,dir),L=terraceLayoutFor(kind,extent,w*d/extent,s.fall);
  const m=n.costMult,sc=n.shelf?.6:1,b=terraceBill(kind,L,gk,geoSoil,cap.mountain);
- const wood=Math.ceil(b.wood*m.wood*sc-1e-9),stone=Math.ceil(b.stone*m.stone*sc-1e-9),work=r1(b.work*m.work*sc);
+ const wood=Math.max(0,Math.ceil(b.wood*m.wood*sc-1e-9)),stone=Math.max(0,Math.ceil(b.stone*m.stone*sc-1e-9)),work=r1(b.work*m.work*sc);
  rec.n=L.n;rec.rise=r2(L.rise);rec.tread=r2(L.tread);
  base.tier=KIND_TIER[kind];base.colour=SLOPE_COLOURS[base.tier];base.extraWood=wood;base.extraStone=stone;base.extraWork=work;base.workPct=Math.round(work/Math.max(1,o.baseWork??80)*100);
  const goods=[wood?`+${wood} wood`:'',stone?`+${stone} stone`:'',`+${base.workPct}% labour time`].filter(Boolean).join(' · ');

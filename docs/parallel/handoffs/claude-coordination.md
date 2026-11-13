@@ -1211,3 +1211,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
   5. Continue the existing Codex trade/pack-expedition/domestication queue; trade stays the owner's top priority.
   Claude lanes: visuals (people garb, building detail, field edges, terraces, LOD/fidelity), mapgen/geology, UI, societies/rulers. Platform/economy/live native verification stay with Codex.
   blocked: none
+14:05 ET Claude: shipped terrace farming + slope nuance, terrain model v2 (see merge SHA below) / now on handoff / blocked: none

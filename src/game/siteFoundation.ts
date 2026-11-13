@@ -73,7 +73,7 @@ export function foundationBoxes(kind:FoundationKind|undefined,b:FoundationInput,
      for(const t of[st.t0,tm,st.t1])for(const s of[sa,sm,sb]){const q=at(t,s);lo=Math.min(lo,o.height(q.x,q.z));}
      if(top-lo>.05)out.push({x:c.x,z:c.z,y:(top+lo-burial)/2,length:len/k+.01,width:tread,height:top-lo+burial,yaw:yawT,kind:st.i%2?'strip-tread-alt':'strip-tread'});
      // the retaining wall: a facing on the downhill edge of the strip, from the ground below up to the tread
-     const w1=at(st.t1-K.wallThick/2,sm);let wlo=Infinity;for(const s of[sa,sm,sb]){const q=at(st.t1+.1,s);wlo=Math.min(wlo,o.height(q.x,q.z));}
+     const w1=at(st.t1-K.wallThick/2+.04,sm);let wlo=Infinity;for(const s of[sa,sm,sb]){const q=at(st.t1+.1,s);wlo=Math.min(wlo,o.height(q.x,q.z));}
      if(top-wlo>.12)out.push({x:w1.x,z:w1.z,y:(top+wlo-burial)/2+.01,length:len/k+.01,width:K.wallThick,height:top-wlo+burial,yaw:yawT,kind:o.terrace.kind==='bund'?'strip-bund':'strip-wall'});
     }
     // irrigation channel running down the terraces at the edge of each strip, falling from tread to tread
