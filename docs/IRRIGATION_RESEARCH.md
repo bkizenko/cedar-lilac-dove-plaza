@@ -5,7 +5,7 @@
 Historically, water management was a labour-and-timing problem, not a "water on/off" switch. Four things carry into the game model:
 
 1. **Gravity ditches and flooded basins came first and cost labour to build and keep up.** Canal irrigation at Choga Mami (Iraq) is dated to about 6000 BCE; surface methods (furrow, border strip, basin) are the oldest form ([Wikipedia: Irrigation](https://en.wikipedia.org/wiki/Irrigation)).
-2. **Lifting water is a separate, later, labour-heavy step.** The shaduf is a pole-and-counterweight lift, 1-6 m range, one person lifting roughly 39-130 L/min in one Chad study ([Wikipedia: Shadoof](https://en.wikipedia.org/wiki/Shadoof)). The noria (pot wheel) appears around the Roman period in North Africa ([Wikipedia: Irrigation](https://en.wikipedia.org/wiki/Irrigation)).
+2. **Lifting water is a separate, later, labour-heavy step.** The shaduf is a pole-and-counterweight lift, 1-6 m range, one person lifting roughly 39-130 L/min in one Chad study ([Wikipedia: Shadoof](https://en.wikipedia.org/wiki/Shadoof)). The noria (pot wheel) is described as in use among Roman settlers in North Africa, with valved pots by 150 BCE ([Wikipedia: Irrigation](https://en.wikipedia.org/wiki/Irrigation)).
 3. **Flood-recession (basin) farming ties yield to the flood, so a bad year is a famine year.** Small floods left upper basins unfilled; large floods broke dykes and canals ([Wikipedia: Flooding of the Nile](https://en.wikipedia.org/wiki/Flooding_of_the_Nile)). Irrigation that is dug and managed buffers this; it does not remove it.
 4. **Over-watering has a cost.** Raised water tables cause salinity ([Wikipedia: Irrigation](https://en.wikipedia.org/wiki/Irrigation)). The game keeps this out of the first model (see "Not modelled").
 
@@ -39,7 +39,7 @@ Historically, water management was a labour-and-timing problem, not a "water on/
 - Terraced rice fields used dikes to control the water level in each field ([Irrigation](https://en.wikipedia.org/wiki/Irrigation)). Stone retaining walls, erosion control and maintenance burden of terraces: [UNVERIFIED] (the Terrace (agriculture) page was not retrievable in this session).
 
 ### Noria
-- The noria is a water wheel with clay pots, in use by about 800 BCE-150 BCE among North African settlers, with valved pots by 150 BCE ([Irrigation](https://en.wikipedia.org/wiki/Irrigation)). That the wheel is turned by stream current without animals, typical lift height and output: [UNVERIFIED] (Noria page not retrievable).
+- The noria is a water wheel with clay pots, said to come into use at about the same time as qanats (the page dates qanats to about 800 BCE) among Roman settlers in North Africa, with valved pots by 150 BCE; the page's dating looks loose, so treat the start date as uncertain ([Irrigation](https://en.wikipedia.org/wiki/Irrigation)). That the wheel is turned by stream current without animals, typical lift height and output: [UNVERIFIED] (Noria page not retrievable).
 
 ## [UNVERIFIED] / not fetched
 - Terrace construction and upkeep details, noria mechanics and capacity, Mesopotamian flood timing mismatch with the crop calendar, seeder-plough and ditch-maintenance labour records. Treat any numbers in the game for these as design values, not history.
