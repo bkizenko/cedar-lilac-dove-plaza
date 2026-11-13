@@ -4,12 +4,18 @@ import {Card} from './CouncilParts';
 type Neighbour=CouncilModel['neighbours'][number];
 import {courtLine} from './courtLine';
 export type DiplomacyAction='marry-houses'|'foster-houses'|'exchange-hostages';
+/** Inbox line: what across all neighbours wants the player's attention (claims against us, wards coming home within a year, houses at odds). */
+export function diplomacyInbox(ns:Neighbour[]):string[]{
+ const against=ns.reduce((a,n)=>a+(n.casus?.filter(k=>!k.byUs).length??0),0),home=ns.reduce((a,n)=>a+(n.wards?.filter(w=>!w.endsIn||w.endsIn<=1).length??0),0),odds=ns.filter(n=>n.hostile).length;
+ return [against&&`${against} claim${against>1?'s':''} held against us`,home&&`${home} ward${home>1?'s':''} due home within a year`,odds&&`${odds} house${odds>1?'s':''} at odds`].filter(Boolean) as string[];
+}
 const mood=(n:Neighbour)=>n.hostile?{word:'At odds',cls:'text-red-300'}:n.atPeace?{word:'At peace',cls:'text-green-200'}:n.trust>=60?{word:'Friendly',cls:'text-green-200'}:n.trust>=25?{word:'Cordial',cls:'text-parchment'}:{word:'Reserved',cls:'text-parchment-dim'};
 /** One card per known neighbour: flag, mood, a trust bar over a grievance bar, what the bond implies, and the family-diplomacy actions. */
 export function DiplomacySheet({neighbours,onAct,feedback}:{neighbours:Neighbour[];onAct:(team:number,kind:DiplomacyAction)=>void;feedback?:string}){
  if(!neighbours.length)return null;
  const sorted=[...neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust);
  return <Card label="Neighbours" title="Neighbouring houses">
+  {diplomacyInbox(neighbours).length>0&&<p data-inbox="1" className="mb-2 rounded border border-bronze/40 bg-black/25 px-2 py-1 text-[12px] text-parchment">Needs attention: {diplomacyInbox(neighbours).join(' · ')}</p>}
   <ul className="space-y-2">{sorted.map(n=>{const m=mood(n),g=n.grievance??0;return <li key={n.team} className="rounded border border-parchment/10 bg-black/20 p-2">
    <div className="flex items-center gap-2">{n.identity&&<SocietyFlag identity={n.identity} label={`${n.name} flag`}/>}<div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-parchment">{n.name}</div><div className="text-parchment-dim">{n.bond}</div></div><span className={'text-[10px] font-semibold uppercase tracking-wide '+m.cls}>{m.word}</span></div>
    {n.voice&&<blockquote data-manner={n.voice.manner} className="mt-1.5 border-l-2 border-bronze/50 pl-2 text-[12px] italic text-parchment-dim" title={`If refused: ${n.voice.refusal} If they give: ${n.voice.gift}`}>{n.voice.greeting}<span className="ml-1 not-italic uppercase tracking-wide text-[10px]">{n.voice.manner}</span></blockquote>}
