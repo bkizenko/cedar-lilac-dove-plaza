@@ -214,13 +214,13 @@ test('pile dwellings: posts on marsh or a low bank for dwellings and shelters on
   const water=()=>9.8,high=()=>12,bank=(x)=>x>1.5?9.5:10.4;
   assert.equal(floodSite(high,water,0,0,5.4,5.2),false);assert.equal(floodSite(bank,water,0,0,5.4,5.2),true);assert.equal(floodSite(high,water,0,0,5.4,5.2,true),true,'wetland province');
 });
-test('floor level: cut and fill takes the mean ground on level/pad sites, an uphill door is not buried, posts and terraces keep the highest contact',()=>{
+test('floor level: cut and fill takes the mean ground on level/pad sites, an uphill door is not buried, posts and outcrops keep the highest contact',()=>{
   const F=foundationLevel;
   assert.equal(F('pad',12,10,undefined,11),11.03);assert.equal(F('none',12,10,undefined,11),11.03);assert.equal(F(undefined,12,10,undefined,11),11.03);
   assert.equal(F('pad',12,10,undefined,undefined),12.03,'no mean known (classic kit): highest, as before');
   assert.equal(F('pad',12,10,11.9,11),11.9-FOUNDATION_RULES.doorBuryMetres+.03,'an uphill door lifts the floor to meet it');
   assert.equal(F('pad',12,10,10.2,11),11.03,'a downhill door keeps the mean (steps down)');
-  assert.equal(F('terrace',12,10,undefined,11),12.03);assert.equal(F('stilts',12,10,undefined,11),12.03);
+  assert.equal(F('terrace',12,10,undefined,11),11.03,'a terrace is a cut bench: half the fall');assert.equal(F('terrace',12,10),12.03);assert.equal(F('stilts',12,10,undefined,11),12.03);assert.equal(F('outcrop',12,10,undefined,11),12.03);
   assert.equal(F('stilts',12,10,undefined,11,.9),12.93,'pile dwellings stand clear of the flood line');
 });
 const planOf=(type,civ,era=1,w=5.4,d=5.2)=>groundPlanOf(variantSpec(carvedVariantFor({worldSeed:4,type,id:5,era,footprint:{w,d},settlementSeed:0,...(civ?{skin:presetSkin(civ)}:{})})));

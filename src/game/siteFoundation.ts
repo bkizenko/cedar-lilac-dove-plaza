@@ -11,12 +11,12 @@ export type FoundationInput={x:number;z:number;w:number;d:number;/** yaw and sca
 export type FoundationOptions={height:(x:number,z:number)=>number;level:number;downhill:{x:number;z:number};burial?:number;fall?:number;terrace?:{n:number;kind:TerraceKind|'none'};plan?:Pick<GroundPlan,'polys'|'piers'|'round'|'raised'>&{lifts?:readonly number[]}|null};
 export const FOUNDATION_RULES={segmentMetres:.9,minimumGapMetres:.12,/** the small stone/earth footing under a building on gentle ground shows from this gap up */footingGapMetres:.03,footingThickness:.26,kerbThickness:.3,wallThickness:.55,/** timber corner posts: sturdy squared timbers on a stone pad (a staddle), never spindly */postSize:.32,padSize:.56,padHeight:.16,postSpacing:2.7,beamHeight:.3,beamWidth:.26,portalHeight:1.7,pierMargin:.1,/** an uphill door may sit this far below the earth before the floor is raised to meet it */doorBuryMetres:.1,/** a pile dwelling on flat or gently sloping wet ground stands this far above the highest ground under it (flood line, damp, vermin) */pileLiftMetres:.9,/** below this mean slope a post platform is a pile dwelling (flood country); above it, a steep-ground platform */pileBelowDegrees:10} as const;
 
-/** Floor level for a foundation. Dugouts take the ground at the door so the door is at grade. Level and levelled-pad sites (cut and fill) take the MEAN ground
+/** Floor level for a foundation. Dugouts take the ground at the door so the door is at grade. Level, levelled-pad and terrace sites (cut and fill) take the MEAN ground
  *  under the footprint when it is known, so the uphill side is cut into the earth and the downhill side needs at most half the fall of footing, never the full
- *  fall; `doorGround` (carved buildings) stops an uphill door from being buried. Terraces, posts and outcrops stand on the highest contact. */
+ *  fall; `doorGround` (carved buildings) stops an uphill door from being buried. Posts and outcrops stand on the highest contact. */
 export function foundationLevel(kind:FoundationKind|undefined,highest:number,lowest:number,doorGround?:number,mean?:number,lift=0){
  if(kind==='dugout'&&doorGround!==undefined)return doorGround+.03;
- if((!kind||kind==='none'||kind==='pad')&&mean!==undefined){
+ if((!kind||kind==='none'||kind==='pad'||kind==='terrace')&&mean!==undefined){
   const floor=Math.max(mean,doorGround!==undefined?doorGround-FOUNDATION_RULES.doorBuryMetres:-Infinity);
   return Math.min(highest,floor)+.03;
  }
