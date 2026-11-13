@@ -67,12 +67,12 @@ export class TrendTracker{
 }
 
 /* ---------- alert ranking ---------- */
-export type AlertKind='raiders'|'thirsty'|'starving'|'freezing'|'full'|'exposed'|'harvest'|'backlog';
+export type AlertKind='raiders'|'thirsty'|'starving'|'freezing'|'full'|'exposed'|'harvest'|'backlog'|'wild';
 export type AlertSeverity='critical'|'warning';
 export type AlertPoint={x:number;y:number;z:number};
 export type Alert={kind:AlertKind;severity:AlertSeverity;count:number;/** Sentence for tooltip and screen reader only. */tip:string;at?:AlertPoint};
 /** Higher ranks first. Only the first critical alert becomes the sticky card; the rest fall to chips. */
-export const ALERT_RANK:Record<AlertKind,number>={raiders:100,thirsty:90,starving:80,freezing:70,full:40,exposed:30,harvest:20,backlog:10};
+export const ALERT_RANK:Record<AlertKind,number>={raiders:100,thirsty:90,starving:80,freezing:70,full:40,exposed:30,harvest:20,backlog:10,wild:25};
 export const CRITICAL_KINDS:readonly AlertKind[]=['raiders','thirsty','starving','freezing'];
 export function rankAlerts(alerts:readonly Alert[]){
  const sorted=alerts.slice().sort((a,b)=>ALERT_RANK[b.kind]-ALERT_RANK[a.kind]);

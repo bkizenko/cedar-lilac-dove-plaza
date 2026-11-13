@@ -121,6 +121,9 @@ export class BiomeVegetation {
 }
 export type DressingPoint={x:number;y:number;z:number;kind:DressingForm|PainterDressing;scale?:number;/** painterly: 0 wet/lush .. 1 dry/straw */tone?:number;/** painterly: stable 0..1 hue pick (flower colour, tuft variety) */hue?:number;/** painterly: rock colour multiplier from the local geology (rocks, pebbles) */rockTint?:readonly [number,number,number];/** scree boulder: allowed on steep ground (the caller already checked water and buildings) */steep?:boolean};
 const DRESSING_BLOOMS=['#f4d54a','#f7f3e8','#b98ad8','#e98a6a','#f1a7c4'];
+/** Botanical understory leaf colours (the leaf-card material multiplies instance colour into the atlas, so these are real foliage colours, not near-white tints). */
+const FLOOR_LEAF:Record<string,string>={fern:'#3e7a36',bracken:'#587f3a',bush:'#5a8838',moss:'#5f8f38',sapling:'#6a9a3e',pinelet:'#2f6048'};
+const FLOOR_STRAW=new THREE.Color('#b69b52'),FLOOR_AUTUMN=new THREE.Color('#b8863a'),FLOOR_WINTER=new THREE.Color('#7d7050'),FLOOR_SNOW=new THREE.Color('#e4edf0');
 /** Tiny nonblocking dressing: no ResourceNode, navigation obstacle, free product
  * or clickable harvest target. Caller supplies actual dry-ground eligibility.
  * 'painterly' adds tufts, tall grass, coloured flower heads, ferns, shrubs, outcrops and logs, wind-swayed on the GPU. */
@@ -133,11 +136,13 @@ export class BiomeDressing {
    if(treeSet==='botanical'){
     // species-true understory: leaf-card grass and ferns, bushes grown from hawthorn skeletons, mushrooms, logs, stumps, deadwood, moss
     const ground=makeBotanicalMaterial(this.sway,{ground:true}),still=makeBotanicalMaterial(this.sway,{ground:true,still:true});this.materials.push(ground,still);this.botanical=new Set();
-    const map:Record<string,[string,THREE.Material]>={flowers:['flowers',ground],grass:['grass',ground],tallgrass:['tallgrass',ground],drygrass:['drygrass',ground],fern:['fern',ground],bracken:['bracken',ground],reeds:['reeds',ground],bush:['bush',still],mushroom:['mushroom',still],log:['log',still],stump:['stump',still],deadwood:['deadwood',still],moss:['moss',still]};
-    for(const kind of UNDERSTORY_KINDS){const [u,mat]=map[kind];this.botanical.add(kind);this.add(kind,understoryGeometry(u as never),mat);}
+    const map:Record<string,[string,THREE.Material]>={flowers:['flowers',ground],grass:['grass',ground],tallgrass:['tallgrass',ground],drygrass:['drygrass',ground],fern:['fern',ground],bracken:['bracken',ground],reeds:['reeds',ground],bush:['bush',still],mushroom:['mushroom',still],log:['log',still],stump:['stump',still],deadwood:['deadwood',still],moss:['moss',still],sapling:['sapling',ground],pinelet:['pinelet',ground]};
+    // grasses, tall grass, reeds and flower stems keep the solid-blade painter tufts (thin alpha-cut blades turn to noise at game distances); leaf-card kinds are botanical
+    const CARD=new Set(['fern','bracken','bush','mushroom','log','stump','deadwood','moss','sapling','pinelet']);
+    for(const kind of UNDERSTORY_KINDS){if(!CARD.has(kind))continue;const [u,mat]=map[kind];this.botanical.add(kind);this.add(kind,understoryGeometry(u as never),mat);}
     // 'scrub' and 'shrub' draw as bushes; blooms, cattail, agave, cushion and stones keep their existing geometry
     this.alias.set('shrub','bush');this.alias.set('scrub','bush');
-    const keep=new Set(['bloom','cattail','agave','cushion','pebbles','rocks']);
+    const keep=new Set(['grass','tallgrass','drygrass','flowers','reeds','bloom','cattail','agave','cushion','pebbles','rocks']);
     for(const [kind,geo,mat] of kinds){if(keep.has(kind))this.add(kind,geo,mat);else geo.dispose();}
     return;
    }
@@ -149,6 +154,15 @@ export class BiomeDressing {
  setTime(t:number){if(this.sway)this.sway.uTime.value=t;}
  private tone(point:DressingPoint,context:Partial<Pick<VegetationContext,'winter'|'autumn'|'snow'>>|undefined,kind:string){
   const c=this.color,dry=point.tone??.3,hue=point.hue??.5;
+  if(this.botanical&&FLOOR_LEAF[kind]){
+   const winter=context?.winter??0,autumn=context?.autumn??0,snow=context?.snow??0,dryKind=kind==='drygrass';
+   c.set(FLOOR_LEAF[kind]);const hsl={h:0,s:0,l:0};c.getHSL(hsl);c.setHSL(hsl.h+(hue-.5)*.07,Math.min(1,hsl.s*(.85+hue*.3)),hsl.l*(.86+((hue*37.7)%1)*.3));
+   if(!dryKind&&kind!=='fern'&&kind!=='moss')c.lerp(FLOOR_STRAW,Math.min(.8,dry*.75));
+   if(autumn>.05&&kind!=='moss'&&kind!=='pinelet')c.lerp(FLOOR_AUTUMN,Math.min(.6,autumn*.55));
+   if(winter>.05)c.lerp(FLOOR_WINTER,Math.min(.75,winter*.7));
+   if(snow>.15)c.lerp(FLOOR_SNOW,Math.min(.8,snow*.7));
+   return c;
+  }
   if(kind==='rocks'||kind==='pebbles'||kind==='log'||kind==='mushroom'||kind==='stump'||kind==='deadwood'){const t=point.rockTint&&kind!=='log'?point.rockTint:null,v=.9+hue*.2;if(t)c.setRGB(t[0]*v,t[1]*v,t[2]*v);else c.setRGB(.9+hue*.2,.9+hue*.15,.88+hue*.1);return c;}
   c.setRGB(.9+hue*.2,.95+(1-hue)*.08,.8+hue*.15);c.lerp(new THREE.Color(1.15,.95,.62),Math.min(1,dry*.8));
   const winter=context?.winter??0,autumn=context?.autumn??0,snow=context?.snow??0;
@@ -176,7 +190,7 @@ export class BiomeDressing {
   }
   const snowLoad=(context.snow??0)>.15?Math.min(1,(context.snow??0)*1.05):0;
   for(const [kind,mesh]of this.batches){mesh.count=counts.get(kind)??0;mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
-   if(this.botanical?.has(kind)){const st=mesh.geometry.getAttribute('iState') as THREE.InstancedBufferAttribute;for(let i=0;i<mesh.count;i++)st.setXY(i,1,snowLoad);st.needsUpdate=true;}}
+   if(this.botanical?.has(kind)){const st=mesh.geometry.getAttribute('iState') as THREE.InstancedBufferAttribute,leaf=kind==='sapling'||kind==='bush'?Math.max(0,1-Math.min(1,(context.winter??0)*1.25)-Math.max(0,((context.autumn??0)-.5)*1.2)):1;for(let i=0;i<mesh.count;i++)st.setXY(i,leaf,snowLoad);st.needsUpdate=true;}}
   return total;
  }
  dispose(){for(const mesh of this.batches.values()){this.scene.remove(mesh);mesh.geometry.dispose();if(!this.materials.length)(mesh.material as THREE.Material).dispose();mesh.dispose();}for(const m of this.materials)m.dispose();this.materials.length=0;this.batches.clear();}

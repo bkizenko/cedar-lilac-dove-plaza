@@ -9,7 +9,7 @@ const rows=[
  {icon:'🪢',kind:'trap',text:'2 caught',why:'snare',section:'afield',urgent:false},
  {icon:'🧠',kind:'rot',text:'3.0',why:'30% rots per 10 min',section:'stores',urgent:true},
 ];
-const plan={enabled:true,hands:['Ada','Bo'],recipes:[{id:'renderFat',icon:'🧈',name:'Render fat into tallow',station:'hearth',issue:null,stations:[{id:1,free:2}]},{id:'soakHide',icon:'💧',name:'Soak a scraped hide',station:'tanner',issue:'Need 1 cleanHide at the camp cache',stations:[{id:2,free:2}]}],carcasses:[{id:9,icon:'🔪',species:'deer',parts:8}],trails:[],ready:[{projectId:4,icon:'🍇',name:'Dry berries on a rack'}]};
+const plan={sites:[],pens:[],enabled:true,hands:['Ada','Bo'],recipes:[{id:'renderFat',icon:'🧈',name:'Render fat into tallow',station:'hearth',issue:null,stations:[{id:1,free:2}]},{id:'soakHide',icon:'💧',name:'Soak a scraped hide',station:'tanner',issue:'Need 1 cleanHide at the camp cache',stations:[{id:2,free:2}]}],carcasses:[{id:9,icon:'🔪',species:'deer',parts:8}],trails:[],ready:[{projectId:4,icon:'🍇',name:'Dry berries on a rack'}]};
 test('panel is icon-first: big glyph tiles, counts, progress, and words only in labels',()=>{
  const html=renderToStaticMarkup(h(WildGlance,{rows,plan,onCommand:()=>{}}));
  for(const g of['🧵','🩸','🪢','🧠','🧈','🔪','✋'])assert.ok(html.includes(g),g);

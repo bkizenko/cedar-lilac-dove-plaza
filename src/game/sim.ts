@@ -371,7 +371,7 @@ export class Game {
     return this.height(x,z);
   }
 
-  private withinWorld(x:number,z:number,pad=2){return inBounds(x,z,pad,this.world.size);}
+  withinWorld(x:number,z:number,pad=2){return inBounds(x,z,pad,this.world.size);}
 
   waterAt(x:number,z:number){return waterSurfaceAt(this.world,x,z);}
 

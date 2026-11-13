@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {BOTANICAL_SPECIES,DEFAULT_SITE,VARIANTS_PER_SPECIES,pickSpecies,pickVariant,stableUnit,type BaseForm,type BotanicalSpecies,type TreeSite} from './botanicalSpecies';
 import {botanicalTree,botanicalStump,type TreeGeometry} from './treeBotany';
 import {makeBotanicalMaterial,makeBotanicalFarMaterial} from './botanicalMaterial';
-import {painterFarRound,painterFarNeedle,contactShadowGeometry,radialShadowTexture} from './painterTrees';
+import {painterFarClustered,painterFarNeedle,contactShadowGeometry,radialShadowTexture} from './painterTrees';
 import {painterSway,type PainterSway} from './painterVegetationMaterial';
 /** Instanced botanical forest (the painterly default). One mesh per (species, variant, LOD tier), all sharing one material: tier 0 full leaf-card
  * trees, tier 1 mid trees (same skeleton, cores plus sparse cards), then far crowns and rooted far trunks. Each living tree is a real resource node; nothing here
@@ -10,7 +10,7 @@ import {painterSway,type PainterSway} from './painterVegetationMaterial';
 export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number};
 export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean};
 export type ForestOptions={seed:number;siteAt:(x:number,z:number)=>TreeSite;baseFormAt:(id:number,x:number,z:number)=>{base:BaseForm;kind:string};/** unit wind vector the trees lean along */wind?:[number,number];nearMetres:Record<'low'|'med'|'high',number>;farMetres:number;lowFarMetres:number;stumpHeightScale:number};
-export const FOREST_LOD={fullFraction:1.2,midFraction:2.4} as const;
+export const FOREST_LOD={fullFraction:.4,midFraction:1.15} as const;
 type Rec={sp:number;v:number;sx:number;sy:number;lean:[number,number];yaw:number;hue:[number,number,number];autumn:number;timing:number};
 type Batch={mesh:THREE.InstancedMesh;state:THREE.InstancedBufferAttribute;ids:number[];capacity:number;n:number;name:string};
 const AUTUMN_CACHE=new Map<string,THREE.Color>();const autumnColor=(hex:string)=>{let c=AUTUMN_CACHE.get(hex);if(!c){c=new THREE.Color(hex);AUTUMN_CACHE.set(hex,c);}return c;};
@@ -27,7 +27,7 @@ export class BotanicalForest{
   const farGeo=new THREE.CylinderGeometry(1,1,1,5).translate(0,.5,0),a=new Float32Array(farGeo.attributes.position.count*3);for(let i=0;i<a.length;i+=3)a.set([.2,.12,.07],i);farGeo.setAttribute('color',new THREE.BufferAttribute(a,3));
   this.farTrunk=new THREE.InstancedMesh(farGeo,this.farMat,1);this.farTrunk.name='resource-far-rooted-trunk';this.farTrunk.count=0;this.farTrunk.frustumCulled=false;scene.add(this.farTrunk);
   const unit=(g:THREE.BufferGeometry)=>{g.computeBoundingBox();const b=g.boundingBox!,c=b.getCenter(new THREE.Vector3()),h=b.getSize(new THREE.Vector3()).multiplyScalar(.5);g.translate(-c.x,-c.y,-c.z);g.scale(1/h.x,1/h.y,1/h.z);g.computeBoundingBox();return g;};
-  this.far=[unit(painterFarRound()),unit(painterFarNeedle())].map((geo,i)=>{const m=new THREE.InstancedMesh(geo,this.farMat,1);m.name=i?'resource-far-needle':'resource-far-crown';m.count=0;m.frustumCulled=false;scene.add(m);return m;});
+  this.far=[unit(painterFarClustered()),unit(painterFarNeedle())].map((geo,i)=>{const m=new THREE.InstancedMesh(geo,this.farMat,1);m.name=i?'resource-far-needle':'resource-far-crown';m.count=0;m.frustumCulled=false;scene.add(m);return m;});
   this.shadowMat=new THREE.MeshBasicMaterial({color:0x10140a,map:null,alphaMap:radialShadowTexture(),transparent:true,opacity:this.shadowOpacity,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
   this.shadows=this.makeShadows(1);
  }
@@ -106,12 +106,12 @@ export class BotanicalForest{
     density=1-Math.min(1,ctx.winter*1.25)-smooth(.55,1.05,ctx.autumn*(.55+.45*rec.timing))*.85;density=Math.max(0,Math.min(1,density));
    }
    const snow=ctx.snow>.15?Math.min(1,ctx.snow*(sp.evergreen?1.05:.9)):0;if(snow>0&&density>.3)this.color.lerp(this.snowColor,snow*.25);
-   this.color.multiplyScalar(.9+.2*rec.hue[2]);
+   this.color.multiplyScalar(1.04+.2*rec.hue[2]);
    if(ctx.marked?.(node.id))this.color.set('#c58e43');
    if(distance<=near*2.2&&!stump){blobs=this.blob(node,s,sp.crownR*rec.sx*(sp.arch==='palm'?.5:.85),blobs);}
    if(tier!==2){
     const key=(rec.sp*VARIANTS_PER_SPECIES+rec.v)*2+tier,need=(tally.get(key)??0)+1;tally.set(key,need);
-    const b=this.batch(rec.sp,rec.v,tier,need),i=b.n++;b.ids.push(node.id);
+    const b=this.batch(rec.sp,rec.v,tier as 0|1,need),i=b.n++;b.ids.push(node.id);
     this.pos.set(node.x,node.y,node.z);this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);this.scale.set(s*rec.sx,s*rec.sy,s*rec.sx);this.matrix.compose(this.pos,this.quat,this.scale);
     b.mesh.setMatrixAt(i,this.matrix);b.mesh.setColorAt(i,this.color);b.state.setXY(i,density,snow);
     if(tier===0)fullTrees++;else midTrees++;if(density>.05||sp.evergreen)leafy++;

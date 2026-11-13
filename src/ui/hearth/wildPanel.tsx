@@ -13,7 +13,7 @@ import {cx} from './kit';
  * screen-reader labels. Every refusal is the engine's own sentence. Hidden on saves without wild-craft. */
 const Q={kind:'wild-craft'} as const;
 type Tone='bad'|'warn'|'good';
-type Cmd={kind:'wild-work-control';projectId:number;paused:boolean}|{kind:'wild-begin';recipe:string;critterId?:number}|{kind:'wild-collect';projectId?:number};
+type Cmd={kind:'wild-work-control';projectId:number;paused:boolean}|{kind:'wild-begin';recipe:string;critterId?:number;x?:number;z?:number}|{kind:'wild-collect';projectId?:number};
 
 function Glyph({icon}:{icon:string}){return <span className="hw-emoji" aria-hidden="true">{icon}</span>;}
 /** Read-only tile: icon, optional count, optional progress bar. */
@@ -41,10 +41,12 @@ export function WildGlance({rows,plan,busy=false,onCommand,note}:{rows:WildCraft
    :<Info key={i} icon={r.icon} label={`${r.why??'Work'}${r.who?` · ${r.who}`:''}`} tip={r.text} pct={percent(r.text)} badge={r.paused?'⏸':undefined}/>;})}</Row>}
   {afield.length>0&&<Row icon={<Footprints/>} label="Out in the wild">{afield.map((r,i)=><Info key={i} icon={r.icon} label={r.kind==='wound'?`Blood trail: ${r.text}`:`${r.why??'Trap'}`} tip={r.kind==='wound'?`Follow it before it bleeds out and the carcass spoils. ${r.amount??0} marks seen.`:r.text} tone={r.urgent?'bad':undefined} badge={r.kind==='trap'?r.text.split(' ')[0]:undefined}/>)}</Row>}
   {stores.length>0&&<Row icon={<Package/>} label="Hides, fat and what is rotting">{stores.map((r,i)=><Info key={i} icon={r.icon} label={`${r.text} in store`} tip={r.why} tone={r.urgent?'warn':undefined} badge={Number.isFinite(+r.text)?Math.round(+r.text):r.text}/>)}</Row>}
-  {plan&&(startable.length>0||plan.carcasses.length>0||plan.ready.length>0||plan.trails.length>0)&&<Row icon={<Plus/>} label="Start work">
+  {plan&&(startable.length>0||plan.carcasses.length>0||plan.ready.length>0||plan.trails.length>0||plan.sites.length>0||plan.pens.length>0)&&<Row icon={<Plus/>} label="Start work">
    {plan.ready.map(b=><Act key={'r'+b.projectId} icon="✋" label={`Collect: ${b.name}`} tip="A finished batch is waiting on its rack. A free adult will carry it home." tone="good" on badge="✓" disabled={busy||!plan.hands.length} onClick={send({kind:'wild-collect',projectId:b.projectId})}/>)}
    {plan.carcasses.map(c=><Act key={'c'+c.id} icon="🔪" label={`Dress the ${c.species}`} tip={`Take fat, sinew, brain and horn: ${c.parts} left on the carcass. One trip carries six.`} badge={c.parts} disabled={busy||!plan.hands.length} onClick={send({kind:'wild-begin',recipe:'dressParts',critterId:c.id})}/>)}
    {plan.trails.map(t=><Act key={'t'+t.id} icon="🩸" label={`Track the ${t.species}`} tip="Follow the blood trail to the wounded animal." tone="bad" disabled={busy||!plan.hands.length} onClick={send({kind:'wild-begin',recipe:'trackWounded',critterId:t.id})}/>)}
+   {plan.sites.map(x=><Act key={'s'+x.id} icon={x.icon} label={x.name} tip={x.left<1?'Spent for now. It renews only in warm weather.':`${x.left} of ${x.cap} left. One trip carries ${x.recipe==='cutHay'?4:2}.`} badge={x.left} tone={x.left<1?'warn':undefined} disabled={busy||!plan.hands.length||x.left<1} onClick={send({kind:'wild-begin',recipe:x.recipe,x:x.x,z:x.z})}/>)}
+   {plan.pens.map(x=><Act key={'p'+x.id} icon={x.icon} label="Fork hay to the herd" tip={x.issue??'Feeds this pen from the hay store. Left-over hay is carried back.'} disabled={busy||!plan.hands.length||!!x.issue} onClick={send({kind:'wild-begin',recipe:'forkHay',x:x.x,z:x.z})}/>)}
    {startable.map(r=><Act key={r.id} icon={r.icon} label={r.name} tip={r.issue??`Needs a free ${r.station}${r.stations.length>1?` (${r.stations.length} available)`:''}`} disabled={busy||!!r.issue} onClick={send({kind:'wild-begin',recipe:r.id})}/>)}
   </Row>}
   {empty&&<p className="hw-empty"><Users size={20}/> Nothing is being hunted, tanned or stored.</p>}

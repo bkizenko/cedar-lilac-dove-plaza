@@ -6,7 +6,7 @@ import {rngFrom} from './painterTrees';
 /** Understory and forest-floor geometry on the botanical atlas: leaf-card grass, tall and dry grass, ferns and bracken, reeds, bushes grown from the
  * hawthorn/juniper skeletons, mushrooms, fallen logs with moss and bracket fungus, stumps, deadwood piles and moss mounds. Same attribute layout as
  * the trees (`aLeaf` tint amount, `aShed` -1) so one material draws them; rooted at y=0, deterministic, nonblocking decoration only. */
-export const UNDERSTORY_KINDS=['flowers','grass','tallgrass','drygrass','fern','bracken','reeds','bush','mushroom','log','stump','deadwood','moss'] as const;
+export const UNDERSTORY_KINDS=['flowers','grass','tallgrass','drygrass','fern','bracken','reeds','bush','mushroom','log','stump','deadwood','moss','sapling','pinelet'] as const;
 export type UnderstoryKind=typeof UNDERSTORY_KINDS[number];
 type Rgb=[number,number,number];
 const {Acc,tube,strip,barkFn,SOLID_UV,add,mul,norm,cross,mix,UP}=P;
@@ -81,14 +81,16 @@ function finish(a:InstanceType<typeof Acc>,scale=1){const g=a.geometry();if(scal
 export function understoryGeometry(kind:UnderstoryKind):THREE.BufferGeometry{
  let g=cache.get(kind);if(g)return g;
  switch(kind){
-  case 'grass':g=finish(tuft(7,.3,[.45,.85],[.5,.8],401));break;
+  case 'grass':g=finish(tuft(9,.34,[.55,1.0],[.85,1.25],401));break;
   case 'flowers':{const a=tuft(7,.4,[.22,.5],[.4,.6],404),r=rngFrom(403);for(let i=0;i<6;i++){const an=r()*6.28,d=Math.sqrt(r())*.38,h=.32+r()*.34,x=Math.cos(an)*d,z=Math.sin(an)*d;tube(a,[[x,0,z],[x+.03,h*.55,z],[x+.05,h,z]],[.012,.01,.008],3,()=>[.2,.4,.12],1,1);}g=finish(a);break;}
-  case 'tallgrass':g=finish(tuft(7,.28,[.9,1.5],[.5,.75],402,.3));break;
-  case 'drygrass':g=finish(tuft(6,.3,[.6,1.1],[.45,.7],403,.4));break;
+  case 'tallgrass':g=finish(tuft(9,.3,[1.0,1.7],[.8,1.15],402,.3));break;
+  case 'drygrass':g=finish(tuft(8,.32,[.7,1.2],[.8,1.1],403,.4));break;
   case 'fern':g=finish(frondFan(8,.95,.2,411,.55,.9,TILE.fern));break;
   case 'bracken':g=finish(frondFan(10,1.5,.26,412,.7,.7,TILE.fern));break;
   case 'reeds':{const r=rngFrom(421),a=new Acc();for(let i=0;i<9;i++){const an=r()*6.28,d=Math.sqrt(r())*.4;blade(a,[Math.cos(an)*d,0,Math.sin(an)*d],an+(r()-.5)*.8,.1+r()*.16,.1+r()*.05,1.3+r()*.9,TILE.grass,[.5,.62,.34],[1.15,1.12,.7],1,.3+r()*.5);}g=finish(a);break;}
   case 'bush':{const t=botanicalTree('hawthorn',1,1);g=t.geometry.clone();g.scale(.5,.5,.5);for(const k of ['position'])void k;g.computeBoundingBox();g.computeBoundingSphere();break;}
+  case 'sapling':{const t=botanicalTree('hawthorn',2,1);g=t.geometry.clone();g.scale(.62,.62,.62);g.computeBoundingBox();g.computeBoundingSphere();break;}
+  case 'pinelet':{const t=botanicalTree('fir',2,1);g=t.geometry.clone();g.scale(.2,.2,.2);g.computeBoundingBox();g.computeBoundingSphere();break;}
   case 'mushroom':g=finish(mushroomCluster());break;
   case 'log':g=finish(fallenLog());break;
   case 'stump':{g=botanicalStump().clone();g.scale(.3,.55,.3);g.computeBoundingBox();g.computeBoundingSphere();break;}

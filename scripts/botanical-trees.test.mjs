@@ -58,7 +58,7 @@ test('site driven species choice is stable, weighted by site and never empty',()
 test('understory kinds are finite, rooted, deterministic and cheap',()=>{
  for(const k of UNDERSTORY_KINDS){
   const g=understoryGeometry(k);assert.ok(finite(g),k);assert.equal(understoryGeometry(k),g);
-  const tris=(g.index?g.index.count:g.getAttribute('position').count)/3;assert.ok(tris>0&&tris<=400,`${k} ${tris}`);
+  const tris=(g.index?g.index.count:g.getAttribute('position').count)/3;assert.ok(tris>0&&tris<=(k==='sapling'||k==='pinelet'?900:400),`${k} ${tris}`);
   g.computeBoundingBox();assert.ok(g.boundingBox.min.y>-.2,k);assert.ok(g.boundingBox.max.y<3.5,k);
  }
  const first=bytes(understoryGeometry('fern'));clearUnderstoryCache();assert.deepEqual(bytes(understoryGeometry('fern')),first);
