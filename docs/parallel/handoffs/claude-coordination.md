@@ -1216,3 +1216,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 08:20 ET Claude: shipped people garb redesign (tapered trunk, shoulder yoke, A-line skirts, sleeves/collar/belt, cloaks, armor cut to trunk, muted dyes, role silhouettes; budgets unchanged; harness now renders people-v2 looks + 14-civ garb sheets) (dcf0d2e2) / now on idle, ready for next item / blocked: none
 
 07:52 ET Claude: shipped lane C village lawn ground cover around settlement buildings (grass/tall grass/flower tufts, nonblocking, capped; harness now renders at med quality, earlier shots had no ground dressing; biome/civ/people/era/wonder 50/50, tsc nil on touched file, SwiftShader docs/renders/visuals/village-lawn-2026-11-13.png) (0b6fca69) / now on Tigrane/Kaaltun civic polish, hearth glow on lawn / blocked: none
+
+13:20 ET Claude: shipped building detail + variety pass (every hut/house/granary/shed its own geometry per id, construction-detail layer, per-civ hut forms, opt-in muted tone; caps hold; sheets in docs/renders/building-detail) (3ac2e22f) / now on idle, ready for next item / blocked: none
