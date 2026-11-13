@@ -1098,6 +1098,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 23:00 | Claude | 59 (since 22:00 ET, all branches) | 30 landed by PM 23:15 (fields snapping, irrigation v1, placement fixes, people animation, society proposals, huts, minimap toggle) | ~6 (fields edge snapping, irrigation v1 opt-in, hut doors, upright work poses, society accept/decline, minimap collapse) | shipping and landing; all lanes posted <1h |
 | 11-12 23:00 | Grok | 0 | 0 | 0 | out; World rows with Claude/PM queue; no board lines to miss |
 | 11-12 23:00 | Total | ~80 | integration 0 ahead of main after 23:15 landing (30 commits, fast-forward) | ~6 | focused sweep 124 tests 121 pass 3 skip 0 fail; tsc diff nil vs main; no idle Claude/Codex agents; Grok only idle |
+| 11-13 00:00 | Codex | 30 (since 23:00 ET, all on main) | 30 | 1 (published field snap/cancel/place paying seeds once; small-building wall-support grounding qualified on native build) | active, on target; irrigation controls kept off pending labor/freshwater qualification |
+| 11-13 00:00 | Claude | 34 (since 23:00 ET, all on main) | 34 | ~3 (waystation raids, stones from geology, Hearth minimap fix) | active; no board lines missed; gap 6 in progress |
+| 11-13 00:00 | Grok | 0 | 0 | 0 | out; World rows with Claude/PM queue |
+| 11-13 00:00 | Total | 64 (all branches) | main 38bce817; no agent branch ahead of main; integration fast-forwarded to main | ~4 | no landing needed this hour; no sweep rerun (no new code since 23:15 sweep 121/124 pass); no idle Claude/Codex agents |
 
 ## Process improvements
 
