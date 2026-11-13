@@ -1,0 +1,122 @@
+{
+ "t1-close": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.32,
+  "dist": 70,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 1,
+  "settle": 2
+ },
+ "t1-mid": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.4,
+  "dist": 200,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 1,
+  "settle": 2
+ },
+ "t2-close": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.32,
+  "dist": 70,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 2,
+  "settle": 2
+ },
+ "t2-mid": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.4,
+  "dist": 200,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 2,
+  "settle": 2
+ },
+ "t3-close": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.32,
+  "dist": 70,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 3,
+  "settle": 2
+ },
+ "t3-mid": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.4,
+  "dist": 200,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 3,
+  "settle": 2
+ },
+ "t4-close": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.32,
+  "dist": 70,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 4,
+  "settle": 2
+ },
+ "t4-mid": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.4,
+  "dist": 200,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 4,
+  "settle": 2
+ },
+ "t5-close": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.32,
+  "dist": 70,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 5,
+  "settle": 2
+ },
+ "t5-mid": {
+  "seed": 5,
+  "width": 640,
+  "height": 360,
+  "yaw": 0.6,
+  "pitch": 0.4,
+  "dist": 200,
+  "quality": "med",
+  "drawDistance": "medium",
+  "treeDetail": 5,
+  "settle": 2
+ }
+}

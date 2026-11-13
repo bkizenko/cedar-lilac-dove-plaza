@@ -51,6 +51,7 @@ import{validTradeIntelState}from'./tradeIntel';
 import{validFibreState}from'./fibre';
 import {validScoutProvisions} from './scoutProvisions';
 import {validProductionPractice} from './productionPractice';
+import {validSkillModel} from './skillRuntime';
 import {validCapturedKnowledgeState} from './capturedKnowledge';
 import {penHousingCapacity,penFeedCapacity} from './penGeometry';
 import{validClayState}from'./pottery';
@@ -216,7 +217,7 @@ function validateGamePayload(raw: unknown) {
   if(!validCopperStudies(s)||!validTradedTeaching(s)||!validArmorRepairs(s)||!validGarmentRepairs(s)||!validHousingState(s)||!validSitePreparationState(s))fail();
   if(!validBuildingMaintenance(s)||!validTowerPlatformState(s)||!validCoastalTradeState(s))fail();
   if(!validCommunityHandovers(s)||!validHandoverAssets(s)||!validCerealState(s)||!validPracticalHelpers(s)||!validTradeIntelState(s)||!validFibreState(s)||!validProductionState(s)||!validWildCraftState(s)||!validClayState(s)||!validProductionPractice(s)||!validCapturedKnowledgeState(s,key=>Object.hasOwn(PRODUCTION_RECIPES,key)))fail();
-  if(!validCampMoveState(s)||!validCultivationEvidence(s))fail();
+  if(!validCampMoveState(s)||!validCultivationEvidence(s)||!validSkillModel(s))fail();
   if(!validStructureKnowledge(s)||!validObservedClaims(s)||!validObservedSettlements(s)||!validDiplomaticKnowledge(s))fail();
   if(!validFiniteCamps(s)||!validRaidIntents(s)||!validRaidDefense(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();

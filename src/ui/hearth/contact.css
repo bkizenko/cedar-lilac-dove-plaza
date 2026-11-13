@@ -1,0 +1,39 @@
+/* First meeting: dark matte panel, heavy frame, near-square corners, one brass accent. Ledger rows, not buttons.
+   Size floors: text 16px+, icons 24px, rows 52px. Desktop first. */
+:root .encounter-dialog.fc{--fc-bg:#13100c;--fc-ink:#ece1c8;--fc-dim:#c2b595;--fc-acc:var(--hw-gold-2,#e3b765);--fc-rule:rgba(236,225,200,.2);
+ width:min(58rem,calc(100vw - 2rem));max-height:calc(100vh - 2rem);padding:0;border:0;border-radius:2px;background:var(--fc-bg);color:var(--fc-ink);overflow:hidden;
+ font:500 16px/1.45 var(--font-display,Georgia,serif);box-shadow:0 0 0 3px #0a0806,0 0 0 4px #6a5736,0 0 0 8px #0a0806,0 24px 60px rgba(0,0,0,.7),inset 0 0 0 1px #0a0806,inset 0 0 0 5px var(--fc-bg),inset 0 0 0 6px rgba(184,150,79,.5)}
+.encounter-dialog.fc::backdrop{background:rgba(6,5,4,.62)}
+.fc *{box-sizing:border-box}
+:root .encounter-dialog.fc .fc-body{display:grid;grid-template-columns:15.5rem minmax(0,1fr);gap:0;max-height:calc(100vh - 2rem);overflow:auto}
+:root .encounter-dialog.fc .fc-side{padding:26px 22px 22px 26px;border-right:1px solid var(--fc-rule);display:flex;flex-direction:column;gap:6px;background:linear-gradient(180deg,rgba(255,255,255,.025),transparent 40%)}
+:root .encounter-dialog.fc .fc-portrait{display:block;width:100%;height:auto;border:2px solid #0a0806;outline:1px solid rgba(184,150,79,.55);outline-offset:3px;margin-bottom:12px}
+:root .encounter-dialog.fc .fc-eyebrow{margin:0;font:600 16px/1.2 var(--font-sans,system-ui);letter-spacing:.18em;text-transform:uppercase;color:var(--fc-acc)}
+:root .encounter-dialog.fc h2{margin:2px 0 0;font:600 32px/1.05 var(--font-display,Georgia,serif);letter-spacing:.04em;color:var(--fc-ink);text-transform:uppercase}
+:root .encounter-dialog.fc .fc-role{margin:4px 0 8px;color:var(--fc-dim);font-size:18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+:root .encounter-dialog.fc .fc-h{margin:14px 0 2px;padding-bottom:5px;border-bottom:1px solid var(--fc-rule);font:600 16px/1.2 var(--font-sans,system-ui);letter-spacing:.2em;text-transform:uppercase;color:var(--fc-acc)}
+:root .encounter-dialog.fc .fc-side .fc-h{margin-top:10px}
+:root .encounter-dialog.fc .fc-know{list-style:none;margin:4px 0 0;padding:0;color:var(--fc-dim);font-size:17px}
+:root .encounter-dialog.fc .fc-know li{padding:3px 0 3px 14px;position:relative}.fc-know li::before{content:'';position:absolute;left:0;top:.8em;width:6px;height:1px;background:var(--fc-acc)}
+:root .encounter-dialog.fc .fc-main{padding:20px 28px 16px 26px;min-width:0}
+:root .encounter-dialog.fc .fc-said{margin:0 0 4px;padding:6px 0 6px 16px;border-left:2px solid var(--fc-acc);min-height:64px}
+:root .encounter-dialog.fc .fc-said p{margin:0;font-size:21px;line-height:1.38;font-style:italic;color:var(--fc-ink)}
+:root .encounter-dialog.fc .fc-list{list-style:none;margin:0;padding:0}
+:root .encounter-dialog.fc .fc-item{border-top:1px solid var(--fc-rule)}.fc-list .fc-item:first-child{border-top:0}
+:root .encounter-dialog.fc .fc-row{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:14px;width:100%;min-height:52px;padding:6px 8px;border:0;border-radius:0;background:transparent;color:var(--fc-ink);text-align:left;cursor:pointer;font:inherit}
+:root .encounter-dialog.fc .fc-row:hover,:root .encounter-dialog.fc .fc-row:focus-visible{background:rgba(184,150,79,.12)}
+:root .encounter-dialog.fc .fc-row:focus-visible{outline:2px solid var(--fc-acc);outline-offset:-2px}
+:root .encounter-dialog.fc .fc-row[aria-disabled=true]{opacity:.58}
+:root .encounter-dialog.fc .fc-ico{display:grid;place-items:center;color:var(--fc-acc)}
+:root .encounter-dialog.fc .fc-txt{display:flex;flex-direction:column;min-width:0}
+:root .encounter-dialog.fc .fc-txt b{font:600 19px/1.2 var(--font-display,Georgia,serif);letter-spacing:.05em;text-transform:uppercase}
+:root .encounter-dialog.fc .fc-txt span{font-size:16px;color:var(--fc-dim);line-height:1.3}
+:root .encounter-dialog.fc .fc-tags{display:inline-flex;gap:8px;color:var(--fc-dim)}
+:root .encounter-dialog.fc .fc-legend{list-style:none;margin:2px 0 6px;padding:0 0 0 8px;display:flex;flex-direction:column;gap:6px;font-size:16px;color:var(--fc-dim)}
+:root .encounter-dialog.fc .fc-legend li{display:flex;align-items:center;gap:6px}:root .encounter-dialog.fc .fc-legend svg{color:var(--fc-acc);flex:none}
+:root .encounter-dialog.fc .fc-note{margin:8px 0 0;padding:6px 0 6px 12px;border-left:1px solid var(--fc-dim);color:var(--fc-dim);font-size:17px}
+:root .encounter-dialog.fc .fc-quiet{padding:6px 8px 6px 46px;color:var(--fc-dim);font-size:16px;list-style:none}
+@media (max-width:760px){:root .encounter-dialog.fc .fc-body{grid-template-columns:1fr}:root .encounter-dialog.fc .fc-side{border-right:0;border-bottom:1px solid var(--fc-rule)}}
+@media (prefers-reduced-motion:no-preference){:root .encounter-dialog.fc .fc-row{transition:background-color .12s}}
+:root .encounter-dialog.fc .fc-say .fc-txt b{text-transform:none;letter-spacing:.01em;font-size:20px;font-weight:600}
+:root .encounter-dialog.fc .fc-portrait{width:150px;margin-bottom:10px}

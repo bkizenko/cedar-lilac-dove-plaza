@@ -6,13 +6,13 @@ type Props={engine:Pick<Engine,'chooseGraphics'|'chooseDrawDistance'|'chooseTree
 const treeLabel=(c:TreeChoice)=>c==='auto'?'Auto':`${c} ${TREE_DETAIL[c].label}`;
 export function GraphicsSettingsPanel({engine,variant='hearth'}:Props){
  const g=engine?.gfx;if(!engine||!g||typeof g.choose!=='function')return null;
- const hud=variant==='hud',lab=hud?'px-2 py-2':undefined,chip=hud?'text-xs':'hw-chip',note=hud?'px-2 py-2 text-xs':'hw-chip t-warn';
+ const hud=variant==='hud',lab=hud?'px-2 py-2':undefined,chip=hud?'text-xs':'hw-chip',note=hud?'px-2 py-2 text-xs':'t-warn';
  const now=(text:string)=><span className={chip} data-testid="gfx-in-use"> in use: {text}</span>;
  const n=g.notice,e=g.effective,c=g.choices;
  return <>
   <label className={lab}>Graphics{hud?' ':''}<select aria-label="Graphics quality" value={c.graphics} onChange={ev=>{const v=ev.target.value;if(isGraphicsChoice(v))engine.chooseGraphics(v);}}>{GRAPHICS_CHOICES.map(v=><option key={v} value={v}>{GRAPHICS_LABELS[v]}</option>)}</select>{(c.graphics==='auto'||e.graphics!==c.graphics)&&now(GRAPHICS_LABELS[e.graphics])}</label>
   <label className={lab}>Draw distance{hud?' ':''}<select aria-label="Draw distance" value={c.draw} onChange={ev=>{const v=ev.target.value;if(isDrawChoice(v))engine.chooseDrawDistance(v);}}>{DRAW_CHOICES.map(v=><option key={v} value={v}>{DRAW_LABELS[v]}</option>)}</select>{(c.draw==='auto'||e.draw!==c.draw)&&now(DRAW_LABELS[e.draw])}</label>
   <label className={lab}>Tree detail{hud?' ':''}<select aria-label="Tree detail" title="Five steps between sparse and full. Auto starts in the middle of Low and Medium." value={String(c.trees)} onChange={ev=>{const v=ev.target.value==='auto'?'auto':Number(ev.target.value);if(isTreeChoice(v))engine.chooseTreeDetail(v);}}>{TREE_CHOICES.map(v=><option key={v} value={String(v)}>{treeLabel(v)}</option>)}</select>{(c.trees==='auto'||e.trees!==c.trees)&&now(treeLabel(e.trees))}</label>
-  {n&&<p role="status" className={note} data-testid="gfx-notice">{n.text} <button type="button" onClick={()=>engine.restoreGraphics()}>Restore my setting</button></p>}
+  {n&&<p role="status" className={note} data-testid="gfx-notice" style={{gridColumn:'1 / -1',margin:'4px 0'}}>{n.text} <button type="button" onClick={()=>engine.restoreGraphics()}>Restore my setting</button></p>}
  </>;
 }

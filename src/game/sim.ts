@@ -48,6 +48,7 @@ import {enableTerrainInfluence} from './terrainInfluenceRuntime';
 import {enableCommanders,tickCommanders} from './commanders';
 import {tickNaval,navalIndependentFood} from './navalFleet';
 import {pauseNavalWork,navalWorkerCommitted} from './navalPorts';
+import {enableSkillModel,advanceSkillDay,gatherSkillStep,personSkillCard,villageSkillCard} from './skillRuntime';
 import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
 import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
 import type {WaterReach} from './waterReach';
@@ -245,6 +246,7 @@ import type {
   SeasonMix,
   PeaceTerm,
 } from "./types";
+import { eraText } from "./vocab";
 import { waterSurfaceAt, generateWorld, inBounds, isFertile, sampleHeight, sampleWorldHeight, type WorldData } from "./worldgen";
 
 const WALK = 520;
@@ -452,6 +454,7 @@ export class Game {
     enableCommanders(this);
     this.state.difficulty=preset;
     this.state.buildingMaintenanceVersion=1;
+    if(request?.skillsVersion!==0)enableSkillModel(this); // new games track per-person skills; saves without the field keep the old behaviour
     this.workBoard.reset();
     this.paths.clear();
     this.state.seed = s;
@@ -1033,7 +1036,7 @@ export class Game {
   }
 
   banner(text: string, t = 2) {
-    this.state.banner = text;
+    this.state.banner = eraText(text, this.state.tribes?.[0]?.age ?? this.state.age);
     this.state.bannerT = t;
   }
 
@@ -4639,7 +4642,7 @@ export class Game {
       if (u.team !== 0 && "species" in node && Math.hypot(node.x-this.campOf(u.team).x,node.z-this.campOf(u.team).z)>75) {
         u.node=null;u.order=u.carry>0?"return":"idle";u.workReason="Herd beyond safe gathering range — returning to local work";return;
       }
-      if("type" in node&&node.type==="farm"){fieldWorkStep(this,u,node as Building,dt);return;}
+      if("type" in node&&node.type==="farm"){fieldWorkStep(this,u,node as Building,dt*gatherSkillStep(this,u,"food",node,dt));return;}
       const atSurface=()=>"w" in node?this.buildingWorkReached(u,node):"kind" in node&&node.kind==="fish"?(u.haulage==="canoe"||this.height(u.x,u.z)>this.waterAt(u.x,u.z)+.12)&&Math.hypot(u.x-node.x,u.z-node.z)<=(u.haulage==="canoe"?2:7):Math.hypot(u.x-node.x,u.z-node.z)<=("species" in node?5:"kind" in node&&["tree","stone","copper","iron"].includes(node.kind)?3.2:1.22);
       if (!atSurface()) {
         const spot="w" in node&&this.solidBuilding(node)?this.interactionSpot(u,node):"kind" in node&&node.kind==="fish"?fishingBank(this,u,node):this.nearestWalk(u,node.x,node.z);
@@ -4665,7 +4668,7 @@ export class Game {
         "kind" in node && node.kind === "forage" && calendar(this).phase === 3 ? 2.2 : 1;
       const winterFishing = calendar(this).phase === 3 && (("type" in node && node.type === "dock") || ("kind" in node && node.kind === "fish")) ? 1.65 : 1;
       const urgency = t === "food" && reserveSeconds(this, u.team) < 240 ? 1.25 : 1;
-      const period = g.period * this.campBonus(u, t) * winterForage * winterFishing * subsistenceLaborMultiplier(this,t,u.x,u.z) / (GATHER_WORK_RATE * urgency);
+      const period = g.period * this.campBonus(u, t) * winterForage * winterFishing * subsistenceLaborMultiplier(this,t,u.x,u.z) / (GATHER_WORK_RATE * urgency * gatherSkillStep(this,u,t,node as never,dt));
       u.gatherT += dt;
       commandUsefulWork(this,u,dt);
       u.stride += dt * 9;
@@ -5899,6 +5902,7 @@ export class Game {
       try {
         this.state.time += sdt;
         advanceRulers(this); // Claude rulers lane: no-op unless worldOptions.rulersVersion===1
+        advanceSkillDay(this); // per-person skills: one batch per sim day, no-op without state.skillModel
         reconcileSiegeRams(this);
         updateSeasonReports(this);
         phases?.mark('production');
@@ -6236,6 +6240,7 @@ export class Game {
         kind: "unit",
         type: u.type,
         team: u.team,
+        skills: u.team===0?personSkillCard(this,u):undefined,
         carry: u.carry > 0 && u.carryType ? (u.carryType==="food"?Object.entries(carriedFoodLots(u)).map(([k,n])=>`${n} ${k}`).join(" · "):u.carryType+" "+u.carry) + "/" + cap : "",
         job: u.order === "hold" ? "hold" : u.job,
       };
@@ -6437,6 +6442,7 @@ export class Game {
       muted: this.muted,
       quality: this.quality,
       workerSelected: units.filter((u) => u.type === "worker").length,
+      villageSkills: villageSkillCard(this,0),
       militiaSelected: units.filter(u=>u.militia).length,
       militarySelected: units.filter((u) => u.type !== "worker" && u.type !== "leader").length,
       job:

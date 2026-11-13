@@ -1,6 +1,7 @@
 /** Browser entry for the ITEM catalogue sheets (bundled by items.mjs with esbuild; REAL three.js, SwiftShader in the sandbox).
  *  Everything drawn is generator output from src/scene/itemModels.ts, shown per tile with a fitted three-quarter camera. */
 import * as THREE from 'three';
+import {NEAR_ITEM} from '@/scene/itemNear';
 import {itemGeometry,itemMaterial} from '@/scene/itemGeometry';
 import {itemDef,ITEM_IDS} from '@/scene/itemModels';
 import {buildItem} from '@/scene/itemModels';
@@ -8,7 +9,7 @@ import {listSkins} from '@/scene/civSkin';
 import type {ItemReq} from '@/scene/itemKit';
 
 type Tile={req:ItemReq;tiltDeg?:number;az?:number;el?:number;ground?:boolean;zoom?:number;bg?:string;focus?:[number,number,number];fr?:number};
-type Spec={width:number;height:number;cols:number;tiles:Tile[];bg?:string};
+type Spec={width:number;height:number;cols:number;tiles:Tile[];bg?:string;nearOff?:boolean};
 const W=window as unknown as {renderItems:(s:Spec)=>Promise<unknown>;itemIds:()=>string[]};
 W.itemIds=()=>[...ITEM_IDS];
 (W as unknown as {dbgProg:(r:ItemReq)=>unknown}).dbgProg=(r)=>{const rd=new THREE.WebGLRenderer(),sc=new THREE.Scene(),g=itemGeometry(r)!,cam=new THREE.PerspectiveCamera(30,1,.1,10);sc.add(new THREE.Mesh(g,itemMaterial()));sc.add(new THREE.AmbientLight());cam.position.set(0,0,3);rd.render(sc,cam);
@@ -18,6 +19,7 @@ W.itemIds=()=>[...ITEM_IDS];
 (W as unknown as {itemDefs:()=>unknown}).itemDefs=()=>ITEM_IDS.map(id=>{const d=itemDef(id)!;return {id,name:d.name,category:d.category,frame:d.frame};});
 (W as unknown as {skinIds:()=>string[]}).skinIds=()=>listSkins().filter(x=>x.id!=='neutral').map(x=>x.id);
 W.renderItems=async(S:Spec)=>{
+ NEAR_ITEM.enabled=!S.nearOff;
  const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);renderer.setSize(S.width,S.height);document.body.appendChild(renderer.domElement);
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.NeutralToneMapping;renderer.toneMappingExposure=1.05;renderer.setScissorTest(true);
  const rows=Math.ceil(S.tiles.length/S.cols),tw=Math.floor(S.width/S.cols),th=Math.floor(S.height/rows),stats:unknown[]=[];

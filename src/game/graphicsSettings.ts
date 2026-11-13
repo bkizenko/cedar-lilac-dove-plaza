@@ -14,6 +14,7 @@
  *  - Safety fallbacks (lost GPU context, repeated render errors) are not choices either: they lower the effective tier, are not persisted, and use the same notice + Restore.
  * Pure: no three.js, no DOM except the storage object that is passed in or read defensively. */
 import {GRAPHICS_RULES,type GraphicsQuality} from './graphics';
+import {DETAIL_RULES} from './detailLevel';
 import {DRAW_DISTANCE_LEVELS,DRAW_DISTANCE_LABELS,DRAW_DISTANCE_RULES,drawBands,isDrawDistance,type DrawBands,type DrawDistance} from './drawDistance';
 
 export type GraphicsChoice='auto'|GraphicsQuality;
@@ -28,22 +29,24 @@ export const TREE_STEPS:readonly TreeStep[]=[1,2,3,4,5];
 export const TREE_CHOICES:readonly TreeChoice[]=['auto',...TREE_STEPS];
 
 /** What one tree-detail step changes. All render-only; none touches the simulation, resource ids, picking or saves.
- *  nearMetres    radius of full + mid botanical species meshes (full-detail inside 40% of it, mid-detail to 115%)  (legacy: Low 28, Medium 75, High 115)
+ *  nearMetres    radius of full + mid botanical species meshes (full-detail inside 40% of it, mid-detail to 115%)  (from DETAIL_RULES.treeNear: graphics Low 70, Medium 170, High 230; the Detail option scales it further)
  *  farScale      multiplier on the draw-distance band's tree draw distance (individual far crowns of sim trees and filler)
  *  fillerCap     multiplier on the cosmetic filler forest's tree and horizon-crown caps; 0 = no filler forest
  *  fillerDetail  multiplier on the radius out to which filler trees are drawn as individual crowns (beyond it: merged horizon crowns)
  *  cardScale     multiplier on leaf-card count of every botanical tree mesh (cores and trunks are unchanged) */
 export type TreeDetail={step:TreeStep;label:string;nearMetres:number;farScale:number;fillerCap:number;fillerDetail:number;cardScale:number};
+const NEAR=DETAIL_RULES.treeNear;
 export const TREE_DETAIL:Record<TreeStep,TreeDetail>={
- 1:{step:1,label:'Sparse',nearMetres:20,farScale:.45,fillerCap:0,fillerDetail:0,cardScale:.55},
- /** step 2 is the new Low: cheaper than the old Low (which drew every card out to 28 m with no filler) */
- 2:{step:2,label:'Light',nearMetres:28,farScale:.6,fillerCap:.25,fillerDetail:.6,cardScale:.75},
+ /** step 1 is below the old Low: shortest near radius, half the cards, only the cheap merged crowns beyond it */
+ 1:{step:1,label:'Sparse',nearMetres:Math.round(NEAR.low*.55),farScale:.3,fillerCap:.08,fillerDetail:.4,cardScale:.55},
+ /** step 2 is the new Low: the old Low radius, but fewer leaf cards and a lighter filler forest, so it is cheaper than the old Low */
+ 2:{step:2,label:'Light',nearMetres:NEAR.low,farScale:.4,fillerCap:.3,fillerDetail:.5,cardScale:.7},
  /** the default for Auto: the middle of Low and Medium */
- 3:{step:3,label:'Balanced',nearMetres:46,farScale:.8,fillerCap:.6,fillerDetail:.8,cardScale:.88},
- /** step 4 equals the old Medium */
- 4:{step:4,label:'Rich',nearMetres:75,farScale:1,fillerCap:1,fillerDetail:1,cardScale:1},
- /** step 5 equals the old High */
- 5:{step:5,label:'Full',nearMetres:115,farScale:1,fillerCap:1,fillerDetail:1,cardScale:1},
+ 3:{step:3,label:'Balanced',nearMetres:Math.round((NEAR.low+NEAR.med)/2),farScale:.7,fillerCap:.6,fillerDetail:.75,cardScale:.82},
+ /** step 4 equals the Medium graphics tier's trees */
+ 4:{step:4,label:'Rich',nearMetres:NEAR.med,farScale:1,fillerCap:1,fillerDetail:1,cardScale:1},
+ /** step 5 equals the High graphics tier's trees */
+ 5:{step:5,label:'Full',nearMetres:NEAR.high,farScale:1,fillerCap:1,fillerDetail:1,cardScale:1},
 };
 export const isTreeStep=(v:unknown):v is TreeStep=>v===1||v===2||v===3||v===4||v===5;
 export const isGraphicsChoice=(v:unknown):v is GraphicsChoice=>v==='auto'||v==='low'||v==='med'||v==='high';
