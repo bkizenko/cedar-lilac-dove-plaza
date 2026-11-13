@@ -1,7 +1,7 @@
 /** Runtime glue for the rulers lane. One call from Game.step. Off unless worldOptions.rulersVersion===1 (set for new games).
  * Old saves have no `rulers` field and no option: nothing happens. Pure state in/out lives in rulersState.ts. */
 import type {Game} from './sim';
-import {initRulers,stepRulersYear,rulersOf,type RulersState,type Ward,type WardReturn} from './rulersState';
+import {initRulers,stepRulersYear,rulersOf,type RulersState,type Ward,type WardReturn,type Gathering} from './rulersState';
 import {familyStage,familyFeatures,kinshipEffectScale} from './familyScale';
 import {marry,heir} from './dynasty';
 import {hash32,makeRng} from './rulerCore';
@@ -38,7 +38,7 @@ export function advanceRulers(g:Game){
  sampleClimate(g,r);
  if(decisionsEnabled(g))beginCivic(g); // M2-14: prehistory recorded once at the start (cheap no-op afterwards)
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
+ while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);harvestGathering(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -161,6 +161,26 @@ export function npcMarriages(g:Game):[number,number][]{
  for(const a of ids){const b=ids.find(x=>x>a&&!societyRelation(g,a,x).hostile&&societyRelation(g,a,x).known&&societyRelation(g,x,a).known);
   if(b!==undefined&&marryHouses(g,a,b))out.push([a,b]);}
  return out;
+}
+
+/** Neighbour harvest gathering (AUD-SOC-HARVEST-GATHERING). Each dynastic year one host (rotating) with real stores (low hunger) invites every
+ * known, mutually peaceful, non-player society that is not itself starving. Envoys ride out and back on the existing 'envoy' tie effect;
+ * the gathering also surfaces marriage/fosterage offers (never executed here: npcMarriages and the player commands do the real exchange).
+ * Skipped when any pair is at war. No goods, units or terrain are created or moved: the feast comes out of the host's own abstract stores. */
+export function harvestGathering(g:Game):Gathering|null{
+ const r=ensureRulers(g);if(!r)return null;
+ const ids=g.state.tribes.map((_,i)=>i).filter(i=>i!==0&&i!==3&&!!g.tribe(i));if(ids.length<2)return null;
+ const host=ids[r.year%ids.length],hin=expansionInputs(g,host);if(!hin||hin.hunger>=.5)return null;
+ const guests=ids.filter(i=>i!==host&&societyRelation(g,host,i).known&&societyRelation(g,i,host).known&&!societyRelation(g,host,i).hostile&&(expansionInputs(g,i)?.hunger??1)<.8);
+ if(!guests.length||guests.some(a=>guests.some(b=>a<b&&societyRelation(g,a,b).hostile)))return null;
+ const offers:Gathering['offers']=[];
+ const sh=r.societies[String(host)];
+ if(sh&&familyFeatures(sh.civ.polity.tier,livingPeople(g,host)).marriageExchange&&guests.some(i=>r.societies[String(i)]&&familyFeatures(r.societies[String(i)].civ.polity.tier,livingPeople(g,i)).marriageExchange))offers.push('marriage');
+ if(sh&&familyFeatures(sh.civ.polity.tier,livingPeople(g,host)).fosterage)offers.push('fosterage');
+ for(const i of guests)tieChange(g,host,i,'envoy',livingPeople(g,host),livingPeople(g,i));
+ const gat:Gathering={year:r.year,host:String(host),guests:guests.slice(0,8).map(String),offers};
+ st(g).rulers={...st(g).rulers!,gatherings:[...(st(g).rulers!.gatherings??[]),gat].slice(-12)};
+ return gat;
 }
 
 /** Expansion party plan for a rival society's next founding journey. The real crew (units) and timber (deducted from the tribe) are
