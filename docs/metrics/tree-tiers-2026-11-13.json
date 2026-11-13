@@ -15,7 +15,7 @@
    "forward": {
     "drawCalls": 30,
     "instances": 1114,
-    "triangles": 92286,
+    "triangles": 105731,
     "groups": {
      "other": {
       "drawCalls": 15,
@@ -25,7 +25,7 @@
      "sim trees full/mid": {
       "drawCalls": 24,
       "instances": 57,
-      "triangles": 56698
+      "triangles": 70143
      },
      "contact shadows": {
       "drawCalls": 1,
@@ -47,7 +47,7 @@
    "allAround": {
     "drawCalls": 30,
     "instances": 2992,
-    "triangles": 156598,
+    "triangles": 170043,
     "groups": {
      "other": {
       "drawCalls": 15,
@@ -57,7 +57,7 @@
      "sim trees full/mid": {
       "drawCalls": 24,
       "instances": 57,
-      "triangles": 56698
+      "triangles": 70143
      },
      "filler horizon crowns": {
       "drawCalls": 2,
@@ -91,7 +91,7 @@
    "forward": {
     "drawCalls": 46,
     "instances": 1777,
-    "triangles": 219148,
+    "triangles": 264776,
     "groups": {
      "other": {
       "drawCalls": 15,
@@ -101,7 +101,7 @@
      "sim trees full/mid": {
       "drawCalls": 40,
       "instances": 172,
-      "triangles": 169988
+      "triangles": 215616
      },
      "sim far crowns+trunks": {
       "drawCalls": 3,
@@ -123,7 +123,7 @@
    "allAround": {
     "drawCalls": 46,
     "instances": 4018,
-    "triangles": 295108,
+    "triangles": 340736,
     "groups": {
      "other": {
       "drawCalls": 15,
@@ -133,7 +133,7 @@
      "sim trees full/mid": {
       "drawCalls": 40,
       "instances": 172,
-      "triangles": 169988
+      "triangles": 215616
      },
      "sim far crowns+trunks": {
       "drawCalls": 3,
@@ -165,9 +165,9 @@
     "cardScale": 0.82
    },
    "forward": {
-    "drawCalls": 67,
+    "drawCalls": 77,
     "instances": 2560,
-    "triangles": 584840,
+    "triangles": 678999,
     "groups": {
      "filler far crowns+trunks": {
       "drawCalls": 3,
@@ -180,9 +180,9 @@
       "triangles": 96187
      },
      "sim trees full/mid": {
-      "drawCalls": 58,
+      "drawCalls": 68,
       "instances": 490,
-      "triangles": 511556
+      "triangles": 605715
      },
      "sim far crowns+trunks": {
       "drawCalls": 3,
@@ -202,9 +202,9 @@
     }
    },
    "allAround": {
-    "drawCalls": 67,
+    "drawCalls": 77,
     "instances": 5255,
-    "triangles": 698148,
+    "triangles": 792307,
     "groups": {
      "filler far crowns+trunks": {
       "drawCalls": 3,
@@ -217,9 +217,9 @@
       "triangles": 96187
      },
      "sim trees full/mid": {
-      "drawCalls": 58,
+      "drawCalls": 68,
       "instances": 490,
-      "triangles": 511556
+      "triangles": 605715
      },
      "sim far crowns+trunks": {
       "drawCalls": 3,
@@ -251,9 +251,9 @@
     "cardScale": 1
    },
    "forward": {
-    "drawCalls": 71,
+    "drawCalls": 87,
     "instances": 3798,
-    "triangles": 1209734,
+    "triangles": 1303893,
     "groups": {
      "filler far crowns+trunks": {
       "drawCalls": 3,
@@ -266,9 +266,9 @@
       "triangles": 96187
      },
      "sim trees full/mid": {
-      "drawCalls": 62,
+      "drawCalls": 78,
       "instances": 965,
-      "triangles": 1061926
+      "triangles": 1156085
      },
      "sim far crowns+trunks": {
       "drawCalls": 3,
@@ -288,9 +288,9 @@
     }
    },
    "allAround": {
-    "drawCalls": 71,
+    "drawCalls": 87,
     "instances": 6935,
-    "triangles": 1383250,
+    "triangles": 1477409,
     "groups": {
      "filler far crowns+trunks": {
       "drawCalls": 3,
@@ -303,9 +303,9 @@
       "triangles": 96187
      },
      "sim trees full/mid": {
-      "drawCalls": 62,
+      "drawCalls": 78,
       "instances": 965,
-      "triangles": 1061926
+      "triangles": 1156085
      },
      "sim far crowns+trunks": {
       "drawCalls": 3,
@@ -337,9 +337,9 @@
     "cardScale": 1
    },
    "forward": {
-    "drawCalls": 76,
+    "drawCalls": 94,
     "instances": 3814,
-    "triangles": 2001413,
+    "triangles": 2095572,
     "groups": {
      "filler far crowns+trunks": {
       "drawCalls": 3,
@@ -352,9 +352,9 @@
       "triangles": 96187
      },
      "sim trees full/mid": {
-      "drawCalls": 70,
+      "drawCalls": 88,
       "instances": 1737,
-      "triangles": 1917745
+      "triangles": 2011904
      },
      "contact shadows": {
       "drawCalls": 1,
@@ -369,9 +369,9 @@
     }
    },
    "allAround": {
-    "drawCalls": 76,
+    "drawCalls": 94,
     "instances": 5485,
-    "triangles": 2054849,
+    "triangles": 2149008,
     "groups": {
      "filler far crowns+trunks": {
       "drawCalls": 3,
@@ -384,9 +384,9 @@
       "triangles": 96187
      },
      "sim trees full/mid": {
-      "drawCalls": 70,
+      "drawCalls": 88,
       "instances": 1737,
-      "triangles": 1917745
+      "triangles": 2011904
      },
      "contact shadows": {
       "drawCalls": 1,
@@ -406,12 +406,12 @@
   "low": {
    "drawCalls": 46,
    "instances": 2046,
-   "triangles": 248094,
+   "triangles": 293722,
    "groups": {
     "sim trees full/mid": {
      "drawCalls": 40,
      "instances": 172,
-     "triangles": 182754
+     "triangles": 228382
     },
     "sim far crowns+trunks": {
      "drawCalls": 3,
@@ -431,9 +431,9 @@
    }
   },
   "med": {
-   "drawCalls": 71,
+   "drawCalls": 87,
    "instances": 3798,
-   "triangles": 1209734,
+   "triangles": 1303893,
    "groups": {
     "filler far crowns+trunks": {
      "drawCalls": 3,
@@ -446,9 +446,9 @@
      "triangles": 96187
     },
     "sim trees full/mid": {
-     "drawCalls": 62,
+     "drawCalls": 78,
      "instances": 965,
-     "triangles": 1061926
+     "triangles": 1156085
     },
     "sim far crowns+trunks": {
      "drawCalls": 3,
@@ -468,9 +468,9 @@
    }
   },
   "high": {
-   "drawCalls": 76,
+   "drawCalls": 94,
    "instances": 3814,
-   "triangles": 2001413,
+   "triangles": 2095572,
    "groups": {
     "filler far crowns+trunks": {
      "drawCalls": 3,
@@ -483,9 +483,9 @@
      "triangles": 163244
     },
     "sim trees full/mid": {
-     "drawCalls": 70,
+     "drawCalls": 88,
      "instances": 1737,
-     "triangles": 1917745
+     "triangles": 2011904
     },
     "contact shadows": {
      "drawCalls": 1,
