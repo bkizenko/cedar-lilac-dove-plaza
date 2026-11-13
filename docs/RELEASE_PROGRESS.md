@@ -4,7 +4,7 @@ Baseline **hearthwild-first-release-gates-v1** (frozen) · 2026-11-12 · desktop
 
 **37/98 verified gates — 37.76%.** This measures acceptance evidence, not development effort or time remaining.
 
-Verified baseline: 18d9fc9f9f72e6a689f0f8dace49b53f17ce39c1 published as 2026-11-12T23-35-40-519Z-18d9fc9 on8086/8101.19/19 unique scoped checks (17native/shared+2actualbuilt), compiler/buildPASS: qualified NPC artisan pays real clay/fuel/labor for a physical record; original civilian recovers the same dropped foreign record, returns it home, pays for study and useful replication. Actual canvas pickup/inventory/provenance/durable restore and untouched original53 PASS. Paid founding workers protected; real alarms release stale pickup reservations. Guarded-cache battle remains pending; one explicitly bounded visible settlement timestamp refresh, no foreign full-read-purity claim. Old assets5/5 separate;37/98 frozen, no new gate credit.
+Verified baseline: 027dfae3bddc661e0e83b3b21fb6534e927aa93e published as 2026-11-13T00-18-33-207Z-027dfae on8086/8101.52/52 scoped checks (49native/shared+3actualbuilt), compiler/buildPASS: genuinely earned horse shares finite carrying budget with typed human meals and animal feed/water; physical cache loading/return, ordinaryRecall, real food/water consumption, retained food kinds and no duplicate income. Same paid NPC author resumes original work without recharging. Raw wild cereal cannot become ready journey berries. Original53/legacy scalar packets and durable state preserved;46Low shader programs compiled, no browser errors. Oldassets5/5 separate.37/98 frozen; full husbandry/trade/campaign/performance remain open.
 
 ## Milestone counts
 
