@@ -2,7 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {SEGS} from '../src/game/constants.ts';
 import {knownSettlementSite} from '../src/game/barter.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
-import {proposePlayerTrade,proposeTradeOffer,answerTradeOffer,reviewTradeNeeds,tickTradeNeeds,tradeStock,tradeSpread,tradeReviewSeconds,marketCount,tradeNeedsDiagnostics,TRADE_NEEDS_RULES,TRADE_GOODS} from '../src/game/tradeNeeds.ts';
+import {proposePlayerTrade,proposeTradeOffer,answerTradeOffer,reviewTradeNeeds,tickTradeNeeds,tradeNeedsAI,tradeStock,tradeSpread,tradeReviewSeconds,marketCount,tradeNeedsDiagnostics,TRADE_NEEDS_RULES,TRADE_GOODS} from '../src/game/tradeNeeds.ts';
 
 function ground(g){const size=g.world.size;for(let z=0;z<=SEGS;z++)for(let x=0;x<=SEGS;x++)g.world.heights[z*(SEGS+1)+x]=4;g.world.rivers=[];g.world.features=[];g.rebuildWalk();for(const u of g.state.units)u.y=g.height(u.x,u.z);for(const b of g.state.buildings)b.y=g.height(b.x,b.z);void size;const clock=g.clockState.bind(g);g.clockState=()=>({...clock(),period:'Day'});}
 /** Flat dry world; halls 70 m apart; each rival has 10 adults and mutually observed halls. */
@@ -47,4 +47,13 @@ test('player proposals are refused for goods not held, unknown villages, or a pa
  const r=proposePlayerTrade(g,1,'stone','wood',10);assert.equal(r.ok,true,JSON.stringify(r));g.state.time=r.offer.answerAt+1;tickTradeNeeds(g,.1);
  assert.equal(r.offer.phase,'declined');assert.equal(r.offer.reason,'no-need','partner already has plenty of stone');
  assert.equal(proposeTradeOffer(g,0,1,'stone','wood').ok,false,'the NPC path still cannot originate as the player');
+});
+
+test('real weapon burden changing an accepted carrier capacity refunds every reserved good instead of dropping the unallocated remainder',async()=>{
+ const{equipCaravan}=await import('../src/game/caravans.ts');const{carryingCapacity}=await import('../src/game/haulage.ts');
+ const g=fixture({stock1:{wood:0,stone:320}});playerSetup(g);finish(g);g.tribe(0).wood=28;g.tribe(0).spears=1;
+ const r=proposePlayerTrade(g,1,'wood','stone',28);assert.equal(r.ok,true,JSON.stringify(r));const o=r.offer;g.state.time=o.answerAt+1;tickTradeNeeds(g,.1);assert.equal(o.phase,'loading',o.reason);assert.equal(o.carriers.length,1);
+ const u=g.state.units.find(u=>u.id===o.carriers[0]),partnerBefore=g.tribe(1).stone+o.get.amount;assert.equal(equipCaravan(g,u),true);assert.ok(carryingCapacity(u,'wood')<28);assert.equal(g.tribe(0).spears,0);
+ for(let i=0;i<2000&&o.phase==='loading';i++){g.state.time+=.1;tradeNeedsAI(g,u,.1);tickTradeNeeds(g,.1);}
+ assert.equal(o.phase,'failed');assert.equal(o.reason,'loading-capacity-changed');assert.equal(g.tribe(0).wood,28);assert.equal(g.tribe(1).stone,partnerBefore);assert.equal(u.carry,0);assert.equal(u.militia,true);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });

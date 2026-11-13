@@ -241,6 +241,7 @@ export function campRaidAI(g: Game, u: Unit, dt: number) {
       if (Math.hypot(u.x - victim.x, u.z - victim.z) > 2) g.steer(u, dt);
       else if (!stolenMarkRoom(g, u)) { u.order = "hold"; u.workReason = "Cannot keep track of another stolen load"; }
       else {
+        if(victim.tradeNeedsId!==undefined)g.interruptMission(victim);
         const stolen = Math.min(4, victim.carry);
         if(victim.carryType==='food'){const lots=withdrawCarriedFood(victim,stolen);if(!lots)return;setCarriedFood(u,lots);}
         else{victim.carry -= stolen;u.carry = stolen;u.carryType = victim.carryType;u.carryFood = undefined;if(victim.carry===0)victim.carryType=null;}
