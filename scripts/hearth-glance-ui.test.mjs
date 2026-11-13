@@ -26,9 +26,10 @@ test('top bar: a starved pantry reads critical (red), a full house reads amber, 
  assert.match(html,/hw-supply-cell s-critical/);assert.match(html,/hw-supply-cell s-low is-warn/);assert.equal((html.match(/hw-supply-cell/g)||[]).length,6);
 });
 const A=(kind,severity,count,at)=>({kind,severity,count,tip:`${count} ${kind}`,at});
+const noFirst=html=>html.replace(/<div class="hw-chiprow hw-firstneeds".*?<\/div>/s,'');
 test('priority stack: one sticky critical card with one button, the rest as icon chips, no title, no key-tip banner',()=>{
  const g=world(),alerts=[A('starving','critical',3),A('raiders','critical',2),A('full','warning',1),A('freezing','critical',1)];
- const html=renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{banner:'C selects a gatherer · ] finds resources · R gives an order',idleWorkers:4}),engine:engine(g),alerts,onOpen(){},hidden:false}));
+ const html=noFirst(renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{banner:'C selects a gatherer · ] finds resources · R gives an order',idleWorkers:4}),engine:engine(g),alerts,onOpen(){},hidden:false})));
  assert.equal((html.match(/hw-crit/g)||[]).length,1,'exactly one critical card');assert.match(html,/Raiders near/);assert.match(html,/>Horn</);
  assert.equal((html.match(/hw-note-act/g)||[]).length,1,'one button');
  assert.equal((html.match(/hw-chip-btn/g)||[]).length,4,'starving, freezing, full and idle become chips');
@@ -36,11 +37,11 @@ test('priority stack: one sticky critical card with one button, the rest as icon
 });
 test('priority stack: non-raid critical gets Find; real news is a timed ghost card; nothing wrong renders an empty stack',()=>{
  const g=world();
- const one=renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{idleWorkers:0}),engine:engine(g),alerts:[A('thirsty','critical',2,{x:1,y:0,z:2})],onOpen(){},hidden:false}));
+ const one=noFirst(renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{idleWorkers:0}),engine:engine(g),alerts:[A('thirsty','critical',2,{x:1,y:0,z:2})],onOpen(){},hidden:false})));
  assert.match(one,/Thirsty/);assert.match(one,/>Find</);assert.equal((one.match(/hw-chip-btn/g)||[]).length,0);
- const news=renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{banner:'Winter is coming',idleWorkers:0}),engine:engine(g),alerts:[],onOpen(){},hidden:false}));
+ const news=noFirst(renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{banner:'Winter is coming',idleWorkers:0}),engine:engine(g),alerts:[],onOpen(){},hidden:false})));
  assert.match(news,/hw-info/);assert.match(news,/Winter is coming/);assert.ok(!/hw-crit|hw-chiprow/.test(news));
- const calm=renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{banner:'',idleWorkers:0}),engine:engine(g),alerts:[],onOpen(){},hidden:false}));assert.ok(!/<article/.test(calm));
+ const calm=noFirst(renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{banner:'',idleWorkers:0}),engine:engine(g),alerts:[],onOpen(){},hidden:false})));assert.ok(!/<article/.test(calm));
 });
 test('pins: one button per located alert, never more than five, each named for screen readers',()=>{
  const g=world(),p={x:0,y:0,z:0};
@@ -58,4 +59,10 @@ test('help: every group has icon, title and keys; the old banner keys are all th
  const html=renderToStaticMarkup(h(HelpBody));assert.equal((html.match(/hw-help-card/g)||[]).length,HELP_GROUPS.length);
  for(const k of ['C','R','Enter','Esc','Space'])assert.match(html,new RegExp(`<kbd>${k}</kbd>`));
  assert.match(html,/<kbd>\]<\/kbd>/);
+});
+
+test('priority stack: first-needs strip shows icon, word and reason for each unmet starting need',()=>{
+ const g=world(),html=renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{idleWorkers:0}),engine:engine(g),alerts:[],onOpen(){},hidden:false}));
+ assert.match(html,/hw-firstneeds/);assert.match(html,/First needs/);
+ for(const w of ['Water','Fire','Shelter','Food'])if(new RegExp('aria-label="'+w+':').test(html))assert.match(html,new RegExp(w+':[^"]{8,}'));
 });
