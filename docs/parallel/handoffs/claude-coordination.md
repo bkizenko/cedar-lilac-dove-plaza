@@ -995,3 +995,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 20:38 ET Claude(PM): landed b0fb9b29 (15 commits: integration neighbour-memory read model+UI, draw distance, wear, first-person design merged normally) / sweep 121 tests 118 pass 3 skip 0 fail, tsc diff nil / Grok out; Codex+Claude posted <1h, none stalled / blocked: none
 
 20:55 ET Claude: shipped lane C shield wear from real condition (scuffs/rubbed face/chipped gap on rig-fallback and held shield model, near+mid LOD, bounded, own cache key; people-look+civ-people+item-models+rig 49/49, tsc 0 src errors, wear.png SwiftShader checked) (23bcd680 on integration/2026-11-11) / now on banner wear then AUD-VIS-CAVALRY-RIDER-RIG / blocked: none
+
+20:59 ET Claude: shipped lane D hygiene: merged main into integration (no conflicts, no unmerged agent branches), tsc diff nil (4 ImportMeta noise only), focused sweep 21 files 198/202 pass 3 skip 1 fail = known animal-orders-live goat #17 (Codex native to confirm, do not weaken), 6 new AUTOPILOT audit rows (disease, festivals, save clarity, night village, camera, sweep split) (f0c4fafe) / now on next audit / blocked: none
