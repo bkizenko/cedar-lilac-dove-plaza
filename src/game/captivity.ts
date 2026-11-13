@@ -1,3 +1,4 @@
+import {withdrawCarriedFood} from './tradeFood';
 import {noteRaidDefenseResidentHome,noteRaidDefenseResidentDelivered} from './warPrestige';
 import {snapshotCapturedMethods,type CapturedMethodSnapshot} from './capturedKnowledge';
 import {reconcileArmorHolders} from './armor';
@@ -149,7 +150,7 @@ export function provisionPrisoner(g:Game,id:number,carrierId:number){
  const u=g.state.units.find(u=>u.id===id&&u.hp>0) as PrisonerUnit|undefined,carrier=g.state.units.find(u=>u.id===carrierId&&u.hp>0);
  if(!u?.prisoner||!carrier||carrier.team!==u.prisoner.captorTeam||Math.hypot(carrier.x-u.x,carrier.z-u.z)>PRISONER_RULES.localSupplyRadiusMeters)return false;
  let delivered=false;
- if(carrier.carryType==='food'&&carrier.carry>0){const food=Math.min(carrier.carry,12-u.prisoner.food);if(food>0){carrier.carry-=food;u.prisoner.food+=food;delivered=true;if(carrier.carry===0){carrier.carryType=null;carrier.carryFood=undefined;}}}
+ if(carrier.carryType==='food'&&carrier.carry>0){const food=Math.min(carrier.carry,12-u.prisoner.food);if(food>0&&withdrawCarriedFood(carrier,food)){u.prisoner.food+=food;delivered=true;if(carrier.carry===0){carrier.carryType=null;carrier.carryFood=undefined;}}}
  if(g.state.survivalVersion===1&&carrier.waterWork&&carrier.waterWork.liters>0){const water=Math.min(carrier.waterWork.liters,4-u.prisoner.waterLiters);if(water>0){carrier.waterWork.liters-=water;u.prisoner.waterLiters+=water;delivered=true;}}
  return delivered;
 }

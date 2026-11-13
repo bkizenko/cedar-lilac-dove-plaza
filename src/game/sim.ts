@@ -1,3 +1,4 @@
+import {planFoodWithdrawal,commitFoodWithdrawal,setCarriedFood,receiveCarriedFood,carriedFoodLots} from './tradeFood';
 import {siteSlopeIssue} from './siteSlope';
 import {tradeCargoCapacity,PACK_TRADE_TRAVEL_RULES} from './tradeCargo';
 import {returnPackJourneyCare,packJourneyReturnBudgetLow} from './packJourneyCare';
@@ -4507,7 +4508,7 @@ export class Game {
       deliverWaterCargo(this,u);
       if(u.methodRecordCargoId!==undefined&&u.productionProjectId===undefined&&!depositMethodRecord(this,u))return;
       if(!deliverProductionCargo(this,u))return;
-      if(u.carryType&&u.carry>0){if(!deliverSamples(this,u))return;recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
+      if(u.carryType&&u.carry>0){if(!deliverSamples(this,u))return;recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);if(u.carryType==="food")receiveCarriedFood(this,u.team,u);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
       if(u.expedition){returnPackJourneyCare(this,u);returnExpeditionProvisions(this,u);}
       finishRepatriation(this,u);
       const joinWork=u.stationOnArrival===false;u.recalled=undefined;u.stationOnArrival=undefined;u.order=joinWork?"idle":"hold";u.workReason=joinWork?"Arrived home — joining village work":"Home after the recall horn — awaiting orders";
@@ -4751,7 +4752,7 @@ export class Game {
         if(!deliverSamples(this,u))return;
         recordCaravanDelivery(this,u);
         recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);
-        if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else tr[u.carryType] += u.carry;
+        if(u.carryType==="food")receiveCarriedFood(this,u.team,u);else tr[u.carryType] += u.carry;
         if (u.team === 0) this.addFloater(drop.x, drop.y + 3, drop.z, "+" + u.carry, "#efe4b0");
         if (u.team === 0) this.onSfx("drop");
         recordHaulDelivery(this,u);
@@ -4844,12 +4845,16 @@ export class Game {
       this.banner(issue + " The carrier is bringing supplies home.", 4);
       return;
     }
-    if(!reserved)rival[deal.get] -= deal.getAmt;
+    const foodLots=deal.get==='food'?(reserved?u.tradeReservation?.foodLots:planFoodWithdrawal(this,rival.id,deal.getAmt)):undefined;
+    if(deal.get==='food'&&!reserved&&(!foodLots||!commitFoodWithdrawal(this,rival.id,foodLots))){releaseTradeReservation(this,u);u.trade=null;u.order='return';u.workReason='Actual food lots changed — bringing the original payment home';return;}
+    if(!reserved&&deal.get!=='food')rival[deal.get] -= deal.getAmt;
     u.tradeReservation=undefined;
-    rival[deal.give] += deal.giveAmt;
+    if(deal.give==='food')receiveCarriedFood(this,rival.id,u);else rival[deal.give] += deal.giveAmt;
     u.carry = deal.getAmt; // Every returned unit was deducted from the seller.
     u.carryType = deal.get;
     u.carryFood = deal.get==="food"?"provisions":undefined;
+    delete u.carryFoodLots;
+    if(foodLots)setCarriedFood(u,foodLots);
     u.workReason = "Bringing traded goods home";
     rival.trust = Math.min(1, (rival.trust || 0) + 0.15);
     rival.tension = Math.max(0, rival.tension - 0.12);
@@ -6208,7 +6213,7 @@ export class Game {
         kind: "unit",
         type: u.type,
         team: u.team,
-        carry: u.carry > 0 && u.carryType ? (u.carryType==="food"?u.carryFood||"provisions":u.carryType) + " " + u.carry + "/" + cap : "",
+        carry: u.carry > 0 && u.carryType ? (u.carryType==="food"?Object.entries(carriedFoodLots(u)).map(([k,n])=>`${n} ${k}`).join(" · "):u.carryType+" "+u.carry) + "/" + cap : "",
         job: u.order === "hold" ? "hold" : u.job,
       };
     } else if (this.state.selBld && this.state.selBld.hp > 0) {

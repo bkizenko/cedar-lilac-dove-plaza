@@ -1,3 +1,4 @@
+import {carriedFoodLots,withdrawCarriedFood,receiveFoodLots} from './tradeFood';
 import type {Game} from './sim';
 import type {GameState,Unit,ResKind,FoodKind} from './types';
 import {PRODUCTION_RECIPES,type ProductionRecipe,type ProductionProject} from './production';
@@ -70,16 +71,18 @@ export function beginTradedTeaching(g:Game,r:{learnerId:number;teacherId:number;
  if(!['food','wood','stone','copper','iron'].includes(r.good)||!Number.isSafeInteger(r.qty)||r.qty<1||r.qty>TRADED_TEACHING_RULES.maximumPayment||u.carryType!==r.good||u.carry<r.qty)return no('Payment must already be in this person’s carried inventory');
  if(Math.hypot(u.x-teacher.x,u.z-teacher.z)>TRADED_TEACHING_RULES.contactMeters)return no('The learner must meet this artisan in person');
  if(!teachingOffers(g,teacher.id).some(o=>o.methodId===r.methodId&&o.siteId===r.siteId))return no('Meet a qualified artisan demonstrating this exact paid method');
+ const paymentKind=r.good==='food'?FOOD_KINDS.find(k=>(carriedFoodLots(u)[k]||0)>=r.qty):undefined;
+ if(r.good==='food'&&!paymentKind)return no('Carry enough of one food type for the agreed lesson payment');
  const site=g.state.buildings.find(b=>b.id===r.siteId)!;if(!g.interactionSpot(u,site))return no('No physical route to the teacher’s workshop');
  const list=g.state.teachingOffers||[];if(list.length>=TRADED_TEACHING_RULES.maximumOffers)return no('The teaching ledger is full');
- g.interruptMission(u);const id=`lesson-${g.state.nextId++}`;const o:TeachingOffer={version:1,id,methodId:r.methodId,teacher:{id:teacher.id,team:teacher.team,siteId:site.id},learner:{id:u.id,team:u.team},consideration:[{good:r.good,qty:r.qty,from:{kind:'resident',id:u.id,team:u.team},to:{kind:'faction',team:teacher.team},...(r.good==='food'?{foodKind:u.carryFood||'provisions'}:{})}],agreedAt:g.state.time,qualifiedBatches:teacher.productionSkills![r.methodId]!.successfulBatches,validUntil:g.state.time+TRADED_TEACHING_RULES.validSeconds,phase:'traveling',observedSeconds:0,lastProgress:0};
+ g.interruptMission(u);const id=`lesson-${g.state.nextId++}`;const o:TeachingOffer={version:1,id,methodId:r.methodId,teacher:{id:teacher.id,team:teacher.team,siteId:site.id},learner:{id:u.id,team:u.team},consideration:[{good:r.good,qty:r.qty,from:{kind:'resident',id:u.id,team:u.team},to:{kind:'faction',team:teacher.team},...(r.good==='food'?{foodKind:paymentKind}:{})}],agreedAt:g.state.time,qualifiedBatches:teacher.productionSkills![r.methodId]!.successfulBatches,validUntil:g.state.time+TRADED_TEACHING_RULES.validSeconds,phase:'traveling',observedSeconds:0,lastProgress:0};
  if(!reserve(workRuntime(g),o))return no('This learner is reserved for other work');(g.state.teachingOffers??=[]).push(o);u.tradedTeaching={offerId:id};u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);return{accepted:true,reason:'Carrying payment to the artisan; knowledge must be observed and brought home'};
 }
 export function cancelTradedTeaching(g:Game,learnerId:number){const u=g.state.units.find(u=>u.id===learnerId&&u.team===0),o=u&&getOffer(g,u);if(!o)return false;finish(g,o,'cancelled','Lesson cancelled; undelivered cargo stays with its carrier, delivered payment is not refunded');return true;}
 /** Formal terms settlement happens here, at actual arrival, never at agreement. */
-function deliverPayment(g:Game,u:Unit,o:TeachingOffer){const t=o.consideration[0];if(u.carryType!==t.good||u.carry<t.qty||(t.good==='food'&&(u.carryFood||'provisions')!==t.foodKind))return false;
- if(t.good==='food')receiveFood(g,o.teacher.team,t.qty,t.foodKind);else g.tribe(o.teacher.team)[t.good]+=t.qty;
- u.carry-=t.qty;if(u.carry<=1e-8){u.carry=0;u.carryType=null;delete u.carryFood;}o.paidAt=g.state.time;o.phase='armed';return true;
+function deliverPayment(g:Game,u:Unit,o:TeachingOffer){const t=o.consideration[0];if(u.carryType!==t.good||u.carry<t.qty||(t.good==='food'&&(carriedFoodLots(u)[t.foodKind!]||0)<t.qty))return false;
+ if(t.good==='food'){const lots=withdrawCarriedFood(u,t.qty,t.foodKind);if(!lots)return false;receiveFoodLots(g,o.teacher.team,lots);}else{g.tribe(o.teacher.team)[t.good]+=t.qty;u.carry-=t.qty;}
+ if(u.carry<=1e-8){u.carry=0;u.carryType=null;delete u.carryFood;}o.paidAt=g.state.time;o.phase='armed';return true;
 }
 export function tradedTeachingAI(g:Game,u:Unit,dt:number){if(!u.tradedTeaching)return false;const o=getOffer(g,u);if(!o)return false;
  if(!free(g,u)||u.team!==o.learner.team){finish(g,o,'lost','The learner cannot report this lesson');return false;}
