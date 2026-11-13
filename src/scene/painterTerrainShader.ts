@@ -231,10 +231,10 @@ export function painterColor(size:number,biomes:boolean){const dbg=(globalThis a
      pSnowAmt=pSnow*smoothstep(-2.,2.5,vSurfaceWorld.y+pPocket-pSnowLine)*(1.-smoothstep(.5,.95,pSlope)*.75)*(1.-pWet*.8)*(1.-pBed);
      pSnowAmt=clamp(pSnowAmt+pSnow*.28*smoothstep(.3,.0,pSlope),0.,1.);
      float pTr=clamp(pTW*.75+pTG*.3,0.,1.);
-     pSnowAmt*=1.-pTr*.5;
+     pSnowAmt*=1.-pTr*.22;
      pBase=mix(pBase,vec3(.9,.93,.97)*(.93+pNC*.1),pSnowAmt*.92);
      // compacted snow on a route: greyer and harder, bare soil showing through the beaten centre
-     pBase=mix(pBase,mix(vec3(.76,.79,.86),pTSoil*1.25,.1+pTm.g*.38),pTr*pSnow*.8);
+     pBase=mix(pBase,mix(vec3(.7,.74,.83),pTSoil*1.2,.08+pTm.g*.32),smoothstep(.12,.55,pTr)*pSnow*.85);
     }
     diffuseColor.rgb=${dbg==='vc'?'diffuseColor.rgb':dbg==='nrm'?'pN*.5+.5':dbg==='bank'?'vec3(0.,vSurfaceRock,vSurfaceSand)':dbg==='geo'?'vGeoRock.xyz*.8+vec3(vGeoState.y)':'pBase'};
     float pCloudShade=pCloud.x*smoothstep(.46,.64,pFbm((pW+vec2(pCloud.y*2.4,pCloud.y*1.1))/200.))*(1.-smoothstep(520.,1600.,pDist));

@@ -70,6 +70,7 @@ import {geologyFor,dropGeology,type SurfaceGeology} from './painterGeology';
 import {installPainterFog} from './painterFog';
 import {ContactShadowMap} from './painterContact';
 import {RouteFieldMap,routeRibbons} from './routeField';
+import {WaystationLayer} from './waystationLayer';
 import {routesEnabled} from '../game/routeWear';
 import {trailStampTexture,painterNodeRock} from './painterTrees';
 import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall} from './depthWater';
@@ -396,6 +397,7 @@ export class WorldView {
   private surfaceGeology: SurfaceGeology | null = null;
   private contactMap: ContactShadowMap | null = null;private contactAt = 0;
   private routeField: RouteFieldMap | null = null;
+  private waystations: WaystationLayer | null = null;
   private waterMaterials: THREE.Material[] = [];
   private campVisual: CampVisual | null = null;
   private terrainLandscape = new Float32Array(0);
@@ -1988,6 +1990,8 @@ export class WorldView {
     this.syncEraDetails(game);
     this.foundations?.sync(game);
     this.routeField?.update(game,performance.now(),game.state.weather,game.seasonMix().snow);
+    if(!this.waystations){this.waystations=new WaystationLayer();this.scene.add(this.waystations.group);}
+    this.waystations.sync(game);
     if(this.contactMap&&performance.now()-this.contactAt>350){this.contactAt=performance.now();this.contactMap.update(game.state.buildings.filter(b=>b.team===0||game.exploredAt(b.x,b.z)));}
   }
 
@@ -3058,7 +3062,7 @@ export class WorldView {
   }
 
   private disposeWorld() {
-    this.foundations?.dispose();this.foundations=null;this.contactMap?.dispose();this.contactMap=null;this.routeField?.dispose();this.routeField=null;
+    this.foundations?.dispose();this.foundations=null;this.contactMap?.dispose();this.contactMap=null;this.routeField?.dispose();this.routeField=null;if(this.waystations){this.scene.remove(this.waystations.group);this.waystations.dispose();this.waystations=null;}
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
     this.wornArmor?.dispose();this.wornArmor=null;

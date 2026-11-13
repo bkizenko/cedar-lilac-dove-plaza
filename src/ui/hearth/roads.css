@@ -1,0 +1,14 @@
+/* Road stops card (src/ui/hearth/roadsCard.tsx). Own file so parallel panels do not collide. Text 14px+, hit target 48px. */
+.hw-roads{position:absolute;left:84px;top:92px;width:min(300px,calc(100vw - 100px));display:grid;gap:var(--hw-s2);padding:var(--hw-s3);border-radius:var(--hw-r-m);pointer-events:auto;background:var(--hw-panel);border:1px solid var(--hw-line);box-shadow:var(--hw-shadow)}
+.hw-roads h3{margin:0;font-size:var(--hw-fs-s);letter-spacing:.06em;text-transform:uppercase;color:var(--hw-dim)}
+.hw-road{display:flex;align-items:center;gap:var(--hw-s3);min-height:var(--hw-hit);padding:var(--hw-s2) var(--hw-s3);border-radius:var(--hw-r-s);border:1px solid var(--hw-line);background:rgba(0,0,0,.22);color:var(--hw-text);text-align:left;cursor:pointer;font:inherit}
+.hw-road:hover{background:rgba(255,236,190,.14)}
+.hw-road.is-raided{border-color:rgba(244,162,135,.55)}
+.hw-road-ico{display:inline-grid;place-items:center;flex:none;width:36px;height:36px;border-radius:50%;background:rgba(227,173,79,.2);color:var(--hw-gold-2)}
+.hw-road-main{display:grid;gap:2px;min-width:0}
+.hw-road-main b{font-size:var(--hw-fs-m)}
+.hw-road-chips{display:flex;flex-wrap:wrap;gap:2px var(--hw-s3);font-size:var(--hw-fs-s);color:var(--hw-dim)}
+.hw-road-chips span{display:inline-flex;align-items:center;gap:4px}
+.hw-road-main small,.hw-road-more{font-size:var(--hw-fs-s);color:var(--hw-warn)}
+.hw-road-bar{display:block;height:8px;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden;min-width:120px}
+.hw-road-bar i{display:block;height:100%;background:var(--hw-good)}
