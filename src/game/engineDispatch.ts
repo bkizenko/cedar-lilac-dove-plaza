@@ -30,7 +30,7 @@ import {acceptCapitulation,refuseCapitulation,type CapitulationOutcome} from './
 import {foundWonder,wonderLabel} from './wonderFounding';
 import {WONDER_FAMILIES} from './wonderRecords';
 import {answerProposal} from './societyCivicRuntime';
-import {marryHouses,fosterHouses,exchangeHostages} from './rulersRuntime';
+import {marryHouses,kinDealRefusal,fosterHouses,exchangeHostages} from './rulersRuntime';
 import {setPreferredFormation} from './combatDoctrine';
 import {validFormationKind,type FormationKind} from './formations';
 import {beginPortWork,resumePortWork,resupplyVessel} from './navalPorts';
@@ -193,11 +193,11 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
    case 'answer-proposal':return answerProposal(g,0,command.proposalId,command.accept);
    case 'marry-houses':{
     const other=g.tribe(command.team);if(!other||command.team===0||command.team===3)return no('That society is not known');
-    const r=marryHouses(g,0,command.team);return r?{accepted:true,reason:`A marriage binds the houses (${r.why[0]})`}:no('No suitable match, or a house is too small to exchange spouses');
+    const cold=kinDealRefusal(g,command.team);if(cold)return no(cold);const r=marryHouses(g,0,command.team);return r?{accepted:true,reason:`A marriage binds the houses (${r.why[0]})`}:no('No suitable match, or a house is too small to exchange spouses');
    }
    case 'foster-houses':case 'exchange-hostages':{
     const other=g.tribe(command.team);if(!other||command.team===0||command.team===3)return no('That society is not known');
-    const fos=command.kind==='foster-houses',r=(fos?fosterHouses:exchangeHostages)(g,0,command.team);
+    const cold=kinDealRefusal(g,command.team);if(cold)return no(cold);const fos=command.kind==='foster-houses',r=(fos?fosterHouses:exchangeHostages)(g,0,command.team);
     return r?{accepted:true,reason:`${fos?'Children are fostered':'Hostages are exchanged'} (${r.why[0]})`}:no(fos?'No child to foster, or a house is too small, or you are at war':'No kinsman to send, or a house is too small, or you are at war');
    }
    case 'free-captives':{const held=g.state.units.filter(u=>u.team===0&&u.hp>0&&(u.enslavedFrom===command.team||u.prisoner?.captorTeam===0&&u.prisoner.phase!=='released'&&u.prisoner.originTeam===command.team));if(!held.length)return no('No captives from that society');for(const u of held)if(u.prisoner)releasePrisoner(g,u.id);if(held.some(u=>u.enslavedFrom===command.team))freePeople(g,command.team);return{accepted:true,reason:'Captives released; people in custody walk home with their belongings'};}

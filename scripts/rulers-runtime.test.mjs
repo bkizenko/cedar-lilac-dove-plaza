@@ -65,6 +65,8 @@ test('council read model and marry command: JSON-safe, gated, and the UI action 
  assert.ok(isEngineDispatchCommand({kind:'marry-houses',team:1}));assert.ok(!isEngineDispatchCommand({kind:'marry-houses',team:1,x:2}));
  assert.equal(applyEngineCommand(g,{kind:'marry-houses',team:1}).accepted,false,'small houses cannot');
  for(const t of [0,1]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<20;i++)g.state.units.push({...u,id:g.state.units.length+7000+i+t*100});}
+ assert.match(applyEngineCommand(g,{kind:'marry-houses',team:1}).reason,/not met/,'unmet society: no envoy can carry a marriage offer');for(const k of ['foster-houses','exchange-hostages'])assert.match(applyEngineCommand(g,{kind:k,team:1}).reason,/not met/);
+ g.state.societyRelations=[{from:0,to:1,known:true,trust:.5,grievance:0,hostile:false,peaceUntil:0,lastContactSeconds:0}];
  for(const t of ['0','1']){const d=g.state.rulers.societies[t].dynasty,k=Object.values(d.people).find(p=>p.alive);d.people[t+'-cadet']={...k,id:t+'-cadet',name:'Cadet'+t,age:20,spouse:undefined,parent:undefined,ruler:undefined};}
  const b0=tiesBetween(g,0,1).bond,r=applyEngineCommand(g,{kind:'marry-houses',team:1});
  assert.equal(r.accepted,true,r.reason);assert.ok(tiesBetween(g,0,1).bond>b0);
