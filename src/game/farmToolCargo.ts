@@ -49,6 +49,17 @@ export function pickupFarmTool(g:Game,carrierId:number,toolId:number){
  else if(!clearCargoApproach(g,u,t.holder))return no('Walk to the dropped tool');
  carried(t,u);return{accepted:true as const,toolId:t.id,reason:'Existing tool picked up with its original condition'};
 }
+/** Taking a tool by force: the victim's equipped or carried tool moves into the robber's hands with its condition. Nothing is created or repaired. */
+export function robFarmTool(g:Game,victim:Unit,robber:Unit){
+ if(robber.hp<=0||robber.farmToolWork||robber.farmToolCargoId!==undefined||held(g,robber))return no('The taker already holds a tool');
+ const carriedTool=held(g,victim);
+ if(carriedTool){carried(carriedTool,robber);delete victim.farmToolCargoId;return{accepted:true as const,toolId:carriedTool.id,reason:'Their carried tool taken'};}
+ if(!victim.farmTool||victim.farmToolWork)return no('No tool to take');
+ if(tools(g).length>=R.maximumRecords)return no('Tool record capacity full; the tool stays with its holder');
+ const t:FarmToolCargo={id:g.id(),kind:victim.farmTool,condition:farmToolCondition(victim),team:robber.team,originalOwnerTeam:victim.team,holder:{kind:'carrier',unitId:robber.id,x:robber.x,z:robber.z}};
+ root(g).tools.push(t);delete victim.farmTool;delete victim.farmToolCondition;carried(t,robber);
+ return{accepted:true as const,toolId:t.id,reason:'Their tool taken'};
+}
 export function depositFarmTool(g:Game,carrierId:number,targetTeam?:number){
  const u=live(g,carrierId),t=u&&held(g,u);if(!u||!t||u.farmToolCargoId!==t.id)return no('No actual carried tool');
  const team=targetTeam??u.team;if(!Number.isSafeInteger(team)||team<0||!g.state.tribes[team]?.alive)return no('Choose an existing receiving village');

@@ -1082,3 +1082,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 23:13 ET Claude: shipped lane A event-born claims (defence claim on raid, succession claim on heirless married line, yearly, saved; rulers 59/59, tsc diff nil) (3083107a) / now on expansion explorer/trade parties + casus belli UI data / blocked: none
 
 23:51 ET Claude(gaps): shipped foreign boats selectable + attackable (selectForeignBoat, naval-order attack, engine click/right-click, 5 tests) / now on gap 4 caravan escort capture + animals/gear rob adapters / blocked: none
+
+00:21 ET Claude(gaps): shipped caravan escort capture + gear/animal rob adapters (robGear, robCarriedArmor, robFarmTool, seizeLoanWeapon; 3 new tests) / now on gap 5 raiders target waystations + Menu toggle / blocked: none
