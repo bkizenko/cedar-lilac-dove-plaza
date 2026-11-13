@@ -140,8 +140,8 @@ export class CharacterRigLayer{
    mul(_w,_u,this.matrices[b]);this.push(v,_w,col);
   }
   for(const [sock,item] of [['itemR',itemR],['itemL',itemL]] as const){
-   if(!item)continue;const id=w.identity(u.team),held=w.heldOf?.(u,item)??null,hEra=held?.era??itemEraForAge(w.era),hBucket=conditionBucket(held?.condition);
-   const v=this.variant(`t${tier}|${item}|c${hBucket}|${heldKey(item,outfit.look?.id,hEra,outfit.rendered.shield)}|${item==='standard'||item==='shield'?hash(outfit.colors.flag+outfit.colors.flag2+outfit.colors.charge+(outfit.look?.shield??'')+(outfit.rendered.shield??'')+id.culture.flag.division):item==='staff'?hash((outfit.look?.id??'')+outfit.colors.trim):''}`,()=>heldItemGeometry(item,outfit,hEra,tier,CONDITION_BUCKET_MID[hBucket])??toGeometry(itemParts(item,id.culture,outfit.look,{shield:outfit.rendered.shield as never}),[0,0,0],outfit.colors,tier));
+   if(!item)continue;const id=w.identity(u.team),held=w.heldOf?.(u,item)??null,hEra=held?.era??itemEraForAge(w.era),hBucket=conditionBucket(held?.condition??(item==='shield'?outfit.rendered.shieldCondition:undefined));
+   const v=this.variant(`t${tier}|${item}|c${hBucket}|${heldKey(item,outfit.look?.id,hEra,outfit.rendered.shield)}|${item==='standard'||item==='shield'?hash(outfit.colors.flag+outfit.colors.flag2+outfit.colors.charge+(outfit.look?.shield??'')+(outfit.rendered.shield??'')+id.culture.flag.division):item==='staff'?hash((outfit.look?.id??'')+outfit.colors.trim):''}`,()=>heldItemGeometry(item,outfit,hEra,tier,CONDITION_BUCKET_MID[hBucket])??toGeometry(itemParts(item,id.culture,outfit.look,{shield:outfit.rendered.shield as never,shieldCondition:outfit.rendered.shieldCondition}),[0,0,0],outfit.colors,tier));
    if(!v)continue;mul(_wn,_u,this.matrices[sock]);this.push(v,_wn,col);
   }
   if(!override)this.stats.people++;return true;
