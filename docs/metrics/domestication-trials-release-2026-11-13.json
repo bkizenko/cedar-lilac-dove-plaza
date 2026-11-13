@@ -1,0 +1,96 @@
+{
+  "release": {
+    "release": "2026-11-13T05-53-59-102Z-ea3fb1d",
+    "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T05-53-59-102Z-ea3fb1d",
+    "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T04-59-30-518Z-5b82b90",
+    "commit": "ea3fb1d7aaf0999c865dd3659f07e32598ec7f37",
+    "retained": {
+      "linked": 1478,
+      "copied": 0,
+      "existing": 14
+    }
+  },
+  "artifactBuiltAtCommit": "9253c72ff2f8e276e12a2a571d9e72bf0849cc20",
+  "scriptOnlyFollowup": "ea3fb1d7aaf0999c865dd3659f07e32598ec7f37; src/package/vite identical to built commit",
+  "batch": {
+    "passed": 14,
+    "total": 14,
+    "nativeTrials": 10,
+    "nativeUI": 2,
+    "built": 2
+  },
+  "supporting": {
+    "passed": 16,
+    "total": 16,
+    "scope": "Existing search queue6, search handoff5, typed husbandry5; excluded from focused total"
+  },
+  "compiler": "PASS full tsc --noEmit",
+  "build": "PASS npm run build; expected DATABASE_URL migration skip",
+  "builtEvidence": {
+    "passed": 2,
+    "total": 2,
+    "scope": "Actual earned horse physical pasture return and new paid goat trial, typed public Move/Resume/save frozen attempt, natural success/refusal bounded two trials; separate original53 strict compatibility. No authored goods, actors, positions, fog, unearned goat-capture completion, screenshots or FPS/full-gate claims.",
+    "pasture": {
+      "pen": 6363,
+      "handler": 6223,
+      "animal": 6354,
+      "queueCancelTyped": true,
+      "sameAnimalPhysicalReturn": true,
+      "samePaidHarness": true,
+      "strictDurable": true
+    },
+    "trials": {
+      "firstAnimal": 6296,
+      "originalHandler": 6223,
+      "moveResumeDurable": true,
+      "sameFrozenAttempt": true,
+      "paidAttempts": 1,
+      "baitSpent": 6,
+      "refusals": 0,
+      "arrivals": 1,
+      "outcome": "physical-pen-arrival",
+      "publicHistory": "Village: 1 home \u00b7 0 refused \u00b7 1 attempts"
+    },
+    "legacy": {
+      "livingResidents": 53,
+      "absentOptionalPreserved": true,
+      "strictDurable": true
+    },
+    "inputUnchanged": true,
+    "original53Unchanged": true,
+    "errors": []
+  },
+  "network": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T05-53-59-102Z-ea3fb1d",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "limitations": [
+    "Built natural success only; refusal and pack refusal/retry coverage native-only",
+    "Native trials use declared finite starting endowment, not earned acquisition",
+    "Real typed Move and public Resume tested, no Halt-button claim",
+    "No new full gate/campaign/FPS credit; 37/98 unchanged"
+  ]
+}

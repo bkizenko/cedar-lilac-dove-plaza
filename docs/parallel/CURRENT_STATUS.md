@@ -101,3 +101,5 @@ LIVE 2026-11-13T03-32-14-127Z-7c81460 /7c81460f bothportsverified: newborn equip
 LIVE 2026-11-13T04-22-31-462Z-03f3198 /03f31981 bothportsverified: actualNPCrecord purchase4physical logs→sameasset home→publicpaidstudy/usefulreplication;11/11scope+17/17supporting, fulltsc/buildPASS, original53preserved;37/98 unchanged. docs/metrics/method-record-purchase-release-2026-11-12.json
 
 LIVE 2026-11-13T04-59-30-518Z-5b82b90 /5b82b90a: actual public field snap and rotated slope placement, exact costs and strict saves; small-building platform correction. Focused23/23, tsc/build PASS; irrigation remains gated OFF and unfinished; 37/98 unchanged. docs/metrics/field-placement-grounding-release-2026-11-13.json
+
+LIVE 2026-11-13T05-53-59-102Z-ea3fb1d / ea3fb1d on both ports: paid domestication trials and compact handling history. 14/14 focused +16/16 supporting; full compiler/build and network5/5 PASS. Same real goat arrived after Move/Resume/save, original53 preserved; refusal path native-only, full W1 open; 37/98 unchanged. docs/metrics/domestication-trials-release-2026-11-13.json
