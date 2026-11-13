@@ -3,6 +3,7 @@ import {BOTANICAL_SPECIES,DEFAULT_SITE,VARIANTS_PER_SPECIES,pickSpecies,pickVari
 import {botanicalTree,botanicalStump,type TreeGeometry} from './treeBotany';
 import {makeBotanicalMaterial,makeBotanicalFarMaterial,makeFarFade} from './botanicalMaterial';
 import {FillerLayer} from './fillerLayer';
+import type {StandField} from '../game/forestEcology';
 import type {FillerBlob} from './fillerForest';
 import {painterFarClustered,painterFarNeedle,contactShadowGeometry,radialShadowTexture} from './painterTrees';
 import {painterSway,type PainterSway} from './painterVegetationMaterial';
@@ -15,9 +16,9 @@ export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'hig
  /** draw-distance bands (src/game/drawDistance.ts): sim trees are culled beyond this (graphics Low scales it down as before); absent = the original 700/420 m */
  farMetres?:number;/** screen-door fade span ahead of the cut-offs (0/absent = hard edge) */fadeMetres?:number;/** conservative frustum test (x,z,radius) for far-tier trees; absent = draw all */inView?:(x:number,z:number,r:number)=>boolean;filler?:ForestFiller|null};
 export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean;/** cosmetic filler tree: never a resource, never picked */filler?:true};
-export type ForestOptions={seed:number;siteAt:(x:number,z:number)=>TreeSite;baseFormAt:(id:number,x:number,z:number)=>{base:BaseForm;kind:string};/** unit wind vector the trees lean along */wind?:[number,number];nearMetres:Record<'low'|'med'|'high',number>;farMetres:number;lowFarMetres:number;stumpHeightScale:number};
+export type ForestOptions={seed:number;/** ecological stands (src/game/forestEcology.ts): species, age class and size come from the stand instead of a per-tree hash; absent = the original per-tree choice */ecology?:StandField;siteAt:(x:number,z:number)=>TreeSite;baseFormAt:(id:number,x:number,z:number)=>{base:BaseForm;kind:string};/** unit wind vector the trees lean along */wind?:[number,number];nearMetres:Record<'low'|'med'|'high',number>;farMetres:number;lowFarMetres:number;stumpHeightScale:number};
 export const FOREST_LOD={fullFraction:.4,midFraction:1.15} as const;
-type Rec={sp:number;v:number;sx:number;sy:number;lean:[number,number];yaw:number;hue:[number,number,number];autumn:number;timing:number};
+type Rec={sp:number;v:number;/** stand-derived size scale (ecology on); absent = the node's own scale */size?:number;sx:number;sy:number;lean:[number,number];yaw:number;hue:[number,number,number];autumn:number;timing:number};
 type Batch={mesh:THREE.InstancedMesh;state:THREE.InstancedBufferAttribute;ids:number[];capacity:number;n:number;name:string};
 const AUTUMN_CACHE=new Map<string,THREE.Color>();const autumnColor=(hex:string)=>{let c=AUTUMN_CACHE.get(hex);if(!c){c=new THREE.Color(hex);AUTUMN_CACHE.set(hex,c);}return c;};
 const smooth=(a:number,b:number,x:number)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
@@ -54,13 +55,14 @@ export class BotanicalForest{
  private rec(node:ForestNode):Rec{
   let r=this.recs.get(node.id);if(r)return r;
   const seed=this.o.seed,{base,kind}=this.o.baseFormAt(node.id,node.x,node.z),site=this.o.siteAt(node.x,node.z)??DEFAULT_SITE;
-  const id=pickSpecies(base,kind,site,stableUnit(node.id,seed,41)),idx=Math.max(0,BOTANICAL_SPECIES.findIndex(s=>s.id===id)),sp=BOTANICAL_SPECIES[idx];
-  const v=pickVariant(node.scale*(node.planted?.6:1),site,stableUnit(node.id,seed,43)),u=(k:number)=>stableUnit(node.id,seed,k);
+  const plan=this.o.ecology?this.o.ecology.plan(node.id,node.x,node.z,{planted:node.planted,filler:node.filler}):null;
+  const id=plan?plan.species:pickSpecies(base,kind,site,stableUnit(node.id,seed,41)),idx=Math.max(0,BOTANICAL_SPECIES.findIndex(s=>s.id===id)),sp=BOTANICAL_SPECIES[idx];
+  const v=plan?plan.variant:pickVariant(node.scale*(node.planted?.6:1),site,stableUnit(node.id,seed,43)),u=(k:number)=>stableUnit(node.id,seed,k);
   // lean: with the wind, plus a drift off steep slopes; exposed species (mountain pine, palms, olive) lean harder
   const exposure=Math.min(1,site.slope*1.4+(kind==='alpine'?.55:0)+(kind==='warm-coast'?.3:0)+sp.lean*1.6),wl=(.012+exposure*.1)*(.7+.6*u(47)),la=Math.atan2(this.wind[1],this.wind[0])+(u(49)-.5)*.9;
   const lean:[number,number]=[Math.cos(la)*wl+(u(51)-.5)*.05,Math.sin(la)*wl+(u(53)-.5)*.05];
   const thin=Math.max(0,Math.min(1,site.soil)),stunt=.8+.2*thin;
-  r={sp:idx,v,sx:(.86+.3*u(55))*(1.02-.1*(site.moisture-.5))*stunt,sy:(.9+.2*u(57))*stunt,lean,yaw:u(59)*Math.PI*2,hue:[(u(61)-.5)*.05,.88+u(63)*.28,.9+u(65)*.2],autumn:Math.floor(u(67)*sp.autumn.length*.999),timing:u(69)};
+  r={sp:idx,v,size:plan?plan.size:undefined,sx:(.86+.3*u(55))*(1.02-.1*(site.moisture-.5))*stunt,sy:(.9+.2*u(57))*stunt,lean,yaw:u(59)*Math.PI*2,hue:[(u(61)-.5)*.05,.88+u(63)*.28,.9+u(65)*.2],autumn:Math.floor(u(67)*sp.autumn.length*.999),timing:u(69)};
   this.recs.set(node.id,r);return r;
  }
  private geometryInfo(spIdx:number){let i=this.info.get(spIdx);if(!i){i=botanicalTree(BOTANICAL_SPECIES[spIdx].id,0,1);this.info.set(spIdx,i);}return i;}
@@ -102,7 +104,7 @@ export class BotanicalForest{
   for(const list of [nodes,ctx.filler?.trees??[]])for(const node of list){
    if(!ctx.known(node.x,node.z))continue;
    const dx=node.x-ctx.camera.x,dz=node.z-ctx.camera.z,distance=Math.hypot(dx,dz);if(distance>reach)continue;
-   const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=node.scale*growth;
+   const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=(rec.size??node.scale)*growth;
    const tier:0|1|2=distance<=d0?0:distance<=d1?1:2;
    if(tier===2&&ctx.inView&&!ctx.inView(node.x,node.z,10))continue;
    if(node.filler)fillerCounts.trees++;

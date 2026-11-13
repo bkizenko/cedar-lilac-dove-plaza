@@ -8,7 +8,7 @@ import {traceStep,tickRouteWear,setRoutesEnabled} from '@/game/routeWear';
 import {findPath} from '@/game/navigation';
 import {galleryScene,galleryPose} from '@/scene/mapGallery';
 import {enableIrrigation,digDitch,ditchesOf} from '@/game/irrigation';
-type Spec={gallery?:string;seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
+type Spec={gallery?:string;/** forestEcologyVersion 1 (stands); absent = the legacy per-tree species choice */forestEcology?:boolean;/** geologyVersion 1 (as fresh game worlds carry it) */geology?:boolean;seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
  prep?:{buildings?:{type:string;x:number;z:number}[];irrigation?:{ditchFields:number[];waterMode?:boolean};fieldBlock?:{w:number;d:number;cols:number;rows:number;stages:string[];kind?:string;minGrade?:number}[];farms?:{x:number;z:number;rel?:boolean;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
  routes?:{from:[number,number];to:[number,number];trips:number;team?:number;jitter?:number}[];routesFresh?:boolean;routesIdle?:number;routesLegacy?:boolean;stations?:{x:number;z:number;stage:0|1|2|3;form?:string;team?:number;hp?:number}[];
@@ -36,7 +36,7 @@ function walkRoute(game:Game,a:[number,number],b:[number,number],trips:number,te
 let cache:{key:string;game:Game;view:WorldView}|null=null;
 w.renderMap=async(S:Spec)=>{
  (globalThis as {__PAINTER_DEBUG?:string}).__PAINTER_DEBUG=(S as {debug?:string}).debug;
- const key=`${S.seed}/${S.version??''}/${S.preset??''}/${S.size??''}/${S.style??''}/${S.quality??''}/${S.mapStyle??''}/${S.treeSet??''}/${JSON.stringify(S.prep??null)}`;
+ const key=`${S.seed}/${S.version??''}/${S.preset??''}/${S.size??''}/${S.style??''}/${S.quality??''}/${S.mapStyle??''}/${S.treeSet??''}/${S.forestEcology?1:0}${S.geology?1:0}/${JSON.stringify(S.prep??null)}`;
  let canvas=document.getElementById('c') as HTMLCanvasElement|null;
  if(!canvas){canvas=document.createElement('canvas');canvas.id='c';document.body.appendChild(canvas);}
  canvas.style.cssText=`width:${S.width}px;height:${S.height}px;display:block`;canvas.width=S.width;canvas.height=S.height;
@@ -45,7 +45,7 @@ w.renderMap=async(S:Spec)=>{
   try{if(S.mapStyle)localStorage.setItem('hearthwild:map-style',S.mapStyle);else localStorage.removeItem('hearthwild:map-style');}catch{/* ok */}
   try{if(S.treeSet)localStorage.setItem('hearthwild:tree-set',S.treeSet);else localStorage.removeItem('hearthwild:tree-set');}catch{/* ok */}
   const game=new Game();game.testMode=true;game.revealMap=true;
-  game.reset(S.seed,S.version,{...(S.preset?{preset:S.preset as never}:{}),...(S.size?{size:S.size as never}:{})});game.enterIsland();game.state.paused=true;
+  game.reset(S.seed,S.version,{...(S.preset?{preset:S.preset as never}:{}),...(S.size?{size:S.size as never}:{}),...(S.geology?{geologyVersion:1 as never}:{}),...(S.forestEcology?{forestEcologyVersion:1 as never}:{})});game.enterIsland();game.state.paused=true;
   const view=new WorldView(canvas);
   if(S.quality)view.applyQuality(S.quality);
   if(S.prep){
