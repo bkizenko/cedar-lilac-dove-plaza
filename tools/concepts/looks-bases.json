@@ -1,0 +1,5 @@
+{
+ "hp-lobed": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"lobed","season":"summer","hour":16.0},
+ "hp-bot": {"renderStyle":"optionH","mapStyle":"painterly","treeSet":"botanical","season":"summer","hour":16.0},
+ "vp-bot": {"renderStyle":"village","mapStyle":"painterly","treeSet":"botanical","season":"summer","hour":16.0}
+}

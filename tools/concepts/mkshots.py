@@ -13,7 +13,7 @@ def village(cx, cz):
          {'x': round(cx - 34, 1), 'z': round(cz + 34, 1), 'stage': 'young'}]
     return {'buildings': b, 'farms': f, 'age': 3}
 
-CAMS = {'close': (0.9, 0.38, 26), 'mid': (0.8, 0.42, 75), 'vista': (0.7, 0.3, 260)}
+CAMS = {'hero': (0.85, 0.36, 44), 'close': (0.9, 0.38, 26), 'mid': (0.8, 0.42, 75), 'vista': (0.7, 0.3, 330)}
 seed, cx, cz, preset, out, looks = int(sys.argv[1]), float(sys.argv[2]), float(sys.argv[3]), sys.argv[4], sys.argv[5], json.load(open(sys.argv[6]))
 only = sys.argv[7].split(',') if len(sys.argv) > 7 else list(CAMS)
 shots = {}
