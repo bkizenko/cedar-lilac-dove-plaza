@@ -34,10 +34,10 @@ export type ItemId='spear'|'bow'|'blade'|'axe'|'pick'|'mallet'|'hoe'|'rod'|'stan
 export type RigGear=OwnedGear&{helmet?:{kind:'leatherCap'|'bronzeHelm'|'ironHelm';condition:number};shield?:{kind:'woodShield'|'hideShield'|'bronzeShield';condition:number}};
 
 // ---- Skeleton. Pivots are rest-pose positions in the unit frame; parents give the chain.
-export const RIG_PIVOTS:Record<RigBone,readonly [number,number,number]>={hips:[0,.5,0],spine:[0,.5,0],head:[0,.93,0],armL:[-.205,.86,0],armR:[.205,.86,0],legL:[-.085,.5,0],legR:[.085,.5,0]};
+export const RIG_PIVOTS:Record<RigBone,readonly [number,number,number]>={hips:[0,.5,0],spine:[0,.5,0],head:[0,.93,0],armL:[-.235,.86,0],armR:[.235,.86,0],legL:[-.085,.5,0],legR:[.085,.5,0]};
 export const RIG_PARENT:Record<RigBone,RigBone|null>={hips:null,spine:'hips',head:'spine',armL:'spine',armR:'spine',legL:'hips',legR:'hips'};
 /** Where the hand holds an item, in the arm bone's frame (arm hangs down -Y). */
-export const HAND_OFFSET:readonly [number,number,number]=[0,-.33,.03];
+export const HAND_OFFSET:readonly [number,number,number]=[0,-.375,.045];
 export type ClassSpec={/** uniform scale of the whole body relative to an adult */scale:number;head:number;/** shoulder/torso width factor */width:number;/** resting forward stoop in degrees (spine) */stoop:number;hairGrey:boolean};
 export const BODY_CLASSES:Record<BodyClass,ClassSpec>={
  adult:{scale:1,head:1,width:1,stoop:0,hairGrey:false},child:{scale:.64,head:1.34,width:.88,stoop:0,hairGrey:false},elder:{scale:.97,head:1,width:.94,stoop:13,hairGrey:true},
