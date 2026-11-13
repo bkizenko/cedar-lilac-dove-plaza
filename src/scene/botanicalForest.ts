@@ -11,7 +11,7 @@ import {painterSway,type PainterSway} from './painterVegetationMaterial';
  * adds wood, collision or clicks. Per-tree seeded variation: species and age class by site, height/width, lean (wind, slope), hue, autumn colour, leaf-fall timing. */
 /** Cosmetic filler for one frame (see fillerForest.ts): individual trees (negative ids, `filler: true`, never resources) and merged horizon crowns, with the radii the budget really reached. */
 export type ForestFiller={trees:readonly ForestNode[];blobs:readonly FillerBlob[];detailEff:number;farEff:number};
-export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number;
+export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';/** tree detail step: full/mid radius and leaf-card scale (absent = per-quality radii, all cards) */detail?:{nearMetres:number;cardScale:number};camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number;
  /** draw-distance bands (src/game/drawDistance.ts): sim trees are culled beyond this (graphics Low scales it down as before); absent = the original 700/420 m */
  farMetres?:number;/** screen-door fade span ahead of the cut-offs (0/absent = hard edge) */fadeMetres?:number;/** conservative frustum test (x,z,radius) for far-tier trees; absent = draw all */inView?:(x:number,z:number,r:number)=>boolean;filler?:ForestFiller|null};
 export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean;/** cosmetic filler tree: never a resource, never picked */filler?:true};
@@ -63,10 +63,13 @@ export class BotanicalForest{
   r={sp:idx,v,sx:(.86+.3*u(55))*(1.02-.1*(site.moisture-.5))*stunt,sy:(.9+.2*u(57))*stunt,lean,yaw:u(59)*Math.PI*2,hue:[(u(61)-.5)*.05,.88+u(63)*.28,.9+u(65)*.2],autumn:Math.floor(u(67)*sp.autumn.length*.999),timing:u(69)};
   this.recs.set(node.id,r);return r;
  }
+ /** Leaf-card scale of the species meshes: a change drops the batches (the next sync rebuilds them from the cached geometry for that scale). Cores, trunks and cheap far crowns are unaffected. */
+ private cardScale=1;
+ private setCardScale(k:number){if(Math.abs(k-this.cardScale)<1e-6)return;this.cardScale=k;for(const b of this.batches.values()){this.scene.remove(b.mesh);b.mesh.dispose();}this.batches.clear();}
  private geometryInfo(spIdx:number){let i=this.info.get(spIdx);if(!i){i=botanicalTree(BOTANICAL_SPECIES[spIdx].id,0,1);this.info.set(spIdx,i);}return i;}
  private batch(sp:number,v:number,tier:0|1,needed:number){
   const key=(sp*VARIANTS_PER_SPECIES+v)*2+tier;let b=this.batches.get(key);
-  if(!b){b=this.makeBatch(botanicalTree(BOTANICAL_SPECIES[sp].id,v,tier).geometry,`resource-${BOTANICAL_SPECIES[sp].id}-v${v}-t${tier}`,Math.max(8,needed));this.batches.set(key,b);}
+  if(!b){b=this.makeBatch(botanicalTree(BOTANICAL_SPECIES[sp].id,v,tier,this.cardScale).geometry,`resource-${BOTANICAL_SPECIES[sp].id}-v${v}-t${tier}`,Math.max(8,needed));this.batches.set(key,b);}
   else if(needed>b.capacity){const old=b,nb=this.makeBatch(old.mesh.geometry,old.name,Math.max(needed,old.capacity*2),old);this.scene.remove(old.mesh);old.mesh.dispose();b=nb;this.batches.set(key,b);}
   return b;
  }
@@ -90,7 +93,7 @@ export class BotanicalForest{
  sync(nodes:readonly ForestNode[],ctx:ForestContext){
   for(const b of this.batches.values()){b.n=0;b.ids.length=0;}
   if(this.stumps){this.stumps.n=0;this.stumps.ids.length=0;}
-  const near=this.o.nearMetres[ctx.quality],d0=near*FOREST_LOD.fullFraction,d1=near*FOREST_LOD.midFraction,cullFar=ctx.farMetres!==undefined?ctx.farMetres*(ctx.quality==='low'?this.o.lowFarMetres/this.o.farMetres:1):ctx.quality==='low'?this.o.lowFarMetres:this.o.farMetres,fadeM=Math.max(0,ctx.fadeMetres??0);
+  this.setCardScale(ctx.detail?.cardScale??1);const near=ctx.detail?ctx.detail.nearMetres:this.o.nearMetres[ctx.quality],d0=near*FOREST_LOD.fullFraction,d1=near*FOREST_LOD.midFraction,cullFar=ctx.farMetres!==undefined?ctx.farMetres*(ctx.quality==='low'&&!ctx.detail?this.o.lowFarMetres/this.o.farMetres:1):ctx.quality==='low'?this.o.lowFarMetres:this.o.farMetres,fadeM=Math.max(0,ctx.fadeMetres??0);
   // with the cosmetic filler on, sim trees beyond the individual-detail radius draw as one cheap low-poly crown (hand-over is a dithered cross-fade); the budget's real reach bounds both
   const detailEff=ctx.filler?ctx.filler.detailEff:Infinity;this.cheapIds[0].length=this.cheapIds[1].length=0;
   const reach=ctx.filler?Math.min(cullFar,ctx.filler.farEff):cullFar;

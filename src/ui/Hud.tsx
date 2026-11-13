@@ -1,6 +1,6 @@
 import {NeedsTradeControls} from './NeedsTradeControls';
 import {CommanderControls} from './CommanderControls';
-import {DRAW_DISTANCE_LEVELS,DRAW_DISTANCE_LABELS,type DrawDistance} from '../game/drawDistance';
+import {GraphicsSettingsPanel} from './GraphicsSettingsPanel';
 import {foodExperienceReport} from '@/game/foodExperience';
 import {useLifecycleAction} from './useLifecycleAction';
 import {VillageSaveButton} from './VillageSaveButton';
@@ -260,10 +260,9 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           {engine&&<PerformanceReadout engine={engine}/>}
           {engine&&<p className="px-2 py-2 select-text">World seed {engine.game.state.seed} · generation {engine.game.state.worldgenVersion??1}</p>}
           <p className="px-2 py-2 text-xs" title={difficultyEffects(engine?.game.state.difficulty??'normal')}>Difficulty: {DIFFICULTIES[engine?.game.state.difficulty??'normal'].name} · {DIFFICULTIES[engine?.game.state.difficulty??'normal'].description}</p>
-          <label className="px-2 py-2">Graphics <select aria-label="Graphics quality" value={hud.quality} onChange={e=>{engine?.setQuality(e.target.value as 'low'|'med'|'high');engine?.pushHud();}}><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select></label>
-          <label className="px-2 py-2">Draw distance <select aria-label="Draw distance" value={engine?.view.getDrawDistance()??'medium'} onChange={e=>{engine?.setDrawDistance(e.target.value as DrawDistance);engine?.pushHud();}}>{DRAW_DISTANCE_LEVELS.map(l=><option key={l} value={l}>{DRAW_DISTANCE_LABELS[l]}</option>)}</select>{engine&&engine.view.getEffectiveDrawDistance()!==engine.view.getDrawDistance()&&<span className="text-xs"> eased to {DRAW_DISTANCE_LABELS[engine.view.getEffectiveDrawDistance()]}</span>}</label>
+          <GraphicsSettingsPanel engine={engine} variant="hud"/>
           <label className="px-2 py-2">Style <select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village (new buildings)</option><option value="optionH">Carved honey (legacy)</option><option value="current">Original blocks (legacy)</option></select></label>
-          <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/> Shadows</label>
+          <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.gfx.effective.graphics);engine.pushHud();}}}/> Shadows</label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/> Selected person circles</label>
           <button className="px-2 py-2" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),opened=>{if(opened)setTestOpen(true);})}>Test lab</button>
           {engine&&<MusicChip engine={engine}/>}

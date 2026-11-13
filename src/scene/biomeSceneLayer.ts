@@ -4,6 +4,7 @@ import {BiomeVegetation,BiomeDressing,resourceTreeForm,BIOME_VEGETATION_RULES,ty
 import type {DressingForm} from './vegetationKit';
 import {peekGeology} from './painterGeology';
 import {BotanicalForest} from './botanicalForest';
+import {treeBudget,type TreeDetail} from '../game/graphicsSettings';
 import {FillerForest,type FillerTree,type FillerBlob} from './fillerForest';
 import {DRAW_DISTANCE_RULES,type DrawBands} from '../game/drawDistance';
 import {loadTreeSet,type TreeSet} from './treeSet';
@@ -171,7 +172,7 @@ export class BiomeSceneLayer {
  private treeIn=0;private dressingIn=0;private lastQuality='';private lastViewKey='';private lastBands:DrawBands|null=null;
  private style:VegetationStyle;
  /** cosmetic filler forest (painterly botanical set only); render-only, see fillerForest.ts */
- private filler:FillerForest|null=null;private fillerOut:{trees:FillerTree[];blobs:FillerBlob[]}={trees:[],blobs:[]};private buildingHash=new Map<number,{x:number;z:number;r:number}[]>();private buildingCount=-1;
+ private lastDetail:TreeDetail|undefined;private filler:FillerForest|null=null;private fillerOut:{trees:FillerTree[];blobs:FillerBlob[]}={trees:[],blobs:[]};private buildingHash=new Map<number,{x:number;z:number;r:number}[]>();private buildingCount=-1;
  lastFiller:{detailEff:number;farEff:number;trees:number;blobs:number;deferred:number;treeCapped:boolean;blobCapped:boolean}|null=null;
  constructor(scene:THREE.Scene,game:BiomeSceneGame,grid:EcologicalProvinceGrid,style:VegetationStyle='classic',treeSet:TreeSet=loadTreeSet()){
   this.grid=grid;this.style=style;this.treeSet=treeSet;const seed=game.state.seed,profileAt=(x:number,z:number)=>provinceAt(grid,x,z);
@@ -195,16 +196,16 @@ export class BiomeSceneLayer {
  }
  /** `view` carries the draw-distance bands and a conservative frustum test; its `key` changes when the camera moved or turned enough to need a fresh far list. `prime` lifts the per-frame
   * time budget for generating filler chunks (first build after a world loads). Without `view` the original radii apply and no filler is drawn. */
- sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number,view?:{bands:DrawBands;inView?:(x:number,z:number,r:number)=>boolean;key?:string;prime?:boolean}){
-  this.treeIn-=Math.max(0,dt);this.dressingIn-=Math.max(0,dt);const changed=quality!==this.lastQuality,treeChanged=changed||(view?.bands!==undefined&&view.bands!==this.lastBands)||(view?.key!==undefined&&view.key!==this.lastViewKey);this.lastQuality=quality;this.lastBands=view?.bands??null;this.lastViewKey=view?.key??'';
+ sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number,view?:{bands:DrawBands;inView?:(x:number,z:number,r:number)=>boolean;key?:string;prime?:boolean;detail?:TreeDetail}){
+  this.treeIn-=Math.max(0,dt);this.dressingIn-=Math.max(0,dt);const detail=view?.detail,changed=quality!==this.lastQuality,treeChanged=changed||detail!==this.lastDetail||(view?.bands!==undefined&&view.bands!==this.lastBands)||(view?.key!==undefined&&view.key!==this.lastViewKey);this.lastQuality=quality;this.lastDetail=detail;this.lastBands=view?.bands??null;this.lastViewKey=view?.key??'';
   let treeReport:ReturnType<BiomeVegetation['sync']>|undefined,dressingCount:number|undefined,changedAgain=false;
-  const context:VegetationContext={quality,camera,known:(x,z)=>game.exploredAt(x,z),marked:id=>game.chopMarks?.has(id)??false,...game.seasonMix()};
+  const context:VegetationContext={quality,detail:detail&&{nearMetres:detail.nearMetres,cardScale:detail.cardScale},camera,known:(x,z)=>game.exploredAt(x,z),marked:id=>game.chopMarks?.has(id)??false,...game.seasonMix()};
   if(this.treeIn<=0||treeChanged){
    const bands=view?.bands;
-   if(bands){const low=quality==='low'?.6:1;context.farMetres=bands.treeFar*low;context.fadeMetres=bands.fadeMetres;context.inView=view.inView;
-    if(this.filler&&bands.fillerFar>0){
+   if(bands){const tb=detail?treeBudget(bands,detail.step):null,low=detail?1:quality==='low'?.6:1;context.farMetres=tb?tb.treeFar:bands.treeFar*low;context.fadeMetres=bands.fadeMetres;context.inView=view.inView;
+    if(this.filler&&(tb?tb.fillerFar>0:bands.fillerFar>0)){
      this.filler.setSimTrees(game.state.trees);
-     const r=this.filler.collect(camera,{detail:bands.fillerDetail*low,far:bands.fillerFar*low,fade:bands.fadeMetres,maxTrees:Math.floor(bands.fillerMaxTrees*(quality==='low'?.5:1)),maxBlobs:Math.floor(bands.fillerMaxBlobs*(quality==='low'?.5:1)),buildMs:view.prime?Infinity:3,inView:view.inView,exclude:this.nearBuilding(game)},this.fillerOut);
+     const r=this.filler.collect(camera,{detail:tb?tb.fillerDetail:bands.fillerDetail*low,far:tb?tb.fillerFar:bands.fillerFar*low,fade:bands.fadeMetres,maxTrees:tb?tb.fillerMaxTrees:Math.floor(bands.fillerMaxTrees*(quality==='low'?.5:1)),maxBlobs:tb?tb.fillerMaxBlobs:Math.floor(bands.fillerMaxBlobs*(quality==='low'?.5:1)),buildMs:view.prime?Infinity:3,inView:view.inView,exclude:this.nearBuilding(game)},this.fillerOut);
      context.filler={trees:this.fillerOut.trees,blobs:this.fillerOut.blobs,detailEff:r.detailEff,farEff:r.farEff};
      this.lastFiller={detailEff:r.detailEff,farEff:r.farEff,trees:this.fillerOut.trees.length,blobs:this.fillerOut.blobs.length,deferred:r.deferred,treeCapped:r.treeCapped,blobCapped:r.blobCapped};
      // chunks still being generated: look again next frame instead of waiting a full refresh
