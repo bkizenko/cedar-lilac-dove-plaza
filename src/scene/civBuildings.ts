@@ -368,9 +368,9 @@ CIVIC.mekhari=g=>{const {w,d,r}=g,W=w*.86,D=d*.44,st=2.1,y=st+.25,h=2.5;
  for(let i=0;i<5;i++)for(const sz of[-1,1])pile(g,-W*.46+i*W*.23,sz*D*.46,st,.12);
  g.B('wall2',[W+.6,.25,D+1.2],[0,st,.2],2);
  // long woven drum hall with a bound waist and sill band
- P(g,'cylinder','wall',[W*.94,h,D*.88],[0,y,-D*.04],undefined,12);P(g,'cylinder','trim',[W*.97,.12,D*.91],[0,y+h*.55,-D*.04],undefined,12,1);
+ P(g,'cylinder','wall',[W*.94,h,D*.88],[0,y,-D*.04],undefined,12);P(g,'cylinder','trim',[W*.97,.12,D*.91],[0,y+h*.3,-D*.04],undefined,12,1);P(g,'cylinder','roof',[W*1.0,.5,D*.98],[0,y+h-.4,-D*.04],undefined,12,1);
  for(let i=1;i<9;i++)g.B('wall2',[.06,h*.88,.06],[-W*.4+i*W*.1,y+.05,D*.4+.03],0);
- g.B('accent',[1.3,1.9,.1],[0,y,D*.4+.04],0);saddle(g,W,D*1.15,y+h,2.3,1.3);
+ g.B('accent',[1.3,1.9,.1],[0,y,D*.4+.04],0);saddle(g,W,D*1.15,y+h,1.75,1.3);
  g.B('wall2',[W+.6,.8,.08],[0,y,D*.5+.8],1);for(let i=0;i<=4;i++)pile(g,-W*.5+i*W*.25,D*.5+.8,y+.9,.06);
  for(let i=0;i<9;i++)g.B('wall2',[1.6,.14,.6],[W*.16,i*.0+i*st/9*.9,D*.5+1.1+(9-i)*.58],1);
  g.banner(-W*.42,D*.5+.8,y+3.6);return {entry:{x:0,z:D*.5+2,width:1.6}};};
