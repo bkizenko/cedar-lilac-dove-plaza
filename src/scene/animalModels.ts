@@ -141,8 +141,8 @@ function antlerRed(m:Mesh,sg:number,scale:number,seed:number,tines:number,col:RG
  const tip=mul(col,1.1),paint:Paint=(x,y,zq,ny,s)=>mix(mul(col,.62),tip,smooth(.1,1,s));const j=()=>(r()-.5)*.02;
  const beam=[P(0,0,0),P(-.04,.14,.05),P(-.07+j(),.3,.1),P(-.05,.46,.14),P(.02,.6,.16),P(.12,.72,.15)];
  const rad=[[.026,.026],[.022,.022],[.019,.019],[.016,.016],[.014,.014],[.012,.012]] as const;
- tube(m,beam,rad.map(([a,b])=>[a*S,b*S]),{seg,paint,up:[0,0,1]});
- const twig=(from:[number,number,number],pts:[number,number,number][],r0:number)=>tube(m,[from,...pts],[[r0*S,r0*S],...pts.map((_,i)=>[r0*S*(1-(i+1)/(pts.length+1)*.8),r0*S*(1-(i+1)/(pts.length+1)*.8)] as [number,number])],{seg:Math.max(4,seg-1),paint});
+ tube(m,beam,rad.map(([a,b])=>[a*S*1.5,b*S*1.5]),{seg,paint,up:[0,0,1]});
+ const twig=(from:[number,number,number],pts:[number,number,number][],r0:number)=>tube(m,[from,...pts],[[r0*S*1.4,r0*S*1.4],...pts.map((_,i)=>[r0*S*1.4*(1-(i+1)/(pts.length+1)*.8),r0*S*1.4*(1-(i+1)/(pts.length+1)*.8)] as [number,number])],{seg:Math.max(4,seg-1),paint});
  twig(P(-.03,.07,.03),[P(.06,.1,.05),P(.15,.2,.06),P(.2,.3,.07)],.014);            // brow tine
  if(tines>=8)twig(P(-.065,.31,.1),[P(.03,.36,.12),P(.12,.46,.12),P(.15,.57,.12)],.012);   // bez
  if(tines>=10)twig(P(-.045,.46,.14),[P(.05,.54,.15),P(.13,.62,.15),P(.17,.72,.14)],.011);  // trez
@@ -173,7 +173,7 @@ function addHorns(m:Mesh,sp:QuadSpec,sg:number,o:Opts,k:number,t:Tier){
   const h=sp.id==='boar'?0:sp.id==='redDeer'?.7:sp.id==='fallowDeer'?.5:sp.id==='roeDeer'?.25:sp.id==='aurochs'||sp.id==='cattle'?.35:.3,fw=sp.id==='aurochs'||sp.id==='cattle'?.3:sp.id==='ibex'?-.3:0;
   if(h>0)tube(m,[[0,0,0],[fw*.5,h*.5,.05*sg],[fw,h,.1*sg]],[[.02,.02],[.014,.014],[.006,.006]],{seg:4,paint:()=>col});return;}
  switch(sp.id){
-  case 'redDeer':antlerRed(m,sg,.55+.5*r(),o.seed+sg,[8,10,12][o.seed%3],col,seg);break;
+  case 'redDeer':antlerRed(m,sg,.8+.45*r(),o.seed+sg,[8,10,12][o.seed%3],col,seg);break;
   case 'fallowDeer':antlerFallow(m,sg,.8+.35*r(),col,seg);break;
   case 'roeDeer':antlerRoe(m,sg,.85+.3*r(),col,seg);break;
   case 'aurochs':hornCurve(m,[[0,0,.02],[.0,.03,.1],[.04,.09,.2],[.13,.17,.28],[.26,.27,.31],[.38,.37,.28],[.43,.49,.22]],.036,.006,sg,col,seg);break;
@@ -268,9 +268,9 @@ function torsoMesh(sp:QuadSpec,o:Opts,L:number):Mesh{
  const sheep=sp.id==='sheep';
  loft(m,dense,{seg,paint:torsoPaint(sp,L)});
  {const pc=mix(hex(sp.coat.back),hex(sp.coat.flank??sp.coat.back),.5);
-  for(const sd of [-1,1])for(const [leg,k] of [[sp.fore,.36],[sp.hind,.5]] as const){
+  for(const sd of [-1,1])if(t===0)for(const [leg,k] of [[sp.hind,.5]] as const){
    const px=leg.pivot[0]*L+(leg===sp.hind?.02:-.0),py=leg.pivot[1]-leg.len[0]*(leg===sp.hind?.1:.12);
-   blob(m,[px,py,sd*leg.z*.92],[leg.len[0]*k*(leg===sp.hind?.95:.85),leg.len[0]*.44,Math.max(leg.r[1]*1.7,leg.z*.5)],pc,{lon:t===0?9:6,lat:t===0?5:3,paint:(x,y,z,ny)=>torsoPaint(sp,L)(x,y,z,ny*.7,0)});
+   blob(m,[px,py,sd*leg.z*.92],[leg.len[0]*k*(leg===sp.hind?.95:.85),leg.len[0]*.44,Math.max(leg.r[1]*1.35,leg.z*.34)],pc,{lon:t===0?9:6,lat:t===0?5:3,paint:(x,y,z,ny)=>torsoPaint(sp,L)(x,y,z,ny*.7,0)});
   }}
  if(t===0){
   const r=seededRandom(hashSeed(o.seed,'furt'));const c=sp.coat,col=hex(c.back),belly=hex(c.belly);
@@ -290,7 +290,7 @@ function torsoMesh(sp:QuadSpec,o:Opts,L:number):Mesh{
 function legPart(sp:QuadSpec,part:PartKey,o:Opts):Mesh{
  const fore=part.startsWith('fore'),leg=fore?sp.fore:sp.hind,m=newMesh(),t=o.tier,seg=segs(t,8),top=mix(hex(sp.coat.back),hex(sp.coat.flank??sp.coat.back),.5);
  const [lu,lm,lc,lh]=leg.len,r=leg.r,ps=sp.foot==='plantigrade';
- if(part.endsWith('U'))limb(m,lu,[r[0]*1.25,r[1]*1.3],[r[0]*.8,r[1]*.95],limbPaint(sp,top),seg,.12,0,t);
+ if(part.endsWith('U'))limb(m,lu,[r[0]*(fore?1.6:1.85),r[1]*(fore?1.7:1.9)],[r[0]*.82,r[1]*.98],limbPaint(sp,top),seg,.1,0,t);
  else if(part.endsWith('M'))limb(m,lm,[r[0]*.8,r[1]*.95],[r[0]*.5,r[1]*.62],mixLimb(sp),seg,.05,.12,t);
  else if(part.endsWith('C'))limb(m,lc,[r[0]*.5,r[1]*.62],[r[0]*.42,r[1]*.52],()=>hex(sp.coat.legs),seg,.0,.1,t);
  else foot(sp,m,lh,fore,t);
