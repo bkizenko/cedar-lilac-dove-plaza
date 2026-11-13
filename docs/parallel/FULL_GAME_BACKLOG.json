@@ -9463,6 +9463,18 @@
       "supportingPassed": 65,
       "supportingTotal": 65,
       "firstReleaseGates": "37/98 unchanged"
+    },
+    {
+      "date": "2026-11-13",
+      "commit": "1aa5ab39eb86e5437684d3993704135f45dda099",
+      "release": "2026-11-13T09-09-19-758Z-1aa5ab3",
+      "summary": "1aa5ab39eb86e5437684d3993704135f45dda099 published as 2026-11-13T09-09-19-758Z-1aa5ab3 on8086/8101. Player Send offer to known villages and incoming Accept/Decline are connected through strict owned commands and bounded pure read models in current Hearth and Classic trade surfaces. Actual needs caravans now qualify for cached long-distance navigation; bounded192k search resolves the native return detour.9/9 focused (3 backend,2 UI,1 native900m round trip,2 built public offer/answer journeys,1 original53 compatibility);49/49 supporting, native55/55, compiler/build PASS, network5/5. Native seed42 V18 terrain unchanged; finite INITIAL halls/stocks/site/vision endowment, not earned discovery/campaign/FPS proof. Outgoing30stone paid,8of36timber reached home after one actual carrier loss; incoming13stone received for16reserved timber. Quotes survive escrow movement and durable reload; no foreign private-stock/crew leaks. Original53 file unchanged.37/98 unchanged; remaining rival/coastal food paths and full naval/campaign remain open.",
+      "evidence": "docs/metrics/player-needs-trade-release-2026-11-13.json",
+      "batchPassed": 9,
+      "batchTotal": 9,
+      "supportingPassed": 49,
+      "supportingTotal": 49,
+      "firstReleaseGates": "37/98 unchanged"
     }
   ],
   "status_update_policy": {
