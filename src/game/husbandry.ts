@@ -1,3 +1,4 @@
+import {penStep} from './animalBehaviour';
 import {domesticationReady,beginDomesticationTrial,practiceDomestication,finishDomesticationTrial,noteDomesticationArrival,reconcileDomestication,DOMESTICATION_RULES} from './domestication';
 import {withdrawExpeditionFood} from './expeditionProvisions';
 import{penBeddingWorkAI,penNeedsBedding,usePenBedding,reconcilePenBedding,returnPenBeddingLoad}from'./penBedding';
@@ -272,7 +273,8 @@ export function tickHusbandry(g:Game,dt:number) {
    if(a.hunger>80)a.hp=Math.max(0,a.hp-dt*.08);else if(fed&&hydrated&&p.care>.2)a.hp=Math.min(a.maxHp,a.hp+dt*.015);
    const adult=g.state.time-a.born>=herdRules(a.species).maturity;
    if(a.hp<=0){a.carcass={meat:CARCASS_MEAT[a.species]/2,diedAt:g.state.time};occupied-=herdRules(a.species).places;continue;}
-   if(!handlers.has(a.id)&&arrived){
+   if(!handlers.has(a.id)&&arrived&&g.state.animalBehaviourVersion===1)penStep(g,a,pen,dt,(x,z)=>insidePen(pen,x,z,.15),herd,false);
+   else if(!handlers.has(a.id)&&arrived){
     a.wanderT-=dt;if(a.wanderT<=0){a.wanderT=3+(a.id%5);a.facing+=1.4;}
     const x=a.x+Math.sin(a.facing)*dt*.35,z=a.z+Math.cos(a.facing)*dt*.35;
     if(insidePen(pen,x,z,.15)&&g.walkable(x,z)){a.x=x;a.z=z;a.y=g.height(x,z);}else a.facing+=Math.PI;

@@ -1419,3 +1419,4 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-13 07:00 | Claude | 22 (since 06:00 ET) | 22 (lane C/D docs + field-placement diagnostics merge) | ~1 (kin deals/escorts source already landed) | lanes A-D active; nothing to land: no agent branch ahead of main; integration 0 ahead |
 | 11-13 07:00 | Grok | 0 | 0 | 0 | idle (out); World rows left with Claude lanes, no new agent spawned (A-D saturated) |
 | 11-13 07:00 | Total | 22 | 22 | ~1 | main == integration + 5 docs commits; open/done counts unchanged (326 / ~17 by status-column) |
+| 11-13 14:00 | Claude | 1 (animals) | 1 | 0 | animal behaviour overhaul: deterministic activity model (flag-gated, old saves unchanged), near-camera jointed rig tied to draw-distance tiers, fish schools, wolves; audit docs/ANIMAL_BEHAVIOUR_AUDIT.md |

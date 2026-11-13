@@ -1,3 +1,4 @@
+import {validAnimalBeh} from './animalBehaviour';
 import {validCarriedFood,validFoodLots} from './tradeFood';
 import {validSiteRecord,slopeClassOf} from './slopeTiers';
 import {validDomesticationState} from './domestication';
@@ -205,6 +206,7 @@ function validateGamePayload(raw: unknown) {
   if(!validWaterEngineering(s,HALF*2))fail(); // includes validCanalWorks
   for(const cut of s.excavations||[])if(cut.id>=s.nextId||!s.tribes[cut.team]||s.units.some((u:any)=>u.id===cut.id)||s.buildings.some((b:any)=>b.id===cut.buildingId&&(b.type!=='trench'||b.x!==cut.x||b.z!==cut.z||b.w!==cut.w||b.d!==cut.d)))fail();
   if(s.sheepVersion!==undefined&&s.sheepVersion!==1)fail();
+  if(s.animalBehaviourVersion!==undefined&&s.animalBehaviourVersion!==1)fail();
   if(s.horseVersion!==undefined&&s.horseVersion!==1)fail();
   if(!validPackPastureOrders(s))fail();
   if(!validPackJourneySupplies(s))fail();
@@ -631,6 +633,7 @@ function validateGamePayload(raw: unknown) {
       const led=a.ledBy!==undefined;
       if(led&&(!Number.isSafeInteger(a.ledBy)||a.hp<=0||!s.units.some((u:any)=>u.id===a.ledBy&&u.hp>0&&!u.prisoner)||s.units.some((u:any)=>u.hp>0&&(u.tamingWork?.animal===a.id||u.husbandryWork?.animal===a.id))))fail();
       if(!s.tribes.some((t:any)=>t.id===a.team)||!Number.isSafeInteger(a.pen)||a.pen<=0||!pen&&!led||!['goat','sheep','horse','cattle'].includes(a.species)||!validFleece(a,s.time)||a.species==='sheep'&&s.sheepVersion!==1||!['female','male'].includes(a.sex)||a.born< -herdRules(a.species).maturity||a.born>s.time||a.tamedAt<0||a.tamedAt>s.time||a.hp<0||a.hp>a.maxHp||a.maxHp<=0||a.maxHp>1000||a.scale<.3||a.scale>3||a.hunger<0||a.hunger>100||a.milk<0||a.milk>herdRules(a.species).milkCapacity||a.pregnancy<0||a.pregnancy>herdRules(a.species).gestation||!carcassStateValid(a.carcass,a.species,a.hp,s.time))fail();
+      if(!validAnimalBeh(a.beh,s.time,Math.max(1000,HALF+40))||a.beh!==undefined&&s.animalBehaviourVersion!==1)fail();
       if(a.lactatingUntil!==undefined&&(!num(a.lactatingUntil)||a.lactatingUntil<0||a.lactatingUntil>s.time+901))fail();
       if(a.hp>0&&pen){perPen.set(a.pen,(perPen.get(a.pen)||0)+herdRules(a.species).places);if((perPen.get(a.pen)||0)>penHousingCapacity(pen))fail();}
     }
@@ -639,8 +642,9 @@ function validateGamePayload(raw: unknown) {
     add(c);
     if(c.grazing!==undefined&&(!obj(c.grazing)||!num(c.grazing.x)||!num(c.grazing.z)||Math.abs(c.grazing.x)>Math.max(1000,HALF+40)||Math.abs(c.grazing.z)>Math.max(1000,HALF+40)))fail();
     numbers(c, ["hp", "maxHp", "facing", "vx", "vz", "wanderT", "fly", "scale"]);
+    if(!validAnimalBeh(c.beh,s.time,Math.max(1000,HALF+40))||c.beh!==undefined&&s.animalBehaviourVersion!==1)fail();
     if(c.huntDefense!==undefined){const h=c.huntDefense;if(c.species!=='boar'||c.hp<=0||!obj(h)||!Number.isSafeInteger(h.hunterId)||h.hunterId<1||h.hunterId>=s.nextId||![h.expiresAt,h.nextAttackAt,h.lastX,h.lastZ].every(num)||h.expiresAt<0||h.expiresAt>s.time+HUNTING_HAZARD_RULES.alertSeconds+.001||h.nextAttackAt<0||h.nextAttackAt>s.time+HUNTING_HAZARD_RULES.attackCooldownSeconds+.001||Math.abs(h.lastX)>HALF+40||Math.abs(h.lastZ)>HALF+40)fail();}
-    if (!["deer", "boar", "goat", "sheep", "horse", "cattle", "bird"].includes(c.species)||!validFleece(c,s.time)||c.species==='sheep'&&s.sheepVersion!==1||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
+    if (!["deer", "boar", "goat", "sheep", "horse", "cattle", "bird", "wolf"].includes(c.species)||!validFleece(c,s.time)||c.species==='sheep'&&s.sheepVersion!==1||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail();
   }
   for(const b of s.buildings)if(b.goatSearch!==undefined&&(b.type!=='pen'||b.team!==0||!validGoatSearchOrder(b.goatSearch,s.time,s.nextId)))fail();
   for(const b of s.buildings)if(b.pasture!==undefined){const p=b.pasture;if(p&&['initialFeed','feedDelivered','feedConsumed'].every(k=>p[k]!==undefined)&&Math.abs(p.initialFeed+p.feedDelivered-p.feedConsumed-p.feed)>1e-7*Math.max(1,p.initialFeed+p.feedDelivered))fail();for(const k of ['initialFeed','feedDelivered','feedConsumed','grazedFood'])if(p?.[k]!==undefined&&(!num(p[k])||p[k]<0||p[k]>1e12))fail();if(b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p.feed)||p.feed<0||p.feed>penFeedCapacity(b)+1e-6||!num(p.care)||p.care<0||p.care>1)fail();}

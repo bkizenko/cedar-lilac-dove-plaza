@@ -20,6 +20,8 @@ import {FixedOrbitCameraCollision} from './fixedOrbitCollision';
 import {survivalFireActive} from '@/game/survivalNeeds';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
+import {AnimalRigLayer,FishSchoolLayer} from './animalRigLayer';
+import {animalRigRadius,selectRigAnimals,ANIMAL_RIG_RULES} from './animalVisual';
 import {FibreWorkLayer} from './fibreWorkLayer';
 import {BasketLayer} from './basketLayer';
 import {PenFenceLayer} from './penFenceLayer';
@@ -1269,6 +1271,11 @@ export class WorldView {
   }
 
   private wildlifeOwners = new Map<THREE.InstancedMesh, import("@/game/types").Critter[]>();
+  /** Near-camera jointed animals and swimming fish (presentation only; far animals keep the cheap merged instances). */
+  private animalRigs: AnimalRigLayer | null = null;
+  private fishSchools: FishSchoolLayer | null = null;
+  private rigIds = new Set<number>();
+  private schoolNodeIds = new Set<number>();
 
   private buildWildlife() {
     const mkHerd = (geo: THREE.BufferGeometry, mat: THREE.Material, n: number) => {
@@ -1508,7 +1515,7 @@ export class WorldView {
     this.biomeScene?.sync(game,this.camera.position,this.quality,dt,this.treeView(false));this.biomeScene?.setTime(game.state.time);
     this.wildPlantLayer?.sync(game);
     this.syncNature(game);
-    this.syncWildlife(game);
+    this.syncWildlife(game,dt);
     this.buildingSyncIn-=dt;
     if(this.buildingSyncIn<=0){this.syncBuildings(game);this.campVisual?.sync(game);this.buildingSyncIn=.1;}
     this.carvedLayer?.animate(game.state.paused?0:dt);
@@ -1684,16 +1691,23 @@ export class WorldView {
     }
   }
 
-  private syncWildlife(game: Game) {
+  private syncWildlife(game: Game,dt=1/60) {
     this.wildlifeOwners.clear();
+    // Camera-distance LOD: animals near the camera focus get the jointed gait rig; the rest keep the cheap merged instances.
+    this.animalRigs??=new AnimalRigLayer(this.scene);
+    const rigRadius=animalRigRadius(this.drawGovernor.level),rigCandidates=game.state.wildlife.filter(c=>c.hp>0&&game.visibleAt(c.x,c.z));
+    const rigAnimals=selectRigAnimals(rigCandidates,this.look.x,this.look.z,rigRadius,this.rigIds);
+    this.rigIds=new Set(rigAnimals.map(c=>c.id));
+    this.animalRigs.update(rigAnimals,game.state.paused?0:dt,(x,z)=>game.height(x,z));
+    this.wildlifeOwners.set(this.animalRigs.body,this.animalRigs.drawn);this.wildlifeOwners.set(this.animalRigs.head,this.animalRigs.drawn);
     const stamp = (key: 'deer'|'boars'|'wildGoats'|'wildSheep'|'wildHorses'|'wildCattle'|'birds', species: string) => {
       const old=this[key];if(!old)return;
-      const list=wildlifeInstanceAnimals(game.state.wildlife,species,(x,z)=>game.visibleAt(x,z),(x,z)=>game.exploredAt(x,z),c=>carcassAvailable(game,c));
+      const list=wildlifeInstanceAnimals(game.state.wildlife,species,(x,z)=>game.visibleAt(x,z),(x,z)=>game.exploredAt(x,z),c=>carcassAvailable(game,c)).filter(c=>!this.rigIds.has(c.id));
       const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;
       for(let i=0;i<list.length;i++){
         const c=list[i],corpse=c.hp<=0;
         _p.set(c.x,c.y+(corpse?.3*c.scale:0),c.z);
-        _haulEuler.set(corpse?Math.PI/2:0,c.facing,0);_q.setFromEuler(_haulEuler);_s.setScalar(c.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+        _haulEuler.set(corpse?Math.PI/2:0,c.facing-Math.PI/2,0);_q.setFromEuler(_haulEuler);_s.setScalar(c.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
       }
       mesh.count=list.length;mesh.instanceMatrix.needsUpdate=true;
       this.wildlifeOwners.set(mesh,list);
@@ -1705,7 +1719,7 @@ export class WorldView {
       const mesh=ensureInstanceCapacity(this.scene,this.domesticHorses,animals.length);this.domesticHorses=mesh;
       for(let i=0;i<animals.length;i++){
         const a=animals[i];
-        _p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+        _p.set(a.x,a.y,a.z);_e.set(0,a.facing-Math.PI/2,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
         this.domesticHorseOwners.push(game.state.buildings.find(b=>b.id===a.pen)!);
       }
       mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
@@ -1715,7 +1729,7 @@ export class WorldView {
       const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='cattle'&&(a.team===0||game.visibleAt(a.x,a.z)));
       const mesh=ensureInstanceCapacity(this.scene,this.domesticCattle,animals.length);this.domesticCattle=mesh;
       for(let i=0;i<animals.length;i++){
-        const a=animals[i];_p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+        const a=animals[i];_p.set(a.x,a.y,a.z);_e.set(0,a.facing-Math.PI/2,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
         this.domesticCattleOwners.push(game.state.buildings.find(b=>b.id===a.pen)!);
       }
       mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
@@ -1725,7 +1739,7 @@ export class WorldView {
       const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&a.species===species).slice(0,instCap(mesh));
       for(let i=0;i<animals.length;i++){
         const a=animals[i],seen=a.team===0||game.visibleAt(a.x,a.z);
-        _p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(seen?a.scale:.001);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+        _p.set(a.x,a.y,a.z);_e.set(0,a.facing-Math.PI/2,0);_q.setFromEuler(_e);_s.setScalar(seen?a.scale:.001);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
       }
       mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
     }
@@ -1860,9 +1874,13 @@ export class WorldView {
     if (this.fish) {
       const nFish = Math.min(game.state.fish.length, instCap(this.fish));
       const t = game.state.time;
+      // near the camera focus, fishing grounds are drawn as swimming schools instead of the flat marker
+      this.fishSchools??=new FishSchoolLayer(this.scene);
+      const fr=ANIMAL_RIG_RULES.fishRadius[this.drawGovernor.level]??65,nearFish=game.state.fish.filter(f=>f.amount>0&&game.exploredAt(f.x,f.z)&&Math.hypot(f.x-this.look.x,f.z-this.look.z)<=fr*(this.schoolNodeIds.has(f.id)?1.18:1)).sort((a,b)=>Math.hypot(a.x-this.look.x,a.z-this.look.z)-Math.hypot(b.x-this.look.x,b.z-this.look.z)).slice(0,ANIMAL_RIG_RULES.maxSchools);
+      this.schoolNodeIds=this.fishSchools.update(nearFish,t,(x,z)=>game.waterAt(x,z));
       for (let i = 0; i < nFish; i++) {
         const f = game.state.fish[i];
-        const gone = f.amount <= 0 || !game.exploredAt(f.x, f.z);
+        const gone = f.amount <= 0 || !game.exploredAt(f.x, f.z) || this.schoolNodeIds.has(f.id);
         const bob = Math.sin(t * 1.6 + i) * 0.08;
         _p.set(f.x, fishMarkerHeight(game,f) + bob, f.z);
         _e.set(0, t * 0.4 + i, 0.12);

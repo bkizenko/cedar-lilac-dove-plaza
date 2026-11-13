@@ -117,9 +117,11 @@ export type Region = {
   clusterName: string;
 };
 
-export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "horse" | "cattle" | "bird";
+export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "horse" | "cattle" | "bird" | "wolf";
 
 export type Critter = {
+  /** Optional activity/herd state; present only in games started with animalBehaviourVersion 1. */
+  beh?:import("./animalBehaviour").AnimalBeh;
   domestication?:import("./domestication").DomesticationMemory;
   huntDefense?:{hunterId:number;expiresAt:number;nextAttackAt:number;lastX:number;lastZ:number};
   grazing?: {x:number;z:number};
@@ -653,6 +655,8 @@ export type GameState = {
   raidT: number;
   wildlife: Critter[];
   sheepVersion?:1;
+  /** 1 = activity-based animal behaviour (herds, rhythms, predators, gaits). Absent = legacy random-walk wildlife. */
+  animalBehaviourVersion?:1;
   horseVersion?:1;
   cattleVersion?:1;
   livestock?: Livestock[];
