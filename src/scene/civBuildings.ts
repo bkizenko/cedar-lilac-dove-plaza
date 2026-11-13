@@ -312,8 +312,9 @@ HOUSE.sandrill=g=>{const {w,d,r}=g;
   P(g,'cylinder',i%2?'wall2':'wall',[sw*1.08,1.4,sd*1.08],[ox,i*1.5,oz],[0,(r()-.5)*.35,0],10);P(g,'cylinder','trim',[sw*1.08+.5,.16,sd*1.08+.5],[ox,i*1.5+1.4,oz],[0,(r()-.5)*.2,0],10,1);
   if(i===0)P(g,'hip','wall2',[sw*1.3,.55,sd*1.3],[ox,0,oz],undefined,undefined,1);
   if(i===2)P(g,'sphere','wall',[sw*.9,.7,sd*.9],[ox,i*1.5+1.5,oz],undefined,undefined,1);}
+ P(g,'cylinder','wall2',[1.3,4.4,1.3],[-w*.28,0,-d*.2],[0,.3,0],10);P(g,'sphere','wall',[1.25,.6,1.25],[-w*.28,4.4,-d*.2],undefined,undefined,1); // wind-worn gnomon stack replaces the spike fins as the tall cliff mass
  g.B('accent',[.95,1.5,.12],[g.off*.4,0,d*.35+.04],0);P(g,'box','accent',[1.3,.2,.5],[g.off*.4,1.55,d*.35+.1],undefined,undefined,1);
- for(const s of[-1,1]){const fh=range(r,4,4.4);P(g,'wedge','roof',[.7,fh,1.6],[s*w*.2,2.4,-d*.05],[0,Math.PI/2*s,0],undefined,1);P(g,'hip','wall2',[1.5,.5,1.5],[s*w*.2,2.1,-d*.05],undefined,undefined,1);}
+ for(const s of[-1,1]){const fh=range(r,2.4,2.8);P(g,'wedge','roof',[1.1,fh,1.9],[s*w*.2,2.4,-d*.05],[0,Math.PI/2*s,0],undefined,1);P(g,'hip','wall2',[1.5,.5,1.5],[s*w*.2,2.1,-d*.05],undefined,undefined,1);}
  for(let i=0;i<4;i++)g.B('wall2',[1.1,.3,.6],[w*.36,i*.3,d*.1+i*.0-i*.55],1);return {entry:{x:g.off*.4,z:d*.35+.6,width:1}};};
 CIVIC.sandrill=g=>{const {w,d,r}=g,gap=1.3;
  // split monolith as two wind-worn 10-sided drums (not crates) with a talus skirt each; the slot between them still catches the sun
