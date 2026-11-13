@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import {Game} from '@/game/sim';
 import {WorldView} from '@/scene/world';
 import {wearTrail} from '@/game/trails';
-import {traceStep,tickRouteWear,setRoutesEnabled} from '@/game/routeWear';
+import {traceStep,tickRouteWear,setRoutesEnabled,routeCorridors,corridorWear,ROUTE_RULES} from '@/game/routeWear';
 import {findPath} from '@/game/navigation';
 import {galleryScene,galleryPose} from '@/scene/mapGallery';
 import {enableIrrigation,digDitch,ditchesOf} from '@/game/irrigation';
@@ -12,7 +12,7 @@ type Spec={gallery?:string;seed:number;version?:number;preset?:string;size?:numb
  prep?:{age?:number;buildings?:{type:string;x:number;z:number}[];irrigation?:{ditchFields:number[];waterMode?:boolean};fieldBlock?:{w:number;d:number;cols:number;rows:number;stages:string[];kind?:string;minGrade?:number}[];farms?:{x:number;z:number;rel?:boolean;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
  routes?:{from:[number,number];to:[number,number];trips:number;team?:number;jitter?:number}[];routesFresh?:boolean;routesIdle?:number;routesLegacy?:boolean;stations?:{x:number;z:number;stage:0|1|2|3;form?:string;team?:number;hp?:number}[];
- fov?:number;drawDistance?:'low'|'medium'|'high'|'ultra';measure?:boolean;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
+ fov?:number;drawDistance?:'low'|'medium'|'high'|'ultra';detail?:'standard'|'high'|'ultra';shadows?:boolean;measure?:boolean;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
 const w=window as unknown as {renderMap:(s:Spec)=>Promise<unknown>;__game?:Game;__view?:WorldView};
 {const g=HTMLCanvasElement.prototype.getContext as (this:HTMLCanvasElement,k:string,o?:object)=>unknown;
  (HTMLCanvasElement.prototype as unknown as {getContext:unknown}).getContext=function(this:HTMLCanvasElement,k:string,o?:object){return g.call(this,k,k.startsWith('webgl')?{...(o||{}),preserveDrawingBuffer:true}:o);};}
@@ -47,15 +47,18 @@ w.renderMap=async(S:Spec)=>{
   const game=new Game();game.testMode=true;game.revealMap=true;
   game.reset(S.seed,S.version,{...(S.preset?{preset:S.preset as never}:{}),...(S.size?{size:S.size as never}:{})});game.enterIsland();game.state.paused=true;
   const view=new WorldView(canvas);
-  if(S.quality)view.applyQuality(S.quality);
+  if(S.shadows!==undefined)view.shadowsEnabled=S.shadows;
+  if(S.quality||S.shadows!==undefined)view.applyQuality(S.quality??'med');
   if(S.prep){
-   const t=game.tribe(0);Object.assign(t,{food:900,wood:300,stone:100,seeds:400,cultivated:['grain','pulses','tubers']});game.vision.fill(2);
+   const t=game.tribe(0);Object.assign(t,{food:900,wood:300,stone:100,seeds:400,cultivated:['grain','pulses','tubers']});if((S.prep as {age?:number}).age!==undefined)(t as {age:number}).age=(S.prep as {age:number}).age;game.vision.fill(2);
    for(const pb of S.prep.buildings??[]){
     const before=game.state.buildings.length;
-    const ok=game.placeBuilding(pb.type as never,pb.x,pb.z);
+    // scan outward from the requested spot for the nearest legal site (the review village must not depend on lucky coordinates)
+    let px=pb.x,pz=pb.z;if((pb as {scan?:boolean}).scan!==false&&game.placementIssue(pb.type as never,px,pz,0)){let hit=false;for(let r=4;r<=60&&!hit;r+=4)for(let a=0;a<16&&!hit;a++){const ang=a/16*Math.PI*2+r*.37,x=pb.x+Math.cos(ang)*r,z=pb.z+Math.sin(ang)*r;if(!game.placementIssue(pb.type as never,x,z,0)){px=x;pz=z;hit=true;}}}
+    const ok=game.placeBuilding(pb.type as never,px,pz);
     const b=game.state.buildings.slice(before)[0] as unknown as {build:number;hp:number;plannedCost?:unknown}|undefined;
     if(!ok||!b){console.warn('building placement failed',pb.type,pb.x,pb.z,game.state.banner);continue;}
-    b.build=1;delete b.plannedCost;
+    b.build=1;delete b.plannedCost;if((pb as {as?:string}).as)(b as unknown as {type:string}).type=(pb as {as:string}).as;
    }
    // fieldBlock: find the nearest site where a cols x rows block of edge-to-edge plots is all placeable, then lay them down (edge-to-edge, as the snapped drag does).
    for(const blk of S.prep.fieldBlock??[]){
@@ -122,6 +125,7 @@ w.renderMap=async(S:Spec)=>{
  for(let k=0;k<30;k++){view.updateCamera(0);const cp=view.camera.position;if(cp.y>game.height(cp.x,cp.z)+4||view.pitch>=1.3)break;view.pitch+=.05;}
  view.updateCamera(0);
  if(S.drawDistance)view.setDrawDistance(S.drawDistance);
+ if(S.detail&&(view as unknown as {setDetailLevel?:(d:string)=>void}).setDetailLevel)(view as unknown as {setDetailLevel:(d:string)=>void}).setDetailLevel(S.detail);
  view.sync(game,5);view.sync(game,5);
  // filler chunks are generated under a per-frame time budget in play; here let them all finish so the picture is the settled one
  for(let k=0;k<600;k++){const bs=(view as unknown as {biomeScene?:{lastFiller:{deferred:number}|null}}).biomeScene;if(!bs?.lastFiller||bs.lastFiller.deferred===0)break;view.sync(game,5);}
@@ -136,21 +140,30 @@ w.renderMap=async(S:Spec)=>{
  const probes=(S.probe??[]).map(([px,pz])=>{const geo=(view as unknown as {terrain:{geometry:{attributes:Record<string,{count:number;getX:(i:number)=>number;getY:(i:number)=>number;getZ:(i:number)=>number;array:Float32Array}>}}}).terrain.geometry,pos=geo.attributes.position;let best=0,bd=1e9;for(let i=0;i<pos.count;i++){const d=Math.hypot(pos.getX(i)-px,pos.getZ(i)-pz);if(d<bd){bd=d;best=i;}}
   const c=geo.attributes.color.array,r=geo.attributes.surfaceRock?.array,sd=geo.attributes.surfaceSand?.array;return {at:[px,pz],h:+pos.getY(best).toFixed(2),color:[c[best*3],c[best*3+1],c[best*3+2]].map(v=>+v.toFixed(3)),rock:r?+r[best].toFixed(2):null,sand:sd?+sd[best].toFixed(2):null};});
  return {probes,nodes:{stone:near(game.state.stones),copper:near(game.state.copper),iron:near(game.state.iron)},build:Math.round(t1-t0),frame:Math.round(performance.now()-t1),calls:info.render.calls,tris:info.render.triangles,camp:[Math.round(c0.x),Math.round(c0.z)],size:game.world.size,waterY:game.world.waterY,
+  routeWear:S.routes?routeCorridors(game).map(c=>+corridorWear(c).toFixed(3)):undefined,routeRules:S.routes?{faint:ROUTE_RULES.faint,halfLifeSeconds:ROUTE_RULES.halfLifeSeconds}:undefined,
   dd:S.drawDistance,extra,camps:game.world.camps.map(c=>[Math.round(c.x),Math.round(c.z),c.team]),features:(game.world.features||[]).map((f:any)=>[f.kind,Math.round(f.x),Math.round(f.z)]).slice(0,40)};
 };
 /** Per-band cost for the distance-quality report: triangles by object class from the scene graph (what was submitted this frame), renderer counters, JS heap, and the median of 3 renders in ms (SwiftShader: relative only). */
 function measure(view:WorldView,game:Game,S:Spec){
- const groups:Record<string,{objects:number;instances:number;tris:number}>={};
+ const groups:Record<string,{objects:number;instances:number;tris:number}>={},tiers:Record<string,Record<string,{objects:number;instances:number;tris:number}>>={};
  const add=(k:string,n:number,i:number,t:number)=>{const g=groups[k]??(groups[k]={objects:0,instances:0,tris:0});g.objects+=n;g.instances+=i;g.tris+=t;};
  view.scene.traverse(o=>{const m=o as unknown as {isMesh?:boolean;isInstancedMesh?:boolean;visible:boolean;count?:number;geometry?:{index?:{count:number}|null;attributes:{position?:{count:number}}}};
   if(!m.isMesh&&!m.isInstancedMesh)return;let v:THREE.Object3D|null=o;while(v){if(!v.visible)return;v=v.parent;}
   const g=m.geometry;if(!g)return;const per=((g.index?g.index.count:g.attributes.position?.count)||0)/3,n=m.isInstancedMesh?(m.count??0):1;if(n<=0)return;
   const name=o.name||'';const k=name==='terrain'?'terrain':name.startsWith('filler-horizon')?'filler horizon crowns':name.startsWith('filler-far')?'filler far crowns+trunks':/^resource-(far|.*-t[01]|stumps|contact)/.test(name)||name.startsWith('resource-')?(name.startsWith('resource-far')?'sim far crowns+trunks':'sim trees near/mid'):name.startsWith('people')?'people':name.startsWith('nonblocking')?'ground dressing':/water|river|sea/.test(name)?'water':'buildings, props, other';
-  add(k,1,n,per*n);});
+  add(k,1,n,per*n);
+  // tier of every drawn mesh, read from the layer's own mesh names (carved-h-<variant>#<tier>, people:t<tier>|.., resource-<species>-v<n>-t<tier>, ground-item:..|l<tier>)
+  const tn=o.name||'';let cls:string|null=null,tier=-1,mm:RegExpMatchArray|null;
+  if((mm=tn.match(/^carved-h-.*#(\d)(~.*)?$/))){cls='buildings (carved)';tier=+mm[1];}else if(tn==='carved-h-impostors'){cls='buildings (carved)';tier=3;}
+  else if((mm=tn.match(/^people:t(\d)\|/))){cls='people';tier=+mm[1];}else if(tn.startsWith('people:far|')){cls='people';tier=2;}
+  else if((mm=tn.match(/^resource-.*-t(\d)$/))){cls='trees (sim)';tier=+mm[1];}else if(tn.startsWith('resource-far')){cls='trees (sim)';tier=2;}else if(tn.startsWith('filler-')){cls='trees (filler)';tier=2;}
+  else if((mm=tn.match(/^ground-item:.*\|l(\d)$/))){cls='ground items';tier=+mm[1];}
+  if(cls){const g2=tiers[cls]??(tiers[cls]={});const t2=g2['t'+tier]??(g2['t'+tier]={objects:0,instances:0,tris:0});t2.objects++;t2.instances+=n;t2.tris+=Math.round(per*n);}});
  const times:number[]=[];const gl=view.renderer.getContext();for(let i=0;i<3;i++){const t=performance.now();view.render();gl.finish();times.push(performance.now()-t);}times.sort((a,b)=>a-b);
  // CPU cost of the scene sync (tree refresh included) as the camera pans, ms per sync: the real, device-independent half of the frame cost
  const syncMs:number[]=[];{const lx=view.look.x,lz=view.look.z;for(let k=0;k<7;k++){view.look.x=lx+k*7;view.look.z=lz-k*5;view.updateCamera(0);const t=performance.now();view.sync(game,.12);syncMs.push(performance.now()-t);}view.look.x=lx;view.look.z=lz;view.updateCamera(0);view.sync(game,.12);}syncMs.sort((a,b)=>a-b);
  const mem=(performance as unknown as {memory?:{usedJSHeapSize:number}}).memory,i=view.renderer.info;
  const bs=(view as unknown as {biomeScene?:{lastFiller:unknown}}).biomeScene;
- return {groups,ms:Math.round(times[1]),syncMs:+syncMs[3].toFixed(2),msAll:times.map(Math.round),heapMB:mem?Math.round(mem.usedJSHeapSize/1048576):null,geometries:i.memory.geometries,textures:i.memory.textures,programs:i.programs?.length,filler:bs?.lastFiller,far:view.camera.far,fog:(view.scene.fog as THREE.FogExp2).density,bands:view.getDrawBands()};
+ const cp=view.camera.position,lk=view.look,render={shadowMapEnabled:view.renderer.shadowMap.enabled,sunCastShadow:view.sun.castShadow,shadowMap:view.sun.shadow.mapSize.x,pixelRatio:view.renderer.getPixelRatio(),quality:view.quality,composerPasses:view.composer?view.composer.passes.length:0,eyeToFocusHoriz:+Math.hypot(cp.x-lk.x,cp.z-lk.z).toFixed(1),eyeToFocus3d:+Math.hypot(cp.x-lk.x,cp.y-lk.y,cp.z-lk.z).toFixed(1),camDist:+view.dist.toFixed(1),pitch:+view.pitch.toFixed(3)};
+ return {render,groups,tiers,ms:Math.round(times[1]),syncMs:+syncMs[3].toFixed(2),msAll:times.map(Math.round),heapMB:mem?Math.round(mem.usedJSHeapSize/1048576):null,geometries:i.memory.geometries,textures:i.memory.textures,programs:i.programs?.length,filler:bs?.lastFiller,far:view.camera.far,fog:(view.scene.fog as THREE.FogExp2).density,bands:view.getDrawBands()};
 }

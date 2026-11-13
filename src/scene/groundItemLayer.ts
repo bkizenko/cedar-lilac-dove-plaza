@@ -18,6 +18,7 @@ type Slot={inst:ItemInstancer;n:number;key:string};
 export class GroundItemLayer{
  private scene:THREE.Scene;private root=new THREE.Group();private slots=new Map<string,Slot>();private disposed=false;
  private m=new THREE.Matrix4();private q=new THREE.Quaternion();private p=new THREE.Vector3();private one=new THREE.Vector3(1,1,1);private up=new THREE.Vector3(0,1,0);
+ private nearUsed=0;private midUsed=0;
  stats={piles:0,placements:0,instancers:0,draws:0,triangles:0};
  constructor(scene:THREE.Scene){this.scene=scene;this.root.name='ground-items';scene.add(this.root);}
  private slot(key:string,make:()=>THREE.BufferGeometry|null,shadows:boolean):Slot|null{
@@ -27,7 +28,8 @@ export class GroundItemLayer{
   s={inst:new ItemInstancer(g),n:0,key};s.inst.mesh.name='ground-item:'+key;s.inst.mesh.castShadow=shadows;s.inst.mesh.receiveShadow=true;this.root.add(s.inst.mesh);this.slots.set(key,s);return s;
  }
  private put(g:Game,kind:string,o:{era:number;skin:string|null;condition:number;x:number;z:number;count:number;seed:number;camera:THREE.Vector3;quality:'low'|'med'|'high';shadows:boolean}){
-  const bucket=conditionBucket(o.condition),d=Math.hypot(o.x-o.camera.x,o.z-o.camera.z),lod:LodTier=lodForDistance(d,o.quality);
+  const bucket=conditionBucket(o.condition),d=Math.hypot(o.x-o.camera.x,o.z-o.camera.z);let lod:LodTier=lodForDistance(d,o.quality);
+  {const n0=shownCount(o.count);if(lod===0&&this.nearUsed+n0>GROUND_ITEM_RULES.maxNearPlacements)lod=1;if(lod===1&&this.midUsed+n0>GROUND_ITEM_RULES.maxMidPlacements)lod=2;if(lod===0)this.nearUsed+=n0;else if(lod===1)this.midUsed+=n0;}
   const eq={kind,era:o.era,skin:o.skin,condition:CONDITION_BUCKET_MID[bucket]},req=requestFor(eq,lod);if(!req)return;
   const key=`${req.id}|${req.era}|${req.skin??''}|c${bucket}|l${lod}`,s=this.slot(key,()=>{const mesh=groundItemMesh(eq,lod,0);return mesh?meshGeometry(mesh):null;},o.shadows);if(!s)return;
   const n=shownCount(o.count),y0=g.travelHeight(o.x,o.z),yaw0=(hash32(o.seed,kind)%628)/100;
@@ -41,7 +43,7 @@ export class GroundItemLayer{
  /** Rebuild the placements from the simulation's records. Cheap: bounded by the number of real parcels in view. */
  sync(g:Game,camera:THREE.Vector3,quality:'low'|'med'|'high'='med',shadows=false){
   if(this.disposed)return;
-  for(const s of this.slots.values())s.n=0;this.stats.piles=0;this.stats.placements=0;
+  this.nearUsed=0;this.midUsed=0;for(const s of this.slots.values())s.n=0;this.stats.piles=0;this.stats.placements=0;
   const view=GROUND_ITEM_RULES.viewMetres[quality],ageEra=itemEraForAge(g.state.age);
   for(const parcel of g.state.droppedWeaponCargo??[]){
    if(Math.hypot(parcel.x-camera.x,parcel.z-camera.z)>view||!g.visibleAt(parcel.x,parcel.z))continue;

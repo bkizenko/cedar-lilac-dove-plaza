@@ -88,7 +88,7 @@ test('equipment-to-mesh mapping: weapons, rig items, cargo and tools resolve; un
  const hs=heldItemMesh('shield',{skin:'skoldar',lod:0,shieldKind:'hideShield'}),bs=heldItemMesh('shield',{skin:'skoldar',lod:0,shieldKind:'bronzeShield'});assert.notEqual(hash(hs),hash(bs));
  assert.equal(heldItemMesh('standard-nope',{lod:0}),null);
  assert.equal(requestFor({kind:'spear',broken:true}).variant,'broken');
- assert.equal(lodForDistance(5),0);assert.equal(lodForDistance(25),1);assert.equal(lodForDistance(90),2);
+ assert.equal(lodForDistance(5),0);assert.equal(lodForDistance(100),1);assert.equal(lodForDistance(260),2);
 });
 test('ground and inventory placements sit on the ground, are finite and are scaled',()=>{
  for(const kind of ['spear','bow','bladeSword','handAxe','shield','pot','basket','ballista','hoe','torch','waterskin']){

@@ -57,7 +57,7 @@ let sharp=null;try{sharp=createRequire('/home/claude/.npm-global/lib/node_module
 const browser=await pw.chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
 const page=await browser.newPage({viewport:{width:W,height:H},deviceScaleFactor:1});
 page.on('pageerror',e=>console.error('[pageerror]',e.message));
-const lite=!fs.existsSync(path.join(root,'node_modules/three/examples/jsm/postprocessing/EffectComposer.js'));
+const lite=(!fs.existsSync(path.join(root,'node_modules/three/examples/jsm/postprocessing/EffectComposer.js'))||!!process.env.THREE_LITE);
 await page.goto(`http://127.0.0.1:${server.address().port}/tools/render-preview/${lite?'three-lite.html':'three.html'}`);
 await page.waitForFunction(()=>window.threeReady===true,null,{timeout:60000});
 await page.evaluate(([s,o])=>window.renderSceneThree(s,o),[{...scene,pixelRatio:1},{tone:'neutral',ao:false}]);
