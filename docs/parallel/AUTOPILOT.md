@@ -1083,6 +1083,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 20:00 | Claude | 42 (since 19:00 ET, all branches) | 31 landed by PM 20:10 | 3 (draw distance setting + filler forest; armor/helmet wear from condition; item/ground-item detail) | landing works; first-person design doc only |
 | 11-12 20:00 | Grok | 0 | 0 | 0 | out; World rows (M2-11, M2-14, M2-16, CAT-117, M4-07..09, M5-04, ASTRA audio/rig) queued for Claude/PM background agents |
 | 11-12 20:00 | Total | ~70 | integration lag 0 after 20:10 PM landing (27 commits: integration 23 + codex caravan 3) | ~5 | focused sweep 144 tests, 142 pass after adding `three` locally (draw-distance, filler-forest 16/16), 0 fail; tsc diff nil; open ~259 not-started, ~138 done/live by table count |
+| 11-12 21:00 | Codex | 12 (since 20:00 ET, all branches) | 5 | 0 new live (typed owned-pen livestock commands + pack trade preflight source landed) | on target; posting ~30 min |
+| 11-12 21:00 | Claude | 24 (since 20:00 ET, all branches) | 19 landed by PM 21:10 | 2 (shield wear from condition; neighbour memory read model + UI) | lanes A-D steady; background agent wired M2-14 prehistory at game start and M2-11 departures/arrivals (06d19ded) |
+| 11-12 21:00 | Grok | 0 | 0 | 0 | out; Claude PM spawned civic-wiring agent for its idle World rows |
+| 11-12 21:00 | Total | ~36 | integration lag 0 after 21:10 PM landing | ~2 | focused sweep 131 tests 122 pass 9 skip 0 fail, civic 50/50 after merge; tsc diff nil in game code; M2-11/14/16, M4-07..09, CAT-117 now run in Game.step, still source-pushed-not-live until deploy qualifies |
 
 ## Process improvements
 
