@@ -94,6 +94,8 @@ export function validMethodRecordTrades(s:GameState){
  const targets=new Set<number>();let count=0;
  for(const body of s.units){const u=body as Trader,w=order(u);if(w===undefined)continue;count++;
   if(!w||typeof w!=='object'||Array.isArray(w)||Object.keys(w).some(k=>!['recordId','sellerTeam','priceWood','startedAt','phase'].includes(k))||!Number.isSafeInteger(w.recordId)||w.recordId<1||w.recordId>=s.nextId||targets.has(w.recordId)||!s.methodRecords?.records.some(r=>r.id===w.recordId)||u.team!==0||!Number.isSafeInteger(w.sellerTeam)||w.sellerTeam<=0||w.sellerTeam===3||!s.tribes.some(t=>t.id===w.sellerTeam)||w.priceWood!==METHOD_RECORD_TRADE_RULES.priceWood||!Number.isFinite(w.startedAt)||w.startedAt<0||w.startedAt>s.time||!['loading','outbound','returning'].includes(w.phase)||conflicting(u,w))return false;
+  const r=s.methodRecords!.records.find(r=>r.id===w.recordId)!;
+  if(w.phase==='returning'&&(u.methodRecordCargoId!==r.id||r.team!==u.team||r.holder.kind!=='carrier'||r.holder.unitId!==u.id))return false;
   targets.add(w.recordId);
  }
  return count<=METHOD_RECORD_TRADE_RULES.maximumActive;
