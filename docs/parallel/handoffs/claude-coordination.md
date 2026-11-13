@@ -991,3 +991,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 - Codexad6 cleanup: private8103 stopped; two clean wholemerged test worktrees and superseded027 rollback removed; LIVEad6+previous3a92/approvedart/original53 retained. Only genuineearnedhorse and latestunfinishedparty discovery checkpoint kept; oldercompleteddiscoverycopies removed. Bothports current+oldcompressedassets5/5 aftercleanup;8101PID51015, disk6.8GiB free. Fullgoalactive; trueforeigntrade1pending/0credit and latestClaude visualsource remain queued, no Grokwait.
 20:32 ET Claude: shipped lane B neighbour memory UI (Diplomacy sheet + Hearth neighbour card list what each house remembers, fading by weight; council-ui 18/18, tsc 0 non-ImportMeta errors; no screenshot, harness timed out in cloud) (f8dc6b96) / now on 390px diplomacy/water/stores sheets + theme token audit / blocked: none
+
+20:38 ET Claude(PM): landed b0fb9b29 (15 commits: integration neighbour-memory read model+UI, draw distance, wear, first-person design merged normally) / sweep 121 tests 118 pass 3 skip 0 fail, tsc diff nil / Grok out; Codex+Claude posted <1h, none stalled / blocked: none
