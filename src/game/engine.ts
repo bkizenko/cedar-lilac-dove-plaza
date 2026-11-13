@@ -44,7 +44,7 @@ import { probeWorld } from "./audioProbe";
 import { saveGame, loadRaw, hasSave, protectGame, exportGame, saveTestLabGame, loadTestLabGame } from "./save";
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
-import { eventInsideUi, wheelZoomFactor } from "./cameraInput";
+import { cameraOwnsWheel, wheelZoomFactor } from "./cameraInput";
 
 export type VillageSaveResult={saved:boolean;message:string;serialized?:string};
 export type VillageImportResult={applied:boolean;saved:boolean;message:string};
@@ -296,6 +296,13 @@ export class Engine {
   private fertilityKey='';
   /** Toggle the quarter turn for a turnable building (R key or the Rotate button). */
   rotatePlacement(){const t=this.game.state.placing;if(!t||!turnableBuilding(t)||(scalablePlot(t)&&this.plotSize))return false;this.quarterTurn=!this.quarterTurn;this.updateGhost(true);this.pushHud();return true;}
+  /** True while a gate or any turnable building is being placed: the rotate buttons and R/Q/E keys act. */
+  canRotateAnyPlacement(){return this.game.state.placing==='gate'||this.canRotatePlacement();}
+  /** One explicit step: -1 left (Q), +1 right (E or R). Gates step their four facings; other buildings flip the quarter turn. */
+  rotatePlacementBy(dir:1|-1){
+    if(this.game.state.placing==='gate'){this.setGateFacing(rotateGateFacing(this.gateFacing,dir));return true;}
+    return this.rotatePlacement();
+  }
   canRotatePlacement(){const t=this.game.state.placing;return !!t&&t!=='gate'&&turnableBuilding(t);}
   private gateFacingExplicit=false;
   ghostPos = { x: 0, z: 0 };
@@ -527,11 +534,9 @@ export class Engine {
   private onKeyDown = (e: KeyboardEvent) => {
     if(e.code==='Escape'&&this.waterDraft)this.cancelWaterEngineering();
     const target=e.target as HTMLElement|null;
-    if(e.code==='KeyR'&&this.game.state.placing==='gate'&&!e.metaKey&&!e.ctrlKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
-      e.preventDefault();if(!e.repeat)this.setGateFacing(rotateGateFacing(this.gateFacing,e.shiftKey?-1:1));return;
-    }
-    if(e.code==='KeyR'&&this.canRotatePlacement()&&!e.metaKey&&!e.ctrlKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
-      e.preventDefault();if(!e.repeat)this.rotatePlacement();return;
+    const rot=e.code==='KeyR'?(e.shiftKey?-1:1):e.code==='KeyQ'?-1:e.code==='KeyE'?1:0;
+    if(rot&&this.canRotateAnyPlacement()&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
+      e.preventDefault();if(!e.repeat)this.rotatePlacementBy(rot);return;
     }
     this.keyboard.key(e);
   };
@@ -542,7 +547,8 @@ export class Engine {
 
   private onWheel = (e: WheelEvent) => {
     // UI scrolls itself: never preventDefault or zoom for events that start inside interface chrome.
-    if (eventInsideUi(e.target)) return;
+    // Only the bare canvas (or empty page) owns the wheel: any other element, known HUD class or not, scrolls itself.
+    if (!cameraOwnsWheel(e.target, this.canvas)) return;
     e.preventDefault();
     this.view.dist *= wheelZoomFactor(e);
   };

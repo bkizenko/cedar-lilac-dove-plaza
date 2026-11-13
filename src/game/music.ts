@@ -1,3 +1,4 @@
+import {musicDuck,musicRestSeconds} from "../scene/audioMix";
 export type MusicStage = "village" | "adventure" | "battle" | "folk" | "celtic" | "harp";
 export const TRACKS: Record<MusicStage, { title: string; file: string }> = {
   village: { title: "Meditation Impromptu 01", file: "/audio/meditation-impromptu-01.mp3" },
@@ -25,6 +26,9 @@ export class AcousticScore {
   volume = 0.2;
   calm = true;
   muted = false;
+  /** The player's own pause/play for the recorded score (kept apart from the master mute). */
+  userPaused = false;
+  private duck = 1;
   error = "";
   private seasonMul = 1;
   private tracks = new Map<MusicStage, HTMLAudioElement>();
@@ -42,7 +46,7 @@ export class AcousticScore {
         const a = new Audio(TRACKS[stage].file);
         a.loop = false;
         a.addEventListener("ended", () => {
-          if(stage===this.stage)this.rests.set(stage, 20 + Math.random() * 20);
+          if(stage===this.stage)this.rests.set(stage, musicRestSeconds(Math.random()));
         });
         a.preload = stage===this.stage?"auto":"metadata";
         a.volume = 0;
@@ -54,7 +58,7 @@ export class AcousticScore {
       document.addEventListener("visibilitychange", this.visibility);
     }
     this.error = "";
-    if(!document.hidden&&!this.muted){this.rests.delete(this.stage);this.playCurrent();}
+    if(!document.hidden&&!this.silent){this.rests.delete(this.stage);this.playCurrent();}
   }
   private playbackError = (error: unknown) => {
     // Opening a paused menu can intentionally cancel a pending play().
@@ -69,13 +73,13 @@ export class AcousticScore {
   private visibility = () => {
     for (const [stage, a] of this.tracks) {
       if (document.hidden) a.pause();
-      else if (stage===this.stage&&!this.muted&&!this.rests.has(stage)) this.playCurrent();
+      else if (stage===this.stage&&!this.silent&&!this.rests.has(stage)) this.playCurrent();
     }
   };
   update(requested: MusicStage, dt: number, _paused: boolean, seasonMul = 1) {
     if (!this.tracks.size || this.disposed) return;
     // Planning menus pause the simulation, not the calm soundtrack.
-    if (document.hidden || this.muted) return;
+    if (document.hidden || this.silent) return;
     if(this.skipped&&this.skipped.context!==requested)this.skipped=null;
     this.requested=requested;
     requested=this.skipped?.stage??requested;
@@ -124,13 +128,23 @@ export class AcousticScore {
     this.rests.delete(next);this.error='';
     const track=this.tracks.get(next);if(track)track.currentTime=0;
     this.levels[next]=1;this.applyVolume();
-    if(!this.muted&&!document.hidden)this.playCurrent();
+    if(!this.silent&&!document.hidden)this.playCurrent();
+  }
+  private get silent(){return this.muted||this.userPaused;}
+  /** Nature ambience level (0..1 bus gain): the score steps down under it so birds, wind and water stay clear. */
+  setAmbience(gain:number){this.duck=musicDuck(gain);this.applyVolume();}
+  /** Player pause/play. Pausing holds the current piece in place; playing resumes it. */
+  setUserPaused(v:boolean){
+    if(this.userPaused===v)return;this.userPaused=v;
+    if(v)for(const t of this.tracks.values())t.pause();
+    else if(!this.muted){if(!this.tracks.size)this.unlock();else if(!document.hidden){this.rests.delete(this.stage);this.playCurrent();}}
+    this.applyVolume();
   }
   private playCurrent(){
     const track=this.tracks.get(this.stage);if(!track)return;
     void track.play().then(()=>{this.error="";}).catch(this.playbackError);
   }
-  get status(){const track=this.tracks.get(this.stage);return this.muted?"Muted":this.error?this.error:this.rests.has(this.stage)?"Quiet interval between pieces":!track||track.paused?"Ready — enable music":"Playing";}
+  get status(){const track=this.tracks.get(this.stage);return this.muted?"Muted":this.userPaused?"Paused":this.error?this.error:this.rests.has(this.stage)?"Quiet interval between pieces":!track||track.paused?"Ready — enable music":"Playing";}
   setVolume(v: number) {
     this.volume = Math.max(0, Math.min(1, v));
     this.applyVolume();
@@ -143,7 +157,7 @@ export class AcousticScore {
   }
   private applyVolume() {
     for (const [s, a] of this.tracks)
-      a.volume = this.muted ? 0 : this.volume * this.levels[s] * this.seasonMul;
+      a.volume = this.silent ? 0 : this.volume * this.levels[s] * this.seasonMul * this.duck;
   }
   dispose() {
     this.disposed = true;

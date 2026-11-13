@@ -47,6 +47,8 @@ export class GameAudio {
   private applySettings() {
     this.muted = this.settings.muted;
     this.score.setVolume(busGain(this.settings, 'music'));
+    this.score.setAmbience(busGain(this.settings, 'ambience'));
+    this.score.setUserPaused(this.settings.musicPaused);
     this.score.setMuted(this.muted || (this.proc.active && proceduralMusicOn()));
     this.proc.setSettings(this.settings);
     if (this.ctx) {
@@ -259,6 +261,17 @@ export class GameAudio {
       saveSettings(typeof localStorage === "undefined" ? null : localStorage, this.settings);
       this.applySettings();
     }
+  }
+  /** Player pause/play for the music only; nature ambience and effects keep playing. */
+  setMusicPaused(p: boolean) {
+    this.settings = { ...this.settings, musicPaused: p };
+    saveSettings(typeof localStorage === "undefined" ? null : localStorage, this.settings);
+    this.applySettings();
+  }
+  toggleMusicPaused() { this.setMusicPaused(!this.settings.musicPaused); }
+  skipTrack() {
+    if (this.settings.musicPaused) this.setMusicPaused(false);
+    this.score.skip();
   }
   setMusicVolume(v: number) {
     this.setVolume("music", v);
