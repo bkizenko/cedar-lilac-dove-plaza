@@ -308,10 +308,13 @@ const BUILDERS:Record<string,(c:Ctx)=>void>={decurrent:buildDecurrent,whorl:buil
 export type TreeGeometry={geometry:THREE.BufferGeometry;/** crown centre and half extents (leaf vertices) for impostors and shadows */crownCenter:V3;crownHalf:V3;height:number;trunkRadius:number;triangles:number};
 const cache=new Map<string,TreeGeometry>();
 /** Deterministic: the same (species, variant, lod) always gives the same geometry. */
-export function botanicalTree(speciesId:string,variant:number,lod:Lod=0):TreeGeometry{
- const v=((variant%VARIANTS_PER_SPECIES)+VARIANTS_PER_SPECIES)%VARIANTS_PER_SPECIES,key=`${speciesId}|${v}|${lod}`,hit=cache.get(key);if(hit)return hit;
- const sp=SPECIES_BY_ID[speciesId];if(!sp)throw new Error('unknown tree species '+speciesId);
- const idx=BOTANICAL_SPECIES.indexOf(sp),seed=idx*7919+v*104729+17,m=AGE[['mature','young','old'][v] as 'mature'];
+/** `cardScale` multiplies every leaf-card count of the species (tree detail steps); 1 is the original tree. Only one non-1 scale is kept cached at a time. */
+export function botanicalTree(speciesId:string,variant:number,lod:Lod=0,cardScale:number=1):TreeGeometry{
+ const v=((variant%VARIANTS_PER_SPECIES)+VARIANTS_PER_SPECIES)%VARIANTS_PER_SPECIES,ck=cardScale===1?'':`|c${Math.round(cardScale*100)}`,key=`${speciesId}|${v}|${lod}${ck}`,hit=cache.get(key);if(hit)return hit;
+ if(ck)for(const k of [...cache.keys()])if(k.includes('|c')&&!k.endsWith(ck))cache.delete(k);
+ const sp0=SPECIES_BY_ID[speciesId];if(!sp0)throw new Error('unknown tree species '+speciesId);
+ const sp=cardScale===1?sp0:{...sp0,cards:[Math.max(sp0.cards[0]?3:0,Math.round(sp0.cards[0]*cardScale)),Math.max(sp0.cards[1]?2:0,Math.round(sp0.cards[1]*cardScale))] as [number,number]};
+ const idx=BOTANICAL_SPECIES.indexOf(sp0),seed=idx*7919+v*104729+17,m=AGE[['mature','young','old'][v] as 'mature'];
  const a=new Acc(),rnd=rngFrom(seed),H=sp.H*m.h*(.94+.12*rngFrom(seed+3)());
  const crown:Crown={c:[0,H*.5,0],r:[sp.crownR,H*.45,sp.crownR],top:sp.top,bottom:sp.bottom,dark:.55};
  const ctx:Ctx={sp,v,lod,a,r:rnd,rd:rngFrom(seed*3+11),bark:barkFn(sp,rngFrom(seed+9)()),H,age:v,crown,sideFor:()=>1};
