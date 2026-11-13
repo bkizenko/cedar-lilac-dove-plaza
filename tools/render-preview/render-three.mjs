@@ -44,15 +44,15 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH 
 
 async function renderOne(name, outPath, tone = flags.tone || 'neutral') {
   const scene = await SCENES[name]({ rig: flags.rig || (flags.terrain === 'carved' ? 'tuned' : 'golden'), terrain: flags.terrain || 'natural' }), W = scene.width || 800, H = scene.height || 500;
-  const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 2 });
+  const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: Number(flags.scale || 2) });
   page.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.error('[page]', m.text()); });
   page.on('pageerror', e => console.error('[pageerror]', e.message));
   await page.goto(base + ((fs.existsSync(path.join(root, 'node_modules/three/examples/jsm/postprocessing/EffectComposer.js')) && !process.env.THREE_LITE) ? '/tools/render-preview/three.html' : '/tools/render-preview/three-lite.html'));
   await page.waitForFunction(() => window.threeReady === true, null, { timeout: 60000 });
-  const res = await page.evaluate(([s, o]) => window.renderSceneThree(s, o), [{ ...scene, width: W, height: H, pixelRatio: 2 }, { tone, ao: !flags['no-ao'] }]);
+  const res = await page.evaluate(([s, o]) => window.renderSceneThree(s, o), [{ ...scene, width: W, height: H, pixelRatio: Number(flags.scale || 2) }, { tone, ao: !flags['no-ao'] }]);
   console.error('[three]', name, JSON.stringify(res));
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  const raw = await page.locator('#wrap').screenshot();
+  const raw = await page.locator('#wrap').screenshot({ timeout: Number(flags['shot-timeout'] || 30000) });
   let buf = raw;
   if (sharp) { buf = await sharp(raw).png({ compressionLevel: 9 }).toBuffer(); if (buf.length > 1.45e6) buf = await sharp(raw).png({ compressionLevel: 9, palette: true, quality: 95, colours: 256, dither: .6 }).toBuffer(); }
   fs.writeFileSync(outPath, buf); await page.close();

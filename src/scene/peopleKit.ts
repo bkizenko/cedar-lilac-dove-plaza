@@ -121,10 +121,12 @@ function hairParts(c:KitCtx,style:HairStyle,covered:boolean){
   case 'curls':out.push(cap(2),...Array.from({length:7},(_,i)=>{const a=i/7*Math.PI*2;return Q(hair,'cone',[.09,.09,.09],[Math.sin(a)*.13*hs,1.0+(i%2)*.04,Math.cos(a)*.12*hs-.02],1,undefined,4);}));break;
  }
 }
+/** near-black hair on dark skin reads as one dark cube at distance: lift a very dark beard toward a warm brown so the jaw keeps a shape */
+const beardCol=(c:KitCtx)=>{const h=c.pal.hair,n=parseInt(h.slice(1),16),l=((n>>16&255)+(n>>8&255)+(n&255))/3;return l<50?mix(h,'#6a5446',.45):h;};
 const BEARD:Record<BeardStyle,(c:KitCtx)=>RigPart[]>={
  none:()=>[],stubble:c=>[Q(mix(c.pal.hair,c.pal.skin,.55),'box',[.17*c.look.face.jaw,.09,.035],[0,.94,.095],0)],
  short:c=>[Q(c.pal.hair,'box',[.19*c.look.face.jaw,.1,.07],[0,.94,.085],1),Q(c.pal.hair,'box',[.11,.025,.04],[0,1.0,.125],0)],
- full:c=>[Q(c.pal.hair,'box',[.2*c.look.face.jaw,.2,.09],[0,.82,.07],1),Q(c.pal.hair,'box',[.13,.03,.045],[0,.99,.125],0)],
+ full:c=>[Q(beardCol(c),'box',[.19*c.look.face.jaw,.15,.065],[0,.85,.08],1),Q(beardCol(c),'box',[.13,.03,.045],[0,.99,.125],0)],
  braided:c=>[Q(c.pal.hair,'box',[.18*c.look.face.jaw,.14,.08],[0,.86,.085],1),Q(c.pal.hair,'cylinder',[.045,.2,.04],[0,.7,.12],1,undefined,5),Q(c.pal.accent,'cylinder',[.056,.025,.056],[0,.74,.12],0,undefined,5)],
  moustache:c=>[Q(c.pal.hair,'box',[.15,.03,.05],[0,1.0,.125],0),Q(c.pal.hair,'box',[.03,.07,.04],[-.065,.94,.12],0),Q(c.pal.hair,'box',[.03,.07,.04],[.065,.94,.12],0)],
 };
