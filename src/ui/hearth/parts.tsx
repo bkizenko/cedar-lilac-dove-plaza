@@ -23,6 +23,7 @@ import {CommanderStrip,BoatStrip} from './commandPanels';
 import {RES_ICON,RES_NAME,bldIcon,PLAN_ICON,PLAN_NAME,POSTURE_ICON,POSTURE_NAME,FORMATION_ICON,ago,freshness} from './icons';
 
 import {cx,IconBtn,Stat} from './kit';
+import {TraderVerbs} from '../TraderVerbs';
 import {SupplyBar,PriorityStack,useGlanceAlerts,OverlayCanvas,OverlayToggles} from './glance';
 import type {Alert} from './glanceModel';
 export {cx,IconBtn,Stat};
@@ -176,6 +177,8 @@ export function selectionStats(sel:HudSnapshot['selection'],hud:HudSnapshot,coun
  if(sel.queue)out.push({k:'queue',icon:<ClipboardList size={22}/>,value:sel.queue,label:sel.queue});
  return out.slice(0,4);
 }
+/** A selected foreign person or held prisoner shows its hostile verbs on the card itself, not behind More orders. */
+function SelectedForeignVerbs({engine}:{engine:Engine}){const u=engine.game.state.units.find(p=>p.selected&&p.hp>0&&(p.team!==0||!!(p as {prisoner?:unknown}).prisoner));return u?<TraderVerbs engine={engine} strangerId={u.id}/>:null;}
 export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engine|null;onOffer:(t:number)=>void}){
  const sel=hud.selection,[more,setMore]=useState(false),[info,setInfo]=useState(false),[tab,setTab]=useState('');
  useEffect(()=>{setMore(false);setInfo(false);setTab('');},[sel.kind,sel.name,sel.buildingId]);
@@ -198,6 +201,7 @@ export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engin
    <IconBtn label="Details" tip={sel.info} active={info} onClick={()=>setInfo(v=>!v)} small><Info size={24}/></IconBtn>
    <IconBtn label="Deselect" tip="Esc" onClick={()=>engine?.clearSelection()} small><X size={24}/></IconBtn>
   </header>
+  {engine&&person&&<SelectedForeignVerbs engine={engine}/>}
   {stats.length>0&&<div className="hw-sel-meta">{stats.map(s=><Stat key={s.k} icon={s.icon} value={s.value} label={s.label} tone={s.tone} className="hw-chip"/>)}</div>}
   {info&&<p className="hw-info">{sel.info}</p>}
   {tabs.length>1&&<div className="hw-ctx" role="tablist" aria-label="Orders">{tabs.map(t=><GameTooltip key={t.id} title={t.label}><button type="button" role="tab" aria-selected={ctx===t.id} aria-label={t.label} className={cx('hw-ctx-tab',ctx===t.id&&'is-on')} onClick={()=>setTab(t.id)}>{t.icon}<span>{t.label}</span></button></GameTooltip>)}</div>}
