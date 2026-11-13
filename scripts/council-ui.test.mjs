@@ -131,3 +131,8 @@ test('parties abroad card names kind, crew, stores and flags trouble; empty is s
  const html=renderToStaticMarkup(h(PartiesCard,{parties}));
  assert.match(html,/Scout/);assert.match(html,/Trade caravan/);assert.match(html,/3 people, 120 m/);assert.match(html,/1 person/);assert.match(html,/Stores running low\./);assert.equal(renderToStaticMarkup(h(PartiesCard,{parties:[]})),'');
 });
+
+test('diplomacy trust and grudge bars expose meter semantics',()=>{
+ const html=renderToStaticMarkup(h(DiplomacySheet,{neighbours:nb,onAct(){}}));
+ assert.equal((html.match(/role="meter"/g)||[]).length,nb.length*2);assert.match(html,/aria-label="Trust in /);assert.match(html,/aria-label="Grudge held by /);assert.match(html,/aria-valuemax="100"/);
+});
