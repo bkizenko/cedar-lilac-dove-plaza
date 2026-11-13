@@ -39,7 +39,7 @@ export function advanceRulers(g:Game){
  sampleClimate(g,r);
  if(decisionsEnabled(g))beginCivic(g); // M2-14: prehistory recorded once at the start (cheap no-op afterwards)
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);npcMarriages(g);expireClaims(g);harvestGathering(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
+ while(s.rulers!.year<target&&guard++<4){const genBefore:Record<string,number>={};for(const [k,v] of Object.entries(s.rulers!.societies))genBefore[k]=v.dynasty.generation;s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);fadeGrudges(g,genBefore);npcMarriages(g);expireClaims(g);harvestGathering(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -154,7 +154,7 @@ export function settleWards(g:Game){
  if(done.length)st(g).rulers={...st(g).rulers!,wards:keep,wardReturns:[...(r.wardReturns??[]),...back].slice(-24)};
  // Death in the other house's custody: trust drops (breakPact tie change) and the home house holds a 'defence' claim on the host (no legitimacy cost;
  // grantClaim still gates by era/feature/known and refuses duplicates).
- for(const w of diedInCustody){const a=Number(w.from),b=Number(w.to);tieChange(g,a,b,'breakPact',livingPeople(g,a),livingPeople(g,b));grantClaim(g,a,b,'defence',40,12);}
+ for(const w of diedInCustody){const a=Number(w.from),b=Number(w.to);tieChange(g,a,b,'breakPact',livingPeople(g,a),livingPeople(g,b));grantClaim(g,a,b,'defence',40,12);addGrudge(g,a,b,.6,'custody');}
 }
 
 /** Rival societies wed each other: every 4th dynastic year each non-player society tries the nearest-numbered peaceful, mutually known neighbour
@@ -312,8 +312,9 @@ export function eventClaims(g:Game):Claim[]{
   for(const okey of Object.keys(r.societies)){const o=Number(okey);if(h===o||!Number.isInteger(o))continue;
    const rel=societyRelation(g,h,o),good=memoryGoodwill(g,h,o); // remembered marriage/pact/fosterage makes a house slower to press a grounds claim, and softer when it does
    const shared=sharedGame(g,h,o); // a herd both houses live beside lowers the grievance bar a little (never below .3) and adds a little strength
-   if(!rel.known||rel.hostile||!(rel.grievance>=Math.max(.3,.5-Math.min(.2,shared*.04))+.25*good))continue;
-   const c=grantClaim(g,h,o,'claim',Math.max(10,Math.round(30+30*Math.min(1,rel.grievance)-18*good+Math.min(10,shared*2))),10);if(c)out.push(c);}}
+   const gr=grudgeOf(g,h,o); // a remembered wrong lowers the bar (never below .25) and adds strength
+   if(!rel.known||rel.hostile||!(rel.grievance>=Math.max(.25,.5-Math.min(.2,shared*.04)-.2*gr)+.25*good))continue;
+   const c=grantClaim(g,h,o,'claim',Math.max(10,Math.round(30+30*Math.min(1,rel.grievance)-18*good+Math.min(10,shared*2)+Math.round(10*gr))),10);if(c)out.push(c);}}
  return out;
 }
 /** Using a claim as casus belli: spends it and the legitimacy cost is returned for the caller to charge to the holder's glory/unrest. */
@@ -322,12 +323,28 @@ export function citeClaim(g:Game,holder:number,target:number,kind:CasusBelli):{c
  const hd=r.societies[String(holder)]?.dynasty;if(hd&&regencyOf(hd))return null; // a regent has no standing to open a cause for a minor
  const i=r.claims.findIndex(c=>c.holder===String(holder)&&c.target===String(target)&&c.kind===kind&&c.expiresTick>r.year);if(i<0)return null;
  st(g).rulers={...r,claims:r.claims.filter((_,j)=>j!==i)};
+ if(kind==='claim'||kind==='succession')addGrudge(g,target,holder,.25,'claim'); // being pressed is remembered by the target house
  const cost=cbLegitimacyCost(kind),cur=st(g).rulers!,debt={...(cur.cbDebt??{})};
  if(cost>0)debt[String(holder)]=Math.min(100,(debt[String(holder)]??0)+cost*2); // using a cause spends the house's standing: it feels the strain as unrest until it fades
  st(g).rulers={...cur,cbDebt:debt};
  return {cost};
 }
 export const cbDebtOf=(g:Game,team:number):number=>rulersOf(st(g))?.cbDebt?.[String(team)]??0;
+/** House grudges: a wrong done to a house (a kinsman dead in custody, a claim pressed against it) is remembered by the house, not the ruler. It fades 7% a year
+ * and weakens to 60% at each succession on either side, so an heir inherits a quieter version unless the wrong is renewed. Read by eventClaims; no goods or units move. */
+export const GRUDGE_FADE=0.93,GRUDGE_HEIR=0.6;
+export function addGrudge(g:Game,holder:number,target:number,w:number,cause:'custody'|'claim'){
+ const r=ensureRulers(g);if(!r||holder===target)return;const h=String(holder),t=String(target),list=[...(r.grudges??[])],i=list.findIndex(x=>x.holder===h&&x.target===t);
+ if(i>=0)list[i]={...list[i],w:Math.min(1,list[i].w+w),since:r.year,cause};else list.push({holder:h,target:t,w:Math.min(1,w),since:r.year,cause});
+ st(g).rulers={...st(g).rulers!,grudges:list.slice(-24)};
+}
+export const grudgeOf=(g:Game,holder:number,target:number):number=>rulersOf(st(g))?.grudges?.find(x=>x.holder===String(holder)&&x.target===String(target))?.w??0;
+/** Yearly: fade, and weaken where a house changed ruler since `genBefore` (generation per society id before the year stepped). */
+export function fadeGrudges(g:Game,genBefore:Record<string,number>){
+ const r=rulersOf(st(g));if(!r?.grudges?.length)return;
+ const next=r.grudges.map(x=>{const turned=[x.holder,x.target].some(id=>(r.societies[id]?.dynasty.generation??0)>(genBefore[id]??0));return {...x,w:Math.round(x.w*GRUDGE_FADE*(turned?GRUDGE_HEIR:1)*1000)/1000};}).filter(x=>x.w>=.05);
+ st(g).rulers={...r,grudges:next};
+}
 /** Yearly: casus-belli strain fades (-4 a year, never below 0). */
 export function fadeCbDebt(g:Game){
  const r=rulersOf(st(g));if(!r?.cbDebt)return;
