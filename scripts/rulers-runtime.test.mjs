@@ -511,3 +511,27 @@ test('lane A: event claims are born of real events (raided house gets a defence 
  assert.deepEqual(R.eventClaims(g),[],'duplicates refused');
  assert.ok(validRulersState(JSON.parse(JSON.stringify(g.state.rulers))),'event claims survive a save round-trip');
 });
+
+test('party read model: explorer, trade caravan and raid units are shown with real stores, status and kind; pure read; off for old saves',async()=>{
+ const {expansionParties}=await import('../src/game/rulersRuntime.ts');
+ const {councilModel}=await import('../src/game/rulersView.ts');
+ const g=fixture();assert.deepEqual(expansionParties(g),[]);
+ const us=g.state.units.filter(u=>u.team===1&&u.hp>0&&!u.prisoner).slice(0,3);assert.equal(us.length,3);
+ const [s,t,r]=us,home=g.campOf(1);
+ s.scout={legs:1,returning:false};s.scoutProvisions={food:20,water:3};s.tx=s.x+60;s.tz=s.z;
+ t.visit={phase:'outbound',wait:0,team:2,wanted:'wood'};t.carry=12;t.carryType='stone';t.tx=t.x+30;t.tz=t.z;
+ r.pillage=2;r.order='attackmove';r.attackDestination={x:r.x+50,z:r.z+5};
+ const before=JSON.stringify(g.state.units),ps=expansionParties(g,1);
+ assert.equal(JSON.stringify(g.state.units),before,'pure read: nothing created, moved or granted');
+ const by=Object.fromEntries(ps.map(p=>[p.kind,p]));
+ assert.deepEqual(Object.keys(by).sort(),['explore','raid','trade']);
+ assert.equal(by.explore.carrying,'20 food, 3 water');assert.equal(by.explore.status,'on the road');assert.ok(by.explore.distance>=59);
+ assert.equal(by.trade.carrying,'12 stone for wood');assert.equal(by.raid.crew,1);assert.equal(by.raid.destX,r.attackDestination.x);
+ s.scoutProvisions.food=2;assert.equal(expansionParties(g,1).find(p=>p.kind==='explore').status,'stores running low');
+ s.scout.returning=true;const back=expansionParties(g,1).find(p=>p.kind==='explore');assert.equal(back.status,'turning home');assert.equal(back.destX,home.x);
+ t.visit.phase='return';assert.equal(expansionParties(g,1).find(p=>p.kind==='trade').status,'carrying goods home');
+ t.stuckT=9;assert.match(expansionParties(g,1).find(p=>p.kind==='trade').status,/struggling/);
+ assert.deepEqual(JSON.parse(JSON.stringify(councilModel(g,1).parties)),expansionParties(g,1));
+ s.prisoner={};assert.ok(!expansionParties(g,1).some(p=>p.kind==='explore'),'a captive is not on an expedition');
+ delete g.state.worldOptions.rulersVersion;assert.deepEqual(expansionParties(g),[]);
+});

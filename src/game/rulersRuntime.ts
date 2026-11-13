@@ -183,18 +183,38 @@ export function expansionParty(g:Game,team:number,raw=false):PartyPlan|null{
   minReserve:d.mode==='migrate'?300:600,why:allow?[...d.why,...(gate.crew<4?[gate.note]:[])]:sends&&council?[council.why,...d.why]:['the society stays at home',...d.why]};
 }
 
-/** Read model of NPC founding parties on the road: the real units, where they are, what they carry. Pure read; nothing is created or moved here. */
-export type PartyLine={team:number;name:string;crew:number;x:number;z:number;destX:number;destZ:number;distance:number;carrying:string;status:string};
+/** Read model of NPC parties on the road: the real units, where they are, what they carry. Pure read; nothing is created or moved here.
+ * kind: settle (founding families), explore (a provisioned scout), trade (a caravan unit carrying real goods to a known hall), raid (fighters
+ * on an attack-move toward a known site). Each is a real unit with its own order; status says why one is struggling, low on stores or turning home. */
+export type PartyKind='settle'|'explore'|'trade'|'raid';
+export type PartyLine={team:number;name:string;crew:number;x:number;z:number;destX:number;destZ:number;distance:number;carrying:string;status:string;kind:PartyKind};
+type PartyUnit={team:number;hp:number;x:number;z:number;tx?:number;tz?:number;order?:string;carry:number;carryType?:string;stuckT:number;prisoner?:unknown;
+ foundingJourney?:{x:number;z:number;leader:boolean;timber?:number;rations?:number};scout?:{legs:number;returning:boolean;preparing?:true};scoutProvisions?:{food:number;water:number};
+ visit?:{phase:string;team?:number;wanted?:string};pillage?:number;attackDestination?:{x:number;z:number}};
 export function expansionParties(g:Game,team?:number):PartyLine[]{
  if(!rulersEnabled(g))return [];
  const out=new Map<string,PartyLine>();
- const units=g.state.units as unknown as {team:number;hp:number;x:number;z:number;carry:number;carryType?:string;stuckT:number;foundingJourney?:{x:number;z:number;leader:boolean;timber?:number;rations?:number}}[];
- for(const u of units){const j=u.foundingJourney;if(!j||u.hp<=0||(team!==undefined&&u.team!==team))continue;
-  const key=u.team+':'+j.x+':'+j.z,cur=out.get(key),d=Math.round(Math.hypot(u.x-j.x,u.z-j.z));
-  const line=cur??{team:u.team,name:g.tribe(u.team).name,crew:0,x:u.x,z:u.z,destX:j.x,destZ:j.z,distance:d,carrying:'',status:'on the road'};
-  line.crew++;if(j.leader){line.x=u.x;line.z=u.z;line.distance=d;const goods=u.carry>0?`${Math.round(u.carry)} ${u.carryType??'goods'}`:'nothing',ra=j.rations?`${Math.round(j.rations)} provisions`:'';line.carrying=ra?(u.carry>0?goods+' and '+ra:ra):goods;}
+ const units=g.state.units as unknown as PartyUnit[];
+ const add=(u:PartyUnit,kind:PartyKind,key:string,dx:number,dz:number,leader:boolean,carrying:()=>string)=>{
+  const cur=out.get(key),d=Math.round(Math.hypot(u.x-dx,u.z-dz));
+  const line=cur??{team:u.team,name:g.tribe(u.team).name,crew:0,x:u.x,z:u.z,destX:dx,destZ:dz,distance:d,carrying:'',status:'on the road',kind};
+  line.crew++;if(leader||!cur){line.x=u.x;line.z=u.z;line.distance=d;line.carrying=carrying();}
   if(u.stuckT>8)line.status='struggling to find a way through';
-  out.set(key,line);}
+  out.set(key,line);return line;};
+ for(const u of units){if(u.hp<=0||u.prisoner||(team!==undefined&&u.team!==team))continue;
+  const j=u.foundingJourney;
+  if(j){add(u,'settle',u.team+':'+j.x+':'+j.z,j.x,j.z,j.leader,()=>{const goods=u.carry>0?`${Math.round(u.carry)} ${u.carryType??'goods'}`:'nothing',ra=j.rations?`${Math.round(j.rations)} provisions`:'';return ra?(u.carry>0?goods+' and '+ra:ra):goods;});continue;}
+  if(u.scout&&!u.scout.preparing){const m=u.scout,p=u.scoutProvisions,home=g.campOf(u.team),
+   line=add(u,'explore','x'+u.team+':'+Math.round(u.x)+':'+Math.round(u.z)+':'+units.indexOf(u),m.returning?home.x:(u.tx??u.x),m.returning?home.z:(u.tz??u.z),true,()=>p?`${Math.round(p.food)} food, ${Math.round(p.water)} water`:'no stores');
+   if(m.returning&&u.stuckT<=8)line.status='turning home';
+   if(p&&!m.returning&&p.food<4&&u.stuckT<=8)line.status='stores running low';
+   continue;}
+  if(u.visit&&u.visit.team!==undefined&&u.visit.phase!=='waiting'&&u.carry>0){const h=g.campOf(u.visit.team);
+   const line=add(u,'trade','t'+u.team+':'+units.indexOf(u),u.tx??h.x,u.tz??h.z,true,()=>`${Math.round(u.carry)} ${u.carryType??'goods'}${u.visit?.wanted?' for '+u.visit.wanted:''}`);
+   if(u.visit.phase==='return'&&u.stuckT<=8)line.status='carrying goods home';
+   continue;}
+  if(u.pillage!==undefined&&u.order==='attackmove'&&u.attackDestination)add(u,'raid','r'+u.team+':'+u.pillage+':'+Math.round(u.attackDestination.x)+':'+Math.round(u.attackDestination.z),u.attackDestination.x,u.attackDestination.z,true,()=>'weapons');
+ }
  return [...out.values()];
 }
 
