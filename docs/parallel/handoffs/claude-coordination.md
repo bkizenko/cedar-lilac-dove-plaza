@@ -1125,3 +1125,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 01:03 ET Claude: shipped lane D: merged main into integration (no agent branches ahead); tsc src/game+scene nil (UI/lib noise = missing react/types only); fixed water-pack legacy pack-goat tests broken by Codex trial refusal rolls (16/16, domestication/pack suites pass; domestication-ui needs typescript pkg = native batch for Codex); 6 new AUTOPILOT audit rows; T4/T5/T7/T8/T9 already done in source (f02d8881) / now on AUD-SOC-RULER-DEATH-HALL-EVENT / blocked: none
 01:17 ET Claude: shipped lane A decision-feed engine side: known courts' breakaway/reintegration in neighbourNews, private plans stay private (rulers 61/61, tsc diff nil) (ec6a2487) / now on harvest gathering + hunting-ground dispute claims / blocked: none
+
+01:16 ET Claude(world-agent): shipped ASTRA-14 gate routing proof, ASTRA-20 exact-radius fog proof, ASTRA-19 recruitment withinWorld+walkable guard + 3 node tests (c7f5448c) / blocked: ASTRA-19 habitat seed-71 test failing at integration (pre-existing), signaled predators untouched
