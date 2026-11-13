@@ -21,6 +21,7 @@ import {HearthCaptiveCard,HearthCapitulationTerms,HandoverCard,RulerPortrait,Fam
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord,partyLabel} from '../council/CouncilParts';
 import {SocietyFlag} from '../SocietyFlag';
+import {SocietiesStrip} from '../council/SocietiesStrip';
 import {GameTooltip} from '../GameTooltip';
 import {GameDisclosure} from '../GameDisclosure';
 import {FoodStoreReadout} from '../FoodStoreReadout';
@@ -84,7 +85,7 @@ const CASUS_NAME:Record<string,string>={claim:'a land claim',tribute:'unpaid tri
 function NeighbourCard({n,soc,route,send}:{n:any;soc?:any;route?:any;send:(team:number,kind:'marry-houses'|'foster-houses'|'exchange-hostages')=>void}){
  const mood=n.hostile?['At odds','bad']:n.atPeace?['At peace','good']:n.trust>=60?['Friendly','good']:n.trust>=25?['Cordial','']:['Reserved',''];
  const PI=soc?.plan?PLAN_ICON[soc.plan.kind]:null,PO=soc?.posture?POSTURE_ICON[soc.posture.kind]:null;
- return <li className="hw-card hw-neighbour">
+ return <li id={`house-${n.team}`} className="hw-card hw-neighbour">
   <div className="hw-card-head">{n.identity&&<SocietyFlag identity={n.identity} label={`${n.name} flag`}/>}<h3>{n.name}</h3><span className={cx('hw-chip','t-'+mood[1])}>{mood[0]}</span></div>
   {n.voice&&<GameTooltip title={`Manner: ${n.voice.manner}`} description={`If refused: ${n.voice.refusal} If they give: ${n.voice.gift}`}><p className="hw-voice" data-manner={n.voice.manner} tabIndex={0}>{n.voice.greeting}</p></GameTooltip>}
   {courtLine(n.court)&&<p className="hw-court" data-court="1">{courtLine(n.court)}</p>}
@@ -142,7 +143,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
    {(s?.own.length||0)>0&&<section className="hw-card"><div className="hw-card-head"><h3>Our outlying halls</h3></div><ul className="hw-chips">{s!.own.map((o,i)=><li key={i} className="hw-chip"><StageMeter stage={o.stage} label="Outlying hall"/>{o.resolution?<em>{o.resolution}</em>:<small>{o.pressure}%</small>}</li>)}</ul></section>}
    {b?.enabled&&b.routes.length>0&&<section className="hw-card"><div className="hw-card-head"><h3>Routes</h3></div><ul className="hw-list">{b.routes.map(r=><li key={r.team}><span className="hw-meter-row"><b className="hw-lbl">{r.name}</b><span className={cx('hw-chip',r.mode==='blocked'&&'t-bad')}>{ROUTE_ICON({size:18})}{r.mode==='open'?'Open':r.mode==='agreement'?'Agreed':r.mode==='escort'?`Escort ×${r.guards||2}`:'Blocked'}</span></span></li>)}</ul></section>}
   </div>}
-  {active==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})}/>)}</ul>}<FeedbackList items={fb.items}/></>}
+  {active==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<><SocietiesStrip neighbours={c.neighbours}/><ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})}/>)}</ul></>}<FeedbackList items={fb.items}/></>}
   {active==='society'&&civic&&<CivicPanel civic={civic} onAnswer={(proposalId,accept)=>fb.send({kind:'answer-proposal',proposalId,accept})}/>}
   {active==='chronicle'&&<><FameFeed log={c.log}/><NeighbourNewsFeed news={c.news??[]} nameOf={t=>c.neighbours.find(n=>n.team===t)?.name??'A neighbour'}/></>}
   {active==='terms'&&<><HearthCapitulationTerms engine={engine}/><HearthCaptiveCard engine={engine}/></>}

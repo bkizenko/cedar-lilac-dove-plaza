@@ -123,7 +123,7 @@ const GQ:readonly GraphicsQuality[]=['low','med','high'];
 export type Apply=(effective:Effective,changed:readonly Knob[])=>void;
 export class GraphicsSettings{
  choices:Choices;effective:Effective;notice:EaseNotice|null=null;
- private storage:StorageLike|null;private apply:Apply;private over=0;private sum=0;private count=0;private settle=SETTINGS_RULES.settleSeconds;
+ private storage:StorageLike|null;private apply:Apply;private over=0;private sum=0;private count=0;private settle:number=SETTINGS_RULES.settleSeconds;
  constructor(apply:Apply,storage:StorageLike|null=defaultStorage(),choices?:Choices){
   this.apply=apply;this.storage=storage;this.choices=choices??loadChoices(storage);this.effective=resolveChoices(this.choices);
  }

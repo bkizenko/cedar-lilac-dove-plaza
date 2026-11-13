@@ -131,7 +131,7 @@ function strip(a:Acc,cr:Crown,pts:V3[],widths:number[],tile:number,across:V3,she
  }
  for(let i=0;i<n-1;i++){const p=base+i*2;a.tri(p,p+1,p+2);a.tri(p+1,p+3,p+2);}
 }
-type Ctx={sp:BotanicalSpecies;v:number;lod:Lod;a:Acc;r:()=>number;rd:()=>number;bark:BarkFn;H:number;age:number;crown:Crown;sideFor:(i:number)=>number};
+type Ctx={sp:BotanicalSpecies;v:number;lod:0|1;a:Acc;r:()=>number;rd:()=>number;bark:BarkFn;H:number;age:number;crown:Crown;sideFor:(i:number)=>number};
 const AGE={young:{h:.8,r:.78,crown:.88,sparse:1.1,curve:.55,limbs:-1},mature:{h:1,r:1,crown:1,sparse:1,curve:1,limbs:0},old:{h:1.04,r:1.28,crown:1.12,sparse:.82,curve:1.9,limbs:1}};
 function trunkPath(c:Ctx,height:number,lean:[number,number],n:number,wob:number):V3[]{
  const {r,sp}=c,ph=r()*6.28,out:V3[]=[];

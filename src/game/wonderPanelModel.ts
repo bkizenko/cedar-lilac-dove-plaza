@@ -15,7 +15,7 @@ export type WonderRow={id:WonderId;label:string;blurb:string;state:WonderRowStat
 export type WondersModel={enabled:boolean;rows:WonderRow[];suggested:WonderId[];ruins:RuinView[];lore:number;ruinsFound:number;reserve:{wood:number;stone:number;food:number}};
 const goodsWords=(g:{wood:number;stone:number;food:number;copper?:number;iron?:number})=>[g.wood&&`${g.wood} wood`,g.stone&&`${g.stone} stone`,g.food&&`${g.food} food`,g.copper&&`${g.copper} copper`,g.iron&&`${g.iron} iron`].filter(Boolean).join(', ');
 export function wondersModel(g:Game,focus?:string):WondersModel{
- const enabled=g.state.wonderFounding?.enabled===true,sugg=new Map<string,Suggestion>(suggestWonders(g,0,{siteChecks:8,focus}).map(s=>[s.id,s]));
+ const enabled=(g.state as {wonderFounding?:{enabled?:boolean}}).wonderFounding?.enabled===true,sugg=new Map<string,Suggestion>(suggestWonders(g,0,{siteChecks:8,focus}).map(s=>[s.id,s]));
  const mine=liveWonders(g).filter(r=>r.team===0),top=[...sugg.values()].filter(s=>s.feasible).slice(0,3).map(s=>s.id);
  const rows:WonderRow[]=WONDER_DEFS.map(d=>{
   const s=sugg.get(d.id),rec=mine.find(r=>r.family===d.id),fallen=(g.state.wonders??[]).some(r=>r.team===0&&r.family===d.id&&r.fallen!==undefined)&&!rec;

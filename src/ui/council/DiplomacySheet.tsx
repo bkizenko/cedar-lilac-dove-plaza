@@ -16,7 +16,7 @@ export function DiplomacySheet({neighbours,onAct,feedback}:{neighbours:Neighbour
  const sorted=[...neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust);
  return <Card label="Neighbours" title="Neighbouring houses">
   {diplomacyInbox(neighbours).length>0&&<p data-inbox="1" className="mb-2 rounded border border-bronze/40 bg-black/25 px-2 py-1 text-[12px] text-parchment">Needs attention: {diplomacyInbox(neighbours).join(' · ')}</p>}
-  <ul className="space-y-2">{sorted.map(n=>{const m=mood(n),g=n.grievance??0;return <li key={n.team} className="rounded border border-parchment/10 bg-black/20 p-2">
+  <ul className="space-y-2">{sorted.map(n=>{const m=mood(n),g=n.grievance??0;return <li key={n.team} id={`house-${n.team}`} className="rounded border border-parchment/10 bg-black/20 p-2">
    <div className="flex items-center gap-2">{n.identity&&<SocietyFlag identity={n.identity} label={`${n.name} flag`}/>}<div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-parchment">{n.name}</div><div className="text-parchment-dim">{n.bond}</div></div><span className={'text-[10px] font-semibold uppercase tracking-wide '+m.cls}>{m.word}</span></div>
    {n.voice&&<blockquote data-manner={n.voice.manner} className="mt-1.5 border-l-2 border-bronze/50 pl-2 text-[12px] italic text-parchment-dim" title={`If refused: ${n.voice.refusal} If they give: ${n.voice.gift}`}>{n.voice.greeting}<span className="ml-1 not-italic uppercase tracking-wide text-[10px]">{n.voice.manner}</span></blockquote>}
    {courtLine(n.court)&&<p className="mt-1.5 text-[12px] text-parchment-dim" data-court="1">{courtLine(n.court)}</p>}
