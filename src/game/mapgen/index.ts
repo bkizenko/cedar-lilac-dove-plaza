@@ -107,6 +107,7 @@ function buildOnce(seed: number, requestedSeed: number, size: number, segs: numb
 }
 function finish(seed: number, requestedSeed: number, size: number, segs: number, n: number, half: number, spec: typeof PRESETS[MapPreset], random: boolean, request: WorldRequest, terrain: ReturnType<typeof buildTerrain>, climate: ReturnType<typeof buildClimate>, hydro: Hydrology, hf: HeightField, fords: FordReport[]): WorldData {
   const waterY = WATER_Y;
+  const forestEcology = request.forestEcologyVersion === 1;
   const heights = new Float32Array(n * n);
   for (let iz = 0; iz < n; iz++) for (let ix = 0; ix < n; ix++) heights[iz * n + ix] = Math.min(144, hf.at((ix / segs) * size - half, (iz / segs) * size - half));
   // ---- water bodies -------------------------------------------------------------------------------------
@@ -150,7 +151,7 @@ function finish(seed: number, requestedSeed: number, size: number, segs: number,
   if (wet && wet.areaSquareMeters > 6000) features.push({ kind: 'wetland', x: wet.center.x, z: wet.center.z, radius: Math.sqrt(wet.areaSquareMeters / Math.PI) });
   const riverList = (rivers as Extract<LocalWaterBody, { kind: "river" }>[]).map(r => ({ pts: r.pts.map(p => ({ x: p.x, z: p.z })), w: r.width }));
   // ---- resources and starts ------------------------------------------------------------------------------------
-  const placed = placeWorld({ seed, size, waterY, preset: spec, terrain, hydro, ecology, waterBodies: bodies, sample, level, rivers: riverList, features, ...(geology ? { geology } : {}) });
+  const placed = placeWorld({ seed, size, waterY, preset: spec, terrain, hydro, ecology, waterBodies: bodies, sample, level, rivers: riverList, features, ...(geology ? { geology } : {}), ...(forestEcology ? { forestEcology: true } : {}) });
   // legacy three-habitat anchors: the spawner sends each wild group to the camp whose anchor matches, so the
   // anchors tag the camps whose surroundings really suit grazers, woodland game and upland goats
   const habitats = assignHabitatAnchors(ecology, placed.camps, size);
@@ -167,6 +168,7 @@ function finish(seed: number, requestedSeed: number, size: number, segs: number,
     preset: spec.id,
     mapgenVersion: MAPGEN_VERSION,
     ...(geology ? { geologyVersion: 1 as const } : {}),
+    ...(forestEcology ? { forestEcologyVersion: 1 as const } : {}),
     ...(request.chunkTerrainVersion === 1 ? { chunkTerrainVersion: 1 as const, ...(request.chunkTerrainScale && request.chunkTerrainScale > 1 ? { chunkTerrainScale: request.chunkTerrainScale } : {}) } : {}),
     ...(request.riverProfileVersion === 2 ? { riverProfileVersion: 2 as const } : {}),
     ...(request.tideVersion === 1 || request.tideVersion === 2 ? { tideVersion: request.tideVersion } : {}),

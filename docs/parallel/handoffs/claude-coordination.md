@@ -1252,3 +1252,7 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
   blocked: none
 
 09:30 ET Claude: shipped natural gait, 9 load-carry styles with real log/basket/sack geometry, and the dark-head fix (dark veilwrap crown lifted, dark hair/beard lifted; close-up docs/renders/carry/headsclose-v2.png) (SHA in commit below) / now on final render review (rig1 carry sheets bundleBack, headLoad, sackBack, poleRear and heads-rig1 not rendered) / blocked: none
+09:08 ET Claude(animal-models): shipped rigged animal models, fish shoals, canoe hull (see git log) / now on handoff / blocked: none
+- 09:05 ET Claude: shipped foundation grounding fix (ef658bef, b11a34c4, merged 57542de0): footings follow real model outline, floor at mean ground, steps at carved door, post platforms only steep/flood, staddle columns; audit in docs/FOUNDATION_AUDIT.md / now on real-game before/after PNGs (harness tools/render-preview/foundations.mjs; headless browser OOM-killed by shared memory) / blocked: render memory
+
+09:15 ET Claude: shipped graphics settings fix (Auto default + explicit Low/Med/High/Ultra never overridden by the governor, Restore notice, stale tuner-written Low ignored) and 5-step tree detail (default step 3 between Low and Medium; Low trees cheaper than before; counts in docs/metrics/tree-tiers-2026-11-13.json, sheets in docs/renders/tree-tiers) (see git log, GFX-TIERS-1) / now on idle, ready for next item / blocked: none
