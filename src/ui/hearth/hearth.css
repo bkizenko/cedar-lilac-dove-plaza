@@ -574,3 +574,6 @@
 .hw-testlab-fold{position:absolute;left:var(--hw-s3);top:462px;z-index:2;display:flex;align-items:center;gap:6px;pointer-events:none}
 .hw-testlab-fold>.hw-testlab{position:static}
 .hw-fold-handle.hw-testlab-fold{pointer-events:auto}
+
+.hw-elder{margin:0;padding-top:var(--hw-s2,8px);border-top:1px solid var(--hw-line,rgba(255,255,255,.12));font:400 var(--hw-fs-s,14px)/1.4 var(--font-body,inherit);color:var(--hw-text-dim,var(--hw-text))}
+.hw-elder b{color:var(--hw-text)}

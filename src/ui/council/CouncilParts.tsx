@@ -63,3 +63,9 @@ export function PartiesCard({parties}:{parties:NonNullable<CouncilModel['parties
  if(!parties.length)return null;
  return <Card label="Parties abroad" title="Parties abroad"><ul className="space-y-1">{parties.map((p,i)=><li key={p.kind+i} data-party={p.kind} className="border-l-2 border-parchment/15 pl-2"><b className="text-parchment">{partyLabel(p.kind)}</b> <span className="text-parchment-dim">{p.crew} {p.crew===1?'person':'people'}, {p.distance} m from their goal; carrying {p.carrying||'nothing'}.</span> <span className={partyWarn(p.status)?'font-semibold text-[color:var(--hw-bad,#d88a7a)]':'text-parchment-dim'}>{p.status[0].toUpperCase()+p.status.slice(1)}.</span></li>)}</ul></Card>;
 }
+
+/** One line of counsel from the best-skilled living elder (real skill stats; hidden when nobody qualifies or the skill model is off). */
+export function ElderCounselLine({elder}:{elder:import('../../game/elderCounsel').ElderCounsel|null|undefined}){
+ if(!elder)return null;
+ return <p data-elder-counsel="1" className="border-t border-parchment/10 pt-1.5 text-parchment-dim"><span className="font-semibold text-parchment">{elder.name}</span>, {elder.age}, {elder.level==='master'||elder.level==='expert'?`a ${elder.level} in ${elder.skillLabel}`:`skilled in ${elder.skillLabel}`}, says: <em>“{elder.line}”</em></p>;
+}

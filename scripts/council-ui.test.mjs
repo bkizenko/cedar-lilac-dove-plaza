@@ -170,3 +170,16 @@ test('attention inbox lists claims, wards due, hostility and unrest worst first,
  const items=attentionInbox(c);assert.equal(items[0].tone,'danger');assert.equal(items.at(-1).tone,'note');assert.ok(items.some(i=>i.label==='Ward to return'));
  const html=renderToStaticMarkup(h(AttentionInbox,{council:c}));assert.match(html,/Needs your attention · /);assert.match(html,/Urgent · Claim against us/);assert.match(html,/Note · Our claim/);
 });
+test('elder counsel: best-skilled living elder from real stats, hidden when none, query accepted, line renders',async()=>{
+ const {Game}=await import('../src/game/sim.ts');const {elderCounsel}=await import('../src/game/elderCounsel.ts');const {trainEntry,skillGenome,newRecord}=await import('../src/game/skills.ts');const {isEngineReadQuery,applyEngineReadQuery}=await import('../src/game/engineReadModels.ts');
+ const {ElderCounselLine}=await import('../src/ui/council/CouncilParts.tsx');
+ const g=new Game();g.reset(4242,10);g.enterIsland();
+ assert.equal(elderCounsel(g),null,'nobody is a skilled elder at the start');
+ const adults=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia);const a=adults[0],b=adults[1];
+ for(const[u,xp]of[[a,5000],[b,9000]]){u.ageT=60*1800;u.parents=undefined;u.skills=newRecord(skillGenome(g.state.seed|0,u.id));trainEntry(u.skills,'pottery',xp,60,1);}
+ const e=elderCounsel(g);assert.ok(e,'an old master is found');assert.equal(e.skill,'pottery');assert.equal(e.id,b.id,'the more skilled elder is chosen');assert.ok(e.age>=50&&e.line.length>10);
+ b.hp=0;assert.equal(elderCounsel(g).id,a.id,'the dead do not counsel');
+ assert.ok(isEngineReadQuery({kind:'elder-counsel'}));assert.equal(isEngineReadQuery({kind:'elder-counsel',x:1}),false);assert.equal(applyEngineReadQuery(g,{kind:'elder-counsel'}).elder.id,a.id);
+ const html=renderToStaticMarkup(h(ElderCounselLine,{elder:e}));assert.match(html,/data-elder-counsel/);assert.match(html,/pottery/);assert.equal(renderToStaticMarkup(h(ElderCounselLine,{elder:null})),'');
+ const off=new Game();off.reset(4242,10,{skillsVersion:0});off.enterIsland();assert.equal(elderCounsel(off),null,'old saves: skill model off');
+});
