@@ -14,7 +14,7 @@ export const FIELD_AREA_RULES={version:1,headlandMetres:.6,maximumTilesPerAxis:6
 export interface FieldTile{x:number;z:number;w:number;d:number;issue:string|null}
 export interface FieldAreaPlan{tiles:FieldTile[];columns:number;rows:number;valid:number;seeds:number}
 
-function split(span:number,base:number,gap=FIELD_AREA_RULES.headlandMetres){
+function split(span:number,base:number,gap:number=FIELD_AREA_RULES.headlandMetres){
  const max=base*3;
  const n=Math.max(1,Math.min(FIELD_AREA_RULES.maximumTilesPerAxis,Math.ceil((span+gap)/(max+gap))));
  // Decimetre lengths fill the drawn span; clamp to the valid plot range.

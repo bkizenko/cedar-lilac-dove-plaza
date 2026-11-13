@@ -7,8 +7,9 @@ import {wearTrail} from '@/game/trails';
 import {traceStep,tickRouteWear,setRoutesEnabled} from '@/game/routeWear';
 import {findPath} from '@/game/navigation';
 import {galleryScene,galleryPose} from '@/scene/mapGallery';
+import {enableIrrigation,digDitch,ditchesOf} from '@/game/irrigation';
 type Spec={gallery?:string;seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
- prep?:{buildings?:{type:string;x:number;z:number}[];fieldBlock?:{w:number;d:number;cols:number;rows:number;stages:string[];kind?:string;minGrade?:number}[];farms?:{x:number;z:number;rel?:boolean;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
+ prep?:{buildings?:{type:string;x:number;z:number}[];irrigation?:{ditchFields:number[];waterMode?:boolean};fieldBlock?:{w:number;d:number;cols:number;rows:number;stages:string[];kind?:string;minGrade?:number}[];farms?:{x:number;z:number;rel?:boolean;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
  routes?:{from:[number,number];to:[number,number];trips:number;team?:number;jitter?:number}[];routesFresh?:boolean;routesIdle?:number;routesLegacy?:boolean;stations?:{x:number;z:number;stage:0|1|2|3;form?:string;team?:number;hp?:number}[];
  fov?:number;drawDistance?:'low'|'medium'|'high'|'ultra';measure?:boolean;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
@@ -77,10 +78,13 @@ w.renderMap=async(S:Spec)=>{
     const stages:Record<string,[number,number,boolean,number]>={fallow:[0,0,false,1],bare:[0,0,false,1],sprout2:[.6,.1,false,1],growing:[1,.8,false,1],sprout:[.12,0,false,1],young:[.45,.2,false,1],mature:[1,.7,false,1],ripe:[1,1,true,1],stubble:[1,1,true,0]};
     const [planted,tended,ripened,remaining]=stages[st];bb.crop={kind:f.kind??'grain',planted,tended,ripened,remaining};if(st==='fallow')bb.fallowYear=Math.floor((S.time??0)/1800);
    }
+   if(S.prep.irrigation){enableIrrigation(game);const fs=game.state.buildings.filter(q=>q.type==='farm');
+    for(const i of S.prep.irrigation.ditchFields){const f=fs[i];if(!f)continue;const r=digDitch(game,0,f.id);if(!r.ok)console.warn('ditch refused',r.reason);else r.ditch.done=r.ditch.length;}
+    console.warn('ditches',JSON.stringify(ditchesOf(game).map(d=>[d.lift,Math.round(d.length)])));}
    for(const tr of S.prep.trails??[]){const [ax,az]=tr.from,[bx,bz]=tr.to,len=Math.hypot(bx-ax,bz-az),n=Math.ceil(len/1.5);
     for(let rep=0;rep<Math.ceil((tr.wear??.7)*2.7);rep++)for(let i=0;i<=n;i++){const x=ax+(bx-ax)*i/n,z=az+(bz-az)*i/n;wearTrail(game,x,z,(bx-ax)/len*1.5,(bz-az)/len*1.5);}}
   }
-  view.rebuild(game);
+  view.rebuild(game);view.setFieldWaterMode(!!S.prep?.irrigation?.waterMode);
   cache={key,game,view};w.__game=game;w.__view=view;
  }
  const {game,view}=cache;
