@@ -12,6 +12,7 @@ import {isRivalTeam} from './factions';
 import type {Game} from './sim';
 import type {Unit} from './types';
 import {isDependent} from './settlement';
+import {traderKnowledgeSnapshot,noteTraderIncident} from './traderInteraction';
 import {capitulationYielded} from './capitulation';
 
 /** Team transfer ends the former owner's construction intent. Interrupt first:
@@ -106,7 +107,7 @@ export function finishRepatriation(g:Game,u:Unit){
 /** New prisoners are held in custody, not automatically assigned forced labor.
  * Existing enslavedFrom saves retain their previous meaning. */
 /** What one person knew about their own home at the moment they were taken (never refreshed afterwards). */
-export type CaptiveKnowledge={team:number;asOf:number;homeHallId?:number;home?:{x:number;z:number};homeArmed:number;homeResidents:number;homeFood:number;homeWood:number};
+export type CaptiveKnowledge={trade?:import('./traderInteraction').TraderKnowledge;team:number;asOf:number;homeHallId?:number;home?:{x:number;z:number};homeArmed:number;homeResidents:number;homeFood:number;homeWood:number};
 export function captiveKnowledgeSnapshot(g:Game,u:Unit,origin:number):CaptiveKnowledge{
  const hall=g.state.buildings.find(b=>b.id===u.homeHall&&b.team===origin&&b.hp>0)??g.state.buildings.filter(b=>b.team===origin&&b.type==='townhall'&&b.hp>0).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
  const near=hall?g.state.units.filter(p=>p!==u&&p.team===origin&&p.hp>0&&!(p as PrisonerUnit).prisoner&&Math.hypot(p.x-hall.x,p.z-hall.z)<=55):[];
@@ -131,8 +132,8 @@ export function acceptPrisonerSurrender(g:Game,target:Unit,captorTeam=0){
  const guard=captors.filter(p=>guardLoad(g,p.id)<PRISONER_RULES.guardCapacity&&((p as Unit&{conflictIntent?:string}).conflictIntent==='capture'||['idle','hold'].includes(p.order)&&(!p.escortId||guardLoad(g,p.id)>0))&&(!p.carry||p.carryType==='food')&&!p.emergency&&!p.envoy&&!p.expedition&&!p.visit&&!p.trade&&!p.boat).sort((a,b)=>guardLoad(g,a.id)-guardLoad(g,b.id)||a.id-b.id)[0];
  if(!guard)return {accepted:false,reason:'No nearby guard has capacity to escort another prisoner'};
  const methods=snapshotCapturedMethods(g.state,u);
- const origin=u.team,home=u.homeHall;if(captorTeam===0&&isRivalTeam(origin))g.makeHostile(origin);interruptForTeamTransfer(g,u);if(guardLoad(g,guard.id)===0)g.interruptMission(guard);
- const knows=captiveKnowledgeSnapshot(g,u,origin);
+ const origin=u.team,home=u.homeHall,tradeKnowledge=traderKnowledgeSnapshot(g,u,origin);if(captorTeam===0&&isRivalTeam(origin)){noteTraderIncident(g,u,'captured');g.makeHostile(origin);}interruptForTeamTransfer(g,u);if(guardLoad(g,guard.id)===0)g.interruptMission(guard);
+ const knows=captiveKnowledgeSnapshot(g,u,origin);if(tradeKnowledge)knows.trade=tradeKnowledge;
  u.prisoner={originTeam:origin,captorTeam,originHomeHall:home,phase:'escorting',guardId:guard.id,food:0,waterLiters:0,unguardedSeconds:0,knows,methods};invalidatePrisonerGuardQueries(g);
  u.team=captorTeam;reconcilePenWater(g);reconcileWaterCargoEvidence(g);reconcileArmorHolders(g);u.selected=false;u.homeHall=undefined;u.target=null;u.node=null;u.job=null;u.jobLock=false;u.pillage=-1;u.order='hold';u.workReason='Surrendered — waiting for a guarded route to custody';
  guard.order='hold';guard.target=null;guard.node=null;guard.pillage=-1;guard.returnAfterCombat=undefined;guard.escortId=u.id;

@@ -11,10 +11,14 @@ import {visitorPrice,visitorTradeCache,visitorTradeIssue,acceptVisitorTrade,decl
 import {personName} from './people';
 import {lifeEvent} from './communities';
 import type {Game} from './sim';
+import {noteTraderIncident,isTraderUnit,heldItems,tickTraderIncidents,validTraderIncidentState,traderConsequencesEnabled,traderKnowledgeLines,type ConsequenceTag} from './traderInteraction';
+import {markStolenLoad,stolenMarkRoom,beginLootReturn,PARCEL_ITEMS} from './stolenCargo';
+import {interrogateCaptive,proposeRansom,captiveIntel} from './captiveDealings';
 /** Contact requires people actually meeting in sight; remembered maps are insufficient. */
 export function tickEncounters(g:Game){
  if(!g.started||g.awaitingStart)return;
  tickContactOrders(g);
+ tickTraderIncidents(g);
  if(g.state.encounter)return;
  const contacts=(g.state.contacts??=[]);
  for(const stranger of g.state.units){
@@ -39,7 +43,7 @@ export function answerEncounter(g:Game,reaction:'greet'|'withdraw'|'observe'){
 }
 
 export const CONTACT_RULES={version:1,talkMeters:12,exchangeMeters:3,capturePartyMeters:50,villageResponseMeters:150,riskMeters:80,maximumDemandGuards:4,trustingThreshold:.6,questionCooldownSeconds:60,visitorCampMeters:35,minimumBundleValueRatio:.65,maximumBundleValueRatio:1.55,yieldSeconds:30,experiencedCraftingSeconds:60,hungrySeconds:30,tiredFraction:.5,woundedFraction:.5} as const;
-export type ContactAction='attack'|'demand'|'capture'|'question'|'trade'|'send-scout-home'|'ask-visitor-leave'|'release-prisoner'|'approach-trade'|'decline-trade';
+export type ContactAction='attack'|'demand'|'rob'|'interrogate'|'ransom'|'capture'|'question'|'trade'|'send-scout-home'|'ask-visitor-leave'|'release-prisoner'|'approach-trade'|'decline-trade';
 export type ContactOutcome={accepted:boolean;reason:string;report?:string};
 export type ContactTrade={id:string;label:string;kind:'bundle'|'visitor';give?:ResKind;buyerId:number;strangerId:number};
 const worth:Record<ResKind,number>={food:1,wood:1.2,stone:2.2,copper:4.5,iron:6.5};
@@ -123,7 +127,7 @@ function exchangeContact(g:Game,u:Unit,optionId:string|undefined,personId?:numbe
  lifeEvent(g,0,`Trade: ${reason}`);return {accepted:true,reason};
 }
 function visitorLeaveIssue(g:Game,u:Unit|undefined,personId?:number){const issue=contactIssue(g,u,personId);if(issue||!u)return issue;if(u.prisoner)return 'Use Release prisoner to return home for someone in your custody';if(g.isFoe(0,u.team))return 'You cannot send an uncontrolled hostile party home';if((u.type!=='worker'||u.militia)&&!u.caravanArmed)return 'This armed party is not under your control';if(!u.visit&&Math.hypot(u.x-g.campOf(0).x,u.z-g.campOf(0).z)>CONTACT_RULES.visitorCampMeters)return 'They are not visiting your camp; you can send your own explorer home';if(u.trade||u.tributeJourney||u.envoy||u.escortId!==undefined||hasTaskCommitment(u))return 'This person has a protected journey or duty and cannot be dismissed as a visitor';if(!supplyDrops(g,u.team).some(home=>!!supplyApproach(g,u,home)))return 'This person has no reachable home camp; clear a route before asking them to return';return null;}
-export function contactActions(g:Game,id:number,personId?:number){const u=target(g,id);return {attack:{reason:attackContactIssue(g,id,personId)},demand:{reason:demandContactIssue(g,id)},conversation:CONTACT_TOPICS.map(topic=>({...topic,reason:questionIssue(g,u,personId,topic.id)})),capture:{reason:captureContactIssue(g,id)},question:{reason:questionIssue(g,u,personId),report:lastContactReport(g,id)},trade:contactTradeOptions(g,id,personId),approach:{reason:approachContactTradeIssue(g,id,personId)},safety:contactSafety(g,id),leave:{reason:visitorLeaveIssue(g,u,personId)},scout:u?speaker(g,u,personId):undefined,prisoner:!!u?.prisoner&&u.prisoner.captorTeam===0&&u.prisoner.phase!=='released'};}
+export function contactActions(g:Game,id:number,personId?:number){const u=target(g,id);return {attack:{reason:attackContactIssue(g,id,personId),consequences:verbConsequences(g,u,'attack')},demand:{reason:demandContactIssue(g,id)},rob:{reason:robContactIssue(g,id),consequences:verbConsequences(g,u,'rob')},interrogate:{reason:interrogateIssue(g,id),consequences:verbConsequences(g,u,'interrogate'),report:interrogationReport(g,id)},ransom:{reason:ransomIssue(g,id),consequences:verbConsequences(g,u,'ransom')},trader:isTraderUnit(g,u),conversation:CONTACT_TOPICS.map(topic=>({...topic,reason:questionIssue(g,u,personId,topic.id)})),capture:{reason:captureContactIssue(g,id),consequences:verbConsequences(g,u,'capture')},question:{reason:questionIssue(g,u,personId),report:lastContactReport(g,id)},trade:contactTradeOptions(g,id,personId),approach:{reason:approachContactTradeIssue(g,id,personId)},safety:contactSafety(g,id),leave:{reason:visitorLeaveIssue(g,u,personId)},scout:u?speaker(g,u,personId):undefined,prisoner:!!u?.prisoner&&u.prisoner.captorTeam===0&&u.prisoner.phase!=='released'};}
 function finishEncounterAction(g:Game,id:number){if(g.state.encounter?.stranger===id){const resume=g.state.encounter.resume;g.state.encounter=undefined;g.state.paused=!resume;}}
 /** Shared UI controller: blocked actions do not interrupt a mission or close
  * the contact; accepted travel commands resume the same physical simulation. */
@@ -132,6 +136,9 @@ export function performContactAction(g:Game,action:ContactAction,id:number,perso
  if(action==='attack')result=beginContactAttack(g,u,personId);
  else if(action==='demand')result=beginContactDemand(g,u);
  else if(action==='capture')result=beginContactCapture(g,u);
+ else if(action==='rob')result=beginContactDemand(g,u,true);
+ else if(action==='interrogate'){const issue=interrogateIssue(g,id);result=issue?{accepted:false,reason:issue}:interrogateCaptive(g,id,0);}
+ else if(action==='ransom'){const issue=ransomIssue(g,id);result=issue?{accepted:false,reason:issue}:proposeRansom(g,id,0);}
  else if(action==='question')result=questionPerson(g,u,personId,optionId||'overview');
  else if(action==='decline-trade')result=declineVisitorVisit(g,u.id);
  else if(action==='trade')result=exchangeContact(g,u,optionId,personId);
@@ -140,19 +147,66 @@ export function performContactAction(g:Game,action:ContactAction,id:number,perso
  else if(action==='ask-visitor-leave'){const issue=visitorLeaveIssue(g,u,personId);if(issue)result={accepted:false,reason:issue};else{returnPerson(g,u,'Leaving by request — taking belongings home');result={accepted:true,reason:'The visitor is walking home with the same belongings'};}}
  else {const own=speaker(g,u,personId);if(!own)result={accepted:false,reason:'Your explorer is no longer present at this meeting'};else if(!supplyDrops(g,0).some(home=>!!supplyApproach(g,own,home)))result={accepted:false,reason:'Your explorer has no reachable home cache; clear a route or crossing first'};else{returnPerson(g,own,'Returning home from first contact with existing provisions');own.order='move';result={accepted:true,reason:`${personName(own)} is returning to your camp; the foreign person remains independent`};}}
  if(result.accepted&&(action==='trade'||action==='decline-trade'))finishEncounterAction(g,id);
- if(result.accepted&&['attack','demand','capture','release-prisoner','ask-visitor-leave','send-scout-home'].includes(action))finishEncounterAction(g,id);g.banner(result.reason,5);return result;
+ if(result.accepted&&['attack','demand','rob','capture','release-prisoner','ask-visitor-leave','send-scout-home'].includes(action))finishEncounterAction(g,id);g.banner(result.reason,5);return result;
 }
 
 function attackParty(g:Game,u:Unit,personId?:number){const armed=captureParty(g,u);if(armed.length)return armed;const own=speaker(g,u,personId);return own&&!hasTaskCommitment(own)&&own.escortId===undefined&&own.conflictIntent!=='occupy'?[own]:[];}
 export function attackContactIssue(g:Game,id:number,personId?:number){const u=target(g,id);if(!u)return 'This person is no longer present';if(u.team===0||u.prisoner)return 'Use custody and release actions for a person under your control';if(isDependent(g,u))return 'Children are protected from this contact attack order';if(!g.visibleAt(u.x,u.z))return 'Reach and see this person first';if(!attackParty(g,u,personId).length)return 'Bring an available adult to give a physical attack order';return null;}
 function beginContactAttack(g:Game,u:Unit,personId?:number):ContactOutcome{const issue=attackContactIssue(g,u.id,personId);if(issue)return {accepted:false,reason:issue};const party=attackParty(g,u,personId),selected=g.state.units.map(p=>({u:p,selected:p.selected})),building=g.state.selBld;g.clearSelect();for(const p of party)p.selected=true;g.issueAttack(u);for(const p of party){p.pillage=-1;p.attackDestination=null;p.returnAfterCombat=undefined;p.contactAttackTargetId=u.id;p.workReason='Approaching to attack this person';}for(const p of selected)p.u.selected=p.selected;g.state.selBld=building;return {accepted:true,reason:'A real attack is ordered; the person may resist, escape or be killed'};}
+export function robContactIssue(g:Game,id:number){
+ const u=target(g,id);if(!u)return 'This person is no longer present';if(u.team===0||u.prisoner)return 'Use custody actions for someone under your control';if(isDependent(g,u))return 'Children cannot be robbed';
+ if(!traderConsequencesEnabled(g))return 'Taking cargo by force is switched off; use Demand';
+ if(!(u.carryType&&u.carry>0)&&!heldItems(u))return 'This person carries nothing to take';if(!g.visibleAt(u.x,u.z))return 'Reach and see this person first';
+ if(!captureParty(g,u).some(p=>p.carry===0&&heldItems(p)===0))return 'No free armed adult with empty hands can reach this meeting';return null;
+}
+/** Exact transfer of what the victim's own hands hold (resource load and bulk items) into the robber's hands. Returns a label or null. */
+function robCargo(g:Game,robber:Unit,victim:Unit):string|null{
+ if(!stolenMarkRoom(g,robber))return null;const took:string[]=[];
+ if(victim.carryType&&victim.carry>0&&(!robber.carry||robber.carryType===victim.carryType)){
+  const kind=victim.carryType,amount=Math.min(victim.carry,Math.max(0,carryingCapacity(robber,kind)-(robber.carry||0)));
+  if(amount>0){robber.carry=(robber.carry||0)+amount;robber.carryType=kind;robber.carryFood=kind==='food'?victim.carryFood:undefined;victim.carry-=amount;if(victim.carry<=1e-9){victim.carry=0;victim.carryType=null;victim.carryFood=undefined;}took.push(`${Math.round(amount*10)/10} ${kind==='wood'?'logs':kind}`);}
+ }
+ let room=8-heldItems(robber);
+ for(const kind of PARCEL_ITEMS){const have=victim.itemCargo?.[kind]||0,n=Math.min(have,room);if(!(n>0))continue;robber.itemCargo={...robber.itemCargo,[kind]:(robber.itemCargo?.[kind]||0)+n};victim.itemCargo![kind]=have-n;if(victim.itemCargo![kind]!<=0)delete victim.itemCargo![kind];room-=n;took.push(`${n} ${kind}`);}
+ if(victim.itemCargo&&!Object.values(victim.itemCargo).some(n=>(n||0)>0))victim.itemCargo=undefined;
+ if(!took.length)return null;
+ if(victim.carry===0&&victim.seedSamples){robber.seedSamples={...robber.seedSamples};for(const [crop,count]of Object.entries(victim.seedSamples))robber.seedSamples[crop as keyof typeof robber.seedSamples]=(robber.seedSamples[crop as keyof typeof robber.seedSamples]||0)+(count||0);victim.seedSamples=undefined;}
+ markStolenLoad(g,robber,victim.team);if(!beginLootReturn(g,robber,victim.team))returnPerson(g,robber,'Carrying taken goods home');
+ return took.join(', ');
+}
+export function interrogateIssue(g:Game,id:number){
+ const u=target(g,id);if(!u||!u.prisoner||u.prisoner.captorTeam!==0||u.prisoner.phase==='released')return 'Hold this person in custody first';
+ if(u.prisoner.phase!=='custody')return 'Questioning waits until the escort reaches custody';
+ if(captiveIntel(g,0).some(i=>i.prisonerId===id))return 'Already questioned; they have nothing more to tell';
+ if(g.state.captiveDealings?.interrogations.some(i=>i.prisonerId===id&&i.captorTeam===0))return 'Questioning under guard';return null;
+}
+export function ransomIssue(g:Game,id:number){
+ const u=target(g,id);if(!u||!u.prisoner||u.prisoner.captorTeam!==0||u.prisoner.phase==='released')return 'Hold this person in custody first';
+ if(u.prisoner.phase!=='custody')return 'A ransom can be named once the escort reaches custody';if(!g.tribe(u.prisoner.originTeam)?.alive)return 'Their society no longer exists to pay';
+ if(g.state.captiveDealings?.ransoms.some(r=>r.prisonerId===id&&['proposed','pickup','carrying'].includes(r.phase)))return 'A ransom for this person is already pending';return null;
+}
+/** What questioning produced, as short lines (home as it was at capture, plus what a trader carried). */
+export function interrogationReport(g:Game,id:number):string[]{
+ const i=captiveIntel(g,0).find(x=>x.prisonerId===id);if(!i)return [];const k=i.knowledge;if(!k)return ['They knew nothing useful'];
+ const u=g.state.units.find(p=>p.id===id),from=u?{x:u.x,z:u.z}:k.home||{x:0,z:0},lines:string[]=[];
+ if(k.home)lines.push(`Home hall lay ${Math.round(Math.hypot(k.home.x-from.x,k.home.z-from.z))} m away: about ${k.homeResidents} people, ${k.homeArmed} armed, ${k.homeFood} food, ${k.homeWood} logs (as they left)`);
+ return [...lines,...traderKnowledgeLines(g,k.trade,from)];
+}
+/** Consequences each hostile verb carries, shown as icons. */
+export function verbConsequences(g:Game,u:Unit|undefined,verb:'attack'|'capture'|'rob'|'interrogate'|'ransom'):ConsequenceTag[]{
+ if(!u)return [];const witnessed=g.state.units.some(w=>w.hp>0&&w.team===u.team&&w.id!==u.id&&Math.hypot(w.x-u.x,w.z-u.z)<=45);
+ if(verb==='attack')return ['war',...(witnessed?['witness' as const]:[]),'grievance'];
+ if(verb==='rob')return ['war','loot',...(witnessed?['witness' as const]:[]),'grievance'];
+ if(verb==='capture')return ['war','custody',...(witnessed?['witness' as const]:[]),'grievance'];
+ if(verb==='ransom')return ['ransom'];return ['custody'];
+}
 export function demandContactIssue(g:Game,id:number){const u=target(g,id);if(!u)return 'This person is no longer present';if(u.team===0||u.prisoner)return 'Use custody actions for someone under your control';if(isDependent(g,u))return 'Children cannot be threatened for supplies';if(!u.carryType||u.carry<=0)return 'This person has no carried goods to demand';if(!g.visibleAt(u.x,u.z))return 'Reach and see this person first';if(!captureParty(g,u).some(p=>p.carry===0))return 'No free armed adult with carrying capacity can reach this meeting';return null;}
-function beginContactDemand(g:Game,u:Unit):ContactOutcome{
- const issue=demandContactIssue(g,u.id);if(issue)return {accepted:false,reason:issue};
+function beginContactDemand(g:Game,u:Unit,forced=false):ContactOutcome{
+ const issue=forced?robContactIssue(g,u.id):demandContactIssue(g,u.id);if(issue)return {accepted:false,reason:issue};
  const defenders=g.state.units.filter(p=>p.team===u.team&&p.hp>0&&!p.prisoner&&!isDependent(g,p)&&(p.militia||!['worker','leader'].includes(p.type))&&g.visibleAt(p.x,p.z)&&Math.hypot(p.x-u.x,p.z-u.z)<=PRISONER_RULES.defenderRadiusMeters).length;
- const party=captureParty(g,u).filter(p=>p.carry===0).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z)).slice(0,Math.min(CONTACT_RULES.maximumDemandGuards,Math.max(1,Math.ceil(defenders*PRISONER_RULES.superiorityRatio))));
- for(const p of party){g.interruptMission(p);p.contactDemand={targetId:u.id,lastTimeSeconds:g.state.time};p.order='hold';p.pillage=-1;p.node=null;p.target=null;p.huntOnly=false;p.workReason='Approaching to demand the actual carried goods';}
- return {accepted:true,reason:`${party.length} armed ${party.length===1?'adult is':'adults are'} approaching; the person may refuse or yield their carried goods`};
+ const party=captureParty(g,u).filter(p=>p.carry===0&&(!forced||heldItems(p)===0)).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z)).slice(0,Math.min(CONTACT_RULES.maximumDemandGuards,Math.max(1,Math.ceil(defenders*PRISONER_RULES.superiorityRatio))));
+ for(const p of party){g.interruptMission(p);p.contactDemand={targetId:u.id,lastTimeSeconds:g.state.time,...(forced?{forced:true as const}:{})};p.order='hold';p.pillage=-1;p.node=null;p.target=null;p.huntOnly=false;p.workReason=forced?'Approaching to take their cargo by force':'Approaching to demand the actual carried goods';}
+ return {accepted:true,reason:forced?`${party.length} armed ${party.length===1?'adult is':'adults are'} closing in to take the cargo; defenders will resist`:`${party.length} armed ${party.length===1?'adult is':'adults are'} approaching; the person may refuse or yield their carried goods`};
 }
 export function contactYieldingTo(g:Game,u:Unit,team:number){
  // Explicit repatriation grants safe conduct from the releasing society until
@@ -167,7 +221,7 @@ function tickContactOrders(g:Game){
   if(p.contactSurrender&&p.contactSurrender.until<=g.state.time)p.contactSurrender=undefined;
   if(p.contactAttackTargetId!==undefined){const person=target(g,p.contactAttackTargetId);if(!person||person.team===p.team||person.prisoner){p.contactAttackTargetId=undefined;if(p.hp>0){if(p.militia)queueStandDown(g,p);else returnPerson(g,p,'Contact attack ended — returning with existing belongings');}}else if(!g.visibleAt(person.x,person.z)){p.order='hold';p.target=null;p.workReason='Lost sight of the person — search or withdraw';}else if(person.shelterId!==undefined){p.order='hold';p.target=null;p.workReason='The person reached shelter — choose another order or withdraw';}}
   const work=p.contactDemand;if(!work||p.hp<=0)continue;const dt=Math.max(0,Math.min(.34,g.state.time-work.lastTimeSeconds));work.lastTimeSeconds=g.state.time;if(!dt)continue;
-  const person=target(g,work.targetId);if(!person||person.team===p.team||person.prisoner||!person.carryType||person.carry<=0){p.contactDemand=undefined;p.workReason='The person or carried goods are no longer available';continue;}
+  const person=target(g,work.targetId);if(!person||person.team===p.team||person.prisoner||(work.forced?!(person.carryType&&person.carry>0)&&!heldItems(person):!person.carryType||person.carry<=0)){p.contactDemand=undefined;p.workReason='The person or carried goods are no longer available';continue;}
   if(p.emergency||p.order==='attack'&&p.target){p.contactDemand=undefined;p.workReason='The demand was interrupted by actual combat';continue;}
   if(Math.hypot(p.x-person.x,p.z-person.z)>CONTACT_RULES.exchangeMeters){const spot=g.nearestWalk(p,person.x,person.z);if(!spot||!g.workBoard.connected(g,p.x,p.z,spot.x,spot.z)){p.workReason='Demand approach blocked — clear a reachable route';continue;}p.tx=spot.x;p.tz=spot.z;p.order='hold';g.steer(p,dt);continue;}
   const force=g.state.units.filter(a=>armedAdult(g,a)&&Math.hypot(a.x-person.x,a.z-person.z)<=PRISONER_RULES.surrenderRadiusMeters).length;
@@ -175,9 +229,10 @@ function tickContactOrders(g:Game){
   if(force<Math.max(1,defenders*PRISONER_RULES.superiorityRatio)&&g.state.units.some(a=>a!==p&&a.hp>0&&armedAdult(g,a)&&a.contactDemand?.targetId===person.id&&Math.hypot(a.x-person.x,a.z-person.z)>PRISONER_RULES.surrenderRadiusMeters)){p.workReason='Waiting for the approaching guards before making the demand';continue;}
   g.makeHostile(person.team);
   if(force<Math.max(1,defenders*PRISONER_RULES.superiorityRatio)){p.contactDemand=undefined;p.order='hold';p.workReason='They refused the demand; armed companions resist';raiseAttackAlarm(g,person,p.team);lifeEvent(g,0,`${personName(person)} refused a demand for carried goods; nearby defenders resisted.`);continue;}
-  const kind=person.carryType,amount=Math.min(person.carry,carryingCapacity(p,kind));p.carry=amount;p.carryType=kind;p.carryFood=kind==='food'?person.carryFood:undefined;person.carry-=amount;
+  if(work.forced){p.contactDemand=undefined;noteTraderIncident(g,person,'robbed');const took=robCargo(g,p,person);if(!took){p.workReason='Nothing could be taken';continue;}returnPerson(g,person,'Robbed — withdrawing with what is left');person.contactSurrender={team:p.team,until:g.state.time+CONTACT_RULES.yieldSeconds};lifeEvent(g,0,`${personName(person)} was robbed of ${took}; the taker carries it home and its owner may pursue.`);continue;}
+  const kind=person.carryType as ResKind,amount=Math.min(person.carry,carryingCapacity(p,kind));p.carry=amount;p.carryType=kind;p.carryFood=kind==='food'?person.carryFood:undefined;person.carry-=amount;
   if(person.carry===0){person.carryType=null;person.carryFood=undefined;if(person.seedSamples){p.seedSamples={...p.seedSamples};for(const [crop,count]of Object.entries(person.seedSamples))p.seedSamples[crop as keyof typeof p.seedSamples]=(p.seedSamples[crop as keyof typeof p.seedSamples]||0)+(count||0);person.seedSamples=undefined;}}
   p.contactDemand=undefined;returnPerson(g,p,'Carrying demanded goods home');returnPerson(g,person,'Yielded carried goods — withdrawing with remaining belongings');person.contactSurrender={team:p.team,until:g.state.time+CONTACT_RULES.yieldSeconds};lifeEvent(g,0,`${personName(person)} yielded ${amount} ${kind}; a real carrier is bringing the goods home.`);
  }
 }
-export function validContactState(value:unknown){if(!value||typeof value!=='object')return false;const s=value as {units?:Unit[];nextId?:number;time?:number;tribes?:unknown[]};if(!Array.isArray(s.units))return false;for(const u of s.units){if(!u||typeof u!=='object'||Array.isArray(u))return false;if(u.contactDemand!==undefined&&(!u.contactDemand||typeof u.contactDemand!=='object'||Array.isArray(u.contactDemand)))return false;if(u.contactSurrender!==undefined&&(!u.contactSurrender||typeof u.contactSurrender!=='object'||Array.isArray(u.contactSurrender)))return false;for(const id of [u.contactDemand?.targetId,u.contactAttackTargetId])if(id!==undefined&&(!Number.isSafeInteger(id)||id<1||id>=Number(s.nextId)||id===u.id||u.team!==0))return false;if(u.contactDemand&&(!Number.isFinite(u.contactDemand.lastTimeSeconds)||u.contactDemand.lastTimeSeconds<0||u.contactDemand.lastTimeSeconds>Number(s.time)))return false;if(u.contactSurrender&&(!Number.isInteger(u.contactSurrender.team)||u.contactSurrender.team<0||u.contactSurrender.team>=Number(s.tribes?.length)||u.contactSurrender.team===u.team||!Number.isFinite(u.contactSurrender.until)||u.contactSurrender.until<0||u.contactSurrender.until>Number(s.time)+CONTACT_RULES.yieldSeconds+.001))return false;}return true;}
+export function validContactState(value:unknown){if(!value||typeof value!=='object')return false;const s=value as {units?:Unit[];nextId?:number;time?:number;tribes?:unknown[]};if(!Array.isArray(s.units))return false;for(const u of s.units){if(!u||typeof u!=='object'||Array.isArray(u))return false;if(u.contactDemand!==undefined&&(!u.contactDemand||typeof u.contactDemand!=='object'||Array.isArray(u.contactDemand)))return false;if(u.contactSurrender!==undefined&&(!u.contactSurrender||typeof u.contactSurrender!=='object'||Array.isArray(u.contactSurrender)))return false;for(const id of [u.contactDemand?.targetId,u.contactAttackTargetId])if(id!==undefined&&(!Number.isSafeInteger(id)||id<1||id>=Number(s.nextId)||id===u.id||u.team!==0))return false;if(u.contactDemand&&(!Number.isFinite(u.contactDemand.lastTimeSeconds)||u.contactDemand.lastTimeSeconds<0||u.contactDemand.lastTimeSeconds>Number(s.time)))return false;if(u.contactSurrender&&(!Number.isInteger(u.contactSurrender.team)||u.contactSurrender.team<0||u.contactSurrender.team>=Number(s.tribes?.length)||u.contactSurrender.team===u.team||!Number.isFinite(u.contactSurrender.until)||u.contactSurrender.until<0||u.contactSurrender.until>Number(s.time)+CONTACT_RULES.yieldSeconds+.001))return false;}return validTraderIncidentState(value);}

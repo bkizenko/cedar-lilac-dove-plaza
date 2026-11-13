@@ -185,7 +185,7 @@ function dispatch(g:Game){
  }
  // Bounded pursuit: owner adults near a living carrier of their goods.
  for(const m of s.marks){
-  const raider=unitOf(g,m.unitId);if(!raider||raider.hp<=0||!(raider.carry>0))continue;
+  const raider=unitOf(g,m.unitId);if(!raider||raider.hp<=0||!holds(raider))continue;
   const chasers=s.trips.filter(t=>t.phase==='chase'&&t.raiderId===raider.id).length;
   if(chasers>=R.chaseMaximumPerRaider)continue;
   const near=g.state.units.filter(u=>u.team===m.owner&&u.hp>0&&candidate(g,u)&&distance(u,raider)<=R.chaseDispatchMeters).sort((a,b)=>distance(a,raider)-distance(b,raider)||a.id-b.id)[0];
@@ -218,15 +218,23 @@ function pickUp(g:Game,u:Unit,trip:CargoTrip){
 }
 function deposit(g:Game,u:Unit,trip:CargoTrip){
  const s=root(g),item=heldItems(u)[0];
- if(item&&!(u.carry>0)){const amount=u.itemCargo![item]!;const t=g.tribe(u.team),items=t.items??={};if(item==='copperMetal'||item==='ironMetal')t[item==='copperMetal'?'copper':'iron']+=amount;else items[item]=(items[item]||0)+amount;delete u.itemCargo![item];if(!Object.values(u.itemCargo||{}).some(n=>(n||0)>0))u.itemCargo=undefined;s.ledger.deposited+=amount;if(trip.finder)s.ledger.depositedByFinder+=amount;else s.ledger.depositedByOwner+=amount;s.marks=s.marks.filter(m=>m.unitId!==u.id);endTrip(g,trip);return;}
+ if(item&&!(u.carry>0)){const amount=u.itemCargo![item]!;const t=g.tribe(u.team),items=t.items??={};if(item==='copperMetal'||item==='ironMetal')t[item==='copperMetal'?'copper':'iron']+=amount;else items[item]=(items[item]||0)+amount;delete u.itemCargo![item];if(!Object.values(u.itemCargo||{}).some(n=>(n||0)>0))u.itemCargo=undefined;s.ledger.deposited+=amount;if(trip.finder)s.ledger.depositedByFinder+=amount;else s.ledger.depositedByOwner+=amount;if(holds(u))return;s.marks=s.marks.filter(m=>m.unitId!==u.id);endTrip(g,trip);return;}
  const kind=u.carryType,amount=u.carry;if(!kind||!(amount>0)){endTrip(g,trip);return;}
  recordSimulationEvent(g,'cargo_delivered',u.team,kind,amount,u.id);
  const provenance=markOf(g,u.id);noteRaidDefenseRecovery(g,provenance?.raidBandId,trip.owner,u.team,amount);
  if(kind==='food')receiveFood(g,u.team,amount,u.carryFood);else g.tribe(u.team)[kind]+=amount;
  u.carry=0;u.carryType=null;u.carryFood=undefined;s.ledger.deposited+=amount;
  if(trip.finder)s.ledger.depositedByFinder+=amount;else s.ledger.depositedByOwner+=amount;
+ if(holds(u))return;// a robbed load can hold a resource and bulk items: finish the rest at the same cache
  s.marks=s.marks.filter(m=>m.unitId!==u.id);
  endTrip(g,trip);
+}
+/** A taker (robber) walks stolen goods to a real cache of its own society; the owner's mark and pursuit stay on the load. */
+export function beginLootReturn(g:Game,u:Unit,owner:number){
+ if(u.hp<=0||!holds(u))return false;const s=root(g);
+ if(s.trips.some(t=>t.unitId===u.id)){const t=tripOf(g,u.id)!;if(t.phase==='return'){t.deadline=g.state.time+R.returnSeconds;return true;}return false;}
+ if(!begin(g,u,{phase:'return',deadline:g.state.time+R.returnSeconds,owner,finder:true}))return false;
+ u.workReason='Carrying taken goods home';return true;
 }
 function stand(g:Game,u:Unit,trip:CargoTrip,reason:StolenCargoReason){endTrip(g,trip,reason,R.restSeconds);}
 
@@ -237,7 +245,7 @@ export function stolenCargoAI(g:Game,u:Unit,dt:number){
  const now=g.state.time;
  if(trip.phase==='chase'){
   const raider=unitOf(g,trip.raiderId!);
-  if(!raider||raider.hp<=0||!(raider.carry>0)||!markOf(g,raider.id)||markOf(g,raider.id)!.owner!==trip.owner){stand(g,u,trip,'pursuit-ended');return false;}
+  if(!raider||raider.hp<=0||!holds(raider)||!markOf(g,raider.id)||markOf(g,raider.id)!.owner!==trip.owner){stand(g,u,trip,'pursuit-ended');return false;}
   if(now>trip.deadline){stand(g,u,trip,'pursuit-time');return false;}
   if(distance(u,{x:trip.originX,z:trip.originZ})>R.chaseDistanceMeters){stand(g,u,trip,'pursuit-distance');return false;}
   if(u.hp<u.maxHp*R.chaseQuitHealthFraction){stand(g,u,trip,'pursuit-hurt');return false;}
@@ -295,6 +303,8 @@ export function tickStolenCargo(g:Game,dt:number){
  if(g.state.time<r.nextScanAt)return;
  r.nextScanAt=g.state.time+R.scanSeconds;
  if(r.parcels.length||r.marks.length)dispatch(g);
+ // A taker of the player's own society whose walk home was broken by a fight resumes carrying the marked load to a cache.
+ for(const m of r.marks){const u=unitOf(g,m.unitId);if(!u||u.hp<=0||u.team!==0||m.owner===0||tripOf(g,u.id)||u.emergency||u.prisoner||u.conflictIntent||!holds(u))continue;if(['idle','hold','return'].includes(u.order))beginLootReturn(g,u,m.owner);}
 }
 
 // ---- Persistence validation (runs inside validCoastalTradeState's existing path).
