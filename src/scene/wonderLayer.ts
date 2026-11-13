@@ -2,7 +2,8 @@
  * A wonder is one unique carved mesh per (record, skin, build stage, LOD): the kit assembly is seeded per record, so two societies' wonders never match.
  * Thin three.js adapter over pure, tested modules (wonderKit, carvedMesh); nothing is created until the first record exists. */
 import * as THREE from 'three';
-import {partsAtLod,renderTierForDistance,type BuildingSpec,type LodTier} from './buildingParts';
+import {buildingTierAt} from '../game/detailLevel';
+import {partsAtLod,type BuildingSpec,type LodTier} from './buildingParts';
 import {buildCarvedMesh} from './carvedMesh';
 import {carvedGeometry,createCarvedMaterial} from './carvedBuildingLayer';
 import {generateWonderKit,type WonderFunction,type WonderOptions} from './wonderKit';
@@ -32,7 +33,7 @@ export class WonderLayer{
    let e=this.entries.get(key);if(!e){e={spec:WonderLayer.specFor(r,skin),meshes:new Map(),used:this.frame};this.entries.set(key,e);}
    e.used=this.frame;
    // a landmark stays visible from far away: the far tier keeps the core and crown silhouette
-   const tier=Math.min(2,renderTierForDistance(Math.hypot(r.x-camera.x,r.z-camera.z))) as LodTier;
+   const tier=Math.min(2,buildingTierAt(Math.hypot(r.x-camera.x,r.z-camera.z))) as LodTier;
    let mesh=e.meshes.get(tier);
    if(!mesh){mesh=new THREE.InstancedMesh(carvedGeometry(buildCarvedMesh(e.spec,tier)),this.material,1);mesh.name=`wonder-${key}#${tier}`;mesh.frustumCulled=false;mesh.castShadow=tier<2;mesh.receiveShadow=true;this.scene.add(mesh);e.meshes.set(tier,mesh);}
    const hw=r.w/2,hd=r.d/2,y=Math.min(groundAt(r.x,r.z),groundAt(r.x-hw,r.z-hd),groundAt(r.x+hw,r.z-hd),groundAt(r.x-hw,r.z+hd),groundAt(r.x+hw,r.z+hd));

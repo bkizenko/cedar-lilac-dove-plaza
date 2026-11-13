@@ -7,7 +7,8 @@ import * as THREE from 'three';
 import {ensureInstanceCapacity} from './instanceCapacity';
 import {heldItemMesh,heldKey,itemEraForAge,conditionBucket,CONDITION_BUCKET_MID} from './itemRegistry';
 import {meshGeometry,itemMaterial} from './itemGeometry';
-import {RIG_BONES,RIG_PIVOTS,bodyClassFor,boneMatrices,farParts,itemParts,mul,newBoneMatrices,composeEuler,rigMeshData,rigOutfit,tierForDistance,type BodyClass,type ItemId,type RigGear,type RigOutfit,type RigPart,type RigSlot,type RigBone} from './characterRig';
+import {personTierAt} from '../game/detailLevel';
+import {RIG_BONES,RIG_PIVOTS,bodyClassFor,boneMatrices,farParts,itemParts,mul,newBoneMatrices,composeEuler,rigMeshData,rigOutfit,type BodyClass,type ItemId,type RigGear,type RigOutfit,type RigPart,type RigSlot,type RigBone} from './characterRig';
 import {DeathTracker,newAnimState,stepAnimator,CORPSE_RULES,type AnimContext,type AnimState,type UnitLike} from './characterAnim';
 import {lifePose} from './peopleLife';
 import {NEUTRAL_POSE,poseAtTier,type Pose} from './animationClips';
@@ -52,6 +53,8 @@ export class CharacterRigLayer{
   this.scene=scene;this.root.name='people-rig';scene.add(this.root);
   this.material=new THREE.MeshStandardMaterial({vertexColors:true,color:0xffffff,roughness:.9,metalness:0,side:THREE.FrontSide});
  }
+ /** people nearer than this (3-D metres) may use the near tier; the adapter lowers it when more than DETAIL_RULES.maxNearPeople are inside the near radius */
+ nearLimit=Infinity;
  beginFrame(world:PeopleWorld,camera:THREE.Vector3,quality:'low'|'med'|'high',shadows:boolean){
   this.world=world;this.camera.copy(camera);this.shadows=shadows&&quality!=='low';this.frame++;
   for(const v of this.variants.values()){v.count=0;}
@@ -107,7 +110,7 @@ export class CharacterRigLayer{
  write(u:UnitLike,scale:readonly [number,number,number],bob:number,brightness:number,tintHue:number,override?:{pose:Pose;sink:number;outfit?:RigOutfit;cls?:BodyClass;/** held items to show with a review pose (render sheets) */items?:{itemR?:ItemId;itemL?:ItemId}}){
   const w=this.world;if(this.disposed||!w)return false;
   const cls=override?.cls??bodyClassFor(u,w.time);
-  const dx=u.x-this.camera.x,dz=u.z-this.camera.z,dy=u.y-this.camera.y,raw=tierForDistance(Math.hypot(dx,dy,dz)),tier=(override&&raw>1?1:raw) as LodTier;
+  const dx=u.x-this.camera.x,dz=u.z-this.camera.z,dy=u.y-this.camera.y,dist3=Math.hypot(dx,dy,dz),raw=dist3<this.nearLimit?personTierAt(dist3):Math.max(1,personTierAt(dist3)),tier=(override&&raw>1?1:raw) as LodTier;
   const outfit=override?.outfit??this.outfitFor(u,cls,w,tier);
   if(!override)this.stats.tiers[tier]++;
   let pose:Pose,itemR=outfit.itemR,itemL=outfit.itemL;
