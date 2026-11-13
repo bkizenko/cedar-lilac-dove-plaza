@@ -41,7 +41,7 @@ function settle(g:Game,camp:{x:number;z:number},team:number,types:string[],tight
     if(!g.placeBuilding(type as any,x,z,0))continue;const b=g.state.buildings.filter(q=>q.type===type&&q.hp>0).pop()!;b.build=1;b.plannedCost=undefined as any;b.team=team;ok=true;n=k+1;placed.push(type);}}
   return placed;
 }
-const shotImages=async(view:WorldView,g:Game,frames:number)=>{for(let i=0;i<frames;i++){view.sync(g,.05);view.render();await new Promise(r=>setTimeout(r,16));}};
+const shotImages=async(view:WorldView,g:Game,frames:number)=>{for(let i=0;i<frames;i++){if(!(o as any).lowq)(view as any).quality='med';view.sync(g,i===1?.6:.05);view.render();await new Promise(r=>setTimeout(r,16));}};
 w.hwShot=async(o:Opts)=>{
   const canvas=document.getElementById('c') as HTMLCanvasElement;
   const g=new Game();g.reset(o.seed,18,{size:1040,layout:'pangaea'} as any);g.enterIsland();(g as any).testMode=true;g.revealMap=true;g.updateVision(0);
@@ -79,7 +79,7 @@ w.hwShot=async(o:Opts)=>{
   if(o.x!=null&&o.z!=null)focus={x:o.x,z:o.z};
   if(o.shot==='societies')for(const c of g.world.camps)for(const tr of g.state.trees){if(Math.hypot(tr.x-c.x,tr.z-c.z)<30)tr.amount=0;}
   if(focus&&o.shot!=='societies')for(const tr of g.state.trees){if(Math.hypot(tr.x-focus.x,tr.z-focus.z)<(o.shot==='village'?9:o.shot==='skins'||o.shot==='wonders'?34:22))tr.amount=0;}
-  const view=new WorldView(canvas);
+  const view=new WorldView(canvas);if(!(o as any).lowq)view.applyQuality('med');
   view.setStyle(o.style);
   view.applyQuality('low');
   view.resize();
@@ -97,9 +97,9 @@ w.hwShot=async(o:Opts)=>{
     };
     return info;
   }
-  for(let i=0;i<o.frames;i++){if(o.time!=null)g.state.time=o.time+i*.05;view.sync(g,.05);view.render();await new Promise(r=>setTimeout(r,16));}
+  for(let i=0;i<o.frames;i++){if(o.time!=null)g.state.time=o.time+i*.05;if(!(o as any).lowq)(view as any).quality='med';view.sync(g,i===1?.6:.05);view.render();await new Promise(r=>setTimeout(r,16));}
   {const L=(view as any).carvedLayer,rs=L?[...L.pickSources().keys()].filter((m:any)=>m.name.includes('~')):[];const mm=rs[0]?new (rs[0].matrix.constructor)():null;if(mm)rs[0].getMatrixAt(0,mm);info.rotors=rs.length;info.rotorM=mm?Array.from(mm.elements as number[]).slice(0,3).map(v=>+v.toFixed(3)):null;info.paused=g.state.paused;info.snow=carvedSnowUniform.value;{const L2=(view as any).carvedLayer;info.mats=L2?[...new Set([...L2.pickSources().keys()].map((m:any)=>m.material.name+':'+(m.material.customProgramCacheKey?.()??'')+':'+m.count))]:null;}info.snowMix=g.seasonMix().snow;}
-  info.wonders=(view as any).wonderLayer?.stats();info.style=view.getStyle();info.cam=[view.camera.position.x,view.camera.position.y,view.camera.position.z].map(v=>+v.toFixed(1));info.look=[view.look.x,view.look.y,view.look.z].map(v=>+v.toFixed(1));info.dist=view.dist;info.tris=view.renderer.info.render.triangles;info.calls=view.renderer.info.render.calls;
+  info.q=view.quality;info.wonders=(view as any).wonderLayer?.stats();info.style=view.getStyle();info.cam=[view.camera.position.x,view.camera.position.y,view.camera.position.z].map(v=>+v.toFixed(1));info.look=[view.look.x,view.look.y,view.look.z].map(v=>+v.toFixed(1));info.dist=view.dist;info.tris=view.renderer.info.render.triangles;info.calls=view.renderer.info.render.calls;
   void BUILDINGS;
   return info;
 };
