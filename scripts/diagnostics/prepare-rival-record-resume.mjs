@@ -1,0 +1,30 @@
+// Prepare an explicitly controlled interruption of genuinely paid native work.
+// No Game.step, fabricated project, skill, material, position or terrain changes.
+import assert from 'node:assert/strict';
+import {readFileSync,writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {isAbsolute} from 'node:path';
+import {encodeGame,decodeGame} from '../../src/game/persistence.ts';
+import {pauseProduction} from '../../src/game/production.ts';
+const input=process.argv[2]??'/tmp/hearthwild-rival-resume-working.json';
+const output=process.argv[3]??'/tmp/hearthwild-rival-resume-paused-working.json';
+const metadataFile=process.argv[4]??'/tmp/hearthwild-rival-resume-paused-working.meta.json';
+for(const file of [input,output,metadataFile])assert.ok(isAbsolute(file),'Use explicit absolute fixture paths');
+assert.notEqual(input,output);assert.notEqual(input,metadataFile);assert.notEqual(output,metadataFile);
+const hash=value=>createHash('sha256').update(value).digest('hex');
+const bytes=readFileSync(input),inputHash=hash(bytes),g=decodeGame(JSON.parse(bytes));
+const project=g.state.production?.projects.find(p=>p.methodRecordWork?.kind==='author'&&p.phase==='working'&&p.progress>0&&p.progress<60);
+assert.ok(project,'Input must contain a genuine partial author project');
+const originalActor=g.state.units.find(u=>u.id===project.actorId);
+assert.ok(originalActor);assert.equal(originalActor.id,project.methodRecordWork.source.makerId);
+assert.notEqual(project.team,0);assert.ok(project.methodRecordWork.source.successfulBatches>=3);
+const payment=game=>({metrics:{consumed:game.state.production.metrics.consumed,logsUsed:game.state.production.metrics.logsUsed,waterUsedLiters:game.state.production.metrics.waterUsedLiters},tribes:game.state.tribes.map(t=>({id:t.id,wood:t.wood,items:t.items,waterLiters:t.survival?.waterLiters}))});
+const paid=structuredClone(payment(g)),source=structuredClone(project.methodRecordWork.source),progress=project.progress,time=g.state.time,positions=g.state.units.map(u=>({id:u.id,x:u.x,y:u.y,z:u.z})),terrainHash=hash(JSON.stringify(Array.from(g.world.heights)));
+assert.equal(pauseProduction(g,originalActor,'interrupted'),true);
+assert.equal(project.phase,'paused');assert.equal(project.pauseCause,'interrupted');assert.equal(project.progress,progress);assert.deepEqual(payment(g),paid);g.state.paused=true;
+const saved=encodeGame(g),restored=decodeGame(saved),retained=restored.state.production.projects.find(p=>p.id===project.id);
+assert.equal(retained.phase,'paused');assert.equal(retained.pauseCause,'interrupted');assert.equal(retained.progress,progress);assert.deepEqual(retained.methodRecordWork.source,source);assert.deepEqual(payment(restored),paid);assert.equal(restored.state.time,time);assert.deepEqual(restored.state.units.map(u=>({id:u.id,x:u.x,y:u.y,z:u.z})),positions);assert.equal(hash(JSON.stringify(Array.from(restored.world.heights))),terrainHash);
+writeFileSync(output,JSON.stringify(saved));
+const metadata={scope:'Controlled interrupted pause of genuinely paid NPC author; no defense or natural event claim',input,inputHash,output,projectId:project.id,actorId:originalActor.id,team:project.team,progress,resumePhase:retained.resumePhase,pauseCause:retained.pauseCause,source,paid,time,terrainHash};
+writeFileSync(metadataFile,JSON.stringify(metadata,null,2));assert.equal(hash(readFileSync(input)),inputHash);
+console.log(JSON.stringify({output,metadataFile,projectId:project.id,actorId:originalActor.id,progress,pauseCause:retained.pauseCause,inputHash,inputUnchanged:true}));

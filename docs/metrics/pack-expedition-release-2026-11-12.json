@@ -1,0 +1,204 @@
+{
+  "release": "2026-11-13T00-18-33-207Z-027dfae",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T00-18-33-207Z-027dfae",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-12T23-35-40-519Z-18d9fc9",
+  "commit": "027dfae3bddc661e0e83b3b21fb6534e927aa93e",
+  "retained": {
+    "linked": 1438,
+    "copied": 0,
+    "existing": 13
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 52,
+    "total": 52,
+    "nativeAndShared": 49,
+    "groups": {
+      "genuineRivalProducer": 2,
+      "samePaidRivalResume": 3,
+      "earnedHorsePhysicalExpeditionAndDeath": 2,
+      "actualAnimalCareConservation": 3,
+      "typedFoodCustodyKernel": 9,
+      "forageIdentity": 2,
+      "botanicalGeometryAndMaterials": 8,
+      "itemModelsAndWildResourceStores": 20
+    },
+    "built": {
+      "passed": 3,
+      "total": 3,
+      "scope": "Actual earned loaded pack exploration, real Recall UI and finite typed food/feed/water physical return; untouched original53; same already-paid NPC author ordinary automatic resume. No new loading grants, bodies, terrain, random overrides, screenshots or FPS/full-gate claims.",
+      "lowRendererPrograms": 46,
+      "pack": {
+        "actor": 6223,
+        "animal": 6354,
+        "physicalReturnCache": 6365,
+        "typedReturned": {
+          "pulses": 41.93834336610773,
+          "grain": 0,
+          "tubers": 0,
+          "berries": 0,
+          "provisions": 1.582514665770216e-14,
+          "bread": 30.48127548647065
+        },
+        "noNewFoodIncome": true,
+        "originalHorseMarker": true,
+        "strictDurable": true
+      },
+      "legacy": {
+        "population": 53,
+        "absentPackets": true,
+        "readPure": true,
+        "legacyExpeditions": 0,
+        "strictDurable": true
+      },
+      "npc": {
+        "projectId": 3105,
+        "recordId": 3107,
+        "sourceMaker": 2968,
+        "automaticSamePaidResume": true,
+        "noSecondClayOrLog": true
+      },
+      "inputFilesUnchanged": true,
+      "errors": []
+    }
+  },
+  "compiler": "PASS final combined tree",
+  "build": "PASS exact frozen027dfae3",
+  "oldAssetNetwork": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T00-18-33-207Z-027dfae",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "frozenAcceptance": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76,
+    "newGateCredit": 0
+  },
+  "features": [
+    "Remote empty-handed Explore queues actual cache return before loading; no remote food withdrawal.",
+    "Actual trained living animal condition determines total carrying budget; human typed meals and real animal plant feed/water share that budget.",
+    "The same animal consumes held journey supplies, not distant village stocks; remaining care/food trigger a timely physical return.",
+    "Typed unused food/feed/water returns without fabricated harvest/production income; food death parcels remain finite and water loss is explicitly accounted.",
+    "Ready journey forage retains actual plant kind and cannot relabel raw wild cereal as ready berries.",
+    "Existing interrupted NPC record work resumes with its original maker/carrier, progress and payment before new-record quotas; manual pauses/food needs stay respected."
+  ],
+  "earnedHorse": {
+    "animalId": 6354,
+    "handlerId": 6223,
+    "healthyTotalFoodEquivalentCapacity": 84,
+    "humanFoodLoaded": 37.90567918087184,
+    "animalPlantFeedLoaded": 34.570740614346114,
+    "animalWaterLitersLoaded": 11.523580204782036,
+    "unassistedFoodCapacity": 24
+  },
+  "evidenceLogs": {
+    "resumeProducer": "/tmp/hearthwild-rival-resume-producer.log",
+    "resumeNative": "/tmp/hearthwild-rival-resume-native.log",
+    "careAndKernel": "/tmp/hearthwild-pack-care-native.log",
+    "currentHorseAndBotany": "/tmp/hearthwild-pack-current-native.log",
+    "itemsAndWildStores": "/tmp/hearthwild-pack-integrated-regressions.log",
+    "forage": "/tmp/hearthwild-expedition-forage-tests.log"
+  },
+  "preservation": {
+    "original53Sha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+    "originalVillageUnchanged": true,
+    "oldScalarExpeditionsRemainUnidentifiedWithoutFreeGoods": true,
+    "globalFoodCustodyPrototypeRemainsUnwired": true
+  },
+  "limitations": [
+    "No fullW1/M3-06 or knowledge gate/campaign/100-resident FPS credit.",
+    "Real pack-trade capacity already exists, but an earned-horse trade journey and broader road-care consumer integration remain to qualify.",
+    "Controlled casualty/interruptions, not a natural raid/campaign claim; no invented animal/body/terrain/RNG or production skill overrides.",
+    "Animal travel water uses existing abstract travel capacity; full container/pottery identity remains a separate W5 task.",
+    "Later approved Claude art changes on main after this frozen artifact await the next integration release."
+  ],
+  "unpublishedMainSourceFiles": [
+    "src/game/sim.ts",
+    "src/scene/biomeSceneLayer.ts",
+    "src/scene/biomeVegetation.ts",
+    "src/scene/botanicalForest.ts",
+    "src/scene/botanicalUnderstory.ts",
+    "src/scene/itemGeometry.ts",
+    "src/scene/itemKit.ts",
+    "src/scene/itemMaterials.ts",
+    "src/scene/itemMelee.ts",
+    "src/scene/itemMesh.ts",
+    "src/scene/itemModels.ts",
+    "src/scene/itemRanged.ts",
+    "src/scene/itemRegistry.ts",
+    "src/scene/itemSiege.ts",
+    "src/scene/itemStyle.ts",
+    "src/scene/itemTexture.ts",
+    "src/scene/itemTools.ts",
+    "src/scene/painterTrees.ts"
+  ],
+  "cleanup": {
+    "completedOwnWorktreesRemoved": 3,
+    "private8103Stopped": true,
+    "live8101Pid": 46599,
+    "supersededRollbackRemoved": "c1d0e59",
+    "currentAndOnePreviousRetained": true,
+    "originalVillageAndApprovedArtPreserved": true,
+    "retainedUnfinishedPackTradeInput": "/tmp/hearthwild-pack-expedition-earned.json",
+    "otherCompletedGeneratedCheckpointCopiesRemoved": true,
+    "postCleanupNetwork": {
+      "passed": 5,
+      "total": 5,
+      "release": "2026-11-13T00-18-33-207Z-027dfae",
+      "assets": [
+        {
+          "port": 8086,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+        },
+        {
+          "port": 8086,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+        },
+        {
+          "port": 8101,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+        },
+        {
+          "port": 8101,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+        }
+      ]
+    },
+    "ordinaryNativeResumeDiagnosticWithoutInputs": {
+      "passed": 0,
+      "skipped": 3,
+      "creditedTo52": false
+    }
+  }
+}

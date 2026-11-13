@@ -1,3 +1,4 @@
+import {inBounds} from './worldgen';
 import type {Game} from './sim';
 import type {Building} from './types';
 import {climateAt} from './ecology';
@@ -25,7 +26,7 @@ const hash=(a:number,b:number)=>{let n=Math.imul(a^0x9e3779b9,0x85ebca6b)^Math.i
 /** Deterministic scan around the camp. Only ground a person can stand on; pans need real sea within a few metres. */
 export function generateSites(g:Game):WildSite[]{
  const camp=g.campOf(0),sea=seaSurfaceY(g.world),out:WildSite[]=[],spin=hash(g.state.seed|0,7)*Math.PI*2;let next=1;
- const stand=(x:number,z:number)=>g.walkable(x,z)&&g.withinWorld(x,z,6);
+ const stand=(x:number,z:number)=>g.walkable(x,z)&&inBounds(x,z,6,g.world.size);
  const nearSea=(x:number,z:number)=>[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dz])=>{const px=x+dx*SITE_RULES.reach*1.5,pz=z+dz*SITE_RULES.reach*1.5;return g.height(px,pz)<sea-.05&&Math.abs(g.waterAt(px,pz)-sea)<.2;})&&g.height(x,z)>sea+.25;
  const pans:WildSite[]=[],high:{x:number;z:number;h:number}[]=[],meadows:WildSite[]=[];
  for(let r=SITE_RULES.scanFrom;r<=SITE_RULES.scanTo;r+=SITE_RULES.ring)for(let i=0;i<SITE_RULES.angles;i++){
