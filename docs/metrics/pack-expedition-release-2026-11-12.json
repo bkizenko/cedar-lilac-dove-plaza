@@ -113,9 +113,9 @@
     "animalId": 6354,
     "handlerId": 6223,
     "healthyTotalFoodEquivalentCapacity": 84,
-    "humanFoodLoaded": 37.90567918087185,
-    "animalPlantFeedLoaded": 34.57074061447015,
-    "animalWaterLitersLoaded": 11.52358020482338,
+    "humanFoodLoaded": 37.90567918087184,
+    "animalPlantFeedLoaded": 34.570740614346114,
+    "animalWaterLitersLoaded": 11.523580204782036,
     "unassistedFoodCapacity": 24
   },
   "evidenceLogs": {
@@ -158,5 +158,47 @@
     "src/scene/itemTexture.ts",
     "src/scene/itemTools.ts",
     "src/scene/painterTrees.ts"
-  ]
+  ],
+  "cleanup": {
+    "completedOwnWorktreesRemoved": 3,
+    "private8103Stopped": true,
+    "live8101Pid": 46599,
+    "supersededRollbackRemoved": "c1d0e59",
+    "currentAndOnePreviousRetained": true,
+    "originalVillageAndApprovedArtPreserved": true,
+    "retainedUnfinishedPackTradeInput": "/tmp/hearthwild-pack-expedition-earned.json",
+    "otherCompletedGeneratedCheckpointCopiesRemoved": true,
+    "postCleanupNetwork": {
+      "passed": 5,
+      "total": 5,
+      "release": "2026-11-13T00-18-33-207Z-027dfae",
+      "assets": [
+        {
+          "port": 8086,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+        },
+        {
+          "port": 8086,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+        },
+        {
+          "port": 8101,
+          "url": "/assets/routes-y3A9lzBK.js",
+          "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+        },
+        {
+          "port": 8101,
+          "url": "/assets/styles-CEdjSfRz.css",
+          "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+        }
+      ]
+    },
+    "ordinaryNativeResumeDiagnosticWithoutInputs": {
+      "passed": 0,
+      "skipped": 3,
+      "creditedTo52": false
+    }
+  }
 }
