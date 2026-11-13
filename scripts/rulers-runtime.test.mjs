@@ -441,3 +441,21 @@ test('lane A long-run stylized facts: 200 dynastic years in a real game stay val
  const total=Object.values(unrestStages).reduce((a,b)=>a+b,0),severe=(unrestStages.civilWar||0)+(unrestStages.uprising||0);
  assert.ok(total>0&&severe/total<.5,'most society-years are not in uprising: '+JSON.stringify(unrestStages));
 });
+
+test('neighbourMemory: acts between two houses fade with a ten-year half-life, third parties and old saves stay out, no state added',async()=>{
+ const {neighbourMemory,MEMORY_HALF_LIFE_YEARS}=await import('../src/game/rulersView.ts');
+ const {recordAgreement}=await import('../src/game/societyRuntime.ts');
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*2;advanceRulers(g);const r=rulersOf(g.state);
+ assert.deepEqual(neighbourMemory(g,0,1),[],'nothing happened, nothing remembered');
+ g.state.time=RULERS_YEAR_SECONDS*r.year;recordAgreement(g,0,1,'pact','Hearth and Rivals swore a pact');recordAgreement(g,1,2,'marriage','Rivals and Others wed');
+ const before=JSON.stringify(g.state.rulers);
+ const fresh=neighbourMemory(g,0,1);assert.equal(fresh.length,1,'only acts between these two houses');assert.equal(fresh[0].weight,100);
+ assert.equal(JSON.stringify(g.state.rulers),before,'read-only: no memory state is stored');
+ r.year+=MEMORY_HALF_LIFE_YEARS;assert.equal(neighbourMemory(g,0,1)[0].weight,50,'half after one half-life');
+ r.year+=3*MEMORY_HALF_LIFE_YEARS;assert.deepEqual(neighbourMemory(g,0,1),[],'forgotten once below the floor');
+ r.year-=3*MEMORY_HALF_LIFE_YEARS;const d1=r.societies['1'].dynasty,k=Object.values(d1.people).find(p=>p.alive);
+ d1.people['1-kid']={...k,id:'1-kid',name:'Kid1',age:6};r.wards=[{kind:'foster',person:'1-kid',from:'1',to:'0',since:r.year-1}];
+ const m=neighbourMemory(g,0,1);assert.ok(m.some(x=>x.kind==='foster'&&/They sent Kid1 to us/.test(x.text)),'hosted ward is remembered');
+ assert.ok(neighbourMemory(g,0,2).every(x=>x.kind!=='foster'),'a ward of house 1 is not a memory with house 2');
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourMemory(old,0,1),[]);
+});

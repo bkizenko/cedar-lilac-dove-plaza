@@ -42,6 +42,12 @@ test('diplomacy sheet shows the wards ledger: who is held where, years left and 
  assert.match(html,/Kin in each other/);assert.match(html,/Little Ines/);assert.match(html,/fostered with us; home in 7 yr/);assert.match(html,/a hostage in Marsh Folk; home in under a year/);
  assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:nb,onAct(){}})),/Kin in each other/);
 });
+test('diplomacy sheet shows what the neighbour remembers, fading, and nothing when empty',()=>{
+ const memory=[{kind:'foster',text:'We sent Tam to them as a foster child',year:30,weight:90},{kind:'truce',text:'A truce was sworn',year:2,weight:18}];
+ const html=renderToStaticMarkup(h(DiplomacySheet,{neighbours:[{...nb[0],memory}],onAct(){}}));
+ assert.match(html,/What Marsh Folk remembers/);assert.match(html,/We sent Tam to them as a foster child\. <span[^>]*>Fresh in mind/);assert.match(html,/Nearly forgotten/);
+ assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:nb,onAct(){}})),/remembers/);
+});
 test('ruler change reads as an event: mourning toast with the chronicle line, silent when nothing changed',async()=>{
  const {describeRulerChange}=await import('../src/ui/RulerEventToast.tsx');
  const c={enabled:true,ruler:{name:'Brenna',age:19,headline:'bold and untested'},house:{name:'Ash',generation:2,family:[]},log:['41: Orm died aged 63'],handover:{}};
