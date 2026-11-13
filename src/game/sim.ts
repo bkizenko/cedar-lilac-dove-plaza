@@ -1,4 +1,4 @@
-import {planFoodWithdrawal,commitFoodWithdrawal,setCarriedFood,receiveCarriedFood} from './tradeFood';
+import {planFoodWithdrawal,commitFoodWithdrawal,setCarriedFood,receiveCarriedFood,carriedFoodLots} from './tradeFood';
 import {siteSlopeIssue} from './siteSlope';
 import {tradeCargoCapacity,PACK_TRADE_TRAVEL_RULES} from './tradeCargo';
 import {returnPackJourneyCare,packJourneyReturnBudgetLow} from './packJourneyCare';
@@ -6213,7 +6213,7 @@ export class Game {
         kind: "unit",
         type: u.type,
         team: u.team,
-        carry: u.carry > 0 && u.carryType ? (u.carryType==="food"?u.carryFood||"provisions":u.carryType) + " " + u.carry + "/" + cap : "",
+        carry: u.carry > 0 && u.carryType ? (u.carryType==="food"?Object.entries(carriedFoodLots(u)).map(([k,n])=>`${n} ${k}`).join(" · "):u.carryType+" "+u.carry) + "/" + cap : "",
         job: u.order === "hold" ? "hold" : u.job,
       };
     } else if (this.state.selBld && this.state.selBld.hp > 0) {

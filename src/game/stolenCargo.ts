@@ -1,4 +1,3 @@
-import {FOOD_KINDS} from './pantry';
 import {withdrawCarriedFood,receiveCarriedFood} from './tradeFood';
 import type {Game} from './sim';
 import {noteRaidDefenseRecovery} from './warPrestige';
@@ -76,9 +75,10 @@ export function droppedParcels(g:Game){return g.state.droppedCargo?.parcels??[];
  * the unaccepted remainder stays on its physical body for a later retry. */
 export function dropFoodUnits(g:Game,u:Unit,food:FoodKind,units:number,originalOwnerTeam=u.team){
  if(u.hp>0||!Number.isFinite(units)||units<=0)return 0;
- const s=root(g),near=s.parcels.find(p=>p.claimedBy===undefined&&p.kind==='food'&&p.food===food&&p.originalOwnerTeam===originalOwnerTeam&&distance(p,u)<=R.mergeMeters);
+ const raidBandId=markOf(g,u.id)?.raidBandId;
+ const s=root(g),near=s.parcels.find(p=>p.claimedBy===undefined&&p.kind==='food'&&p.food===food&&p.originalOwnerTeam===originalOwnerTeam&&p.raidBandId===raidBandId&&distance(p,u)<=R.mergeMeters);
  if(!near&&s.parcels.length>=R.maximumParcels){note(g,'parcel-cap');return 0;}
- if(near)near.amount+=units;else s.parcels.push({id:g.id(),kind:'food',food,amount:units,x:u.x,z:u.z,originalOwnerTeam,fromTeam:u.team,droppedAt:g.state.time});
+ if(near)near.amount+=units;else s.parcels.push({id:g.id(),kind:'food',food,amount:units,x:u.x,z:u.z,originalOwnerTeam,fromTeam:u.team,droppedAt:g.state.time,...(raidBandId===undefined?{}:{raidBandId})});
  s.ledger.dropped+=units;return units;
 }
 function dropExpeditionFood(g:Game,u:Unit){

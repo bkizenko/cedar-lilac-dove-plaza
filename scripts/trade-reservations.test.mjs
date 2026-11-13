@@ -22,7 +22,7 @@ function legacyFixture(armed=false){const file=armed?'legacy-held-armed-trade-92
 test('a loaded legacy paid guarantee retains finite escrow when new proposals depart and seller free stock is spent',()=>{
  const g=legacyFixture(),u=g.state.units[0];
  assert.equal(g.tribe(1).wood,40);assert.deepEqual(u.tradeReservation,{team:1,kind:'wood',amount:30});
- const loadingStock=g.tribe(0).food;assert.equal(g.dispatchTrade(g.state.units[1],deal,1),true);finishTradeLoading(g,g.state.units[1],loadingStock);assert.equal(g.state.units[1].carry,20);assert.equal(g.state.units[1].tradeReservation,undefined);assert.equal(g.tribe(1).wood,40,'new unguaranteed proposals cannot consume the legacy escrow');
+ const loadingStock=g.tribe(0).food;assert.equal(g.dispatchTrade(g.state.units[1],{...deal,getAmt:1},1),true);finishTradeLoading(g,g.state.units[1],loadingStock);assert.equal(g.state.units[1].carry,20);assert.equal(g.state.units[1].tradeReservation,undefined);assert.equal(g.tribe(1).wood,40,'new unguaranteed proposals cannot consume the legacy escrow');
  g.tribe(1).wood=0;const hall=g.state.buildings[1],spot=g.interactionSpot(u,hall);u.x=spot.x;u.z=spot.z;
  g.tradeAI(u,.1);assert.equal(u.carryType,'wood');assert.equal(u.carry,30);assert.equal(u.tradeReservation,undefined);
  assert.equal(g.tribe(1).wood,0);assert.equal(g.tribe(1).food,50);assert.equal(g.tribe(0).wood,100,'goods still have to travel home');
