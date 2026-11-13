@@ -439,8 +439,9 @@ HOUSE.tigrane=g=>{const {w,d,r}=g,W=w*.88,D=d*.86,h=range(r,2.7,3.2),t=.42,rd=D*
  g.B('trim',[W,.18,rd+.1],[0,h*.55,-D/2+rd/2],1);g.B('accent',[1.0,1.7,.1],[0,0,-D/2+rd+.04],0);g.B('wall2',[1.6,.3,.9],[0,0,0],0);
  g.B('wall2',[W*.5,.14,.14],[0,h*.62,D/2-t/2],1);return {entry:{x:0,z:D/2,width:W*.3}};};
 CIVIC.tigrane=g=>{const {w,d,r}=g;let y=0;
- for(let i=0;i<3;i++){const k=1-i*.22;g.B(i%2?'wall2':'wall',[w*.94*k,1.5,d*.9*k],[0,y,-d*.04*i],2);g.B('trim',[w*.94*k+.1,.16,d*.9*k+.1],[0,y+1.5,-d*.04*i],1);
-  if(i<2)for(let j=0;j<7;j++)g.B('wall2',[.34,1.5,.3],[-w*.94*k*.45+j*w*.94*k*.15,y,d*.9*k*.5-d*.04*i],1);y+=1.66;}
+ // stacked discs: three round baked-brick terraces (elliptical drums, each smaller than the last) with a trim ring and a ring of pilasters on the lower two
+ for(let i=0;i<3;i++){const k=1-i*.22,tw=w*.94*k,td=d*.9*k,zo=-d*.04*i;P(g,'cylinder',i%2?'wall2':'wall',[tw,1.5,td],[0,y,zo],undefined,14,2);P(g,'cylinder','trim',[tw+.2,.16,td+.2],[0,y+1.5,zo],undefined,14,1);
+  if(i<2)for(let j=0;j<6;j++){const a=Math.PI*(.14+j*.145);g.B('wall2',[.34,1.5,.3],[Math.cos(a)*tw*.5*1.0,y,zo+Math.sin(a)*td*.5],1,[0,-a,0]);}y+=1.66;}
  for(let i=0;i<10;i++)g.B('wall',[w*.22,.3,.55],[0,i*.5*(3.1/4.9)*1.0,d*.44+.1+(10-i)*.34],1);
  const W=w*.4,D=d*.4,h=1.7,vh=1.6,zc=-d*.1;g.B('wall',[W,h,D],[0,y,zc],2);
  // true barrel vault: an elliptical drum on its side (axis along the hall), springing from the walls, with glazed-band rib hoops and a lit arched mouth
