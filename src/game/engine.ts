@@ -145,7 +145,13 @@ export class Engine {
   private dispatchSequence=0;
   private dispatchRevision=0;
   /** Captures IDs at the click; native handlers revalidate original entities. */
-  async dispatch(command:EngineDispatchCommand,selection?:EngineSelection):Promise<EngineDispatchResult>{
+  async dispatch(command:EngineDispatchCommand,selection?:EngineSelection,opts?:{notice?:boolean}):Promise<EngineDispatchResult>{
+    const result=await this.dispatchRaw(command,selection);
+    /* A refused order is never silent: one visible banner with the reason plus the refusal cue. Callers with their own feedback list (council) pass notice:false. */
+    if(!result.accepted&&opts?.notice!==false&&result.reason&&!this.disposed){this.presentationNotice(result.reason,4);try{this.audio?.play('invalid');}catch{/* cue is optional */}}
+    return result;
+  }
+  private async dispatchRaw(command:EngineDispatchCommand,selection?:EngineSelection):Promise<EngineDispatchResult>{
     const captured=selection??{selectedUnitIds:this.game.selectedUnits().map(u=>u.id),selectedBuildingId:this.game.state.selBld?.id,selectedBoatId:this.game.selectedBoat??undefined};
     const epoch=this.dispatchEpoch;
     if(!this.commandReady)throw new Error('No authoritative session is ready');
