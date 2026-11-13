@@ -1270,3 +1270,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 09:50 ET Claude: shipped ruler-change hall event (banner/mourning window + handover card data in council model, optional saved halls, rulers 82/82, tsc nil) (bfd95c33) / now on fosterage/hostage return march events (AUD-SOC-HOSTAGE-FOSTER-RETURN) / blocked: none
 09:55 ET Claude: shipped nothing visual this slot (run started 09:54 ET, past the lane C window; merged main into integration, AUD-VIS-MOURNING-AND-FESTIVAL marked unblocked by hall event bfd95c33) / now on mourning banner + hearth dim in src/scene next slot / blocked: none
+
+10:08 ET Claude (horizon): shipped horizon ring + aerial perspective (land, sea, mountains and forest masses beyond the map edge to the far plane; blue distance haze, no white fog sheet; +2 draw calls, ~33k tris at Medium; render-only, `?horizon=off` for the old look) (c55aad19) / now on idle, waiting for Boris's next playtest note / blocked: none

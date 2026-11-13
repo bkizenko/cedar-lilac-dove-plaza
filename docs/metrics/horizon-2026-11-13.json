@@ -1,0 +1,16 @@
+{
+ "what": "Horizon ring (land, sea, forest masses beyond the playable square to the camera far plane): cost per draw-distance level",
+ "source": "src/scene/horizonField.ts buildHorizon / horizonBudget (exact geometry counts) and tools/render-preview/map.mjs measure (scene graph, SwiftShader, Medium). Frame times are not reported: SwiftShader is relative only and the machine was shared.",
+ "perLevelBound": {
+  "low":    {"ringTriangles": 11520, "canopyCap": 0,    "canopyTriangles": 0,     "worstCaseTriangles": 11520,  "drawCalls": 1, "ringVertices": 6048,  "ringBuildMsNode": "<100"},
+  "medium": {"ringTriangles": 26624, "canopyCap": 1800, "canopyTriangles": 37800, "worstCaseTriangles": 64424,  "drawCalls": 2, "ringVertices": 13824, "ringBuildMsNode": "<250"},
+  "high":   {"ringTriangles": 38400, "canopyCap": 2800, "canopyTriangles": 58800, "worstCaseTriangles": 97200,  "drawCalls": 2, "ringVertices": 19840, "ringBuildMsNode": "<250"},
+  "ultra":  {"ringTriangles": 52224, "canopyCap": 4500, "canopyTriangles": 94500, "worstCaseTriangles": 146724, "drawCalls": 2, "ringVertices": 26880, "ringBuildMsNode": "<250"}
+ },
+ "measuredMedium": {
+  "hilltop-start-noon (v18 seed 3, 1040 m)": {"horizonObjects": 2, "horizonInstances": 317, "horizonTriangles": 33260},
+  "coast-noon (v1 seed 4)": {"horizonObjects": 2, "horizonInstances": 351, "horizonTriangles": 33974},
+  "edge-east-noon (v18 seed 3)": {"horizonObjects": 2, "horizonInstances": 317, "horizonTriangles": 33260}
+ },
+ "notes": "Medium adds 2 draw calls and about 33k triangles, a quarter of the 131k-triangle terrain mesh. The map-wide frame totals in the before/after logs also contain other agents' merged work (animal rigs, materials), so only the horizon group is attributable to this change. The ring is rebuilt when the draw-distance level changes (including governor easing) and costs tens of ms on the CPU, not per frame."
+}
