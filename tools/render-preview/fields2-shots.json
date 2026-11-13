@@ -1,0 +1,295 @@
+{
+ "f2-close": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.9,
+  "pitch": 0.5,
+  "dist": 18,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4725,
+  "season": "autumn",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "ripe",
+      "ripe",
+      "stubble",
+      "bare"
+     ]
+    }
+   ]
+  }
+ },
+ "f2-mid": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.7,
+  "dist": 110,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4275,
+  "season": "summer",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "growing",
+      "sprout2",
+      "bare",
+      "fallow"
+     ]
+    }
+   ]
+  }
+ },
+ "f2-far": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.8,
+  "dist": 260,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4275,
+  "season": "summer",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "growing",
+      "sprout2",
+      "bare",
+      "fallow"
+     ]
+    }
+   ]
+  }
+ },
+ "f2-spring": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.62,
+  "dist": 46,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 3825,
+  "season": "spring",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "bare",
+      "sprout",
+      "sprout2",
+      "fallow"
+     ]
+    }
+   ]
+  }
+ },
+ "f2-summer": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.62,
+  "dist": 46,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4275,
+  "season": "summer",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "growing",
+      "sprout2",
+      "bare",
+      "fallow"
+     ]
+    }
+   ]
+  }
+ },
+ "f2-autumn": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.62,
+  "dist": 46,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4725,
+  "season": "autumn",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "ripe",
+      "ripe",
+      "stubble",
+      "bare"
+     ]
+    }
+   ]
+  }
+ },
+ "f2-winter": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.7,
+  "pitch": 0.62,
+  "dist": 46,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 5175,
+  "season": "winter",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "stubble",
+      "stubble",
+      "bare",
+      "fallow"
+     ]
+    }
+   ]
+  }
+ },
+ "f2-era1": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.55,
+  "pitch": 0.42,
+  "dist": 14,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4725,
+  "season": "autumn",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "ripe",
+      "ripe",
+      "stubble",
+      "bare"
+     ]
+    }
+   ],
+   "age": 1
+  }
+ },
+ "f2-era2": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.55,
+  "pitch": 0.42,
+  "dist": 14,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4725,
+  "season": "autumn",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "ripe",
+      "ripe",
+      "stubble",
+      "bare"
+     ]
+    }
+   ],
+   "age": 2
+  }
+ },
+ "f2-era3": {
+  "seed": 7,
+  "version": 21,
+  "width": 1280,
+  "height": 720,
+  "yaw": 0.55,
+  "pitch": 0.42,
+  "dist": 14,
+  "hour": 15.5,
+  "quality": "med",
+  "time": 4725,
+  "season": "autumn",
+  "prep": {
+   "fieldBlock": [
+    {
+     "w": 24.6,
+     "d": 16.4,
+     "cols": 2,
+     "rows": 2,
+     "stages": [
+      "ripe",
+      "ripe",
+      "stubble",
+      "bare"
+     ]
+    }
+   ],
+   "age": 3
+  }
+ }
+}

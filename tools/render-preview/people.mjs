@@ -64,6 +64,12 @@ const sheetsDef = {
   },
 };
 
+
+// Garb sheet: every civ in a row of roles (farmer, soldier, hunter, trader, smith, priest, elder, child, ruler), warm and cold clothing, composed into labelled contact sheets.
+const ALL_CIVS = ['sandrill', 'nilemark', 'tigrane', 'hanrei', 'vedara', 'aureline', 'sahelan', 'quillan', 'kaaltun', 'mekhari', 'brythen', 'rusvolt', 'steppan', 'skoldar'];
+const GARB_ROLES = [['worker', 'farmer'], ['spearman', 'soldier'], ['archer', 'hunter'], ['worker', 'merchant'], ['worker', 'smith'], ['worker', 'priest'], ['worker', 'elder', 'elder'], ['worker', 'worker', 'child'], ['leader', 'ruler', 'leader']];
+const garbRow = (mode, civ, item, season, d = 5.9) => ({ width: 1500, height: 310, mode, season, era: 3, seconds: .3, cam: { pos: [0, 1.4, d], target: [0, .9, 0], fov: 30 },
+  people: GARB_ROLES.map(([type, role, cls], i) => person(civ, type, (i - 4) * 1.12, 0, { role, cls: cls || undefined, id: 7000 + i * 13 + ALL_CIVS.indexOf(civ) * 101, facing: .35, order: 'idle', gear: G(item, type === 'spearman' ? ARMOR : {}) })) });
 const esbuild = need('esbuild'), { chromium } = need('playwright');
 const three = findThree();
 const bundle = path.join(outDir, '.people-bundle.js');
@@ -84,7 +90,8 @@ async function shoot(name, spec) {
   console.log(name, JSON.stringify(info));
 }
 const all = want.includes('all');
-for (const mode of ['rig', 'legacy']) {
+const modes = (args.find(a => a.startsWith('--modes=')) || '--modes=rig,legacy').slice(8).split(',');
+for (const mode of modes) {
   for (const s of ['lineup', 'classes', 'jobs', 'strips', 'fights', 'death']) if (all || want.includes(s)) {
     if (mode === 'legacy' && (s === 'death' || s === 'strips')) continue;
     if (s === 'lineup') { await shoot(`lineup-a-${mode}`, sheetsDef.lineup(mode, SIX.slice(0, 3))); await shoot(`lineup-b-${mode}`, sheetsDef.lineup(mode, SIX.slice(3))); continue; }
@@ -93,7 +100,21 @@ for (const mode of ['rig', 'legacy']) {
   }
 }
 if (all || want.includes('distance')) for (const [n, d] of [['near', 26], ['mid', 52], ['far', 105]]) { await shoot('distance-' + n + '-rig', sheetsDef.distance('rig', d)); await shoot('distance-' + n + '-legacy', sheetsDef.distance('legacy', d)); }
+if (all || want.includes('garb')) for (const mode of modes.filter(m => m !== 'legacy')) for (const [tag, item, season] of [['warm', 'lightClothes', 'summer'], ['cold', 'woolCoat', 'winter']]) {
+  for (const civ of ALL_CIVS) await shoot(`garbrow-${tag}-${civ}-${mode}`, garbRow(mode, civ, item === 'woolCoat' && ['steppan', 'rusvolt', 'skoldar', 'brythen', 'quillan', 'tigrane'].includes(civ) ? 'hideCoat' : item, season));
+}
 await browser.close();
+// Garb contact sheets: labelled civ rows stacked, seven civs per sheet.
+if (all || want.includes('garb')) {
+  const sharpG = need('sharp');
+  for (const mode of modes.filter(m => m !== 'legacy')) for (const tag of ['warm', 'cold']) for (const [half, civs] of [['a', ALL_CIVS.slice(0, 7)], ['b', ALL_CIVS.slice(7)]]) {
+    const rows = civs.map((civ, i) => ({ input: path.join(outDir, `garbrow-${tag}-${civ}-${mode}.png`), top: i * 310, left: 0 }));
+    const labels = civs.map((civ, i) => ({ input: Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="260" height="28"><rect width="100%" height="100%" fill="#1b1b1bcc"/><text x="8" y="20" font-family="sans-serif" font-size="16" font-weight="700" fill="#f2e8d0">${civ} (${tag}, ${mode})</text></svg>`), top: i * 310 + 4, left: 4 }));
+    await sharpG({ create: { width: 1500, height: 310 * civs.length, channels: 3, background: '#222' } }).composite([...rows, ...labels]).png().toFile(path.join(outDir, `garb-${tag}-${half}-${mode}.png`));
+    console.log(`garb-${tag}-${half}-${mode}`);
+  }
+  for (const f of fs.readdirSync(outDir)) if (f.startsWith('garbrow-')) fs.unlinkSync(path.join(outDir, f));
+}
 // Before/after composites (legacy above, rig below) for every sheet that has both.
 const sharp = need('sharp');
 const names = fs.readdirSync(outDir).filter(f => f.endsWith('-rig.png')).map(f => f.slice(0, -8));

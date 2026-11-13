@@ -1198,6 +1198,7 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 07:10 ET Claude(PM): landed none (no agent branch or integration commit ahead of main; main already ahead of integration by docs only) / throughput: Codex 0, Claude 22, Grok 0 commits last hour / sweep not needed (no new source) / agents posted <2h: Claude yes, Codex idle ~3h (its work in main), Grok idle; no reassignment, Claude lanes A-D cover World/rows / blocked: none
 07:21 ET Claude: shipped lane A neighbour harvest gathering (yearly fed host, peaceful known rivals, envoy ties, marriage/foster offers surfaced, skipped at war, saved rulers.gatherings; rulers 66/66, tsc nil on touched files) (2c49c868) / now on envoy safe-conduct escort, rival formation use / blocked: none
+08:10 ET Claude: shipped field edges and crops rework (drystone by local rock, wattle, mixed hedge, earth bank, gates, fine swaying crops with weeds, irregular furrows, draw-distance tiers) (bb3e1916) / now on awaiting Boris review of docs/renders/fields-2 / blocked: none
 07:28 ET Claude: shipped lane B Production basket/vessel/clothing buttons name why disabled; Hearth tiles, age-up, commander, wild and Council panels already covered (council-ui 23/23, tsc nil; production-catalog-ui and fibre-production fail on Node22 extensionless import, same without my change) (8b9f79a1) / now on field-drag feel readout, ward/claim inbox camera click / blocked: none
 
 07:36 ET Claude: shipped graded slope model, tiers/classes/foundations/costs/preview + ladder render (ae0661e5) / now on SLOPE-TIERS verification (full suite) / blocked: none
@@ -1212,3 +1213,9 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
   Claude lanes: visuals (people garb, building detail, field edges, terraces, LOD/fidelity), mapgen/geology, UI, societies/rulers. Platform/economy/live native verification stay with Codex.
   blocked: none
 14:05 ET Claude: shipped terrace farming + slope nuance, terrain model v2 (see merge SHA below) / now on handoff / blocked: none
+
+08:20 ET Claude: shipped people garb redesign (tapered trunk, shoulder yoke, A-line skirts, sleeves/collar/belt, cloaks, armor cut to trunk, muted dyes, role silhouettes; budgets unchanged; harness now renders people-v2 looks + 14-civ garb sheets) (dcf0d2e2) / now on idle, ready for next item / blocked: none
+
+07:52 ET Claude: shipped lane C village lawn ground cover around settlement buildings (grass/tall grass/flower tufts, nonblocking, capped; harness now renders at med quality, earlier shots had no ground dressing; biome/civ/people/era/wonder 50/50, tsc nil on touched file, SwiftShader docs/renders/visuals/village-lawn-2026-11-13.png) (0b6fca69) / now on Tigrane/Kaaltun civic polish, hearth glow on lawn / blocked: none
+
+13:20 ET Claude: shipped building detail + variety pass (every hut/house/granary/shed its own geometry per id, construction-detail layer, per-civ hut forms, opt-in muted tone; caps hold; sheets in docs/renders/building-detail) (3ac2e22f) / now on idle, ready for next item / blocked: none
