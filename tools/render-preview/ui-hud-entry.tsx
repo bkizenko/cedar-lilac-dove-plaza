@@ -10,11 +10,14 @@ import {ensureNaval} from '@/game/navalPorts';
 import {enableWildCraft,wildStock,beginWildWork} from '@/game/wildCraft';
 import {generateSites} from '@/game/wildStores';
 import {HudHearth} from '@/ui/hearth/HudHearth';
+import {EncounterDialog} from '@/ui/EncounterDialog';
+import {setEraVoice} from '@/game/vocab';
 import {Hud} from '@/ui/Hud';
 import {lookAtCamera} from '@/ui/hearth/glanceModel';
 const w=window as any;
-w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number})=>{
- const g:any=new Game();g.reset(5,10,{rulersVersion:2});g.enterIsland();
+w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number;seed?:number;age?:number;leader?:boolean;legacy?:boolean;hostile?:boolean})=>{
+ if(o.legacy)setEraVoice(false);
+ const g:any=new Game();g.reset(o.seed??5,10,{rulersVersion:2});g.enterIsland();
  const end=g.state.time+(o.years??6)*90;while(g.state.time<end){g.state.paused=false;g.step(.5);}
  g.state.paused=true;
  const mine=g.state.units.filter((u:any)=>u.team===0&&u.hp>0);
@@ -43,6 +46,7 @@ w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number})=>{
   if(sc==='glance'){const u=mine[4];if(u){u.thirstSeconds=400;u.x=home.x-170;u.z=home.z+40;u.y=g.height(u.x,u.z);}}};
  if(sc==='glance'){const c=g.campOf(0);g.tribe(0).wood+=200;g.tribe(0).stone+=100;for(const [t,dx,dz] of [['townhall',0,0],['hearth',9,8],['lumber',-12,6],['farm',14,-10]] as const)g.placeBuilding(t,c.x+dx,c.z+dz,0);for(const b of g.state.buildings.filter((b:any)=>b.team===0)){b.build=1;b.hp=b.maxHp;}}
  if(sc==='glance'){const home=g.campOf(0),n=192;for(let gz=0;gz<n;gz++)for(let gx=0;gx<n;gx++){const x=((gx+.5)/n-.5)*g.world.size-home.x,z=((gz+.5)/n-.5)*g.world.size-home.z;if(x*x+z*z<260*260&&g.vision[gz*n+gx]===0)g.vision[gz*n+gx]=1;}}
+ if(sc==='encounter'){const home=g.campOf(0),t1=g.tribe(1);if(t1)t1.age=o.age??0;g.tribe(0).age=o.age??0;const st=g.spawnUnit(o.leader?'leader':'worker',home.x+6,home.z+4,1);st.carryType='food';st.carry=4;st.stature=1;if(o.hostile)g.makeHostile(1);g.state.encounter={team:1,person:mine[0].id,stranger:st.id,resume:false};}
  const mkHud=(late=false)=>{const hud:any={...g.snapshot(),started:true,awaitingStart:false,founding:false};
   if(sc==='placing')hud.placing='house';
   if(late&&(sc==='raid'||sc==='glance'))hud.threat=.7;
@@ -57,7 +61,7 @@ w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number})=>{
   canRotatePlacement:()=>true,canRotateAnyPlacement:()=>true,rotatePlacementBy(){return true;},pushHud(){},keyboard:{}};
  const engine:any=new Proxy(base,{get:(t,p)=>p in t?t[p as any]:(p==='then'?undefined:()=>undefined)});
  const root=createRoot(document.getElementById('root')!);
- const draw=()=>root.render(o.ui==='classic'?h(Hud as any,{hud,engine}):h(HudHearth,{hud,engine}));
+ const draw=()=>root.render(sc==='encounter'?h(EncounterDialog,{engine}):o.ui==='classic'?h(Hud as any,{hud,engine}):h(HudHearth,{hud,engine}));
  draw();
  if(sc==='glance'||sc==='raid'){
   // Let the HUD sample stock for a few simulated days so supply trends have history, then bring the trouble.
