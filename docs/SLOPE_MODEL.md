@@ -1,6 +1,6 @@
 # Slope model (graded)
 
-**BLUF.** A slight angle is free; a mountainside is not. Placement now grades a footprint into four tiers (level, moderate, steep, severe) by mean slope and by fall across the footprint, with tolerances per building class. Each tier above level names the foundation that will be built and charges real wood, stone and extra labour seconds. New villages use it (`state.slopeModel==='graded'`); saves without that field keep the earlier linear rule (one relief allowance + 47 degree neighbour step) unchanged.
+**BLUF.** A slight angle is free; a mountainside is not. New villages (`terrainModel==='v3'`) farm slopes the ordinary way: fields on hills up to about 18 degrees (plough) or 30 degrees (small hoe plots), furrows along the contour, terraces only as an optional upgrade. Buildings keep the tiers below. Placement now grades a footprint into four tiers (level, moderate, steep, severe) by mean slope and by fall across the footprint, with tolerances per building class. Each tier above level names the foundation that will be built and charges real wood, stone and extra labour seconds. New villages use it (`state.slopeModel==='graded'`); saves without that field keep the earlier linear rule (one relief allowance + 47 degree neighbour step) unchanged.
 
 Code: `src/game/slopeTiers.ts` (model, pure), `src/game/siteFoundation.ts` (foundation boxes, pure), `Game.siteAssessment()` (sim), `buildingGrounding.ts` / `foundations.ts` (rendering), engine banner + ghost tint (preview). Optional save fields: `state.slopeModel`, `building.site` (validated in `persistence.ts`).
 
@@ -20,6 +20,14 @@ Geology (`geologyAt`): exposed hard rock quarries its own stone (x0.6 stone, x1.
 Goods and labour: extra wood/stone are added to the placement bill and spent like any cost (planned sites too); `b.site.extraWork` is added to the worker-seconds the site needs (`sim.ts` build step, `villageWorkload.ts`). The free founding hall and `house` renovations (`planAdvancedHome`) are not charged; AI rivals are not surveyed (as before).
 
 Rendering: foundation level is the highest contact (dugout: ground at the door). Every box is sunk to the terrain beneath it (tested), so corners do not float. Ladder sheet: `docs/renders/slope-tiers/slope-ladder.png` (`tools/render-preview/slope-tiers.mjs`).
+
+## Terrain model v3 (new villages) and v2
+
+**v3 is the default for new villages**: hillside farming is ordinary (no terraces unless you choose them). Fields work to 18 degrees with a plough, to 30 degrees as small hand-tilled plots, and only as terraced ground beyond that; furrows follow the contour, a bank holds the lower edge, soil thins and erodes, and a "Terrace this field" action adds earth bunds and then stone facing. See `docs/TERRACE_FARMING.md`. Saves with `terrainModel==='v2'` keep terraces assigned by slope (below); saves with neither keep the plain tiers. Everything below about buildings (shelves, nuance) is the same in v2 and v3.
+
+### Terrain model v2
+
+New villages also carry `state.terrainModel==='v2'`: fields are never refused below a cliff and become terrace strips (`docs/TERRACE_FARMING.md`); every building also reads curvature, aspect, roughness, drainage and natural shelves (a shelf is credited, so a steep hillside with a ledge is not refused). The tier table above is unchanged on plain slopes. Saves without the switch keep the 22 degree field rule.
 
 ## Sources
 

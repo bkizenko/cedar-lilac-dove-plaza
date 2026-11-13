@@ -3,9 +3,11 @@
 import {hash32,makeRng,normal,pick,weighted,type Rng} from './rulerCore';
 import {generatePolity,type Ecology,type Polity} from './polityModel';
 import {generateRuler,type Ruler} from './rulerGenome';
+import {genomeForCivId} from '../scene/tasteEnvelope';
 
 export const PRESETS=['aureline','hanrei','steppan','sandrill','kaaltun','mekhari','skoldar','nilemark','tigrane','rusvolt'] as const;
-export type Mode='preset'|'remix'|'free';
+/** 'generated' = built inside the taste envelope (scene/tasteEnvelope.ts): materials, silhouette and look come from one validated style genome. Never drawn by the default cast. */
+export type Mode='preset'|'remix'|'free'|'generated';
 export const MATERIALS=['wood','stone','brick','mudbrick','felt','thatch','turf','bamboo','plaster','timberFrame'] as const;
 export type Material=(typeof MATERIALS)[number];
 
@@ -40,15 +42,17 @@ const PRESET_MAT:Record<string,Material[]>={aureline:['plaster','stone'],hanrei:
 export function generateCiv(gameSeed:number,slot:number,mode:Mode,preset?:string):CivSeed{
  const seed=hash32('civ',gameSeed,slot),r=makeRng(seed);
  const p=preset??pick(r,PRESETS);
- let eco=ecologyFor(r,mode==='free'?undefined:PRESET_ECO[p]);
+ let eco=ecologyFor(r,mode==='free'||mode==='generated'?undefined:PRESET_ECO[p]);
  if(mode==='remix')eco=mutate(r,eco,.5);
- let mats:Material[]=mode==='free'?[...new Set<Material>([pick(r,MATERIALS),pick(r,MATERIALS),pick(r,MATERIALS)])]:[...(PRESET_MAT[p]??['wood'])];
+ let mats:Material[]=mode==='free'||mode==='generated'?[...new Set<Material>([pick(r,MATERIALS),pick(r,MATERIALS),pick(r,MATERIALS)])]:[...(PRESET_MAT[p]??['wood'])];
  if(mode==='remix'&&r()<.6)mats=[...new Set<Material>([...mats.slice(0,1),pick(r,MATERIALS)])];
  const trad=Math.round(normal(r,50,20));
  const polity=generatePolity(seed,eco,{traditionalism:trad});
  const ruler=generateRuler(hash32('civ-ruler',seed),{traditionalism:trad});
- const sil=pick(r,['terraced','radial','linear','courtyard','stilted','clustered','walled','scattered']);
- return {id:`civ-${gameSeed}-${slot}`,mode,preset:mode==='free'?undefined:p,name:cap(pick(r,SYL)+pick(r,SYL)+pick(r,['an','ar','ine','ok','ul'])),ecology:eco,materials:mats,silhouette:sil,hueShift:Math.round((r()-.5)*40),traditionalism:trad,polity,ruler,faith:generateFaith(seed,eco)};
+ let sil=pick(r,['terraced','radial','linear','courtyard','stilted','clustered','walled','scattered']);
+ const genome=mode==='generated'?genomeForCivId(`civ-${gameSeed}-${slot}`):null;
+ if(genome){mats=[...new Set<Material>([genome.materials.wall,genome.materials.wall2,genome.materials.roof])];sil=genome.silhouette;}
+ return {id:`civ-${gameSeed}-${slot}`,mode,preset:mode==='free'||mode==='generated'?undefined:p,name:cap(pick(r,SYL)+pick(r,SYL)+pick(r,['an','ar','ine','ok','ul'])),ecology:eco,materials:mats,silhouette:sil,hueShift:genome?0:Math.round((r()-.5)*40),traditionalism:trad,polity,ruler,faith:generateFaith(seed,eco)};
 }
 /** A game's cast: unique names, no two civs with identical material+silhouette. */
 export function generateCast(gameSeed:number,n:number,modes:Mode[]=['preset','remix','free']):CivSeed[]{

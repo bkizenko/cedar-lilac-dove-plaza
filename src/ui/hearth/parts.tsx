@@ -1,7 +1,9 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
-import {Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints} from 'lucide-react';
+import {SkillStrip} from './skillsCard';
+import {Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import {MusicChip} from './MusicControls';
+import {FoldHandle,FoldMin,useFold} from './fold';
 import type {HudSnapshot} from '@/game/types';
 import {BUILDINGS} from '@/game/constants';
 import {YEAR_SECONDS} from '@/game/settlement';
@@ -34,17 +36,23 @@ export {cx,IconBtn,Stat};
 export function ResourceBar(props:{hud:HudSnapshot;engine:Engine|null;onOpen:(s:'council'|'stores')=>void}){return <SupplyBar {...props}/>;}
 export function TimeCard({hud,engine,onAges,onMenu}:{hud:HudSnapshot;engine:Engine|null;onAges:()=>void;onMenu:()=>void}){
  const bits=hud.weather.split(' · '),temp=bits[1]||'',speed=hud.speed>=3?4:hud.speed===2?2:1;
+ const f=useFold('time');
  return <div className="hw-top-right">
-  <div className="hw-time" role="group" aria-label="Time">
+  {f.showPanel&&<div className={cx('hw-time',f.cls)} role="group" aria-label="Time">
    <span className="hw-time-icon">{hud.night?<Moon size={28}/>:<Sun size={28}/>}{hud.paused&&<Pause size={24} className="hw-time-pause"/>}</span>
    <div className="hw-time-text"><b>{hud.clock}</b><span>{hud.season} · Y{Math.floor(hud.time/YEAR_SECONDS)+1}{temp?` · ${temp}`:''}</span></div>
    <GameTooltip title={hud.ages[hud.age]+' Age'} description={hud.canAge&&hud.nextAge?`Ready for ${hud.nextAge}`:undefined}><button type="button" className={cx('hw-era',hud.canAge&&'is-ready')} aria-label={`${hud.ages[hud.age]} Age. Open ages`} onClick={onAges}><BookOpen size={20}/><span>{hud.ages[hud.age]}</span></button></GameTooltip>
-  </div>
+  </div>}
+  {/* The bar always exists: the clock and speed buttons fold into a "Clock" handle, the sound chip folds on its own, and Menu never hides. */}
   <div className="hw-speed" role="group" aria-label="Game speed">
-   <IconBtn label={hud.paused?'Resume':'Pause'} tip="Space" active={hud.paused} onClick={()=>engine?.setPaused(!hud.paused)}><Pause size={24}/></IconBtn>
-   <IconBtn label="Normal speed" active={!hud.paused&&speed===1} onClick={()=>engine?.setSpeed(1)}><Play size={24}/></IconBtn>
-   <IconBtn label="Double speed" tip="The day runs twice as fast" active={!hud.paused&&speed===2} onClick={()=>engine?.setSpeed(2)}><FastForward size={24}/></IconBtn>
-   <IconBtn label="Four times speed" active={!hud.paused&&speed===4} onClick={()=>engine?.setSpeed(4)}><span className="hw-x4">4×</span></IconBtn>
+   {f.showPanel&&<span className={cx('hw-speed-set',f.cls)} role="group" aria-label="Speed">
+    <IconBtn label={hud.paused?'Resume':'Pause'} tip="Space" active={hud.paused} onClick={()=>engine?.setPaused(!hud.paused)}><Pause size={24}/></IconBtn>
+    <IconBtn label="Normal speed" active={!hud.paused&&speed===1} onClick={()=>engine?.setSpeed(1)}><Play size={24}/></IconBtn>
+    <IconBtn label="Double speed" tip="The day runs twice as fast" active={!hud.paused&&speed===2} onClick={()=>engine?.setSpeed(2)}><FastForward size={24}/></IconBtn>
+    <IconBtn label="Four times speed" active={!hud.paused&&speed===4} onClick={()=>engine?.setSpeed(4)}><span className="hw-x4">4×</span></IconBtn>
+    <FoldMin f={f}/>
+   </span>}
+   <FoldHandle f={f} icon={hud.paused?<Pause size={24}/>:<Clock size={24}/>} badge={undefined}/>
    <MusicChip engine={engine}/>
    <IconBtn label="Menu" onClick={onMenu}><MenuIcon size={26}/></IconBtn>
   </div>
@@ -54,7 +62,10 @@ export function TimeCard({hud,engine,onAges,onMenu}:{hud:HudSnapshot;engine:Engi
 /* ---------- left rail ---------- */
 export function Rail({hud,engine,workOpen,onWork}:{hud:HudSnapshot;engine:Engine|null;workOpen:boolean;onWork:()=>void}){
  const auto=engine?.game.state.autoWorkEnabled!==false;
- return <nav className="hw-rail" aria-label="Village commands">
+ const f=useFold('rail');
+ if(!f.showPanel)return <FoldHandle f={f} icon={<Wrench size={24}/>}/>;
+ return <nav className={cx('hw-rail',f.cls)} aria-label="Village commands">
+  <FoldMin f={f}/>
   <IconBtn label={auto?'Auto work on':'Auto work off'} tip="Residents follow village priorities. Direct orders and paid work stay protected." active={auto} onClick={()=>{if(engine){engine.game.setAutoWork(!auto);engine.pushHud();}}}><Repeat size={26}/></IconBtn>
   <IconBtn label="Workload" tip="Planned work, capacity, blocked tasks" active={workOpen} onClick={onWork}><ClipboardList size={26}/></IconBtn>
   <IconBtn label="Mark trees" tip="Drag over trees to mark them for felling (N)" active={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}><Axe size={26}/></IconBtn>
@@ -74,10 +85,13 @@ export function Dock({active,onPick,onHome,hasMap,alerts}:{active:DockKey|null;o
   {k:'council',label:'Council',icon:<Crown size={30}/>,tip:'Ruler, house, neighbours'},
   {k:'wonders',label:'Wonders',icon:<Landmark size={30}/>,tip:'Great works, suggestions and ruins'},
  ];
- return <nav className="hw-dock" aria-label="Main menu">
+ const f=useFold('dock');
+ if(!f.showPanel)return <FoldHandle f={f} icon={<LayoutGrid size={24}/>}/>;
+ return <nav className={cx('hw-dock',f.cls)} aria-label="Main menu">
   {items.map(i=><GameTooltip key={i.k} title={i.label} description={i.tip}><button type="button" className={cx('hw-dock-btn',active===i.k&&'is-on')} aria-pressed={active===i.k} aria-label={i.label} onClick={()=>onPick(i.k)}>{i.icon}<span>{i.label}</span>{!!alerts[i.k]&&<i className="hw-badge">{alerts[i.k]}</i>}</button></GameTooltip>)}
   <GameTooltip title="Home" description="Centre the view on your village (F)"><button type="button" className="hw-dock-btn" aria-label="Home" onClick={onHome}><Home size={30}/><span>Home</span></button></GameTooltip>
   {hasMap&&<button type="button" className={cx('hw-dock-btn hw-dock-map',active==='map'&&'is-on')} aria-pressed={active==='map'} aria-label="Map" onClick={()=>onPick('map')}><MapIcon size={30}/><span>Map</span></button>}
+  <FoldMin f={f}/>
  </nav>;
 }
 
@@ -185,8 +199,10 @@ export function selectionStats(sel:HudSnapshot['selection'],hud:HudSnapshot,coun
 function SelectedForeignVerbs({engine}:{engine:Engine}){const u=engine.game.state.units.find(p=>p.selected&&p.hp>0&&(p.team!==0||!!(p as {prisoner?:unknown}).prisoner));return u?<TraderVerbs engine={engine} strangerId={u.id}/>:null;}
 export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engine|null;onOffer:(t:number)=>void}){
  const sel=hud.selection,[more,setMore]=useState(false),[info,setInfo]=useState(false),[tab,setTab]=useState('');
+ const f=useFold('selection');
  useEffect(()=>{setMore(false);setInfo(false);setTab('');},[sel.kind,sel.name,sel.buildingId]);
  if(sel.kind==='none')return null;
+ if(!f.showPanel)return <FoldHandle f={f} icon={<UserRound size={24}/>}/>;
  const hp=sel.maxHp>0?Math.round(100*sel.hp/sel.maxHp):0;
  const person=sel.kind==='unit'||sel.kind==='units';
  const icon=sel.kind==='building'?bldIcon(sel.type,40):sel.kind==='resource'?(sel.type==='tree'?<RES_ICON.wood size={40}/>:sel.type==='fish'?bldIcon('dock',40):<RES_ICON.stone size={40}/>):sel.kind==='boat'?bldIcon('dock',40):<Users size={40}/>;
@@ -197,16 +213,18 @@ export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engin
  const mil=person&&(hud.militarySelected>0||hud.militiaSelected>0),cmdOk=own&&(mil||sel.kind==='boat');
  const tabs=[showJobs&&{id:'work',label:'Work',icon:<Hammer size={26}/>},mil&&{id:'fight',label:'Fight',icon:<Swords size={26}/>},cmdOk&&{id:'command',label:sel.kind==='boat'?'Hull':'Command',icon:sel.kind==='boat'?<Anchor size={26}/>:<Flag size={26}/>}].filter(Boolean) as {id:string;label:string;icon:ReactNode}[];
  const ctx=tabs.find(t=>t.id===tab)?.id??(mil?'fight':tabs[0]?.id);
- return <section className={cx('hw-sel',more&&'is-open')} data-kind={sel.kind} aria-label={`Selected: ${sel.name}`}>
+ return <section className={cx('hw-sel',more&&'is-open',f.cls)} data-kind={sel.kind} aria-label={`Selected: ${sel.name}`}>
   <header className="hw-sel-head">
    <span className="hw-medal">{icon}</span>
    <div className="hw-sel-title"><h2>{sel.name}</h2>
     <div className={cx('hw-bar',hp<35&&'is-low')} role="progressbar" aria-label={`Condition ${hpLabel}`} aria-valuenow={hp} aria-valuemin={0} aria-valuemax={100} title={`Condition ${hpLabel}`}><i style={{width:`${hp}%`}} className={hp<35?'t-bad':''}/></div></div>
    <IconBtn label="Details" tip={sel.info} active={info} onClick={()=>setInfo(v=>!v)} small><Info size={24}/></IconBtn>
    <IconBtn label="Deselect" tip="Esc" onClick={()=>engine?.clearSelection()} small><X size={24}/></IconBtn>
+   <FoldMin f={f}/>
   </header>
   {engine&&person&&<SelectedForeignVerbs engine={engine}/>}
   {stats.length>0&&<div className="hw-sel-meta">{stats.map(s=><Stat key={s.k} icon={s.icon} value={s.value} label={s.label} tone={s.tone} className="hw-chip"/>)}</div>}
+  {sel.kind==='unit'&&sel.skills&&<SkillStrip card={sel.skills}/>}
   {info&&<p className="hw-info">{sel.info}</p>}
   {tabs.length>1&&<div className="hw-ctx" role="tablist" aria-label="Orders">{tabs.map(t=><GameTooltip key={t.id} title={t.label}><button type="button" role="tab" aria-selected={ctx===t.id} aria-label={t.label} className={cx('hw-ctx-tab',ctx===t.id&&'is-on')} onClick={()=>setTab(t.id)}>{t.icon}<span>{t.label}</span></button></GameTooltip>)}</div>}
   {ctx==='work'&&showJobs&&<div className="hw-jobs" role="group" aria-label="Assign work">{JOBS.filter(j=>!j.need||j.need(hud)).map(j=><GameTooltip key={j.id} title={j.label} description={JOB_TIP[j.id]}><button type="button" className={cx('hw-job',hud.job===j.id&&'is-on')} aria-pressed={hud.job===j.id} aria-label={j.label} onClick={()=>engine?.assignJob(j.id as never)}>{j.icon}<span>{j.label}</span></button></GameTooltip>)}</div>}

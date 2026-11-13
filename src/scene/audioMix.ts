@@ -11,17 +11,23 @@ const r3=(v:number)=>Math.round(v*1000)/1000;
 
 // ---------------------------------------------------------------- settings / buses
 export type Bus='master'|'music'|'sfx'|'ambience';
-export type AudioSettings={master:number;music:number;sfx:number;ambience:number;muted:boolean;musicPaused:boolean};
-export const DEFAULT_AUDIO_SETTINGS:AudioSettings={master:.8,music:.4,sfx:.7,ambience:.6,muted:false,musicPaused:false};
+/** Each sub-bus has its own volume and its own on/off switch (musicOff / ambienceOff / sfxOff), kept apart from `muted` (everything) and `musicPaused` (player pause). */
+export type AudioSettings={master:number;music:number;sfx:number;ambience:number;muted:boolean;musicPaused:boolean;musicOff:boolean;ambienceOff:boolean;sfxOff:boolean};
+export const DEFAULT_AUDIO_SETTINGS:AudioSettings={master:.8,music:.4,sfx:.7,ambience:.6,muted:false,musicPaused:false,musicOff:false,ambienceOff:false,sfxOff:false};
+export const BUS_OFF_KEY={music:'musicOff',ambience:'ambienceOff',sfx:'sfxOff'} as const;
+export type SubBus=keyof typeof BUS_OFF_KEY;
+/** True when this bus is silent: everything muted, or that bus switched off. Master only follows the all-mute. */
+export function busOff(s:AudioSettings,bus:Bus):boolean{return s.muted||(bus!=='master'&&s[BUS_OFF_KEY[bus]]);}
 export const AUDIO_SETTINGS_KEY='hearthwild.audio.v1';
 export function normaliseSettings(raw:unknown):AudioSettings{
  const o=(raw&&typeof raw==='object'?raw:{}) as Record<string,unknown>,d=DEFAULT_AUDIO_SETTINGS;
  const n=(k:Bus)=>typeof o[k]==='number'&&Number.isFinite(o[k] as number)?clamp(o[k] as number):d[k];
- return {master:n('master'),music:n('music'),sfx:n('sfx'),ambience:n('ambience'),muted:typeof o.muted==='boolean'?o.muted:d.muted,musicPaused:typeof o.musicPaused==='boolean'?o.musicPaused:d.musicPaused};
+ return {master:n('master'),music:n('music'),sfx:n('sfx'),ambience:n('ambience'),muted:typeof o.muted==='boolean'?o.muted:d.muted,musicPaused:typeof o.musicPaused==='boolean'?o.musicPaused:d.musicPaused,
+  musicOff:typeof o.musicOff==='boolean'?o.musicOff:d.musicOff,ambienceOff:typeof o.ambienceOff==='boolean'?o.ambienceOff:d.ambienceOff,sfxOff:typeof o.sfxOff==='boolean'?o.sfxOff:d.sfxOff};
 }
 /** Gain a bus node should hold. Volume curve is quadratic so the slider feels even. */
 export function busGain(s:AudioSettings,bus:Bus):number{
- if(s.muted)return 0;const v=bus==='master'?s.master:s[bus]*s.master;return r3(v*v);
+ if(busOff(s,bus))return 0;const v=bus==='master'?s.master:s[bus]*s.master;return r3(v*v);
 }
 /** How far the recorded score ducks under the nature bed: ambience at full lowers music to 45% of its level; ambience off leaves it alone. */
 export function musicDuck(ambienceGain:number):number{const a=Math.max(0,Math.min(1,ambienceGain));return r3(1-.55*Math.sqrt(a));}

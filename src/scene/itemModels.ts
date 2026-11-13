@@ -9,6 +9,7 @@ import {spearFamily,handAxe,club,warPick,sword,shield} from './itemMelee';
 import {bow,crossbow,sling,atlatl,arrow,quiver} from './itemRanged';
 import {SIEGE_GENERATORS} from './itemSiege';
 import {TOOL_GENERATORS} from './itemTools';
+import {nearItemDetail} from './itemNear';
 
 export type ItemCategory='melee'|'ranged'|'shield'|'siege'|'farm'|'craft'|'hunt'|'fish'|'carry'|'ship'|'light';
 export type Frame='hand'|'world';
@@ -47,7 +48,7 @@ export function buildItem(req:ItemReq):ItemMesh|null{
  const def=itemDef(req.id);if(!def)return null;
  const norm:ItemReq={...req,era:Math.max(0,Math.min(4,Math.round(req.era))),condition:Math.max(0,Math.min(1,Number.isFinite(req.condition)?req.condition:1)),seed:req.seed|0,lod:req.lod};
  const key=itemKey(norm),hit=cache.get(key);if(hit)return hit;
- const c=makeCtx(norm);def.gen(c);const m=c.b.finish();
+ const c=makeCtx(norm);if(norm.lod===0)c.room=()=>def.budget[0]-c.b.triangles;def.gen(c);if(norm.lod===0)nearItemDetail(c,def.category);const m=c.b.finish();
  if(cache.size>600)cache.clear();cache.set(key,m);return m;
 }
 export const clearItemCache=()=>cache.clear();

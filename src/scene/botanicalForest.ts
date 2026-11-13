@@ -4,6 +4,7 @@ import {BOTANICAL_SPECIES,DEFAULT_SITE,VARIANTS_PER_SPECIES,pickSpecies,pickVari
 import {botanicalTree,botanicalStump,type TreeGeometry} from './treeBotany';
 import {makeBotanicalMaterial,makeBotanicalFarMaterial,makeFarFade} from './botanicalMaterial';
 import {FillerLayer} from './fillerLayer';
+import type {StandField} from '../game/forestEcology';
 import type {FillerBlob} from './fillerForest';
 import {painterFarClustered,painterFarNeedle,contactShadowGeometry,radialShadowTexture} from './painterTrees';
 import {painterSway,type PainterSway} from './painterVegetationMaterial';
@@ -12,13 +13,13 @@ import {painterSway,type PainterSway} from './painterVegetationMaterial';
  * adds wood, collision or clicks. Per-tree seeded variation: species and age class by site, height/width, lean (wind, slope), hue, autumn colour, leaf-fall timing. */
 /** Cosmetic filler for one frame (see fillerForest.ts): individual trees (negative ids, `filler: true`, never resources) and merged horizon crowns, with the radii the budget really reached. */
 export type ForestFiller={trees:readonly ForestNode[];blobs:readonly FillerBlob[];detailEff:number;farEff:number};
-export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number;
+export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';/** tree detail step: full/mid radius and leaf-card scale (absent = per-quality radii, all cards) */detail?:{nearMetres:number;cardScale:number};camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number;
  /** draw-distance bands (src/game/drawDistance.ts): sim trees are culled beyond this (graphics Low scales it down as before); absent = the original 700/420 m */
  farMetres?:number;/** screen-door fade span ahead of the cut-offs (0/absent = hard edge) */fadeMetres?:number;/** conservative frustum test (x,z,radius) for far-tier trees; absent = draw all */inView?:(x:number,z:number,r:number)=>boolean;filler?:ForestFiller|null};
 export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean;/** cosmetic filler tree: never a resource, never picked */filler?:true};
-export type ForestOptions={seed:number;siteAt:(x:number,z:number)=>TreeSite;baseFormAt:(id:number,x:number,z:number)=>{base:BaseForm;kind:string};/** unit wind vector the trees lean along */wind?:[number,number];nearMetres:Record<'low'|'med'|'high',number>;farMetres:number;lowFarMetres:number;stumpHeightScale:number};
+export type ForestOptions={seed:number;/** ecological stands (src/game/forestEcology.ts): species, age class and size come from the stand instead of a per-tree hash; absent = the original per-tree choice */ecology?:StandField;siteAt:(x:number,z:number)=>TreeSite;baseFormAt:(id:number,x:number,z:number)=>{base:BaseForm;kind:string};/** unit wind vector the trees lean along */wind?:[number,number];nearMetres:Record<'low'|'med'|'high',number>;farMetres:number;lowFarMetres:number;stumpHeightScale:number};
 export const FOREST_LOD={fullFraction:.4,midFraction:1.15} as const;
-type Rec={sp:number;v:number;sx:number;sy:number;lean:[number,number];yaw:number;hue:[number,number,number];autumn:number;timing:number};
+type Rec={sp:number;v:number;/** stand-derived size scale (ecology on); absent = the node's own scale */size?:number;sx:number;sy:number;lean:[number,number];yaw:number;hue:[number,number,number];autumn:number;timing:number};
 type Batch={mesh:THREE.InstancedMesh;state:THREE.InstancedBufferAttribute;ids:number[];capacity:number;n:number;name:string};
 const AUTUMN_CACHE=new Map<string,THREE.Color>();const autumnColor=(hex:string)=>{let c=AUTUMN_CACHE.get(hex);if(!c){c=new THREE.Color(hex);AUTUMN_CACHE.set(hex,c);}return c;};
 const smooth=(a:number,b:number,x:number)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
@@ -55,19 +56,23 @@ export class BotanicalForest{
  private rec(node:ForestNode):Rec{
   let r=this.recs.get(node.id);if(r)return r;
   const seed=this.o.seed,{base,kind}=this.o.baseFormAt(node.id,node.x,node.z),site=this.o.siteAt(node.x,node.z)??DEFAULT_SITE;
-  const id=pickSpecies(base,kind,site,stableUnit(node.id,seed,41)),idx=Math.max(0,BOTANICAL_SPECIES.findIndex(s=>s.id===id)),sp=BOTANICAL_SPECIES[idx];
-  const v=pickVariant(node.scale*(node.planted?.6:1),site,stableUnit(node.id,seed,43)),u=(k:number)=>stableUnit(node.id,seed,k);
+  const plan=this.o.ecology?this.o.ecology.plan(node.id,node.x,node.z,{planted:node.planted,filler:node.filler}):null;
+  const id=plan?plan.species:pickSpecies(base,kind,site,stableUnit(node.id,seed,41)),idx=Math.max(0,BOTANICAL_SPECIES.findIndex(s=>s.id===id)),sp=BOTANICAL_SPECIES[idx];
+  const v=plan?plan.variant:pickVariant(node.scale*(node.planted?.6:1),site,stableUnit(node.id,seed,43)),u=(k:number)=>stableUnit(node.id,seed,k);
   // lean: with the wind, plus a drift off steep slopes; exposed species (mountain pine, palms, olive) lean harder
   const exposure=Math.min(1,site.slope*1.4+(kind==='alpine'?.55:0)+(kind==='warm-coast'?.3:0)+sp.lean*1.6),wl=(.012+exposure*.1)*(.7+.6*u(47)),la=Math.atan2(this.wind[1],this.wind[0])+(u(49)-.5)*.9;
   const lean:[number,number]=[Math.cos(la)*wl+(u(51)-.5)*.05,Math.sin(la)*wl+(u(53)-.5)*.05];
   const thin=Math.max(0,Math.min(1,site.soil)),stunt=.8+.2*thin;
-  r={sp:idx,v,sx:(.86+.3*u(55))*(1.02-.1*(site.moisture-.5))*stunt,sy:(.9+.2*u(57))*stunt,lean,yaw:u(59)*Math.PI*2,hue:[(u(61)-.5)*.05,.88+u(63)*.28,.9+u(65)*.2],autumn:Math.floor(u(67)*sp.autumn.length*.999),timing:u(69)};
+  r={sp:idx,v,size:plan?plan.size:undefined,sx:(.86+.3*u(55))*(1.02-.1*(site.moisture-.5))*stunt,sy:(.9+.2*u(57))*stunt,lean,yaw:u(59)*Math.PI*2,hue:[(u(61)-.5)*.05,.88+u(63)*.28,.9+u(65)*.2],autumn:Math.floor(u(67)*sp.autumn.length*.999),timing:u(69)};
   this.recs.set(node.id,r);return r;
  }
+ /** Leaf-card scale of the species meshes: a change drops the batches (the next sync rebuilds them from the cached geometry for that scale). Cores, trunks and cheap far crowns are unaffected. */
+ private cardScale=1;
+ private setCardScale(k:number){if(Math.abs(k-this.cardScale)<1e-6)return;this.cardScale=k;for(const b of this.batches.values()){this.scene.remove(b.mesh);b.mesh.dispose();}this.batches.clear();}
  private geometryInfo(spIdx:number){let i=this.info.get(spIdx);if(!i){i=botanicalTree(BOTANICAL_SPECIES[spIdx].id,0,1);this.info.set(spIdx,i);}return i;}
- private batch(sp:number,v:number,tier:0|1,needed:number){
-  const key=(sp*VARIANTS_PER_SPECIES+v)*2+tier;let b=this.batches.get(key);
-  if(!b){b=this.makeBatch(botanicalTree(BOTANICAL_SPECIES[sp].id,v,tier).geometry,`resource-${BOTANICAL_SPECIES[sp].id}-v${v}-t${tier}`,Math.max(8,needed));this.batches.set(key,b);}
+ private batch(sp:number,v:number,tier:0|1|2,needed:number){
+  const key=(sp*VARIANTS_PER_SPECIES+v)*3+tier;let b=this.batches.get(key);
+  if(!b){b=this.makeBatch(botanicalTree(BOTANICAL_SPECIES[sp].id,v,tier,this.cardScale).geometry,`resource-${BOTANICAL_SPECIES[sp].id}-v${v}-t${tier}`,Math.max(8,needed));this.batches.set(key,b);}
   else if(needed>b.capacity){const old=b,nb=this.makeBatch(old.mesh.geometry,old.name,Math.max(needed,old.capacity*2),old);this.scene.remove(old.mesh);old.mesh.dispose();b=nb;this.batches.set(key,b);}
   return b;
  }
@@ -91,23 +96,27 @@ export class BotanicalForest{
  sync(nodes:readonly ForestNode[],ctx:ForestContext){
   for(const b of this.batches.values()){b.n=0;b.ids.length=0;}
   if(this.stumps){this.stumps.n=0;this.stumps.ids.length=0;}
-  const near=this.o.nearMetres[ctx.quality]*detailScale();let d0=near*FOREST_LOD.fullFraction;const d1=near*FOREST_LOD.midFraction,cullFar=ctx.farMetres!==undefined?ctx.farMetres*(ctx.quality==='low'?this.o.lowFarMetres/this.o.farMetres:1):ctx.quality==='low'?this.o.lowFarMetres:this.o.farMetres,fadeM=Math.max(0,ctx.fadeMetres??0);
+  this.setCardScale(ctx.detail?.cardScale??1);const near=(ctx.detail?ctx.detail.nearMetres:this.o.nearMetres[ctx.quality])*detailScale();let d0=near*FOREST_LOD.fullFraction;const d1=near*FOREST_LOD.midFraction,cullFar=ctx.farMetres!==undefined?ctx.farMetres*(ctx.quality==='low'&&!ctx.detail?this.o.lowFarMetres/this.o.farMetres:1):ctx.quality==='low'?this.o.lowFarMetres:this.o.farMetres,fadeM=Math.max(0,ctx.fadeMetres??0);
   // Detail: at most `maxFullTrees` are drawn at the full tier, nearest first (the M1 triangle budget); the rest of the ring uses the mid tier
   {const cap=DETAIL_RULES.maxFullTrees[getDetailLevel()],ds:number[]=[];for(const node of nodes){if(node.amount<=0&&!node.planted)continue;const q=Math.hypot(node.x-ctx.camera.x,node.z-ctx.camera.z);if(q<=d0&&ctx.known(node.x,node.z))ds.push(q);}
    if(ds.length>cap){ds.sort((a,b)=>a-b);d0=Math.min(d0,ds[cap-1]);}}
+  // HERO tier: the nearest maxHeroTrees real trees inside heroTreeMetres draw the enriched near geometry (treeBotany lod 2); never more, so the triangle budget is bounded
+  let heroD=Math.min(d0,DETAIL_RULES.heroTreeMetres[getDetailLevel()]);
+  {const cap=DETAIL_RULES.maxHeroTrees[getDetailLevel()],ds:number[]=[];for(const node of nodes){if(node.amount<=0&&!node.planted)continue;const q=Math.hypot(node.x-ctx.camera.x,node.z-ctx.camera.z);if(q<=heroD&&ctx.known(node.x,node.z))ds.push(q);}
+   if(ds.length>cap){ds.sort((x,y)=>x-y);heroD=ds[cap-1];}}
   // with the cosmetic filler on, sim trees beyond the individual-detail radius draw as one cheap low-poly crown (hand-over is a dithered cross-fade); the budget's real reach bounds both
   const detailEff=ctx.filler?ctx.filler.detailEff:Infinity;this.cheapIds[0].length=this.cheapIds[1].length=0;
   const reach=ctx.filler?Math.min(cullFar,ctx.filler.farEff):cullFar;
   if(fadeM>0)this.simFade.value.set((ctx.filler?detailEff:cullFar)-fadeM,ctx.filler?detailEff:cullFar,-2,-1);else this.simFade.value.set(1e9,1e9+1,-2,-1);
   const fillerCounts={trees:0,far:0,blobs:0,cheap:0};this.fill.begin();
-  const farCounts=[0,0];let farTrunks=0,blobs=0,midTrees=0,fullTrees=0,leafy=0;this.farTrunkIds.length=0;this.farIds[0].length=this.farIds[1].length=0;
+  const farCounts=[0,0];let farTrunks=0,blobs=0,midTrees=0,fullTrees=0,heroTrees=0,leafy=0;this.farTrunkIds.length=0;this.farIds[0].length=this.farIds[1].length=0;
   // two passes would let batches size exactly; instead capacity doubles on demand
   const tally=new Map<number,number>();
   for(const list of [nodes,ctx.filler?.trees??[]])for(const node of list){
    if(!ctx.known(node.x,node.z))continue;
    const dx=node.x-ctx.camera.x,dz=node.z-ctx.camera.z,distance=Math.hypot(dx,dz);if(distance>reach)continue;
-   const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=node.scale*growth;
-   const tier:0|1|2=node.filler?2:distance<=d0?0:distance<=d1?1:2; // cosmetic filler never uses the pickable individual tiers
+   const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=(rec.size??node.scale)*growth;
+   const tier:0|1|2=node.filler?2:distance<=d0?0:distance<=d1?1:2,heroTier:0|1|2=tier===0&&distance<=heroD&&!node.filler?2:tier; // cosmetic filler never uses the pickable individual tiers
    if(tier===2&&ctx.inView&&!ctx.inView(node.x,node.z,10))continue;
    if(node.filler)fillerCounts.trees++;
    if(stump){
@@ -129,11 +138,11 @@ export class BotanicalForest{
    if(ctx.marked?.(node.id))this.color.set('#c58e43');
    if(distance<=Math.min(near*2.2,165)&&!stump){blobs=this.blob(node,s,sp.crownR*rec.sx*(sp.arch==='palm'?.5:.85),blobs);}
    if(tier!==2){
-    const key=(rec.sp*VARIANTS_PER_SPECIES+rec.v)*2+tier,need=(tally.get(key)??0)+1;tally.set(key,need);
-    const b=this.batch(rec.sp,rec.v,tier as 0|1,need),i=b.n++;b.ids.push(node.id);
+    const key=(rec.sp*VARIANTS_PER_SPECIES+rec.v)*3+heroTier,need=(tally.get(key)??0)+1;tally.set(key,need);
+    const b=this.batch(rec.sp,rec.v,heroTier as 0|1|2,need),i=b.n++;b.ids.push(node.id);
     this.pos.set(node.x,node.y,node.z);this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);this.scale.set(s*rec.sx,s*rec.sy,s*rec.sx);this.matrix.compose(this.pos,this.quat,this.scale);
     b.mesh.setMatrixAt(i,this.matrix);b.mesh.setColorAt(i,this.color);b.state.setXY(i,density,snow);
-    if(tier===0)fullTrees++;else midTrees++;if(density>.05||sp.evergreen)leafy++;
+    if(tier===0)fullTrees++;else midTrees++;if(heroTier===2)heroTrees++;if(density>.05||sp.evergreen)leafy++;
    }else{
     const g=this.geometryInfo(rec.sp),fl=node.filler===true;
     if(distance>detailEff-fadeM){
@@ -173,7 +182,7 @@ export class BotanicalForest{
   if(this.shadows){this.shadows.count=blobs;this.shadows.instanceMatrix.needsUpdate=true;}
   this.farTrunk.count=farTrunks;this.farTrunk.instanceMatrix.needsUpdate=true;
   for(let i=0;i<2;i++){const m=this.far[i];m.count=farCounts[i];m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;}
-  return {nearTrees:fullTrees+midTrees,nearCanopies:leafy,farCanopies:farCounts[0]+farCounts[1],resourceCount:nodes.length,fullTrees,midTrees,filler:{...fillerCounts,...this.fill.stats()}};
+  return {nearTrees:fullTrees+midTrees,nearCanopies:leafy,farCanopies:farCounts[0]+farCounts[1],resourceCount:nodes.length,fullTrees,midTrees,heroTrees,filler:{...fillerCounts,...this.fill.stats()}};
  }
  /** Meshes of the cosmetic filler layer (for tests and the measurement harness). */
  fillerMeshes(){return this.fill.meshes();}
