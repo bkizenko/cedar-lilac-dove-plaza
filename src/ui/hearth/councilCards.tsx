@@ -10,6 +10,7 @@ import type {CapitulationOutcome} from '../../game/capitulation';
 import {TERMS} from '../council/CapitulationTerms';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
+import {dedupeFeed} from '../council/feedDedupe';
 
 const cx=(...a:(string|false|undefined|null)[])=>a.filter(Boolean).join(' ');
 const sentence=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,'$1 $2').toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
@@ -50,9 +51,9 @@ export function HandoverCard({h}:{h:Handover}){
 
 /** Fame feed: the house's recent deeds and losses, newest first and larger, older ones fading, so a death or a coup reads as an event. */
 export function FameFeed({log}:{log:string[]}){
- const items=[...log].reverse().map(l=>l.replace(/^\d+:\s*/,''));
+ const items=dedupeFeed([...log].reverse());
  if(!items.length)return <p className="hw-empty">Nothing has happened to the house yet.</p>;
- return <ol className="hw-fame" aria-label="Chronicle">{items.map((l,i)=><li key={i} className={cx(i===0&&'is-new',i>4&&'is-old')}>{i===0&&<Scroll size={20}/>}<span>{l}</span></li>)}</ol>;
+ return <ol className="hw-fame" aria-label="Chronicle">{items.map((l,i)=><li key={i} className={cx(i===0&&'is-new',i>4&&'is-old')}>{i===0&&<Scroll size={20}/>}<span>{l.text}{l.count>1&&<b className="hw-count" title={`${l.count} times`}> ×{l.count}</b>}</span></li>)}</ol>;
 }
 
 /** Neighbour news: agreements the player is party to, in plain lines under the chronicle. Nothing the player could not know. */
