@@ -86,9 +86,9 @@ export const plainItemMaterial=()=>new THREE.MeshStandardMaterial({vertexColors:
 
 /** Instanced draw of one item model: call `set(i, matrix)` for each placement, then `commit(n)`. Grows by doubling. */
 export class ItemInstancer{
- readonly mesh:THREE.InstancedMesh;private cap:number;
- constructor(readonly geometry:THREE.BufferGeometry,material:THREE.Material=itemMaterial(),capacity=16){
-  this.cap=capacity;this.mesh=new THREE.InstancedMesh(geometry,material,capacity);this.mesh.count=0;this.mesh.frustumCulled=false;this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+ readonly mesh:THREE.InstancedMesh;readonly geometry:THREE.BufferGeometry;private cap:number;
+ constructor(geometry:THREE.BufferGeometry,material:THREE.Material=itemMaterial(),capacity=16){
+  this.geometry=geometry;this.cap=capacity;this.mesh=new THREE.InstancedMesh(geometry,material,capacity);this.mesh.count=0;this.mesh.frustumCulled=false;this.mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
  }
  ensure(n:number){
   if(n<=this.cap)return;let c=this.cap;while(c<n)c*=2;
