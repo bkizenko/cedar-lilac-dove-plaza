@@ -104,6 +104,15 @@ async function armorSheet() {
   void styles;
   await stack(path.join(outDir, 'armor.png'), parts);
 }
+async function wear() {
+  const parts = [];
+  for (const skin of ['civ:aureline', 'civ:steppan']) {
+    const r = await shoot(`wear-${skin}`, { width: 1600, height: 470, season: 'summer', era: 3, seconds: .5, cam: { pos: [0, 1.6, 4.6], target: [0, 1.0, 0], fov: 31 },
+      people: [.95, .7, .5, .3, .1].map((c, i) => P(skin, 'spearman', (i - 2) * 1.0, 0, { id: 400 + i * 5, facing: .25 }, 'summer', { armor: { kind: i % 2 ? 'scaleCuirass' : 'paddedTorso', condition: c }, helmet: { kind: i % 2 ? 'bronzeHelm' : 'leatherCap', condition: c } })) });
+    parts.push({ label: `${skin}: owned armor + helmet wear by condition .95 .7 .5 .3 .1 (cosmetic; near LOD only)`, img: r.out });
+  }
+  await stack(path.join(outDir, 'wear.png'), parts);
+}
 async function lineup(file, ids, extra = {}) {
   const per = 3, rows = [];
   for (let i = 0; i < ids.length; i += 6) rows.push(ids.slice(i, i + 6));
@@ -148,6 +157,7 @@ else {
   if (want.includes('tools')) await toolsSheet();
   if (all || want.includes('roles')) await rolesSheet();
   if (all || want.includes('armor')) await armorSheet();
+  if (want.includes('wear')) await wear();
   if (all || want.includes('overview')) await lineup(path.join(outDir, 'overview.png'), ALL);
   if (all || want.includes('silhouettes')) await lineup(path.join(outDir, 'silhouettes.png'), ALL, { sil: true });
 }
