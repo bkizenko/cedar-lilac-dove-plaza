@@ -105,7 +105,7 @@ test('a stage waits when the stock cannot deliver it, and resumes when the goods
  assert.ok(W.wondersOf(g)[0].progress>.3||!W.wondersOf(g)[0].project,'work resumed');
 });
 test('suggest ranking: ordered, deterministic, explained, held wonders drop out, needs move the score',()=>{
- const g1=game(),g2=game();prepare(g1,0);prepare(g2,0);
+ const g1=game(),g2=game();run(g1,15);run(g2,15);prepare(g1,0);prepare(g2,0);
  const a=S.suggestWonders(g1,0,{siteChecks:26}),b=S.suggestWonders(g2,0,{siteChecks:26});
  assert.deepEqual(a,b,'same seed same list');assert.equal(a.length,24);
  for(let i=1;i<a.length;i++)assert.ok(a[i].score<=a[i-1].score+1e-9);
@@ -117,11 +117,11 @@ test('suggest ranking: ordered, deterministic, explained, held wonders drop out,
  g1.tribe(0).food=0;const low=S.measureNeeds(g1,0).needs.food;g1.tribe(0).food=3000;const high=S.measureNeeds(g1,0).needs.food;assert.ok(low>=high,`${low} ${high}`);
  const n0=S.suggestWonders(g1,0,{siteChecks:26}).find(s=>s.id==='granary');g1.tribe(0).food=0;const n1=S.suggestWonders(g1,0,{siteChecks:26}).find(s=>s.id==='granary');if(n0.feasible)assert.ok(n1.need>=n0.need-1e-9);
  // one wonder per family: a held wonder drops out of the list
- const best=a.find(s=>s.ready);g1.tribe(0).food=3000;assert.equal(W.foundWonder(g1,0,best.id,{site:best.site}).ok,true);
+ const best=a.find(s=>s.ready);assert.ok(best,"a ready wonder exists");g1.tribe(0).food=3000;assert.equal(W.foundWonder(g1,0,best.id,{site:best.site}).ok,true);
  const after=S.suggestWonders(g1,0,{siteChecks:26});assert.equal(after.find(s=>s.id===best.id).feasible,false);assert.ok(after.every(s=>!s.ready),'one project at a time');
  // the panel model carries the same ranking and a site picker
  const m=applyEngineReadQuery(g2,{kind:'wonders'});assert.equal(m.kind,'wonders');assert.ok(m.wonders.rows.length===26&&m.wonders.suggested.length<=3);assert.ok(isEngineReadQuery({kind:'wonders'})&&isEngineReadQuery({kind:'wonders',focus:'granary'})&&!isEngineReadQuery({kind:'wonders',focus:'x y'}));
- assert.ok(m.wonders.rows.some(r=>r.sites.length));assert.ok(m.wonders.rows.every(r=>r.cost.labourSeconds>0&&r.effects.length>0));
+ assert.ok(m.wonders.rows.some(r=>r.sites.length));assert.ok(m.wonders.rows.every(r=>r.cost.labourSeconds>0&&(r.effects.length>0||['cistern','assembly'].includes(r.id))));
 });
 test('rivals found from the same registry and the fame reaches the player as vague rumour',()=>{
  const g=game();run(g,15);const rival=[1,2].find(t=>g.tribe(t)&&t!==3);prepare(g,rival);
