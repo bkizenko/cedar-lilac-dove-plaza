@@ -1,0 +1,503 @@
+{
+ "note": "Tree layers only (ground dressing excluded). Counts from the real tree layers on a seeded woodland (2200 sim trees within 300 m of the camp, filler everywhere), camera at the camp, draw distance Medium. forward = 100 degree view cone (what a normal view submits); allAround = upper bound. No GPU timing: SwiftShader/no-GPU sandbox, not an M1.",
+ "steps": {
+  "1": {
+   "label": "Sparse",
+   "knobs": {
+    "step": 1,
+    "label": "Sparse",
+    "nearMetres": 39,
+    "farScale": 0.3,
+    "fillerCap": 0.08,
+    "fillerDetail": 0.4,
+    "cardScale": 0.55
+   },
+   "forward": {
+    "drawCalls": 30,
+    "instances": 1114,
+    "triangles": 92286,
+    "groups": {
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 24,
+      "instances": 57,
+      "triangles": 56698
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 100,
+      "triangles": 2000
+     },
+     "sim far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 152,
+      "triangles": 18576
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 805,
+      "triangles": 15012
+     }
+    }
+   },
+   "allAround": {
+    "drawCalls": 30,
+    "instances": 2992,
+    "triangles": 156598,
+    "groups": {
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 24,
+      "instances": 57,
+      "triangles": 56698
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 2291,
+      "triangles": 42556
+     },
+     "sim far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 454,
+      "triangles": 53544
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 190,
+      "triangles": 3800
+     }
+    }
+   }
+  },
+  "2": {
+   "label": "Light",
+   "knobs": {
+    "step": 2,
+    "label": "Light",
+    "nearMetres": 70,
+    "farScale": 0.4,
+    "fillerCap": 0.3,
+    "fillerDetail": 0.5,
+    "cardScale": 0.7
+   },
+   "forward": {
+    "drawCalls": 46,
+    "instances": 1777,
+    "triangles": 219148,
+    "groups": {
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 40,
+      "instances": 172,
+      "triangles": 169988
+     },
+     "sim far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 188,
+      "triangles": 22220
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 324,
+      "triangles": 6480
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 1093,
+      "triangles": 20460
+     }
+    }
+   },
+   "allAround": {
+    "drawCalls": 46,
+    "instances": 4018,
+    "triangles": 295108,
+    "groups": {
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 40,
+      "instances": 172,
+      "triangles": 169988
+     },
+     "sim far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 536,
+      "triangles": 62576
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 2688,
+      "triangles": 50104
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 622,
+      "triangles": 12440
+     }
+    }
+   }
+  },
+  "3": {
+   "label": "Balanced",
+   "knobs": {
+    "step": 3,
+    "label": "Balanced",
+    "nearMetres": 120,
+    "farScale": 0.7,
+    "fillerCap": 0.6,
+    "fillerDetail": 0.75,
+    "cardScale": 0.82
+   },
+   "forward": {
+    "drawCalls": 67,
+    "instances": 2560,
+    "triangles": 584840,
+    "groups": {
+     "filler far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 34,
+      "triangles": 3828
+     },
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 58,
+      "instances": 490,
+      "triangles": 511556
+     },
+     "sim far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 320,
+      "triangles": 36568
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 560,
+      "triangles": 11200
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 1156,
+      "triangles": 21688
+     }
+    }
+   },
+   "allAround": {
+    "drawCalls": 67,
+    "instances": 5255,
+    "triangles": 698148,
+    "groups": {
+     "filler far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 60,
+      "triangles": 6912
+     },
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 58,
+      "instances": 490,
+      "triangles": 511556
+     },
+     "sim far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 944,
+      "triangles": 108364
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 701,
+      "triangles": 14020
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 3060,
+      "triangles": 57296
+     }
+    }
+   }
+  },
+  "4": {
+   "label": "Rich",
+   "knobs": {
+    "step": 4,
+    "label": "Rich",
+    "nearMetres": 170,
+    "farScale": 1,
+    "fillerCap": 1,
+    "fillerDetail": 1,
+    "cardScale": 1
+   },
+   "forward": {
+    "drawCalls": 71,
+    "instances": 3798,
+    "triangles": 1209734,
+    "groups": {
+     "filler far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 454,
+      "triangles": 52360
+     },
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 62,
+      "instances": 965,
+      "triangles": 1061926
+     },
+     "sim far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 494,
+      "triangles": 59188
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 701,
+      "triangles": 14020
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 1184,
+      "triangles": 22240
+     }
+    }
+   },
+   "allAround": {
+    "drawCalls": 71,
+    "instances": 6935,
+    "triangles": 1383250,
+    "groups": {
+     "filler far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 674,
+      "triangles": 78296
+     },
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 62,
+      "instances": 965,
+      "triangles": 1061926
+     },
+     "sim far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 1450,
+      "triangles": 169852
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 701,
+      "triangles": 14020
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 3145,
+      "triangles": 59156
+     }
+    }
+   }
+  },
+  "5": {
+   "label": "Full",
+   "knobs": {
+    "step": 5,
+    "label": "Full",
+    "nearMetres": 230,
+    "farScale": 1,
+    "fillerCap": 1,
+    "fillerDetail": 1,
+    "cardScale": 1
+   },
+   "forward": {
+    "drawCalls": 76,
+    "instances": 3814,
+    "triangles": 2001413,
+    "groups": {
+     "filler far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 454,
+      "triangles": 52360
+     },
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 70,
+      "instances": 1737,
+      "triangles": 1917745
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 701,
+      "triangles": 14020
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 922,
+      "triangles": 17288
+     }
+    }
+   },
+   "allAround": {
+    "drawCalls": 76,
+    "instances": 5485,
+    "triangles": 2054849,
+    "groups": {
+     "filler far crowns+trunks": {
+      "drawCalls": 3,
+      "instances": 674,
+      "triangles": 78296
+     },
+     "other": {
+      "drawCalls": 15,
+      "instances": 521,
+      "triangles": 96187
+     },
+     "sim trees full/mid": {
+      "drawCalls": 70,
+      "instances": 1737,
+      "triangles": 1917745
+     },
+     "contact shadows": {
+      "drawCalls": 1,
+      "instances": 701,
+      "triangles": 14020
+     },
+     "filler horizon crowns": {
+      "drawCalls": 2,
+      "instances": 2373,
+      "triangles": 44788
+     }
+    }
+   }
+  }
+ },
+ "legacy": {
+  "low": {
+   "drawCalls": 46,
+   "instances": 2046,
+   "triangles": 248094,
+   "groups": {
+    "sim trees full/mid": {
+     "drawCalls": 40,
+     "instances": 172,
+     "triangles": 182754
+    },
+    "sim far crowns+trunks": {
+     "drawCalls": 3,
+     "instances": 312,
+     "triangles": 35676
+    },
+    "contact shadows": {
+     "drawCalls": 1,
+     "instances": 324,
+     "triangles": 6480
+    },
+    "filler horizon crowns": {
+     "drawCalls": 2,
+     "instances": 1238,
+     "triangles": 23184
+    }
+   }
+  },
+  "med": {
+   "drawCalls": 71,
+   "instances": 3798,
+   "triangles": 1209734,
+   "groups": {
+    "filler far crowns+trunks": {
+     "drawCalls": 3,
+     "instances": 454,
+     "triangles": 52360
+    },
+    "other": {
+     "drawCalls": 15,
+     "instances": 521,
+     "triangles": 96187
+    },
+    "sim trees full/mid": {
+     "drawCalls": 62,
+     "instances": 965,
+     "triangles": 1061926
+    },
+    "sim far crowns+trunks": {
+     "drawCalls": 3,
+     "instances": 494,
+     "triangles": 59188
+    },
+    "contact shadows": {
+     "drawCalls": 1,
+     "instances": 701,
+     "triangles": 14020
+    },
+    "filler horizon crowns": {
+     "drawCalls": 2,
+     "instances": 1184,
+     "triangles": 22240
+    }
+   }
+  },
+  "high": {
+   "drawCalls": 76,
+   "instances": 3814,
+   "triangles": 2001413,
+   "groups": {
+    "filler far crowns+trunks": {
+     "drawCalls": 3,
+     "instances": 454,
+     "triangles": 52360
+    },
+    "other": {
+     "drawCalls": 15,
+     "instances": 877,
+     "triangles": 163244
+    },
+    "sim trees full/mid": {
+     "drawCalls": 70,
+     "instances": 1737,
+     "triangles": 1917745
+    },
+    "contact shadows": {
+     "drawCalls": 1,
+     "instances": 701,
+     "triangles": 14020
+    },
+    "filler horizon crowns": {
+     "drawCalls": 2,
+     "instances": 922,
+     "triangles": 17288
+    }
+   }
+  }
+ }
+}
