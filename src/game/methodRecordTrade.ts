@@ -7,6 +7,7 @@ import {isDependent} from './settlement';
 import {knownDiplomaticRelation} from './diplomaticKnowledge';
 import {methodRecords,depositMethodRecord,type MethodRecord} from './methodRecords';
 import {appendMethodRecordAcquisition,METHOD_RECORD_TRADE_PRICE_WOOD} from './methodRecordAcquisition';
+import {carryingCapacity} from './haulage';
 import {sameCargoCache} from './farmToolCargo';
 import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 
@@ -27,7 +28,7 @@ function eligibleRecord(g:Game,r:MethodRecord,except?:Unit){return peaceful(g,r.
  * example. Reading offers never initializes stock, advances AI or reveals a site. */
 export function methodRecordTradeOffers(g:Game){return methodRecords(g).filter(r=>g.visibleAt(r.holder.x,r.holder.z)&&eligibleRecord(g,r)).map(r=>({recordId:r.id,sellerTeam:r.team,sellerName:g.tribe(r.team).name,recipe:r.source.recipe,makerName:r.source.makerName,priceWood:METHOD_RECORD_TRADE_RULES.priceWood}));}
 function conflicting(u:Unit,w?:MethodRecordTradeOrder){if(!w)return hasTaskCommitment(u);const copy={...u} as Trader;delete copy.methodRecordTrade;if(w.phase==='returning'&&copy.methodRecordCargoId===w.recordId)delete copy.methodRecordCargoId;return hasTaskCommitment(copy);}
-function free(g:Game,u:Unit){return u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&u.enslavedFrom===undefined&&!isDependent(g,u)&&!u.boat&&!u.haulage&&!u.expedition&&!u.visit&&!u.envoy&&!u.scout&&!u.trade&&!u.tributeJourney&&!u.foundingJourney&&!u.recalled&&!u.emergency&&!u.buildOrder&&u.escortId===undefined&&!u.conflictIntent&&u.drill==null&&!u.resting&&!u.shelterId&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!conflicting(u)&&(!u.jobLock||u.order==='hold')&&['idle','hold','gather'].includes(u.order)&&!peekWorkRuntime(g)?.activeJob(u.id);}
+function free(g:Game,u:Unit){return u.team===0&&u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&u.enslavedFrom===undefined&&!isDependent(g,u)&&!u.boat&&!u.haulage&&!u.expedition&&!u.visit&&!u.envoy&&!u.scout&&!u.trade&&!u.tributeJourney&&!u.foundingJourney&&!u.recalled&&!u.emergency&&!u.buildOrder&&u.escortId===undefined&&!u.conflictIntent&&u.drill==null&&!u.resting&&!u.shelterId&&carryingCapacity(u,'wood')>=METHOD_RECORD_TRADE_RULES.priceWood&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!conflicting(u)&&(!u.jobLock||u.order==='hold')&&['idle','hold','gather'].includes(u.order)&&!peekWorkRuntime(g)?.activeJob(u.id);}
 function home(g:Game,u:Unit){return supplyDrops(g,u.team).map(drop=>({drop,spot:supplyApproach(g,u,drop)})).filter((v):v is {drop:typeof v.drop;spot:{x:number;z:number}}=>!!v.spot).sort((a,b)=>Math.hypot(a.spot.x-u.x,a.spot.z-u.z)-Math.hypot(b.spot.x-u.x,b.spot.z-u.z))[0]??null;}
 function own(g:Game,u:Unit,w:MethodRecordTradeOrder,provided?:JobCoordinator){const jobs=provided??workRuntime(g),id=key(u),current=jobs.activeJob(u.id);if(current&&current.id!==id)return false;if(current?.id===id)return true;const old=jobs.job(id);if(old&&['completed','canceled'].includes(old.phase))jobs.forget(id);if(!jobs.job(id))jobs.propose({id,kind:'method-record-trade',owner:u.team,actors:[u.id],target:w.recordId});if(jobs.reserve(id,[{key:assetKey(w.recordId),amount:1,capacity:1}]))return true;jobs.finish(id,true);jobs.forget(id);return false;}
 function release(g:Game,u:Unit,completed=false){const jobs=workRuntime(g);jobs.finish(key(u),!completed);jobs.forget(key(u));}
@@ -70,6 +71,7 @@ export function methodRecordTradeAI(g:Game,u:Unit,dt:number){
  if(r.team!==w.sellerTeam||!eligibleRecord(g,r,u))return fail(g,u,'The seller, peace or offered record changed; actual unspent goods return physically');
  const seller=sellerCache(g,r);if(!seller)return fail(g,u,'The original offered record has left its store; no remote payment is made');
  if(w.phase==='loading'){
+  if(carryingCapacity(u,'wood')<w.priceWood)return fail(g,u,'This person cannot carry the agreed payment; nothing was loaded');
   if(u.carry>0||Object.values(u.itemCargo||{}).some(n=>(n||0)>0))return fail(g,u,'Unexpected cargo retained; no second payment was loaded');
   const h=home(g,u);if(!h){u.workReason='Purchase waits for a reachable home cache; nothing paid';return true;}
   u.tx=h.spot.x;u.tz=h.spot.z;u.order='hold';u.workReason='Collecting four real logs at the home cache';
@@ -88,12 +90,19 @@ export function methodRecordTradeAI(g:Game,u:Unit,dt:number){
  appendMethodRecordAcquisition(r,{kind:'traded',fromTeam:w.sellerTeam,toTeam:u.team,at:g.state.time,by:u.id,payment:{kind:'wood',amount:w.priceWood}});
  r.team=u.team;r.holder={kind:'carrier',unitId:u.id,x:u.x,z:u.z};u.methodRecordCargoId=r.id;w.phase='returning';g.invalidateRoute(u);return true;
 }
-export function reconcileMethodRecordTrades(g:Game){for(const u of g.state.units){const w=order(u);if(!w)continue;const r=record(g,w.recordId);if(u.hp<=0||u.team!==0||u.prisoner||u.emergency||!r||w.phase!=='returning'&&(r.team!==w.sellerTeam||!peaceful(g,w.sellerTeam)||r.holder.kind!=='cache'||busyRecord(g,r)))cancelMethodRecordTrade(g,u,'Record purchase stopped after custody, record or diplomatic change; finite goods remain physical');}}
+export function reconcileMethodRecordTrades(g:Game){for(const u of g.state.units){const w=order(u);if(!w)continue;const r=record(g,w.recordId);if(u.hp<=0||u.team!==0||u.prisoner||u.emergency||!r||w.phase==='returning'&&(r.team!==u.team||r.holder.kind!=='carrier'||r.holder.unitId!==u.id||u.methodRecordCargoId!==r.id)||w.phase!=='returning'&&(r.team!==w.sellerTeam||!peaceful(g,w.sellerTeam)||r.holder.kind!=='cache'||busyRecord(g,r)))cancelMethodRecordTrade(g,u,'Record purchase stopped after custody, record or diplomatic change; finite goods remain physical');}}
 export function rebuildMethodRecordTradeOwnership(g:Game,jobs:JobCoordinator){for(const u of g.state.units){const w=order(u);if(w&&(u.hp<=0||u.team!==0||conflicting(u,w)||!record(g,w.recordId)||!own(g,u,w,jobs))){delete (u as Trader).methodRecordTrade;jobs.finish(key(u),true);jobs.forget(key(u));u.workReason='Record purchase stopped; original cargo and record custody retained';}}}
 export function validMethodRecordTrades(s:GameState){
  const targets=new Set<number>();let count=0;
  for(const body of s.units){const u=body as Trader,w=order(u);if(w===undefined)continue;count++;
   if(!w||typeof w!=='object'||Array.isArray(w)||Object.keys(w).some(k=>!['recordId','sellerTeam','priceWood','startedAt','phase'].includes(k))||!Number.isSafeInteger(w.recordId)||w.recordId<1||w.recordId>=s.nextId||targets.has(w.recordId)||!s.methodRecords?.records.some(r=>r.id===w.recordId)||u.team!==0||!Number.isSafeInteger(w.sellerTeam)||w.sellerTeam<=0||w.sellerTeam===3||!s.tribes.some(t=>t.id===w.sellerTeam)||w.priceWood!==METHOD_RECORD_TRADE_RULES.priceWood||!Number.isFinite(w.startedAt)||w.startedAt<0||w.startedAt>s.time||!['loading','outbound','returning'].includes(w.phase)||conflicting(u,w))return false;
+  const r=s.methodRecords!.records.find(r=>r.id===w.recordId)!;
+  if(w.phase==='loading'&&(u.carry!==0||u.methodRecordCargoId!==undefined))return false;
+  // Theft may remove some/all real payment before the next order tick. Keep
+  // that conservation snapshot loadable; the executor cancels rather than pays
+  // from the treasury or conjuring the missing logs.
+  if(w.phase==='outbound'&&(u.carry<0||u.carry>w.priceWood||u.carry>0&&u.carryType!=='wood'||u.methodRecordCargoId!==undefined))return false;
+  if(w.phase==='returning'&&(u.carry!==0||u.methodRecordCargoId!==r.id||r.team!==u.team||r.holder.kind!=='carrier'||r.holder.unitId!==u.id||!r.acquisitions?.some(a=>a.kind==='traded'&&a.fromTeam===w.sellerTeam&&a.toTeam===u.team&&a.by===u.id&&a.at>=w.startedAt&&a.payment?.kind==='wood'&&a.payment.amount===w.priceWood)))return false;
   targets.add(w.recordId);
  }
  return count<=METHOD_RECORD_TRADE_RULES.maximumActive;
