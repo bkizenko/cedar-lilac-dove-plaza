@@ -29,7 +29,7 @@ export function ruinSource(v:Pick<RuinView,'kind'|'was'|'style'|'seed'|'w'|'d'|'
 export function ruinSpecFor(v:Pick<RuinView,'kind'|'was'|'style'|'seed'|'w'|'d'|'id'|'decay'|'climate'>,habitat?:Parameters<typeof ruinSource>[1]):RuinSpec|null{
  const src=ruinSource(v,habitat);if(!src)return null;
  const decay=quant(v.decay),spec=ruinSpec(src,{seed:hashSeed(v.seed,'ruin'),decay,overgrowth:Math.min(1,decay*(v.climate==='arid'?.35:v.climate==='wet'?1:.8)),climate:v.climate});
- return{...spec,variantKey:`ruin.${v.id}.${Math.round(decay*RUIN_DECAY_STEPS)}`};
+ return{...spec,...(src.materials?{materials:src.materials}:{}),variantKey:`ruin.${v.id}.${Math.round(decay*RUIN_DECAY_STEPS)}`};
 }
 type Entry={spec:RuinSpec;meshes:Map<LodTier,THREE.InstancedMesh>;used:number};
 const m4=new THREE.Matrix4(),q4=new THREE.Quaternion(),p3=new THREE.Vector3(),s3=new THREE.Vector3(1,1,1),up=new THREE.Vector3(0,1,0);
