@@ -123,10 +123,69 @@ test('the graded model is on for new games and old saves keep the earlier linear
   assert.equal(before.wood-g.tribe(0).wood,(BUILDINGS.hut.wood||0)+quote.extraWood,'extra wood is really spent');assert.equal(before.stone-g.tribe(0).stone,(BUILDINGS.hut.stone||0)+quote.extraStone,'extra stone is really spent');
   // save round trip keeps the record; an old save without the switch loads as linear
   const raw=JSON.parse(JSON.stringify(encodeGame(g)));validateGameSave(raw);const back=decodeGame(raw);assert.equal(back.state.slopeModel,'graded');assert.deepEqual(back.state.buildings.find(x=>x.id===b.id).site,b.site);
-  const old=JSON.parse(JSON.stringify(raw));delete old.state.slopeModel;for(const x of old.state.buildings)delete x.site;validateGameSave(old);assert.equal(decodeGame(old).state.slopeModel,undefined);
+  const old=JSON.parse(JSON.stringify(raw));delete old.state.slopeModel;delete old.state.terrainModel;for(const x of old.state.buildings)delete x.site;validateGameSave(old);assert.equal(decodeGame(old).state.slopeModel,undefined);
   const bad=JSON.parse(JSON.stringify(raw));bad.state.buildings.find(x=>x.id===b.id).site={v:1,tier:'moderate',foundation:'moat',slope:1,fall:1,extraWork:1,wood:1,stone:1};assert.throws(()=>validateGameSave(bad));
-  const orphan=JSON.parse(JSON.stringify(raw));delete orphan.state.slopeModel;assert.throws(()=>validateGameSave(orphan),'a site record needs the graded switch');
+  const orphan=JSON.parse(JSON.stringify(raw));delete orphan.state.slopeModel;delete orphan.state.terrainModel;assert.throws(()=>validateGameSave(orphan),'a site record needs the graded switch');
   g.height=orig;
   // build time: the extra labour is part of the work need
   const {BUILD_TIME}=await import('../src/game/constants.ts');assert.ok(BUILD_TIME.hut+b.site.extraWork>BUILD_TIME.hut);void COST_RULES;
+});
+
+// ---- terrain model v2: nuance beyond a single angle ------------------------------------------------------------------------------------------------
+import {surveyNuance,findShelf,permeabilityOf,NUANCE_RULES} from '../src/game/slopeNuance.ts';
+import {assessSiteV2} from '../src/game/siteAssessmentV2.ts';
+const dome=k=>(x,z)=>10-k*(x*x+z*z);
+const slopeS=deg=>{const g=Math.tan(deg*Math.PI/180);return (x,z)=>10-g*z;};      // falls toward +z (south)
+const slopeN=deg=>{const g=Math.tan(deg*Math.PI/180);return (x,z)=>10+g*z;};
+const shelfHill=(deg,half=3)=>{const g=Math.tan(deg*Math.PI/180);return (x)=>10+g*(x>=half?x-half:x<=-half?x+half:0);};
+const v2=(h,type='hut',w=5.4,d=5.2,o={})=>assessSiteV2(h,type,0,0,w,d,o);
+test('nuance: a ridge is windy, a hollow is damp or frosty; the same mean slope reads differently',()=>{
+  const r=surveyNuance(dome(.04),0,0,5.4,5.2),h=surveyNuance(dome(-.04),0,0,5.4,5.2),p=surveyNuance(tilt(15),0,0,5.4,5.2);
+  assert.equal(r.landform,'ridge');assert.ok(r.curvature>=NUANCE_RULES.curvatureMetres);assert.ok(r.tags.includes('Ridge: windy')&&r.risks.wind>.5);
+  assert.equal(h.landform,'hollow');assert.ok(h.curvature<=-NUANCE_RULES.curvatureMetres);assert.ok(h.tags.some(t=>/^Hollow/.test(t)));assert.ok(h.risks.frost>.5,'cold air pools in a hollow');assert.ok(h.wetness>r.wetness,'a hollow is wetter than a ridge');
+  assert.ok(Math.abs(p.curvature)<1e-9&&p.landform!=='hollow'&&p.landform!=='ridge','a plane has no curvature however steep');
+  assert.ok(v2(dome(-.04)).extraWork>=v2(dome(.04)).extraWork||v2(dome(-.04)).tier==='level');
+});
+test('nuance: aspect and sun, with the hemisphere flipping it',()=>{
+  const s=surveyNuance(slopeS(15),0,0,5.4,5.2),n=surveyNuance(slopeN(15),0,0,5.4,5.2),south=surveyNuance(slopeS(15),0,0,5.4,5.2,{hemisphere:-1});
+  assert.ok(s.sun>.9&&s.tags.includes('Sun slope'));assert.ok(n.sun<-.9&&n.tags.includes('Shade slope'));assert.ok(south.sun<-.9,'in the south hemisphere the sun is north');
+  assert.equal(s.aspectDeg,180);assert.equal(n.aspectDeg,0);assert.equal(surveyNuance(tilt(15),0,0,5.4,5.2).aspectDeg,270,'ground falling to -x faces west');
+  assert.equal(surveyNuance(()=>10,0,0,5.4,5.2).sun,0,'flat ground has no sun side');
+});
+test('nuance: a smooth 15 degree slope is not a broken 15 degree slope',()=>{
+  const bumpy=(x,z)=>tilt(15)(x,z)+.6*Math.sin(x*2.3)*Math.cos(z*1.9);
+  const smooth=surveyNuance(tilt(15),0,0,5.4,5.2),broken=surveyNuance(bumpy,0,0,5.4,5.2);
+  assert.ok(smooth.roughness<.01&&!smooth.rough);assert.ok(broken.roughness>=NUANCE_RULES.roughRmsMetres&&broken.rough&&broken.tags.includes('Broken ground'));
+  const a=v2(tilt(15)),b=v2(bumpy);assert.ok(b.extraWork>a.extraWork,'broken ground is slower work');assert.match(b.detail,/broken ground/);
+});
+test('nuance: a natural shelf on a steep hillside is a good site, not a refusal',()=>{
+  const H=shelfHill(30);
+  const plain=assessSite(tilt(30),'hut',0,0,5.4,5.2);assert.ok(!plain.ok,'the bare 30 degree hillside is refused');
+  const onShelf=v2(H);assert.ok(onShelf.ok,onShelf.issue);assert.ok(['level','moderate'].includes(onShelf.tier));assert.ok(onShelf.tags.includes('Natural shelf'));assert.match(onShelf.label,/Natural shelf/);
+  const straddle=assessSiteV2(H,'hut',1.1,0,5.4,5.2);assert.ok(straddle.ok&&straddle.tags.includes('Natural shelf'),'a footprint mostly on the ledge still works');
+  const store=assessSiteV2(H,'warehouse',0,0,6,6);assert.ok(store.ok,'a store sits on a shelf too');
+  const off=assessSiteV2(H,'hut',9,0,5.4,5.2);assert.ok(!off.ok,'off the shelf it is hillside again');
+  const hint=findShelf(H,9,0,5.4,5.2);assert.ok(hint&&hint.distance<=NUANCE_RULES.searchRadiusMetres&&hint.dx<0,'the shelf is found uphill-left');
+  assert.match(assessSiteV2(H,'hut',9,0,5.4,5.2,{hint:true}).detail,/natural shelf \d+ m /);
+  assert.equal(surveyNuance(tilt(30),0,0,5.4,5.2).shelf,null,'a plain slope has no shelf');
+});
+test('nuance: wet hollows near water flood; loose steep hollows slip; drainage follows the rock',()=>{
+  const bowl=(x,z)=>1+.03*(x*x+z*z),n=surveyNuance(bowl,0,0,5.4,5.2,{water:()=>.5,waterDistance:10});
+  assert.ok(n.risks.flood>=.4&&n.tags.includes('Flood risk'));assert.equal(surveyNuance(bowl,0,0,5.4,5.2).risks.flood,0,'no water known: no flood');
+  const gully=(x,z)=>10+Math.tan(34*Math.PI/180)*x+.05*z*z,loose=surveyNuance(gully,0,0,5.4,5.2,{ground:SHALE}),hard=surveyNuance(gully,0,0,5.4,5.2,{ground:GRANITE});
+  assert.ok(loose.risks.landslip>hard.risks.landslip&&loose.risks.landslip>=.4&&loose.tags.includes('Slip risk'));
+  assert.ok(permeabilityOf(SAND)>permeabilityOf(SHALE)&&permeabilityOf(null)===.5);
+  assert.ok(surveyNuance(()=>10,0,0,5.4,5.2,{ground:SHALE}).wetness>surveyNuance(()=>10,0,0,5.4,5.2,{ground:SAND}).wetness,'clay stays wet');
+  assert.ok(v2(gully,'hut',5.4,5.2,{ground:SHALE}).extraStone>=v2(gully,'hut',5.4,5.2,{ground:GRANITE}).extraStone||!v2(gully,'hut',5.4,5.2,{ground:SHALE}).ok);
+});
+test('v2 buildings: same tiers as the plain model on plain slopes; exempt types untouched; deterministic',()=>{
+  for(const d of[2,5,10,15,22,35])assert.equal(v2(tilt(d)).tier,hut(d).tier,String(d));
+  assert.equal(v2(tilt(15)).foundation,hut(15).foundation);assert.deepEqual(v2(tilt(15),'stonewall',4,4),at('stonewall',15,4,4));assert.deepEqual(v2(tilt(17),'hut'),v2(tilt(17),'hut'));
+  for(const f of['slopeNuance','terraceFarming','terraceRecord','siteAssessmentV2','terraceRuntime']){const src=readFileSync(new URL(`../src/game/${f}.ts`,import.meta.url),'utf8');assert.ok(!/Math\.random|Date\.now|performance\.now/.test(src),f);}
+});
+test('v2 save record: tags and terrace are optional, validated, and only on v2',()=>{
+  const f=assessSiteV2(tilt(20),'farm',0,0,8.2,8.2),r=siteRecord(f);assert.ok(r&&r.terrace&&validSiteRecord(r)&&r.foundation==='strips');
+  for(const bad of[{...r,terrace:{...r.terrace,k:'moat'}},{...r,terrace:{...r.terrace,soil:-1}},{...r,terrace:{...r.terrace,junk:1}},{...r,terrace:{...r.terrace,n:0}},{...r,tags:['Haunted']},{...r,tags:'Sun slope'}])assert.ok(!validSiteRecord(bad),JSON.stringify(bad));
+  const withTags=siteRecord(assessSiteV2(shelfHill(30),'hut',1.1,0,5.4,5.2));assert.equal(withTags,undefined,'a level shelf stores nothing');
+  assert.ok(validSiteRecord({...siteRecord(hut(22)),tags:['Sun slope']}));
 });

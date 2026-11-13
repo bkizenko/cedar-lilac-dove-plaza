@@ -1,0 +1,538 @@
+{
+ "generated": "2026-11-13",
+ "seeds": 200,
+ "sampler": {
+  "failBeforeRepair": 146,
+  "failAfterRepair": 0,
+  "rerolled": 3,
+  "ruleTally": {
+   "contrast": 107,
+   "dark-brown-with-green": 7,
+   "lightness-band": 54,
+   "saturation-cap": 18,
+   "mean-saturation": 8,
+   "harmony": 8
+  },
+  "worst": [
+   {
+    "seed": 184,
+    "before": 0.425,
+    "after": 1,
+    "rerolls": 1,
+    "rules": [
+     "lightness-band",
+     "harmony",
+     "dark-brown-with-green",
+     "contrast"
+    ]
+   },
+   {
+    "seed": 162,
+    "before": 0.6,
+    "after": 1,
+    "rerolls": 0,
+    "rules": [
+     "harmony",
+     "dark-brown-with-green",
+     "contrast"
+    ]
+   },
+   {
+    "seed": 11,
+    "before": 0.625,
+    "after": 1,
+    "rerolls": 0,
+    "rules": [
+     "saturation-cap",
+     "lightness-band",
+     "contrast"
+    ]
+   },
+   {
+    "seed": 114,
+    "before": 0.625,
+    "after": 1,
+    "rerolls": 0,
+    "rules": [
+     "lightness-band",
+     "contrast"
+    ]
+   },
+   {
+    "seed": 169,
+    "before": 0.65,
+    "after": 1,
+    "rerolls": 0,
+    "rules": [
+     "lightness-band",
+     "contrast"
+    ]
+   },
+   {
+    "seed": 175,
+    "before": 0.65,
+    "after": 1,
+    "rerolls": 0,
+    "rules": [
+     "lightness-band",
+     "contrast"
+    ]
+   },
+   {
+    "seed": 183,
+    "before": 0.7,
+    "after": 1,
+    "rerolls": 0,
+    "rules": [
+     "saturation-cap"
+    ]
+   },
+   {
+    "seed": 194,
+    "before": 0.7,
+    "after": 1,
+    "rerolls": 0,
+    "rules": [
+     "dark-brown-with-green",
+     "contrast"
+    ]
+   },
+   {
+    "seed": 198,
+    "before": 0.7,
+    "after": 1,
+    "rerolls": 0,
+    "rules": [
+     "lightness-band",
+     "harmony",
+     "contrast"
+    ]
+   },
+   {
+    "seed": 8,
+    "before": 0.725,
+    "after": 1,
+    "rerolls": 0,
+    "rules": [
+     "lightness-band",
+     "contrast"
+    ]
+   }
+  ]
+ },
+ "unconstrained": {
+  "failBeforeRepair": 200,
+  "failAfterRepair": 0,
+  "rerolled": 58,
+  "ruleTally": {
+   "saturation-cap": 198,
+   "lightness-band": 181,
+   "near-black": 52,
+   "neon": 130,
+   "mean-saturation": 192,
+   "hue-count": 102,
+   "harmony": 169,
+   "purple-rare": 154,
+   "dark-brown-with-green": 34,
+   "material-availability": 160,
+   "roof-climate": 143,
+   "roof-material": 73,
+   "proportion": 197,
+   "roof-pitch": 151,
+   "wall-thickness": 145,
+   "ornament-motifs": 68,
+   "ornament-motif-family": 130,
+   "ornament-symmetry": 78,
+   "ornament-repeat": 105,
+   "garb-coherence": 192,
+   "garb-motif": 162,
+   "grammar-climate": 143,
+   "material-compat": 115,
+   "ornament-zone-family": 145,
+   "garb-cut": 86,
+   "garb-headwear": 61,
+   "pure-primary": 61,
+   "ornament-density": 77,
+   "ornament-zones": 64,
+   "garb-fibre": 114,
+   "wonder-signature": 135,
+   "contrast": 40,
+   "ornament-material": 54,
+   "blown-white": 1
+  },
+  "worst": [
+   {
+    "seed": 1,
+    "before": 0,
+    "after": 1,
+    "rerolls": 0,
+    "n": 31,
+    "rules": [
+     "saturation-cap",
+     "lightness-band",
+     "near-black",
+     "neon",
+     "mean-saturation",
+     "hue-count",
+     "harmony",
+     "purple-rare",
+     "dark-brown-with-green",
+     "material-availability",
+     "roof-climate",
+     "roof-material",
+     "proportion",
+     "roof-pitch",
+     "wall-thickness",
+     "ornament-motifs",
+     "ornament-motif-family",
+     "ornament-symmetry",
+     "ornament-repeat",
+     "garb-coherence",
+     "garb-motif",
+     "grammar-climate"
+    ],
+    "examples": [
+     "saturation-cap: wall2 sat 0.85 > 0.50",
+     "lightness-band: wall2 l 0.10 outside 0.28-0.88",
+     "near-black: wall2 l 0.10",
+     "saturation-cap: accent sat 0.72 > 0.68"
+    ]
+   },
+   {
+    "seed": 2,
+    "before": 0,
+    "after": 1,
+    "rerolls": 0,
+    "n": 32,
+    "rules": [
+     "saturation-cap",
+     "neon",
+     "mean-saturation",
+     "hue-count",
+     "harmony",
+     "purple-rare",
+     "material-availability",
+     "material-compat",
+     "roof-climate",
+     "roof-material",
+     "proportion",
+     "roof-pitch",
+     "wall-thickness",
+     "ornament-zone-family",
+     "ornament-repeat",
+     "garb-cut",
+     "garb-headwear",
+     "garb-coherence",
+     "garb-motif",
+     "grammar-climate"
+    ],
+    "examples": [
+     "saturation-cap: wall sat 0.57 > 0.50",
+     "saturation-cap: trim sat 0.88 > 0.58",
+     "saturation-cap: ground sat 0.97 > 0.50",
+     "neon: ground #fd8ba4 sat 0.97"
+    ]
+   },
+   {
+    "seed": 3,
+    "before": 0,
+    "after": 1,
+    "rerolls": 0,
+    "n": 32,
+    "rules": [
+     "saturation-cap",
+     "neon",
+     "pure-primary",
+     "lightness-band",
+     "mean-saturation",
+     "harmony",
+     "purple-rare",
+     "material-availability",
+     "roof-climate",
+     "proportion",
+     "ornament-density",
+     "ornament-motif-family",
+     "ornament-zones",
+     "ornament-zone-family",
+     "ornament-repeat",
+     "garb-cut",
+     "garb-headwear",
+     "garb-fibre",
+     "garb-coherence",
+     "garb-motif",
+     "wonder-signature",
+     "grammar-climate"
+    ],
+    "examples": [
+     "saturation-cap: wall2 sat 0.78 > 0.50",
+     "neon: wall2 #685feb sat 0.78",
+     "pure-primary: wall2 #685feb hue 244",
+     "saturation-cap: roof sat 0.91 > 0.52"
+    ]
+   },
+   {
+    "seed": 4,
+    "before": 0,
+    "after": 1,
+    "rerolls": 1,
+    "n": 39,
+    "rules": [
+     "saturation-cap",
+     "neon",
+     "lightness-band",
+     "mean-saturation",
+     "hue-count",
+     "harmony",
+     "purple-rare",
+     "contrast",
+     "material-availability",
+     "roof-climate",
+     "roof-material",
+     "proportion",
+     "wall-thickness",
+     "ornament-motifs",
+     "ornament-motif-family",
+     "ornament-zones",
+     "ornament-zone-family",
+     "ornament-repeat",
+     "ornament-material",
+     "garb-coherence",
+     "garb-motif",
+     "grammar-climate"
+    ],
+    "examples": [
+     "saturation-cap: wall2 sat 0.92 > 0.50",
+     "neon: wall2 #2ff6da sat 0.92",
+     "saturation-cap: roof sat 0.56 > 0.52",
+     "lightness-band: trim l 0.93 outside 0.2-0.9"
+    ]
+   },
+   {
+    "seed": 5,
+    "before": 0,
+    "after": 1,
+    "rerolls": 0,
+    "n": 29,
+    "rules": [
+     "saturation-cap",
+     "lightness-band",
+     "near-black",
+     "mean-saturation",
+     "harmony",
+     "dark-brown-with-green",
+     "material-availability",
+     "roof-climate",
+     "proportion",
+     "roof-pitch",
+     "wall-thickness",
+     "ornament-density",
+     "ornament-zones",
+     "ornament-zone-family",
+     "ornament-symmetry",
+     "garb-fibre",
+     "garb-coherence",
+     "garb-motif",
+     "grammar-climate"
+    ],
+    "examples": [
+     "saturation-cap: wall sat 0.74 > 0.50",
+     "saturation-cap: roof sat 0.67 > 0.52",
+     "saturation-cap: cloth sat 0.74 > 0.64",
+     "lightness-band: cloth l 0.14 outside 0.22-0.92"
+    ]
+   },
+   {
+    "seed": 6,
+    "before": 0,
+    "after": 1,
+    "rerolls": 0,
+    "n": 20,
+    "rules": [
+     "saturation-cap",
+     "pure-primary",
+     "lightness-band",
+     "neon",
+     "mean-saturation",
+     "harmony",
+     "proportion",
+     "ornament-zone-family",
+     "ornament-repeat",
+     "garb-fibre",
+     "garb-coherence",
+     "garb-motif",
+     "wonder-signature",
+     "grammar-climate"
+    ],
+    "examples": [
+     "saturation-cap: wall sat 0.89 > 0.50",
+     "saturation-cap: wall2 sat 0.55 > 0.50",
+     "saturation-cap: roof sat 0.72 > 0.52",
+     "saturation-cap: trim sat 0.69 > 0.58"
+    ]
+   },
+   {
+    "seed": 7,
+    "before": 0,
+    "after": 1,
+    "rerolls": 1,
+    "n": 29,
+    "rules": [
+     "saturation-cap",
+     "neon",
+     "lightness-band",
+     "pure-primary",
+     "mean-saturation",
+     "harmony",
+     "purple-rare",
+     "material-availability",
+     "material-compat",
+     "roof-material",
+     "proportion",
+     "roof-pitch",
+     "wall-thickness",
+     "ornament-motif-family",
+     "ornament-repeat",
+     "garb-cut",
+     "garb-coherence",
+     "garb-motif",
+     "wonder-signature",
+     "grammar-climate"
+    ],
+    "examples": [
+     "saturation-cap: wall sat 0.80 > 0.50",
+     "neon: wall #e83de9 sat 0.80",
+     "saturation-cap: wall2 sat 0.87 > 0.50",
+     "neon: wall2 #f3aa4d sat 0.87"
+    ]
+   },
+   {
+    "seed": 8,
+    "before": 0,
+    "after": 1,
+    "rerolls": 0,
+    "n": 33,
+    "rules": [
+     "saturation-cap",
+     "neon",
+     "pure-primary",
+     "lightness-band",
+     "near-black",
+     "mean-saturation",
+     "hue-count",
+     "harmony",
+     "purple-rare",
+     "material-availability",
+     "roof-climate",
+     "roof-material",
+     "proportion",
+     "roof-pitch",
+     "wall-thickness",
+     "ornament-motifs",
+     "ornament-zone-family",
+     "ornament-repeat",
+     "garb-cut",
+     "garb-headwear",
+     "garb-coherence",
+     "garb-motif",
+     "wonder-signature"
+    ],
+    "examples": [
+     "saturation-cap: wall sat 0.78 > 0.50",
+     "neon: wall #30b7e5 sat 0.78",
+     "saturation-cap: roof sat 0.59 > 0.52",
+     "saturation-cap: accent sat 0.99 > 0.68"
+    ]
+   },
+   {
+    "seed": 9,
+    "before": 0,
+    "after": 1,
+    "rerolls": 0,
+    "n": 38,
+    "rules": [
+     "saturation-cap",
+     "lightness-band",
+     "neon",
+     "mean-saturation",
+     "hue-count",
+     "harmony",
+     "purple-rare",
+     "material-availability",
+     "material-compat",
+     "proportion",
+     "roof-pitch",
+     "wall-thickness",
+     "ornament-motif-family",
+     "ornament-zone-family",
+     "ornament-symmetry",
+     "ornament-material",
+     "garb-cut",
+     "garb-fibre",
+     "garb-coherence",
+     "garb-motif"
+    ],
+    "examples": [
+     "saturation-cap: wall sat 0.94 > 0.50",
+     "lightness-band: wall l 0.31 outside 0.42-0.92",
+     "saturation-cap: wall2 sat 0.96 > 0.50",
+     "lightness-band: wall2 l 0.27 outside 0.28-0.88"
+    ]
+   },
+   {
+    "seed": 10,
+    "before": 0,
+    "after": 1,
+    "rerolls": 1,
+    "n": 25,
+    "rules": [
+     "lightness-band",
+     "saturation-cap",
+     "mean-saturation",
+     "harmony",
+     "purple-rare",
+     "material-availability",
+     "roof-climate",
+     "roof-material",
+     "proportion",
+     "roof-pitch",
+     "wall-thickness",
+     "ornament-motifs",
+     "ornament-motif-family",
+     "ornament-zone-family",
+     "ornament-symmetry",
+     "garb-cut",
+     "garb-coherence",
+     "wonder-signature"
+    ],
+    "examples": [
+     "lightness-band: wall l 0.14 outside 0.42-0.92",
+     "saturation-cap: wall2 sat 0.60 > 0.50",
+     "saturation-cap: cloth sat 0.80 > 0.64",
+     "saturation-cap: ground sat 0.94 > 0.50"
+    ]
+   }
+  ]
+ },
+ "legacyFreeRemixPalettes": {
+  "total": 400,
+  "outsideEnvelope": 331,
+  "ruleTally": {
+   "purple-rare": 73,
+   "harmony": 45,
+   "dark-brown-with-green": 18,
+   "saturation-cap": 77,
+   "lightness-band": 95,
+   "blown-white": 1,
+   "mean-saturation": 111,
+   "contrast": 153,
+   "neon": 6,
+   "pure-primary": 21,
+   "hue-count": 6
+  }
+ },
+ "cast60x8": {
+  "minTotal": 0.428,
+  "minPalette": 0.201,
+  "minForm": 0.211
+ }
+}

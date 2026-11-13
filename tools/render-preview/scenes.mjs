@@ -9,6 +9,7 @@ import { hutSheetScene } from './hut-sheet.mjs';
 import { hutVarietyScene } from './hut-variety.mjs';
 import { slopeScene, villagesScene } from './placement-demo.mjs';
 import { slopeTiersScene } from './slope-tiers.mjs';
+import { terraceFarmScene, slopeNuanceScene } from './terraces.mjs';
 
 const B = constants.BUILDINGS;
 const WORLD = 1207;
@@ -306,6 +307,8 @@ export const SCENES = {
   'civ-lineup': civLineupScene,
   'placement-slope': slopeScene(),
   'slope-tiers': slopeTiersScene(),
+  'terrace-farm': terraceFarmScene(),
+  'slope-nuance': slopeNuanceScene(),
   'placement-villages': villagesScene(),
   'hut-sheet': hutSheetScene(),
   'hut-sheet-a': hutSheetScene({ civs: ['sandrill','nilemark','tigrane','hanrei','vedara','aureline','sahelan'] }),

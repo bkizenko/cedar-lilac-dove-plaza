@@ -152,7 +152,7 @@ export function lookForSkin(skin:CivSkin|null|undefined):PeopleLook{
   if(k)look=mergeLook(look,{cuts:{light:{...k,sleeve:k.sleeve==='long'?'short':k.sleeve,mantle:'none',hem:k.hem+.04},mild:k,cold:{...k,mantle:k.mantle==='none'?'cape':k.mantle,hem:Math.max(.06,k.hem-.06),sleeve:'long'}},
    head:{light:HEAD_OF[skin.garb.headwear]??look.head.light,cold:skin.garb.headwear==='none'||skin.garb.headwear==='braids'?'hood':HEAD_OF[skin.garb.headwear]??look.head.cold}});
  }
- if(skin.mode==='remix'||skin.mode==='free'){
+ if(skin.mode==='remix'||skin.mode==='free'||skin.mode==='generated'){
   const r=seededRandom(hashSeed('people-look',skin.id)),b=look.body;
   const tone=Math.max(0,Math.min(6,look.skin[0]+(r()<.5?-1:1)*(r()<.7?1:2)));
   look=mergeLook(look,{body:{height:jit(r,b.height,.05),shoulder:jit(r,b.shoulder,.07),chest:jit(r,b.chest,.07),waist:jit(r,b.waist,.06),hip:jit(r,b.hip,.06),limb:jit(r,b.limb,.06),head:jit(r,b.head,.05),neck:jit(r,b.neck,.06),hand:jit(r,b.hand,.05),torso:+(b.torso+(r()-.5)*.05).toFixed(3)},
