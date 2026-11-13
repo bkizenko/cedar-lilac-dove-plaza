@@ -2,8 +2,9 @@ import {knowledgeDateLabel,KNOWLEDGE_STATE_LABELS,KNOWLEDGE_SOURCE_LABELS} from 
 import {useMemo,useState} from 'react';
 import {BookOpen,ChevronDown,ChevronRight,FlaskConical,Wheat,Hammer,Ship,House,Leaf,Shield} from 'lucide-react';
 import type {Engine} from '../game/engine';
-import {knowledgeReport,runKnowledgeAction,type KnowledgeStage,type KnowledgeTopic,type KnowledgeAction} from '../game/knowledge';
+import {knowledgeReport,runKnowledgeAction,type KnowledgeStage,type KnowledgeTopic,type KnowledgeAction,type KnowledgeActionResult} from '../game/knowledge';
 import {GameTooltip} from './GameTooltip';
+import {useLifecycleAction} from './useLifecycleAction';
 const STAGE_LABELS:Record<KnowledgeStage,string>={need:'Unexplored',observation:'Observed',experiment:'In progress',proven:'Established',adoption:'In use'};
 export function primaryKnowledgeAction(topic:KnowledgeTopic){
  const available=topic.actions.filter(action=>!action.blockedReason);
@@ -37,18 +38,18 @@ export function KnowledgeTopicRow({topic,onAction}:{topic:KnowledgeTopic;onActio
 /** Knowledge is visible evidence and actual work, never a passive science queue. */
 export function KnowledgePanel({engine,expanded=false,onChooseSite}:{engine:Engine;expanded?:boolean;onChooseSite?:()=>void}){
  const [open,setOpen]=useState(false),[feedback,setFeedback]=useState(''),[revision,setRevision]=useState(0),[search,setSearch]=useState(''),[activeOnly,setActiveOnly]=useState(false);
- const g=engine.game,show=expanded||open;
+ const g=engine.game,show=expanded||open,lifecycle=useLifecycleAction(engine);
  const report=useMemo(()=>show?knowledgeReport(g):null,[g,g.state,Math.floor(g.state.time),show,revision]);
- const act=(id:string)=>{const result=runKnowledgeAction(g,id);if(result.accepted&&result.placement){if(g.state.placing!==result.placement)engine.setPlacing(result.placement);onChooseSite?.();}setFeedback(result.reason);setRevision(n=>n+1);g.banner(result.reason,5);engine.pushHud();};
+ const act=(id:string)=>{const epoch=engine.dispatchEpoch;void lifecycle.run(async():Promise<KnowledgeActionResult>=>{if(id.startsWith('records:buy:'))return engine.dispatch({kind:'method-record-purchase',recordId:Number(id.split(':')[2])});if(id.startsWith('records:cancel-purchase:'))return engine.dispatch({kind:'cancel-method-record-purchase',unitId:Number(id.split(':')[2])});return runKnowledgeAction(g,id);},result=>{if(epoch!==engine.dispatchEpoch)return;if(result.accepted&&result.placement){if(g.state.placing!==result.placement)engine.setPlacing(result.placement);onChooseSite?.();}setFeedback(result.reason);setRevision(n=>n+1);g.banner(result.reason,5);engine.pushHud();});};
  const topics=report?.topics.filter(topic=>(!activeOnly||topic.stage==='experiment')&&`${topic.title} ${topic.id}`.toLowerCase().includes(search.trim().toLowerCase()))||[];
- const content=report&&<div className="space-y-2 py-2 text-parchment">
+ const content=report&&<fieldset disabled={lifecycle.busy} className="space-y-2 border-0 py-2 text-parchment">
   <label className="block"><span className="sr-only">Find a skill</span><input type="search" value={search} onChange={event=>setSearch(event.target.value)} placeholder="Find a skill…" className="w-full rounded-md border border-parchment/20 bg-ink-soft px-3 py-2 text-sm"/></label>
   <div className="flex items-center gap-2 text-xs"><button type="button" className="rounded px-2 py-1 aria-pressed:bg-parchment/10" aria-pressed={!activeOnly} onClick={()=>setActiveOnly(false)}>All skills</button><button type="button" className="rounded px-2 py-1 aria-pressed:bg-parchment/10" aria-pressed={activeOnly} onClick={()=>setActiveOnly(true)}>In progress · {report.topics.filter(topic=>topic.stage==='experiment').length}</button></div>
   <div>{topics.map(topic=><KnowledgeTopicRow key={topic.id} topic={topic} onAction={act}/>)}</div>
   {!topics.length&&<p className="text-xs text-parchment-dim">No matching skills.</p>}
   {g.state.paused&&<p className="text-xs text-parchment-dim">Paused · resume to continue work.</p>}
-  {feedback&&<p role="status" aria-live="polite" className="text-xs">{feedback}</p>}
- </div>;
+  {(lifecycle.error||feedback)&&<p role="status" aria-live="polite" className="text-xs">{lifecycle.error||feedback}</p>}
+ </fieldset>;
  if(expanded)return <section aria-label="Knowledge through practice"><h3 className="mt-3 flex items-center gap-2 text-sm"><BookOpen className="size-4"/>Learning through practice</h3>{content}</section>;
  return <details className="hud-panel max-w-full" aria-label="Knowledge through practice" onToggle={event=>setOpen(event.currentTarget.open)}><summary className="flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2 text-xs"><BookOpen className="size-4"/><span>Knowledge</span><ChevronDown className="ml-auto size-3" aria-hidden="true"/></summary>{content}</details>;
 }

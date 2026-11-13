@@ -2,6 +2,7 @@ import {applyHusbandryCommand,HUSBANDRY_ACTIONS,type HusbandryCommand} from './h
 import {pauseWildWork,resumeWildWork,WILD_RECIPES} from './wildCraft';
 import {applyWildCommand,type WildBeginCommand,type WildCollectCommand} from './wildCraftControl';
 import {beginMethodRecordPickup} from './methodRecordPickup';
+import {beginMethodRecordTrade,cancelMethodRecordTrade} from './methodRecordTrade';
 import {beginDraftCartOrder,recoverDraftCart,setDraftCartPaused,cancelDraftCartOrder} from './draftCart';
 import {freePeople} from './peace';
 import {repatriateCaptive,releasePrisoner,assignPrisonerGuard} from './captivity';
@@ -42,6 +43,8 @@ export type EngineDispatchCommand=
  |{kind:'wild-work-control';projectId:number;paused:boolean}
  |WildBeginCommand|WildCollectCommand
  |{kind:'method-record-pickup';recordId:number;unitId:number}
+ |{kind:'method-record-purchase';recordId:number;unitId?:number}
+ |{kind:'cancel-method-record-purchase';unitId:number}
  |{kind:'draft-cart';unitId:number;mode:'hitch'|'detach'}
  |{kind:'recover-draft-cart';unitId:number;cartId:number}
  |{kind:'pause-draft-cart';unitId:number;paused:boolean}
@@ -103,6 +106,8 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
    case 'wild-work-control':{const p=g.state.wildCraft?.projects.find(p=>p.id===command.projectId&&p.team===0),u=p&&g.state.units.find(u=>u.id===p.actorId&&u.team===0&&u.hp>0&&u.wildWorkId===p.id);if(!p||!u)return no('Original owned wild work unavailable');if(!!p.paused===command.paused)return no('Work is already in that state');const accepted=command.paused?pauseWildWork(g,u):resumeWildWork(g,u.id);return{accepted,reason:accepted?'Original paid work updated; contents retained at their actual place':'Original worker or paid workplace is unavailable'};}
 
    case 'draft-cart':return beginDraftCartOrder(g,command.unitId,command.mode);
+   case 'method-record-purchase':return beginMethodRecordTrade(g,command.recordId,command.unitId);
+   case 'cancel-method-record-purchase':{const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0&&u.hp>0),accepted=!!u&&cancelMethodRecordTrade(g,u,'Purchase cancelled; carried payment or record remains with this person');return{accepted,reason:accepted?'Purchase cancelled; actual carried goods return physically':'No active record purchase for this person'};}
    case 'method-record-pickup':{if(!selection.selectedUnitIds.includes(command.unitId))return no('Select the original resident before ordering record pickup');return beginMethodRecordPickup(g,command.unitId,command.recordId);}
    case 'recover-draft-cart':return recoverDraftCart(g,command.unitId,command.cartId);
    case 'pause-draft-cart':{const accepted=setDraftCartPaused(g,command.unitId,command.paused);return{accepted,reason:accepted?'Original fitting progress and goods retained':'No owned cart fitting'};}
@@ -252,6 +257,8 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   pause:{paused:bool},speed:{speed:v=>v===1||v===2||v===4,resume:v=>v===undefined||bool(v)},
   move:{unitIds:v=>Array.isArray(v)&&v.length>0&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length,x:v=>typeof v==='number'&&Number.isFinite(v),z:v=>typeof v==='number'&&Number.isFinite(v),attackMove:v=>v===undefined||bool(v)},
   'draft-cart':{unitId:id,mode:v=>v==='hitch'||v==='detach'},
+  'method-record-purchase':{recordId:id,unitId:optionalId},
+  'cancel-method-record-purchase':{unitId:id},
   'method-record-pickup':{recordId:id,unitId:id},'recover-draft-cart':{unitId:id,cartId:id},
   'pause-draft-cart':{unitId:id,paused:bool},
   'cancel-draft-cart':{unitId:id},

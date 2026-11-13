@@ -9400,6 +9400,19 @@
       "supportingPassed": 19,
       "supportingTotal": 19,
       "firstReleaseGates": "37/98 unchanged"
+    },
+    {
+      "date": "2026-11-12",
+      "commit": "03f31981e6b745b9e7a7a2758105a4c6dac8b26d",
+      "release": "2026-11-13T04-22-31-462Z-03f3198",
+      "status": "live-partial",
+      "summary": "03f31981e6b745b9e7a7a2758105a4c6dac8b26d published as 2026-11-13T04-22-31-462Z-03f3198 on8086/8101.11/11 scoped (9native +2actualbuilt), supporting17/17 (foreignrecordvisibility2, compactKnowledge2, incomingUI13), fulltsc/buildPASS. ActualNPC1 artisanAuseae2968 threepaidbatches/finiteclay createdrecord3107; player3094 physicallyloads4logs atowncache, paysatseller contact for SAMErecord, bringsithome, then publicpaidstudy/usefulcordagereplication. Immutableauthor/source and traded4woodreceipt; no purchaseknowledgegrant. Reservations, cancellation, realpartialcargo/reload and explicitcarrierdeath conserved; typedepoch/admission checksPASS. Original53 exactdurable/hash and oldassets5/5 preserved. Initialsourcefixture declaresfiniteinfrastructure/materials/geographicfamiliarity, notnaturaldiscovery/campaign proof. Incomingcamera/music/menu/gallery source through40e411e8 included; newerfields/irrigation/placement/animation onmain outsidefrozenartifact.37/98 frozen; fullW1/W2/institutions/foreignpacktrade/campaign/100residentFPS remainopen.",
+      "evidence": "docs/metrics/method-record-purchase-release-2026-11-12.json",
+      "batchPassed": 11,
+      "batchTotal": 11,
+      "supportingPassed": 17,
+      "supportingTotal": 17,
+      "firstReleaseGates": "37/98 unchanged"
     }
   ],
   "status_update_policy": {
