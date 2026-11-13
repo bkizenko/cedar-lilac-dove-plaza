@@ -21,12 +21,12 @@ let mute=false;
 export const setBuildingMute=(on:boolean)=>{mute=!!on;};
 export const getBuildingMute=()=>mute;
 const clamp=(v:number,lo=0,hi=1)=>Math.min(hi,Math.max(lo,v));
-/** Desaturate and darken a hex colour toward a weathered, earthy value: saturation x .66 (cap .46), lightness x .95. */
+/** Desaturate and darken a hex colour toward a weathered, earthy value: saturation x .55 (cap .4), lightness x .93. */
 export function muteHex(hex:string):string{
  const n=parseInt(hex.slice(1),16),r=(n>>16&255)/255,g=(n>>8&255)/255,b=(n&255)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;
  if(!d)return hex;
  const s=d/(1-Math.abs(2*l-1)),h=(mx===r?((g-b)/d+(g<b?6:0)):mx===g?(b-r)/d+2:(r-g)/d+4)*60;
- const s2=Math.min(s*.66,.46),l2=clamp(l*.95,.08,.9),c=(1-Math.abs(2*l2-1))*s2,x=c*(1-Math.abs((h/60)%2-1)),m=l2-c/2;
+ const s2=Math.min(s*.55,.4),l2=clamp(l*.93,.08,.88),c=(1-Math.abs(2*l2-1))*s2,x=c*(1-Math.abs((h/60)%2-1)),m=l2-c/2;
  const [rr,gg,bb]=h<60?[c,x,0]:h<120?[x,c,0]:h<180?[0,c,x]:h<240?[0,x,c]:h<300?[x,0,c]:[c,0,x];
  return '#'+[rr+m,gg+m,bb+m].map(v=>Math.round(clamp(v)*255).toString(16).padStart(2,'0')).join('');
 }
@@ -40,7 +40,7 @@ const rotY=(p:Part)=>Math.abs(p.rot?.[1]??0),tilted=(p:Part)=>!!p.rot&&(Math.abs
 
 /** Dress `parts` in place. Returns the number of parts added. */
 export function dressDwelling(parts:Part[],m:DetailMats,r:Rng,o:DetailOpts):number{
- const n0=parts.length,add=(p:Part)=>void parts.push(p),room=Math.max(0,1380-parts.reduce((a,p)=>a+partTriangles(p),0)),f=clamp(room/650,0,1),pr=seededRandom(Math.floor(r()*4294967296)); // richness: busy massings get fewer extras so the near budget holds
+ const n0=parts.length,add=(p:Part)=>void parts.push(p),room=clamp(1330-parts.filter(p=>p.size[2]>=.05).reduce((a,p)=>a+partTriangles(p),0),0,650),f=room/650,pr=seededRandom(Math.floor(r()*4294967296)); // richness: busy massings get fewer extras so the near budget holds
  const box=(mat:M,size:V,pos:V,lod:LodTier=0,rot?:V)=>add(part('box',mat,size,pos,lod,rot));
  const cyl=(mat:M,dia:number,h:number,pos:V,lod:LodTier=0,sides=6,rot?:V,top?:number)=>add(part('cylinder',mat,[dia,h,top??dia],pos,lod,rot,sides));
  const solid=parts.filter(p=>!p.ends&&p.lod>=1&&p.mat!==m.cloth);
@@ -61,6 +61,7 @@ export function dressDwelling(parts:Part[],m:DetailMats,r:Rng,o:DetailOpts):numb
  const style=r(),wallStyle=style<.4?0:style<.75?1:2;
  const radAt=(t:number)=>Rb+(Rt-Rb)*t;
  // ================================================= walls
+ if(o.kind!=='shed'){ // open-front sheds have no reliable front wall to mark: roof and yard only
  if(round){
   const nc=f>.5?pick(r,[2,3,3,4]):2;
   if(wallStyle!==1)for(let i=0;i<nc;i++){const t=(i+1)/(nc+1),rad=radAt(t)/apo*1.01;cyl(i%2?m.wall2:m.trim,rad*2,.05+r()*.05,[cx,H*t,cz],i===0?1:0,sides);}
@@ -94,6 +95,7 @@ export function dressDwelling(parts:Part[],m:DetailMats,r:Rng,o:DetailOpts):numb
  }
  // soot over the door, a darker smear where fire has licked it
  if(door&&!gran)box(m.dark,[(door.size[0]+.15)*(.8+r()*.4),.28+r()*.3,.025],[doorX,doorTop+.12,Math.min(front,door.pos[2])+.07],0);
+ }
  // ================================================= roofs
  if(roof&&roof.shape==='cone'){
   const rb=roof.pos,Ro=roof.size[0]/2,Hr=roof.size[1],y0=rb[1],rs=roof.sides??8,rapo=Math.cos(Math.PI/rs),pcx=rb[0],pcz=rb[2];
@@ -152,7 +154,7 @@ export function dressDwelling(parts:Part[],m:DetailMats,r:Rng,o:DetailOpts):numb
   }
  }
  // hard cap: drop the last-added extras (yard props, then roof marks) until the near tier is back under the carved cap
- let tris=parts.reduce((a,p)=>a+partTriangles(p),0);
- while(parts.length>n0&&tris>1430)tris-=partTriangles(parts.pop()!);
+ let tris=parts.slice(n0).reduce((a,p)=>a+partTriangles(p),0);
+ while(parts.length>n0&&tris>room+60)tris-=partTriangles(parts.pop()!);
  return parts.length-n0;
 }

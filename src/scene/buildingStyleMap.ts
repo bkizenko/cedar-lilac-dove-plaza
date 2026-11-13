@@ -140,7 +140,7 @@ export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|nul
  if(!map)return null;
  const material=materialFor(era,habitat),skinned=!!(input.skin&&input.skin.grammar),roleHere=skinned?roleForType(input.type):null,
   // A society's dwellings and granaries are each their own building: the variant is the building id, not a handful of shared meshes.
-  count=roleHere==='house'||roleHere==='granary'?SKIN_DWELLING_VARIANTS:VARIANTS_PER_FAMILY[map.family],index=variantIndexFor(input.worldSeed,input.id,count);
+  count=roleHere==='house'||roleHere==='granary'?SKIN_DWELLING_VARIANTS:skinned&&map.family==='workshop'?SKIN_DWELLING_VARIANTS/2:VARIANTS_PER_FAMILY[map.family],index=variantIndexFor(input.worldSeed,input.id,count);
  // Wealth is a property of the variant (spread across the pool), so richer and
  // poorer houses coexist in one village without unique meshes per building.
  const spread=count>1?index/(count-1):.5,tier=prosperityTier(input.prosperity);

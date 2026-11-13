@@ -5,6 +5,8 @@
 import { Soup, specMesh, slab, grainTexture, parts as PT, MAT } from './scene-lib.mjs';
 import { rigFor } from './rigs.mjs';
 const cb = await import('../../src/scene/civSkin.ts'), sm = await import('../../src/scene/buildingStyleMap.ts'), cs = await import('../../src/scene/civStyles.ts'), vi = await import('../../src/scene/villageIdentity.ts');
+const bd = await import('../../src/scene/buildingDetail.ts');
+if (process.env.BUILDING_MUTE) bd.setBuildingMute(true);
 const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
 function paint(spec) {
   const stand = { ...spec, parts: spec.parts.map(p => ({ ...p, mat: 'plaster' })) };
