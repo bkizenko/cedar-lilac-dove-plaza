@@ -1404,3 +1404,6 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | AUD-VIS-FAMINE-PEOPLE | audit | Visuals: villagers show lean frames, patched cloaks and fewer lit hearths in a real shortage from existing food state, near-only, reverts on recovery | Claude | Claude lane C | open | |
 | AUD-UI-FACTION-TOOLTIP-REASON | audit | UI: each faction chip in the strip explains in one line what it wants and what real stat drives it, readable at 390px | Claude | Claude lane B | open | |
 | AUD-FEEL-RIVER-CROSSING-CUE | audit | Game feel: wading or ford crossings show a splash and slow movement by existing water depth; no shrunk collision, no teleport | Claude | Claude lane C | open | |
+| 11-13 06:00 | Codex | 0 | 0 | 0 | no agent branches ahead of integration |
+| 11-13 06:00 | Claude | 25 | landed 8 | Kaaltun house polish + small-building grounding fix | integration landed to main |
+| 11-13 06:00 | Grok | 0 | 0 | 0 | idle; no reassignment (Claude lanes A-D active) |
