@@ -1079,6 +1079,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 19:00 | Claude | 84 (since 18:00 ET, all branches) | 74 | 3 (wild-craft UI + wildStores salt/hay; botanical tree set + tier narrowing; shipping-waiting-hooks World wiring) | shipping and landing; lanes A-D all posted <1h |
 | 11-12 19:00 | Grok | 0 | 0 | 0 | out; World rows with Claude/PM queue; no board lines to miss |
 | 11-12 19:00 | Total | ~155 | integration lag 0 after 19:1x PM landing | ~5 | focused sweep 121 tests, 117 pass, 3 skip, 1 fail fixed (rulers-runtime expedition test now provisions from a real cache; physical provisioning is intentional); open ~261 not-started rows, ~240 done/live by table count |
+| 11-12 20:00 | Codex | 28 (since 19:00 ET, all branches) | 24 | 2 (approved item textures + botanical stands live as 3a92d065; pack caravan care/cargo capacity landed, preflight in progress) | on target; posting every ~30 min |
+| 11-12 20:00 | Claude | 42 (since 19:00 ET, all branches) | 31 landed by PM 20:10 | 3 (draw distance setting + filler forest; armor/helmet wear from condition; item/ground-item detail) | landing works; first-person design doc only |
+| 11-12 20:00 | Grok | 0 | 0 | 0 | out; World rows (M2-11, M2-14, M2-16, CAT-117, M4-07..09, M5-04, ASTRA audio/rig) queued for Claude/PM background agents |
+| 11-12 20:00 | Total | ~70 | integration lag 0 after 20:10 PM landing (27 commits: integration 23 + codex caravan 3) | ~5 | focused sweep 144 tests, 142 pass after adding `three` locally (draw-distance, filler-forest 16/16), 0 fail; tsc diff nil; open ~259 not-started, ~138 done/live by table count |
 
 ## Process improvements
 
