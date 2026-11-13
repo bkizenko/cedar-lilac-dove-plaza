@@ -9387,6 +9387,19 @@
       "liveCommit": "054b6809b866f22c9ada59e91a706175e58b92e3",
       "evidence": "docs/metrics/livestock-controls-distance-release-2026-11-12.json",
       "scope": "46/46 scoped +11 queue/handoff regressions. Actual publicgoatsearch/capture/escort/pen andsamehorse/harness return; typedbait/save/cancel continuity;12graphics/distance choices+realpicker+original53. Foreignpacktrade/fullW1/campaign/FPS and37/98 unchanged."
+    },
+    {
+      "date": "2026-11-12",
+      "commit": "7c81460f035571c9174cd9ab0494ed57e4e46b9a",
+      "release": "2026-11-13T03-32-14-127Z-7c81460",
+      "status": "live-partial",
+      "summary": "7c81460f035571c9174cd9ab0494ed57e4e46b9a published as 2026-11-13T03-32-14-127Z-7c81460 on8086/8101.43/43 scoped (41 unique native +2 actualbuilt), plus19/19 supporting cultivation/handover regressions; full tsc/buildPASS. New livestock inherit biology only, never mother paidharness/consumption; actual controlled births/aging require ownstable/training/materials. New paid seedtrials retain originalphysicalsite through camprelocation/reload/handover; missingoriginalhall gives honestblockedreason, communalcache remains current. Built publicResume completes at originalplot without secondpayment, original53 exactdurable/hash unchanged. Whole Claude integration through f7725fce plus main5689e3f1 included; incomingtrader/route/civic native34/34 (17routecases reexecuted in merged24/24). Actualbuilt genericvillage smoke does not qualify allnewtrader/route/civic behaviors. Oldassets5/5 separate.37/98 frozen; naturalharvest acquisition for newtrial fixture, foreignpacktrade/fullhusbandry/institutions/campaign/100residentFPS remainopen.",
+      "evidence": "docs/metrics/trial-newborn-release-2026-11-12.json",
+      "batchPassed": 43,
+      "batchTotal": 43,
+      "supportingPassed": 19,
+      "supportingTotal": 19,
+      "firstReleaseGates": "37/98 unchanged"
     }
   ],
   "status_update_policy": {

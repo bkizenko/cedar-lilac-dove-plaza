@@ -1,0 +1,103 @@
+{
+  "release": {
+    "release": "2026-11-13T03-32-14-127Z-7c81460",
+    "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T03-32-14-127Z-7c81460",
+    "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T02-46-35-813Z-054b680",
+    "commit": "7c81460f035571c9174cd9ab0494ed57e4e46b9a",
+    "retained": {
+      "linked": 1459,
+      "copied": 0,
+      "existing": 12
+    }
+  },
+  "commit": "7c81460f035571c9174cd9ab0494ed57e4e46b9a",
+  "scope": "Paid cultivation-site and newborn equipment conservation plus incoming whole integration; narrow release qualification, not full game completion",
+  "batch": {
+    "passed": 43,
+    "total": 43,
+    "nativeUnique": 41,
+    "built": 2,
+    "nativeGroups": {
+      "incoming_trader_routes_civic": 34,
+      "newborn_species": 4,
+      "paid_trial_anchor": 3
+    },
+    "reexecutedOverlap": {
+      "routes": 17,
+      "merged_run_total": 24,
+      "merged_run_passed": 24
+    }
+  },
+  "supportingRegressions": {
+    "passed": 19,
+    "total": 19
+  },
+  "compiler": "PASS full tsc --noEmit",
+  "build": "PASS npm run build; expected DATABASE_URL migration skip",
+  "builtEvidence": {
+    "passed": 2,
+    "total": 2,
+    "scope": "Built public resume of a paid/physically relocated seed trial at its original plot, plus unchanged original53 legacy village durable save. CONTROLLED finite initial household and four delivered samples on generated terrain (sample acquisition not qualified); no new trial inputs, positions, terrain, knowledge or progress granted by this probe; no campaign/performance claim.",
+    "trial": {
+      "kind": "grain",
+      "originalAnchor": {
+        "kind": "camp",
+        "x": 72,
+        "y": 25.292658262986404,
+        "z": 212
+      },
+      "publicResume": true,
+      "samePayment": true,
+      "completedEvidence": {
+        "demonstratedAt": 58.000000000000284,
+        "actorIds": [
+          3563
+        ]
+      }
+    },
+    "legacy": {
+      "residents": 53,
+      "strictDurable": true
+    },
+    "inputsUnchanged": true,
+    "errors": []
+  },
+  "network": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T03-32-14-127Z-7c81460",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "fixtureDisclosure": {
+    "newborn": "Controlled finite initial parents/terrain; ordinary birth, aging, parent harness refit and offspring own stable training. No earned capture claim.",
+    "cultivation": "Controlled finite household with four delivered starting samples on generated unflattened terrain. Actual paidwork/camptransport/resume/handover. Natural wild sample acquisition not qualified by this new scenario.",
+    "legacy": "Original53 copied privately; no edits to source save or user tab."
+  },
+  "limits": [
+    "No new 98-gate credit",
+    "Full W1/W2 remain partial",
+    "No new campaign/FPS/full art acceptance",
+    "Incoming trader/civic/route feature completeness not established by generic built smoke"
+  ]
+}
