@@ -1,11 +1,14 @@
-import {useCallback,useEffect,useState} from 'react';
+import {useCallback,useEffect} from 'react';
+import {layout} from './hudLayout';
+import {useLayoutVersion} from './fold';
 import {MINIMAP_KEY,readMinimapCollapsed,writeMinimapCollapsed,isMinimapShortcut} from './minimapPrefs';
 import {Map as MapIcon,Minimize2} from 'lucide-react';
 
 export {MINIMAP_KEY,readMinimapCollapsed,writeMinimapCollapsed,isMinimapShortcut};
 export function useMinimapCollapsed(){
- const [collapsed,setCollapsed]=useState(()=>readMinimapCollapsed());
- const set=useCallback((v:boolean|((p:boolean)=>boolean))=>setCollapsed(p=>{const n=typeof v==='function'?v(p):v;writeMinimapCollapsed(n);return n;}),[]);
+ // The minimap is one panel of the shared HUD layout (same MINIMAP_KEY on disk), so Show all / Reset layout reach it too.
+ useLayoutVersion();const collapsed=layout.isCollapsed('map');
+ const set=useCallback((v:boolean|((p:boolean)=>boolean))=>layout.set('map',typeof v==='function'?v(layout.isCollapsed('map')):v),[]);
  useEffect(()=>{
   const key=(e:KeyboardEvent)=>{if(!isMinimapShortcut(e))return;e.preventDefault();e.stopImmediatePropagation();set(p=>!p);};
   window.addEventListener('keydown',key,true);return()=>window.removeEventListener('keydown',key,true);

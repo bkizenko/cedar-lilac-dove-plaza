@@ -26,6 +26,8 @@ export const TERRACE_RULES={
   stair:{from:38,to:52,rise:2.2,minTread:1.5,wallThick:.7,protect:.93,slow:1.6,labour:16,word:'Terrace stairs',detail:'tall narrow stone stairs, drained and channelled'},
  } as Record<TerraceKind,KindRules>,
 } as const;
+/** Terrain model v3: ground steeper than a plough field (18 deg) is hoed by hand, and the harvest falls by this share per degree up to 30 degrees. Only records without terraces are touched. */
+export const HAND_TILL={fromDeg:18,toDeg:30,perDeg:.015} as const;
 /** Kind for a mean slope in degrees; null on flat ground (below 5) and beyond the cliff limit. */
 export function terraceKindFor(meanDeg:number):TerraceKind|null{
  const K=TERRACE_RULES.kinds;
@@ -131,8 +133,8 @@ export function terraceYield(rec:TerraceRecord|undefined,crop:CropLike='grain',f
  if(!rec)return 1;const kind=rec.k==='none'?null:rec.k;
  const depth=.55+.5*Math.min(1,rec.soil/.8),cool=Math.min(1,Math.max(0,rec.alt)/80),sun=1+rec.sun*(.04+.06*cool);
  const heat=kind===null||kind==='bund'?0:TERRACE_RULES.wallHeat,frost=1-rec.frost*(frostWeather?.3:.1)*(1-heat);
- const wet=rec.wet>.75?.9+.1*(1-rec.wet)/.25:1,alt=ALTITUDE_CROP[altitudeBand(rec.alt)][crop];
- return Math.max(.35,Math.min(1.25,depth*sun*frost*wet*alt));
+ const wet=rec.wet>.75?.9+.1*(1-rec.wet)/.25:1,alt=ALTITUDE_CROP[altitudeBand(rec.alt)][crop],hand=kind===null&&rec.slope>HAND_TILL.fromDeg?1-HAND_TILL.perDeg*(Math.min(HAND_TILL.toDeg,rec.slope)-HAND_TILL.fromDeg):1;
+ return Math.max(.35,Math.min(1.25,depth*sun*frost*wet*alt*hand));
 }
 /** Washing-away of soil each year, as a fraction of the soil. Design curve: rises with the tangent of the slope, softer rock goes faster, a sown crop holds it a little, walls and bunds stop most of it. */
 const ERODIBILITY:Record<string,number>={granite:.3,basalt:.34,sandstone:.6,limestone:.55,shale:1.9,volcanic:1.4,sediment:2.3};

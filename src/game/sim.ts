@@ -2,7 +2,7 @@ import {planFoodWithdrawal,commitFoodWithdrawal,setCarriedFood,receiveCarriedFoo
 import {siteSlopeIssue} from './siteSlope';
 import {assessSite,siteRecord,type SiteAssessment} from './slopeTiers';
 import {assessSiteV2} from './siteAssessmentV2';
-import {terrainV2,terraceCapability,altitudeAt} from './terraceRuntime';
+import {terrainV2,terrainV3,terraceCapability,altitudeAt} from './terraceRuntime';
 import {TERRACE_CLIFF_GRADE} from './terraceFarming';
 import {geologyAt} from './mapgen/geology/read';
 import {tradeCargoCapacity,PACK_TRADE_TRAVEL_RULES} from './tradeCargo';
@@ -316,7 +316,7 @@ export class Game {
     this.walk = new Uint8Array(WALK * WALK);
     this.state = this.blank();
     this.state.slopeModel = "graded"; // new villages use the tiered slope model; saves without the field keep the earlier linear rule
-    this.state.terrainModel = "v2"; // terrain nuance + terrace farming; saves without the field keep the plain tiers
+    this.state.terrainModel = "v3"; // terrain nuance + ordinary hillside farming with optional terraces; saves keep the model they were made with (v2 = automatic terraces, none = plain tiers)
     this.workBoard.reset();
   }
 
@@ -444,7 +444,7 @@ export class Game {
     this.configureFlowFields();
     this.state = this.blank();
     this.state.slopeModel = "graded"; // new villages use the tiered slope model; saves without the field keep the earlier linear rule
-    this.state.terrainModel = "v2"; // terrain nuance + terrace farming; saves without the field keep the plain tiers
+    this.state.terrainModel = "v3"; // terrain nuance + ordinary hillside farming with optional terraces; saves keep the model they were made with (v2 = automatic terraces, none = plain tiers)
     this.state.finiteRaiderCampVersion=1;
     enableCombatDoctrine(this);
     enableTerrainInfluence(this);
@@ -1243,7 +1243,7 @@ export class Game {
   siteAssessment(type:BldType,x:number,z:number,w:number,d:number,hint=false):SiteAssessment{
     let ground:{rockName?:string;hardness?:number;soilDepthMeters?:number;landformTag?:string}|null=null;
     try{const r=geologyAt({size:this.world.size,mapgen:this.world.mapgen as never},x,z);if(r)ground={rockName:r.rockName,hardness:r.hardness,soilDepthMeters:r.soilDepthMeters,landformTag:r.landformTag};}catch{ground=null;}
-    if(terrainV2(this))return assessSiteV2((px,pz)=>this.height(px,pz),type,x,z,w,d,{ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d}),capability:type==='farm'?terraceCapability(this,0):undefined,altitude:altitudeAt(this,x,z),waterDistance:riverDistance(this,x,z),hint});
+    if(terrainV2(this))return assessSiteV2((px,pz)=>this.height(px,pz),type,x,z,w,d,{model:terrainV3(this)?'v3':'v2',ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d}),capability:type==='farm'?terraceCapability(this,0):undefined,altitude:altitudeAt(this,x,z),waterDistance:riverDistance(this,x,z),hint});
     return assessSite((px,pz)=>this.height(px,pz),type,x,z,w,d,{ground,water:(px,pz)=>this.waterAt(px,pz),baseWork:(BUILD_TIME[type]||16)*plotArea({type,w,d})});
   }
 
@@ -1282,7 +1282,7 @@ export class Game {
       if(_team===0&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return "Explore the whole plot first";
       if([...this.state.trees,...this.state.stones,...this.state.forage].some(n=>n.amount>0&&!prep?.clearable.includes(n)&&Math.abs(n.x-x)<d.w/2+clearance&&Math.abs(n.z-z)<d.d/2+clearance))return "Clear resources from the plot first";
       if(this.state.buildings.some(b=>{if(b.id===ignoreId||b.hp<=0)return false;const gap=type==='farm'&&b.type==='farm'&&b.team===_team?-1e-4:clearance;return Math.abs(b.x-x)<((b.expansion?.w??b.w)+d.w)/2+gap&&Math.abs(b.z-z)<((b.expansion?.d??b.d)+d.d)/2+gap;}))return "Too close to another building";
-      if(type==="farm")return fieldTopographyIssue(this,{x,z,w:d.w,d:d.d},terrainV2(this)?TERRACE_CLIFF_GRADE:undefined);
+      if(type==="farm")return fieldTopographyIssue(this,{x,z,w:d.w,d:d.d},terrainV2(this)&&(!terrainV3(this)||_team===0)?TERRACE_CLIFF_GRADE:undefined);
       if(compactGrainSite)return null;
     }
     if (type !== "quarry") {
