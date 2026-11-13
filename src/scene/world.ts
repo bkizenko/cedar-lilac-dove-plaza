@@ -1,4 +1,5 @@
 import {MethodRecordLayer} from './methodRecordLayer';
+import {GroundItemLayer} from './groundItemLayer';
 import {DraftCartLayer,DRAFT_CART_RENDER} from './draftCartLayer';
 import {SiegeRamLayer} from './siegeRams';
 import {SailRigs} from './sailRigs';
@@ -323,6 +324,7 @@ export class WorldView {
   private baskets:BasketLayer|null=null;
   private housingPackets:HousingPacketLayer|null=null;
   private methodRecordMarkers:MethodRecordLayer|null=null;
+  private groundItems:GroundItemLayer|null=null;
   private draftCarts:DraftCartLayer|null=null;
   private fibreWork:FibreWorkLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
@@ -1153,6 +1155,7 @@ export class WorldView {
     }
     this.draftCarts=new DraftCartLayer(this.scene,this.mats.timber);
     this.methodRecordMarkers=new MethodRecordLayer(this.scene,this.mats.stone);
+    try{this.groundItems=new GroundItemLayer(this.scene);}catch(e){console.error('ground item models disabled:',e);this.groundItems=null;}
     for (const kind of ['sled', 'cart', 'canoe', 'pack'] as const) {
       const mesh = new THREE.InstancedMesh(haulageGeo(kind), kind==='pack'?this.mats.hide:this.mats.timber, 140);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -2019,6 +2022,7 @@ export class WorldView {
     this.housingPackets?.sync(game);
     this.draftCarts?.sync(game,this.quality,this.shadowsEnabled);
     this.methodRecordMarkers?.sync(game,this.quality,this.shadowsEnabled);
+    try{this.groundItems?.sync(game,this.camera.position,this.quality,this.shadowsEnabled);}catch(e){console.error('ground item models disabled:',e);this.groundItems?.dispose();this.groundItems=null;}
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
     const vehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};let paddles=0;
     let horses=0,cattle=0,ards=0;this.packHorseOwners=[];this.packCattleOwners=[];this.woodenArdOwners=[];
@@ -3015,6 +3019,7 @@ export class WorldView {
     this.housingPackets?.dispose();this.housingPackets=null;
     this.draftCarts?.dispose();this.draftCarts=null;
     this.methodRecordMarkers?.dispose();this.methodRecordMarkers=null;
+    this.groundItems?.dispose();this.groundItems=null;
     this.waterVessels?.dispose();this.waterVessels=null;
     this.baskets?.dispose();this.baskets=null;
     this.fibreWork?.dispose();this.fibreWork=null;

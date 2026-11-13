@@ -5,8 +5,8 @@
  * world keeps the legacy meshes as invisible picking proxies, so selection and hover behave exactly as before. */
 import * as THREE from 'three';
 import {ensureInstanceCapacity} from './instanceCapacity';
-import {heldItemMesh,heldKey} from './itemRegistry';
-import {meshGeometry} from './itemGeometry';
+import {heldItemMesh,heldKey,itemEraForAge,conditionBucket,CONDITION_BUCKET_MID} from './itemRegistry';
+import {meshGeometry,itemMaterial} from './itemGeometry';
 import {RIG_BONES,RIG_PIVOTS,bodyClassFor,boneMatrices,farParts,itemParts,mul,newBoneMatrices,composeEuler,rigMeshData,rigOutfit,tierForDistance,type BodyClass,type ItemId,type RigGear,type RigOutfit,type RigPart,type RigSlot,type RigBone} from './characterRig';
 import {DeathTracker,newAnimState,stepAnimator,CORPSE_RULES,type AnimContext,type AnimState,type UnitLike} from './characterAnim';
 import {lifePose} from './peopleLife';
@@ -24,6 +24,7 @@ export type PeopleIdentity={culture:Culture;teamColor:string;affiliation?:string
 export type PeopleWorld={time:number;season:Season;era:number;identity(team:number):PeopleIdentity;
  /** real gear: garment, armor asset, optional helmet/shield */gearOf(u:UnitLike):RigGear;
  projectFor(u:UnitLike):AnimContext['project'];farmFor(u:UnitLike):AnimContext['farm'];fireLitNear(u:UnitLike):boolean;loadOf(u:UnitLike):number;
+ /** the real state of what this unit holds: the item era (0 flint .. 4 steel) and its condition 0..1 when the game knows them (farm tool wear, shield wear); absent = from the age */heldOf?(u:UnitLike,item:ItemId):{era?:number;condition?:number}|null;
  aliveIds():ReadonlySet<number>;visible(x:number,z:number):boolean;/** role from real unit state (peopleLook.roleOf); absent = derived from type and age class */roleOf?(u:UnitLike):Role};
 type Variant={mesh:THREE.InstancedMesh;count:number;lastUsed:number};
 const linear=(c:Float32Array)=>{const o=new Float32Array(c.length),k=new THREE.Color();for(let i=0;i<c.length;i+=3){k.setRGB(c[i],c[i+1],c[i+2],THREE.SRGBColorSpace);o[i]=k.r;o[i+1]=k.g;o[i+2]=k.b;}return o;};
@@ -34,7 +35,7 @@ function toGeometry(parts:readonly RigPart[],pivot:readonly number[],colors:Reco
 }
 const hash=(s:string)=>(hashSeed(s)>>>0).toString(36);
 /** Items v2: a held item's detailed procedural model (society, era, shield kind), or null to fall back to the first rig's parts. */
-const heldItemGeometry=(item:ItemId,o:RigOutfit,era:number,tier:LodTier)=>{const m=heldItemMesh(item,{skin:o.look?.id,era,lod:tier===0?0:2,shieldKind:o.rendered.shield});if(!m)return null;const g=meshGeometry(m);if(g.boundingSphere)g.boundingSphere.radius=Math.max(g.boundingSphere.radius,1.5);return g;};
+const heldItemGeometry=(item:ItemId,o:RigOutfit,era:number,tier:LodTier,condition?:number)=>{const m=heldItemMesh(item,{skin:o.look?.id,era,lod:tier===0?0:2,shieldKind:o.rendered.shield,condition});if(!m)return null;const g=meshGeometry(m);if(g.boundingSphere)g.boundingSphere.radius=Math.max(g.boundingSphere.radius,1.5);return g;};
 /** A stable signature of one bone's parts and the colours they use, so identical bones of different outfits share one draw. */
 const SIGS=new WeakMap<RigOutfit,Map<string,string>>();
 function boneSignature(parts:readonly RigPart[],colors:Record<RigSlot,string>,tier:LodTier){
@@ -94,7 +95,7 @@ export class CharacterRigLayer{
    if(oldest&&oldestKey!==undefined){this.root.remove(oldest.mesh);oldest.mesh.geometry.dispose();oldest.mesh.dispose();this.variants.delete(oldestKey);}
    else{this.stats.fallbacks++;return null;}
   }
-  const mesh=new THREE.InstancedMesh(make(),this.material,PEOPLE_RULES.startCapacity);mesh.count=0;mesh.frustumCulled=false;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  const geo=make(),mesh=new THREE.InstancedMesh(geo,geo.getAttribute('aTex')?itemMaterial():this.material,PEOPLE_RULES.startCapacity);mesh.count=0;mesh.frustumCulled=false;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(PEOPLE_RULES.startCapacity*3),3);mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);mesh.name='people:'+key;mesh.receiveShadow=true;
   this.root.add(mesh);v={mesh,count:0,lastUsed:this.frame};this.variants.set(key,v);return v;
  }
@@ -139,8 +140,8 @@ export class CharacterRigLayer{
    mul(_w,_u,this.matrices[b]);this.push(v,_w,col);
   }
   for(const [sock,item] of [['itemR',itemR],['itemL',itemL]] as const){
-   if(!item)continue;const id=w.identity(u.team);
-   const v=this.variant(`t${tier}|${item}|${heldKey(item,outfit.look?.id,w.era,outfit.rendered.shield)}|${item==='standard'||item==='shield'?hash(outfit.colors.flag+outfit.colors.flag2+outfit.colors.charge+(outfit.look?.shield??'')+(outfit.rendered.shield??'')+id.culture.flag.division):item==='staff'?hash((outfit.look?.id??'')+outfit.colors.trim):''}`,()=>heldItemGeometry(item,outfit,w.era,tier)??toGeometry(itemParts(item,id.culture,outfit.look,{shield:outfit.rendered.shield as never}),[0,0,0],outfit.colors,tier));
+   if(!item)continue;const id=w.identity(u.team),held=w.heldOf?.(u,item)??null,hEra=held?.era??itemEraForAge(w.era),hBucket=conditionBucket(held?.condition);
+   const v=this.variant(`t${tier}|${item}|c${hBucket}|${heldKey(item,outfit.look?.id,hEra,outfit.rendered.shield)}|${item==='standard'||item==='shield'?hash(outfit.colors.flag+outfit.colors.flag2+outfit.colors.charge+(outfit.look?.shield??'')+(outfit.rendered.shield??'')+id.culture.flag.division):item==='staff'?hash((outfit.look?.id??'')+outfit.colors.trim):''}`,()=>heldItemGeometry(item,outfit,hEra,tier,CONDITION_BUCKET_MID[hBucket])??toGeometry(itemParts(item,id.culture,outfit.look,{shield:outfit.rendered.shield as never}),[0,0,0],outfit.colors,tier));
    if(!v)continue;mul(_wn,_u,this.matrices[sock]);this.push(v,_wn,col);
   }
   if(!override)this.stats.people++;return true;
