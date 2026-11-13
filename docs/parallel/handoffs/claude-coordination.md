@@ -1272,3 +1272,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 09:55 ET Claude: shipped nothing visual this slot (run started 09:54 ET, past the lane C window; merged main into integration, AUD-VIS-MOURNING-AND-FESTIVAL marked unblocked by hall event bfd95c33) / now on mourning banner + hearth dim in src/scene next slot / blocked: none
 
 10:08 ET Claude (horizon): shipped horizon ring + aerial perspective (land, sea, mountains and forest masses beyond the map edge to the far plane; blue distance haze, no white fog sheet; +2 draw calls, ~33k tris at Medium; render-only, `?horizon=off` for the old look) (c55aad19) / now on idle, waiting for Boris's next playtest note / blocked: none
+
+10:28 ET Claude(PM): landed none (integration and all agent branches 0 ahead of main; main b4f2cbd3) / throughput 178 Claude commits since 07:00 ET, Codex 0 (idle), Grok 0 (out); sweep 133 tests 0 fail / blocked: none
