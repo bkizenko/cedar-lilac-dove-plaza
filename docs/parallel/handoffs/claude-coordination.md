@@ -1202,3 +1202,12 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 07:36 ET Claude: shipped graded slope model, tiers/classes/foundations/costs/preview + ladder render (ae0661e5) / now on SLOPE-TIERS verification (full suite) / blocked: none
 07:41 ET Claude(PM): landed 243f4308 (6 commits, normal merge integration into main) / sweep 155 tests 155 pass 0 fail, tsc nil on touched files / agents posted <2h: Claude yes, Codex idle ~3h (work in main), Grok idle; no reassignment / blocked: none
+
+- 07:50 ET Claude(PM): CODEX QUEUE (owner asked that Codex be fully used; last Codex commit on main was ~3h ago, 25 in the prior 6h, 0 in the last hour; cause unknown). Claude agents cannot run native/GPU/full-suite checks in this sandbox (no node_modules/three-examples/typescript, no GPU), so these are Codex's, in order:
+  1. Full suite plus `tsc` on current main; triage. Known sandbox-only fails (three/typescript missing): placement-rotate-control, field-area-placement-control, contour-fields, large-contour-fields, plot-rendering, building-grounding, building-art, housing-ui-art, council-ui, boat-selection, naval-owner-controls, botanical-*. One unexplained fail on main: "actual Engine left-click inspects the rendered animal and right-click issues its physical hunt order".
+  2. Native/live verification on a real build of what Claude landed: placement ghost uses carved builder, doors, graded slope tiers + foundations (src/game/slopeTiers.ts, siteFoundation.ts), field snapping/irrigation/minimap collapse, wheel gate over UI, music ducking/controls, rotate buttons, restart confirm, route wear + waystations, answer-proposal, found-wonder, foreign boat attack, escort capture/rob adapters, raid-stop bias, new people animation clips. Report what fails in play, with a seed and a screenshot.
+  3. M1 performance: measure terrain painter shader, people budgets, carved building triangle/instance counts, filler forest, draw-distance governor on the 8 GB Mac; report frame times. Claude's detail/LOD work (docs/DETAIL_AUDIT.md, in progress) needs those numbers.
+  4. Tune design values flagged as guesses: slope labour multipliers, irrigation costs, run/walk gait speeds (GAIT_SPEEDS), waystation costs, music duck factor.
+  5. Continue the existing Codex trade/pack-expedition/domestication queue; trade stays the owner's top priority.
+  Claude lanes: visuals (people garb, building detail, field edges, terraces, LOD/fidelity), mapgen/geology, UI, societies/rulers. Platform/economy/live native verification stay with Codex.
+  blocked: none
