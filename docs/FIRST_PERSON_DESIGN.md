@@ -1,6 +1,12 @@
 # First-person mode: design
 
-Author: Claude worker, 12 November 2026. Base: `origin/main` 67965c6b. Branch `claude/firstperson-design`. **Design only.** No game source was changed. Build after the current visual and bug pass.
+Author: Claude worker, 12 November 2026. Base: `origin/main` 67965c6b. Branch `claude/firstperson-design`; real-render revision on `claude/firstperson-real` (13 November 2026 UTC). **Design only.** No game source was changed. Build after the current visual and bug pass.
+
+## Rule zero
+
+**Same world, same art, same HUD. First person is only a camera mode.**
+
+It is not a second game and not a second renderer. The same `Game`, the same `WorldView` (painterly terrain, botanical trees, village buildings in their civ skin, people v2 with items, draw distance, season, light) and the same Hearth HUD are drawn; only the camera pose, near plane and FOV differ. Anything that would make a first-person frame look unlike the RTS frame (new art, new fog, new UI chrome, an HTML mockup) is a defect, not a design choice. Pictures in this document are therefore **real engine frames** from `tools/render-preview/fp.mjs` and never mockups; the earlier HTML/SVG mockups were retired because they did not look like the game. If a proposal below cannot be shown by that harness, it is not ready to be designed.
 
 ## BLUF
 
@@ -221,10 +227,10 @@ All figures labelled "estimate" are from reading code and the existing budget me
 | Walkability | `Game.walkable(x,z)`, `terrainWalkCache.ts` (exact grid per sea level), `travelHeight`, `solidBuilding`, footprint test `abs(dx) < w*.4` in `sim.ts`, pens in `penGeometry.ts` | Collision can match what units already obey, so you stand where people can stand |
 
 ### Camera rig
-A `walk` pose: eye at feet height + eye offset (about 1.6 to 1.75 m; the rig's adult is scaled by about 1.65 in `world.ts` line ~2199, so the true adult height is **(unverified)** until measured), yaw and pitch from the pointer, pitch limited to about plus/minus 80 degrees. Differences from orbit that must be explicit:
-- **Near plane** 0.5 is too far for a hand or a doorway; use about 0.1 with a 24-bit depth buffer over a far plane that can stay near 860 (ratio 8,600). Thin parts may z-fight; reversed or logarithmic depth is the fallback **(unverified)**.
+A `walk` pose: eye at feet height + **1.55 m** (derived, now measured from the rig: head pivot y 0.93 in `RIG_PIVOTS` times the adult body scale 1.65 in `world.ts` line ~2199 = 1.53 m to the head centre; per-civ `body.height` 0.97 to 1.05 gives 1.49 to 1.62 m, and `stature` varies each person, so 1.55 is the average adult eye, and children at scale 0.64 see from about 1.0 m). Yaw and pitch from the pointer, pitch limited to about plus/minus 80 degrees. Differences from orbit that must be explicit:
+- **Near plane** 0.5 is too far for a hand or a doorway; use about 0.1. The far plane is not 860 any more: draw distance **Medium sets `camera.far` 1,400** (tree far 1,100, people far 900, fog scale 0.82; measured from `getDrawBands()`). Depth resolution at 24 bits is `d^2 / (near * 2^24)`: with near 0.1 about 6 mm at 100 m, 9.5 cm at 400 m, 60 cm at 1,000 m and 1.2 m at 1,400 m (near 0.5 is five times finer). No z-fighting was visible in any of the eye-level frames taken, so this stays a watch item, with reversed or logarithmic depth as the fallback.
 - **Vertical FOV** 38 degrees is a telephoto RTS view; walk should default around 55 to 65 vertical (about 85 to 100 horizontal at 16:10), user-adjustable.
-- **Shadow frustum** is ±110 m on a 512 or 1,024 map, so a texel is 0.2 to 0.43 m: blurry shadows at eye level. Walk mode should centre a tighter frustum (about ±40 m, estimate) on the avatar; this is cheaper and sharper.
+- **Shadows are off by default** (`GRAPHICS_RULES.defaultShadows = false`), so at the default setting people and buildings carry only the blob contact shadow, which looks pasted on at eye level. When on, the frustum is ±110 m on a **512 map at Medium (0.43 m per texel) or 1,024 at High (0.21 m)**; see finding F4. Walk mode should turn shadows on by default and centre a tighter frustum (about ±40 m, 0.08 to 0.16 m per texel) on the avatar.
 - **Fog** `FogExp2 0.0034` and the painter fog are tuned for overhead haze; at eye level they shorten the horizon dramatically. A mode fog setting is needed.
 - **Sun, sky disc and glow** follow `camera.position`; they work unchanged.
 
@@ -351,7 +357,7 @@ Pointer lock works on a trackpad but is the most error-prone scheme (accidental 
 Two-finger scroll adjusts FOV or zoom-to-inspect, never reply. Tap-to-click is respected; a dead zone setting suppresses jitter. **Which scheme the platform allows first, and how the pointer-lock API behaves under the current browser build on the M1, is (unverified).**
 
 ### Reply UI
-A single Hearth card docked low and to the side of the reporter, so it never covers them (the mockup puts it bottom-left in Walk and bottom-centre in the hall): a medal (role icon), the line (at most two short lines), the icon row of facts, up to four reply buttons, one gold (the default). **No portrait close-ups, no full-screen dialogue.** The existing `LeaderConversation`/`EncounterDialog` flow is a modal; in first person it becomes the same card placed in the scene.
+A single Hearth card docked low and to the side of the reporter, so it never covers them (the real frame (a) in the section "Real eye-level renders" puts it in the selection card's slot, bottom-left): a medal (role icon), the line (at most two short lines), the icon row of facts, up to four reply buttons, one gold (the default). **No portrait close-ups, no full-screen dialogue.** The existing `LeaderConversation`/`EncounterDialog` flow is a modal; in first person it becomes the same card placed in the scene.
 
 ### Accessibility
 - **Everything is readable without audio:** dialogue is text; every sound cue has a visual counterpart (a small icon pulse at the screen edge in the direction of an urgent emitter).
@@ -409,12 +415,72 @@ I could not confirm these from this repository or from running anything. Each ne
 
 The rulers, great-person and fame specs listed as project docs (`claude/rulers-ingame-representation.md`, `claude/great-persons-and-player-integration-spec.md`, `claude/rulers-dynasties-expansion-spec.md`, `claude/engagement-design-and-decisions-round3.md`, `claude/completion-plan-and-context.md`) are not reachable from this session (no Projects tool). I used the repository's `docs/parallel/CLAUDE_RULERS_INGAME.md` and the source modules `greatPersons.ts`, `fame.ts`, `rulersView.ts` instead; the project copies may say more.
 
-## Mockups
 
-Design mockups, not in-game screenshots. They are HTML/CSS/SVG drawn by `tools/render-preview/firstperson-mockups.mjs` (sources in `docs/renders/firstperson/mockups/`; run `node tools/render-preview/firstperson-mockups.mjs`) and show intent, not the final renderer. Each was looked at and iterated once: the first pass had the steward off-screen (a feet-versus-head origin bug), a muddled hand and hoe, and role labels covering faces in the hall; all three were fixed and re-rendered.
+## Real eye-level renders
 
-| File | Shows |
-|---|---|
-| `docs/renders/firstperson/walk-steward.jpg` | Eye-level village at 1.65 m and 60 degrees vertical FOV; a steward four metres away with a report card, and the same report as a pin on the well |
-| `docs/renders/firstperson/ride-farmer.jpg` | Riding a farmer's eyes; needs shown through the body, not bars |
-| `docs/renders/firstperson/audience-hall.jpg` | A ruler's audience: a line of petitioners, an envoy, short replies |
+**These are engine frames, not mockups.** `tools/render-preview/fp.mjs` boots the real `Game` and the real `WorldView` in headless Chromium (three.js on SwiftShader), builds a village through the game's own placement rules, and draws the real `HudHearth` over the frame exactly as the app does. Only the camera is different: the orbit rig first places the sun, the shadow frustum and the culls on the ground under the eye, then the camera is set to an adult eye at 1.55 m, near 0.1, 62 degrees vertical FOV (see "Prototype camera" below). Output is PNG, never JPEG.
+
+Setup common to all four: seed 7, worldgen version 18, 1,040 m map; the player's civ skin is `civ:brythen` (the doc's own Brythen example); village style, painterly map, botanical tree set, quality Medium, **draw distance Medium**, summer, real day-of-year light for the hour shown. The village is a street of houses, huts, a workshop, a market, a well and a hearth with the town hall closing it (its door faces down the street) and two crop plots beside it, all placed with `placeBuilding`; the street is worn with `wearTrail`; stores are set to plausible numbers. People are the game's own units moved into place (their look, kit, tools and pose come from the unit state): the farmer has a real `farmTool`, the thirsty pair really have `thirstSeconds`, the visitor is a unit of a rival society (so it wears that society's garb and carries a trade pack).
+
+| Frame | Situation | Eye | Mean luminance (0 to 255) |
+|---|---|---|---|
+| `docs/renders/firstperson-real/a-street.png` | (a) walking the village street, a steward approaching 4 m away with a report; the real top bar, resource bar, time card, rail, minimap and dock, a real **thirsty pin** and priority card for the two dry residents, and the **report card** in the selection card's slot | street, looking at the hall | 123.9 |
+| `docs/renders/firstperson-real/b-farmer.png` | (b) looking at a farmer working a ripe plot; the real **selection card** for that person | plot edge | 117 |
+| `docs/renders/firstperson-real/c-hall-door.png` | (c) standing at the hall door with a visitor from a rival society 3.5 m away; selection card for the town hall | hall porch | 108.1 |
+| `docs/renders/firstperson-real/d-river.png` | (d) a long view downstream along the river to the horizon | bank cut | 153.7 |
+
+Each frame also exists without the HUD as `<name>-world.png` (that is the image the luminance is measured on, so the dark HUD panels cannot lower it). **The luminance guard**: `fp.mjs` computes the mean Rec. 709 luma of every world frame and exits 2 under `--min-lum` (default 70 of 255). The first-pass frames of the earlier mockups showed black on Boris's device; these are all between 108.1 and 153.7. **No exposure, near-plane, shadow or fog fix was needed to reach that**: the game's tone mapping (exposure about 1.09), the hemisphere light and the painter haze already give a bright eye-level frame at 09:30 to 11:30. The one dark case is a backlit person (finding F2).
+
+Reproduce (from the repo root; needs esbuild, playwright, sharp, react, react-icons in `NODE_PATH`, and three's `build/` in `THREE_DIR`):
+
+```
+export NODE_PATH=/opt/npm-tools/node_modules THREE_DIR=/mnt/user-data/uploads/hearthwild.nosync/node_modules/three
+node tools/render-preview/fp.mjs --skin=civ:brythen                                   # the four frames, shots in tools/render-preview/fp-shots.json
+node tools/render-preview/fp.mjs --skin=civ:brythen --no-hud --shots=tools/render-preview/fp-findings.json --out=docs/renders/firstperson-real/findings
+node tools/render-preview/fp-crops.mjs                                                 # the evidence crops below
+```
+
+Honest limits of the harness: the post-processing is the repo's SwiftShader shim (`shims/post.js`: bloom is a simplified blur-and-add, vignette and tone map are the same chain), so bloom will differ on a GPU; people are staged units, not a simulated day; there is no wind or water animation beyond what one `sync` gives. Real device numbers (frame time, memory) are **not** measured here.
+
+### What looks wrong at eye level (each with a frame)
+
+Ordered by how badly it breaks "same game, seen from the ground". Every item is something the RTS camera hides.
+
+**F1. Terrain faceting and slope streaks (the ~4 m cell).** On a steep bank the height-grid triangles show as a polygon web (`findings/f1a-terrain-facets-right-bank.png`, the cell is 4.06 m, about 2.6 eye heights) and the painter ground texture smears along the slope (`findings/f1b-terrain-streaks-left-slope.png`). On gentle grass the ground reads well, because pebbles, blades and dirt flecks cover it; the facets only betray themselves on bare sand and rock.
+
+**F2. Near-LOD people at 1 to 3 m.** At 2.4 to 4 m a person fills a third of the frame. Faces are a handful of boxes (two dark-cube eyes under a brow, a wedge nose, no mouth), arms end in stubs with no hands or fingers, one arm of the visitor sticks straight out sideways in the idle pose, the trade pack is a flat brown slab, and a walking steward's arms stay horizontal in the stride pose (`findings/f2a-near-lod-visitor-at-3m.png`, `findings/f2b-near-lod-steward-walk-pose.png`). In an earlier 15:00 pass with the sun behind the visitor the whole figure went near-black (the unlit side only gets the hemisphere fill); the 09:30 frame shown reads, so this is a time-of-day trap, and the only dark region seen in any pass. The design's "reporter is the highest-detail person in the game" is true and the detail is not enough yet.
+
+**F3. Building entrances.** The hall door is a flat dark slab flush with the wall, no frame, no recess, no sill, no depth behind it (`findings/f3a-hall-door-flat-slab.png`); a hut door is a green rectangle painted on the wall (`findings/f3b-hut-door-painted-on.png`). The hall stands on a low timber deck that the eye walks onto. There is no interior to look into, as the doc already said; now it is seen.
+
+**F4. Shadows.** Off by default; with them on, a 512 map over ±110 m is 0.43 m per texel and people self-shadow into muddy dark (`findings/f4-shadows-sheet.png`: top left default off, top right Medium 512 at ±110, bottom left High 1,024 at ±110, bottom right High at ±40). The tight frustum is visibly cleaner and is cheap, so it is a mode setting, not a quality tier.
+
+**F5. Ground cover has no near fade.** A single `nonblocking-sapling` instance at about 0.5 m from the eye fills 70 percent of the screen with flat dark green (`findings/f5-groundcover-fills-view.png`; found by hiding scene nodes one at a time). Reeds and cattails at 0.6 m do the same on a smaller scale. The orbit camera never gets this close, so nothing fades them.
+
+**F6. The eye can be below the water surface.** The lake outlet's bed is 1.9 m under the water plane, and the eye at 1.55 m is under it: a hard milky sheet across the whole horizon (`findings/f6-eye-under-water.png`). `waterAt` is known to the sim (the design's 0.9 m wade rule covers it); the camera needs a hard clamp too.
+
+**F7. A black rectangle (seen once).** In one run of frame (d) a black axis-aligned rectangle (48 by 94 px at the left edge, `findings/f7-black-rectangle-seen-once.png`) appeared and vanished when the yaw changed by 0.08 rad; it did not come back in later runs, and hiding any scene node did not remove it while the terrain was drawn. **Cause not isolated; treat as a SwiftShader tile artefact until a GPU run says otherwise.** Recorded because Boris saw black on his device; this is not that bug (his was the mockup JPEGs).
+
+Checked and **not** a problem in these frames: depth precision (no z-fighting in any frame taken; table above), the near plane (0.1 shows nothing wrong; a test with the eye 0.45 m from the hall wall looked the same at near 0.5 and 0.1), fog (the painter haze reads as a pleasant horizon at 11:30; the fog density is -0.0012 with the Medium scale 0.82), exposure, and the shadow-frustum position (the sun, shadow box and building culls follow `look`, so they stay correct once `look` is set under the eye).
+
+### Prioritised fix list for eye-level quality
+
+| P | Fix | Why (frame) | Where |
+|---|---|---|---|
+| P0 | Near fade (dither or cull) for every `nonblocking-*` ground-cover instance within about 0.9 m of the eye | F5 | `biomeVegetation` / ground-cover instance shaders; eye distance uniform |
+| P0 | Hard camera clamps: eye at least `waterAt + 0.3` and never inside terrain; walk collision with `Game.walkable` | F6 | walk pose (new), `cameraClearance.ts` |
+| P0 | A first-person pose path: sun, shadow box, culls and tree view follow the eye, not `look`/`dist` (the orbit's 14 m minimum and `8 + dist*.12` building-cull radius must not apply) | prototype below | `world.ts updateCamera`, `treeView`, `syncBuildings` |
+| P1 | Shadows on in Walk by default, frustum ±40 m on the avatar, keep 1,024 on Medium for this mode only | F4 | `applyQuality`, sun shadow camera |
+| P1 | Near-people detail (rig-near-2): eye sockets with a pupil, a mouth line, finger blocks, arm swing in stride, a fill light on backlit faces (a small hemisphere or rim term in the person material) | F2 | `characterRig.ts`, `peopleLook.ts`, people material |
+| P1 | Doors and thresholds as real geometry: framed reveal 0.2 to 0.3 m deep, a lintel and sill, a dark stage behind (class B of the table above), per skin grammar | F3 | `civBuildings.ts` door part per grammar |
+| P2 | Slope-aware terrain texturing (triplanar or stretch-compensated UV) and smoothed vertex normals on steep cells, so banks stop streaking and facets stop showing | F1 | terrain painter shader |
+| P2 | Optional local 1 m tessellation ring that samples the same height field, only if P2 above is not enough | F1 | terrain mesh |
+| P3 | Re-check F7 on a real GPU; measure frame time and memory of Walk at Medium on the M1 (not done here) | F7 | device |
+| P3 | Depth: keep near 0.1; add reversed-Z only if far-shore flicker shows on device (60 cm at 1 km) | depth table | renderer |
+
+### Prototype camera (not wired)
+
+`fpShot` in `tools/render-preview/fp-entry.tsx` is the whole prototype and it is about thirty lines: set `view.look` to the ground under the eye with a steep orbit pitch and `dist 14`, call `updateCamera(0)` so the sun, the shadow box and the culls land on the avatar; then set `camera.position` to `ground + 1.55`, `near 0.1`, `fov 62`, `lookAt(eye + (sin yaw cos pitch, sin pitch, cos yaw cos pitch))`; then `sync` and `render` (re-applying the pose before each `sync` so people, trees and ground items pick their LOD from the eye, not from the orbit). Nothing in `src/` was changed. A real build moves exactly this into a `walk` pose in `world.ts` and replaces the harness's fixed shot list with input.
+
+### What remains
+
+Pointer lock and input; walk collision and the water clamp; the P0 and P1 fixes above; the `fp-reports` read model and a real report card component (the card in frame (a) is a harness prototype in `fp-entry.tsx` built from the real `IconBtn`, `Stat` and the `hw-sel`, `hw-medal`, `hw-primary` classes and size tokens, `--hw-hit` 48 px, `--hw-fs-m` 18 px, 26 px icons; its copy is the steward example of section 2, and there is **no steward role in the sim** (`peopleLook.ROLES`), so the frame uses an ordinary worker in that slot); the class A hall room; audio listener; Ride along arms. Frames for Audience (hall interior) cannot be rendered until a room kit exists, which is itself the finding.

@@ -1,0 +1,107 @@
+{
+ "f4a-shadows-default-off": {
+  "eye": [
+   "$C.x+1.9",
+   "$C.z-24"
+  ],
+  "yaw": 3.4,
+  "pitch": -0.12,
+  "fov": 62,
+  "hour": 8.5,
+  "stage": {
+   "case": "c"
+  },
+  "hud": false
+ },
+ "f4b-shadows-med-110": {
+  "eye": [
+   "$C.x+1.9",
+   "$C.z-24"
+  ],
+  "yaw": 3.4,
+  "pitch": -0.12,
+  "fov": 62,
+  "hour": 8.5,
+  "stage": {
+   "case": "c"
+  },
+  "hud": false,
+  "shadows": true,
+  "quality": "med"
+ },
+ "f4c-shadows-high-110": {
+  "eye": [
+   "$C.x+1.9",
+   "$C.z-24"
+  ],
+  "yaw": 3.4,
+  "pitch": -0.12,
+  "fov": 62,
+  "hour": 8.5,
+  "stage": {
+   "case": "c"
+  },
+  "hud": false,
+  "shadows": true,
+  "quality": "high"
+ },
+ "f4d-shadows-high-40": {
+  "eye": [
+   "$C.x+1.9",
+   "$C.z-24"
+  ],
+  "yaw": 3.4,
+  "pitch": -0.12,
+  "fov": 62,
+  "hour": 8.5,
+  "stage": {
+   "case": "c"
+  },
+  "hud": false,
+  "shadows": true,
+  "quality": "high",
+  "shadowHalf": 40
+ },
+ "f5-groundcover-fills-view": {
+  "eye": [
+   "$C.x-0.6",
+   "$C.z+20"
+  ],
+  "yaw": 3.1416,
+  "pitch": -0.03,
+  "fov": 62,
+  "hour": 10.5,
+  "stage": {
+   "case": "a"
+  },
+  "hud": false
+ },
+ "f6-eye-under-water": {
+  "eye": [
+   "$river.x-10",
+   "$river.z+8"
+  ],
+  "yaw": -0.15,
+  "pitch": -0.02,
+  "fov": 62,
+  "hour": 11.5,
+  "stage": {
+   "case": "d"
+  },
+  "hud": false
+ },
+ "f7-black-rectangle": {
+  "eye": [
+   213,
+   -224
+  ],
+  "yaw": -0.12,
+  "pitch": 0.0,
+  "fov": 62,
+  "hour": 11.5,
+  "stage": {
+   "case": "d"
+  },
+  "hud": false
+ }
+}
