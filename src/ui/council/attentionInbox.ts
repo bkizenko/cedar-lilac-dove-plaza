@@ -1,6 +1,6 @@
 import type {CouncilModel} from '../../game/rulersView';
 /** One slow diplomatic matter the player should not miss. Pure, derived from the council read model only; no new state. */
-export type InboxItem={key:string;team?:number;tone:'danger'|'warn'|'note';glyph:string;label:string;text:string};
+export type InboxItem={key:string;team?:number;tone:'danger'|'warn'|'note';glyph:string;label:string;text:string;actions?:{label:string;command:'take-in-refugees'|'turn-away-refugees'}[]};
 const RANK={danger:0,warn:1,note:2} as const;
 const yrs=(n:number)=>n<=0?'under a year':n===1?'1 year':`${n} years`;
 /** Ward, claim, grievance and handover matters in one list, worst first. Old or empty models give []. */
@@ -16,6 +16,7 @@ export function attentionInbox(c:CouncilModel|undefined):InboxItem[]{
   }
   if(n.hostile)out.push({key:`war-${n.team}`,team:n.team,tone:'danger',glyph:'⚔',label:'At odds',text:`${n.name} stand against us${n.means.length?`: ${n.means[0]}`:''}.`});
  }
+ for(const r of c.refugees??[])out.push({key:`refugees-${r.team}`,team:r.team,tone:'warn',glyph:'☗',label:'Hungry families at the hall',text:`${r.count} ${r.count===1?'person':'people'} from ${r.name} ask to be taken in. They leave in ${yrs(r.yearsLeft)}.`,actions:[{label:'Take them in',command:'take-in-refugees'},{label:'Turn away',command:'turn-away-refugees'}]});
  const h=c.handover;
  if(h){
   if(h.extinct)out.push({key:'extinct',tone:'danger',glyph:'♛',label:'No heir',text:'The line has no heir; the house may end with this ruler.'});

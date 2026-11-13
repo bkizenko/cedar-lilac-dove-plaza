@@ -16,11 +16,13 @@ import {dominantTraits} from './rulerGenome';
 import {heir,yearlyDeathChance} from './dynasty';
 import {hash32,makeRng} from './rulerCore';
 import {mourningOf} from './societyRuntime';
+import {orphanCare} from './orphans';
+import {pendingRefugees,REFUGEE_RULES} from './refugees';
 
 export type CouncilModel={
  enabled:boolean;stage:string;showSuccession:boolean;showFactions:boolean;
  ruler?:{name:string;age:number;headline:string;contradiction:string|null;wants:string[];fears:string;competences:Record<string,string>;values:string[]};
- house?:{name:string;generation:number;family:{name:string;age:number;role:string;adult:boolean}[]};
+ house?:{name:string;generation:number;family:{name:string;age:number;role:string;adult:boolean;care?:string}[]};
  polity?:{form:string;law:string;tier:string};
  factions:{kind:FactionKind;power:number;loyalty:number;demand:string}[];coalitionLoss:number;
  glory:{stream:string;value:number}[];gloryScore:number;
@@ -30,6 +32,8 @@ export type CouncilModel={
  log:string[];
  /** Agreements the player is party to (marriages, pacts, fosterage), newest first; optional so old callers and empty models stay valid. */
  news?:{time:number;kind:string;with:number;text:string}[];
+ /** Hungry families waiting at our hall to be taken in (real people, src/game/refugees.ts); absent when none. */
+ refugees?:{team:number;name:string;count:number;yearsLeft:number}[];
  mourning?:{from:string;to:string;relation:string;contested:boolean;kind:string;secondsLeft:number;carried:number;strained:number;lapsed:number};
  handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;regency?:{yearsLeft:number;limits:string[]};rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
 };
@@ -86,7 +90,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
  const person=head?.ruler;
  const factions=f.factions?stepFactions(generateFactions(me.civ.ruler.seed,me.civ.polity),person?.traits??me.civ.ruler.traits):[];
  const role=(id:string)=>id===d.rulerId?'ruler':d.people[id]?.spouse===d.rulerId?'consort':d.people[id]?.parent===d.rulerId?'child':'kin';
- const exp=expansionOf(g,team);
+ const exp=expansionOf(g,team),ocs=orphanCare(d);
  const neighbours=g.state.tribes.map((t,i)=>i).filter(i=>i!==team&&i!==3&&societyRelation(g,team,i).known).map(i=>{
   const o=r.societies[String(i)],ties=tiesBetween(g,team,i),im=implications(ties),rel=societyRelation(g,team,i);
   return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:rel.hostile,atPeace:rel.peaceUntil>g.state.time,identity:societyIdentity(g,i),voice:diplomaticVoice(o?.dynasty.people[o.dynasty.rulerId]?.ruler?.traits??o?.civ.ruler.traits,g.tribe(i).name),court:rivalCourt(r,i),wards:wardLines(r,team,i),casus:casusLines(r,team,i),memory:neighbourMemory(g,team,i),
@@ -102,11 +106,19 @@ export function councilModel(g:Game,team=0):CouncilModel{
  return {
   handover,mourning:(m=>m?{from:m.from,to:m.to,relation:m.relation,contested:m.contested,kind:m.kind,secondsLeft:Math.max(0,Math.round(m.mourningUntil-g.state.time)),carried:m.carried,strained:m.strained,lapsed:m.lapsed}:undefined)(mourningOf(g,team)),enabled:true,stage:f.stage,showSuccession:f.showSuccessionUI,showFactions:f.factions,
   ruler:person?{...(({name,age,headline,contradiction,wants,fears,competences,values})=>({name,age,headline,contradiction,wants:wants.map(String),fears:String(fears),competences,values:values as string[]}))(dossier(person))}:undefined,
-  house:{name:d.house,generation:d.generation,family:Object.values(d.people).filter(p=>p.alive).map(p=>({name:p.name,age:p.age,role:role(p.id),adult:p.age>=16}))},
+  house:{name:d.house,generation:d.generation,family:Object.values(d.people).filter(p=>p.alive).map(p=>{const oc=ocs.find(o=>o.child===p.id);return {name:p.name,age:p.age,role:role(p.id),adult:p.age>=16,...(oc?{care:`raised by ${d.people[oc.guardian]?.name??'the hall'} (${oc.relation})`}:{})};})},
   polity:{form:me.civ.polity.form,law:me.civ.polity.succession,tier:me.civ.polity.tier},
   factions:factions.map(x=>({kind:x.kind,power:Math.round(x.power*100),loyalty:x.loyalty,demand:x.demand})),coalitionLoss:coalitionLoss(factions),
   glory:STREAMS.map(s=>({stream:s,value:Math.round(me.ledger[s])})),gloryScore:Math.round(score(me.ledger)),
-  expansion:exp?{mode:exp.mode,drive:exp.drive,why:exp.why}:undefined,parties:expansionParties(g,team),neighbours,log:d.log.slice(-6),news:neighbourNews(g,0,6).map(n=>({time:n.time,kind:n.kind,with:n.a===0?n.b:n.a,text:n.text})),
+  expansion:exp?{mode:exp.mode,drive:exp.drive,why:exp.why}:undefined,parties:expansionParties(g,team),neighbours,log:d.log.slice(-6),refugees:refugeesWaiting(g),news:neighbourNews(g,0,6).map(n=>({time:n.time,kind:n.kind,with:n.a===0?n.b:n.a,text:n.text})),
  };
 }
 void traitWord;void dominantTraits;
+
+/** Parties waiting at the hall, grouped by the society they left; patience counts down in dynastic years. */
+function refugeesWaiting(g:Game):CouncilModel['refugees']{
+ const year=(g.state as unknown as {rulers?:{year:number}}).rulers?.year??0,by=new Map<number,{count:number;since:number}>();
+ for(const u of pendingRefugees(g)){if(u.refugee!.phase!=='waiting')continue;const e=by.get(u.refugee!.home)??{count:0,since:u.refugee!.year};e.count++;e.since=Math.min(e.since,u.refugee!.year);by.set(u.refugee!.home,e);}
+ const out=[...by].map(([team,e])=>({team,name:g.tribe(team).name,count:e.count,yearsLeft:Math.max(0,REFUGEE_RULES.patienceYears-(year-e.since))}));
+ return out.length?out:undefined;
+}
