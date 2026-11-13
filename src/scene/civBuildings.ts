@@ -431,7 +431,7 @@ CIVIC.nilemark=g=>{const {w,d,r}=g,tw=w*.26,td=d*.34,zf=d*.28;
  return {entry:{x:0,z:zf+td*.5+1,width:1.6}};};
 /** Tigrane: baked-brick courtyard houses with vaulted rooms and pilasters; the civic hall is a three-tier brick terrace with a pilastered face, grand ramp and a vaulted shrine under a glazed band. */
 HOUSE.tigrane=g=>{const {w,d,r}=g,W=w*.88,D=d*.86,h=range(r,2.7,3.2),t=.42,rd=D*.46;
- g.B('wall',[W,h,rd],[0,0,-D/2+rd/2],2);P(g,'sphere','wall',[W*.96,1.9,rd*1.05],[0,h-.5,-D/2+rd/2]);g.B('trim',[W*.98,.1,rd*.2],[0,h+.1,-D/2+rd*.5],0);
+ g.B('wall',[W,h,rd],[0,0,-D/2+rd/2],2);{const zc=-D/2+rd/2,vh=range(r,.8,1.0),cy=Math.max(h,W*.5+.02);P(g,'cylinder','wall',[W*.98,rd*1.02,vh*2],[0,cy,zc],[Math.PI/2,0,0],14);for(let i=0;i<4;i++)P(g,'cylinder','trim',[W*1.0,.12,vh*2.05],[0,cy,zc-rd*.36+i*rd*.24],[Math.PI/2,0,0],14,0);}g.B('trim',[W*.98,.1,rd*.2],[0,h+.1,-D/2+rd*.5],0);
  for(const s of[-1,1])g.B('wall',[t,h*.62,D-rd],[s*(W/2-t/2),0,D/2-(D-rd)/2],2);g.B('wall',[W*.34,h*.62,t],[-W*.33,0,D/2-t/2],2);g.B('wall',[W*.34,h*.62,t],[W*.33,0,D/2-t/2],2);
  for(let i=0;i<5;i++)g.B('wall2',[.26,h,.22],[-W*.4+i*W*.2,0,-D/2+rd+.1],1);
  g.B('trim',[W,.18,rd+.1],[0,h*.55,-D/2+rd/2],1);g.B('accent',[1.0,1.7,.1],[0,0,-D/2+rd+.04],0);g.B('wall2',[1.6,.3,.9],[0,0,0],0);
