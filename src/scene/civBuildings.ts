@@ -52,20 +52,33 @@ const mk=(civ:CivId,ctx:CivContext,r:Rng):G=>{const parts:Part[]=[],m=(s:Slot)=>
   banner:(x,z,h)=>{if(grammarSet==='original')return void bannerFor(parts,civ,m,x,z,h,ctx.mourning,ctx.look?.banner,ctx.wear);parts.push(beam(m('trim'),[x,0,z],[x,h,z],.08,1),part('box',m('cloth'),[.7,.95,.03],[x+.38,h-1.05,z],1));},
   door:(x,z,wd=.9,h=1.8)=>void parts.push(part('box',m('accent'),[wd,h,.08],[x,0,z],0))};return g;};
 const jit=(r:Rng,a:number)=>1+(r()-.5)*2*a;
-/** Poorest local dwelling per civ (era 0-1). */
-const POOR:Record<CivId,string>={sandrill:'cave',nilemark:'hut',tigrane:'dome',hanrei:'hut',vedara:'hut',aureline:'hut',sahelan:'conehut',quillan:'sod',kaaltun:'hut',mekhari:'raft',brythen:'lean',rusvolt:'dugout',steppan:'tent',skoldar:'tent'};
-function poor(g:G):Out{const {w,d,r}=g,k=POOR[g.civ],W=Math.min(w,d)*range(r,.6,.8),h=range(r,1.6,2.2);
+/** Poorest local dwelling per civ (era 0-1). Every one must read as a HUT at a glance: a wall, a clearly separate roof mass that overhangs it,
+ * and a dark framed doorway 0.95 m wide x 1.65 m tall (a person is ~1.7 m) on the +Z (entry) face. */
+const POOR:Record<CivId,string>={sandrill:'cave',nilemark:'hut',tigrane:'dome',hanrei:'hut',vedara:'hut',aureline:'hut',sahelan:'conehut',quillan:'sod',kaaltun:'hut',mekhari:'raft',brythen:'lean',rusvolt:'dugout',steppan:'tent',skoldar:'longhut'};
+export const POOR_KIND=POOR;
+const lum=(h:string)=>{const n=parseInt(h.slice(1),16);return .2126*(n>>16&255)+.7152*(n>>8&255)+.0722*(n&255);};
+/** The darkest of the civ's own swatches: the doorway opening (civ tables have no black slot, so the opening is its darkest tone). */
+function darkSlot(g:G):Slot{const t=(g.look?.palette??CIVS[g.civ].materials) as CivMaterials,slots:Slot[]=['wall2','accent','trim','roof','cloth'];return slots.reduce((a,b)=>lum(t[b].hex)<lum(t[a].hex)?b:a,slots[0]);}
+/** Framed doorway on the +Z face at x, wall plane z: dark opening, light-contrast posts + lintel, a threshold step. */
+function hutDoor(g:G,x:number,z:number,wd=.95,h=1.65){
+ const dk=darkSlot(g),fr:Slot=dk==='trim'?'wall':'trim';
+ g.B(dk,[wd,h,.1],[x,0,z],0);
+ for(const s of[-1,1])g.B(fr,[.14,h+.14,.2],[x+s*(wd/2+.07),0,z+.04],0);
+ g.B(fr,[wd+.4,.16,.2],[x,h,z+.04],0);g.B('wall2',[wd+.7,.1,.5],[x,0,z+.22],1);}
+function poor(g:G):Out{const {w,d,r}=g,k=POOR[g.civ],W=Math.min(w,d)*range(r,.74,.84),R=W/2,h=range(r,1.85,2.05),dx=g.off*.25;
  switch(k){
-  case 'cave':g.B('wall',[w*.8,3.2,d*.5],[0,0,-d*.2],2);g.B('accent',[1.1,1.5,.2],[g.off,0,d*.05+.02],0);g.B('wall2',[w*.5,.5,.6],[0,0,d*.12],1);break;
-  case 'dome':g.Cy('wall',W,h*.6,[0,0,0],2,10);g.Pr('sphere','wall',[W,h*.8,W],[0,h*.55,0],2);g.door(g.off*.3,W/2+.02,.7,1.2);break;
-  case 'conehut':g.Cy('wall',W,1.5,[0,0,0],2,10);g.Pr('cone','roof',[W*1.25,1.6,W*1.25],[0,1.45,0],2,undefined,10);g.door(g.off*.3,W/2+.02,.6,1.2);break;
-  case 'sod':g.B('wall',[W*1.1,1.3,W*.9],[0,0,0],2);g.Pr('wedge','roof',[W*1.3,.7,W*1.1],[0,1.3,0],2);g.door(g.off*.3,W*.45+.02,.6,1.1);break;
-  case 'lean':g.post('wall',-W/2,-W/2,1.9);g.post('wall',W/2,-W/2,1.9);g.post('wall',-W/2,0,1.1);g.post('wall',W/2,0,1.1);g.Pr('wedge','roof',[W*1.2,.9,W*1.1],[0,1.1,-W*.25],2);g.B('wall2',[W,1,.1],[0,0,-W/2],1);break;
-  case 'dugout':g.B('wall',[W*1.2,.5,W],[0,0,0],2);g.Pr('prism','roof',[W*1.2,.9,W*1.1],[0,.5,0],2);g.B('wall2',[.8,.9,.2],[g.off*.3,0,W/2],0);break;
-  case 'tent':g.Pr('cone','roof',[W*1.4,h*1.4,W*1.4],[0,0,0],2,undefined,8);g.B('accent',[.7,1.2,.05],[0,0,W*.4],0);g.post('trim',0,0,h*1.5+.3,.07,1);break;
-  case 'raft':for(const x of[-1,1])for(const z of[-1,1])g.post('trim',x*W*.4,z*W*.35,.9,.12,2);g.B('wall2',[W,.12,W*.9],[0,.9,0],2);g.B('wall',[W*.8,1.2,W*.7],[0,1.02,0],2);g.Pr('prism','roof',[W*.95,.7,W*.85],[0,2.22,0],2);break;
-  default:g.Cy('wall',W,1.3,[0,0,0],2,8);g.Pr('cone','roof',[W*1.2,1.1,W*1.2],[0,1.3,0],2,undefined,8);g.door(g.off*.3,W/2+.02,.6,1.1);}
- return {entry:{x:0,z:Math.min(d/2-.2,W/2+.4),width:.9}};}
+  case 'cave':{const bw=w*.86,bd=d*.62,bh=2.5,z0=-d*.12;g.B('wall',[bw,bh,bd],[0,0,z0],2);g.B('roof',[bw+.5,.28,bd+.5],[0,bh,z0],2);g.B('wall2',[bw+.5,.34,.26],[0,bh+.28,z0+bd/2+.12],1);for(const x of[-1,0,1])g.parts.push(part('cylinder',matId(g.civ,'trim') as Part['mat'],[.2,.8,.2],[x*bw*.3,bh-.35,z0+bd/2+.4],1,[Math.PI/2,0,0],6));hutDoor(g,dx,z0+bd/2+.02);return {entry:{x:dx,z:z0+bd/2+.5,width:.95}};}
+  case 'dome':{const wh=1.45;g.Cy('wall',W,wh,[0,0,0],2,10);g.Pr('sphere','wall',[W*1.04,W*.85,W*1.04],[0,wh-.1,0],2,undefined,10);g.Cy('wall2',W*1.06,.14,[0,wh-.12,0],1,10);hutDoor(g,dx,R*.951+.03,.9,1.45);return {entry:{x:dx,z:R+.5,width:.9}};}
+  case 'conehut':{g.Cy('wall',W,1.55,[0,0,0],2,10);g.Pr('cone','roof',[W*1.45,2.4,W*1.45],[0,1.4,0],2,undefined,10);hutDoor(g,dx,R*.951+.03,.85,1.5);g.Cy('trim',W*1.02,.12,[0,1.1,0],1,10);return {entry:{x:dx,z:R+.5,width:.9}};}
+  case 'sod':{const bw=W*1.15,bd=W*.95,wh=1.75;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.7,1.5,bd+.7],[0,wh-.05,0],2);g.B('wall2',[bw+.2,.3,bd+.2],[0,0,0],1);hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
+  case 'lean':{const bw=W*1.0,bd=W*1.0,wh=1.1;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.6,2.2,bd+.8],[0,wh-.05,0],2);g.post('trim',-bw/2,bd/2+.1,wh+.4,.14,1);g.post('trim',bw/2,bd/2+.1,wh+.4,.14,1);hutDoor(g,dx,bd/2+.02,.9,1.0);return {entry:{x:dx,z:bd/2+.5,width:.9}};}
+  case 'dugout':{const bw=W*1.15,bd=W*.95,wh=1.85;g.B('wall',[bw,wh,bd],[0,0,0],2);for(let i=0;i<4;i++)g.parts.push(part('cylinder',matId(g.civ,'wall2') as Part['mat'],[.22,bw+.15,.22],[0,.3+i*.45,bd/2+.06],1,[0,0,Math.PI/2],6));g.Pr('prism','roof',[bw+.8,1.5,bd+.8],[0,wh-.05,0],2);g.post('trim',0,0,wh+1.55,.1,1);hutDoor(g,dx,bd/2+.1);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
+  case 'tent':{g.Cy('wall',W*1.05,1.35,[0,0,0],2,10);g.Pr('cone','roof',[W*1.35,2.2,W*1.35],[0,1.3,0],2,undefined,10);g.post('trim',0,0,3.8,.07,1);hutDoor(g,dx,R*1.05*.951+.03,.9,1.3);return {entry:{x:dx,z:R+.5,width:.9}};}
+  case 'longhut':{const bw=W*1.25,bd=W*.85,wh=1.7;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.8,1.4,bd+.8],[0,wh-.05,0],2);g.B('wall2',[bw+.15,.35,bd+.15],[0,0,0],1);hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
+  case 'raft':{const bw=W*.95,bd=W*.8,fh=.85;for(const x of[-1,1])for(const z of[-1,1])g.post('trim',x*bw*.46,z*bd*.44,fh,.14,2);g.B('wall2',[bw+.3,.14,bd+.3],[0,fh,0],2);g.B('wall',[bw,1.6,bd],[0,fh+.14,0],2);g.Pr('prism','roof',[bw+.8,1.4,bd+.8],[0,fh+1.7,0],2);
+   g.B('trim',[.9,.1,.9],[dx,fh+.04,bd/2+.4],1);g.Pr('wedge','wall2',[.9,fh,.9],[dx,0,bd/2+1.1],1,[0,Math.PI,0]);const dk=darkSlot(g);g.B(dk,[.85,1.35,.1],[dx,fh+.14,bd/2+.02],0);for(const s of[-1,1])g.B('trim',[.12,1.45,.18],[dx+s*.5,fh+.14,bd/2+.04],0);g.B('trim',[1.1,.14,.18],[dx,fh+1.49,bd/2+.04],0);return {entry:{x:dx,z:bd/2+1.2,width:.9}};}
+  default:{g.Cy('wall',W,h*.85,[0,0,0],2,8);g.Cy('wall2',W*1.04,.3,[0,0,0],1,8);g.Pr('cone','roof',[W*1.4,2.0,W*1.4],[0,h*.85-.1,0],2,undefined,8);hutDoor(g,dx,R*.924+.03);return {entry:{x:dx,z:R+.5,width:.95}};}}
+}
 // ---------------------------------------------------------------- houses
 const HOUSE:Record<CivId,(g:G)=>Out>={
  sandrill:g=>{const {w,d,r}=g,mh=range(r,4,5.4);g.B('wall2',[w*.95,mh,d*.45],[0,0,-d*.3],2);const fw=w*.62*jit(r,.06),fh=range(r,3,3.6);g.B('wall',[fw,fh,.7],[g.off*.4,0,-d*.04],2);
