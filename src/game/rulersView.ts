@@ -17,6 +17,7 @@ import {heir,yearlyDeathChance} from './dynasty';
 import {hash32,makeRng} from './rulerCore';
 import {mourningOf} from './societyRuntime';
 import {orphanCare} from './orphans';
+import {pendingRefugees,REFUGEE_RULES} from './refugees';
 
 export type CouncilModel={
  enabled:boolean;stage:string;showSuccession:boolean;showFactions:boolean;
@@ -31,6 +32,8 @@ export type CouncilModel={
  log:string[];
  /** Agreements the player is party to (marriages, pacts, fosterage), newest first; optional so old callers and empty models stay valid. */
  news?:{time:number;kind:string;with:number;text:string}[];
+ /** Hungry families waiting at our hall to be taken in (real people, src/game/refugees.ts); absent when none. */
+ refugees?:{team:number;name:string;count:number;yearsLeft:number}[];
  mourning?:{from:string;to:string;relation:string;contested:boolean;kind:string;secondsLeft:number;carried:number;strained:number;lapsed:number};
  handover?:{law:string;heir?:{name:string;age:number;role:string;adult:boolean;legit:boolean;claim:number;headline:string};regent?:string;regency?:{yearsLeft:number;limits:string[]};rulerAge:number;yearlyRisk:number;extinct:boolean;others:{name:string;age:number;role:string}[];rivals?:{name:string;age:number;role:string;claim:number;legit:boolean}[];pressure?:{unrest:number;stage:string;claimsAgainst:number;why:string[]}};
 };
@@ -107,7 +110,15 @@ export function councilModel(g:Game,team=0):CouncilModel{
   polity:{form:me.civ.polity.form,law:me.civ.polity.succession,tier:me.civ.polity.tier},
   factions:factions.map(x=>({kind:x.kind,power:Math.round(x.power*100),loyalty:x.loyalty,demand:x.demand})),coalitionLoss:coalitionLoss(factions),
   glory:STREAMS.map(s=>({stream:s,value:Math.round(me.ledger[s])})),gloryScore:Math.round(score(me.ledger)),
-  expansion:exp?{mode:exp.mode,drive:exp.drive,why:exp.why}:undefined,parties:expansionParties(g,team),neighbours,log:d.log.slice(-6),news:neighbourNews(g,0,6).map(n=>({time:n.time,kind:n.kind,with:n.a===0?n.b:n.a,text:n.text})),
+  expansion:exp?{mode:exp.mode,drive:exp.drive,why:exp.why}:undefined,parties:expansionParties(g,team),neighbours,log:d.log.slice(-6),refugees:refugeesWaiting(g),news:neighbourNews(g,0,6).map(n=>({time:n.time,kind:n.kind,with:n.a===0?n.b:n.a,text:n.text})),
  };
 }
 void traitWord;void dominantTraits;
+
+/** Parties waiting at the hall, grouped by the society they left; patience counts down in dynastic years. */
+function refugeesWaiting(g:Game):CouncilModel['refugees']{
+ const year=(g.state as unknown as {rulers?:{year:number}}).rulers?.year??0,by=new Map<number,{count:number;since:number}>();
+ for(const u of pendingRefugees(g)){if(u.refugee!.phase!=='waiting')continue;const e=by.get(u.refugee!.home)??{count:0,since:u.refugee!.year};e.count++;e.since=Math.min(e.since,u.refugee!.year);by.set(u.refugee!.home,e);}
+ const out=[...by].map(([team,e])=>({team,name:g.tribe(team).name,count:e.count,yearsLeft:Math.max(0,REFUGEE_RULES.patienceYears-(year-e.since))}));
+ return out.length?out:undefined;
+}

@@ -31,7 +31,7 @@ export function CouncilPanel({engine}:{engine:Engine}){
    <ElderCounselLine elder={elder}/>
    {c.house&&<ul className="grid grid-cols-2 gap-x-3 border-t border-parchment/10 pt-1.5">{c.house.family.map(p=><li key={p.name+p.age}>{p.name} <span className="text-parchment-dim">{p.role}, {p.age}</span></li>)}</ul>}
   </Card>}
-  <AttentionInbox council={c} onFocus={t=>focusKnownSettlement(engine,t)}/>
+  <AttentionInbox council={c} onFocus={t=>focusKnownSettlement(engine,t)} onAnswer={(team,kind)=>fb.send({kind,team})}/>
   <SocietiesStrip neighbours={c.neighbours} onFocus={t=>focusKnownSettlement(engine,t)}/>
   {c.handover&&<HandoverCard h={c.handover}/>}
   {c.showFactions&&<FactionsStrip factions={c.factions} coalitionLoss={c.coalitionLoss}/>}

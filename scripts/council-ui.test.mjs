@@ -183,3 +183,11 @@ test('elder counsel: best-skilled living elder from real stats, hidden when none
  const html=renderToStaticMarkup(h(ElderCounselLine,{elder:e}));assert.match(html,/data-elder-counsel/);assert.match(html,/pottery/);assert.equal(renderToStaticMarkup(h(ElderCounselLine,{elder:null})),'');
  const off=new Game();off.reset(4242,10,{skillsVersion:0});off.enterIsland();assert.equal(elderCounsel(off),null,'old saves: skill model off');
 });
+
+test('attention inbox offers take-in / turn-away buttons for hungry families waiting at the hall',async()=>{
+ const {attentionInbox}=await import('../src/ui/council/attentionInbox.ts');const {AttentionInbox}=await import('../src/ui/council/AttentionInbox.tsx');
+ const c={enabled:true,neighbours:[],log:[],refugees:[{team:3,name:'Sandrill',count:3,yearsLeft:2}]};
+ const it=attentionInbox(c).find(i=>i.key==='refugees-3');assert.ok(it);assert.match(it.text,/3 people from Sandrill ask to be taken in\. They leave in 2 years/);assert.deepEqual(it.actions.map(a=>a.command),['take-in-refugees','turn-away-refugees']);
+ const html=renderToStaticMarkup(h(AttentionInbox,{council:c,onAnswer(){}}));assert.match(html,/data-refugee-action="take-in-refugees"/);assert.match(html,/Turn away/);
+ assert.doesNotMatch(renderToStaticMarkup(h(AttentionInbox,{council:c})),/data-refugee-action/);assert.equal(attentionInbox({enabled:true,neighbours:[],log:[]}).some(i=>i.key.startsWith('refugees')),false);
+});
