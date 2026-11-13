@@ -1,0 +1,21 @@
+/* Icon-first wild-craft panel. Tile sizes follow the Hearth floors: 52 hit, 38 icon, 30/24 row glyphs. */
+.hw .hw-wild{display:grid;gap:var(--hw-s3)}
+.hw .hw-wrow-head{display:flex;align-items:center;gap:var(--hw-s3)}
+.hw .hw-wtitle{font-size:var(--hw-fs-m);font-weight:750;color:var(--hw-gold-2)}
+.hw .hw-wrow{display:flex;align-items:center;gap:var(--hw-s3)}
+.hw .hw-wrow-label{flex:none;display:grid;place-items:center;width:38px;height:38px;color:var(--hw-dim)}
+.hw .hw-wrow-label svg{width:var(--hw-ico,30px);height:var(--hw-ico,30px)}
+.hw .hw-wtiles{display:flex;flex-wrap:wrap;gap:var(--hw-s2);min-width:0}
+.hw .hw-wtile{position:relative;display:inline-grid;place-items:center;width:52px;height:52px;flex:none;border-radius:var(--hw-r-m);border:1px solid var(--hw-line);background:rgba(255,236,190,.07);color:var(--hw-text);padding:0}
+.hw .hw-wtile.is-act{cursor:pointer;transition:background-color .12s,transform .12s}
+.hw .hw-wtile.is-act:hover{background:rgba(255,236,190,.18);border-color:var(--hw-line-strong)}
+.hw .hw-wtile.is-act:active{transform:translateY(1px)}
+.hw .hw-wtile[aria-disabled="true"]{opacity:.45;cursor:default}
+.hw .hw-wtile.is-on{background:linear-gradient(180deg,var(--hw-gold-2),var(--hw-gold));border-color:var(--hw-gold-2)}
+.hw .hw-wtile.t-bad{border-color:rgba(244,162,135,.75);background:rgba(244,162,135,.14)}
+.hw .hw-wtile.t-warn{border-color:rgba(242,199,107,.7);background:rgba(242,199,107,.12)}
+.hw .hw-wtile.t-good{border-color:rgba(180,217,140,.7)}
+.hw .hw-emoji{font-size:var(--hw-ico-l,38px);line-height:1;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.hw .hw-wbar{position:absolute;left:6px;right:6px;bottom:4px;height:5px;border-radius:3px;background:rgba(0,0,0,.4);overflow:hidden}
+.hw .hw-wbar i{display:block;height:100%;background:var(--hw-gold-2)}
+.hw .hw-wtile .hw-btn-badge{position:absolute;top:-6px;right:-6px;min-width:24px;height:24px;border-radius:12px;background:var(--hw-parch);color:var(--hw-ink);font:800 var(--hw-fs-s,16px)/24px var(--font-sans);text-align:center;font-style:normal;padding:0 5px;box-shadow:0 1px 3px rgba(0,0,0,.5)}

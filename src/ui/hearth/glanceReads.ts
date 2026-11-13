@@ -11,6 +11,7 @@ import {harvestBacklogAlert} from '@/game/cerealProcessing';
 import {measureVillageWorkload} from '@/game/villageWorkload';
 import type {Unit} from '@/game/types';
 import type {Alert} from './glanceModel';
+import {wildAlert} from '@/game/wildCraftControl';
 
 export const RAIDER_SIGHT_METERS=140;
 const residents=(g:Game)=>g.state.units.filter(u=>u.team===0&&u.hp>0&&!u.expedition&&!u.visit);
@@ -60,6 +61,7 @@ export function detectAlerts(g:Game,workloadPercent:number|null=null):Alert[]{
  if(exposed>=8)out.push({kind:'exposed',severity:'warning',count:Math.floor(exposed),tip:`${Math.floor(exposed)} harvest units exposed to spoilage`});
  if(harvest)out.push({kind:'harvest',severity:'warning',count:1,tip:harvest});
  if(workloadPercent!==null&&workloadPercent>100)out.push({kind:'backlog',severity:'warning',count:Math.ceil(workloadPercent),tip:`Work backlog, ${Math.ceil(workloadPercent)}% of capacity`});
+ const wild=wildAlert(g);if(wild)out.push({kind:'wild',severity:'warning',count:wild.count,tip:wild.tip,at:{x:wild.x,y:g.height(wild.x,wild.z),z:wild.z}});
  return out;
 }
 export const workloadOf=(g:Game)=>measureVillageWorkload(g).workloadPercent;

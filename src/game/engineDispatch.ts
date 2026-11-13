@@ -1,4 +1,5 @@
-import {pauseWildWork,resumeWildWork} from './wildCraft';
+import {pauseWildWork,resumeWildWork,WILD_RECIPES} from './wildCraft';
+import {applyWildCommand,type WildBeginCommand,type WildCollectCommand} from './wildCraftControl';
 import {beginMethodRecordPickup} from './methodRecordPickup';
 import {beginDraftCartOrder,recoverDraftCart,setDraftCartPaused,cancelDraftCartOrder} from './draftCart';
 import {freePeople} from './peace';
@@ -34,6 +35,7 @@ import {assignGuardDuty,releaseGuardDuty,type GuardDutyKind} from './guardDuty';
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
  |{kind:'wild-work-control';projectId:number;paused:boolean}
+ |WildBeginCommand|WildCollectCommand
  |{kind:'method-record-pickup';recordId:number;unitId:number}
  |{kind:'draft-cart';unitId:number;mode:'hitch'|'detach'}
  |{kind:'recover-draft-cart';unitId:number;cartId:number}
@@ -91,6 +93,7 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
   const no=(reason:string)=>({accepted:false,reason});if(!isEngineDispatchCommand(command)||!isEngineSelection(selection))return no('Unsupported or malformed command payload');
   if('unitId' in command&&command.unitId!==undefined&&!g.state.units.some(u=>u.id===command.unitId&&u.team===0&&u.hp>0))return no('Original owned person unavailable');
   switch(command.kind){
+   case 'wild-begin':case 'wild-collect':return applyWildCommand(g,command,selection.selectedUnitIds);
    case 'wild-work-control':{const p=g.state.wildCraft?.projects.find(p=>p.id===command.projectId&&p.team===0),u=p&&g.state.units.find(u=>u.id===p.actorId&&u.team===0&&u.hp>0&&u.wildWorkId===p.id);if(!p||!u)return no('Original owned wild work unavailable');if(!!p.paused===command.paused)return no('Work is already in that state');const accepted=command.paused?pauseWildWork(g,u):resumeWildWork(g,u.id);return{accepted,reason:accepted?'Original paid work updated; contents retained at their actual place':'Original worker or paid workplace is unavailable'};}
 
    case 'draft-cart':return beginDraftCartOrder(g,command.unitId,command.mode);
@@ -247,6 +250,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'cancel-traded-teaching':{learnerId:id},
   'begin-production':{recipe:v=>typeof v==='string'&&Object.hasOwn(PRODUCTION_RECIPES,v),workplaceId:id,unitId:optionalId},
   'wild-work-control':{projectId:id,paused:bool},
+  'wild-begin':{recipe:v=>typeof v==='string'&&Object.hasOwn(WILD_RECIPES,v),unitId:optionalId,stationId:optionalId,critterId:optionalId,x:v=>v===undefined||typeof v==='number'&&Number.isFinite(v),z:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)},'wild-collect':{unitId:optionalId,projectId:optionalId},
   'pause-production':{projectId:id},'resume-production':{projectId:id,unitId:optionalId},
   'armor-repair':{unitId:id,workplaceId:optionalId},'armor-repair-control':{unitId:id,action:v=>v==='pause'||v==='resume'||v==='cancel'},
   'garment-repair':{unitId:id,slot:v=>v==='worn'||v==='spare',workplaceId:optionalId},'garment-repair-control':{unitId:id,action:v=>v==='pause'||v==='resume'||v==='cancel'},

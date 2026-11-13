@@ -115,11 +115,25 @@ async function lineup(file, ids, extra = {}) {
   }
   await stack(file, parts); void per;
 }
+/** Items v2: the real rig carrying the era's weapons for a society, flint to steel. */
+async function handsSheet() {
+  const skins = (process.env.HANDS_SKINS || 'civ:skoldar,civ:hanrei,civ:kaaltun').split(','), parts = [];
+  for (const skin of skins.filter(k => ALL.includes(k))) for (const era of [0, 2, 4]) {
+    const shield = (kind) => ({ shield: { kind, condition: .9 }, garment: { item: 'lightClothes', condition: .95 } });
+    const row = [['spearman', {}, {}], ['archer', {}, {}], ['swordsman', {}, {}], ['warden', {}, {}], ['spearman', {}, shield(era < 2 ? 'hideShield' : era < 4 ? 'bronzeShield' : 'woodShield')], ['worker', { role: 'priest' }, {}], ['leader', { cls: 'leader' }, {}]];
+    const people = row.map(([t, o, g], i) => P(skin, t, (i - 3) * 1.55, 0, { ...o, id: 70 + i * 11 + era, facing: .7 }, 'summer', g));
+    const r = await shoot(`hands-${skin}-${era}`, { width: 1500, height: 440, season: 'summer', era, seconds: .6, cam: { pos: [0, 1.7, 7.4], target: [0, 1.1, 0], fov: 32 }, people });
+    parts.push({ label: `${skin} era ${era}: spearman, archer, swordsman, warden (axe), shield-bearer, priest (staff), leader (standard)`, img: r.out });
+    stats[`${skin}-${era}`] = { close: r.info, rts: r.info };
+  }
+  await stack(path.join(outDir, 'hands.png'), parts);
+}
 const want = pos.length ? pos : ['all'];
 if (want[0] === 'civ') for (const s of want.slice(1)) await civSheet(s);
 else {
   const all = want.includes('all');
   if (all || want.includes('civs')) for (const s of ALL) await civSheet(s);
+  if (want.includes('hands')) await handsSheet();
   if (all || want.includes('roles')) await rolesSheet();
   if (all || want.includes('armor')) await armorSheet();
   if (all || want.includes('overview')) await lineup(path.join(outDir, 'overview.png'), ALL);

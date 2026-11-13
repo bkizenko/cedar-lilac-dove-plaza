@@ -22,7 +22,7 @@ const shim=path.join(root,'.hw-lucide-shim.mjs');
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'hw-ui-')),bundle=path.join(tmp,'ui.js');
 execFileSync(esbuild,['tools/render-preview/ui-hud-entry.tsx','--bundle','--format=esm','--outfile='+bundle,'--alias:@=./src','--loader:.css=empty','--jsx=automatic','--define:process.env.NODE_ENV="production"','--alias:three/addons/utils/BufferGeometryUtils.js=./tools/render-preview/shims/BufferGeometryUtils.js',...['EffectComposer','RenderPass','UnrealBloomPass','ShaderPass','FilmPass','OutputPass'].map(n=>`--alias:three/addons/postprocessing/${n}.js=./tools/render-preview/shims/postprocessing.js`),'--alias:node:zlib=./tools/render-preview/shims/empty.js','--alias:three/examples/jsm/libs/fflate.module.js=./tools/render-preview/shims/fflate.js','--alias:lucide-react='+shim,'--log-level=error'],{cwd:root,stdio:'inherit'});
 fs.rmSync(shim,{force:true});
-const css=['hearth.css','glance.css'].map(f=>fs.readFileSync(path.join(root,'src/ui/hearth',f),'utf8')).join('\n'),code=fs.readFileSync(bundle,'utf8');
+const css=['hearth.css','glance.css','wildPanel.css'].map(f=>fs.readFileSync(path.join(root,'src/ui/hearth',f),'utf8')).join('\n'),code=fs.readFileSync(bundle,'utf8');
 const bgFile=path.join(root,'docs/renders/map/3-wide.jpg');let bg=null;
 // The map renders are before|after composites: keep the right-hand (painterly default) half as the terrain backdrop.
 try{const sharp=createRequire('/home/claude/.npm-global/lib/node_modules/x.js')('sharp');bg=await sharp(bgFile).extract({left:800,top:36,width:800,height:414}).jpeg({quality:90}).toBuffer();}catch{}

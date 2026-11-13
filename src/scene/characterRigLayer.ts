@@ -5,6 +5,8 @@
  * world keeps the legacy meshes as invisible picking proxies, so selection and hover behave exactly as before. */
 import * as THREE from 'three';
 import {ensureInstanceCapacity} from './instanceCapacity';
+import {heldItemMesh,heldKey} from './itemRegistry';
+import {meshGeometry} from './itemGeometry';
 import {RIG_BONES,RIG_PIVOTS,bodyClassFor,boneMatrices,farParts,itemParts,mul,newBoneMatrices,composeEuler,rigMeshData,rigOutfit,tierForDistance,type BodyClass,type ItemId,type RigGear,type RigOutfit,type RigPart,type RigSlot,type RigBone} from './characterRig';
 import {DeathTracker,newAnimState,stepAnimator,CORPSE_RULES,type AnimContext,type AnimState,type UnitLike} from './characterAnim';
 import {lifePose} from './peopleLife';
@@ -31,6 +33,8 @@ function toGeometry(parts:readonly RigPart[],pivot:readonly number[],colors:Reco
  g.computeBoundingSphere();if(g.boundingSphere)g.boundingSphere.radius=Math.max(g.boundingSphere.radius,1.5);return g;
 }
 const hash=(s:string)=>(hashSeed(s)>>>0).toString(36);
+/** Items v2: a held item's detailed procedural model (society, era, shield kind), or null to fall back to the first rig's parts. */
+const heldItemGeometry=(item:ItemId,o:RigOutfit,era:number,tier:LodTier)=>{const m=heldItemMesh(item,{skin:o.look?.id,era,lod:tier===0?0:2,shieldKind:o.rendered.shield});if(!m)return null;const g=meshGeometry(m);if(g.boundingSphere)g.boundingSphere.radius=Math.max(g.boundingSphere.radius,1.5);return g;};
 /** A stable signature of one bone's parts and the colours they use, so identical bones of different outfits share one draw. */
 const SIGS=new WeakMap<RigOutfit,Map<string,string>>();
 function boneSignature(parts:readonly RigPart[],colors:Record<RigSlot,string>,tier:LodTier){
@@ -136,7 +140,7 @@ export class CharacterRigLayer{
   }
   for(const [sock,item] of [['itemR',itemR],['itemL',itemL]] as const){
    if(!item)continue;const id=w.identity(u.team);
-   const v=this.variant(`t${tier}|${item}|${item==='standard'||item==='shield'?hash(outfit.colors.flag+outfit.colors.flag2+outfit.colors.charge+(outfit.look?.shield??'')+(outfit.rendered.shield??'')+id.culture.flag.division):item==='staff'?hash((outfit.look?.id??'')+outfit.colors.trim):''}`,()=>toGeometry(itemParts(item,id.culture,outfit.look,{shield:outfit.rendered.shield as never}),[0,0,0],outfit.colors,tier));
+   const v=this.variant(`t${tier}|${item}|${heldKey(item,outfit.look?.id,w.era,outfit.rendered.shield)}|${item==='standard'||item==='shield'?hash(outfit.colors.flag+outfit.colors.flag2+outfit.colors.charge+(outfit.look?.shield??'')+(outfit.rendered.shield??'')+id.culture.flag.division):item==='staff'?hash((outfit.look?.id??'')+outfit.colors.trim):''}`,()=>heldItemGeometry(item,outfit,w.era,tier)??toGeometry(itemParts(item,id.culture,outfit.look,{shield:outfit.rendered.shield as never}),[0,0,0],outfit.colors,tier));
    if(!v)continue;mul(_wn,_u,this.matrices[sock]);this.push(v,_wn,col);
   }
   if(!override)this.stats.people++;return true;
