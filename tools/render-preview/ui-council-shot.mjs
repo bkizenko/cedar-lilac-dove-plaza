@@ -25,7 +25,7 @@ const css=fs.readFileSync(path.join(root,'src/ui/hearth/hearth.css'),'utf8'),cod
 const html=`<!doctype html><meta charset=utf-8><style>html,body{margin:0;background:#1b140d;color:#f8efd9;font-family:system-ui,sans-serif}${css}</style><div id=root></div><script type=module src=/ui.js></script>`;
 const server=http.createServer((q,r)=>{if(q.url==='/ui.js'){r.writeHead(200,{'content-type':'text/javascript'});r.end(code);}else{r.writeHead(200,{'content-type':'text/html'});r.end(html);}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
-let pw;for(const b of [root,'/home/claude/.npm-global/lib/node_modules']){try{pw=createRequire(path.join(b,'x.js'))('playwright');break;}catch{}}
+let pw;for(const b of ['/home/claude/.npm-global/lib/node_modules',root]){try{pw=createRequire(path.join(b,'x.js'))('playwright');break;}catch{}}
 const browser=await pw.chromium.launch();
 const page=await browser.newPage({viewport:{width:+(flags.w||1440),height:+(flags.h||900)}});
 page.on('pageerror',e=>console.error('[pageerror]',e.message));
