@@ -21,13 +21,14 @@ export function fieldStage(field:{fallowYear?:number;crop?:CropLike},time:number
 }
 export type BoundaryKind='bank'|'wattle'|'hedge'|'stone';
 /** Boundary by age and local habit (variant 0-3 from the village style) and slope: banks first, then wattle, hedges, drystone. */
-export function boundaryKind(era:number,variant:number,grade=0):BoundaryKind{
+/** `noStone` (terrain model v3 hillside fields that are not stone-terraced): a steep field keeps an earth bank or a hedge, never a drystone wall. */
+export function boundaryKind(era:number,variant:number,grade=0,noStone=false):BoundaryKind{
  const e=Math.max(0,Math.floor(era)),v=((Math.floor(variant)%4)+4)%4;
- if(e>=1&&grade>.35)return'stone';
+ if(!noStone&&e>=1&&grade>.35)return'stone';
  if(e<=0)return'bank';
  if(e===1)return v%2===0?'wattle':'bank';
- if(e===2)return v===2?'stone':v===1?'wattle':'hedge';
- return v%2===1?'stone':'hedge';
+ if(e===2)return v===2?(noStone?'bank':'stone'):v===1?'wattle':'hedge';
+ return v%2===1?(noStone?'hedge':'stone'):'hedge';
 }
 /** Small stable hash in [0,1). */
 export function hash01(a:number,b=0,c=0){let h=Math.imul(Math.floor(a*1000)^0x9e3779b1,0x85ebca6b)^Math.imul(Math.floor(b*1000)+0x7f4a7c15,0xc2b2ae35)^Math.imul(c+0x165667b1,0x27d4eb2f);h^=h>>>15;h=Math.imul(h,0x2c1b3c6d);h^=h>>>12;return((h>>>0)%1000003)/1000003;}

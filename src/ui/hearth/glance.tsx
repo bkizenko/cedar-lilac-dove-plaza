@@ -1,11 +1,12 @@
 import {useEffect,useMemo,useReducer,useRef,useState,type ReactNode} from 'react';
-import {ArrowUp,ArrowDown,ArrowRight,Minus,Swords,Droplets,Wheat,Snowflake,Package,ClipboardList,Users,BookOpen,Bell,ChevronRight,X,Flag,Radar,Gem,Footprints} from 'lucide-react';
+import {ArrowUp,ArrowDown,ArrowRight,Minus,Swords,Droplets,Wheat,Snowflake,Package,ClipboardList,Users,BookOpen,Bell,ChevronRight,X,Flag,Radar,Gem,Footprints,Coins,TriangleAlert,Newspaper} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import type {HudSnapshot} from '@/game/types';
 import {readyFoodStock} from '../FoodStoreReadout';
 import {GameTooltip} from '../GameTooltip';
 import {SocietyFlag} from '../SocietyFlag';
 import {cx,IconBtn} from './kit';
+import {FoldHandle,FoldMin,useFold} from './fold';
 import {RES_ICON,RES_NAME} from './icons';
 import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,infoVisible,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
 import {detectAlerts,foodDays,waterDays,workloadOf} from './glanceReads';
@@ -34,7 +35,10 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
   ...(hud.age>=2||hud.iron>0?[{k:'iron' as const,value:hud.iron,stock:hud.iron,days:null,fill:null,level:'unknown' as const,trackTrend:true,tip:'Iron in stores.'}]:[]),
  ];
  for(const c of cells){if(!c.trackTrend)continue;let t=trackers.current.get(c.k);if(!t){t=new TrendTracker(simulationDaySeconds);trackers.current.set(c.k,t);}t.push(hud.time,c.stock,game?.state);}
- return <div className="hw-top-left">
+ const f=useFold('resources');
+ if(!f.showPanel)return <FoldHandle f={f} icon={<Coins size={24}/>} tone={cells.some(c=>c.level==='critical')?'bad':undefined}/>;
+ return <div className={cx('hw-top-left',f.cls)}>
+  <FoldMin f={f}/>
   {engine&&<button type="button" className="hw-flag" aria-label={`Council of ${engine.game.tribe(0).name}`} onClick={()=>onOpen('council')}><SocietyFlag game={engine.game} team={0}/><span>{engine.game.tribe(0).name}</span></button>}
   <ul className="hw-res hw-supply" aria-label="Village stores">{cells.map(c=>{
    const I=RES_ICON[c.k],trend=c.trackTrend?trackers.current.get(c.k)?.trend()??null:null,T=trend&&trend!=='flat'?TREND_ICON[trend]:null;
@@ -101,19 +105,29 @@ export function PriorityStack({hud,engine,alerts,onOpen,hidden,extra}:{hud:HudSn
  if(hud.banner&&!hud.placing&&!isKeyTip(hud.banner))info.push({id:'banner:'+hud.banner,sticky:false,icon:<Bell size={26}/>,title:hud.banner,dismiss:()=>setGone(g=>[...g,'banner:'+hud.banner])});
  const shown=useInfoClock(info.filter(n=>!gone.includes(n.id)));
  const idle=hud.idleWorkers>0&&hud.selection.kind==='none';
+ const fa=useFold('alerts'),fn=useFold('notes');
+ const alertCount=(critical?1:0)+chips.length+(idle?1:0);
  return <aside className={cx('hw-notes hw-prio',hidden&&'is-hidden')} aria-label="Notifications">
-  {critical&&<article className="hw-note hw-crit" role="alert" aria-label={critical.tip}>
-   <span className="hw-medal hw-medal-s">{ALERT_ICON[critical.kind]({size:30})}</span>
-   <div className="hw-note-main"><b>{CRIT_TITLE[critical.kind]??critical.tip}</b></div>
-   <span className="hw-chip t-bad" title={critical.tip}>{critical.count}</span>
-   <button type="button" className="hw-note-act" onClick={()=>critical.kind==='raiders'?(engine?.game.soundDefenseHorn(),engine?.pushHud()):alertAction(critical,engine)}>{critical.kind==='raiders'?'Horn':'Find'}</button>
-  </article>}
-  {(chips.length>0||idle)&&<div className="hw-chiprow" role="group" aria-label="Needs attention">
-   {chips.map(a=><GameTooltip key={a.kind} title={a.tip}><button type="button" className={cx('hw-chip hw-chip-btn',a.severity==='critical'?'t-bad':'t-warn')} aria-label={a.tip} onClick={()=>alertAction(a,engine)}>{ALERT_ICON[a.kind]({size:24})}{a.kind==='harvest'?'':a.count}</button></GameTooltip>)}
-   {idle&&<GameTooltip title={`${hud.idleWorkers} idle`} description="Jump to the next idle resident"><button type="button" className="hw-chip hw-chip-btn" aria-label={`${hud.idleWorkers} idle`} onClick={()=>engine?.focusIdle()}><Users size={24}/>{hud.idleWorkers}</button></GameTooltip>}
+  <div className="hw-fold-bar">
+   {fa.showHandle?<FoldHandle f={fa} icon={<TriangleAlert size={24}/>} badge={alertCount} tone={critical?'bad':alertCount?'warn':undefined}/>:alertCount>0&&<FoldMin f={fa} text/>}
+   {fn.showHandle?<FoldHandle f={fn} icon={<Newspaper size={24}/>} badge={shown.length}/>:shown.length>0&&<FoldMin f={fn} text/>}
+  </div>
+  {fa.showPanel&&<div className={cx('hw-fold-group',fa.cls)} data-fold="alerts">
+   {critical&&<article className="hw-note hw-crit" role="alert" aria-label={critical.tip}>
+    <span className="hw-medal hw-medal-s">{ALERT_ICON[critical.kind]({size:30})}</span>
+    <div className="hw-note-main"><b>{CRIT_TITLE[critical.kind]??critical.tip}</b></div>
+    <span className="hw-chip t-bad" title={critical.tip}>{critical.count}</span>
+    <button type="button" className="hw-note-act" onClick={()=>critical.kind==='raiders'?(engine?.game.soundDefenseHorn(),engine?.pushHud()):alertAction(critical,engine)}>{critical.kind==='raiders'?'Horn':'Find'}</button>
+   </article>}
+   {(chips.length>0||idle)&&<div className="hw-chiprow" role="group" aria-label="Needs attention">
+    {chips.map(a=><GameTooltip key={a.kind} title={a.tip}><button type="button" className={cx('hw-chip hw-chip-btn',a.severity==='critical'?'t-bad':'t-warn')} aria-label={a.tip} onClick={()=>alertAction(a,engine)}>{ALERT_ICON[a.kind]({size:24})}{a.kind==='harvest'?'':a.count}</button></GameTooltip>)}
+    {idle&&<GameTooltip title={`${hud.idleWorkers} idle`} description="Jump to the next idle resident"><button type="button" className="hw-chip hw-chip-btn" aria-label={`${hud.idleWorkers} idle`} onClick={()=>engine?.focusIdle()}><Users size={24}/>{hud.idleWorkers}</button></GameTooltip>}
+   </div>}
   </div>}
-  {shown.map(({n,fading})=><InfoCard key={n.id} n={n} fading={fading}/>)}
-  {extra}
+  {fn.showPanel&&<div className={cx('hw-fold-group',fn.cls)} data-fold="notes">
+   {shown.map(({n,fading})=><InfoCard key={n.id} n={n} fading={fading}/>)}
+   {extra}
+  </div>}
  </aside>;
 }
 

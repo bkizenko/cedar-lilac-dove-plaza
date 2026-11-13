@@ -34,9 +34,9 @@ export function lifePose(pose:Pose,clip:ClipId,time:number,id:number,age=.4,brea
   o.parts.head[1]+=look*.5;o.parts.head[0]+=Math.sin(time*TAU*.031+ph)*.05;
   const g=gestureFor(id,time),ease=Math.min(1,Math.max(0,(((time/(18+lifeRand(id,3)*20)+lifeRand(id,4)*7)%1)*8)));
   const e=ease*ease*(3-2*ease),fade=Math.min(1,(1-((time/(18+lifeRand(id,3)*20)+lifeRand(id,4)*7)%1))*8),w=Math.min(e,fade<0?0:fade);
-  if(g==='clasp'){o.parts.armL[0]-=.55*w;o.parts.armR[0]-=.55*w;o.parts.armL[2]+=.34*w;o.parts.armR[2]-=.34*w;}
-  else if(g==='fold'){o.parts.armL[0]-=.95*w;o.parts.armR[0]-=.95*w;o.parts.armL[2]+=.62*w;o.parts.armR[2]-=.62*w;}
-  else if(g==='hip'){o.parts.armR[2]-=.5*w;o.parts.armR[0]+=.1*w;}
+  if(g==='clasp'){o.parts.armL[0]-=.42*w;o.parts.armR[0]-=.42*w;o.parts.armL[2]+=.2*w;o.parts.armR[2]-=.2*w;}
+  else if(g==='fold'){o.parts.armL[0]-=.62*w;o.parts.armR[0]-=.62*w;o.parts.armL[2]+=.3*w;o.parts.armR[2]-=.3*w;}
+  else if(g==='hip'){o.parts.armR[2]-=.34*w;o.parts.armR[0]+=.1*w;}
  }
  return o;
 }

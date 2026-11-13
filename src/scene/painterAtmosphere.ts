@@ -12,7 +12,7 @@ export function painterAtmosphere(i:AtmosphereInput):AtmospherePalette{
  const overcast=wx==='storm'?1:wx==='rain'||wx==='flood'?.85:wx==='mist'?.7:wx==='frost'?.35:wx==='drought'?0:0;
  const goldenWeather=wx==='golden'?1:0;
  // Clear-day base: deep cobalt zenith, warm pale horizon.
- let zen='#3f78b8',mid='#82b2dc',hor='#d8e4e8',gnd='#b8b49a',sun='#fff0cf',hemiSky='#b7d3f0',hemiGround='#8a7a55',fog='#c6d8e3';
+ let zen='#3f78b8',mid='#82b2dc',hor='#cde0ec',gnd='#b8b49a',sun='#fff0cf',hemiSky='#b7d3f0',hemiGround='#8a7a55',fog='#c5d9e8';
  // Low sun (dawn, dusk, late afternoon): amber horizon, violet-blue zenith.
  const warm=Math.max(i.dawn*.9,i.dusk*1,low*.75,goldenWeather);
  zen=mixHex(zen,'#4a5f9e',warm*.6);mid=mixHex(mid,'#c9a6a0',warm*.55);hor=mixHex(hor,'#f6b077',warm*.9);fog=mixHex(fog,'#e7bd93',warm*.75);
@@ -27,7 +27,8 @@ export function painterAtmosphere(i:AtmosphereInput):AtmospherePalette{
  if(wx==='flood')fog=mixHex(fog,'#7f9894',.4);
  // Night: deep blue, moonlit.
  if(i.night){zen='#0b1430';mid='#182444';hor='#2c3b5e';gnd='#1a2236';fog='#273450';sun='#aebde6';hemiSky='#6a7db0';hemiGround='#2a3348';}
- gnd=mixHex(gnd,fog,.5);
+ // below the horizon the dome is the haze itself, so a sea or a plain meets the sky with no seam
+ gnd=mixHex(gnd,fog,.92);
  const sunIntensity=i.night?.7:(1.75+e*1.1+(i.dawn+i.dusk)*.45)*(1-overcast*.62)*(wx==='drought'?1.06:1)*(1-Math.max(i.winter,i.snow)*.1);
  const hemiIntensity=i.night?.8:(.9+e*.22+low*.5)*(1+overcast*.35);
  const fillIntensity=i.night?.35:.12+overcast*.18;
@@ -51,7 +52,7 @@ export function makePainterSky(){
    float fbm(vec2 p){float s=0.,a=.5;for(int i=0;i<4;i++){s+=a*n2(p);p=p*2.03+vec2(7.3,3.1);a*=.5;}return s;}
    void main(){
     vec3 d=normalize(vDir);float y=d.y;
-    vec3 col=mix(uHorizon,uMid,smoothstep(0.,.22,y));col=mix(col,uZenith,smoothstep(.12,.85,y));
+    vec3 col=mix(uHorizon,uMid,smoothstep(0.,.3,y));col=mix(col,uZenith,smoothstep(.12,.85,y));
     col=mix(col,uGround,smoothstep(0.,-.35,y)*(y<0.?1.:0.));
     float sd=max(dot(d,normalize(uSunDir)),0.);
     float glow=pow(sd,6.)*.34+pow(sd,48.)*.42;col+=uSun*glow*(1.-uNight*.8);

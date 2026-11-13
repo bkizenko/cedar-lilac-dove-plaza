@@ -2,6 +2,7 @@ import {shallowFishSite,SHALLOW_FISH_SITE_RULES} from './shallowFishSites';
 import {buildBankTerrain,bankHeightAt,type BankTerrain} from './bankTerrain';
 import{repairDistributedRiparian,maximumAddedEdgeRise,DISTRIBUTED_RIPARIAN_RULES}from'./distributedRiparian';
 import {distributedGeography} from './distributedGeography';
+import {ChunkTerrain,sourceFromWorld} from './terrainChunks';
 import {buildLocalWaterIndex,indexedWaterAt,prepareOwnedWaterWorld} from './indexedLocalWater';
 import{measureCoastFingerprints,COAST_FINGERPRINT_RULES}from'./coastFingerprint';
 import {diverseLandforms,diverseGeography} from './coastalVariety';
@@ -28,6 +29,8 @@ import { fbm, mulberry32 } from "./rng";
 import type { ResKind, ResourceNode } from "./types";
 
 export type WorldData = {
+  /** opt-in chunked terrain (worldOptions.chunkTerrainVersion 1); non-enumerable, see attachChunkTerrain */
+  readonly chunkTerrain?:ChunkTerrain;
   readonly bankTerrain?:BankTerrain;
   geographyDistribution?:ReturnType<typeof distributedGeography>['distribution'];
   coastVariety?:ReturnType<typeof measureCoastFingerprints>;
@@ -139,9 +142,15 @@ function node(
 /** Reject unsuitable V15 candidates deterministically; never publish missing
  * geography or an unsafe camp just to make a seed succeed. Old versions keep
  * their byte-for-byte generation path. */
+/** Opt-in (request.chunkTerrainVersion 1): attach the chunked terrain query layer as a non-enumerable `chunkTerrain`, so saves, clones and the legacy path never see it. */
+function attachChunkTerrain(world:WorldData,seed:number):WorldData{
+ if(world.options?.chunkTerrainVersion!==1)return world;
+ Object.defineProperty(world,'chunkTerrain',{value:new ChunkTerrain(sourceFromWorld(world,{seed,scale:world.options.chunkTerrainScale??1})),enumerable:false,writable:true,configurable:true});
+ return world;
+}
 export function generateWorld(seed:number,version=1,request:WorldRequest={}):WorldData{
  if(version===20)return prepareOwnedWaterWorld(generatePublishedV20(seed,request),true);
- if(version>=21)return prepareOwnedWaterWorld(generateMapWorld(seed,request),true);
+ if(version>=21)return attachChunkTerrain(prepareOwnedWaterWorld(generateMapWorld(seed,request),true),seed);
  if(version<15)return generateWorldCandidate(seed,version,request);
  const rejectedReasons:string[]=[],random=mulberry32(seed^0x157f4a31);
  for(let attempt=0;attempt<16;attempt++){

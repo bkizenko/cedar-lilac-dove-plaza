@@ -1,0 +1,1713 @@
+{
+ "legacy": {
+  "file": "contact-legacy-unenveloped-24.png",
+  "mean": [
+   154.7,
+   136.3,
+   88.4,
+   255
+  ],
+  "infos": [
+   {
+    "label": "legacy free 100/0",
+    "id": "gen:civ-100-0",
+    "name": "Shisulul",
+    "mode": "free",
+    "grammar": "sahelan",
+    "roof": "flatSpiked",
+    "banner": {
+     "style": "swallow",
+     "emblem": "onionStar"
+    },
+    "cut": "trousers",
+    "head": "hood",
+    "climate": "arid",
+    "palette": {
+     "wall": "#cfc5ae",
+     "wall2": "#707f4a",
+     "roof": "#b79552",
+     "trim": "#6b6738",
+     "accent": "#c87b2d",
+     "cloth": "#a03631",
+     "ground": "#9fa07c"
+    },
+    "sat": [
+     0.26,
+     0.26,
+     0.41,
+     0.31,
+     0.63,
+     0.53,
+     0.16
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 100/1",
+    "id": "gen:civ-100-1",
+    "name": "Karuar",
+    "mode": "remix",
+    "grammar": "kaaltun",
+    "roof": "saddle",
+    "banner": {
+     "style": "swallow",
+     "emblem": "stepStar"
+    },
+    "cut": "kilt",
+    "head": "band",
+    "climate": "wet",
+    "palette": {
+     "wall": "#c4c67e",
+     "wall2": "#845932",
+     "roof": "#90a240",
+     "trim": "#5d7450",
+     "accent": "#41746a",
+     "cloth": "#41746a",
+     "ground": "#4c7234"
+    },
+    "sat": [
+     0.39,
+     0.45,
+     0.43,
+     0.18,
+     0.28,
+     0.28,
+     0.37
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 100/2",
+    "id": "gen:civ-100-2",
+    "name": "Kaorar",
+    "mode": "free",
+    "grammar": "mekhari",
+    "roof": "saddle",
+    "banner": {
+     "style": "swallow",
+     "emblem": "lotus"
+    },
+    "cut": "cape",
+    "head": "hood",
+    "climate": "wet",
+    "palette": {
+     "wall": "#cfc8ae",
+     "wall2": "#d9cca0",
+     "roof": "#465c6f",
+     "trim": "#94a67e",
+     "accent": "#35c782",
+     "cloth": "#38a08f",
+     "ground": "#9fa17c"
+    },
+    "sat": [
+     0.26,
+     0.43,
+     0.23,
+     0.18,
+     0.58,
+     0.48,
+     0.16
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 100/3",
+    "id": "gen:civ-100-3",
+    "name": "Shiruok",
+    "mode": "remix",
+    "grammar": "sandrill",
+    "roof": "flatParapet",
+    "banner": {
+     "style": "hanging",
+     "emblem": "urnSteps"
+    },
+    "cut": "tunic",
+    "head": "wrap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#c59f69",
+     "wall2": "#c0a77b",
+     "roof": "#707f67",
+     "trim": "#e3d5a0",
+     "accent": "#6e612c",
+     "cloth": "#c2d15a",
+     "ground": "#bc8b56"
+    },
+    "sat": [
+     0.44,
+     0.35,
+     0.1,
+     0.54,
+     0.43,
+     0.56,
+     0.43
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 100/4",
+    "id": "gen:civ-100-4",
+    "name": "Baishine",
+    "mode": "free",
+    "grammar": "skoldar",
+    "roof": "turfLow",
+    "banner": {
+     "style": "flag",
+     "emblem": "lotus"
+    },
+    "cut": "poncho",
+    "head": "hood",
+    "climate": "cold",
+    "palette": {
+     "wall": "#cfc6ae",
+     "wall2": "#9c968a",
+     "roof": "#5d6670",
+     "trim": "#778162",
+     "accent": "#69b936",
+     "cloth": "#62a13e",
+     "ground": "#9fa07c"
+    },
+    "sat": [
+     0.26,
+     0.08,
+     0.09,
+     0.14,
+     0.55,
+     0.44,
+     0.16
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 100/5",
+    "id": "gen:civ-100-5",
+    "name": "Ishmirul",
+    "mode": "remix",
+    "grammar": "mekhari",
+    "roof": "saddle",
+    "banner": {
+     "style": "swallow",
+     "emblem": "boatHorns"
+    },
+    "cut": "cape",
+    "head": "band",
+    "climate": "wet",
+    "palette": {
+     "wall": "#c8c263",
+     "wall2": "#a39e46",
+     "roof": "#778439",
+     "trim": "#54401d",
+     "accent": "#336484",
+     "cloth": "#336484",
+     "ground": "#607544"
+    },
+    "sat": [
+     0.48,
+     0.4,
+     0.4,
+     0.49,
+     0.44,
+     0.44,
+     0.26
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 101/0",
+    "id": "gen:civ-101-0",
+    "name": "Kavenul",
+    "mode": "free",
+    "grammar": "vedara",
+    "roof": "chhatri",
+    "banner": {
+     "style": "hanging",
+     "emblem": "prowHead"
+    },
+    "cut": "kilt",
+    "head": "hood",
+    "climate": "wet",
+    "palette": {
+     "wall": "#a85a3f",
+     "wall2": "#b79352",
+     "roof": "#5d6970",
+     "trim": "#7e8445",
+     "accent": "#30d05c",
+     "cloth": "#36b068",
+     "ground": "#8c6a45"
+    },
+    "sat": [
+     0.45,
+     0.41,
+     0.09,
+     0.31,
+     0.63,
+     0.53,
+     0.34
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 101/1",
+    "id": "gen:civ-101-1",
+    "name": "Shiorul",
+    "mode": "remix",
+    "grammar": "hanrei",
+    "roof": "upturnedHip",
+    "banner": {
+     "style": "hanging",
+     "emblem": "mountainWave"
+    },
+    "cut": "robe",
+    "head": "brim",
+    "climate": "wet",
+    "palette": {
+     "wall": "#d6bf94",
+     "wall2": "#8b3330",
+     "roof": "#91644e",
+     "trim": "#8b3330",
+     "accent": "#c88859",
+     "cloth": "#9c485c",
+     "ground": "#8a8c80"
+    },
+    "sat": [
+     0.45,
+     0.49,
+     0.3,
+     0.49,
+     0.5,
+     0.37,
+     0.05
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 101/2",
+    "id": "gen:civ-101-2",
+    "name": "Ishmirok",
+    "mode": "free",
+    "grammar": "aureline",
+    "roof": "terracottaGable",
+    "banner": {
+     "style": "flag",
+     "emblem": "stepStar"
+    },
+    "cut": "tunic",
+    "head": "brim",
+    "climate": "temperate",
+    "palette": {
+     "wall": "#c9a57a",
+     "wall2": "#c8b46a",
+     "roof": "#c0623a",
+     "trim": "#899556",
+     "accent": "#32be63",
+     "cloth": "#983575",
+     "ground": "#9c9062"
+    },
+    "sat": [
+     0.42,
+     0.46,
+     0.54,
+     0.27,
+     0.58,
+     0.48,
+     0.23
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 101/3",
+    "id": "gen:civ-101-3",
+    "name": "Kaelul",
+    "mode": "remix",
+    "grammar": "tigrane",
+    "roof": "vault",
+    "banner": {
+     "style": "swallow",
+     "emblem": "torches"
+    },
+    "cut": "robe",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#b28051",
+     "wall2": "#a38952",
+     "roof": "#ab8e52",
+     "trim": "#335296",
+     "accent": "#d5b94e",
+     "cloth": "#36509b",
+     "ground": "#aa9367"
+    },
+    "sat": [
+     0.39,
+     0.33,
+     0.35,
+     0.49,
+     0.62,
+     0.48,
+     0.28
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 101/4",
+    "id": "gen:civ-101-4",
+    "name": "Thaelul",
+    "mode": "free",
+    "grammar": "skoldar",
+    "roof": "turfLow",
+    "banner": {
+     "style": "swallow",
+     "emblem": "laurelColumn"
+    },
+    "cut": "trousers",
+    "head": "cap",
+    "climate": "cold",
+    "palette": {
+     "wall": "#6f7f4a",
+     "wall2": "#b79a52",
+     "roof": "#806d39",
+     "trim": "#7d7b59",
+     "accent": "#2d88c9",
+     "cloth": "#354cad",
+     "ground": "#6f7d4a"
+    },
+    "sat": [
+     0.26,
+     0.41,
+     0.38,
+     0.17,
+     0.63,
+     0.53,
+     0.26
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 101/5",
+    "id": "gen:civ-101-5",
+    "name": "Anthaul",
+    "mode": "remix",
+    "grammar": "nilemark",
+    "roof": "flatSpiked",
+    "banner": {
+     "style": "streamers",
+     "emblem": "prowHead"
+    },
+    "cut": "kilt",
+    "head": "band",
+    "climate": "arid",
+    "palette": {
+     "wall": "#e0e8c6",
+     "wall2": "#bdb275",
+     "roof": "#57ac54",
+     "trim": "#3f43ac",
+     "accent": "#52ce3d",
+     "cloth": "#e7f4e4",
+     "ground": "#d7da90"
+    },
+    "sat": [
+     0.42,
+     0.35,
+     0.35,
+     0.46,
+     0.6,
+     0.42,
+     0.5
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 102/0",
+    "id": "gen:civ-102-0",
+    "name": "Ruanok",
+    "mode": "free",
+    "grammar": "sahelan",
+    "roof": "flatSpiked",
+    "banner": {
+     "style": "swallow",
+     "emblem": "stepStar"
+    },
+    "cut": "trousers",
+    "head": "brim",
+    "climate": "arid",
+    "palette": {
+     "wall": "#c9a87a",
+     "wall2": "#9c978a",
+     "roof": "#5d6470",
+     "trim": "#8a8262",
+     "accent": "#d4b836",
+     "cloth": "#90a02e",
+     "ground": "#9c9162"
+    },
+    "sat": [
+     0.42,
+     0.08,
+     0.09,
+     0.17,
+     0.65,
+     0.55,
+     0.23
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 102/1",
+    "id": "gen:civ-102-1",
+    "name": "Venmiran",
+    "mode": "remix",
+    "grammar": "sandrill",
+    "roof": "flatParapet",
+    "banner": {
+     "style": "twin",
+     "emblem": "urnSteps"
+    },
+    "cut": "robe",
+    "head": "braids",
+    "climate": "arid",
+    "palette": {
+     "wall": "#c96472",
+     "wall2": "#a64958",
+     "roof": "#b16f80",
+     "trim": "#e5a29c",
+     "accent": "#762266",
+     "cloth": "#de4b91",
+     "ground": "#c05450"
+    },
+    "sat": [
+     0.48,
+     0.39,
+     0.3,
+     0.58,
+     0.55,
+     0.69,
+     0.47
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 102/2",
+    "id": "gen:civ-102-2",
+    "name": "Anshiok",
+    "mode": "free",
+    "grammar": "rusvolt",
+    "roof": "plankGable",
+    "banner": {
+     "style": "swallow",
+     "emblem": "knotRing"
+    },
+    "cut": "tunic",
+    "head": "none",
+    "climate": "cold",
+    "palette": {
+     "wall": "#c8b96a",
+     "wall2": "#8f6e43",
+     "roof": "#465c6f",
+     "trim": "#825736",
+     "accent": "#d3593e",
+     "cloth": "#a63d33",
+     "ground": "#9c9a5a"
+    },
+    "sat": [
+     0.46,
+     0.36,
+     0.23,
+     0.41,
+     0.63,
+     0.53,
+     0.27
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 102/3",
+    "id": "gen:civ-102-3",
+    "name": "Shishiul",
+    "mode": "remix",
+    "grammar": "hanrei",
+    "roof": "saddle",
+    "banner": {
+     "style": "twin",
+     "emblem": "glyphMask"
+    },
+    "cut": "robe",
+    "head": "brim",
+    "climate": "wet",
+    "palette": {
+     "wall": "#dbc893",
+     "wall2": "#b07c4e",
+     "roof": "#6b715a",
+     "trim": "#93382b",
+     "accent": "#dea64a",
+     "cloth": "#b5343a",
+     "ground": "#8f957b"
+    },
+    "sat": [
+     0.5,
+     0.39,
+     0.11,
+     0.55,
+     0.69,
+     0.55,
+     0.11
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 102/4",
+    "id": "gen:civ-102-4",
+    "name": "Venloan",
+    "mode": "free",
+    "grammar": "mekhari",
+    "roof": "saddle",
+    "banner": {
+     "style": "flag",
+     "emblem": "terraceSun"
+    },
+    "cut": "robe",
+    "head": "band",
+    "climate": "wet",
+    "palette": {
+     "wall": "#8f6c43",
+     "wall2": "#cfc7ae",
+     "roof": "#766145",
+     "trim": "#988a93",
+     "accent": "#713ec7",
+     "cloth": "#5a3a9b",
+     "ground": "#7f7347"
+    },
+    "sat": [
+     0.36,
+     0.26,
+     0.26,
+     0.06,
+     0.55,
+     0.46,
+     0.28
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 102/5",
+    "id": "gen:civ-102-5",
+    "name": "Kashiul",
+    "mode": "remix",
+    "grammar": "nilemark",
+    "roof": "flatPalm",
+    "banner": {
+     "style": "pennant",
+     "emblem": "crescentStar"
+    },
+    "cut": "kilt",
+    "head": "none",
+    "climate": "arid",
+    "palette": {
+     "wall": "#e3e6c4",
+     "wall2": "#c8cd9d",
+     "roof": "#72a455",
+     "trim": "#3f50a7",
+     "accent": "#78c83c",
+     "cloth": "#e8f2e0",
+     "ground": "#d8d58e"
+    },
+    "sat": [
+     0.4,
+     0.32,
+     0.32,
+     0.45,
+     0.56,
+     0.41,
+     0.49
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 103/0",
+    "id": "gen:civ-103-0",
+    "name": "Venthaok",
+    "mode": "free",
+    "grammar": "nilemark",
+    "roof": "flatPalm",
+    "banner": {
+     "style": "pennant",
+     "emblem": "prowHead"
+    },
+    "cut": "kilt",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#c9a47a",
+     "wall2": "#cfc6ae",
+     "roof": "#c0603a",
+     "trim": "#8c9c93",
+     "accent": "#2fa4c5",
+     "cloth": "#3890ac",
+     "ground": "#9c8f62"
+    },
+    "sat": [
+     0.42,
+     0.26,
+     0.54,
+     0.07,
+     0.61,
+     0.51,
+     0.23
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 103/1",
+    "id": "gen:civ-103-1",
+    "name": "Dresulok",
+    "mode": "remix",
+    "grammar": "rusvolt",
+    "roof": "feltDome",
+    "banner": {
+     "style": "flag",
+     "emblem": "anvilHammer"
+    },
+    "cut": "kilt",
+    "head": "cap",
+    "climate": "cold",
+    "palette": {
+     "wall": "#7c3b2c",
+     "wall2": "#a6684f",
+     "roof": "#b8bcb1",
+     "trim": "#e4bfa3",
+     "accent": "#b3356c",
+     "cloth": "#752959",
+     "ground": "#585e34"
+    },
+    "sat": [
+     0.48,
+     0.36,
+     0.08,
+     0.55,
+     0.54,
+     0.48,
+     0.29
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 103/2",
+    "id": "gen:civ-103-2",
+    "name": "Kadreul",
+    "mode": "free",
+    "grammar": "skoldar",
+    "roof": "plankGable",
+    "banner": {
+     "style": "pennant",
+     "emblem": "mountainWave"
+    },
+    "cut": "cape",
+    "head": "cap",
+    "climate": "cold",
+    "palette": {
+     "wall": "#717f4a",
+     "wall2": "#9c958a",
+     "roof": "#76645a",
+     "trim": "#6f866d",
+     "accent": "#3bd872",
+     "cloth": "#35a62d",
+     "ground": "#707d4a"
+    },
+    "sat": [
+     0.26,
+     0.08,
+     0.13,
+     0.1,
+     0.67,
+     0.57,
+     0.26
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 103/3",
+    "id": "gen:civ-103-3",
+    "name": "Orshian",
+    "mode": "remix",
+    "grammar": "mekhari",
+    "roof": "saddle",
+    "banner": {
+     "style": "hanging",
+     "emblem": "boatHorns"
+    },
+    "cut": "wrap",
+    "head": "brim",
+    "climate": "wet",
+    "palette": {
+     "wall": "#b3ca68",
+     "wall2": "#b0a764",
+     "roof": "#408e3b",
+     "trim": "#5a561f",
+     "accent": "#3a358e",
+     "cloth": "#3a358e",
+     "ground": "#597b46"
+    },
+    "sat": [
+     0.48,
+     0.32,
+     0.41,
+     0.49,
+     0.46,
+     0.46,
+     0.27
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy free 103/4",
+    "id": "gen:civ-103-4",
+    "name": "Orruok",
+    "mode": "free",
+    "grammar": "tigrane",
+    "roof": "vault",
+    "banner": {
+     "style": "twin",
+     "emblem": "tripleSpire"
+    },
+    "cut": "cape",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#ece2cc",
+     "wall2": "#a85d3f",
+     "roof": "#b44e3a",
+     "trim": "#886332",
+     "accent": "#9dd839",
+     "cloth": "#6fa32d",
+     "ground": "#aeae8b"
+    },
+    "sat": [
+     0.46,
+     0.45,
+     0.51,
+     0.46,
+     0.67,
+     0.57,
+     0.18
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "legacy remix 103/5",
+    "id": "gen:civ-103-5",
+    "name": "Lobaan",
+    "mode": "remix",
+    "grammar": "tigrane",
+    "roof": "flatPalm",
+    "banner": {
+     "style": "streamers",
+     "emblem": "stepStar"
+    },
+    "cut": "robe",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#9c6d49",
+     "wall2": "#8f7342",
+     "roof": "#586060",
+     "trim": "#2e4a7d",
+     "accent": "#bc933b",
+     "cloth": "#324a73",
+     "ground": "#97815a"
+    },
+    "sat": [
+     0.36,
+     0.37,
+     0.04,
+     0.46,
+     0.52,
+     0.39,
+     0.25
+    ],
+    "genome": null,
+    "look": 1
+   }
+  ]
+ },
+ "legacyFixed": {
+  "file": "contact-legacy-repaired-24.png",
+  "mean": [
+   137.4,
+   120.5,
+   81.2,
+   255
+  ],
+  "infos": [
+   {
+    "label": "repaired free 100/0",
+    "id": "gen:civ-100-0",
+    "name": "Shisulul",
+    "mode": "free",
+    "grammar": "sahelan",
+    "roof": "flatSpiked",
+    "banner": {
+     "style": "swallow",
+     "emblem": "onionStar"
+    },
+    "cut": "kilt",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#cfc5ae",
+     "wall2": "#707f4a",
+     "roof": "#b79552",
+     "trim": "#6b6738",
+     "accent": "#c87b2d",
+     "cloth": "#a03631",
+     "ground": "#9fa07c"
+    },
+    "sat": [
+     0.26,
+     0.26,
+     0.41,
+     0.31,
+     0.63,
+     0.53,
+     0.16
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 100/1",
+    "id": "gen:civ-100-1",
+    "name": "Karuar",
+    "mode": "remix",
+    "grammar": "kaaltun",
+    "roof": "saddle",
+    "banner": {
+     "style": "swallow",
+     "emblem": "stepStar"
+    },
+    "cut": "kilt",
+    "head": "band",
+    "climate": "wet",
+    "palette": {
+     "wall": "#c4c67e",
+     "wall2": "#845932",
+     "roof": "#90a240",
+     "trim": "#5d7450",
+     "accent": "#464174",
+     "cloth": "#464174",
+     "ground": "#4c7234"
+    },
+    "sat": [
+     0.39,
+     0.45,
+     0.43,
+     0.18,
+     0.28,
+     0.28,
+     0.37
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 100/2",
+    "id": "gen:civ-100-2",
+    "name": "Kaorar",
+    "mode": "free",
+    "grammar": "mekhari",
+    "roof": "saddle",
+    "banner": {
+     "style": "swallow",
+     "emblem": "lotus"
+    },
+    "cut": "tunic",
+    "head": "brim",
+    "climate": "wet",
+    "palette": {
+     "wall": "#cfc8ae",
+     "wall2": "#d9cca0",
+     "roof": "#465c6f",
+     "trim": "#94a67e",
+     "accent": "#35c782",
+     "cloth": "#38a08f",
+     "ground": "#9fa17c"
+    },
+    "sat": [
+     0.26,
+     0.43,
+     0.23,
+     0.18,
+     0.58,
+     0.48,
+     0.16
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 100/3",
+    "id": "gen:civ-100-3",
+    "name": "Shiruok",
+    "mode": "remix",
+    "grammar": "sandrill",
+    "roof": "flatParapet",
+    "banner": {
+     "style": "hanging",
+     "emblem": "urnSteps"
+    },
+    "cut": "tunic",
+    "head": "wrap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#c59f69",
+     "wall2": "#c0a77b",
+     "roof": "#707f67",
+     "trim": "#e3d5a0",
+     "accent": "#6e612c",
+     "cloth": "#c2d15a",
+     "ground": "#bc8b56"
+    },
+    "sat": [
+     0.44,
+     0.35,
+     0.1,
+     0.54,
+     0.43,
+     0.56,
+     0.43
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 100/4",
+    "id": "gen:civ-100-4",
+    "name": "Baishine",
+    "mode": "free",
+    "grammar": "skoldar",
+    "roof": "turfLow",
+    "banner": {
+     "style": "flag",
+     "emblem": "lotus"
+    },
+    "cut": "poncho",
+    "head": "hood",
+    "climate": "cold",
+    "palette": {
+     "wall": "#cfc6ae",
+     "wall2": "#9c968a",
+     "roof": "#5d6670",
+     "trim": "#778162",
+     "accent": "#69b936",
+     "cloth": "#62a13e",
+     "ground": "#9fa07c"
+    },
+    "sat": [
+     0.26,
+     0.08,
+     0.09,
+     0.14,
+     0.55,
+     0.44,
+     0.16
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 100/5",
+    "id": "gen:civ-100-5",
+    "name": "Ishmirul",
+    "mode": "remix",
+    "grammar": "mekhari",
+    "roof": "saddle",
+    "banner": {
+     "style": "swallow",
+     "emblem": "boatHorns"
+    },
+    "cut": "kilt",
+    "head": "band",
+    "climate": "wet",
+    "palette": {
+     "wall": "#c4be67",
+     "wall2": "#9f9b4a",
+     "roof": "#75813c",
+     "trim": "#907037",
+     "accent": "#433681",
+     "cloth": "#433681",
+     "ground": "#607346"
+    },
+    "sat": [
+     0.44,
+     0.36,
+     0.37,
+     0.45,
+     0.41,
+     0.41,
+     0.24
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 101/0",
+    "id": "gen:civ-101-0",
+    "name": "Kavenul",
+    "mode": "free",
+    "grammar": "vedara",
+    "roof": "chhatri",
+    "banner": {
+     "style": "hanging",
+     "emblem": "prowHead"
+    },
+    "cut": "kilt",
+    "head": "band",
+    "climate": "wet",
+    "palette": {
+     "wall": "#a85a3f",
+     "wall2": "#b79352",
+     "roof": "#5d6970",
+     "trim": "#7e8445",
+     "accent": "#71d030",
+     "cloth": "#67b036",
+     "ground": "#8c6a45"
+    },
+    "sat": [
+     0.45,
+     0.41,
+     0.09,
+     0.31,
+     0.63,
+     0.53,
+     0.34
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 101/1",
+    "id": "gen:civ-101-1",
+    "name": "Shiorul",
+    "mode": "remix",
+    "grammar": "hanrei",
+    "roof": "upturnedHip",
+    "banner": {
+     "style": "hanging",
+     "emblem": "mountainWave"
+    },
+    "cut": "robe",
+    "head": "brim",
+    "climate": "wet",
+    "palette": {
+     "wall": "#d6bf94",
+     "wall2": "#8b3330",
+     "roof": "#91644e",
+     "trim": "#8b3330",
+     "accent": "#c88859",
+     "cloth": "#9c485c",
+     "ground": "#8a8c80"
+    },
+    "sat": [
+     0.45,
+     0.49,
+     0.3,
+     0.49,
+     0.5,
+     0.37,
+     0.05
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 101/2",
+    "id": "gen:civ-101-2",
+    "name": "Ishmirok",
+    "mode": "free",
+    "grammar": "aureline",
+    "roof": "terracottaGable",
+    "banner": {
+     "style": "flag",
+     "emblem": "stepStar"
+    },
+    "cut": "tunic",
+    "head": "band",
+    "climate": "temperate",
+    "palette": {
+     "wall": "#c6a57d",
+     "wall2": "#c4b26e",
+     "roof": "#b86542",
+     "trim": "#927659",
+     "accent": "#38b865",
+     "cloth": "#933973",
+     "ground": "#9a8f64"
+    },
+    "sat": [
+     0.39,
+     0.42,
+     0.47,
+     0.24,
+     0.53,
+     0.44,
+     0.21
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 101/3",
+    "id": "gen:civ-101-3",
+    "name": "Kaelul",
+    "mode": "remix",
+    "grammar": "tigrane",
+    "roof": "vault",
+    "banner": {
+     "style": "swallow",
+     "emblem": "torches"
+    },
+    "cut": "robe",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#ae8055",
+     "wall2": "#a08855",
+     "roof": "#806a41",
+     "trim": "#375392",
+     "accent": "#d0b653",
+     "cloth": "#3a5297",
+     "ground": "#a7926a"
+    },
+    "sat": [
+     0.35,
+     0.31,
+     0.33,
+     0.45,
+     0.57,
+     0.44,
+     0.26
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 101/4",
+    "id": "gen:civ-101-4",
+    "name": "Thaelul",
+    "mode": "free",
+    "grammar": "skoldar",
+    "roof": "turfLow",
+    "banner": {
+     "style": "swallow",
+     "emblem": "laurelColumn"
+    },
+    "cut": "trousers",
+    "head": "cap",
+    "climate": "cold",
+    "palette": {
+     "wall": "#788950",
+     "wall2": "#b79a52",
+     "roof": "#695e2e",
+     "trim": "#626047",
+     "accent": "#5c2dc9",
+     "cloth": "#5935ad",
+     "ground": "#6f7d4a"
+    },
+    "sat": [
+     0.26,
+     0.41,
+     0.39,
+     0.16,
+     0.63,
+     0.53,
+     0.26
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 101/5",
+    "id": "gen:civ-101-5",
+    "name": "Anthaul",
+    "mode": "remix",
+    "grammar": "nilemark",
+    "roof": "flatSpiked",
+    "banner": {
+     "style": "streamers",
+     "emblem": "prowHead"
+    },
+    "cut": "kilt",
+    "head": "band",
+    "climate": "arid",
+    "palette": {
+     "wall": "#dfe7c7",
+     "wall2": "#bab078",
+     "roof": "#5aa858",
+     "trim": "#783b91",
+     "accent": "#56c843",
+     "cloth": "#e4f1e1",
+     "ground": "#d4d793"
+    },
+    "sat": [
+     0.4,
+     0.32,
+     0.31,
+     0.42,
+     0.55,
+     0.36,
+     0.46
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 102/0",
+    "id": "gen:civ-102-0",
+    "name": "Ruanok",
+    "mode": "free",
+    "grammar": "sahelan",
+    "roof": "flatSpiked",
+    "banner": {
+     "style": "swallow",
+     "emblem": "stepStar"
+    },
+    "cut": "tunic",
+    "head": "brim",
+    "climate": "arid",
+    "palette": {
+     "wall": "#c9a87a",
+     "wall2": "#9c978a",
+     "roof": "#5d6470",
+     "trim": "#8a8262",
+     "accent": "#a89123",
+     "cloth": "#90a02e",
+     "ground": "#9c9162"
+    },
+    "sat": [
+     0.42,
+     0.08,
+     0.09,
+     0.17,
+     0.66,
+     0.55,
+     0.23
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 102/1",
+    "id": "gen:civ-102-1",
+    "name": "Venmiran",
+    "mode": "remix",
+    "grammar": "sandrill",
+    "roof": "flatParapet",
+    "banner": {
+     "style": "twin",
+     "emblem": "urnSteps"
+    },
+    "cut": "robe",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#c56875",
+     "wall2": "#a24d5b",
+     "roof": "#824a58",
+     "trim": "#e1a4a0",
+     "accent": "#72332a",
+     "cloth": "#c67063",
+     "ground": "#bc5854"
+    },
+    "sat": [
+     0.44,
+     0.36,
+     0.27,
+     0.52,
+     0.46,
+     0.46,
+     0.44
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 102/2",
+    "id": "gen:civ-102-2",
+    "name": "Anshiok",
+    "mode": "free",
+    "grammar": "rusvolt",
+    "roof": "plankGable",
+    "banner": {
+     "style": "swallow",
+     "emblem": "knotRing"
+    },
+    "cut": "tunic",
+    "head": "none",
+    "climate": "cold",
+    "palette": {
+     "wall": "#c8b96a",
+     "wall2": "#8f6e43",
+     "roof": "#465c6f",
+     "trim": "#825736",
+     "accent": "#d3593e",
+     "cloth": "#a63d33",
+     "ground": "#9c9a5a"
+    },
+    "sat": [
+     0.46,
+     0.36,
+     0.23,
+     0.41,
+     0.63,
+     0.53,
+     0.27
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 102/3",
+    "id": "gen:civ-102-3",
+    "name": "Shishiul",
+    "mode": "remix",
+    "grammar": "hanrei",
+    "roof": "saddle",
+    "banner": {
+     "style": "twin",
+     "emblem": "glyphMask"
+    },
+    "cut": "robe",
+    "head": "brim",
+    "climate": "wet",
+    "palette": {
+     "wall": "#d8c796",
+     "wall2": "#ac7c52",
+     "roof": "#6b705b",
+     "trim": "#8f3b2f",
+     "accent": "#d39e45",
+     "cloth": "#b0393f",
+     "ground": "#8e947c"
+    },
+    "sat": [
+     0.46,
+     0.35,
+     0.1,
+     0.51,
+     0.62,
+     0.51,
+     0.1
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 102/4",
+    "id": "gen:civ-102-4",
+    "name": "Venloan",
+    "mode": "free",
+    "grammar": "mekhari",
+    "roof": "saddle",
+    "banner": {
+     "style": "flag",
+     "emblem": "terraceSun"
+    },
+    "cut": "robe",
+    "head": "band",
+    "climate": "wet",
+    "palette": {
+     "wall": "#946f45",
+     "wall2": "#cfc7ae",
+     "roof": "#625139",
+     "trim": "#988a93",
+     "accent": "#593597",
+     "cloth": "#5a3a9b",
+     "ground": "#7f7347"
+    },
+    "sat": [
+     0.36,
+     0.26,
+     0.26,
+     0.06,
+     0.48,
+     0.46,
+     0.28
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 102/5",
+    "id": "gen:civ-102-5",
+    "name": "Kashiul",
+    "mode": "remix",
+    "grammar": "nilemark",
+    "roof": "flatPalm",
+    "banner": {
+     "style": "pennant",
+     "emblem": "crescentStar"
+    },
+    "cut": "kilt",
+    "head": "none",
+    "climate": "arid",
+    "palette": {
+     "wall": "#e3e6c4",
+     "wall2": "#c8cd9d",
+     "roof": "#72a455",
+     "trim": "#3f50a7",
+     "accent": "#78c83c",
+     "cloth": "#e8f2e0",
+     "ground": "#d8d58e"
+    },
+    "sat": [
+     0.4,
+     0.32,
+     0.32,
+     0.45,
+     0.56,
+     0.41,
+     0.49
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 103/0",
+    "id": "gen:civ-103-0",
+    "name": "Venthaok",
+    "mode": "free",
+    "grammar": "nilemark",
+    "roof": "flatPalm",
+    "banner": {
+     "style": "pennant",
+     "emblem": "prowHead"
+    },
+    "cut": "kilt",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#c9a47a",
+     "wall2": "#cfc6ae",
+     "roof": "#bd613d",
+     "trim": "#84958b",
+     "accent": "#2fa4c5",
+     "cloth": "#3890ac",
+     "ground": "#9c8f62"
+    },
+    "sat": [
+     0.42,
+     0.26,
+     0.51,
+     0.07,
+     0.61,
+     0.51,
+     0.23
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 103/1",
+    "id": "gen:civ-103-1",
+    "name": "Dresulok",
+    "mode": "remix",
+    "grammar": "rusvolt",
+    "roof": "feltDome",
+    "banner": {
+     "style": "flag",
+     "emblem": "anvilHammer"
+    },
+    "cut": "cape",
+    "head": "cap",
+    "climate": "cold",
+    "palette": {
+     "wall": "#a04c39",
+     "wall2": "#a6684f",
+     "roof": "#b8bcb1",
+     "trim": "#e4bfa3",
+     "accent": "#812d52",
+     "cloth": "#753329",
+     "ground": "#5e6437"
+    },
+    "sat": [
+     0.47,
+     0.36,
+     0.08,
+     0.55,
+     0.48,
+     0.48,
+     0.29
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 103/2",
+    "id": "gen:civ-103-2",
+    "name": "Kadreul",
+    "mode": "free",
+    "grammar": "skoldar",
+    "roof": "plankGable",
+    "banner": {
+     "style": "pennant",
+     "emblem": "mountainWave"
+    },
+    "cut": "cape",
+    "head": "cap",
+    "climate": "cold",
+    "palette": {
+     "wall": "#7a8950",
+     "wall2": "#9c958a",
+     "roof": "#76645a",
+     "trim": "#96aa95",
+     "accent": "#60d83b",
+     "cloth": "#4aa62d",
+     "ground": "#707d4a"
+    },
+    "sat": [
+     0.26,
+     0.08,
+     0.13,
+     0.11,
+     0.67,
+     0.57,
+     0.26
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 103/3",
+    "id": "gen:civ-103-3",
+    "name": "Orshian",
+    "mode": "remix",
+    "grammar": "mekhari",
+    "roof": "saddle",
+    "banner": {
+     "style": "hanging",
+     "emblem": "boatHorns"
+    },
+    "cut": "wrap",
+    "head": "brim",
+    "climate": "wet",
+    "palette": {
+     "wall": "#b1c66c",
+     "wall2": "#9cad67",
+     "roof": "#438b3e",
+     "trim": "#4b5821",
+     "accent": "#4c398a",
+     "cloth": "#778a39",
+     "ground": "#5a7948"
+    },
+    "sat": [
+     0.44,
+     0.3,
+     0.38,
+     0.45,
+     0.42,
+     0.42,
+     0.25
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired free 103/4",
+    "id": "gen:civ-103-4",
+    "name": "Orruok",
+    "mode": "free",
+    "grammar": "tigrane",
+    "roof": "vault",
+    "banner": {
+     "style": "twin",
+     "emblem": "tripleSpire"
+    },
+    "cut": "robe",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#e9e2cf",
+     "wall2": "#9c624b",
+     "roof": "#a75747",
+     "trim": "#7f633b",
+     "accent": "#99c74a",
+     "cloth": "#6e963a",
+     "ground": "#abab8e"
+    },
+    "sat": [
+     0.37,
+     0.35,
+     0.4,
+     0.37,
+     0.53,
+     0.44,
+     0.15
+    ],
+    "genome": null,
+    "look": 1
+   },
+   {
+    "label": "repaired remix 103/5",
+    "id": "gen:civ-103-5",
+    "name": "Lobaan",
+    "mode": "remix",
+    "grammar": "tigrane",
+    "roof": "flatPalm",
+    "banner": {
+     "style": "streamers",
+     "emblem": "stepStar"
+    },
+    "cut": "robe",
+    "head": "cap",
+    "climate": "arid",
+    "palette": {
+     "wall": "#9c6d49",
+     "wall2": "#8f7342",
+     "roof": "#586060",
+     "trim": "#2e4a7d",
+     "accent": "#bc933b",
+     "cloth": "#324a73",
+     "ground": "#97815a"
+    },
+    "sat": [
+     0.36,
+     0.37,
+     0.04,
+     0.46,
+     0.52,
+     0.39,
+     0.25
+    ],
+    "genome": null,
+    "look": 1
+   }
+  ]
+ },
+ "era": {
+  "file": "era-progression.png",
+  "mean": [
+   166.5,
+   151.9,
+   92.2,
+   255
+  ]
+ }
+}

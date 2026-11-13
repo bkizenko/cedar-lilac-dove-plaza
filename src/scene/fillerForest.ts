@@ -1,5 +1,7 @@
 import {DRAW_DISTANCE_RULES} from '../game/drawDistance';
 import {BOTANICAL_SPECIES,type BaseForm} from './botanicalSpecies';
+import {crownSpacing,type StandField} from '../game/forestEcology';
+import {standDensityMul} from '../game/forestEcology';
 /** Cosmetic filler forest: render-only trees that keep the woods from thinning out with distance.
  *
  * The simulation only places a limited number of tree resources (per-province density, steep and wet ground refused, felled stands do not regrow
@@ -28,8 +30,10 @@ export type FillerEnv={
  camps:readonly {x:number;z:number}[];
  /** forest base form of a tree id at a point (the same function the forest uses to pick species) */
  baseFormAt:(id:number,x:number,z:number)=>BaseForm;
+ /** ecological stands (forestEcology.ts): species group and size come from the stand, density follows glades and gaps, crowns keep their spacing; absent = the original groves */
+ ecology?:StandField;
 };
-export type FillerTree={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;filler:true};
+export type FillerTree={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;filler:true;/** ecology on: botanical group of the stand species */group?:BaseForm};
 export type FillerBlob={x:number;y:number;z:number;/** crown half-width */r:number;/** crown half-height */h:number;/** summer leaf colour, 0..1 */cr:number;cg:number;cb:number;/** share of needle-leaf crowns 0..1 */needle:number;/** share of deciduous crowns 0..1 */dec:number;/** trees merged */n:number};
 type Chunk={trees:FillerTree[];blobs:(FillerBlob[]|null)[]};
 /** Filler ids are negative; sim resource ids are positive. */
@@ -80,7 +84,7 @@ export class FillerForest{
    if(Math.abs(x)>half||Math.abs(z)>half)continue;
    const p=env.provinceAt(x,z);if(!(p.treeDensityPerHectare>0))continue;
    const soil=env.soilAt(x,z);if(soil!==null&&soil<R.minSoil)continue;
-   const grove=smooth(.3,.72,groveAt(env.seed,x,z))*1.8,soilMul=soil===null?1:.3+.7*Math.min(1,soil*1.25);
+   const soilEarly=soil,grove=env.ecology?standDensityMul(env.seed,x,z,soilEarly===null?0:1-Math.min(1,soilEarly*1.25))*1.35:smooth(.3,.72,groveAt(env.seed,x,z))*1.8,soilMul=soil===null?1:.3+.7*Math.min(1,soil*1.25);
    const accept=Math.min(1,p.treeDensityPerHectare*grove*soilMul/perHectare);
    if(hash(cx*64+i,cz*64+j,env.seed,7)>=accept)continue;
    // keep the sim's own area authoritative: thin in over a gradient beyond the camps
@@ -89,6 +93,13 @@ export class FillerForest{
    const y=env.height(x,z);if(!Number.isFinite(y)||y<env.waterAt(x,z)+R.minDryMetres)continue;
    const grade=Math.max(Math.abs(env.height(x+2,z)-env.height(x-2,z)),Math.abs(env.height(x,z+2)-env.height(x,z-2)))/4;if(grade>R.maxGrade)continue;
    if(this.nearSim(x,z))continue;
+   if(env.ecology){
+    // stands: species group and size from the stand; crown shyness keeps neighbours a crown apart
+    const tid=-(1+((cx+2048)*4096+(cz+2048))*128+k),plan=env.ecology.plan(tid,x,z,{filler:true});
+    const gap=crownSpacing(plan.species,plan.size);let shy=false;for(const o of trees)if(Math.hypot(o.x-x,o.z-z)<gap){shy=true;break;}
+    if(shy)continue;k++;
+    trees.push({id:tid,x,y,z,amount:1,scale:plan.size*(.9+.1*(soil??1)),regenT:0,filler:true,group:plan.group});continue;
+   }
    const id=-(1+((cx+2048)*4096+(cz+2048))*128+k++);
    trees.push({id,x,y,z,amount:1,scale:(.8+.6*hash(cx*64+i,cz*64+j,env.seed,17))*(.88+.12*(soil??1)),regenT:0,filler:true});
   }
@@ -100,7 +111,7 @@ export class FillerForest{
   const ch=this.chunk(cx,cz),cached=ch.blobs[level];if(cached)return cached;
   const cell=DRAW_DISTANCE_RULES.blobCells[level].size,groups=new Map<number,{n:number;sx:number;sz:number;area:number;hs:number;r:number;g:number;b:number;needle:number;dec:number}>();
   for(const t of ch.trees){
-   const base=this.env.baseFormAt(t.id,t.x,t.z),crown=CROWN[base]??CROWN.broadleaf,leaf=groupLeaf.get(base)??groupLeaf.get('broadleaf')!,g0=Math.floor(t.x/cell)*4096+Math.floor(t.z/cell),
+   const base=t.group??this.env.baseFormAt(t.id,t.x,t.z),crown=CROWN[base]??CROWN.broadleaf,leaf=groupLeaf.get(base)??groupLeaf.get('broadleaf')!,g0=Math.floor(t.x/cell)*4096+Math.floor(t.z/cell),
     jitter=.9+.2*hash(t.id,7,this.env.seed,29),cr=crown.r*t.scale,g=groups.get(g0)??{n:0,sx:0,sz:0,area:0,hs:0,r:0,g:0,b:0,needle:0,dec:0};
    g.n++;g.sx+=t.x;g.sz+=t.z;g.area+=Math.PI*cr*cr;g.hs+=crown.h*t.scale;g.r+=leaf.r*jitter;g.g+=leaf.g*jitter;g.b+=leaf.b*jitter;if(base==='conifer')g.needle++;g.dec+=leaf.dec;groups.set(g0,g);
   }

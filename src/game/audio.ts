@@ -1,6 +1,6 @@
 import { peacefulMusic, AcousticScore } from "./music";
 import { ProceduralAudio, proceduralMusicOn, type WorldAudio } from "./proceduralAudio";
-import { LEGACY_SFX, busGain, loadSettings, saveSettings, type AudioSettings, type Bus } from "../scene/audioMix";
+import { LEGACY_SFX, BUS_OFF_KEY, busGain, busOff, loadSettings, saveSettings, type AudioSettings, type Bus, type SubBus } from "../scene/audioMix";
 export class GameAudio {
   ctx: AudioContext | null = null;
   master: GainNode | null = null;
@@ -49,7 +49,7 @@ export class GameAudio {
     this.score.setVolume(busGain(this.settings, 'music'));
     this.score.setAmbience(busGain(this.settings, 'ambience'));
     this.score.setUserPaused(this.settings.musicPaused);
-    this.score.setMuted(this.muted || (this.proc.active && proceduralMusicOn()));
+    this.score.setMuted(busOff(this.settings, 'music') || (this.proc.active && proceduralMusicOn()));
     this.proc.setSettings(this.settings);
     if (this.ctx) {
       this.master?.gain.setTargetAtTime(this.muted ? 0 : .5, this.ctx.currentTime, .04);
@@ -63,6 +63,19 @@ export class GameAudio {
     this.applySettings();
   }
 
+  /** Sound effects are silent while everything is muted or the effects switch is off (one-shots are skipped, not just turned down). */
+  get sfxOff() { return busOff(this.settings, "sfx"); }
+  /** Per-bus on/off, independent of the other buses and of the master mute. Persisted with the volumes. */
+  setBusOff(bus: SubBus, off: boolean) {
+    if (!(bus in BUS_OFF_KEY)) return;
+    this.settings = { ...this.settings, [BUS_OFF_KEY[bus]]: !!off };
+    saveSettings(typeof localStorage === "undefined" ? null : localStorage, this.settings);
+    this.applySettings();
+  }
+  toggleBusOff(bus: SubBus) { this.setBusOff(bus, !this.settings[BUS_OFF_KEY[bus]]); }
+  setSfxOff(off: boolean) { this.setBusOff("sfx", off); }
+  toggleSfxOff() { this.toggleBusOff("sfx"); }
+
   private makeNoise(ctx: AudioContext) {
     const n = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const d = n.getChannelData(0);
@@ -74,7 +87,7 @@ export class GameAudio {
   private voices = 0;
 
   tone(freq: number, dur: number, type: OscillatorType = "triangle", vol = 0.08, detune = 0) {
-    if (!this.ctx || !this.sfx || this.muted) return;
+    if (!this.ctx || !this.sfx || this.sfxOff) return;
     if (this.voices > 10) return;
     const o = this.ctx.createOscillator();
     const g = this.ctx.createGain();
@@ -104,7 +117,7 @@ export class GameAudio {
   }
 
   play(name: string) {
-    if (!this.ctx) return;
+    if (!this.ctx || this.sfxOff) return;
     if (this.proc.active) {
       const kind = LEGACY_SFX[name];
       if (kind !== undefined) {
@@ -212,7 +225,7 @@ export class GameAudio {
   }
 
   private noiseBurst(dur: number, vol: number, cutoff: number) {
-    if (!this.ctx || !this.sfx || !this.noise || this.muted) return;
+    if (!this.ctx || !this.sfx || !this.noise || this.sfxOff) return;
     if (this.voices > 12) return;
     const src = this.ctx.createBufferSource();
     src.buffer = this.noise;
