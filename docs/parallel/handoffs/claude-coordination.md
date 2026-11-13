@@ -1323,3 +1323,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 15:48 ET Claude: shipped lane C Tigrane civic hall as stacked round discs (original grammar, legacy kept; civ tests 38/38, tsc-diff nil, SwiftShader docs/renders/visuals/tigrane-discs-2026-11-13.png) (f00a1f3f, on integration) / now on Option H adapter polish, hearth glow on lawn / blocked: none
 15:42 ET Claude(PM): landed 7675d9ac (9 commits: first-needs strip, child-ruler regency, shared hunting ground, lane docs) / sweep 141 tests 137 pass 3 skip 1 sandbox-env fail (hearth-glance-ui needs typescript, lane B ran 3/3+8/8); tsc skipped (small UI diff, lane B nil); no other branch ahead; Codex idle since ~08:49 reassigned, Grok out / blocked: none
+
+15:48 ET Claude: shipped lane C Tigrane civic hall as stacked round discs (original grammar, legacy kept; civ tests 38/38, tsc-diff nil, SwiftShader docs/renders/visuals/tigrane-discs-2026-11-13.png) (f00a1f3f, on integration) / now on Option H adapter polish, hearth glow on lawn / blocked: none
