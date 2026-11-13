@@ -417,6 +417,9 @@ CIVIC.quillan=g=>{const {w,d,r}=g,W=w*.84,D=d*.56,z0=-d*.14;let y=0;
  for(let i=0;i<8;i++)g.B('wall',[W*.3,.25,.5],[0,i*(y/8),d*.42+.2+(8-i)*.28-.25],1);
  g.Pr('hip','roof',[W*1.18,range(r,2.8,3.2),D*1.3],[0,hall,z0],2);P(g,'cylinder','roof',[W*.98,.36,D*1.14],[0,hall-.22,z0],undefined,10,1);
  g.B('trim',[W*.7,.28,.3],[0,hall+2.7,z0],1);for(const s of[-1,1]){g.B('wall2',[.4,3.6,.4],[s*w*.43,0,d*.3],2);P(g,'wedge','accent',[.5,.5,.5],[s*w*.43,3.6,d*.3],undefined,undefined,1);}
+ // near-only carved gnomon stone (stepped, notched) on the front terrace and rope-bound twin ridge finials, original Quillan grammar
+ for(let i=0;i<3;i++)g.B(i%2?'wall':'wall2',[1.5-i*.35,.34,1.5-i*.35],[-w*.3,y*.55+i*.34,d*.36],0);g.B('trim',[.3,.9,.3],[-w*.3,y*.55+1.02,d*.36],0);g.Pr('wedge','accent',[.34,.5,.34],[-w*.3,y*.55+1.92,d*.36],0);
+ for(const s of[-1,1]){g.B('trim',[.3,.26,.3],[s*W*.56,hall+2.62,z0],0);g.B('accent',[.2,.34,.2],[s*W*.56,hall+2.88,z0],0);}
  g.banner(w*.4,d*.3,6.2);return {entry:{x:0,z:d*.42+.6,width:W*.3}};};
 /** Nilemark: whitewashed mudbrick blocks with parapets, roof stairs and palm pergolas; the civic hall is a gate of two battered towers before a columned court. */
 HOUSE.nilemark=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,h=range(r,2.5,3);
