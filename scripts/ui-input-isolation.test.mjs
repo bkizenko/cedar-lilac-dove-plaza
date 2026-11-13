@@ -40,5 +40,5 @@ test('Hearth CSS contains scroll chaining and lets touch pan inside panels',()=>
 test('engine wheel handler defers to the UI gate',()=>{
  const src=fs.readFileSync(new URL('../src/game/engine.ts',import.meta.url),'utf8');
  const i=src.indexOf('private onWheel');assert.ok(i>0);
- assert.match(src.slice(i,i+500),/eventInsideUi\(e\.target\)/);
+ assert.match(src.slice(i,i+500),/cameraOwnsWheel\(e\.target/);
 });

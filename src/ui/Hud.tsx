@@ -33,6 +33,8 @@ import {CraftingAndBuildings} from './CraftingAndBuildings';
 import {ProductionControls} from './ProductionControls';
 import {StorehouseInventory} from './StorehouseInventory';
 import {GateRotationControl} from './GateRotationControl';
+import {MusicChip} from './hearth/MusicControls';
+import {RotateButtons} from './hearth/RotateButtons';
 import {WorkloadPanel} from './WorkloadPanel';
 import {WildCraftPanel} from './WildCraftPanel';
 import {NomadicCampControl} from './NomadicCampControl';
@@ -263,6 +265,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.game.quality);engine.pushHud();}}}/> Shadows</label>
           <label className="px-2 py-2"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/> Selected person circles</label>
           <button className="px-2 py-2" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),opened=>{if(opened)setTestOpen(true);})}>Test lab</button>
+          {engine&&<MusicChip engine={engine}/>}
           <button className="px-2 py-2" onClick={()=>setInterfaceHidden(true)} aria-label="Minimize game interface">Hide interface</button>
           <button
             className="px-2 py-2"
@@ -380,7 +383,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   {hud.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
                 </IconBtn>
                 <IconBtn title="Skip music" onClick={()=>{engine?.audio.score.skip();engine?.pushHud();}}><SkipForward className="size-3.5"/></IconBtn>
-                <IconBtn title="Restart" onClick={() => void lifecycle.run(()=>engine!.restart(undefined,21,true))}>
+                <IconBtn title="Restart (asks first)" onClick={() => {if(window.confirm('Restart? The current village is abandoned. Save first to keep it.'))void lifecycle.run(()=>engine!.restart(undefined,21,true));}}>
                   <RotateCcw className="size-3.5" />
                 </IconBtn>
               </div>
@@ -430,7 +433,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               {hud.placing==='trench'&&engine&&<ExcavationControls engine={engine}/>}
               {hud.placing==='watchtower'&&engine&&<TowerPlatformControls engine={engine}/>}
               {hud.placing==='gate'&&engine&&<><GateRotationControl facing={engine.gateFacing} onChange={facing=>engine.setGateFacing(facing)}/><span className="text-xs text-parchment-dim">R rotates · Shift+R reverses</span></>}
-              {hud.placing&&hud.placing!=='gate'&&engine?.canRotatePlacement()&&<><button type="button" className="rounded border border-bronze/40 px-2 py-1" title="Turn the building a quarter turn (R)" aria-pressed={engine.quarterTurn} onClick={()=>engine.rotatePlacement()}>Rotate ↻</button><span className="text-xs text-parchment-dim">R turns a quarter</span></>}
+              {engine?.canRotateAnyPlacement()&&<RotateButtons engine={engine} gate={hud.placing==='gate'}/>}
               <div>{founding ? "Choose open ground near food and timber."
                 : hud.placing === "bridge" ? "Drag bank to bank · 5–28 m · Esc cancels"
                 : ["palisade","stonewall","trench","moat"].includes(hud.placing) ? "Drag a joined line · leave space for a gate"

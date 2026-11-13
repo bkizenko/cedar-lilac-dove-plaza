@@ -10,6 +10,7 @@ import {TradeProposal} from '../TradeProposal';
 import {ExcavationControls} from '../ExcavationControls';
 import {TowerPlatformControls} from '../TowerPlatformControls';
 import {GateRotationControl} from '../GateRotationControl';
+import {RotateButtons} from './RotateButtons';
 import {TradeBlock} from '../Hud';
 import {UiThemeBoot} from '../uiTheme';
 import {StartupHint} from './StartupHint';
@@ -17,6 +18,7 @@ import {AlertPins,useGlanceAlerts} from './glance';
 import {HelpScreen} from './helpScreen';
 import {RoadsCard} from './roadsCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
+import {MinimapReopen,useMinimapCollapsed} from './minimapToggle';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
 import './hearth.css';
 import './glance.css';
@@ -27,6 +29,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const lifecycle=useLifecycleAction(engine);
  const [screen,setScreen]=useState<null|{k:'village'|'council'|'ages'|'menu'|'trade'|'help';tab?:string}>(null);
  const [tray,setTray]=useState(false),[tab,setTab]=useState('Village'),[map,setMap]=useState(false),[test,setTest]=useState(false),[hidden,setHidden]=useState(false),[trade,setTrade]=useState<number|null>(null);
+ const [mapCollapsed,setMapCollapsed]=useMinimapCollapsed();
  const founding=hud.founding;
  const alerts=useGlanceAlerts(hud.started&&!hud.awaitingStart?engine:null);
  useEffect(()=>{if(hud.placing)setTray(false);},[hud.placing]);
@@ -56,13 +59,13 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
       {hud.placing==='trench'&&engine&&<ExcavationControls engine={engine}/>}
       {hud.placing==='watchtower'&&engine&&<TowerPlatformControls engine={engine}/>}
       {hud.placing==='gate'&&engine&&<GateRotationControl facing={engine.gateFacing} onChange={f=>engine.setGateFacing(f)}/>}
-      {hud.placing!=='gate'&&engine?.canRotatePlacement()&&<button type="button" className="hw-btn-wide" aria-pressed={engine.quarterTurn} title="Quarter turn (R)" onClick={()=>engine.rotatePlacement()}>Rotate ↻</button>}</>}/>
+      {engine?.canRotateAnyPlacement()&&<RotateButtons engine={engine} gate={hud.placing==='gate'}/>}</>}/>
      :tray&&<BuildTray hud={hud} engine={engine} tab={tab} setTab={setTab} onPick={()=>setTray(false)}/>}
     <SelectionCard hud={hud} engine={engine} onOffer={t=>setTrade(t)}/>
     <Dock active={screen?.k==='village'?'village':screen?.k==='ages'?'ages':screen?.k==='council'?'council':tray?'build':map?'map':null} onPick={open} onHome={()=>engine?.focusHome()} hasMap alerts={{}}/>
    </>}
   </div>
-  <div className="hw-map-wrap"><MinimapCard hud={hud} engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})}/>
+  <div className={cx('hw-map-wrap',mapCollapsed&&'is-collapsed')}>{mapCollapsed?<MinimapReopen onClick={()=>setMapCollapsed(false)}/>:<MinimapCard hud={hud} engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})} onCollapse={()=>setMapCollapsed(true)}/>}
    {map&&<MinimapCard phone hud={hud} engine={engine} onNeighbours={()=>{setMap(false);setScreen({k:'council',tab:'neighbours'});}} onClose={()=>setMap(false)}/>}</div>
 
   {engine&&<VisitingTrader engine={engine}/>}

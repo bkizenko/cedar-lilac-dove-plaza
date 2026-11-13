@@ -1,6 +1,7 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints} from 'lucide-react';
 import type {Engine} from '@/game/engine';
+import {MusicChip} from './MusicControls';
 import type {HudSnapshot} from '@/game/types';
 import {BUILDINGS} from '@/game/constants';
 import {YEAR_SECONDS} from '@/game/settlement';
@@ -12,6 +13,7 @@ import {readyFoodStock} from '../FoodStoreReadout';
 import {GameTooltip} from '../GameTooltip';
 import {SocietyFlag} from '../SocietyFlag';
 import {WorldMinimap} from '../WorldMinimap';
+import {MinimapCollapseButton} from './minimapToggle';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {RulerEventToast} from '../RulerEventToast';
 import {WorkDeliveryCue} from '../WorkDeliveryCue';
@@ -45,6 +47,7 @@ export function TimeCard({hud,engine,onAges,onMenu}:{hud:HudSnapshot;engine:Engi
    <IconBtn label="Four times speed" active={!hud.paused&&speed===4} onClick={()=>engine?.setSpeed(4)}><span className="hw-x4">4×</span></IconBtn>
    <IconBtn label="Menu" onClick={onMenu}><MenuIcon size={26}/></IconBtn>
   </div>
+  <MusicChip engine={engine}/>
  </div>;
 }
 
@@ -271,12 +274,12 @@ export function NotesStack({hud,engine,onOpen,hidden,alerts}:{hud:HudSnapshot;en
 }
 
 /* ---------- minimap + neighbours ---------- */
-export function MinimapCard({hud,engine,onNeighbours,phone,onClose}:{hud:HudSnapshot;engine:Engine|null;onNeighbours:()=>void;phone?:boolean;onClose?:()=>void}){
+export function MinimapCard({hud,engine,onNeighbours,phone,onClose,onCollapse}:{hud:HudSnapshot;engine:Engine|null;onNeighbours:()=>void;phone?:boolean;onClose?:()=>void;onCollapse?:()=>void}){
  const Q={kind:'society-decisions'} as const;
  const known=hud.tribes.filter(t=>t.id!==0&&hud.camps?.some(c=>c.team===t.id&&c.known));
  return <section className={cx('hw-map',phone&&'is-phone')} aria-label="Map">
   {phone&&<IconBtn label="Close map" onClick={onClose!} small className="hw-map-x"><X size={22}/></IconBtn>}
-  <div className="hw-map-frame"><WorldMinimap hud={hud} engine={engine}/><OverlayCanvas hud={hud} engine={engine}/></div>
+  <div className="hw-map-frame">{!phone&&onCollapse&&<MinimapCollapseButton onClick={onCollapse}/>}<WorldMinimap hud={hud} engine={engine}/><OverlayCanvas hud={hud} engine={engine}/></div>
   <OverlayToggles engine={engine}/>
   {known.length>0&&<button type="button" className="hw-map-neigh" aria-label="Neighbours" onClick={onNeighbours}>{known.map(t=>{const w=!t.alive?'Fallen':t.hostile?'War':t.ally?'Pact':(t.tension||0)>.52?'Tense':'Peace';return <span key={t.id} className="hw-neigh" title={`${t.name}: ${w}`}><i style={{background:t.alive?t.color:'#6b6256'}}/><b>{t.name}</b><em className={cx(t.hostile&&'t-bad',t.ally&&'t-good')}>{w}</em></span>;})}</button>}
  </section>;
