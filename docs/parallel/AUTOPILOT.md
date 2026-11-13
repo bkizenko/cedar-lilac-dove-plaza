@@ -1074,6 +1074,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 18:00 | Claude | ~22 (lane C forge etc.) | 2 landed (lit forge stage, lane C status) | 1 (lit forge stage in Village grammar) | on vegetation seasonal fields; no stall |
 | 11-12 18:00 | Grok | 0 | 0 | 0 | out; World rows still with Claude/PM queue |
 | 11-12 18:00 | Total | ~53 | integration synced to main | ~2 | focused sweep 118 tests/115 pass/0 fail; tsc diff nil; foreign-record-controls test sandbox-only (three missing); open rows ~259 not-started, ~141 done/live |
+| 11-12 19:00 | Codex | 71 (since 18:00 ET, all branches) | 52 | 2 (earned horse pack expeditions: physical typed provisioning, finite journey feed/water, native-earned pack recall; foreign-record cleanup) | active, on target; pack-expedition + controls branches landed 19:1x |
+| 11-12 19:00 | Claude | 84 (since 18:00 ET, all branches) | 74 | 3 (wild-craft UI + wildStores salt/hay; botanical tree set + tier narrowing; shipping-waiting-hooks World wiring) | shipping and landing; lanes A-D all posted <1h |
+| 11-12 19:00 | Grok | 0 | 0 | 0 | out; World rows with Claude/PM queue; no board lines to miss |
+| 11-12 19:00 | Total | ~155 | integration lag 0 after 19:1x PM landing | ~5 | focused sweep 121 tests, 117 pass, 3 skip, 1 fail fixed (rulers-runtime expedition test now provisions from a real cache; physical provisioning is intentional); open ~261 not-started rows, ~240 done/live by table count |
 
 ## Process improvements
 
