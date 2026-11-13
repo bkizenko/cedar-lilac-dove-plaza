@@ -9450,6 +9450,19 @@
       "supportingPassed": 25,
       "supportingTotal": 25,
       "firstReleaseGates": "37/98 unchanged"
+    },
+    {
+      "date": "2026-11-13",
+      "commit": "ea6d6a6c1ce6fc04aba325ef1b68f741292d85cd",
+      "release": "2026-11-13T07-28-20-529Z-ea6d6a6",
+      "status": "live-partial",
+      "summary": "ea6d6a6c1ce6fc04aba325ef1b68f741292d85cd published as 2026-11-13T07-28-20-529Z-ea6d6a6 on 8086/8101. Focused6/6 (5 new needs-caravan food/capacity cases +1 built original53 inventory/strict-save compatibility); supporting65/65 (18 existing trade/food +47 conflict-intent/council/water-pack), total native70/70, full compiler/build PASS; both ports/retained assets5/5. Needs-based food escrow, loaded lines, carrier inventory, partner payment and refunds retain exact food kinds/counts. Interrupted trips retain real cargo; deaths drop exact food and refund only uncollected partner stock. Re-check capacity before loading/payment, returning real escrow instead of discarding unallocated goods. Saved side/line food lots must match the existing scalar totals and physical body. Built original53 remains unchanged. Needs-trade physical scenarios use controlled legacy geometry and finite endowments; no genuine public needs-trade/browser journey, campaign/FPS or new gate claim. Player propose/answer functions and pure H adapter still lack production command/UI callers; Codex takes command/read hooks next, Claude UI wiring. Conventional/rival/coastal food consumers outside this scope remain queue items.37/98 unchanged.",
+      "evidence": "docs/metrics/needs-food-escrow-release-2026-11-13.json",
+      "batchPassed": 6,
+      "batchTotal": 6,
+      "supportingPassed": 65,
+      "supportingTotal": 65,
+      "firstReleaseGates": "37/98 unchanged"
     }
   ],
   "status_update_policy": {

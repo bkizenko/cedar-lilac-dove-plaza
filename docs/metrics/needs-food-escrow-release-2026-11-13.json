@@ -1,0 +1,83 @@
+{
+  "release": {
+    "release": "2026-11-13T07-28-20-529Z-ea6d6a6",
+    "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T07-28-20-529Z-ea6d6a6",
+    "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T06-57-43-047Z-7b4854c",
+    "commit": "ea6d6a6c1ce6fc04aba325ef1b68f741292d85cd",
+    "retained": {
+      "linked": 1488,
+      "copied": 0,
+      "existing": 14
+    }
+  },
+  "batch": {
+    "passed": 6,
+    "total": 6,
+    "newNeedsFoodCases": 4,
+    "changedCapacityCase": 1,
+    "builtLegacyCompatibility": 1
+  },
+  "supporting": {
+    "passed": 65,
+    "total": 65,
+    "existingTradeAndFood": 18,
+    "sharedConflictCouncilWaterPack": 47
+  },
+  "nativeTotal": {
+    "passed": 70,
+    "total": 70,
+    "runs": {
+      "needsAndFood": 22,
+      "extraCapacity": 1,
+      "shared": 47
+    }
+  },
+  "compiler": "PASS full tsc --noEmit",
+  "build": "PASS npm run build",
+  "builtEvidence": {
+    "passed": 1,
+    "total": 1,
+    "scope": "Built public Inventory & activity renders existing36 fresh fish; read-only selection and durable save retain original53 IDs/stocks/cargo. No mixed-trade browser journey claim, screenshots, added goods or terrain/fog changes.",
+    "original53Unchanged": true,
+    "residents": 53,
+    "errors": []
+  },
+  "network": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T07-28-20-529Z-ea6d6a6",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "diagnostics": [
+    "Escort fixture fails unchanged baseline because live raiders kill/interrupt the caravan; arming test now advances only real trade executors for its stated arming/route purpose, not an escort-combat claim",
+    "Forged save test initially modified the live encodeGame state reference; changed to structuredClone before tampering. No product workaround"
+  ],
+  "limitations": [
+    "Controlled existing flat trade fixtures and finite endowments; not genuine terrain/acquisition/campaign acceptance",
+    "Built scope only public original53 inventory and strict save compatibility, no needs-trade UI journey",
+    "Public player needs-offer propose/answer is not wired; pure H adapter also has no production caller",
+    "Rival barter/coastal scalar food consumers remain explicit W11 follow-up",
+    "Full gate baseline37/98 unchanged"
+  ]
+}
