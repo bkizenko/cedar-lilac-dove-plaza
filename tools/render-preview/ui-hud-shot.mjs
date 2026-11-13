@@ -22,7 +22,7 @@ const shim=path.join(root,'.hw-lucide-shim.mjs');
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'hw-ui-')),bundle=path.join(tmp,'ui.js');
 execFileSync(esbuild,['tools/render-preview/ui-hud-entry.tsx','--bundle','--format=esm','--outfile='+bundle,'--alias:@=./src','--loader:.css=empty','--jsx=automatic','--define:process.env.NODE_ENV="production"','--alias:three/addons/utils/BufferGeometryUtils.js=./tools/render-preview/shims/BufferGeometryUtils.js',...['EffectComposer','RenderPass','UnrealBloomPass','ShaderPass','FilmPass','OutputPass'].map(n=>`--alias:three/addons/postprocessing/${n}.js=./tools/render-preview/shims/postprocessing.js`),'--alias:node:zlib=./tools/render-preview/shims/empty.js','--alias:three/examples/jsm/libs/fflate.module.js=./tools/render-preview/shims/fflate.js','--alias:lucide-react='+shim,'--log-level=error'],{cwd:root,stdio:'inherit'});
 fs.rmSync(shim,{force:true});
-const css=['hearth.css','glance.css','wildPanel.css'].map(f=>fs.readFileSync(path.join(root,'src/ui/hearth',f),'utf8')).join('\n'),code=fs.readFileSync(bundle,'utf8');
+const css=['hearth.css','glance.css','wildPanel.css','contact.css'].map(f=>fs.readFileSync(path.join(root,'src/ui/hearth',f),'utf8')).join('\n'),code=fs.readFileSync(bundle,'utf8');
 const bgFile=path.join(root,'docs/renders/map/3-wide.jpg');let bg=null;
 // The map renders are before|after composites: keep the right-hand (painterly default) half as the terrain backdrop.
 try{const sharp=createRequire('/home/claude/.npm-global/lib/node_modules/x.js')('sharp');bg=await sharp(bgFile).extract({left:800,top:36,width:800,height:414}).jpeg({quality:90}).toBuffer();}catch{}
@@ -33,15 +33,18 @@ let pw;for(const b of [root,'/home/claude/.npm-global/lib/node_modules']){try{pw
 const browser=await pw.chromium.launch();
 const page=await browser.newPage({viewport:{width:+(flags.w||1440),height:+(flags.h||900)},deviceScaleFactor:+(flags.dpr||1)});
 if(!flags.hint)await page.addInitScript(()=>{try{localStorage.setItem('hearthwild.ui.hintGraphics','1');}catch{}});
+if(flags.layout)await page.addInitScript(l=>{try{localStorage.setItem('hearthwild.ui.hudLayout.v1',l);}catch{}},String(flags.layout)==='all'?JSON.stringify({resources:true,time:true,audio:true,rail:true,dock:true,selection:true,alerts:true,notes:true,tips:true}):String(flags.layout)==='mixed'?JSON.stringify({resources:true,rail:true,audio:true,notes:true}):String(flags.layout));
+if(flags.layout==='all')await page.addInitScript(()=>{try{localStorage.setItem('hearthwild.minimap.collapsed','1');}catch{}});
 page.on('pageerror',e=>console.error('[pageerror]',e.message));
 page.on('console',m=>{if(m.type()==='error')console.error('[page]',m.text().slice(0,300));});
 await page.goto(`http://127.0.0.1:${server.address().port}/`);
 await page.waitForFunction(()=>window.hwReady===true,null,{timeout:60000});
 if(flags.theme)await page.evaluate(t=>{document.documentElement.dataset.hwUi=t;},flags.theme);
 else if(flags.ui==='classic')await page.evaluate(()=>{document.documentElement.dataset.hwUi='field';});
-const info=await page.evaluate(o=>window.hwMount(o),{scenario:screen,ui:flags.ui,years:+(flags.years||6)});
+const info=await page.evaluate(o=>window.hwMount(o),{scenario:screen,ui:flags.ui,years:+(flags.years||6),seed:flags.seed?+flags.seed:undefined,age:flags.age?+flags.age:0,leader:!!flags.leader,legacy:!!flags.legacy,hostile:!!flags.hostile});
 if(flags.click)for(const c of String(flags.click).split('|')){{const l=page.locator('[aria-label="'+c+'"]');await (await l.count()?l.first():page.getByText(c,{exact:true}).first()).click();}await page.waitForTimeout(400);}
 {const clip=flags.clip?Object.fromEntries(String(flags.clip).split(',').map((v,i)=>[['x','y','width','height'][i],+v])):undefined;await page.screenshot({path:out,clip});}
 if(flags.measure){const rows=await page.evaluate(()=>{const out=[];document.querySelectorAll('.hw button,.hw [role=button],.hw-chip,.hw-stat,.hw svg').forEach(e=>{const r=e.getBoundingClientRect();if(r.width&&r.height)out.push([e.tagName.toLowerCase()+'.'+((e.className&&e.className.baseVal)??e.className??'').toString().split(' ')[0],Math.round(r.width),Math.round(r.height),e.tagName!=='svg'?parseFloat(getComputedStyle(e).fontSize):0]);});return out;});fs.writeFileSync(String(flags.measure),JSON.stringify(rows));}
+if(flags.audit){const hits=await page.evaluate(()=>{const out={};for(let x=0;x<innerWidth;x+=12)for(let y=0;y<innerHeight;y+=12){const e=document.elementFromPoint(x,y);if(e&&e.closest('.hw')&&e.closest('button,.hw-speed,[role=group],aside,section,nav,header,article')){const k=(e.closest('button')||e.closest('.hw-speed')||e).className.toString().split(' ')[0];out[k]=(out[k]||0)+1;}else if(e&&e.closest('.hw')&&!e.classList.contains('hw'))out['LEAK:'+e.tagName+'.'+e.className]=1;}return out;});fs.writeFileSync(String(flags.audit),JSON.stringify(hits,null,1));}
 console.log(JSON.stringify(info));
 await browser.close();server.close();fs.rmSync(tmp,{recursive:true,force:true});

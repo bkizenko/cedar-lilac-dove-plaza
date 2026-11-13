@@ -31,22 +31,17 @@ Switch: `GameState.animalBehaviourVersion?: 1`, set by `spawnWildlife` for new g
 - **People.** Wild animals flee at species/group/habituation-dependent FID (a worker walking at a deer herd; a stalking hunter can approach much closer, which keeps bow and spear hunting playable). Pen stock ignores people and now grazes/rests/walks inside the pen at walking pace (`penStep`), young stay by an adult.
 - **Performance.** Update LOD by distance to the player's people/camp: near every tick, mid 0.2 s, far 1 s with accumulated dt; at most 90 animal steps per tick (most overdue first); tree density grid rebuilt every 10 s.
 
-### Presentation (camera-distance LOD, no sim writes)
-- Near zone radius is tied to the draw-distance tier (`animalRigRadius`: Low 48 m, Medium 80 m, High 110 m, Ultra 150 m from the camera focus; leave at 1.18x; at most 56 rigged animals). Inside it, `AnimalRigLayer` draws every animal with shared part meshes (body, neck, head, horns, tail, two-bone legs, wings): about 8 draw calls for all species. Outside it, the existing merged mesh instances remain (cheap, far).
-- `stepVisual` derives everything from the animal's sim record: yaw follows the heading at <= 4.5 rad/s, stride phase advances with ground speed so stance feet move back at exactly the body speed (no sliding, tested), gait offsets blend between walk/trot/canter/gallop patterns, head-down graze/drink, head-up alert with scanning, lying down for rest/sleep, terrain pitch, banking, tail swing, wing flap and perching for birds.
-- **No pop.** A visual state is created from the current sim record when an animal enters the zone (same yaw, speed, pose targets) and discarded on leaving; the sim never reads it, so determinism, saves and gameplay are identical with or without it.
-- Fishing grounds within the near radius draw 2-5 fish each with schooling paths, varying depth, tail beat and a surface wake ring; the flat marker is hidden only while the school is drawn.
+### Presentation (owned by the animal-models work, `docs/ANIMAL_MODELS*`; sim hooks only)
+The jointed rig, fish shoals and world wiring are the animal-models agent's (`animalRigLayer.ts`, `animalAdapter.ts`, `animalLife.ts`). Its adapter already applies `FACING_OFFSET = -PI/2` to the sim facing `atan2(vx,vz)`, so the sideways-travel bug in the old merged-mesh path is handled there; this branch adds no second rotation fix. Two small hooks connect it to the behaviour sim: `MotionTracker.step` takes the sim state (`graze`, `drink`, `alert`/`stalk`/`flee`, `feed`, rest) so the rig shows exactly what the animal is doing, and the sim velocity as the starting speed so an animal entering the near zone starts in its true gait (no pop). The rig derives speed and stride phase from real displacement, so stance feet do not slide, and it never writes sim state.
 
 ## 3. Files
-`src/game/animalTraits.ts` (species table, rhythm), `src/game/animalBehaviour.ts` (model), `src/scene/animalVisual.ts` (pure gait/pose maths), `src/scene/animalRigLayer.ts` (three.js layers), hooks in `sim.ts` (`spawnWildlife`, `tickWildlife`), `hunting.ts` (`noteAttack`, wolf meat), `husbandry.ts` (`penStep`), `persistence.ts` (validators, `wolf`), `wildlifeMovement.ts` (exported safe-segment test), `world.ts` (rig and fish layers, orientation fix), `types.ts`.
+`src/game/animalTraits.ts`, `src/game/animalBehaviour.ts`, hooks in `sim.ts`, `hunting.ts`, `husbandry.ts`, `persistence.ts`, `wildlifeMovement.ts`, `types.ts`; small rig hooks in `src/scene/animalLife.ts` and `animalAdapter.ts`.
 
 ## 4. Tests and renders
-`scripts/animal-behaviour.test.mjs`: determinism, speed/turn limits and no teleport, daily rhythm distribution, herd cohesion and spacing, FID and flee direction, wolf stalk/chase/kill/feed, obstacle and water safety, legacy-save compatibility and validator, LOD handoff without pop, foot-slide bound, IK reach, near-zone hysteresis, fish schools.
-Renders in `docs/renders/animals/`: `trace-herd-day.png`, `trace-predator-chase.png`, `trace-drinking.png` (from the real sim, `tools/render-preview/animal-trace.mjs`), `gait-strip-{deer,horse,cattle,wolf}.png`, `postures-{deer,horse,boar,goat}.png`, `legacy-orientation-bug.png`, `fish-school.png` (real three.js, `tools/render-preview/animals.mjs`).
+`scripts/animal-behaviour.test.mjs`: determinism, speed/turn limits and no teleport, daily rhythm, herd cohesion and spacing, FID and flee, wolf stalk/chase/kill/feed, obstacle and water safety, legacy-save compat, near-zone handoff without pop.
+Renders in `docs/renders/animals/`: `trace-herd-day.png`, `trace-predator-chase.png`, `trace-drinking.png` (real sim traces), `gait-strip-{deer,horse,cattle,wolf}.png`.
 
 ## 5. Known gaps (not done / not verified)
 - Rabbits/warrens are not a species in this game; the trait table and herd code take them when added. Sheep, horse, cattle wild herds only exist once other systems create them; they get groups on first tick.
 - Seasonal migration is a home-range anchor with habitat weighting, not long-distance migration.
-- Pen stock and pack/led stock use the old merged meshes (no joint rig yet) although their pen movement is now smooth.
-- The rig is a generic quadruped/bird built from primitives with per-species proportions, not the authored merged meshes: silhouettes differ at the LOD boundary (the handoff is continuous in position, yaw and pose, not in mesh shape). Needs an in-game visual pass.
-- Rendering checks were done with SwiftShader sheets, not a live GPU session; wild-animal picking through the rig meshes is wired but not exercised in a browser.
+- Rig appearance, pen/pack stock meshes and picking belong to the animal-models work; no live-GPU check was done here.

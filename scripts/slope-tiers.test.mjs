@@ -123,10 +123,123 @@ test('the graded model is on for new games and old saves keep the earlier linear
   assert.equal(before.wood-g.tribe(0).wood,(BUILDINGS.hut.wood||0)+quote.extraWood,'extra wood is really spent');assert.equal(before.stone-g.tribe(0).stone,(BUILDINGS.hut.stone||0)+quote.extraStone,'extra stone is really spent');
   // save round trip keeps the record; an old save without the switch loads as linear
   const raw=JSON.parse(JSON.stringify(encodeGame(g)));validateGameSave(raw);const back=decodeGame(raw);assert.equal(back.state.slopeModel,'graded');assert.deepEqual(back.state.buildings.find(x=>x.id===b.id).site,b.site);
-  const old=JSON.parse(JSON.stringify(raw));delete old.state.slopeModel;for(const x of old.state.buildings)delete x.site;validateGameSave(old);assert.equal(decodeGame(old).state.slopeModel,undefined);
+  const old=JSON.parse(JSON.stringify(raw));delete old.state.slopeModel;delete old.state.terrainModel;for(const x of old.state.buildings)delete x.site;validateGameSave(old);assert.equal(decodeGame(old).state.slopeModel,undefined);
   const bad=JSON.parse(JSON.stringify(raw));bad.state.buildings.find(x=>x.id===b.id).site={v:1,tier:'moderate',foundation:'moat',slope:1,fall:1,extraWork:1,wood:1,stone:1};assert.throws(()=>validateGameSave(bad));
-  const orphan=JSON.parse(JSON.stringify(raw));delete orphan.state.slopeModel;assert.throws(()=>validateGameSave(orphan),'a site record needs the graded switch');
+  const orphan=JSON.parse(JSON.stringify(raw));delete orphan.state.slopeModel;delete orphan.state.terrainModel;assert.throws(()=>validateGameSave(orphan),'a site record needs the graded switch');
   g.height=orig;
   // build time: the extra labour is part of the work need
   const {BUILD_TIME}=await import('../src/game/constants.ts');assert.ok(BUILD_TIME.hut+b.site.extraWork>BUILD_TIME.hut);void COST_RULES;
+});
+
+// ---- terrain model v2: nuance beyond a single angle ------------------------------------------------------------------------------------------------
+import {surveyNuance,findShelf,permeabilityOf,NUANCE_RULES} from '../src/game/slopeNuance.ts';
+import {assessSiteV2} from '../src/game/siteAssessmentV2.ts';
+const dome=k=>(x,z)=>10-k*(x*x+z*z);
+const slopeS=deg=>{const g=Math.tan(deg*Math.PI/180);return (x,z)=>10-g*z;};      // falls toward +z (south)
+const slopeN=deg=>{const g=Math.tan(deg*Math.PI/180);return (x,z)=>10+g*z;};
+const shelfHill=(deg,half=3)=>{const g=Math.tan(deg*Math.PI/180);return (x)=>10+g*(x>=half?x-half:x<=-half?x+half:0);};
+const v2=(h,type='hut',w=5.4,d=5.2,o={})=>assessSiteV2(h,type,0,0,w,d,o);
+test('nuance: a ridge is windy, a hollow is damp or frosty; the same mean slope reads differently',()=>{
+  const r=surveyNuance(dome(.04),0,0,5.4,5.2),h=surveyNuance(dome(-.04),0,0,5.4,5.2),p=surveyNuance(tilt(15),0,0,5.4,5.2);
+  assert.equal(r.landform,'ridge');assert.ok(r.curvature>=NUANCE_RULES.curvatureMetres);assert.ok(r.tags.includes('Ridge: windy')&&r.risks.wind>.5);
+  assert.equal(h.landform,'hollow');assert.ok(h.curvature<=-NUANCE_RULES.curvatureMetres);assert.ok(h.tags.some(t=>/^Hollow/.test(t)));assert.ok(h.risks.frost>.5,'cold air pools in a hollow');assert.ok(h.wetness>r.wetness,'a hollow is wetter than a ridge');
+  assert.ok(Math.abs(p.curvature)<1e-9&&p.landform!=='hollow'&&p.landform!=='ridge','a plane has no curvature however steep');
+  assert.ok(v2(dome(-.04)).extraWork>=v2(dome(.04)).extraWork||v2(dome(-.04)).tier==='level');
+});
+test('nuance: aspect and sun, with the hemisphere flipping it',()=>{
+  const s=surveyNuance(slopeS(15),0,0,5.4,5.2),n=surveyNuance(slopeN(15),0,0,5.4,5.2),south=surveyNuance(slopeS(15),0,0,5.4,5.2,{hemisphere:-1});
+  assert.ok(s.sun>.9&&s.tags.includes('Sun slope'));assert.ok(n.sun<-.9&&n.tags.includes('Shade slope'));assert.ok(south.sun<-.9,'in the south hemisphere the sun is north');
+  assert.equal(s.aspectDeg,180);assert.equal(n.aspectDeg,0);assert.equal(surveyNuance(tilt(15),0,0,5.4,5.2).aspectDeg,270,'ground falling to -x faces west');
+  assert.equal(surveyNuance(()=>10,0,0,5.4,5.2).sun,0,'flat ground has no sun side');
+});
+test('nuance: a smooth 15 degree slope is not a broken 15 degree slope',()=>{
+  const bumpy=(x,z)=>tilt(15)(x,z)+.6*Math.sin(x*2.3)*Math.cos(z*1.9);
+  const smooth=surveyNuance(tilt(15),0,0,5.4,5.2),broken=surveyNuance(bumpy,0,0,5.4,5.2);
+  assert.ok(smooth.roughness<.01&&!smooth.rough);assert.ok(broken.roughness>=NUANCE_RULES.roughRmsMetres&&broken.rough&&broken.tags.includes('Broken ground'));
+  const a=v2(tilt(15)),b=v2(bumpy);assert.ok(b.extraWork>a.extraWork,'broken ground is slower work');assert.match(b.detail,/broken ground/);
+});
+test('nuance: a natural shelf on a steep hillside is a good site, not a refusal',()=>{
+  const H=shelfHill(30);
+  const plain=assessSite(tilt(30),'hut',0,0,5.4,5.2);assert.ok(!plain.ok,'the bare 30 degree hillside is refused');
+  const onShelf=v2(H);assert.ok(onShelf.ok,onShelf.issue);assert.ok(['level','moderate'].includes(onShelf.tier));assert.ok(onShelf.tags.includes('Natural shelf'));assert.match(onShelf.label,/Natural shelf/);
+  const straddle=assessSiteV2(H,'hut',1.1,0,5.4,5.2);assert.ok(straddle.ok&&straddle.tags.includes('Natural shelf'),'a footprint mostly on the ledge still works');
+  const store=assessSiteV2(H,'warehouse',0,0,6,6);assert.ok(store.ok,'a store sits on a shelf too');
+  const off=assessSiteV2(H,'hut',9,0,5.4,5.2);assert.ok(!off.ok,'off the shelf it is hillside again');
+  const hint=findShelf(H,9,0,5.4,5.2);assert.ok(hint&&hint.distance<=NUANCE_RULES.searchRadiusMetres&&hint.dx<0,'the shelf is found uphill-left');
+  assert.match(assessSiteV2(H,'hut',9,0,5.4,5.2,{hint:true}).detail,/natural shelf \d+ m /);
+  assert.equal(surveyNuance(tilt(30),0,0,5.4,5.2).shelf,null,'a plain slope has no shelf');
+});
+test('nuance: wet hollows near water flood; loose steep hollows slip; drainage follows the rock',()=>{
+  const bowl=(x,z)=>1+.03*(x*x+z*z),n=surveyNuance(bowl,0,0,5.4,5.2,{water:()=>.5,waterDistance:10});
+  assert.ok(n.risks.flood>=.4&&n.tags.includes('Flood risk'));assert.equal(surveyNuance(bowl,0,0,5.4,5.2).risks.flood,0,'no water known: no flood');
+  const gully=(x,z)=>10+Math.tan(34*Math.PI/180)*x+.05*z*z,loose=surveyNuance(gully,0,0,5.4,5.2,{ground:SHALE}),hard=surveyNuance(gully,0,0,5.4,5.2,{ground:GRANITE});
+  assert.ok(loose.risks.landslip>hard.risks.landslip&&loose.risks.landslip>=.4&&loose.tags.includes('Slip risk'));
+  assert.ok(permeabilityOf(SAND)>permeabilityOf(SHALE)&&permeabilityOf(null)===.5);
+  assert.ok(surveyNuance(()=>10,0,0,5.4,5.2,{ground:SHALE}).wetness>surveyNuance(()=>10,0,0,5.4,5.2,{ground:SAND}).wetness,'clay stays wet');
+  assert.ok(v2(gully,'hut',5.4,5.2,{ground:SHALE}).extraStone>=v2(gully,'hut',5.4,5.2,{ground:GRANITE}).extraStone||!v2(gully,'hut',5.4,5.2,{ground:SHALE}).ok);
+});
+test('v2 buildings: same tiers as the plain model on plain slopes; exempt types untouched; deterministic',()=>{
+  for(const d of[2,5,10,15,22,35])assert.equal(v2(tilt(d)).tier,hut(d).tier,String(d));
+  assert.equal(v2(tilt(15)).foundation,hut(15).foundation);assert.deepEqual(v2(tilt(15),'stonewall',4,4),at('stonewall',15,4,4));assert.deepEqual(v2(tilt(17),'hut'),v2(tilt(17),'hut'));
+  for(const f of['slopeNuance','terraceFarming','terraceRecord','siteAssessmentV2','terraceRuntime']){const src=readFileSync(new URL(`../src/game/${f}.ts`,import.meta.url),'utf8');assert.ok(!/Math\.random|Date\.now|performance\.now/.test(src),f);}
+});
+test('v2 save record: tags and terrace are optional, validated, and only on v2',()=>{
+  const f=assessSiteV2(tilt(20),'farm',0,0,8.2,8.2),r=siteRecord(f);assert.ok(r&&r.terrace&&validSiteRecord(r)&&r.foundation==='strips');
+  for(const bad of[{...r,terrace:{...r.terrace,k:'moat'}},{...r,terrace:{...r.terrace,soil:-1}},{...r,terrace:{...r.terrace,junk:1}},{...r,terrace:{...r.terrace,n:0}},{...r,tags:['Haunted']},{...r,tags:'Sun slope'}])assert.ok(!validSiteRecord(bad),JSON.stringify(bad));
+  const withTags=siteRecord(assessSiteV2(shelfHill(30),'hut',1.1,0,5.4,5.2));assert.equal(withTags,undefined,'a level shelf stores nothing');
+  assert.ok(validSiteRecord({...siteRecord(hut(22)),tags:['Sun slope']}));
+});
+
+// ---- foundation audit 2026-11-13: buildings sit on the ground; posts only where history puts them --------------------------------------------------
+import {floodSite,pileDwellingClass} from '../src/game/slopeTiers.ts';
+import {FOUNDATION_RULES} from '../src/game/siteFoundation.ts';
+import {groundPlanOf,offsetPolygon} from '../src/scene/groundPlan.ts';
+import {carvedVariantFor,variantSpec} from '../src/scene/buildingStyleMap.ts';
+import {presetSkin} from '../src/scene/civSkin.ts';
+test('post platforms are never chosen below 18 degrees on dry ground, for any class, nor for fire work or civic stone',()=>{
+  for(const type of['hut','house','dryrack','potter','tailor','kiln','oven','forge','smokehouse','warehouse','townhall','temple','well','watchtower','barracks','stables'])for(let deg=0;deg<18;deg+=1){
+    const a=at(type,deg,5.4,5.2);assert.notEqual(a.foundation,'stilts',`${type} at ${deg} degrees must not be on posts on dry ground`);
+  }
+  for(const deg of[0,3,6,10,14])assert.ok(['none','pad'].includes(hut(deg).foundation),`hut ${deg}: ${hut(deg).foundation}`);
+  assert.equal(hut(22).foundation,'stilts','the steep tier still offers a platform for a hut');
+});
+test('pile dwellings: posts on marsh or a low bank for dwellings and shelters only, whatever the tilt; never for kilns, stores, halls',()=>{
+  for(const deg of[0,3,8]){const a=at('hut',deg,5.4,5.2,{flood:true});assert.equal(a.foundation,'stilts',`hut ${deg}`);assert.match(a.label,/Pile dwelling/);assert.ok(a.ok&&a.extraWood>0);}
+  assert.equal(at('house',0,5.4,5.2,{flood:true}).foundation,'stilts');
+  for(const type of['kiln','forge','oven','smokehouse','warehouse','townhall','temple','well','watchtower'])assert.notEqual(at(type,0,5.4,5.2,{flood:true}).foundation,'stilts',type);
+  assert.ok(pileDwellingClass('dwelling','hut')&&!pileDwellingClass('dwelling','kiln')&&!pileDwellingClass('storage','warehouse'));
+  const rec=siteRecord(at('hut',0,5.4,5.2,{flood:true}));assert.ok(rec&&rec.foundation==='stilts'&&validSiteRecord(rec),'a pile dwelling on level ground is recorded');
+  assert.equal(siteRecord(hut(0)),undefined,'dry level ground stores nothing');
+  // flood detection: a footprint with water lapping 2 m away is flood country, dry upland is not
+  const water=()=>9.8,high=()=>12,bank=(x)=>x>1.5?9.5:10.4;
+  assert.equal(floodSite(high,water,0,0,5.4,5.2),false);assert.equal(floodSite(bank,water,0,0,5.4,5.2),true);assert.equal(floodSite(high,water,0,0,5.4,5.2,true),true,'wetland province');
+});
+test('floor level: cut and fill takes the mean ground on level/pad sites, an uphill door is not buried, posts and outcrops keep the highest contact',()=>{
+  const F=foundationLevel;
+  assert.equal(F('pad',12,10,undefined,11),11.03);assert.equal(F('none',12,10,undefined,11),11.03);assert.equal(F(undefined,12,10,undefined,11),11.03);
+  assert.equal(F('pad',12,10,undefined,undefined),12.03,'no mean known (classic kit): highest, as before');
+  assert.equal(F('pad',12,10,11.9,11),11.9-FOUNDATION_RULES.doorBuryMetres+.03,'an uphill door lifts the floor to meet it');
+  assert.equal(F('pad',12,10,10.2,11),11.03,'a downhill door keeps the mean (steps down)');
+  assert.equal(F('terrace',12,10,undefined,11),11.03,'a terrace is a cut bench: half the fall');assert.equal(F('terrace',12,10),12.03);assert.equal(F('stilts',12,10,undefined,11),12.03);assert.equal(F('outcrop',12,10,undefined,11),12.03);
+  assert.equal(F('stilts',12,10,undefined,11,.9),12.93,'pile dwellings stand clear of the flood line');
+});
+const planOf=(type,civ,era=1,w=5.4,d=5.2)=>groundPlanOf(variantSpec(carvedVariantFor({worldSeed:4,type,id:5,era,footprint:{w,d},settlementSeed:0,...(civ?{skin:presetSkin(civ)}:{})})));
+test('ground plan: read from the real generated spec - walls for huts and houses, legs for the staddle granary, no empty plan',()=>{
+  for(const civ of['sandrill','nilemark','tigrane','hanrei','vedara','aureline','sahelan'])for(const type of['hut','house'])for(const era of[0,1,2]){
+    const p=planOf(type,civ,era);assert.ok(p.polys.length>=1||p.piers.length>=1,`${civ} ${type} era ${era} has a plan`);
+    for(const poly of p.polys)assert.ok(poly.length>=4&&poly.every(q=>Math.abs(q.x)<4&&Math.abs(q.z)<4),'outline inside the plot');
+  }
+  let granary=0;for(const civ of[null,'sandrill','nilemark','tigrane','hanrei','vedara','aureline','sahelan'])for(const era of[0,1,2]){const p=planOf('warehouse',civ,era,6.6,6);if(p.raised){granary++;assert.ok(p.piers.length>=4&&p.polys.length===0,'a raised granary has staddle stones and no wall ring');}}
+  assert.ok(granary>=2,'at least one civ builds the granary on staddle stones');
+  const sq=[{x:-1,z:-1},{x:1,z:-1},{x:1,z:1},{x:-1,z:1}],o=offsetPolygon(sq,.5);assert.ok(o.every(q=>Math.abs(Math.abs(q.x)-1.5)<1e-9&&Math.abs(Math.abs(q.z)-1.5)<1e-9),'mitred offset of a square');
+});
+test('footings follow the real wall outline and stand clear of the posts: a ring under every wall, sunk to the terrain, never above the floor',()=>{
+  const H=tilt(8),level=10+Math.tan(8*Math.PI/180)*0+.03,hut=planOf('hut','aureline',1);
+  const boxes=foundationBoxes('none',{x:0,z:0,w:5.4,d:5.2,yaw:0},{height:H,level:level+.02,downhill:{x:-1,z:0},plan:hut});
+  assert.ok(boxes.length>0&&boxes.every(b=>b.kind==='footing'),'gentle slope: a small footing only');
+  for(const b of boxes){assert.ok(b.y-b.height/2<=H(b.x,b.z)+1e-6,'sunk into the ground');assert.ok(b.y+b.height/2<=level+.02-.02+1e-6,'below the floor');assert.ok(b.width<=FOUNDATION_RULES.footingThickness+1e-9,'small');}
+  assert.equal(foundationBoxes('none',{x:0,z:0,w:5.4,d:5.2},{height:()=>10,level:10.03,downhill:{x:0,z:1},plan:hut}).length,0,'flat ground: no footing at all');
+  // stilts: squared posts on stone pads, thick enough to read as timber
+  const st=foundationBoxes('stilts',{x:0,z:0,w:5.4,d:5.2},{height:tilt(22),level:11.5,downhill:{x:-1,z:0},plan:hut}),posts=st.filter(b=>b.kind==='post'),pads=st.filter(b=>b.kind==='footing');
+  assert.ok(posts.length>=4&&pads.length===posts.length,'every post stands on a stone pad');assert.ok(posts.every(b=>b.width>=.3),'posts are not spindly');assert.ok(st.some(b=>b.kind==='beam'));
 });

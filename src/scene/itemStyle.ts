@@ -48,7 +48,7 @@ export function itemStyleFor(skinId?:string|null):ItemStyle{
  const skin=skinId?skinById(skinId)??skinById('civ:'+skinId)??skinById(String(skinId).replace(/^civ:/,'')):undefined;
  const civ=((skin?.preset??skin?.grammar)||(ROW[String(skinId??'').replace(/^civ:/,'')]?String(skinId).replace(/^civ:/,''):FALLBACK_CIV)) as string,row=ROW[civ]??ROW[FALLBACK_CIV];
  const look=skin?lookForSkin(skin):LOOKS[civ as CivId]??LOOKS.aureline,h=hash32('item-style',skin?.id??'neutral'),acc=skin?.palette?.accent.hex??'#c9a23c',field=skin?.garb?.body??'#8a7a5a',trim=skin?.garb?.trim??'#c9a23c';
- const remix=!!skin&&(skin.mode==='remix'||skin.mode==='free');
+ const remix=!!skin&&(skin.mode==='remix'||skin.mode==='free'||skin.mode==='generated');
  const woods:MatId[]=['ash','oak','yew','birch','bamboo','cedar','pine','elm','willow'];
  const s:ItemStyle={
   civ,emblem:skin?.banner?.emblem??CIVS[civ as CivId]?.emblem?.id??'sunDisc',wood:remix&&h%3===0?woods[(h>>>3)%woods.length]:row.wood,wood2:row.wood2??row.wood,wrapKind:row.wrapKind??'leather',wrap:row.wrap??'leather',

@@ -20,8 +20,8 @@ import {FixedOrbitCameraCollision} from './fixedOrbitCollision';
 import {survivalFireActive} from '@/game/survivalNeeds';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
-import {AnimalRigLayer,FishSchoolLayer} from './animalRigLayer';
-import {animalRigRadius,selectRigAnimals,ANIMAL_RIG_RULES} from './animalVisual';
+import {AnimalAdapter,FishAdapter,readAnimalSet,type AnimalRow} from './animalAdapter';
+import {YEAR_SECONDS} from '@/game/settlement';
 import {FibreWorkLayer} from './fibreWorkLayer';
 import {BasketLayer} from './basketLayer';
 import {PenFenceLayer} from './penFenceLayer';
@@ -37,6 +37,7 @@ import {excavationTerrain} from '../game/excavation';
 import {WildPlantLayer} from './wildPlants';
 import {wildPlantsEnabled,habitatKindAt} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
+import {HorizonRing} from './horizonRing';
 import {TowerPlatformLayer} from './towerPlatformLayer';
 import {CarvedBuildingLayer,carvedGeometry,createCarvedMaterial,type CarvedInstance} from './carvedBuildingLayer';
 import {carvedDaylightGrade,CARVED_LIGHT_RIG} from './carvedPalette';
@@ -51,8 +52,10 @@ import {hearthHeating} from '@/game/survivalNeeds';
 import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
-import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
-import {DrawDistanceGovernor,drawBands,loadDrawDistance,type DrawBands,type DrawDistance} from '../game/drawDistance';
+import {GRAPHICS_RULES,graphicsPixelRatio} from '../game/graphics';
+import {initialEffective,TREE_DETAIL,type TreeStep} from '../game/graphicsSettings';
+import {buildingTierAt,getDetailLevel,setDetailLevel,loadDetailLevel,rememberDetailLevel,shadowHalfExtent,DETAIL_RULES,type DetailLevel} from '../game/detailLevel';
+import {DrawDistanceGovernor,drawBands,type DrawBands,type DrawDistance} from '../game/drawDistance';
 import {currentRenderStyle,type RenderStyle} from './renderStyle';
 import {loadMapStyle,rememberMapStyle,type MapStyle} from './mapStyle';
 import {painterAtmosphere,makePainterSky,PAINTER_GRADE_SHADER} from './painterAtmosphere';
@@ -84,7 +87,8 @@ import {makeDepthWater,addLocalWaters,type RenderWaterBody,type RenderWaterfall}
 import {seaSurfaceY} from '../game/localWater';
 import {CampVisual} from './campVisual';
 import {landscapeSample,LANDSCAPE_ART_RULES,ATMOSPHERE_RULES,atmosphericDensity} from './landscapeArt';
-import {foundationProfile,terrainLaidWorkplace} from './foundations';
+import {foundationProfile,terrainLaidWorkplace,setGroundPlanProvider,type DrawnGroundPlan} from './foundations';
+import {groundPlanOf,type GroundPlan} from './groundPlan';
 import {FieldSurface} from "./fieldSurface";
 import {daylightArt} from './daylightArt';
 import {shorelineAt} from './shoreline';
@@ -97,7 +101,9 @@ import {trailRibbons} from "@/game/trailRibbons";
 import {smoothRivers} from "@/game/channelSmoothness";
 import {buildingQuarterTurns,turnedFootprint} from "@/game/footprints";
 import {siteRecord} from "@/game/slopeTiers";
-import {carvedVariantFor,variantSpec} from './buildingStyleMap';
+import {foundationBoxes} from "@/game/siteFoundation";
+import {hillFieldLines,HILL_RULES} from "@/game/hillFarming";
+import {carvedVariantFor,variantSpec,carvedBuildingSpec} from './buildingStyleMap';
 import {buildCarvedMesh} from './carvedMesh';
 import {buildingGroundSupports} from './buildingGrounding';
 import * as THREE from "three";
@@ -306,6 +312,9 @@ export class WorldView {
   private contourFields: ContourFields | null = null;
   private wildPlantLayer:WildPlantLayer|null=null;
   private landContinuation:LandContinuation|null=null;
+  /** land, sea and forest masses beyond the playable square (horizonRing.ts) */
+  horizon:HorizonRing|null=null;
+  private horizonTint=new THREE.Color();
   private bankLayer:BankTerrainLayer|null=null;
   private excavationLayer:ExcavationLayer|null=null;
   private fieldSurface: FieldSurface | null = null;
@@ -380,6 +389,8 @@ export class WorldView {
   domesticSheep: THREE.InstancedMesh | null = null;
   domesticGoats: THREE.InstancedMesh | null = null;
   birds: THREE.InstancedMesh | null = null;
+  /** ?animals=legacy keeps the old merged animal meshes; otherwise the jointed rig layer draws animals and the old meshes stay as invisible picking proxies. */
+  private animalSet=readAnimalSet();private animals:AnimalAdapter|null=null;private fishAdapter:FishAdapter|null=null;
   private tmpCam = new THREE.Vector3();
   private disposed = false;
   private treeCount = 0;
@@ -427,7 +438,9 @@ export class WorldView {
   private litFog = new THREE.Color("#d2dcbe");
   private litSunCol = new THREE.Color("#fff4d2");
   /** Draw distance (src/game/drawDistance.ts): the level the player chose, the level in force (the governor may ease it when frames stay over budget) and its bands. */
-  private drawGovernor = new DrawDistanceGovernor(loadDrawDistance());
+  private drawGovernor = new DrawDistanceGovernor(initialEffective().draw);
+  /** Tree detail step 1..5 in force (src/game/graphicsSettings.ts TREE_DETAIL); the settings controller sets it, the tree layers read it each sync. */
+  private treeStep: TreeStep = initialEffective().trees;
   private drawBandsNow: DrawBands = drawBands(this.drawGovernor.level, MAP);
   private lastRenderAt = 0;
   /** Called (once per easing) when the governor lowers the draw distance automatically. */
@@ -438,7 +451,8 @@ export class WorldView {
   private viewSphere = new THREE.Sphere();
 
   constructor(canvas: HTMLCanvasElement) {
-    this.quality = loadGraphicsQuality();
+    this.quality = initialEffective().graphics;
+    setDetailLevel(loadDetailLevel());
     this.setStyle(this.styleId);
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -452,7 +466,7 @@ export class WorldView {
       graphicsPixelRatio(this.quality,canvas.clientWidth||800,canvas.clientHeight||600,window.devicePixelRatio||1),
     );
     this.renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 600, false);
-    this.renderer.shadowMap.enabled = this.shadowsEnabled;
+    this.renderer.shadowMap.enabled = this.sunShadows();
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.toneMappingExposure = 1.02;
@@ -474,7 +488,7 @@ export class WorldView {
     this.fill = new THREE.AmbientLight("#f1f1e6", 0.22);
     this.scene.add(this.fill);
     this.sun = new THREE.DirectionalLight("#fff1c4", 2.05);
-    this.sun.castShadow = this.shadowsEnabled;
+    this.sun.castShadow = this.sunShadows();
     this.sun.shadow.mapSize.set(
       this.quality === "high" ? 1024 : 512,
       this.quality === "high" ? 1024 : 512,
@@ -705,13 +719,30 @@ export class WorldView {
   getDrawDistance(): DrawDistance { return this.drawGovernor.chosen; }
   getEffectiveDrawDistance(): DrawDistance { return this.drawGovernor.level; }
   getDrawBands(): DrawBands { return this.drawBandsNow; }
+  /** Detail (detailLevel.ts): model-tier switch distances plus the High/Ultra fidelity features (sun shadow map, AgX grade, bump, MSAA). Render-only. */
+  getDetailLevel(): DetailLevel { return getDetailLevel(); }
+  setDetailLevel(level: DetailLevel) {
+    setDetailLevel(level);
+    this.applyQuality(this.quality);
+    this.carvedLayer?.setBump(DETAIL_RULES.bump[getDetailLevel()]);
+    this.setupComposer();
+    this.lastRenderAt = 0;
+  }
+  /** Effective sun-shadow switch: the user's Shadows checkbox, or any Detail level that carries a shadow map. */
+  private sunShadows(q: "low" | "med" | "high" = this.quality) { return (this.shadowsEnabled || DETAIL_RULES.shadowMap[getDetailLevel()] > 0) && q !== "low"; }
   /** Choose a draw distance (the UI persists it). Resets the automatic easing. */
   setDrawDistance(level: DrawDistance) { this.drawGovernor.choose(level); this.lastRenderAt = 0; this.applyDrawBands(); }
+  /** Put a level in force without changing the chosen one (Auto easing and safety fallbacks come through the settings controller, never from here on its own). */
+  setEffectiveDrawDistance(level: DrawDistance) { this.drawGovernor.level = level; this.applyDrawBands(); }
+  getTreeDetail(): TreeStep { return this.treeStep; }
+  setTreeDetail(step: TreeStep) { if (this.treeStep === step) return; this.treeStep = step; }
   private applyDrawBands() {
     this.drawBandsNow = drawBands(this.drawGovernor.level, this.mapSize);
     this.camera.far = this.drawBandsNow.cameraFar;
     this.camera.updateProjectionMatrix();
+    if(this.horizon&&this.horizonGame)this.horizon.build(this.horizonGame,this.drawGovernor.level,this.drawBandsNow);
   }
+  private horizonGame:Game|null=null;
   /** What the tree layers need each sync: the bands, a conservative frustum test for far trees (camera frustum widened sideways so a quick turn does not show a hole
    * before the next refresh), and a key that changes when the camera moved or turned enough to need a fresh far list. */
   private treeView(prime: boolean) {
@@ -722,7 +753,7 @@ export class WorldView {
     const frustum = this.viewFrustum, sphere = this.viewSphere, y = this.look.y;
     const inView = (x: number, z: number, r: number) => { sphere.center.set(x, y, z); sphere.radius = r + 60; return frustum.intersectsSphere(sphere); };
     const key = `${Math.round(p.x / 6)}|${Math.round(p.z / 6)}|${Math.round(this.yaw * 14)}|${Math.round(this.pitch * 14)}|${Math.round(this.dist / 12)}`;
-    return { bands: this.drawBandsNow, inView, key, prime };
+    return { bands: this.drawBandsNow, inView, key, prime, detail: TREE_DETAIL[this.treeStep] };
   }
 
   applyQuality(q: "low" | "med" | "high") {
@@ -731,9 +762,11 @@ export class WorldView {
       graphicsPixelRatio(q,this.renderer.domElement?.clientWidth||800,this.renderer.domElement?.clientHeight||600,window.devicePixelRatio||1),
     );
     this.composer?.setPixelRatio(this.renderer.getPixelRatio?.()??graphicsPixelRatio(q,800,600,window.devicePixelRatio||1));
-    this.renderer.shadowMap.enabled = this.shadowsEnabled && q !== "low";
-    this.sun.castShadow = this.shadowsEnabled && q !== "low";
-    const map = q === "high" ? 1024 : 512;
+    this.renderer.shadowMap.enabled = this.sunShadows(q);
+    this.sun.castShadow = this.sunShadows(q);
+    const lv = getDetailLevel(), map = DETAIL_RULES.shadowMap[lv] || (q === "high" ? 1024 : 512);
+    this.renderer.toneMapping = DETAIL_RULES.grade[lv] === "agx" ? THREE.AgXToneMapping : THREE.NeutralToneMapping;
+    this.renderer.toneMappingExposure = DETAIL_RULES.grade[lv] === "agx" ? 1.12 : 1.02;
     this.sun.shadow.mapSize.set(map, map);
     this.sun.shadow.map?.dispose();
     this.sun.shadow.map = null;
@@ -771,6 +804,7 @@ export class WorldView {
     this.seasonAcc = 1;
     this.buildTerrain(game);
     if(game.world.landContinuation&&this.terrainSurface)this.landContinuation=new LandContinuation(this.scene,game,this.terrainSurface,this.mats.ground as THREE.MeshStandardMaterial);
+    this.horizon??=new HorizonRing(this.scene);this.horizon.build(game,this.drawGovernor.level,this.drawBandsNow);this.horizonGame=game;
     this.cameraGround={size:game.world.size,height:(x,z)=>Math.max(game.height(x,z),game.waterAt(x,z))};
     this.cameraGroundRevision=()=>game.navigationRevision();this.cameraCollision.invalidate();
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size,this.terrainSurface?.banks,this.terrainSurface?.bankCuts);
@@ -1073,6 +1107,8 @@ export class WorldView {
     });
     this.fish.count = nFish;
     this.scene.add(this.fish);
+    this.fishAdapter?.dispose();this.fishAdapter=null;
+    if(this.animalSet==='rig'){try{this.fishAdapter=new FishAdapter(this.scene);this.fish.visible=false;}catch(e){console.error('fish rig disabled:',e);this.fishAdapter=null;}}
 
     const sites = game.world.dockSites || [];
     if (sites.length) {
@@ -1118,6 +1154,7 @@ export class WorldView {
 
   private buildBuildings() {
     this.foundations=new BuildingGroundingLayer(this.scene,this.mats.stone);
+    setGroundPlanProvider((g,b)=>this.carvedPlanFor(g,b));
     this.eraDetails=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94}),1600);
     this.eraDetails.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.eraDetails.count=0;this.eraDetails.castShadow=true;this.eraDetails.receiveShadow=true;this.eraDetails.frustumCulled=false;
@@ -1271,11 +1308,6 @@ export class WorldView {
   }
 
   private wildlifeOwners = new Map<THREE.InstancedMesh, import("@/game/types").Critter[]>();
-  /** Near-camera jointed animals and swimming fish (presentation only; far animals keep the cheap merged instances). */
-  private animalRigs: AnimalRigLayer | null = null;
-  private fishSchools: FishSchoolLayer | null = null;
-  private rigIds = new Set<number>();
-  private schoolNodeIds = new Set<number>();
 
   private buildWildlife() {
     const mkHerd = (geo: THREE.BufferGeometry, mat: THREE.Material, n: number) => {
@@ -1308,6 +1340,28 @@ export class WorldView {
     this.domesticCattle = mkHerd(cattleGeo(), cattleMat, 24);
     this.packCattle = mkHerd(cattleGeo(true), cattleMat, 24);
     this.birds = mkHerd(birdGeo(), birdMat, 16);
+    this.animals?.dispose();this.animals=null;
+    if(this.animalSet==='rig'){try{this.animals=new AnimalAdapter(this.scene);this.hideLegacyAnimals();}catch(e){console.error('animal rig disabled, legacy animals restored:',e);this.animals=null;this.animalSet='legacy';}}
+  }
+
+  private hideLegacyAnimals(){
+    const on=this.animalSet==='legacy'||!this.animals;
+    for(const m of [this.deer,this.boars,this.wildGoats,this.domesticGoats,this.wildSheep,this.domesticSheep,this.wildHorses,this.domesticHorses,this.wildCattle,this.domesticCattle,this.birds])if(m)m.visible=on;
+  }
+
+  /** Draw every wild and domestic animal through the rig layer (positions and state read from the game, nothing written back). */
+  private drawAnimalRig(game:Game){
+    const ad=this.animals;if(!ad)return;
+    this.hideLegacyAnimals();
+    const cal=calendar(game),within=Math.max(0,Math.min(1,1-cal.remaining/(YEAR_SECONDS/4))),rows:AnimalRow[]=[];
+    const shore=(c:{x:number;z:number;facing:number})=>{const x=c.x+Math.sin(c.facing)*1.6,z=c.z+Math.cos(c.facing)*1.6;return game.waterAt(x,z)>game.height(x,z)-.02;};
+    for(const list of this.wildlifeOwners.values())for(const c of list)rows.push({c,domestic:false,season:cal.phase,within,shore:c.hp>0&&c.species!=='bird'&&shore(c)});
+    for(const a of game.state.livestock||[]){
+      if(a.hp<=0||(a.team!==0&&!game.visibleAt(a.x,a.z)))continue;
+      if(a.species!=='horse'&&a.species!=='cattle'&&a.species!=='goat'&&a.species!=='sheep')continue;
+      rows.push({c:a,domestic:true,season:cal.phase,within,shore:shore(a)});
+    }
+    ad.frame(rows,this.camera.position,game.state.time);
   }
 
   updateCamera(dt: number) {
@@ -1515,7 +1569,7 @@ export class WorldView {
     this.biomeScene?.sync(game,this.camera.position,this.quality,dt,this.treeView(false));this.biomeScene?.setTime(game.state.time);
     this.wildPlantLayer?.sync(game);
     this.syncNature(game);
-    this.syncWildlife(game,dt);
+    this.syncWildlife(game);
     this.buildingSyncIn-=dt;
     if(this.buildingSyncIn<=0){this.syncBuildings(game);this.campVisual?.sync(game);this.buildingSyncIn=.1;}
     this.carvedLayer?.animate(game.state.paused?0:dt);
@@ -1558,6 +1612,14 @@ export class WorldView {
       this.look.z + Math.sin(ang) * dist * 0.62,
     );
     this.sun.target.position.copy(this.look);
+    if (DETAIL_RULES.shadowMap[getDetailLevel()] > 0) {
+      // tight shadow box that follows the zoom: sharper texels when close; the focus is snapped to the texel grid so shadows do not crawl while panning
+      const half = shadowHalfExtent(this.dist), c = this.sun.shadow.camera;
+      if (c.right !== half) { c.left = -half; c.right = half; c.top = half; c.bottom = -half; c.updateProjectionMatrix(); }
+      const texel = (half * 2) / DETAIL_RULES.shadowMap[getDetailLevel()];
+      this.sun.target.position.x = Math.round(this.look.x / texel) * texel; this.sun.target.position.z = Math.round(this.look.z / texel) * texel;
+      this.sun.position.x += this.sun.target.position.x - this.look.x; this.sun.position.z += this.sun.target.position.z - this.look.z;
+    }
     this.bounce.position.set(this.look.x - 24, 20, this.look.z + 14);
     this.bounce.target.position.copy(this.look);
 
@@ -1684,6 +1746,7 @@ export class WorldView {
       u.uZenith.value.set(painter.skyZenith);u.uMid.value.set(painter.skyMid);u.uHorizon.value.set(painter.skyHorizon);u.uGround.value.set(painter.skyGround);u.uSun.value.set(painter.sun);
       u.uSunDir.value.copy(sunDir);u.uTime.value=game.state.time;u.uCover.value=painter.cloudCover;u.uNight.value=night?1:0;
       for(const material of this.waterMaterials){const w=(material as THREE.ShaderMaterial).uniforms;if(w?.uSkyHorizon){(w.uSkyHorizon.value as THREE.Color).set(painter.skyHorizon);(w.uSkyZenith.value as THREE.Color).set(painter.skyZenith);(w.uSunColor.value as THREE.Color).set(painter.sun);}}
+      if(this.horizon){const t=this.horizonTint.setRGB(1,1,1);if(sn.autumn>.15)t.lerp(_c.set('#ffd9a8'),sn.autumn*.45);if(sn.winter>.15||sn.snow>.3)t.lerp(_c.set('#e9eef5'),Math.max(sn.winter*.5,sn.snow*.75));this.horizon.sync({horizon:painter.skyHorizon,zenith:painter.skyZenith},sunDir,painter.sun,night?.3:Math.min(1,.4+painter.sunIntensity*.3),t);}
       if(this.terrainSurface)this.terrainSurface.setAtmosphere(sunDir,painter.cloudShadow,game.state.time,painter.sun,painter.haze);
       this.biomeScene?.setSun(sunDir,night?0:Math.min(1,painter.sunIntensity/2.2)*(1-.6*(painter.cloudCover>.8?1:0)),this.renderer.shadowMap.enabled);
       const g=this.gradePass?.uniforms;
@@ -1691,23 +1754,16 @@ export class WorldView {
     }
   }
 
-  private syncWildlife(game: Game,dt=1/60) {
+  private syncWildlife(game: Game) {
     this.wildlifeOwners.clear();
-    // Camera-distance LOD: animals near the camera focus get the jointed gait rig; the rest keep the cheap merged instances.
-    this.animalRigs??=new AnimalRigLayer(this.scene);
-    const rigRadius=animalRigRadius(this.drawGovernor.level),rigCandidates=game.state.wildlife.filter(c=>c.hp>0&&game.visibleAt(c.x,c.z));
-    const rigAnimals=selectRigAnimals(rigCandidates,this.look.x,this.look.z,rigRadius,this.rigIds);
-    this.rigIds=new Set(rigAnimals.map(c=>c.id));
-    this.animalRigs.update(rigAnimals,game.state.paused?0:dt,(x,z)=>game.height(x,z));
-    this.wildlifeOwners.set(this.animalRigs.body,this.animalRigs.drawn);this.wildlifeOwners.set(this.animalRigs.head,this.animalRigs.drawn);
     const stamp = (key: 'deer'|'boars'|'wildGoats'|'wildSheep'|'wildHorses'|'wildCattle'|'birds', species: string) => {
       const old=this[key];if(!old)return;
-      const list=wildlifeInstanceAnimals(game.state.wildlife,species,(x,z)=>game.visibleAt(x,z),(x,z)=>game.exploredAt(x,z),c=>carcassAvailable(game,c)).filter(c=>!this.rigIds.has(c.id));
-      const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;
+      const list=wildlifeInstanceAnimals(game.state.wildlife,species,(x,z)=>game.visibleAt(x,z),(x,z)=>game.exploredAt(x,z),c=>carcassAvailable(game,c));
+      const mesh=growWildlifeMesh(this.scene,old,list.length);this[key]=mesh;if(this.animals)mesh.visible=false;
       for(let i=0;i<list.length;i++){
         const c=list[i],corpse=c.hp<=0;
         _p.set(c.x,c.y+(corpse?.3*c.scale:0),c.z);
-        _haulEuler.set(corpse?Math.PI/2:0,c.facing-Math.PI/2,0);_q.setFromEuler(_haulEuler);_s.setScalar(c.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+        _haulEuler.set(corpse?Math.PI/2:0,c.facing,0);_q.setFromEuler(_haulEuler);_s.setScalar(c.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
       }
       mesh.count=list.length;mesh.instanceMatrix.needsUpdate=true;
       this.wildlifeOwners.set(mesh,list);
@@ -1719,7 +1775,7 @@ export class WorldView {
       const mesh=ensureInstanceCapacity(this.scene,this.domesticHorses,animals.length);this.domesticHorses=mesh;
       for(let i=0;i<animals.length;i++){
         const a=animals[i];
-        _p.set(a.x,a.y,a.z);_e.set(0,a.facing-Math.PI/2,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+        _p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
         this.domesticHorseOwners.push(game.state.buildings.find(b=>b.id===a.pen)!);
       }
       mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
@@ -1729,7 +1785,7 @@ export class WorldView {
       const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='cattle'&&(a.team===0||game.visibleAt(a.x,a.z)));
       const mesh=ensureInstanceCapacity(this.scene,this.domesticCattle,animals.length);this.domesticCattle=mesh;
       for(let i=0;i<animals.length;i++){
-        const a=animals[i];_p.set(a.x,a.y,a.z);_e.set(0,a.facing-Math.PI/2,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+        const a=animals[i];_p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
         this.domesticCattleOwners.push(game.state.buildings.find(b=>b.id===a.pen)!);
       }
       mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
@@ -1739,11 +1795,12 @@ export class WorldView {
       const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&a.species===species).slice(0,instCap(mesh));
       for(let i=0;i<animals.length;i++){
         const a=animals[i],seen=a.team===0||game.visibleAt(a.x,a.z);
-        _p.set(a.x,a.y,a.z);_e.set(0,a.facing-Math.PI/2,0);_q.setFromEuler(_e);_s.setScalar(seen?a.scale:.001);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
+        _p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(seen?a.scale:.001);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
       }
       mesh.count=animals.length;mesh.instanceMatrix.needsUpdate=true;
     }
     }
+    this.drawAnimalRig(game);
   }
 
   private trailAlpha() {
@@ -1874,13 +1931,9 @@ export class WorldView {
     if (this.fish) {
       const nFish = Math.min(game.state.fish.length, instCap(this.fish));
       const t = game.state.time;
-      // near the camera focus, fishing grounds are drawn as swimming schools instead of the flat marker
-      this.fishSchools??=new FishSchoolLayer(this.scene);
-      const fr=ANIMAL_RIG_RULES.fishRadius[this.drawGovernor.level]??65,nearFish=game.state.fish.filter(f=>f.amount>0&&game.exploredAt(f.x,f.z)&&Math.hypot(f.x-this.look.x,f.z-this.look.z)<=fr*(this.schoolNodeIds.has(f.id)?1.18:1)).sort((a,b)=>Math.hypot(a.x-this.look.x,a.z-this.look.z)-Math.hypot(b.x-this.look.x,b.z-this.look.z)).slice(0,ANIMAL_RIG_RULES.maxSchools);
-      this.schoolNodeIds=this.fishSchools.update(nearFish,t,(x,z)=>game.waterAt(x,z));
       for (let i = 0; i < nFish; i++) {
         const f = game.state.fish[i];
-        const gone = f.amount <= 0 || !game.exploredAt(f.x, f.z) || this.schoolNodeIds.has(f.id);
+        const gone = f.amount <= 0 || !game.exploredAt(f.x, f.z);
         const bob = Math.sin(t * 1.6 + i) * 0.08;
         _p.set(f.x, fishMarkerHeight(game,f) + bob, f.z);
         _e.set(0, t * 0.4 + i, 0.12);
@@ -1891,6 +1944,7 @@ export class WorldView {
       }
       this.fish.count = nFish;
       this.fish.instanceMatrix.needsUpdate = true;
+      if(this.fishAdapter){this.fish.visible=false;this.fishAdapter.frame(game.state.fish.slice(0,nFish),{waterAt:(x,z)=>game.waterAt(x,z)},this.camera.position,game.state.time,(x,z)=>game.exploredAt(x,z));}
     }
   }
 
@@ -2015,7 +2069,7 @@ export class WorldView {
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     if(!this.irrigationLayer&&(game.state as {irrigation?:unknown}).irrigation){this.irrigationLayer=new IrrigationLayer(this.scene,(x,z)=>game.height(x,z));this.irrigationLayer.setPreview(this.ditchPreview);}
     this.irrigationLayer?.sync(game);
-    this.contourFields?.sync(game,this.camera.position,b=>{const st=this.villageStyle(game,b.team,b);return{era:st.era,variant:st.variant};});
+    this.contourFields?.sync(game,this.camera.position,b=>{const st=this.villageStyle(game,b.team,b);return{era:st.era,variant:st.variant};},{quality:this.quality});
     const contourRows=this.bldMeshes.get('farm')?.timber.geometry.getAttribute('fieldRows');if(contourRows)contourRows.needsUpdate=true;
     for(const name of ['fieldEdges','fieldLook','fieldSoil']){const a=this.bldMeshes.get('farm')?.timber.geometry.getAttribute(name);if(a)a.needsUpdate=true;}
     this.syncEraDetails(game);
@@ -2053,11 +2107,42 @@ export class WorldView {
 
   /** The ONE place a roofed building becomes carved-generator input. The finished building (syncBuildings) and the placement ghost (setGhost) both call it, so the preview is the same model, skin, heraldry and facing as what gets built. */
   private carvedInputFor(game:Game,b:import("@/game/types").Building,type:BldType,ys:number):CarvedInstance{
+    return {...this.carvedInputBase(game,b,type,ys),y:foundationProfile(game,b).level};
+  }
+  /** carvedInputFor without the floor level (which itself needs the ground plan of this very input). */
+  private carvedInputBase(game:Game,b:import("@/game/types").Building,type:BldType,ys:number):CarvedInstance{
     const fab=fabricContext(b),mill=type==='watermill'||type==='windmill';
     const skin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,mourn=!!skin&&(this.mourning.get(b.team)?.until??0)>game.state.time;
     return {worldSeed:game.state.seed,type,id:b.id,era:fab?.built.era??(game.tribe(b.team)?.age||0),footprint:{w:b.w,d:b.d},
-      settlementSeed:b.team,...(()=>{const h=game.world.ecology?habitatForProvince(provinceAt(game.world.ecology,b.x,b.z).kind):habitatForBaseKind(habitatKindAt(game,b.x,b.z));return h?{habitat:h}:{};})(),lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:foundationProfile(game,b).level,z:b.z,
+      settlementSeed:b.team,...(()=>{const h=game.world.ecology?habitatForProvince(provinceAt(game.world.ecology,b.x,b.z).kind):habitatForBaseKind(habitatKindAt(game,b.x,b.z));return h?{habitat:h}:{};})(),lit:type==='hearth'?hearthHeating(game,b.id):undefined,x:b.x,y:b.y,z:b.z,
       ...(skin?{skin,heraldry:villageHeraldry(game.state.seed,b.team),...(mourn?{mourning:true}:{}),...(b.build>=1&&b.maxHp>0?{condition:b.hp/b.maxHp}:{})}:{}),yaw:type==='watermill'?this.millFacing(game,b):this.dwellingYaw(game,b),progress:ys,...(mill&&b.build>=1?{spin:this.millSpin(game,b)}:{})};
+  }
+
+  private planCache=new WeakMap<import("@/game/types").Building,{t:number;plan:DrawnGroundPlan|null}>();
+  private planByKey=new Map<string,DrawnGroundPlan>();
+  /** Where a finished carved building really touches the ground (groundPlan.ts), in its drawn orientation; null when the classic kit draws it. Cached per sim tick and per variant. */
+  private carvedPlanFor(game:Game,b:import("@/game/types").Building):DrawnGroundPlan|null{
+    const hit=this.planCache.get(b);if(hit&&hit.t===game.state.time)return hit.plan;
+    const type=b.type;let plan:DrawnGroundPlan|null=null;
+    const noPlan=this.renderStyle!=='carved'||b.bridge||!CARVED_TYPES.includes(type)||CARVED_KEEP_CURRENT.has(type)||terrainLaidWorkplace(type)||['palisade','gate','stonewall','trench','moat','dock','aqueduct','quarry','cornerstone','cairn','grove','canal','farm','pen','bridge','lumber'].includes(type)||type==='watchtower'&&!!b.towerPlatform||type!=='warehouse'&&expandedGrainWorkplace(b);
+    if(!noPlan){
+      const keep=(key:string,make:()=>DrawnGroundPlan)=>{let p=this.planByKey.get(key);if(!p){if(this.planByKey.size>600)this.planByKey.clear();p=make();this.planByKey.set(key,p);}return p;};
+      if(type==='warehouse'){
+        const skin=this.skinsOn&&this.styleId==='village'?skinOfTeam(game.state,b.team):null,era=fabricContext(b)?.built.era??(game.tribe(b.team)?.age||0);
+        const inputs=plotModules(b).map(m=>({m,input:{worldSeed:game.state.seed,type,id:b.id*16+Math.abs(Math.round(m.x*3+m.z*7))%13,era,footprint:{w:BUILDINGS.warehouse.w*m.sx,d:BUILDINGS.warehouse.d*m.sz},settlementSeed:b.team,...(skin?{skin,heraldry:villageHeraldry(game.state.seed,b.team)}:{})}}));
+        const variants=inputs.map(({m,input})=>({m,v:carvedVariantFor(input)}));
+        if(variants.every(q=>q.v)){
+          plan=keep(variants.map(q=>q.v!.key+'@'+q.m.x+','+q.m.z).join('|'),()=>{
+            const polys:GroundPlan['polys'][number][]=[],lifts:number[]=[],piers:GroundPlan['piers'][number][]=[];let entry:GroundPlan['entry'],round=false,raised=false;
+            for(const {m,v} of variants){const gp=groundPlanOf(variantSpec(v!));gp.polys.forEach((q,qi)=>{polys.push(q.map(pt=>({x:pt.x+m.x,z:pt.z+m.z})));lifts.push(gp.lifts[qi]??0);});for(const pr of gp.piers)piers.push({x:pr.x+m.x,z:pr.z+m.z,r:pr.r});entry??=gp.entry&&{x:gp.entry.x+m.x,z:gp.entry.z+m.z,width:gp.entry.width};round=round||gp.round;raised=raised||gp.raised;}
+            return {polys,lifts,piers,...(entry?{entry}:{}),round,raised,yaw:0};});
+        }
+      }else{
+        const input=this.carvedInputBase(game,b,type,1),v=carvedVariantFor(input);
+        if(v)plan=keep(v.key+'|'+input.yaw,()=>({...groundPlanOf(variantSpec(v)),yaw:input.yaw}));
+      }
+    }
+    this.planCache.set(b,{t:game.state.time,plan});return plan;
   }
 
   /** Quarter-turn yaw of a carved building. Dwellings the player did not turn explicitly swing their door toward the village's plaza (placementFacing.ts). */
@@ -2072,8 +2157,8 @@ export class WorldView {
     if(!list.length&&!this.carvedLayer)return;
     const layer=this.carvedLayer||(this.carvedLayer=new CarvedBuildingLayer(this.scene));
     for(const mesh of this.carvedOwners.keys())this.buildingInstances.delete(mesh);this.carvedOwners.clear();
-    layer.setSnow(this.carvedSnow);
-    layer.sync(list,this.camera.position);
+    layer.setSnow(this.carvedSnow);layer.setBump(DETAIL_RULES.bump[getDetailLevel()]);
+    layer.sync(list,this.camera.position,m=>buildingTierAt(m));
     for(const [mesh,owners] of layer.pickSources()){
       const buildings=(owners as (CarvedInstance&{b:import("@/game/types").Building})[]).map(o=>o.b);
       this.carvedOwners.set(mesh,buildings);this.buildingInstances.set(mesh,buildings);
@@ -2167,6 +2252,7 @@ export class WorldView {
         }else vehicles[kind!]++;
         if(kind==='canoe'&&this.canoePaddles&&paddles<instCap(this.canoePaddles)){
           const moving=afloat&&Math.hypot(u.vx,u.vz)>.1;
+          if(moving)this.fishAdapter?.wake(x,water,z,u.facing);
           const stroke=moving?Math.sin(game.state.time*4+u.id*.7):0;
           _p.set(.72,afloat?.85:.5,0);
           _e.set(afloat?stroke*.65:Math.PI/2,0,afloat?-.25:0);_q.setFromEuler(_e);_s.set(1,1,1);
@@ -2188,6 +2274,8 @@ export class WorldView {
         _p.set(0,(kind==='cart'?.7:kind==='pack'?(horse?1.40:bovine?1.46:1.05):.34)+height*.5,kind==='canoe'?-.85:0).applyMatrix4(_haulMatrix);
         _s.set(1.25,height/.55,1.65);_m.compose(_p,_q,_s);
       }else{
+        // people v2 carry their load on the body (logs on the shoulder, baskets on the back, jars on the head): see carryLoads.ts
+        if(this.people?.active&&!u.haulage&&!u.boat)continue;
         _p.set(u.x-Math.sin(u.facing)*0.5,u.y+1.1,u.z-Math.cos(u.facing)*0.5);
         _e.set(0,u.facing,0);_q.setFromEuler(_e);_s.set(1,1,1);_m.compose(_p,_q,_s);
       }
@@ -2445,9 +2533,26 @@ export class WorldView {
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const carvedVariant=carved?carvedVariantFor(carved.input):null;
     const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'')+(carvedVariant?`|${carvedVariant.key}|${Math.round(carved!.y*20)}|${Math.round(x*2)},${Math.round(z*2)}|${carved!.fake.site?.foundation??''}`:'');
-    if (this.ghost.userData.key === key) return;
+    const fieldGame=type==='farm'?this.ghostGame:null,fieldSa=fieldGame&&(fieldGame.state.terrainModel==='v2'||fieldGame.state.terrainModel==='v3')?fieldGame.siteAssessment('farm',x,z,size?.w??BUILDINGS.farm.w,size?.d??BUILDINGS.farm.d):null;
+    const fieldKey=fieldSa?`|f${fieldSa.ok}${fieldSa.terrace?.k}${fieldSa.terrace?.n}${Math.round(x*2)},${Math.round(z*2)}`:'';
+    if (this.ghost.userData.key === key+fieldKey) return;
     this.clearGhost();
-    this.ghost.userData.key = key;
+    this.ghost.userData.key = key+fieldKey;
+    // terrain model v2: the terrace strips and walls the field will be built with, tinted like the other slope previews
+    if(fieldGame&&fieldSa?.ok&&fieldSa.terrace&&fieldSa.terrace.k!=='none'){
+      const tint=new THREE.Color(fieldSa.tier==='moderate'?'#f0b030':'#f08030'),w=size?.w??BUILDINGS.farm.w,d=size?.d??BUILDINGS.farm.d;
+      for(const sp of foundationBoxes('strips',{x,z,w,d},{height:(px,pz)=>fieldGame.height(px,pz),level:fieldGame.height(x,z),downhill:fieldSa.downhill,terrace:{n:fieldSa.terrace.n,kind:fieldSa.terrace.k}})){
+        const m=new THREE.Mesh(this.ghostBox,new THREE.MeshBasicMaterial({color:tint,transparent:true,opacity:.4,depthWrite:false}));m.position.set(sp.x,sp.y,sp.z);m.rotation.y=sp.yaw;m.scale.set(sp.length,sp.height,sp.width);this.ghostFoot.add(m);
+      }
+    }
+    // terrain model v3: the ordinary way to farm a hill is furrows along the contour and a bank at the lower edge; steep ground (warning tint) shows the same furrows
+    if(fieldGame&&fieldSa?.ok&&fieldSa.terrace&&fieldSa.terrace.k==='none'&&fieldSa.terrace.slope>=HILL_RULES.minHillDeg&&fieldGame.state.terrainModel==='v3'){
+      const warn=fieldSa.tier==='steep'||fieldSa.terrace.eros>=HILL_RULES.gullyRate,tint=new THREE.Color(warn?'#e07a30':'#d9b24a'),bank=new THREE.Color(warn?'#b8553a':'#9a7a4a'),w=size?.w??BUILDINGS.farm.w,d=size?.d??BUILDINGS.farm.d;
+      for(const ln of hillFieldLines((px,pz)=>fieldGame.height(px,pz),{x,z,w,d},fieldSa.downhill)){
+        const bk=ln.kind==='bank',m=new THREE.Mesh(this.ghostBox,new THREE.MeshBasicMaterial({color:bk?bank:tint,transparent:true,opacity:bk?.55:.45,depthWrite:false}));
+        m.position.set(ln.x,fieldGame.height(ln.x,ln.z)+(bk?.16:.05),ln.z);m.rotation.y=ln.yaw;m.scale.set(ln.length+.02,bk?.32:.08,bk?.5:.14);this.ghostFoot.add(m);
+      }
+    }
     if(carved&&carvedVariant){this.buildCarvedGhost(carved,carvedVariant,ok);return;}
     const meshes = this.bldMeshes.get(type);
     if (!meshes) return;
@@ -2681,7 +2786,7 @@ export class WorldView {
   render() {
     this.latestRenderMetrics=undefined;
     if (this.lost || this.disposed) return;
-    {const now=typeof performance!=='undefined'?performance.now():0;if(this.lastRenderAt>0){const eased=this.drawGovernor.observe(now-this.lastRenderAt);if(eased){this.applyDrawBands();this.onDrawDistanceEased?.(eased,this.drawGovernor.chosen);}}this.lastRenderAt=now;}
+    // no automatic draw-distance easing here: the settings controller (src/game/graphicsSettings.ts) is the only thing that may ease, and only knobs on Auto
     beginRendererFrame(this.renderer.info);
     try {
     try {
@@ -2809,7 +2914,9 @@ export class WorldView {
       const el = this.renderer.domElement;
       const w = el.clientWidth || 800;
       const h = el.clientHeight || 600;
-      this.composer = new EffectComposer(this.renderer);
+      const pr = this.renderer.getPixelRatio(), samples = DETAIL_RULES.msaaSamples[getDetailLevel()];
+      // the composer's own target is what the scene is drawn into, so the canvas antialias flag never applied on this path: MSAA must be asked for here
+      this.composer = new EffectComposer(this.renderer, new THREE.WebGLRenderTarget(Math.max(1, Math.floor(w * pr)), Math.max(1, Math.floor(h * pr)), { type: THREE.HalfFloatType, samples }));
       this.composer.addPass(new RenderPass(this.scene, this.camera));
       this.bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.14, 0.28, 0.92);
       this.composer.addPass(this.bloom);
@@ -3151,11 +3258,12 @@ export class WorldView {
   }
 
   private disposeWorld() {
-    this.foundations?.dispose();this.foundations=null;this.contactMap?.dispose();this.contactMap=null;this.routeField?.dispose();this.routeField=null;if(this.waystations){this.scene.remove(this.waystations.group);this.waystations.dispose();this.waystations=null;}
+    this.foundations?.dispose();this.foundations=null;setGroundPlanProvider(null);this.contactMap?.dispose();this.contactMap=null;this.routeField?.dispose();this.routeField=null;if(this.waystations){this.scene.remove(this.waystations.group);this.waystations.dispose();this.waystations=null;}
     this.penFences?.dispose();this.penFences=null;
     this.wornGarments?.dispose();this.wornGarments=null;
     this.wornArmor?.dispose();this.wornArmor=null;
     this.people?.dispose();this.people=null;
+    this.animals?.dispose();this.animals=null;this.fishAdapter?.dispose();this.fishAdapter=null;
     this.siegeRamLayer?.dispose();this.siegeRamLayer=null;
     this.housingPackets?.dispose();this.housingPackets=null;
     this.draftCarts?.dispose();this.draftCarts=null;
@@ -3165,7 +3273,7 @@ export class WorldView {
     this.baskets?.dispose();this.baskets=null;
     this.fibreWork?.dispose();this.fibreWork=null;
     this.wildPlantLayer?.dispose();this.wildPlantLayer=null;
-    this.landContinuation?.dispose();this.landContinuation=null;
+    this.landContinuation?.dispose();this.landContinuation=null;this.horizon?.dispose();this.horizon=null;this.horizonGame=null;
     this.bankLayer?.dispose();this.bankLayer=null;
     this.excavationLayer?.dispose();this.excavationLayer=null;
     this.hullFleet?.dispose();this.hullFleet=null;

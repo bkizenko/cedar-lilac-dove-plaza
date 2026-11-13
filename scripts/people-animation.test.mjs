@@ -22,7 +22,7 @@ test('hips drop and the knees-bent stance keeps both feet on the ground: lowest 
  for(const id of IDS){const c=CLIPS[id];if(!c.lock)continue;let minRoot=0;
   each(id,p=>{const [a,b]=feet(p);assert.ok(Math.min(a,b)>=-.03,`${id} foot sinks ${Math.min(a,b)}`);if(id!=='run')assert.ok(Math.min(a,b)<=.03,`${id} foot floats ${Math.min(a,b)}`);minRoot=Math.min(minRoot,p.root[1]);});
   if(WORK.includes(id))assert.ok(minRoot<=-.03,`${id} work stance drops the hips (${minRoot.toFixed(3)})`);
-  if(FORAGE.includes(id))assert.ok(minRoot<=-.14,`${id} natural squat (${minRoot.toFixed(3)})`);else assert.ok(minRoot>-.14,`${id} must not crouch deep (${minRoot.toFixed(3)})`);
+  if(FORAGE.includes(id))assert.ok(minRoot<=-.1,`${id} low lunge (${minRoot.toFixed(3)})`);else assert.ok(minRoot>-.1,`${id} must not crouch deep (${minRoot.toFixed(3)})`);
  }
 });
 test('work poses are driven by shoulders and arms with weight transfer: the tool arc is large, the spine is not',()=>{

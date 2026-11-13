@@ -35,7 +35,9 @@ export type Part={shape:PartShape;size:readonly [number,number,number];pos:reado
  /** Beam endpoints, kept so footprint fitting can rebuild the beam exactly. */
  ends?:readonly [readonly [number,number,number],readonly [number,number,number]];
  /** Present when this part belongs to a rotor that the layer turns (water wheel, sails). */
- anim?:PartAnim};
+ anim?:PartAnim;
+ /** Cylinder only: depth (Z) multiplier on both rings, so a round wall can be an oval or a D-shaped end. Same triangles as the round cylinder. */
+ oval?:number};
 export type BuildingSpec={family:string;variantKey:string;footprint:{w:number;d:number};parts:Part[];
  entry?:{x:number;z:number;width:number};notes:{reference:string};
  /** Optional per-spec swatch table (a CivSkin look): a part's `mat` is looked up here first, then in the carved palette. Absent for the neutral Village grammar. */
@@ -78,7 +80,7 @@ function rotate(v:[number,number,number],rot:readonly [number,number,number]):[n
  return [x,y,z];
 }
 export function partCorners(p:Part):[number,number,number][]{
- const [w,h,d]=p.size,round=p.shape==='cylinder'||p.shape==='cone',hw=(round?Math.max(w,d):w)/2,hd=(round?Math.max(w,d):d)/2;
+ const [w,h,d]=p.size,round=p.shape==='cylinder'||p.shape==='cone',hw=(round?Math.max(w,d):w)/2,hd=(round?Math.max(w,d)*(p.shape==='cylinder'?p.oval??1:1):d)/2;
  const out:[number,number,number][]=[];
  for(const x of[-hw,hw])for(const y of[0,h])for(const z of[-hd,hd]){const r=p.rot?rotate([x,y,z],p.rot):[x,y,z] as [number,number,number];out.push([r[0]+p.pos[0],r[1]+p.pos[1],r[2]+p.pos[2]]);}
  return out;

@@ -9,12 +9,16 @@ import {appointCommander,assignToCommander} from '@/game/commanders';
 import {ensureNaval} from '@/game/navalPorts';
 import {enableWildCraft,wildStock,beginWildWork} from '@/game/wildCraft';
 import {generateSites} from '@/game/wildStores';
+import {GameAudio} from '@/game/audio';
 import {HudHearth} from '@/ui/hearth/HudHearth';
+import {EncounterDialog} from '@/ui/EncounterDialog';
+import {setEraVoice} from '@/game/vocab';
 import {Hud} from '@/ui/Hud';
 import {lookAtCamera} from '@/ui/hearth/glanceModel';
 const w=window as any;
-w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number})=>{
- const g:any=new Game();g.reset(5,10,{rulersVersion:2});g.enterIsland();
+w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number;seed?:number;age?:number;leader?:boolean;legacy?:boolean;hostile?:boolean})=>{
+ if(o.legacy)setEraVoice(false);
+ const g:any=new Game();g.reset(o.seed??5,10,{rulersVersion:2});g.enterIsland();
  const end=g.state.time+(o.years??6)*90;while(g.state.time<end){g.state.paused=false;g.step(.5);}
  g.state.paused=true;
  const mine=g.state.units.filter((u:any)=>u.team===0&&u.hp>0);
@@ -22,6 +26,16 @@ w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number})=>{
  const sc=o.scenario;
  const clear=()=>{for(const u of g.state.units)u.selected=false;g.selectedBoat=null;g.state.selBld=null;};
  if(sc==='worker'&&workers[0]){clear();workers[0].selected=true;}
+ if(sc==='skills'||sc==='skills-village'){clear();
+  // Train a small cast over simulated days so the cards show real model output: a veteran woodcutter, a rusty fisher, a young apprentice, a potter's quarter.
+  const{recordPractice,advanceSkillDay}=await import('@/game/skillRuntime');const{newRecord,skillGenome,trainEntry,forgetEntry}=await import('@/game/skills');const dayS=56.25;
+  const cast=workers.slice(0,14);const sd=g.state.seed|0;for(const u of cast)u.skills=newRecord(skillGenome(sd,u.id),u.parents?.map((p:number)=>skillGenome(sd,p)));
+  const t0=cast[0];trainEntry(t0.skills,'woodcutting',2600,40,1);trainEntry(t0.skills,'mining',900,40,1);trainEntry(t0.skills,'building',500,40,1);
+  trainEntry(t0.skills,'fishing',2500,40,1);forgetEntry(t0.skills,'fishing',4000,2000);
+  for(const u of cast.slice(1,9)){trainEntry(u.skills,'pottery',5200+Math.round(u.id%5)*300,40,1);trainEntry(u.skills,'cooking',700,40,1);}
+  for(const u of cast.slice(9,12)){trainEntry(u.skills,'woodcutting',700,40,1);trainEntry(u.skills,'foraging',400,40,1);}
+  g.state.time+=dayS*3;for(let d=0;d<90;d++){g.state.time+=dayS;for(const u of cast.slice(1,9))recordPractice(g,u,'pottery',50);advanceSkillDay(g);}
+  t0.selected=true;}
  if(sc==='crowd'){clear();workers.slice(0,4).forEach((u:any)=>u.selected=true);}
  if(sc==='building'){clear();const c=g.campOf(0);g.tribe(0).wood+=200;g.tribe(0).stone+=100;const res:any[]=[];for(const [t,dx,dz] of [['townhall',0,0],['hearth',9,8],['lumber',-12,6],['farm',14,-10]] as const){res.push(t+':'+g.placeBuilding(t,c.x+dx,c.z+dz,0));}(window as any).hwRes=res;
   const bs=g.state.buildings.filter((b:any)=>b.team===0);for(const b of bs){b.build=1;b.hp=b.maxHp*.8;}const b=bs.find((b:any)=>b.type==='hearth')||bs[0];if(b){b.selected=true;g.state.selBld=b;}}
@@ -43,6 +57,7 @@ w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number})=>{
   if(sc==='glance'){const u=mine[4];if(u){u.thirstSeconds=400;u.x=home.x-170;u.z=home.z+40;u.y=g.height(u.x,u.z);}}};
  if(sc==='glance'){const c=g.campOf(0);g.tribe(0).wood+=200;g.tribe(0).stone+=100;for(const [t,dx,dz] of [['townhall',0,0],['hearth',9,8],['lumber',-12,6],['farm',14,-10]] as const)g.placeBuilding(t,c.x+dx,c.z+dz,0);for(const b of g.state.buildings.filter((b:any)=>b.team===0)){b.build=1;b.hp=b.maxHp;}}
  if(sc==='glance'){const home=g.campOf(0),n=192;for(let gz=0;gz<n;gz++)for(let gx=0;gx<n;gx++){const x=((gx+.5)/n-.5)*g.world.size-home.x,z=((gz+.5)/n-.5)*g.world.size-home.z;if(x*x+z*z<260*260&&g.vision[gz*n+gx]===0)g.vision[gz*n+gx]=1;}}
+ if(sc==='encounter'){const home=g.campOf(0),t1=g.tribe(1);if(t1)t1.age=o.age??0;g.tribe(0).age=o.age??0;const st=g.spawnUnit(o.leader?'leader':'worker',home.x+6,home.z+4,1);st.carryType='food';st.carry=4;st.stature=1;{const n=Math.round(Math.sqrt(g.vision.length)),cx=Math.floor((st.x/g.world.size+.5)*n),cz=Math.floor((st.z/g.world.size+.5)*n);for(let dz=-3;dz<=3;dz++)for(let dx=-3;dx<=3;dx++)g.vision[(cz+dz)*n+cx+dx]=2;}if(o.hostile)g.makeHostile(1);mine[0].x=st.x-2.5;mine[0].z=st.z;mine[0].y=g.height(mine[0].x,mine[0].z);mine[0].boat=undefined;g.state.encounter={team:1,person:mine[0].id,stranger:st.id,resume:false};}
  const mkHud=(late=false)=>{const hud:any={...g.snapshot(),started:true,awaitingStart:false,founding:false};
   if(sc==='placing')hud.placing='house';
   if(late&&(sc==='raid'||sc==='glance'))hud.threat=.7;
@@ -51,13 +66,13 @@ w.hwMount=async(o:{scenario:string;ui?:'hearth'|'classic';years?:number})=>{
  let hud:any=mkHud();
  const base:any={game:g,dispatchEpoch:0,disposed:false,loggingMode:false,quarterTurn:false,gateFacing:0,
   view:{getDrawDistance:()=>'medium',getEffectiveDrawDistance:()=>'medium',getDrawDistance_:0,getMapStyle:()=>'painterly',getStyle:()=>'village',shadowsEnabled:true,unitRingsEnabled:true,look:{x:0,z:0},dist:60,camera:(()=>{const home=g.campOf(0),c:any=lookAtCamera({x:home.x-30,y:g.height(home.x,home.z)+70,z:home.z+90},{x:home.x,y:g.height(home.x,home.z),z:home.z},50,window.innerWidth/window.innerHeight);c.fov=50;c.aspect=window.innerWidth/window.innerHeight;return c;})()},
-  profile:{measure:(_n:string,f:()=>void)=>f()},audio:{settings:{master:.8,music:.6,sfx:.8,ambience:.5,musicPaused:false,muted:false},play(){},toggleMusicPaused(){},skipTrack(){},setVolume(){},score:{status:'Playing'}},
+  profile:{measure:(_n:string,f:()=>void)=>f()},audio:new GameAudio(),toggleMute(){},
   readModel:async(q:any)=>({epoch:0,model:applyEngineReadQuery(g,q)}),
   dispatch:async(c:any,s:any)=>{const reply=(applyEngineCommand as any)?(applyEngineCommand as any)(g,c,s):{accepted:false};return{epoch:0,...reply};},
   canRotatePlacement:()=>true,canRotateAnyPlacement:()=>true,rotatePlacementBy(){return true;},pushHud(){},keyboard:{}};
  const engine:any=new Proxy(base,{get:(t,p)=>p in t?t[p as any]:(p==='then'?undefined:()=>undefined)});
  const root=createRoot(document.getElementById('root')!);
- const draw=()=>root.render(o.ui==='classic'?h(Hud as any,{hud,engine}):h(HudHearth,{hud,engine}));
+ const draw=()=>root.render(sc==='encounter'?h(EncounterDialog,{engine}):o.ui==='classic'?h(Hud as any,{hud,engine}):h(HudHearth,{hud,engine}));
  draw();
  if(sc==='glance'||sc==='raid'){
   // Let the HUD sample stock for a few simulated days so supply trends have history, then bring the trouble.

@@ -1,7 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {ANIMAL_TRAITS,ANIMAL_RULES,activityLevel,flightDistance,validAnimalBeh,animalRand} from '../src/game/animalBehaviour.ts';
-import {newVisual,stepVisual,selectRigAnimals,gaitFor,legIK,ANATOMY,ANIMAL_RIG_RULES,animalRigRadius,schoolFish} from '../src/scene/animalVisual.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 const calm=g=>{g.state.weather='clear';g.state.weatherT=1e9;g.state.units=[];g.state.autoWorkEnabled=false;};
 /** A resting resident far from animals but counted as a player unit (not a threat) keeps every animal in the full-rate LOD ring. */
@@ -82,33 +81,15 @@ test('legacy saves keep the old behaviour: no flag, no beh, same random-walk tic
  const bad=world(17);bad.state.wildlife[0].beh.sp=500;assert.throws(()=>decodeGame(encodeGame(bad)));
  const noFlag=world(17);delete noFlag.state.animalBehaviourVersion;assert.throws(()=>decodeGame(encodeGame(noFlag)),'beh without the version flag is rejected');
 });
-test('LOD handoff has no pop: a visual state started from a sim record matches its yaw, speed and pose, and stepping never mutates the sim',()=>{
- const g=world(23);const c=species(g,'deer')[0];c.beh.st='walk';c.vx=Math.sin(1.2)*.9;c.vz=Math.cos(1.2)*.9;c.facing=1.2;
- const before=JSON.stringify(c);const v=newVisual(c);assert.ok(Math.abs(v.yaw-c.facing)<1e-9);assert.ok(Math.abs(v.speed-.9)<1e-9);
- const h=(x,z)=>g.height(x,z);let prevYaw=v.yaw,prevLegs=null;const dt=1/60;
- for(let i=0;i<120;i++){const r=stepVisual(v,c,dt,h);assert.ok(Math.abs(Math.atan2(Math.sin(v.yaw-prevYaw),Math.cos(v.yaw-prevYaw)))<=4.5*dt+1e-9);prevYaw=v.yaw;
-  if(prevLegs)for(let k=0;k<4;k++){assert.ok(Math.hypot(r.legs[k].fx-prevLegs[k].fx,r.legs[k].fy-prevLegs[k].fy)<.12,'foot target moves continuously');}prevLegs=r.legs.map(l=>({...l}));}
- assert.equal(JSON.stringify(c),before,'presentation never writes the animal record');
- // entering mid-gallop with a head-down state starts at that pose, not a neutral one
- c.beh.st='graze';c.vx=0;c.vz=0;const grazing=newVisual(c);assert.ok(grazing.neckPitch>.8);c.beh.st='rest';assert.equal(newVisual(c).lie,1);
-});
-test('no foot sliding: in stance a foot moves backward at the body speed',()=>{
- for(const sp of['deer','horse','cattle','wolf']){const c={id:5,species:sp,x:0,y:0,z:0,facing:0,vx:0,vz:ANIMAL_TRAITS[sp].gaits[1],hp:3,maxHp:3,fly:0,wanderT:0,scale:1,beh:{st:'walk',sp:ANIMAL_TRAITS[sp].gaits[1]}};
-  const v=newVisual(c);v.speed=Math.hypot(c.vx,c.vz);const dt=1/120;let worst=0,samples=0;let prev=null;
-  for(let i=0;i<600;i++){const r=stepVisual(v,c,dt,()=>0);const g=gaitFor(v.speed,sp);if(prev&&i>240)for(let k=0;k<4;k++){const stance=r.legs[k].fy<1e-9&&prev[k].fy<1e-9&&Math.abs(r.legs[k].fx)<=ANATOMY[sp].leg*.9+1e-6;if(stance){const foot=(prev[k].fx-r.legs[k].fx)/dt;worst=Math.max(worst,Math.abs(foot-v.speed)/v.speed);samples++;}}prev=r.legs.map(l=>({...l}));void g;}
-  assert.ok(samples>50&&worst<.08,`${sp}: stance foot speed error ${worst}`);}
-});
-test('two-bone legs reach their targets and never exceed bone length',()=>{
- for(const bend of[1,-1]){const ik=legIK(.3,.54,.1,0,bend);assert.ok(Math.hypot(ik.kx,ik.ky)<=.3+1e-9);const fx=ik.kx+Math.sin(ik.lower)*.3,fy=ik.ky-Math.cos(ik.lower)*.3;assert.ok(Math.hypot(fx-.1,fy+.54)<.02,'foot lands on target');}
-});
-test('near-zone selection ties to draw distance, has hysteresis and a cap',()=>{
- assert.ok(animalRigRadius('low')<animalRigRadius('medium')&&animalRigRadius('medium')<animalRigRadius('ultra'));
- const list=Array.from({length:100},(_,i)=>({id:i+1,x:i*2,z:0}));const r=animalRigRadius('medium');
- const first=selectRigAnimals(list,0,0,r,new Set());assert.ok(first.length<=ANIMAL_RIG_RULES.maxRigs);assert.ok(first.every(c=>c.x<=r));
- const keep=selectRigAnimals([{id:1,x:r*1.1,z:0}],0,0,r,new Set([1]));assert.equal(keep.length,1,'stays inside the hysteresis band');assert.equal(selectRigAnimals([{id:1,x:r*1.1,z:0}],0,0,r,new Set()).length,0,'does not enter there');
-});
-test('fish schools are deterministic, stay near their node and swim below the surface',()=>{
- const a=schoolFish(3,2,10,1.4),b=schoolFish(3,2,10,1.4);assert.deepEqual(a,b);for(let t=0;t<60;t+=.5)for(let i=0;i<5;i++){const f=schoolFish(3,i,t,1.4);assert.ok(Math.hypot(f.x,f.z)<=1.4*2);assert.ok(f.depth>0&&f.depth<.45);}
- const p=schoolFish(3,1,5,1.4),q=schoolFish(3,1,5.1,1.4);assert.ok(Math.hypot(p.x-q.x,p.z-q.z)<1,'smooth path');
-});
 test('seeded stream is stable and uniform enough',()=>{const xs=Array.from({length:2000},(_,i)=>animalRand(7,3,i));assert.ok(xs.every(x=>x>=0&&x<1));assert.ok(Math.abs(xs.reduce((a,b)=>a+b)/2000-.5)<.03);assert.equal(animalRand(7,3,5),animalRand(7,3,5));});
+test('near-zone handoff has no pop: a rig motion started from a moving sim record starts in the same gait and speed, and never feeds back into the sim',async()=>{
+ const {MotionTracker}=await import('../src/scene/animalLife.ts');const {QUADS}=await import('../src/scene/animalSpecs.ts');
+ const g=world(31);const c=g.state.wildlife.find(a=>a.species==='deer');assert.ok(c);
+ for(let i=0;i<40;i++)g.tickWildlife?.(.2);
+ const before=JSON.stringify(c);const sp={walkMax:1.6,trotMax:3.2,stride:[.9,1.4,2.2]};
+ const t=new MotionTracker();const m=t.step(c.id,c.x,c.z,10,sp,true,false,c.id,'walk',1.2);
+ assert.equal(m.gait,'walk');assert.ok(Math.abs(m.speed-1.2)<1e-9,'starts at the sim speed, not 0');
+ const g2=new MotionTracker().step(c.id,c.x,c.z,10,sp,true,false,c.id,'graze',0);assert.equal(g2.idle,'graze');
+ const d=new MotionTracker().step(c.id,c.x,c.z,10,sp,true,false,c.id,'drink',0);assert.equal(d.idle,'drink');
+ assert.equal(JSON.stringify(c),before,'presentation never writes the sim');
+});

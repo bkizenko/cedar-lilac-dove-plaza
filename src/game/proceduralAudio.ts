@@ -4,7 +4,7 @@
  *  calls attach() from a user gesture (GameAudio.unlock). */
 import {seededRandom,hashSeed} from '../scene/buildingParts';
 import {SCORE_LAYERS,ENV_LAYERS,BED_PARAMS,SFX_SPECS,VoiceBudget,BarClock,ScoreSmoother,barNotes,scoreMix,envMix,envEvents,envRecipe,sfxRecipe,smoothEnv,emitterGain,busGain,midiToHz,
- DEFAULT_AUDIO_SETTINGS,type AudioSettings,type ScoreInput,type EnvInput,type EnvLayer,type ScoreLayer,type SfxKind,type Recipe,type Note,type Scale} from '../scene/audioMix';
+ DEFAULT_AUDIO_SETTINGS,busOff,type AudioSettings,type ScoreInput,type EnvInput,type EnvLayer,type ScoreLayer,type SfxKind,type Recipe,type Note,type Scale} from '../scene/audioMix';
 
 export type Emitter={kind:SfxKind;x:number;z:number};
 export type WorldAudio={score:ScoreInput;env:EnvInput;biome:string;listener:{x:number;z:number;yaw:number;dist:number};emitters:Emitter[];paused:boolean};
@@ -49,13 +49,13 @@ export class ProceduralAudio{
   this.smoother.step(mix,dt);const t=ctx.currentTime;
   for(const l of SCORE_LAYERS)this.layerGain.get(l)!.gain.setTargetAtTime(this.smoother.gains[l]*.5,t,.25);
   this.brightness=this.smoother.brightness;for(const f of this.filterByLayer.values())f.frequency.setTargetAtTime(700+this.brightness*4200,t,.5);
-  if(proceduralMusicOn()&&this.settings.music>0&&!this.settings.muted)this.scheduleScore(mix.scale,mix.danger);
+  if(proceduralMusicOn()&&this.settings.music>0&&!busOff(this.settings,'music'))this.scheduleScore(mix.scale,mix.danger);
   smoothEnv(this.env,envMix(w.env),dt);this.updateBeds(t);
-  if(!this.settings.muted&&this.settings.ambience>0)for(const e of envEvents(this.env,dt,this.rng)){
+  if(!busOff(this.settings,'ambience')&&this.settings.ambience>0)for(const e of envEvents(this.env,dt,this.rng)){
    const rec=envRecipe(e.kind,w.biome,w.env.hour,this.rng);
    this.play(rec,b.amb,t+e.delay,e.gain*(e.kind==='crackle'?.8:1),(this.rng()-.5)*(e.kind==='thunder'?0:1.2));
   }
-  if(!this.settings.muted)this.updateEmitters(dt,w);
+  if(!busOff(this.settings,'sfx'))this.updateEmitters(dt,w);
  }
  private updateEmitters(dt:number,w:WorldAudio){
   const L=w.listener;
@@ -63,7 +63,7 @@ export class ProceduralAudio{
  }
  /** Play a sound kind. dx,dz are metres relative to the listener (omit for a non-positional cue). */
  playSfx(kind:SfxKind,dx?:number,dz?:number,camDist=0,yaw=0){
-  const ctx=this.ctx,b=this.buses;if(!ctx||!b||!this.active||ctx.state!=='running'||this.settings.muted)return;
+  const ctx=this.ctx,b=this.buses;if(!ctx||!b||!this.active||ctx.state!=='running'||busOff(this.settings,'sfx'))return;
   const spec=SFX_SPECS[kind],pos=dx!==undefined&&dz!==undefined,sp=pos?emitterGain(dx!,dz!,spec.spatial,camDist,yaw):{gain:1,pan:0,dist:0};
   const g=sp.gain*spec.gain,v=this.budget.acquire(kind,g,ctx.currentTime);if(!v)return;
   const rec=sfxRecipe(kind,this.rng),end=this.play(rec,b.sfx,ctx.currentTime,g,sp.pan);
