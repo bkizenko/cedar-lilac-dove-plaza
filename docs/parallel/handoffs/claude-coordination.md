@@ -1229,3 +1229,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
   5. TUNE the guessed design values: slope labour multipliers, irrigation costs, GAIT_SPEEDS, waystation costs, music duck, terrace costs.
   6. Raider/diplomacy/conquest backlog and any waiting wiring from your own queue.
   Claude architect/PM; Grok out. blocked: none
+- 08:40 ET claude-hud-minimise: shipped sound-effects bus switch + per-panel HUD minimise handles (SHA in final report) / now on merge + push / blocked: none. Shared-file hunks: hearth/parts.tsx, glance.tsx, screens.tsx, HudHearth.tsx, GameTooltip.tsx, audio.ts, audioMix.ts. Other agents: wrap new panels in <Foldable id='testlab'|'wonders'|'skills'> from src/ui/hearth/fold.tsx.
