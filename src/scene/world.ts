@@ -49,9 +49,10 @@ import {hearthHeating} from '@/game/survivalNeeds';
 import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
 import {gateOrientation,type GateFacing} from '../game/gateGeometry';
-import {GRAPHICS_RULES,loadGraphicsQuality,graphicsPixelRatio} from '../game/graphics';
+import {GRAPHICS_RULES,graphicsPixelRatio} from '../game/graphics';
+import {initialEffective,TREE_DETAIL,type TreeStep} from '../game/graphicsSettings';
 import {buildingTierAt,getDetailLevel,setDetailLevel,loadDetailLevel,rememberDetailLevel,shadowHalfExtent,DETAIL_RULES,type DetailLevel} from '../game/detailLevel';
-import {DrawDistanceGovernor,drawBands,loadDrawDistance,type DrawBands,type DrawDistance} from '../game/drawDistance';
+import {DrawDistanceGovernor,drawBands,type DrawBands,type DrawDistance} from '../game/drawDistance';
 import {currentRenderStyle,type RenderStyle} from './renderStyle';
 import {loadMapStyle,rememberMapStyle,type MapStyle} from './mapStyle';
 import {painterAtmosphere,makePainterSky,PAINTER_GRADE_SHADER} from './painterAtmosphere';
@@ -428,7 +429,9 @@ export class WorldView {
   private litFog = new THREE.Color("#d2dcbe");
   private litSunCol = new THREE.Color("#fff4d2");
   /** Draw distance (src/game/drawDistance.ts): the level the player chose, the level in force (the governor may ease it when frames stay over budget) and its bands. */
-  private drawGovernor = new DrawDistanceGovernor(loadDrawDistance());
+  private drawGovernor = new DrawDistanceGovernor(initialEffective().draw);
+  /** Tree detail step 1..5 in force (src/game/graphicsSettings.ts TREE_DETAIL); the settings controller sets it, the tree layers read it each sync. */
+  private treeStep: TreeStep = initialEffective().trees;
   private drawBandsNow: DrawBands = drawBands(this.drawGovernor.level, MAP);
   private lastRenderAt = 0;
   /** Called (once per easing) when the governor lowers the draw distance automatically. */
@@ -439,7 +442,7 @@ export class WorldView {
   private viewSphere = new THREE.Sphere();
 
   constructor(canvas: HTMLCanvasElement) {
-    this.quality = loadGraphicsQuality();
+    this.quality = initialEffective().graphics;
     setDetailLevel(loadDetailLevel());
     this.setStyle(this.styleId);
     this.renderer = new THREE.WebGLRenderer({
@@ -720,6 +723,10 @@ export class WorldView {
   private sunShadows(q: "low" | "med" | "high" = this.quality) { return (this.shadowsEnabled || DETAIL_RULES.shadowMap[getDetailLevel()] > 0) && q !== "low"; }
   /** Choose a draw distance (the UI persists it). Resets the automatic easing. */
   setDrawDistance(level: DrawDistance) { this.drawGovernor.choose(level); this.lastRenderAt = 0; this.applyDrawBands(); }
+  /** Put a level in force without changing the chosen one (Auto easing and safety fallbacks come through the settings controller, never from here on its own). */
+  setEffectiveDrawDistance(level: DrawDistance) { this.drawGovernor.level = level; this.applyDrawBands(); }
+  getTreeDetail(): TreeStep { return this.treeStep; }
+  setTreeDetail(step: TreeStep) { if (this.treeStep === step) return; this.treeStep = step; }
   private applyDrawBands() {
     this.drawBandsNow = drawBands(this.drawGovernor.level, this.mapSize);
     this.camera.far = this.drawBandsNow.cameraFar;
@@ -735,7 +742,7 @@ export class WorldView {
     const frustum = this.viewFrustum, sphere = this.viewSphere, y = this.look.y;
     const inView = (x: number, z: number, r: number) => { sphere.center.set(x, y, z); sphere.radius = r + 60; return frustum.intersectsSphere(sphere); };
     const key = `${Math.round(p.x / 6)}|${Math.round(p.z / 6)}|${Math.round(this.yaw * 14)}|${Math.round(this.pitch * 14)}|${Math.round(this.dist / 12)}`;
-    return { bands: this.drawBandsNow, inView, key, prime };
+    return { bands: this.drawBandsNow, inView, key, prime, detail: TREE_DETAIL[this.treeStep] };
   }
 
   applyQuality(q: "low" | "med" | "high") {
@@ -2705,7 +2712,7 @@ export class WorldView {
   render() {
     this.latestRenderMetrics=undefined;
     if (this.lost || this.disposed) return;
-    {const now=typeof performance!=='undefined'?performance.now():0;if(this.lastRenderAt>0){const eased=this.drawGovernor.observe(now-this.lastRenderAt);if(eased){this.applyDrawBands();this.onDrawDistanceEased?.(eased,this.drawGovernor.chosen);}}this.lastRenderAt=now;}
+    // no automatic draw-distance easing here: the settings controller (src/game/graphicsSettings.ts) is the only thing that may ease, and only knobs on Auto
     beginRendererFrame(this.renderer.info);
     try {
     try {

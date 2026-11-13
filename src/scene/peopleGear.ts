@@ -9,7 +9,7 @@ import {hashSeed} from './buildingParts';
 import {dressFor,type Culture,type GarmentId,type Season} from './cultureGrammar';
 import {mix,type UnitKind} from './unitAppearance';
 import type {BodyClass,RigBone,RigGear,RigInput,RigOutfit,RigPart,RigSlot} from './characterRig';
-import {bodyParts,earthy,TB,frameOf,frontZ,emptyBones,footParts,headParts,headwearParts,jewelParts,markParts,paletteFor,Q,shade,type KitCtx,type Palette} from './peopleKit';
+import {ARM,armSeg,armX,bodyParts,earthy,TB,frameOf,frontZ,emptyBones,footParts,headParts,headwearParts,jewelParts,markParts,paletteFor,Q,shade,type KitCtx,type Palette} from './peopleKit';
 import {garmentParts} from './peopleGarb';
 import {fibreOf,individualFor,lookForSkin,warmthOf,type ArmorStyle,type HelmStyle,type Individual,type PeopleLook,type Role,type ShieldShape} from './peopleLook';
 
@@ -127,7 +127,7 @@ function roleKit(c:KitCtx,role:Role,type:UnitKind){
   case 'merchant':bones.spine.push(Q(pal.leather,'box',[.2,.18,.08],[.2*sd,.46,fz(.5)+.02],1,[0,0,0]),Q(shade(pal.leather,.7),'box',[.02,.5,.012],[0,.55,fz(.7)],1,[0,0,-.7*sd]),TB(pal.cloth2,[.3,.14],[.26,.12],.26,[0,.52,bz-.02],2),Q(pal.accent,'box',[.31,.04,.15],[0,.66,bz-.02],0),Q(pal.metal,'sphere',[.05,.05,.04],[-.2*sd,.4,fz(.45)+.02],0));break;
   case 'farmer':bones.hips.push(Q(pal.leather,'box',[.07,.1,.12],[-.2*sd,.34,.03],1));break;
   case 'priest':bones.spine.push(TB(pal.trim,[.1,.03],[.1,.03],.78,[-.08,.1,fz(.7)+.012],2),TB(pal.trim,[.1,.03],[.1,.03],.78,[.08,.1,fz(.7)+.012],2),Q(pal.accent,'box',[.1,.03,.032],[-.08,.2,fz(.5)+.02],0),Q(pal.accent,'box',[.1,.03,.032],[.08,.2,fz(.5)+.02],0),Q(pal.metal,'sphere',[.06,.06,.04],[0,.78,fz(.78)+.012],0));break;
-  case 'soldier':if(type==='archer')bones.spine.push(Q(pal.leather,'cylinder',[.1,.46,.09],[-.1,.38,bz],1,[.15,0,.15],6));bones.spine.push(Q(pal.leather,'box',[.025,.55,.012],[0,.52,fz(.7)+.01],1,[0,0,type==='swordsman'?-.7:.7]));for(const s of [-1,1])bones[s<0?'armL':'armR'].push(Q(pal.leather,'cylinder',[.075,.1,.075],[s*(.17+.04*b.shoulder),.56,0],0,undefined,6));break;
+  case 'soldier':if(type==='archer')bones.spine.push(Q(pal.leather,'cylinder',[.1,.46,.09],[-.1,.38,bz],1,[.15,0,.15],6));bones.spine.push(Q(pal.leather,'box',[.025,.55,.012],[0,.52,fz(.7)+.01],1,[0,0,type==='swordsman'?-.7:.7]));for(const s of [-1,1])bones[s<0?'armL':'armR'].push(Q(pal.leather,'cylinder',[.066*b.limb,.08,.074*b.limb],armSeg(s*armX(b),.61,.08,ARM.foreTilt,(ARM.elbowY-.61)*Math.tan(ARM.foreTilt)),0,[-ARM.foreTilt,0,0],6));break;
   case 'ruler':bones.spine.push(Q(pal.trim,'box',[.025,.55,.012],[0,.52,fz(.7)+.01],1,[0,0,.7]),Q(pal.metal,'sphere',[.06,.06,.04],[-.12,.8,fz(.8)+.01],0));break;
   case 'elder':break;
   default:break;
