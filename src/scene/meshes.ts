@@ -749,8 +749,10 @@ void hall;
 export function cargoGeo(kind:ResKind){
  const parts:THREE.BufferGeometry[]=[];
  if(kind==='wood'){
-  for(const [x,y] of [[-.18,-.22],[.18,-.22],[0,.04]])parts.push(box(.29,.25,1.05,x,y,0));
-  for(const z of [-.32,.32])parts.push(box(.7,.045,.065,0,.02,z));
+  // round-ended logs of slightly different length and girth, bound with two rings of cordage (never box slabs)
+  const lg=(x:number,y:number,r:number,len:number)=>{const g=new THREE.CylinderGeometry(r,r*.93,len,7);g.rotateX(Math.PI/2);g.translate(x,y,0);return g;};
+  parts.push(lg(-.17,-.09,.15,1.08),lg(.17,-.09,.14,.98),lg(0,.14,.14,1.04));
+  for(const z of [-.3,.3]){const g=new THREE.CylinderGeometry(.34,.34,.05,9);g.rotateX(Math.PI/2);g.translate(0,.02,z);parts.push(g);}
  }else if(kind==='food'){
   parts.push(box(.66,.43,.65,0,-.25,0),box(.45,.12,.48,0,.18,0),box(.18,.1,.2,0,.3,0));
  }else{

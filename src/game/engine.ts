@@ -414,7 +414,7 @@ export class Engine {
 
   async configureNewWorld(request:WorldRequest,previewRiverbanks=false,wildCraft=false):Promise<boolean>{
     if(this.originalGame&&!this.game.testMode)return false;
-    return this.restart({...request,geologyVersion:1},previewRiverbanks&&this.game.testMode?19:21,wildCraft); // fresh worlds carry the geology layer; saved v21 worlds without the flag regenerate unchanged
+    return this.restart({...request,geologyVersion:1,forestEcologyVersion:1},previewRiverbanks&&this.game.testMode?19:21,wildCraft); // fresh worlds carry the geology layer; saved v21 worlds without the flag regenerate unchanged
   }
 
   enterIsland() {

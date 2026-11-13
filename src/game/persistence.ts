@@ -198,6 +198,7 @@ function validateGamePayload(raw: unknown) {
   if(s.worldOptions?.tideVersion!==undefined&&s.worldOptions.tideVersion!==1&&s.worldOptions.tideVersion!==2)fail();
   if(s.worldOptions?.landformLabelVersion!==undefined&&s.worldOptions.landformLabelVersion!==2)fail();
   if(s.worldOptions?.flowFieldVersion!==undefined&&s.worldOptions.flowFieldVersion!==1)fail();
+  if(s.worldOptions?.forestEcologyVersion!==undefined&&(s.worldgenVersion!==21||s.worldOptions.forestEcologyVersion!==1))fail();
   const HALF=(s.worldOptions?.size??1040)/2;
   if(!validWaterEngineering(s,HALF*2))fail();
   if(!validIrrigation(s,HALF*2))fail();
