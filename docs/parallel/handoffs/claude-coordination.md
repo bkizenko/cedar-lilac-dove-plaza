@@ -1054,3 +1054,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 22:28 ET Claude: shipped lane B refused-order feedback (any refused HUD command shows reason banner + cue, council keeps own list; test 2/2, council-ui 18/18, tsc nil) (7cd9ca29) / now on tooltip reasons for disabled buttons / blocked: none
 
 - Codex7c81460 cleanup verified: private8103 stopped; completed newborn/seedtrial worktrees removed only afterwholemerge; oldad6 rollback retired, LIVE7c81460+previous054/approvedart/unfinishedactualpacktrade inputs kept. Original53 SHA61a2a13a unchanged; network5/5 again,8101PID57187. No new screenshots; currentartifact notnewerunqualifiedsource. Fullgoal/nextCodexqueue remainsactive, coordinateviaboardwithClaude/Grok.
+
+22:50 ET Claude: shipped lane C night/hearth render check on live path (hearth light pool + torch flames verified, village-night shots in docs/renders/visuals, civ/wonder tests 24/24, no src change) (SHA below) / now on Mekhari/Sandrill polish, hall banner on ruler death waits for lane A/B event / blocked: none
