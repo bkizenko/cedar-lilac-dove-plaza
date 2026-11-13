@@ -1122,6 +1122,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-13 04:00 | Claude | 22 (since 03:00 ET) | 21 | ~2 (trade refusal tooltips, claim/agreement cues, Mekhari eave fringe) | lanes A-D + PM posted <1h |
 | 11-13 04:00 | Grok | 0 | 0 | 0 | idle (out); World rows still with Claude/background agents |
 | 11-13 04:00 | Total | 29 | main = integration + codex-autopilot (1aa5ab39) | ~3 | sweep 129 tests 126 pass/3 skip/0 fail; tsc skipped (diagnostic-script-only change); open ~326 / done ~17 by status-column count |
+| 11-13 05:00 | Codex | 1 (since 04:00 ET) | 1 | 0 | quiet after 1aa5ab39 live; next W5/W11 cargo consumers |
+| 11-13 05:00 | Claude | 20 (since 04:00 ET) | 20 via integration | ~2 (Quillan/Mekhari building grammar, Neighbours inbox) | lanes A-D shipping; PM landing 05:10 |
+| 11-13 05:00 | Grok | 0 | 0 | 0 | idle (out) - World rows with Claude/background agents |
+| 11-13 05:00 | Total | 21 | main = integration | ~2 | sweep 129 tests 126 pass/3 skip/0 fail; tsc not installed, diff = civBuildings.ts only |
 
 ## Process improvements
 
