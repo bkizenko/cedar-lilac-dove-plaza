@@ -617,3 +617,19 @@ test('harvest gathering: rotating well-fed host, peaceful known rivals only, tie
  // old save: nothing
  delete g.state.worldOptions.rulersVersion;delete g.state.rulers;assert.equal(R.harvestGathering(g),null);
 });
+
+test('neighbour memory feeds casus belli: remembered fosterage delays and softens a grounds claim; old saves unchanged',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');
+ const mk=()=>{const g=fixture();R.ensureRulers(g);const rel=(f,t,o={})=>({from:f,to:t,known:true,trust:.3,grievance:0,hostile:false,peaceUntil:0,lastContactSeconds:0,...o});
+  const ids=g.state.tribes.map((_,i)=>i).filter(i=>i!==0&&i!==3&&g.tribe(i));g.state.societyRelations=[];for(const a of ids)for(const b of ids)if(a!==b)g.state.societyRelations.push(rel(a,b,{grievance:.55}));return {g,ids};};
+ const {g:cold,ids}=mk();assert.equal(R.memoryGoodwill(cold,ids[0],ids[1]),0);
+ const {g:warm}=mk();warm.state.rulers.wards=[{from:String(ids[0]),to:String(ids[1]),person:'x',kind:'foster',since:warm.state.rulers.year}];
+ assert.ok(R.memoryGoodwill(warm,ids[0],ids[1])>.9);assert.ok(R.memoryGoodwill(warm,ids[1],ids[0])>.9);
+ const gone=(g)=>R.eventClaims(g).filter(c=>(c.holder===String(ids[0])&&c.target===String(ids[1]))||(c.holder===String(ids[1])&&c.target===String(ids[0])));
+ const c1=gone(cold),c2=gone(warm);
+ assert.ok(c2.length<=c1.length,'goodwill never adds claims');
+ if(c1.length&&c2.length)assert.ok(c2[0].strength<c1[0].strength);
+ // fosterage fades: forty years on it is mostly forgotten
+ warm.state.rulers.year+=40;assert.ok(R.memoryGoodwill(warm,ids[0],ids[1])<.1);
+ delete warm.state.worldOptions.rulersVersion;delete warm.state.rulers;assert.equal(R.memoryGoodwill(warm,ids[0],ids[1]),0);
+});

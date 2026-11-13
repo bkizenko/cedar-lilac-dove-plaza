@@ -1,15 +1,21 @@
+import type {Engine} from '../../game/engine';
+import {knownSettlementSite} from '../../game/barter';
 import type {CouncilModel} from '../../game/rulersView';
 import {SocietyFlag} from '../SocietyFlag';
 import {societyChips,type SocietyChip} from './societiesModel';
 type Neighbour=CouncilModel['neighbours'][number];
 const TONE:Record<SocietyChip['mood'],string>={war:'text-red-300',wary:'text-red-200',cool:'text-parchment-dim',cordial:'text-parchment',friend:'text-green-200',peace:'text-green-200'};
-/** One row of chips, one per known house: flag, name, mood, and badges for claims against us (!), claims we hold, and wards. Tap jumps to its card. */
-export function SocietiesStrip({neighbours,identityOf}:{neighbours:Neighbour[];identityOf?:(n:Neighbour)=>Neighbour['identity']}){
+/** One row of chips, one per known house: flag, name, mood, and badges for claims against us (!), claims we hold, and wards. Tap jumps to its card and, when their settlement has been seen, centres the map on it. */
+/** Centre the camera on a house's settlement, only if we have actually seen it (never leaks fogged ground). Returns whether it moved. */
+export function focusKnownSettlement(engine:Engine|null|undefined,team:number):boolean{
+ if(!engine)return false;const site=knownSettlementSite(engine.game,team);if(!site)return false;engine.focusMinimap(site.x,site.z);return true;
+}
+export function SocietiesStrip({neighbours,identityOf,onFocus}:{neighbours:Neighbour[];identityOf?:(n:Neighbour)=>Neighbour['identity'];onFocus?:(team:number)=>void}){
  const chips=societyChips(neighbours);
  if(!chips.length)return null;
  return <nav aria-label="Societies at a glance" data-societies-strip="1" className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
   {chips.map(c=>{const n=neighbours.find(x=>x.team===c.team)!,id=identityOf?identityOf(n):n.identity;
-   return <a key={c.team} href={`#house-${c.team}`} onClick={e=>{const el=document.getElementById(`house-${c.team}`);if(el){e.preventDefault();el.scrollIntoView({block:'nearest',behavior:'smooth'});}}} className="flex min-w-[8.5rem] shrink-0 items-center gap-1.5 rounded border border-parchment/15 bg-black/25 px-2 py-1 text-[12px]" data-mood={c.mood}>
+   return <a key={c.team} href={`#house-${c.team}`} onClick={e=>{onFocus?.(c.team);const el=document.getElementById(`house-${c.team}`);if(el){e.preventDefault();el.scrollIntoView({block:'nearest',behavior:'smooth'});}}} className="flex min-w-[8.5rem] shrink-0 items-center gap-1.5 rounded border border-parchment/15 bg-black/25 px-2 py-1 text-[12px]" data-mood={c.mood}>
     {id&&<SocietyFlag identity={id} label={`${c.name} flag`}/>}
     <span className="min-w-0"><span className="block truncate font-semibold text-parchment">{c.name}</span><span className={'block text-[10px] uppercase tracking-wide '+TONE[c.mood]}>{c.word}</span></span>
     <span className="ml-auto flex gap-1 text-[10px] tabular-nums">
