@@ -18,6 +18,7 @@ import {calendar,isDependent,reserveSeconds} from './settlement';
 import {HAULAGE,WHEEL_PRACTICE,haulageRequirement,beginHaulageWork,cartUpgradeCandidate,queuedCartUpgrades} from './haulage';
 import {FARM_TOOLS,farmToolRequirement,beginFarmToolWork,resumeFarmToolWork} from './farmTools';
 import {foodSpoilage,preservationAvailable,preservationTimberReserve} from './pantry';
+import {skillKnowledgeTopics} from './skillRuntime';
 import {supplyAccounting} from './simulationEvents';
 
 export const KNOWLEDGE_RULES={version:1,cropSampleUnits:4,cropTrialFoodReserveSeconds:60,lowFoodReserveSeconds:600} as const;
@@ -102,7 +103,7 @@ export function knowledgeReport(g:Game):{topics:KnowledgeTopic[];foodReserveSeco
  const stores=buildings(g,'warehouse'),preservers=people.filter(u=>u.order==='gather'&&u.node&&'kind' in u.node&&u.node.kind==='building'&&u.node.type==='warehouse').length,care=stores.length?stores.reduce((n,b)=>n+(b.storeCare||0),0)/stores.length:0,accounting=supplyAccounting(g),preserveReady=preservationProposal(g);
  topics.push({id:'storage',title:'Keep surplus edible',need:`Current spoilage forecast ${(foodSpoilage(g)*60).toFixed(2)} food/minute; protection competes for building timber and tending labor.`,stage:care>0&&stores.length?'adoption':stores.length?'proven':accounting.foodSpoiled>0?'observation':'need',observation:`${accounting.foodSpoiled.toFixed(1)} recorded food spoiled · ${stores.length} completed stores`,experiment:`${preservers} residents assigned to preservation · mean store care ${Math.round(care*100)}%`,result:stores.length?'Physical stores protect food; tending consumes real spare logs.':'No completed store protects the surplus yet.',adoption:`${stores.filter(b=>(b.storeCare||0)>.6).length} well-tended stores of ${stores.length}`,metrics:{recordedFoodSpoiled:accounting.foodSpoiled,currentSpoilagePerMinute:foodSpoilage(g)*60,completedStores:stores.length,preservationWorkers:preservers,meanStoreCare:care},actions:[action('place:warehouse','Choose a store site',null),action('preserve','Tend and preserve',preserveReady.reason)],limitation:'This is demonstrated storage practice, not a separate research unlock. Spoilage totals include only recorded history, not guessed legacy losses.'});
  topics.push(housingKnowledgeTopic(g));
- topics.push(...methodRecordKnowledgeTopics(g),...boatKnowledgeTopics(g),...fibreKnowledgeTopics(g),...productionKnowledgeTopics(g));
+ topics.push(...methodRecordKnowledgeTopics(g),...boatKnowledgeTopics(g),...fibreKnowledgeTopics(g),...productionKnowledgeTopics(g),...skillKnowledgeTopics(g));
  if(g.state.ended)for(const topic of topics)for(const a of topic.actions)a.blockedReason='The chapter has ended';
  return {topics:annotateKnowledge(g,topics),foodReserveSeconds:reserve,limitations:['No generic science queue or research-point spending.','Working makers can teach exact demonstrated production methods; wider exchange and institutions remain future work.']};
 }

@@ -28,7 +28,7 @@ import {setSitePreparationPaused} from './sitePreparation';
 import {orderConstruction} from './construction';
 import {acceptCapitulation,refuseCapitulation,type CapitulationOutcome} from './capitulation';
 import {foundWonder,wonderLabel} from './wonderFounding';
-import {WONDER_FAMILIES} from './wonderRecords';
+import {WONDER_FAMILIES,validLook,type WonderLook} from './wonderRecords';
 import {answerProposal} from './societyCivicRuntime';
 import {marryHouses,kinDealRefusal,fosterHouses,exchangeHostages} from './rulersRuntime';
 import {setPreferredFormation} from './combatDoctrine';
@@ -79,7 +79,7 @@ export type EngineDispatchCommand=
  |{kind:'set-auto-work';enabled:boolean}|{kind:'set-route-switches';routes?:boolean;waystations?:boolean;raiders?:boolean}|{kind:'defense-horn'}|{kind:'recall'}
  |{kind:'production-control';projectId:number;action:'pause'|'resume'|'unload';unitId?:number}
  |{kind:'dairy-clean';projectId:number;unitId?:number}|{kind:'dairy-discard';projectId:number}
- |{kind:'answer-proposal';proposalId:number;accept:boolean}|{kind:'found-wonder';family:(typeof WONDER_FAMILIES)[number]}|{kind:'marry-houses';team:number}|{kind:'foster-houses';team:number}|{kind:'exchange-hostages';team:number}
+ |{kind:'answer-proposal';proposalId:number;accept:boolean}|{kind:'found-wonder';family:string;x?:number;z?:number;look?:WonderLook}|{kind:'marry-houses';team:number}|{kind:'foster-houses';team:number}|{kind:'exchange-hostages';team:number}
  |{kind:'set-formation';formation:FormationKind}|{kind:'guard-duty';unitId:number;duty:GuardDutyKind}|{kind:'release-guard';unitId:number}
  |{kind:'accept-capitulation';frontId:number;outcome:CapitulationOutcome}|{kind:'refuse-capitulation';frontId:number}
  |{kind:'commander-order';action:'appoint'|'replace'|'assign'|'release'|'promote';unitId?:number;commanderId?:number;commandKind?:'army'|'fleet';ids?:number[];promotionId?:string;replacesId?:number}
@@ -189,7 +189,7 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     const project=g.state.production?.projects.find(p=>p.id===command.projectId&&p.team===0);if(!project)return no('Original vessel project unavailable');
     const accepted=command.kind==='dairy-clean'?queueDairyVesselCleaning(g,project.id,command.unitId):discardDairyProject(g,project.id);return{accepted,reason:accepted?'Original held vessel updated':g.state.banner||'Vessel request refused',projectId:project.id};
    }
-   case 'found-wonder':{const r=foundWonder(g,0,command.family);return r.ok?{accepted:true,reason:`Work begins on a ${wonderLabel(command.family)}`}:no(r.reason);}
+   case 'found-wonder':{const r=foundWonder(g,0,command.family as never,{...(command.x!==undefined&&command.z!==undefined?{site:{x:command.x,z:command.z}}:{}),...(command.look?{look:command.look}:{})});return r.ok?{accepted:true,reason:`Work begins on a ${wonderLabel(command.family)}`}:no(r.reason);}
    case 'answer-proposal':return answerProposal(g,0,command.proposalId,command.accept);
    case 'marry-houses':{
     const other=g.tribe(command.team);if(!other||command.team===0||command.team===3)return no('That society is not known');
@@ -287,7 +287,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'survey-fibre':{unitId:id},'return-fibre':{unitId:id},'equip-basket':{unitId:id},'survey-clay':{unitId:id},'equip-water-vessel':{unitId:id},'swap-clothing':{unitId:id},'gather-fibre':{unitId:id,patchId:id},'gather-clay':{unitId:id,depositId:id},'equip-clothing':{unitId:id,item:v=>GARMENT_KINDS.includes(v as GarmentKind)},
   'set-auto-work':{enabled:bool},'set-route-switches':{routes:v=>v===undefined||bool(v),waystations:v=>v===undefined||bool(v),raiders:v=>v===undefined||bool(v)},'defense-horn':{},recall:{},
   'production-control':{projectId:id,action,unitId:optionalId},'dairy-clean':{projectId:id,unitId:optionalId},'dairy-discard':{projectId:id},
-  'answer-proposal':{proposalId:id,accept:bool},'found-wonder':{family:v=>(WONDER_FAMILIES as readonly string[]).includes(v as string)},
+  'answer-proposal':{proposalId:id,accept:bool},'found-wonder':{family:v=>(WONDER_FAMILIES as readonly string[]).includes(v as string),x:v=>v===undefined||typeof v==='number'&&Number.isFinite(v),z:v=>v===undefined||typeof v==='number'&&Number.isFinite(v),look:v=>validLook(v)},
   'set-formation':{formation:v=>validFormationKind(v)},'guard-duty':{unitId:id,duty:v=>v==='post'||v==='patrol'},'release-guard':{unitId:id},
   'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'boat-stop':{boatId:id},'free-captives':{team:v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0},'repatriate-captive':{unitId:id},'escort-captive':{unitId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},'naval-order':{action:v=>['port-work','resume-port-work','resume-commission','commission','board','attack','resupply'].includes(v as string),dockId:optionalId,work:v=>v===undefined||PORT_WORK_IDS.includes(v as PortWork),design:v=>v===undefined||DESIGN_IDS.includes(v as string),builderId:optionalId,projectId:optionalId,boatId:optionalId,targetBoatId:optionalId,food:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1000,missileLoads:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=100},'commander-order':{action:v=>['appoint','replace','assign','release','promote'].includes(v as string),unitId:optionalId,commanderId:optionalId,commandKind:v=>v===undefined||v==='army'||v==='fleet',ids:v=>v===undefined||Array.isArray(v)&&v.length<=32&&v.every(id)&&new Set(v).size===v.length,promotionId:v=>v===undefined||typeof v==='string'&&v.length<=32,replacesId:optionalId},
   'site-preparation-pause':{buildingId:id,paused:bool},'paused-plan':{buildingId:id,paused:bool},

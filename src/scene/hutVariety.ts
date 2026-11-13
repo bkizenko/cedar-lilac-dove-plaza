@@ -12,8 +12,12 @@ type M=Part['mat'];
 export type HutMats={wall:M;wall2:M;roof:M;trim:M;accent:M;cloth:M;ground:M;dark:M};
 type V=[number,number,number];
 /** mid-tier triangles a hut may reach before the later dressing pass (cap 1000 for the whole building) */
-const MID_BUDGET=780;
+const MID_BUDGET=440;
+/** near-tier triangles before the dressing pass (the dressing pass then adds up to 1250 more, ceiling 2400 in nearDetail.ts) */
+const NEAR_BUDGET=1500;
 const clamp=(v:number,lo=0,hi=1)=>Math.min(hi,Math.max(lo,v));
+/** Legacy switch: off draws the previous per-building proportions only (one base form per civ, no plan scaling or extensions). */
+let enabled=true;export const setHutVariety=(on:boolean)=>{enabled=!!on;};export const getHutVariety=()=>enabled;
 export type HutPlan={kx:number;kz:number;apse:boolean;doorK:[number,number];doorSpread:number};
 /** Draw the per-hut plan numbers first (the generator reads doorK/doorSpread while it builds), then call `varyHut` on the result. */
 export function hutPlan(r:Rng):HutPlan{
@@ -88,7 +92,7 @@ export function varyHut(parts:Part[],n0:number,m:HutMats,r:Rng,o:{wealth:number;
   }
  }
  // ---- budget: keep the mid tier under its cap (dressing adds to it later), dropping the newest extras first
- let mid=parts.reduce((a,p)=>p.lod>=1?a+partTriangles(p):a,0);while(parts.length>start&&mid>MID_BUDGET)mid-=parts[parts.length-1].lod>=1?partTriangles(parts[parts.length-1]):0,parts.pop();
+ const tot=()=>parts.reduce((a,p)=>a+partTriangles(p),0),midT=()=>parts.reduce((a,p)=>p.lod>=1?a+partTriangles(p):a,0);while(parts.length>start&&(midT()>MID_BUDGET||tot()>NEAR_BUDGET))parts.pop();
  // ---- trimmed down: no part may dip below the ground
  for(let i=start;i<parts.length;i++){const p=parts[i];if(p.pos[1]<0)parts[i]={...p,pos:[p.pos[0],0,p.pos[2]]};}
  return parts.length-start;

@@ -41,7 +41,9 @@ export type Part={shape:PartShape;size:readonly [number,number,number];pos:reado
 export type BuildingSpec={family:string;variantKey:string;footprint:{w:number;d:number};parts:Part[];
  entry?:{x:number;z:number;width:number};notes:{reference:string};
  /** Optional per-spec swatch table (a CivSkin look): a part's `mat` is looked up here first, then in the carved palette. Absent for the neutral Village grammar. */
- materials?:Record<string,{hex:string;roughness:number;grain?:number;course?:string}>};
+ materials?:Record<string,{hex:string;roughness:number;grain?:number;course?:string}>;
+ /** Texture hints for the per-material set (buildingTextures.ts): building age (era) and wear 0 new .. 1 ruined; absent = era 2, wear .3 */
+ tex?:{era:number;wear:number}};
 
 export const LOD_DISTANCES_METRES=[30,70,120] as const;
 
@@ -156,4 +158,14 @@ export function structuralSignature(spec:BuildingSpec){
  const roof=spec.parts.find(p=>p.shape==='prism'||p.shape==='hip'||p.shape==='cone'||p.shape==='pyramid'||p.shape==='wedge');
  const pitch=roof?(roof.size[1]/Math.max(.01,roof.size[0]/2)).toFixed(1):'none';
  return [spec.family,(b.maxX-b.minX).toFixed(1),(b.maxZ-b.minZ).toFixed(1),b.maxY.toFixed(1),pitch,spec.entry?`${spec.entry.x.toFixed(1)},${spec.entry.z.toFixed(1)}`:'-',Object.entries(shapes).sort().map(([k,v])=>k+v).join('.')].join('|');
+}
+
+/** Keep the mid tier (lod >= 1) at or under `cap` triangles by demoting the smallest lod-1 parts to near-only (lod 0), smallest volume first.
+ * Core massing (lod 2) never changes. Deterministic; used after the dressing passes so detail never pushes a building past the mid cap. */
+export function capMidTier(parts:Part[],cap=990):Part[]{
+ let mid=0;for(const p of parts)if(p.lod>=1)mid+=partTriangles(p);
+ if(mid<=cap)return parts;
+ const vol=(p:Part)=>p.size[0]*Math.max(.05,p.size[1])*Math.max(.05,p.size[2]),order=parts.map((p,i)=>({p,i})).filter(x=>x.p.lod===1&&!x.p.anim).sort((a,b)=>vol(a.p)-vol(b.p)||a.i-b.i),out=parts.slice();
+ for(const {p,i} of order){if(mid<=cap)break;out[i]={...p,lod:0};mid-=partTriangles(p);}
+ return out;
 }

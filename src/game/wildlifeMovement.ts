@@ -22,3 +22,5 @@ export function moveGroundWildlife(g:Ground,c:Critter,dt:number,obstacles:Wildli
  if(!chosen){const side=c.id%2?1:-1;for(const angle of[Math.PI/3,-Math.PI/3,Math.PI/2,-Math.PI/2,Math.PI*.75,-Math.PI*.75,Math.PI]){const a=angle*side,cos=Math.cos(a),sin=Math.sin(a),p={x:c.x+dx*cos-dz*sin,z:c.z+dx*sin+dz*cos};if(safeSegment(g,c,p,obstacles)){chosen=p;break;}}}
  if(chosen){if(!direct){c.vx=(chosen.x-c.x)/dt;c.vz=(chosen.z-c.z)/dt;}c.x=chosen.x;c.z=chosen.z;c.y=g.height(c.x,c.z);}else{c.vx*= -.4;c.vz*= -.4;c.wanderT=.4;}
 }
+/** Same physical test moveGroundWildlife uses (footprints, water, world edge), exposed for the behaviour layer. */
+export function wildlifeSegmentSafe(g:Ground,c:Critter,p:Point,obstacles:WildlifeObstacles){return safeSegment(g,c,p,obstacles);}

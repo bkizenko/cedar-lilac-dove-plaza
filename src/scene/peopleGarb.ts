@@ -7,6 +7,7 @@
  *  mantle (cape, fur, shawl, feather, blanket, hood), fibre detail (pleats, ribbing, rolled felt edge, tufted fur, stitched hide, tapa blocks,
  *  feather fringe, silk trim) and wear: patches, soil and frayed hems follow the garment's real condition. Role changes the silhouette: a farmer's
  *  short hem and apron, a trader's long coat with a sash and capelet, an elder's long hem and shawl, a child's plain short tunic. */
+import {deferGarmentDetail} from './peopleDetail';
 import {Q,TB,shade,frameOf,frontZ,type KitCtx} from './peopleKit';
 import {mix} from './unitAppearance';
 import type {LodTier} from './buildingParts';
@@ -98,6 +99,7 @@ export function garmentParts(c:KitCtx){
  }
  // ---- fibre detail on the front and hem, near only
  fibreDetail(c,{hem,skH,bw,bd,zS,zT,kind:skirtKind,tb,tH,strip});
+ deferGarmentDetail(c,{hem,skH,bw,bd,zS,zT,kind:skirtKind,tb,tH});
  // ---- wear: patches and frayed hem from the REAL condition
  const worn=cond>=.85?0:cond>=.62?1:cond>=.4?2:3,n=Math.min(worn,ind.patches+1),spots:[number,number][]=[[.09,.66],[-.1,.74],[.06,.4],[-.07,.3]];
  if(covered||skirtKind)for(let i=0;i<n;i++){const [x,y]=spots[(i+v)%4],pc=i%2?shade(cl,.74):mix(cl,pal.accent,.3),yy=y>tw?y:Math.max(hem+.08,y),z=(yy>tw?zT(yy):zS(yy))+.008;(yy>tw?bones.spine:bones.hips).push(Q(pc,'box',[.07,.06,.012],[x,yy,z],0,[0,0,i*.3-.2]),Q(shade(pc,.8),'box',[.07,.008,.014],[x,yy+.03,z],0));}

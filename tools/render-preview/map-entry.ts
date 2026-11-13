@@ -8,7 +8,7 @@ import {traceStep,tickRouteWear,setRoutesEnabled,routeCorridors,corridorWear,ROU
 import {findPath} from '@/game/navigation';
 import {galleryScene,galleryPose} from '@/scene/mapGallery';
 import {enableIrrigation,digDitch,ditchesOf} from '@/game/irrigation';
-type Spec={gallery?:string;/** forestEcologyVersion 1 (stands); absent = the legacy per-tree species choice */forestEcology?:boolean;/** geologyVersion 1 (as fresh game worlds carry it) */geology?:boolean;seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
+type Spec={gallery?:string;/** forestEcologyVersion 1 (stands); absent = the legacy per-tree species choice */forestEcology?:boolean;/** geologyVersion 1 (as fresh game worlds carry it) */geology?:boolean;/** look at the densest cluster of living trees within this many metres of the first camp (forest renders) */lookForest?:number;seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
  prep?:{age?:number;buildings?:{type:string;x:number;z:number}[];irrigation?:{ditchFields:number[];waterMode?:boolean};fieldBlock?:{w:number;d:number;cols:number;rows:number;stages:string[];kind?:string;minGrade?:number}[];farms?:{x:number;z:number;rel?:boolean;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
  probe?:[number,number][];
  routes?:{from:[number,number];to:[number,number];trips:number;team?:number;jitter?:number}[];routesFresh?:boolean;routesIdle?:number;routesLegacy?:boolean;stations?:{x:number;z:number;stage:0|1|2|3;form?:string;team?:number;hp?:number}[];
@@ -117,6 +117,7 @@ w.renderMap=async(S:Spec)=>{
   if(sc.farm&&!(game.state.buildings as {type:string}[]).some(b=>b.type==='farm')){const t=game.tribe(0);Object.assign(t,{food:900,wood:300,stone:100,seeds:40,cultivated:['grain','pulses','tubers']});game.vision.fill(2);
    const n=game.state.buildings.length;if(game.placeBuilding('farm',p.x,p.z)){const b=game.state.buildings[n] as unknown as {build:number;plannedCost?:unknown;cropType?:string;crop?:unknown};b.build=1;delete b.plannedCost;b.cropType='grain';b.crop={kind:'grain',planted:.45,tended:.2,ripened:false,remaining:1};view.rebuild(game);}}
   S.look=[p.x,p.z];S.lookY=p.lookY-game.height(p.x,p.z);}}
+ if(S.lookForest&&!S.look){const c=game.campOf(0),T=game.state.trees.filter(t=>t.amount>0&&Math.hypot(t.x-c.x,t.z-c.z)<S.lookForest!);let best=0,bx=c.x,bz=c.z;for(const t of T){let n=0;for(const o of T)if(Math.abs(o.x-t.x)<22&&Math.abs(o.z-t.z)<22)n++;if(n>best){best=n;bx=t.x;bz=t.z;}}S.look=[bx,bz];}
  const blk=(w as unknown as {__blk?:[number,number]}).__blk,lx=S.look?S.look[0]:blk?blk[0]:c0.x,lz=S.look?S.look[1]:blk?blk[1]:c0.z;
 (view as unknown as {cameraGround:unknown}).cameraGround=null;
  view.look.set(lx,game.height(lx,lz)+(S.lookY??.55),lz);view.yaw=S.yaw;view.pitch=S.pitch;view.dist=S.dist;

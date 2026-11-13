@@ -31,8 +31,8 @@ const row = (list, spacing, o = {}, z0 = 0) => list.map((s, i) => A(s, (i - (lis
 const sheetsDef = {
   // facing is rotation about Y; +X is the animal's front, so facing 0 shows the right-hand flank to a camera on +Z
   lineup: (tier, who = QUAD, sp = 2.9) => ({ width: 1700, height: 640, mode: 'new', cam: { pos: [0, 2.6, 15], target: [0, .75, 0], fov: 32 }, animals: row(who, sp, { tier, facing: 0 }) }),
-  near: (who) => ({ width: 1500, height: 560, mode: 'new', cam: { pos: [0, 1.7, 10.5], target: [0, .8, 0], fov: 32 }, animals: row(who, 3.1, { tier: 0, facing: .3 }) }),
-  seasons: (sp) => ({ width: 1500, height: 520, mode: 'new', cam: { pos: [0, 1.8, 8.6], target: [0, .8, 0], fov: 32 }, animals: [0, 1, 2, 3].map((season, i) => A(sp, (i - 1.5) * 2.7, 0, { season, within: .5, id: 311, tier: 0, sex: 'm', facing: .3 })) }),
+  near: (who) => ({ width: 1500, height: 620, mode: 'new', cam: { pos: [0, 1.6, 11.5], target: [0, .85, 0], fov: 30 }, animals: row(who, 3.6, { tier: 0, facing: .35 }) }),
+  seasons: (sp) => ({ width: 1500, height: 520, mode: 'new', cam: { pos: [0, 1.8, 8.6], target: [0, .8, 0], fov: 32 }, animals: [0, 1, 2, 3].map((season, i) => A(sp, (i - 1.5) * 2.7, 0, { season, within: .5, id: 312, tier: 0, sex: 'm', facing: .3 })) }),
   sexage: (sp) => ({ width: 1500, height: 520, mode: 'new', cam: { pos: [0, 1.8, 8.6], target: [0, .7, 0], fov: 32 }, animals: [['m', 1], ['f', 1], ['m', .35], ['f', .6]].map(([sex, age], i) => A(sp, (i - 1.5) * 2.6, 0, { sex, age, id: 211 + i, tier: 0, season: 1, facing: .3, size: undefined })) }),
   poses: (sp) => ({ width: 1700, height: 460, mode: 'new', cam: { pos: [0, 1.6, 9.5], target: [0, .75, 0], fov: 32 }, animals: ['idle', 'graze', 'alert', 'drink', 'walk', 'trot', 'gallop'].map((gait, i) => A(sp, (i - 3) * 2.4, 0, { gait, phase: .15, id: 421, tier: 0, facing: 0 })) }),
   strips: (sp) => ({ width: 1700, height: 700, mode: 'new', cam: { pos: [0, 2.4, 11], target: [0, .75, -1.4], fov: 34 }, animals: ['walk', 'trot', 'gallop'].flatMap((gait, r) => [0, 1, 2, 3, 4, 5, 6].map((k, i) => A(sp, (i - 3) * 2.2, -r * 2.2 + 1.5, { gait, phase: k / 7, id: 421, tier: 0, facing: 0 }))) }),
@@ -56,11 +56,15 @@ async function shoot(name, spec) {
 }
 const all = sheets.includes('all'), has = s => all || sheets.includes(s);
 const mode = modes[0];
+const LEGACY_ONLY = ['redDeer', 'boar', 'goat', 'sheep', 'horse', 'cattle', 'duck', 'trout'];
 const withMode = s => ({ ...s, mode });
 const chunks = (a, n) => a.reduce((o, x, i) => (i % n ? o[o.length - 1].push(x) : o.push([x]), o), []);
+if (has('legacy-near')) await shoot('near-legacy', { ...sheetsDef.near(LEGACY_ONLY.slice(0, 4)), mode: 'legacy', width: 1500 });
+if (has('legacy-near')) await shoot('near-legacy-2', { ...sheetsDef.near(LEGACY_ONLY.slice(4)), mode: 'legacy', width: 1500 });
 if (has('near')) for (const [i, g] of chunks([...QUAD], 4).entries()) await shoot(`near-${mode}-${i + 1}`, withMode(sheetsDef.near(g)));
 if (has('mid')) for (const [i, g] of chunks([...QUAD], 9).entries()) await shoot(`mid-${mode}-${i + 1}`, withMode(sheetsDef.lineup(1, g, 3.4)));
 if (has('far')) for (const [i, g] of chunks([...QUAD], 9).entries()) await shoot(`far-${mode}-${i + 1}`, withMode(sheetsDef.lineup(2, g, 3.4)));
+if (has('canoe')) for (const v of ['old', 'new']) await shoot(`canoe-${v}`, { width: 1300, height: 440, mode, water: true, canoe: v, cam: { pos: [0, 3.4, 9.5], target: [0, 0, 0], fov: 34 }, animals: [] });
 const flyRow = (gait, y = 0, o = {}) => BIRD.flatMap((b, i) => ['m', 'f'].map((sex, j) => A(b, (i * 2 + j - 2.5) * 1.25, 0, { gait, sex, id: 77 + i * 5 + j, tier: 0, facing: .5, y, phase: (i * 2 + j) * .17, ...o })));
 if (has('birds')) {
   await shoot(`near-${mode}-birds-stand`, { width: 1500, height: 520, mode, cam: { pos: [0, 1.1, 6.2], target: [0, .3, 0], fov: 32 }, animals: flyRow('idle') });

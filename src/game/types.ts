@@ -117,9 +117,11 @@ export type Region = {
   clusterName: string;
 };
 
-export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "horse" | "cattle" | "bird";
+export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "horse" | "cattle" | "bird" | "wolf";
 
 export type Critter = {
+  /** Optional activity/herd state; present only in games started with animalBehaviourVersion 1. */
+  beh?:import("./animalBehaviour").AnimalBeh;
   domestication?:import("./domestication").DomesticationMemory;
   huntDefense?:{hunterId:number;expiresAt:number;nextAttackAt:number;lastX:number;lastZ:number};
   grazing?: {x:number;z:number};
@@ -280,6 +282,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   seaRaid?: {plan?:import('./raidIntent').RaidPlan;x:number;z:number;goalX:number;goalZ:number;phase:"raid"|"retreat";thinkAt:number;departAt:number};
   siegeRamId?:number;
   craftingXP?: number;
+  /** Per-person skill record (skills.ts); present only when state.skillModel is on. */
+  skills?:import('./skills').SkillRecord;
   craftingPractice?:{toolmaking?:import("./crafting").ToolmakingPractice};
   copperStudy?:import('./materialStudy').CopperStudy;
   caravanRoute?:number;
@@ -531,6 +535,7 @@ export type GameState = {
   retainedHousingProjects?:import('./housingTypes').RetainedHousingProject[];
   retainedBuildingRepairs?:import('./buildingMaintenance').RetainedBuildingRepair[];
   buildingMaintenanceVersion?:1;
+  skillModel?:import('./skillRuntime').SkillModel;
   raidDefense?:import('./warPrestige').RaidDefenseState;
   raidIntentHistory?:import('./raidIntent').RaidIntentHistory[];
   communityHandovers?:import("./communityHandoverTypes").CommunityHandover[];
@@ -608,6 +613,8 @@ export type GameState = {
   skins?: import("./skinState").SkinsState;
   /** Wonders standing or rising (src/game/wonderRecords.ts); drawn through the owner's CivSkin. Absent in old saves. */
   wonders?: import("./wonderRecords").WonderRecord[];
+  /** Ruins and ancient sites (src/game/ruinsWorld.ts); absent in old saves, which keep only the legacy cairns. */
+  ruins?: import("./ruinsWorld").RuinsState;
   tradeReports?: {team:number; time:number; offers:TradeDeal[]; observation?: {populationLow:number; populationHigh:number; buildings:number; stocks:Partial<Record<ResKind,"scarce"|"adequate"|"plentiful">>}}[];
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
@@ -658,6 +665,8 @@ export type GameState = {
   raidT: number;
   wildlife: Critter[];
   sheepVersion?:1;
+  /** 1 = activity-based animal behaviour (herds, rhythms, predators, gaits). Absent = legacy random-walk wildlife. */
+  animalBehaviourVersion?:1;
   horseVersion?:1;
   cattleVersion?:1;
   livestock?: Livestock[];
@@ -689,9 +698,11 @@ export type HudSelection = {
   planned?: boolean;
   buildingId?: number;
   completed?: boolean;
+  skills?:import('./skillRuntime').PersonSkillCard;
 };
 
 export type HudSnapshot = {
+  villageSkills?:import('./skillRuntime').VillageSkillCard;
   foodLots?: Partial<Record<FoodKind,number>>;
   cornerstoneCount?: number;
   food: number;

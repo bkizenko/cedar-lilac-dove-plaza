@@ -4,6 +4,7 @@ import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {applyEngineCommand,isEngineDispatchCommand} from '../src/game/engineDispatch.ts';
 import {mulberry32} from '../src/game/rng.ts';
 import * as W from '../src/game/wonderFounding.ts';
+import * as D from '../src/game/wonderDefs.ts';
 const random=Math.random;test.beforeEach(()=>{Math.random=mulberry32(0x6161);});test.afterEach(()=>{Math.random=random;});
 /** Seed 1 has wonder-worthy ground (hills, river, shore) within reach of both the player's and team 1's camp. The player's own search honours exploration, so the tests reveal the map. */
 function game(){const g=new Game();g.reset(1,10,{});g.enterIsland();g.exploredAt=()=>true;return g;}
@@ -40,7 +41,7 @@ test('founding spends real goods, opens a record at progress 0, and the crew pay
  if(!fam){assert.ok(false,'no wonder family fits the generated ground near the hall; test world needs another seed');}
  const r=applyEngineCommand(g,{kind:'found-wonder',family:fam});assert.equal(r.accepted,true,r.reason);
  const rec=W.wondersOf(g)[0];assert.ok(rec&&rec.team===0&&rec.family===fam&&rec.progress===0&&rec.project);
- const cc=W.wonderCost(fam);assert.ok(before.wood-t.wood>=cc.wood-1&&before.stone-t.stone>=cc.stone-1,'goods came out of the stock');assert.ok(Math.abs(before.stone-t.stone-cc.stone)<5);void c;
+ const cc=W.wonderCost(fam);const g0=D.stageGoods(fam,0);assert.ok(before.wood-t.wood>=g0.wood-1&&before.stone-t.stone>=g0.stone-1,'first-stage goods came out of the stock');assert.ok(Math.abs(before.stone-t.stone-g0.stone)<5);void c;
  assert.match(W.wonderFoundingIssue(g,0,fam)??'',/already rising/,'one project at a time');
  // labour: progress follows crew seconds; it never jumps
  run(g,60);const mid=W.wondersOf(g)[0];assert.ok(mid.project.crewIds.length>=1,'workers were sent');assert.ok(mid.progress>=0&&mid.progress<1);

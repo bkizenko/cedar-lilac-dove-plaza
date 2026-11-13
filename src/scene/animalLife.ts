@@ -53,9 +53,10 @@ export class MotionTracker{
  private m=new Map<number,Motion>();private seen=new Set<number>();
  get(id:number){return this.m.get(id);}
  /** `drink` true when standing beside water. */
- step(id:number,x:number,z:number,now:number,sp:{walkMax:number;trotMax:number;stride:readonly [number,number,number]},herbivore:boolean,drink:boolean,seed:number):Motion{
+ step(id:number,x:number,z:number,now:number,sp:{walkMax:number;trotMax:number;stride:readonly [number,number,number]},herbivore:boolean,drink:boolean,seed:number,simState?:string,v0=0):Motion{
   let s=this.m.get(id);
-  if(!s){s={x,z,t:now,speed:0,phase:(seed%100)/100,gait:'idle',gaitT:0,idleT:now-seed%7,idle:'idle'};this.m.set(id,s);}
+  if(!s){const g0:Gait=v0<.08?'idle':v0<sp.walkMax?'walk':v0<sp.trotMax?'trot':'gallop';
+   s={x,z,t:now,speed:v0,phase:(seed%100)/100,gait:g0,gaitT:0,idleT:now-seed%7,idle:'idle'};this.m.set(id,s);}
   const dt=now-s.t;this.seen.add(id);
   if(dt>1e-4){
    const d=Math.hypot(x-s.x,z-s.z),inst=Math.min(d/dt,12),k=1-Math.exp(-dt*8);
@@ -68,7 +69,9 @@ export class MotionTracker{
   if(s.gait==='idle'){
    // idle behaviour changes every 7-19 s, chosen by a seeded hash of the interval index: graze 55% (herbivores), alert 22%, stand otherwise
    const slot=Math.floor((now+seed%13)/ (7+(seed%12))),h=hashSeed(seed,slot)%100;
-   s.idle=drink?'drink':h<(herbivore?55:20)?'graze':h<(herbivore?77:50)?'alert':'idle';
+   // the behaviour sim (flagged saves) names what the animal is doing: show exactly that on the rig
+   const sim=simState==='graze'?'graze':simState==='drink'?'drink':simState==='alert'||simState==='stalk'||simState==='flee'?'alert':simState==='rest'||simState==='sleep'||simState==='ruminate'||simState==='feed'?(simState==='feed'?'graze':'idle'):undefined;
+   if(sim)s.idle=sim;else s.idle=drink?'drink':h<(herbivore?55:20)?'graze':h<(herbivore?77:50)?'alert':'idle';
   }
   return s;
  }

@@ -9,12 +9,13 @@ import { climateAt } from "./ecology";
 import { predisposition } from "./people";
 import {WildlifeObstacles,moveGroundWildlife} from "./wildlifeMovement";
 import {nearbyStepBuildings} from "./buildingQueries";
+import {noteAttack} from "./animalBehaviour";
 
 export type Carcass = { meat: number; diedAt: number; hides?:number; bones?:number;prepared?:true;preparationWork?:number;skinningWork?:number };
 /** Tunable game work seconds, not a historical time measurement. */
 export const CARCASS_PROCESSING_RULES={gutSeconds:2,skinSeconds:3} as const;
 export type HuntableCritter = Critter & { carcass?: Carcass };
-export const CARCASS_MEAT = { deer: 24, boar: 32, goat: 16, sheep:16, horse:48, cattle:60, bird: 0 } as const;
+export const CARCASS_MEAT = { deer: 24, boar: 32, goat: 16, sheep:16, horse:48, cattle:60, bird: 0, wolf: 12 } as const;
 
 /** Old dead wildlife has no carcass field: loading cannot recreate eaten meat. */
 export function carcassStateValid(value: unknown, species: CritterKind, hp: number, now: number) {
@@ -65,6 +66,7 @@ export const HUNTING_WEAPONS={stone:{range:5,period:1.1,damage:1,speed:16},bow:{
 export function huntingWeapon(u:Unit):keyof typeof HUNTING_WEAPONS{return ['archer','ranger'].includes(u.type)?'bow':u.type==='spearman'||u.type==='worker'&&u.militia?'spear':['swordsman','cavalry','warden'].includes(u.type)?'blade':'stone';}
 function damagePrey(g:Game,c:HuntableCritter,damage:number,team:number,attackerId?:number){
  if(c.hp<=0)return;c.hp=Math.max(0,c.hp-damage);if(team===0)g.onSfx('hit');
+ if(c.beh){const a=attackerId!==undefined?g.state.units.find(u=>u.id===attackerId):undefined;noteAttack(g,c,a?.x??c.x,a?.z??c.z);}
  if(c.hp>0&&c.species==='boar'&&attackerId!==undefined){const u=g.state.units.find(u=>u.id===attackerId&&u.hp>0);if(u)c.huntDefense={hunterId:u.id,expiresAt:g.state.time+HUNTING_HAZARD_RULES.alertSeconds,nextAttackAt:Math.max(g.state.time,c.huntDefense?.nextAttackAt??0),lastX:u.x,lastZ:u.z};}
  if(c.hp===0){delete c.huntDefense;c.carcass={meat:CARCASS_MEAT[c.species],diedAt:g.state.time,...(animalProcessingEnabled(g,team)?{hides:1,bones:c.species==='boar'?3:2}:{})};c.vx=0;c.vz=0;c.wanderT=600;g.workBoard.reset();g.addBurst(c.x,c.y+.3,c.z,'#8a5a3a',6);if(team===0)g.addFloater(c.x,c.y+1.8,c.z,`${CARCASS_MEAT[c.species]} meat to carry home`,'#efe4b0');}
 }

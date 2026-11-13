@@ -39,6 +39,7 @@ import {wildPlantsEnabled,habitatKindAt} from '../game/ecology';
 import {LandContinuation} from './landContinuation';
 import {HorizonRing} from './horizonRing';
 import {TowerPlatformLayer} from './towerPlatformLayer';
+import {setBuildingWeather} from './buildingTextures';
 import {CarvedBuildingLayer,carvedGeometry,createCarvedMaterial,type CarvedInstance} from './carvedBuildingLayer';
 import {carvedDaylightGrade,CARVED_LIGHT_RIG} from './carvedPalette';
 import {habitatForProvince,habitatForBaseKind} from './carvedHabitat';
@@ -62,6 +63,8 @@ import {painterAtmosphere,makePainterSky,PAINTER_GRADE_SHADER} from './painterAt
 import {setBuildingGrammar} from './buildingFamilies';
 import {skinOfTeam} from '@/game/skinState';
 import {WonderLayer} from './wonderLayer';
+import {RuinLayer} from './ruinLayer';
+import {ruinViews} from '../game/ruinsWorld';
 /** Banners hang at half-mast this many sim seconds after a succession (two dynastic years). */
 const MOURNING_SECONDS=180;
 import {millPowerKw,MILL_RULES} from '@/game/millPower';
@@ -2065,6 +2068,7 @@ export class WorldView {
     }
     this.syncCarvedBuildings(carvedList);
     this.syncWonders(game);
+    this.syncRuins(game);
     this.penFences?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     this.fibreWork?.sync(game,this.camera.position,this.shadowsEnabled&&this.quality!=='low');
     if(!this.irrigationLayer&&(game.state as {irrigation?:unknown}).irrigation){this.irrigationLayer=new IrrigationLayer(this.scene,(x,z)=>game.height(x,z));this.irrigationLayer.setPreview(this.ditchPreview);}
@@ -2097,6 +2101,14 @@ export class WorldView {
     return -Math.min(1.6,.3+.9*kw/MILL_RULES.maxWindKw);
   }
 
+  private ruinLayer:RuinLayer|null=null;private ruinTick=0;
+  /** Ruins and ancient sites (state.ruins) drawn as aged variants; decay follows game time. Nothing is built until a ruin has been explored. */
+  private syncRuins(game:Game){
+    const list=game.state.ruins?.sites;if(!list?.length&&!this.ruinLayer)return;
+    if(this.ruinLayer&&(this.ruinTick++)%30!==0)return;
+    const layer=this.ruinLayer||(this.ruinLayer=new RuinLayer(this.scene));
+    layer.sync(ruinViews(game),this.camera.position,(x,z)=>game.height(x,z));
+  }
   private wonderLayer:WonderLayer|null=null;
   /** Wonders (state.wonders) drawn through the owner's skin; nothing is built until a record exists. */
   private syncWonders(game:Game){
@@ -2252,6 +2264,7 @@ export class WorldView {
         }else vehicles[kind!]++;
         if(kind==='canoe'&&this.canoePaddles&&paddles<instCap(this.canoePaddles)){
           const moving=afloat&&Math.hypot(u.vx,u.vz)>.1;
+          if(moving)this.fishAdapter?.wake(x,water,z,u.facing);
           const stroke=moving?Math.sin(game.state.time*4+u.id*.7):0;
           _p.set(.72,afloat?.85:.5,0);
           _e.set(afloat?stroke*.65:Math.PI/2,0,afloat?-.25:0);_q.setFromEuler(_e);_s.set(1,1,1);
@@ -3040,6 +3053,7 @@ export class WorldView {
     this.seasonAcc = 0;
     const sn = game.seasonMix();
     this.lastSnow = sn.snow;
+    {const wx=game.state.weather,rainy=wx==='rain'||wx==='storm'||wx==='flood'?1:wx==='mist'?.5:0;setBuildingWeather({wet:Math.min(1,rainy*.85+sn.spring*.25+sn.autumn*.2),sun:Math.max(0,sn.summer*.9+sn.spring*.35-rainy*.5),moss:Math.min(1,.25+sn.spring*.45+sn.autumn*.4+sn.winter*.25)});}
     this.carvedSnow = this.styleId==='village'||this.renderStyle==='carved'?sn.snow:0;this.carvedLayer?.setSnow(this.carvedSnow);carvedSnowUniform.value=this.carvedSnow<.02?0:this.carvedSnow;
     if(this.terrainSurface){this.terrainSurface.snow.value=sn.snow;this.terrainSurface.heights.needsUpdate=true;}
     const geo = this.terrain.geometry as THREE.BufferGeometry;
@@ -3347,7 +3361,7 @@ export class WorldView {
       (meshes.timber.material as THREE.Material).dispose();
       (meshes.roof.material as THREE.Material).dispose();
     }
-    this.carvedLayer?.dispose();this.carvedLayer=null;this.wonderLayer?.dispose();this.wonderLayer=null;this.carvedOwners.clear();
+    this.carvedLayer?.dispose();this.carvedLayer=null;this.wonderLayer?.dispose();this.wonderLayer=null;this.ruinLayer?.dispose();this.ruinLayer=null;this.carvedOwners.clear();
     this.bldMeshes.clear();this.buildingInstances.clear();
     this.unitMeshes.clear();this.unitInstanceOwners.clear();
     this.haulageMeshes.clear();

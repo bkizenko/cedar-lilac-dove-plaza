@@ -9,10 +9,11 @@
  * orienting each triangle away from the part centroid. Triangle counts equal
  * partTriangles() exactly (tested). */
 import {hashSeed,partsAtLod,partTriangles,rotatePoint,seededRandom,SPHERE_SEGMENTS,type BuildingSpec,type LodTier,type Part} from './buildingParts';
+import {layerForMat,NO_LAYER} from './buildingTextures';
 import {CARVED_GRAIN,carvedSwatch,getCarvedPalette,hexToRgb,specSwatch,type CarvedMaterialId} from './carvedPalette';
 
 type V3=[number,number,number];
-export type CarvedMeshData={positions:Float32Array;normals:Float32Array;uvs:Float32Array;colors:Float32Array;grain:Float32Array;triangles:number;
+export type CarvedMeshData={positions:Float32Array;normals:Float32Array;uvs:Float32Array;colors:Float32Array;grain:Float32Array;/** per-vertex material layer+1 (0 = none), wear, part height fraction, part seed (bytes, see buildingTextures.packBm) */bm:Uint8Array;triangles:number;
  bounds:{minX:number;maxX:number;minY:number;maxY:number;minZ:number;maxZ:number}};
 
 const quad=(out:V3[][],a:V3,b:V3,c:V3,d:V3)=>{out.push([a,b,c],[a,c,d]);};
@@ -71,11 +72,11 @@ export type MeshSelect={select?:(p:Part)=>boolean;origin?:readonly [number,numbe
  * `origin` is subtracted from every position so a rotor mesh turns about its own pivot. */
 export function buildCarvedMesh(spec:BuildingSpec,tier:LodTier,opt:MeshSelect={}):CarvedMeshData{
  const o=opt.origin??[0,0,0],parts=opt.select?partsAtLod(spec,tier).filter(opt.select):partsAtLod(spec,tier),triangles=parts.reduce((s,p)=>s+partTriangles(p),0),vc=triangles*3;
- const positions=new Float32Array(vc*3),normals=new Float32Array(vc*3),uvs=new Float32Array(vc*2),colors=new Float32Array(vc*3),grain=new Float32Array(vc);
+ const positions=new Float32Array(vc*3),normals=new Float32Array(vc*3),uvs=new Float32Array(vc*2),colors=new Float32Array(vc*3),grain=new Float32Array(vc),bm=new Uint8Array(vc*4),texEra=spec.tex?.era??2,texWear=spec.tex?.wear??.3,rb=seededRandom(hashSeed(spec.variantKey,tier,'bm'));
  const bounds={minX:Infinity,maxX:-Infinity,minY:Infinity,maxY:-Infinity,minZ:Infinity,maxZ:-Infinity};
  const r=seededRandom(hashSeed(spec.variantKey,tier));let v=0;
  for(const p of parts){
-  const tris=shapeTriangles(p),c=centroidOf(p),[w,h,d]=p.size,own=spec.materials?.[p.mat],base=own?hexRgb(own.hex):swatchRgb(p.mat),tone=1+(r()-.5)*.08,offU=r(),offV=r(),gs=own?specSwatch(spec.materials,p.mat).grain:carvedSwatch(p.mat).grain;
+  const tris=shapeTriangles(p),c=centroidOf(p),[w,h,d]=p.size,own=spec.materials?.[p.mat],base=own?hexRgb(own.hex):swatchRgb(p.mat),tone=1+(r()-.5)*.08,offU=r(),offV=r(),gs=own?specSwatch(spec.materials,p.mat).grain:carvedSwatch(p.mat).grain,layer=p.mat.startsWith('shared.')?NO_LAYER:layerForMat(p.mat,own?.course,texEra),pw=Math.max(0,Math.min(1,texWear*(.75+rb()*.5))),pseed=rb();
   for(const tri of tris){
    let [a,b,e]=tri;let nrm=cross(sub(b,a),sub(e,a));
    const mid:V3=[(a[0]+b[0]+e[0])/3,(a[1]+b[1]+e[1])/3,(a[2]+b[2]+e[2])/3];
@@ -97,12 +98,13 @@ export function buildCarvedMesh(spec:BuildingSpec,tier:LodTier,opt:MeshSelect={}
     const ao=NO_AO.has(p.mat)||p.mat.startsWith('shared.')?1:.8+.2*Math.min(1,Math.max(0,y/1.1));
     colors[v*3]=Math.min(1,base[0]*tone*ao);colors[v*3+1]=Math.min(1,base[1]*tone*ao);colors[v*3+2]=Math.min(1,base[2]*tone*ao);
     grain[v]=gs;
+    bm[v*4]=layer===NO_LAYER?0:layer+1;bm[v*4+1]=Math.round(pw*255);bm[v*4+2]=Math.round(Math.max(0,Math.min(1,h>0?q[1]/h:0))*255);bm[v*4+3]=Math.round(pseed*255);
     bounds.minX=Math.min(bounds.minX,x);bounds.maxX=Math.max(bounds.maxX,x);bounds.minY=Math.min(bounds.minY,y);bounds.maxY=Math.max(bounds.maxY,y);bounds.minZ=Math.min(bounds.minZ,z);bounds.maxZ=Math.max(bounds.maxZ,z);
     v++;
    }
   }
  }
- return {positions,normals,uvs,colors,grain,triangles,bounds};
+ return {positions,normals,uvs,colors,grain,bm,triangles,bounds};
 }
 
 /** Far-distance impostor card: two crossed vertical quads sized to the
