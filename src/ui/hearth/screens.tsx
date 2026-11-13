@@ -116,8 +116,8 @@ export function CouncilWithoutHouse({onClose,terms,captives}:{onClose:()=>void;t
  return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><p className="hw-empty">No ruling house yet.</p>{terms}{captives}</Screen>;
 }
 export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()=>void;initial?:string}){
- const QC={kind:'rulers-council'} as const,QS={kind:'society-decisions'} as const,QB={kind:'combat-doctrine'} as const,QV={kind:'society-civic'} as const,QO={kind:'capitulation-offers'} as const,QP={kind:'captives'} as const;
- const read=useOwnerReadModels(engine,[QC,QS,QB,QV,QO,QP]),c=read(QC).model?.council,s=read(QS).model?.societies,b=read(QB).model?.combat,civic=read(QV).model?.civic;
+ const QC={kind:'rulers-council'} as const,QS={kind:'society-decisions'} as const,QB={kind:'combat-doctrine'} as const,QV={kind:'society-civic'} as const,QO={kind:'capitulation-offers'} as const,QP={kind:'captives'} as const,QE={kind:'elder-counsel'} as const;
+ const read=useOwnerReadModels(engine,[QC,QS,QB,QV,QO,QP,QE]),c=read(QC).model?.council,elder=read(QE).model?.elder,s=read(QS).model?.societies,b=read(QB).model?.combat,civic=read(QV).model?.civic;
  const fb=useActionFeedback(engine);
  const [tab,setTab]=useState(initial||'ruler');
  const terms=read(QO).model?.offers??[],captives=read(QP).model?.captives??[],termsTab=councilTermsTab(terms.length,captives.length);
@@ -131,6 +131,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
     <p className="hw-quote">{c.ruler.headline}{c.ruler.contradiction?`. ${c.ruler.contradiction}`:''}</p>
     {c.ruler.wants.length>0&&<div className="hw-chips"><span className="hw-row-label"><Target size={18}/>Wants</span>{c.ruler.wants.map(w=><span key={w} className="hw-chip">{w}</span>)}</div>}
     <div className="hw-chips"><span className="hw-row-label"><TriangleAlert size={18}/>Fears</span><span className="hw-chip t-warn">{c.ruler.fears}</span></div>
+    {elder&&<p className="hw-elder" data-elder-counsel="1"><b>{elder.name}</b>, {elder.age}, {elder.level==='master'||elder.level==='expert'?`${elder.level} in ${elder.skillLabel}`:`skilled in ${elder.skillLabel}`}: <em>“{elder.line}”</em></p>}
     <div className="hw-chips">{Object.entries(c.ruler.competences).map(([k,v])=><span key={k} className="hw-chip hw-chip-soft">{nice(k)} {v}</span>)}</div>
    </section>}
    {c.handover&&<HandoverCard h={c.handover}/>}

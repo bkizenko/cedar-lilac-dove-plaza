@@ -2,19 +2,19 @@ import {useActionFeedback,FeedbackList} from './council/useActionFeedback';
 import type {Engine} from '../game/engine';
 import {useOwnerReadModels} from './useOwnerReadModels';
 import {CouncilPanelClassic} from './council/CouncilPanelClassic';
-import {PartiesCard,HandoverCard,FameFeed,NeighbourNews,FactionsStrip,GloryBars,Card} from './council/CouncilParts';
+import {PartiesCard,ElderCounselLine,HandoverCard,FameFeed,NeighbourNews,FactionsStrip,GloryBars,Card} from './council/CouncilParts';
 import {CapitulationTerms} from './council/CapitulationTerms';
 import {SocietiesStrip,focusKnownSettlement} from './council/SocietiesStrip';
 import {AttentionInbox} from './council/AttentionInbox';
 import {DiplomacySheet} from './council/DiplomacySheet';
 import {useCouncilLayout} from './council/councilLayout';
-const QUERY={kind:'rulers-council'} as const;
+const QUERY={kind:'rulers-council'} as const,QELDER={kind:'elder-counsel'} as const;
 const MODE_LABEL:Record<string,string>={stay:'Content to stay',settle:'Looking to settle new ground',migrate:'Pressed to move on',conquer:'Eyeing a neighbour',trade:'Seeking trade',explore:'Itching to explore',mission:'Wanting to spread the faith'};
 const STAGE_NOTE:Record<string,string>={household:'A small household. The leader and kin are people, not yet a house.',kingroup:'A growing kin-group. Heirs and fosterage matter.',house:'A ruling house. Marriage alliances and succession now matter.',dynasty:'A dynasty. Claims, regents and factions shape the realm.'};
 /** Council (current layout): ruler, handover, factions, renown, chronicle, expansion and neighbours. `classic` layout keeps the archived panel. */
 export function CouncilPanel({engine}:{engine:Engine}){
  const [layout,setLayout]=useCouncilLayout();
- const read=useOwnerReadModels(engine,[QUERY]),res=read(QUERY),c=res.model?.council;
+ const read=useOwnerReadModels(engine,[QUERY,QELDER]),res=read(QUERY),c=res.model?.council,elder=read(QELDER).model?.elder;
  const fb=useActionFeedback(engine);
  if(layout==='classic')return <><LayoutToggle layout={layout} set={setLayout}/><CouncilPanelClassic engine={engine}/></>;
  if(!c)return <p className="text-xs text-parchment-dim">{res.issue}</p>;
@@ -28,6 +28,7 @@ export function CouncilPanel({engine}:{engine:Engine}){
    <h5 className="text-sm font-semibold text-parchment">{c.ruler.name}, {c.ruler.age}</h5>
    <p>{c.ruler.headline}.{c.ruler.contradiction&&<> {c.ruler.contradiction}.</>}</p>
    {c.ruler.wants.length>0&&<p className="text-parchment-dim">Wants: {c.ruler.wants.join(', ')}. Fears: {c.ruler.fears}.</p>}
+   <ElderCounselLine elder={elder}/>
    {c.house&&<ul className="grid grid-cols-2 gap-x-3 border-t border-parchment/10 pt-1.5">{c.house.family.map(p=><li key={p.name+p.age}>{p.name} <span className="text-parchment-dim">{p.role}, {p.age}</span></li>)}</ul>}
   </Card>}
   <AttentionInbox council={c} onFocus={t=>focusKnownSettlement(engine,t)}/>
