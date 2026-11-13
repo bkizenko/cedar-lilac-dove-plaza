@@ -36,6 +36,13 @@ export function modelIdFor(kind:string):string|null{
  if(Object.hasOwn(CARGO_MODEL,kind))return CARGO_MODEL[kind];
  return null;
 }
+/** Game ages (constants.AGES: Stone, Bronze, Iron, Classical, Medieval, Renaissance) to the item eras (0 flint & bone, 1 copper, 2 bronze, 3 iron, 4 steel). Age 0 is also what a missing age reads as. */
+export const itemEraForAge=(age:number|undefined|null):number=>{const a=Math.max(0,Math.min(5,Math.floor(Number.isFinite(age as number)?(age as number):0)));return [0,2,3,3,4,4][a];};
+/** The era of a farm tool kind (game/farmTools FARM_TOOLS keys). */
+export const FARM_TOOL_ERA:Readonly<Record<string,number>>=Object.freeze({woodenArd:0,stoneHoe:0,copperTools:1,ironTools:3});
+/** Condition (0 ruined .. 1 new) as one of four buckets so shared draws stay few: new, used, worn, ruined. */
+export const conditionBucket=(c:number|undefined|null):0|1|2|3=>{const x=Number.isFinite(c as number)?(c as number):.85;return x>=.78?0:x>=.5?1:x>=.22?2:3;};
+export const CONDITION_BUCKET_MID:readonly number[]=Object.freeze([.92,.64,.36,.1]);
 export const lodForDistance=(d:number,quality:'low'|'med'|'high'='high'):LodTier=>{const k=quality==='high'?1:quality==='med'?.7:.5;return d<14*k?0:d<40*k?1:2;};
 /** The mesh request for a piece of equipment at a level of detail. */
 export function requestFor(eq:EquipmentState,lod:LodTier=0):ItemReq|null{

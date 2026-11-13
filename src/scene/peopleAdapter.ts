@@ -9,6 +9,8 @@
  * only if a future simulation owns them (RigGear). A team dresses in its society's CivSkin (state.skins); `civForTeam` remains the fallback for games without skins. */
 import type * as THREE from 'three';
 import {wornArmor} from '../game/armor';
+import {farmToolCondition} from '../game/farmTools';
+import {itemEraForAge,FARM_TOOL_ERA} from './itemRegistry';
 import {armorAffiliationColor} from '../game/societyIdentity';
 import {calendar} from '../game/settlement';
 import {carryingCapacity} from '../game/haulage';
@@ -57,6 +59,10 @@ export class PeopleAdapter{
    roleOf:u=>{const unit=u as unknown as Unit;const recipe=this.projects.get(u.id)?.recipe;
     return roleOf({type:unit.type,bodyClass:bodyClassFor(u as unknown as UnitLike,g.state.time),farming:!!unit.farmTool,hunting:unit.searchJob==='hunt',recipe,scouting:!!unit.scoutProvisions,trading:unit.caravanRoute!==undefined||!!unit.tradeCargoPending});},
    gearOf:u=>{const unit=u as unknown as Unit,gear:RigGear={};if(unit.garment)gear.garment={item:unit.garment.item,condition:unit.garment.condition};const a=wornArmor(g,unit);if(a)gear.armor={kind:a.kind,condition:a.condition};return gear;},
+   // the real state of what is in hand: a farm tool brings its own era and wear (the simulation tracks both); everything else takes the society's age
+   heldOf:(u,item)=>{const unit=u as unknown as Unit,ageEra=itemEraForAge(g.state.age);
+    if(unit.farmTool&&['hoe','sickle','spade','flail'].includes(item as string))return {era:FARM_TOOL_ERA[unit.farmTool]??ageEra,condition:farmToolCondition(unit)};
+    return {era:ageEra};},
    projectFor:u=>this.projects.get(u.id),
    farmFor:u=>{const n=(u as unknown as Unit).node as {type?:string;crop?:{ripened?:boolean;planted?:number;tended?:number}}|null;return n&&n.type==='farm'?(n.crop??{}):null;},
    fireLitNear:u=>(u as unknown as Unit).workReason==='Warming up by the lit hearth',
