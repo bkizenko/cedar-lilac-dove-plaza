@@ -1093,6 +1093,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-12 22:00 | Claude | 58 (since 21:00 ET, all branches) | 4 landed by PM 22:10 | 2 (trader verbs rob/interrogate/ransom + incident ledger; routes/trails + waystations + Roads card) | lanes A-D steady; CONCEPTS-ADULT-1 boards pushed |
 | 11-12 22:00 | Grok | 0 | 0 | 0 | out; World rows M5-04 map gallery handed to background agent |
 | 11-12 22:00 | Total | ~72 | integration lag 0 after 22:10 PM landing (4 commits) | ~2 | focused sweep 153 tests 150 pass 3 skip 0 fail (incl. routes-waystations, trader-interaction); tsc diff nil; source-pushed-not-live until deploy qualifies |
+| 11-12 23:00 | Codex | 21 (since 22:00 ET, all branches) | 0 new on main this hour (method-record-purchase 3 commits unlanded: tsc errors) | 0 new live (LIVE 7c81460 protected) | active; W2 physical method-record purchase in progress, needs METHOD_RECORD_TRADE_PRICE_WOOD + 'traded' source to land |
+| 11-12 23:00 | Claude | 59 (since 22:00 ET, all branches) | 30 landed by PM 23:15 (fields snapping, irrigation v1, placement fixes, people animation, society proposals, huts, minimap toggle) | ~6 (fields edge snapping, irrigation v1 opt-in, hut doors, upright work poses, society accept/decline, minimap collapse) | shipping and landing; all lanes posted <1h |
+| 11-12 23:00 | Grok | 0 | 0 | 0 | out; World rows with Claude/PM queue; no board lines to miss |
+| 11-12 23:00 | Total | ~80 | integration 0 ahead of main after 23:15 landing (30 commits, fast-forward) | ~6 | focused sweep 124 tests 121 pass 3 skip 0 fail; tsc diff nil vs main; no idle Claude/Codex agents; Grok only idle |
 
 ## Process improvements
 
