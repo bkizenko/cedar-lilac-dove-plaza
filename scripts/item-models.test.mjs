@@ -6,6 +6,9 @@ import {ITEM_DEFS,ITEM_IDS,buildItem,clearItemCache,itemDef,itemKey} from '../sr
 import {meshIsFinite} from '../src/scene/itemMesh.ts';
 import {itemStyleFor} from '../src/scene/itemStyle.ts';
 import {modelIdFor,requestFor,meshForEquipment,heldItemMesh,groundItemMesh,inventoryItemMesh,RIG_ITEM_MODEL,CARGO_MODEL,lodForDistance} from '../src/scene/itemRegistry.ts';
+import {buildAtlas,clearAtlasCache,atlasGpuBytes,TILE_COUNT,ATLAS_SIZE,DECAL_GRID,motifCell,emblemCell,FIRST_EMBLEM_CELL,EMBLEMS} from '../src/scene/itemTexture.ts';
+import {conditionBucket,itemEraForAge,CONDITION_BUCKET_MID,FARM_TOOL_ERA} from '../src/scene/itemRegistry.ts';
+import {shownCount,GROUND_ITEM_RULES,FARM_TOOL_MODEL} from '../src/scene/itemRegistry.ts';
 import {WEAPON_CARGO_KINDS} from '../src/game/weaponCargo.ts';
 
 const CIVS=['aureline','hanrei','steppan','sandrill','kaaltun','mekhari','skoldar','nilemark','tigrane','rusvolt','vedara','sahelan','quillan','brythen'];
@@ -102,4 +105,35 @@ test('colours stay in range and normals are unit length (sampled)',()=>{
 });
 test('weapon ids in weaponFamilies are untouched by the model layer',()=>{
  assert.equal(Object.keys(WEAPONS).length,WEAPON_IDS.length);
+});
+
+test('texture atlas is deterministic, finite, and within its memory budget',()=>{
+ clearAtlasCache();const a=buildAtlas(1);clearAtlasCache();const b=buildAtlas(1);
+ assert.equal(a.checksum,b.checksum);assert.equal(a.layers,TILE_COUNT);assert.equal(a.size,ATLAS_SIZE);
+ assert.ok(a.detail.some(v=>v!==a.detail[0]),'detail has variation');assert.ok(atlasGpuBytes(a)<12e6,`atlas gpu bytes ${atlasGpuBytes(a)}`);
+ clearAtlasCache();assert.notEqual(buildAtlas(2).checksum,a.checksum,'seed matters');clearAtlasCache();
+});
+test('every item has uv, decal and accent attributes that are finite, in range, and sized to the vertices',()=>{
+ for(const id of ITEM_IDS)for(const era of [0,3]){const m=buildItem(req(id,{era})),nv=m.positions.length/3;
+  assert.equal(m.uvs?.length,nv*3,`${id} uvs`);assert.equal(m.decals?.length,nv*4,`${id} decals`);assert.equal(m.accents?.length,nv*8,`${id} accents`);
+  for(let i=0;i<nv;i++){const L=m.uvs[i*3+2];assert.ok(Number.isInteger(L)&&L>=0&&L<TILE_COUNT,`${id} tile layer ${L}`);
+   for(const c of [m.decals[i*4+2],m.decals[i*4+3]])assert.ok(Number.isInteger(c)&&c>=0&&c<DECAL_GRID*DECAL_GRID,`${id} decal cell ${c}`);}}
+});
+test('painted shields carry a society motif and emblem decal, and the emblem is stable per civ',()=>{
+ for(const civ of CIVS.filter(c=>c!=='mekhari')){// mekhari carries a plain woven (wicker) shield by design
+  const m=buildItem(req('shield',{era:2,skin:civ}));let n=0;for(let i=0;i<m.positions.length/3;i++)if(m.decals[i*4+3]>=FIRST_EMBLEM_CELL)n++;assert.ok(n>20,`${civ} shield emblem verts ${n}`);}
+ assert.equal(emblemCell('sunDisc'),emblemCell('sunDisc'));assert.ok(EMBLEMS.length>=3);assert.ok(motifCell('rings')>=1);
+});
+test('condition buckets, era mapping and ground pile counts are bounded and monotone',()=>{
+ assert.deepEqual([1,.8,.6,.3,.05,undefined,NaN].map(conditionBucket),[0,0,1,2,3,0,0]);
+ for(let b=0;b<4;b++)assert.equal(conditionBucket(CONDITION_BUCKET_MID[b]),b);
+ assert.deepEqual([0,1,2,3,4,5,9,-1,undefined].map(itemEraForAge),[0,2,3,3,4,4,4,0,0]);
+ assert.equal(FARM_TOOL_ERA.woodenArd,0);assert.ok(FARM_TOOL_ERA.ironTools>=3);for(const k of Object.keys(FARM_TOOL_MODEL))assert.ok(itemDef(FARM_TOOL_MODEL[k]),k);
+ let prev=0;for(const n of [0,1,2,3,4,7,50,1e6]){const c=shownCount(n);assert.ok(c>=prev&&c<=GROUND_ITEM_RULES.maxPerKind,`${n}->${c}`);prev=c;}
+ assert.equal(shownCount(0),0);assert.equal(shownCount(2),2);
+});
+test('worn metal is not all green: patina leaves tarnish and bare colour in the mix',()=>{
+ const m=buildItem(req('bladeSword',{era:3,condition:.2}));let green=0,n=0;
+ for(let i=0;i<m.colors.length;i+=3){const r=m.colors[i],g=m.colors[i+1],b=m.colors[i+2];n++;if(g>r*1.25&&g>b*1.1)green++;}
+ assert.ok(green/n<.5,`green fraction ${green/n}`);
 });

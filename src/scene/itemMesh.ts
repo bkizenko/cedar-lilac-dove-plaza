@@ -234,7 +234,7 @@ export class MeshBuilder{
   return {positions,normals,colors,triangles:positions.length/9,bounds:{min,max},uvs:new Float32Array(this.U),decals:new Float32Array(this.D),accents:new Uint8Array(this.A)};
  }
 }
-export function meshIsFinite(m:ItemMesh){for(const a of [m.positions,m.normals,m.colors])for(let i=0;i<a.length;i++)if(!Number.isFinite(a[i]))return false;return true;}
+export function meshIsFinite(m:ItemMesh){for(const a of [m.positions,m.normals,m.colors,m.uvs,m.decals,m.accents])if(a)for(let i=0;i<a.length;i++)if(!Number.isFinite(a[i]))return false;return true;}
 export function mergeMeshes(parts:ItemMesh[]):ItemMesh{
  const n=parts.reduce((s,p)=>s+p.positions.length,0),nv=n/3,positions=new Float32Array(n),normals=new Float32Array(n),colors=new Float32Array(n),uvs=new Float32Array(nv*3),decals=new Float32Array(nv*4),accents=new Uint8Array(nv*8);let o=0,ov=0;
  for(const p of parts){positions.set(p.positions,o);normals.set(p.normals,o);colors.set(p.colors,o);if(p.uvs)uvs.set(p.uvs,ov*3);if(p.decals)decals.set(p.decals,ov*4);if(p.accents)accents.set(p.accents,ov*8);o+=p.positions.length;ov+=p.positions.length/3;}

@@ -43,6 +43,7 @@ import { probeWorld } from "./audioProbe";
 import { saveGame, loadRaw, hasSave, protectGame, exportGame, saveTestLabGame, loadTestLabGame } from "./save";
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
+import { eventInsideUi, wheelZoomFactor } from "./cameraInput";
 
 export type VillageSaveResult={saved:boolean;message:string;serialized?:string};
 export type VillageImportResult={applied:boolean;saved:boolean;message:string};
@@ -531,10 +532,10 @@ export class Engine {
   };
 
   private onWheel = (e: WheelEvent) => {
-    if ((e.target as HTMLElement | null)?.closest("dialog, input, select, textarea, .hud-panel")) return;
+    // UI scrolls itself: never preventDefault or zoom for events that start inside interface chrome.
+    if (eventInsideUi(e.target)) return;
     e.preventDefault();
-    const s = Math.sign(e.deltaY);
-    this.view.dist *= s > 0 ? 1.08 : 0.92;
+    this.view.dist *= wheelZoomFactor(e);
   };
 
   private canvasXY(e: PointerEvent) {

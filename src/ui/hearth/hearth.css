@@ -479,3 +479,9 @@
 .hw-btn-badge{min-width:26px;height:26px;line-height:24px;border-radius:13px}
 .hw-medal .hw-rank,.hw-medal-s .hw-rank{min-width:24px;height:24px;line-height:24px}
 @media (max-width:760px){.hw-tile{width:92px}.hw-tiles{max-height:34dvh}}
+
+/* 390px: fade the clipped edge of scrollable tab strips so hidden tabs are discoverable */
+@media (max-width:760px){.hw-screen-tabs{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}}
+/* Wheel, trackpad and touch inside the interface scroll the interface, never the camera: contain chaining, allow vertical pan. */
+.hw *{overscroll-behavior:contain}
+.hw-screen,.hw-sel,.hw-tiles,.hw-tray,.hw-notes{touch-action:pan-y}
