@@ -315,6 +315,14 @@ test('casus belli is visible in the council neighbour view, both directions, and
  assert.equal(casusLines({year:10},0,1).length,0);
 });
 
+test('casus belli held against us carries plain demand terms and a dated ultimatum; ours carries none (read-only, nothing taken)',async()=>{
+ const {casusLines}=await import('../src/game/rulersView.ts');
+ const r={year:10,claims:[{holder:'1',target:'0',kind:'succession',strength:45,expiresTick:25},{holder:'0',target:'1',kind:'claim',strength:30,expiresTick:30}]};
+ const l=casusLines(r,0,1),against=l.find(x=>!x.byUs),ours=l.find(x=>x.byUs);
+ assert.ok(against&&/throne/.test(against.demand)&&against.ultimatumYear===25&&against.endsIn===15);
+ assert.ok(ours&&ours.demand===undefined&&ours.ultimatumYear===undefined);
+});
+
 test('neighbourNews: real agreements only, player-known, newest first, old saves empty',async()=>{
  const {neighbourNews,marryHouses}=await import('../src/game/rulersRuntime.ts');
  const {recordAgreement}=await import('../src/game/societyRuntime.ts');

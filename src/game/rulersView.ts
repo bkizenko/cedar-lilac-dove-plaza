@@ -41,12 +41,14 @@ export function rivalCourt(r:NonNullable<ReturnType<typeof rulersOf>>,other:numb
  return {ruler:head.name,rulerAge:head.age,house:d.house,law:o.civ.polity.succession,heir:hp?{name:hp.name,age:hp.age,adult:hp.age>=16,legit:hp.legit}:undefined,regent:d.regent?d.people[d.regent]?.name:undefined,extinct:!hp&&!d.regent,lastEvent:d.log.length?d.log[d.log.length-1]:undefined};
 }
 /** A standing grievance between two houses, in plain words: who holds it, the cause, how strong, when it lapses and what citing it costs the holder. */
-export type CasusLine={byUs:boolean;kind:string;strength:number;endsIn:number;cost:number;reason:string};
+export type CasusLine={byUs:boolean;kind:string;strength:number;endsIn:number;cost:number;reason:string;demand?:string;ultimatumYear?:number};
+/** What a house holding this cause against us would ask, in plain words. Terms ask only for things the player can really hand over or refuse; nothing is taken without a war the player can see coming. */
+const DEMAND_WORDS:Record<string,string>={succession:'a say in who sits our throne, shown as a marriage or a fostered heir',claim:'recognition of their claim: a ward sent to their hall or lands ceded by treaty',tribute:'the tribute we owe, paid from our own stores',raid:'redress for the raids: goods returned from our own stores',holy:'a sign of respect to their faith',reconquest:'the return of lands they once held',liberation:'release of their kin held in our hall'};
 const CB_WORDS:Record<string,string>={claim:'a claim on their lands',tribute:'unpaid tribute',holy:'a sacred grievance',reconquest:'lands once held',defence:'a wrong done in defence',raid:'raids and cattle-lifting',succession:'a disputed succession',liberation:'kin held under their rule'};
 export function casusLines(r:NonNullable<ReturnType<typeof rulersOf>>,team:number,other:number):CasusLine[]{
  return liveClaims(r.claims??[],r.year).filter(c=>(Number(c.holder)===team&&Number(c.target)===other)||(Number(c.holder)===other&&Number(c.target)===team)).map(c=>{
   const byUs=Number(c.holder)===team;
-  return {byUs,kind:c.kind,strength:Math.round(c.strength),endsIn:Math.max(0,c.expiresTick-r.year),cost:cbLegitimacyCost(c.kind),reason:(byUs?'We hold ':'They hold ')+(CB_WORDS[c.kind]??c.kind)+'; citing it costs the holder '+cbLegitimacyCost(c.kind)+' legitimacy.'};});
+  return {byUs,kind:c.kind,strength:Math.round(c.strength),endsIn:Math.max(0,c.expiresTick-r.year),cost:cbLegitimacyCost(c.kind),reason:(byUs?'We hold ':'They hold ')+(CB_WORDS[c.kind]??c.kind)+'; citing it costs the holder '+cbLegitimacyCost(c.kind)+' legitimacy.',...(byUs?{}:{demand:DEMAND_WORDS[c.kind]??'their cause answered',ultimatumYear:c.expiresTick})};});
 }
 /** One kinsman living in another house: who, which way, why, and when they go home. */
 export type WardLine={name:string;age:number;kind:'foster'|'hostage';heldByUs:boolean;sinceYear:number;endsIn:number;effect:string};
