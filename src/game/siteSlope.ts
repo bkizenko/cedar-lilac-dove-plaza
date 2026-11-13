@@ -1,11 +1,13 @@
-/** Sloping ground is allowed. A rigid building (hut, house, hall, workshop...) stands on a levelled plinth that fills the fall under its walls
- * (scene/buildingGrounding.ts), so the only honest refusals are a cliff-like drop or a site where the plinth would be absurdly tall.
- * Tolerance grows with the footprint: a bigger building is levelled by a bigger platform. Pure, shared by placementIssue and the ghost. */
+/** Sloping ground is allowed. Rigid buildings use terrain-conforming wall/post
+ * supports; placement tolerance does not imply a filled platform or terrain edit. */
 import type {BldType} from './types';
 export const SLOPE_RULES={baseReliefMetres:.9,reliefPerFootprintMetre:.2,maximumReliefMetres:3,maximumGrade:1.05,sampleStepMetres:1.5,maximumSamples:81} as const;
-/** Rigid roofed buildings that get a levelled plinth. Fields, pens, walls, docks, water works, camps and ground-laid floors follow the earth instead. Independent of the renderer so headless sims agree with the preview. */
+/** Rigid structures surveyed for slope admission, independent of visual support policy. */
 const RIGID=new Set<string>(['hut','house','townhall','barracks','grindingStone','workshop','forge','kiln','potter','fibreWorkshop','tailor','tanner','butcher','dryrack','smokehouse','oven','watchtower','temple','market','keep','stables','university']);
-export const needsLevelledPlinth=(type:BldType)=>RIGID.has(type);
+/** Only large civic halls and fortified keeps may have a filled structural base.
+ * Huts, houses and workstations always retain their individual wall/leg supports. */
+export const PLINTH_RULES={types:['townhall','keep'] as readonly BldType[],minimumAreaSquareMetres:80,minimumSideMetres:8,minimumReliefMetres:.3} as const;
+export const needsLevelledPlinth=(type:BldType)=>PLINTH_RULES.types.includes(type);
 export const reliefAllowance=(w:number,d:number)=>Math.min(SLOPE_RULES.maximumReliefMetres,SLOPE_RULES.baseReliefMetres+SLOPE_RULES.reliefPerFootprintMetre*Math.max(w,d));
 export type SiteRelief={range:number;maxGrade:number;min:number;max:number;allowance:number;ok:boolean;samples:number};
 /** Survey the footprint on a bounded grid: height range, steepest step between neighbouring samples, and the verdict. */
@@ -19,11 +21,11 @@ export function siteRelief(height:(x:number,z:number)=>number,x:number,z:number,
  return{range,maxGrade:grade,min:lo,max:hi,allowance,ok:range<=allowance&&grade<=R.maximumGrade,samples:(nx+1)*(nz+1)};
 }
 export function siteSlopeIssue(height:(x:number,z:number)=>number,type:BldType,x:number,z:number,w:number,d:number):string|null{
- if(!needsLevelledPlinth(type))return null;const r=siteRelief(height,x,z,w,d);
- return r.ok?null:`Too steep to level a foundation here (${r.range.toFixed(1)} m fall across the site, up to ${r.allowance.toFixed(1)} m is fine) — pick a gentler slope`;
+ if(!RIGID.has(type))return null;const r=siteRelief(height,x,z,w,d);
+ return r.ok?null:`Too steep for a supported foundation here (${r.range.toFixed(1)} m fall across the site, up to ${r.allowance.toFixed(1)} m is fine) — pick a gentler slope`;
 }
-/** Cut-and-fill platform under a sloping rigid building: world-space box from below the lowest wall contact up to just under the floor. Null on near-level ground. */
+/** Visual structural base for explicitly eligible large structures only; never edits terrain. */
 export function levellingPlinth(type:BldType,b:{x:number;z:number;w:number;d:number},level:number,bottom:number,burial:number){
- if(!needsLevelledPlinth(type)||level-bottom<=.3)return null;const lo=bottom-burial-.2,top=level-.02;
+ if(!needsLevelledPlinth(type)||Math.min(b.w,b.d)<PLINTH_RULES.minimumSideMetres||b.w*b.d<PLINTH_RULES.minimumAreaSquareMetres||level-bottom<=PLINTH_RULES.minimumReliefMetres)return null;const lo=bottom-burial-.2,top=level-.02;
  return{x:b.x,z:b.z,y:(top+lo)/2,length:b.w+.5,width:b.d+.5,height:top-lo,yaw:0,kind:'plinth' as const};
 }

@@ -14,7 +14,8 @@ export function buildingGroundSupports(g:Game,b:Building):readonly GroundSupport
    if(f.level-bottom<R.minimumVisibleGapMetres)continue;bottom-=R.burialMetres;const top=f.level+.025;supports.push(Object.freeze({x,z,y:(top+bottom)/2,length:len/n+.012,width:R.stripWidthMetres,height:top-bottom,yaw:Math.atan2(-dz,dx)}));
   }
  }
- // Sloping site: a levelled platform under the whole footprint (cut-and-fill), so the floor stands on a terrain-fitting foundation instead of floating on wall strips.
+ // Only explicitly eligible large halls/keeps receive a filled structural base.
+ // Small buildings retain the real terrain-conforming bearing strips above.
  const plinth=levellingPlinth(b.type,b,f.level,f.bottom,R.burialMetres);if(plinth)supports.push(Object.freeze(plinth));
  const entry=groundEntryFor(b.type);
  if(entry){const e=world(entry.x,entry.z),direction={x:s,z:c},width=entry.width*sx,margin=Math.max(.18,width/2),bounds=[Math.abs(direction.x)>.00001?(b.w/2-margin-Math.sign(direction.x)*(e.x-b.x))/Math.abs(direction.x):Infinity,Math.abs(direction.z)>.00001?(b.d/2-margin-Math.sign(direction.z)*(e.z-b.z))/Math.abs(direction.z):Infinity],length=Math.min(1.25,...bounds);

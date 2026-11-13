@@ -17,9 +17,11 @@ test('slope: flat and gentle ground is fine, a cliff is refused, bigger footprin
   const r=siteRelief(plane(.25,0),0,0,6,6);assert.ok(Math.abs(r.range-1.5)<1e-6&&r.ok&&r.maxGrade<=.26);
 });
 test('slope: fields, walls, docks and water works are never refused by the plinth rule',()=>{for(const t of['farm','pen','palisade','gate','dock','canal','hearth'])assert.equal(needsLevelledPlinth(t),false);assert.equal(siteSlopeIssue(plane(2,0),'farm',0,0,9,9),null);});
-test('plinth: a sloping site gets a levelled platform that covers the footprint and sits under the floor; level ground gets none',()=>{
+test('plinth: only explicitly large halls/keeps receive a structural base; small buildings never do',()=>{
   assert.equal(levellingPlinth('hut',{x:0,z:0,w:5.4,d:5.2},10.03,9.9,.18),null);
-  const p=levellingPlinth('hut',{x:4,z:-2,w:5.4,d:5.2},11.5,10,.18);assert.ok(p);assert.equal(p.kind,'plinth');
+  for(const type of ['hut','house','hearth','workshop','butcher','smokehouse','oven'])assert.equal(levellingPlinth(type,{x:0,z:0,w:20,d:20},11.5,10,.18),null,type);
+  assert.equal(levellingPlinth('townhall',{x:0,z:0,w:7,d:7},11.5,10,.18),null);
+  const p=levellingPlinth('townhall',{x:4,z:-2,w:10,d:10},11.5,10,.18);assert.ok(p);assert.equal(p.kind,'plinth');
   assert.ok(p.length>=5.4&&p.width>=5.2);assert.ok(p.y+p.height/2<11.5,'top stays under the floor');assert.ok(p.y-p.height/2<10,'bottom is below the lowest contact');
   assert.equal(levellingPlinth('farm',{x:0,z:0,w:9,d:9},12,10,.18),null);
 });

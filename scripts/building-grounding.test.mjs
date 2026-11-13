@@ -13,3 +13,14 @@ test('all civic variants preserve footing anchors and existing society navigatio
 
 test('only an actual raised doorway gets bounded terrain-reaching steps, fully inside old collision rectangle',()=>{const b=site('temple'),g=game((x,z)=>-.22*z),rows=buildingGroundSupports(g,b),steps=rows.filter(s=>s.kind==='step');assert.ok(steps.length>0&&steps.length<=8);for(const s of steps){assert.ok(s.y-s.height/2<g.height(s.x,s.z));for(const a of[-.5,.5])for(const z of[-.5,.5]){const x=s.x+Math.cos(s.yaw)*s.length*a+Math.sin(s.yaw)*s.width*z,dz=s.z-Math.sin(s.yaw)*s.length*a+Math.cos(s.yaw)*s.width*z;assert.ok(Math.abs(x)<b.w/2);assert.ok(Math.abs(dz)<b.d/2);}}assert.equal(buildingGroundSupports(game(),site('temple')).filter(s=>s.kind==='step').length,0);});
 test('stable actual layer does not resample/upload; terrain revision and visibility/death remain live',()=>{let samples=0;const g=game((x,z)=>{samples++;return .12*x+.05*z;}),b=site(),scene=new T.Scene(),layer=new BuildingGroundingLayer(scene,new T.MeshStandardMaterial());g.state.buildings=[b];layer.sync(g);const count=samples,version=layer.mesh.instanceMatrix.version;assert.ok(count>0);layer.sync(g);assert.equal(samples,count);assert.equal(layer.mesh.instanceMatrix.version,version);g.rev();layer.sync(g);assert.ok(samples>count);const afterRevision=samples;g.world.heights=new Float32Array(9);layer.sync(g);assert.ok(samples>afterRevision);b.hp=0;layer.sync(g);assert.equal(layer.mesh.count,0);assert.equal(layer.metrics.overflow,0);layer.dispose();});
+
+test('actual hut, house and cooking/workstation frames retain strips without a full filled base on moderate hills',()=>{
+ const g=game((x,z)=>.18*x+.09*z);
+ for(const type of ['hut','house','hearth','workshop','butcher','smokehouse','oven']){
+  const b=site(type),rows=buildingGroundSupports(g,b);
+  assert.equal(rows.some(r=>r.kind==='plinth'),false,type);
+  assert.equal(rows.some(r=>r.length>=b.w&&r.width>=b.d),false,type+' full footprint box');
+  if(type!=='hearth')assert.ok(rows.length>0,type+' real bearing supports retained');
+ }
+ const hall=site('townhall');assert.equal(buildingGroundSupports(g,hall).filter(r=>r.kind==='plinth').length,1,'explicit large-hall policy');
+});
