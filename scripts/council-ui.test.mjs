@@ -124,3 +124,10 @@ test('compact leader portrait drops the caption, honours size, and stays seeded 
  assert.match(full,/<figcaption>/);assert.doesNotMatch(small,/figcaption/);assert.match(small,/width="56" height="56"/);
  assert.equal(renderToStaticMarkup(h(LeaderPortrait,{...p,compact:true,size:56})),small);
 });
+
+test('parties abroad card names kind, crew, stores and flags trouble; empty is silent',async()=>{
+ const {PartiesCard}=await import('../src/ui/council/CouncilParts.tsx');
+ const parties=[{team:0,name:'Us',crew:3,x:0,z:0,destX:9,destZ:9,distance:120,carrying:'4 food, 2 water',status:'stores running low',kind:'explore'},{team:0,name:'Us',crew:1,x:0,z:0,destX:9,destZ:9,distance:40,carrying:'8 grain for salt',status:'on the road',kind:'trade'}];
+ const html=renderToStaticMarkup(h(PartiesCard,{parties}));
+ assert.match(html,/Scout/);assert.match(html,/Trade caravan/);assert.match(html,/3 people, 120 m/);assert.match(html,/1 person/);assert.match(html,/Stores running low\./);assert.equal(renderToStaticMarkup(h(PartiesCard,{parties:[]})),'');
+});

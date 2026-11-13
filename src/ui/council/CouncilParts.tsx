@@ -52,3 +52,12 @@ export function GloryBars({glory,score}:{glory:{stream:string;value:number}[];sc
  return <Card label="Renown" title={`Renown ${score}`}><ul className="space-y-1">{rows.map(g=><li key={g.stream} className="grid grid-cols-[4.5rem_1fr_2rem] items-center gap-2"><span className="capitalize text-parchment">{g.stream}</span>
   <span className="h-2 rounded bg-black/40"><span className="block h-2 rounded bg-bronze-bright" style={{width:Math.round(100*g.value/top)+'%'}}/></span><span className="text-right tabular-nums text-parchment-dim">{g.value}</span></li>)}</ul></Card>;
 }
+
+/** Expeditions in the field (settlers, scouts, traders, raiders): real crews carrying real stores, read-only from the council model. */
+const PARTY_LABEL:Record<string,string>={settle:'Settlers',explore:'Scout',trade:'Trade caravan',raid:'Raiding party'};
+export const partyLabel=(k:string)=>PARTY_LABEL[k]??'Party';
+const partyWarn=(status:string)=>/struggling|running low/.test(status);
+export function PartiesCard({parties}:{parties:NonNullable<CouncilModel['parties']>}){
+ if(!parties.length)return null;
+ return <Card label="Parties abroad" title="Parties abroad"><ul className="space-y-1">{parties.map((p,i)=><li key={p.kind+i} data-party={p.kind} className="border-l-2 border-parchment/15 pl-2"><b className="text-parchment">{partyLabel(p.kind)}</b> <span className="text-parchment-dim">{p.crew} {p.crew===1?'person':'people'}, {p.distance} m from their goal; carrying {p.carrying||'nothing'}.</span> <span className={partyWarn(p.status)?'font-semibold text-[color:var(--hw-bad,#d88a7a)]':'text-parchment-dim'}>{p.status[0].toUpperCase()+p.status.slice(1)}.</span></li>)}</ul></Card>;
+}
