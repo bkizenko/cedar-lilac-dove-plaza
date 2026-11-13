@@ -95,6 +95,7 @@ function NeighbourCard({n,soc,route,send}:{n:any;soc?:any;route?:any;send:(team:
   {n.means.length>0&&<ul className="hw-chips">{n.means.map((x:string)=><li key={x} className="hw-chip hw-chip-soft">{x}</li>)}</ul>}
   {!!n.wards?.length&&<ul className="hw-chips">{n.wards.map((w:any)=><li key={w.name+w.sinceYear} className="hw-chip hw-chip-soft" title={w.effect}><Heart size={16}/>{w.name} · {w.kind==='foster'?'fostered':'hostage'} · {w.endsIn?`${w.endsIn}y`:'<1y'}</li>)}</ul>}
   {!!n.casus?.length&&<ul className="hw-chips" aria-label={`Grievances between us and ${n.name}`}>{n.casus.map((k:any,i:number)=><li key={k.kind+i} className={cx('hw-chip',k.byUs?'hw-chip-soft':'t-bad')} title={k.reason}><Swords size={16}/>{k.byUs?'We hold':'They hold'} {CASUS_NAME[k.kind]??k.kind} · {k.endsIn?`${k.endsIn}y`:'<1y'}</li>)}</ul>}
+  {!!n.memory?.length&&<ul className="hw-chips hw-memory" aria-label={`What ${n.name} remembers`} data-memory="1">{n.memory.slice(0,4).map((m:any,i:number)=><li key={m.kind+m.year+i} className="hw-chip hw-chip-soft" style={{opacity:Math.max(0.55,Math.min(1,m.weight/100))}} title={`${m.text}. Year ${m.year}; memory fades by half every ten years.`}><Clock size={16}/>{m.text}</li>)}</ul>}
   {n.canMarry&&<div className="hw-row">{([['marry-houses','Marry',<Heart size={22} key="m"/>],['foster-houses','Foster',<Users size={22} key="f"/>],['exchange-hostages','Hostages',<Shield size={22} key="h"/>]] as const).map(([k,l,i])=><button key={k} type="button" className="hw-btn-wide" onClick={()=>send(n.team,k)}>{i}{l}</button>)}</div>}
  </li>;
 }
