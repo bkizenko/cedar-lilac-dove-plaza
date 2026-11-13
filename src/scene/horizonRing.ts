@@ -42,12 +42,14 @@ export class HorizonRing{
     #include <opaque_fragment>`);
   };
   this.canopyMat=new THREE.MeshLambertMaterial({color:'#ffffff'});
-  this.canopyMat.flatShading=true;
+  this.canopyMat.flatShading=false;
   scene.add(this.group);
  }
  /** (Re)build for this world and draw-distance bands. Cheap enough to redo when the level changes (tens of ms). */
  build(game:Game,level:DrawDistance,bands:DrawBands){
   this.game=game;this.level=level;this.far=bands.cameraFar;
+  // escape hatch for comparisons and bug reports: ?horizon=off draws nothing beyond the map edge (the pre-horizon look)
+  try{if(/[?&]horizon=off/.test(globalThis.location?.search||'')){this.clear();this.builtKey='off';return;}}catch{/* no location in tests */}
   const w=game.world,half=w.size/2,width=w.landContinuation?.width??0,seaY=seaSurfaceY(w);
   const key=`${game.state.seed}/${w.size}/${level}/${Math.round(this.far)}/${width}/${seaY.toFixed(2)}`;
   if(key===this.builtKey&&this.ground)return;this.builtKey=key;
@@ -64,7 +66,7 @@ export class HorizonRing{
    const m=new THREE.InstancedMesh(cone,this.canopyMat,geo.canopies.length),mat=new THREE.Matrix4(),q=new THREE.Quaternion(),p=new THREE.Vector3(),s=new THREE.Vector3(),c=new THREE.Color();
    geo.canopies.forEach((k,i)=>{
     p.set(k.x,k.y,k.z);q.setFromAxisAngle(new THREE.Vector3(0,1,0),k.tone*6.28);s.set(k.r,k.h*1.1,k.r);mat.compose(p,q,s);m.setMatrixAt(i,mat);
-    const hi=Math.max(0,Math.min(1,(k.y-seaY-30)/130)),r=.13+k.tone*.06-hi*.02,gr=.27+k.tone*.1-hi*.06,b=.14+k.tone*.04;
+    const hi=Math.max(0,Math.min(1,(k.y-seaY-30)/130)),r=.19+k.tone*.05-hi*.04,gr=.33+k.tone*.07-hi*.07,b=.17+k.tone*.04-hi*.02;
     c.setRGB(r,gr,b);m.setColorAt(i,c);
    });
    m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;m.name='horizon-ring-canopy';m.raycast=()=>{};m.computeBoundingSphere();m.frustumCulled=false;this.canopy=m;this.group.add(m);

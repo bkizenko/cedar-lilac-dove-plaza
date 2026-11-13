@@ -27,14 +27,14 @@ export const HORIZON_RULES={
  /** how far under the transparent continuation the ring lies where both draw land, so the two never z-fight */
  underContinuation:.45,
  /** canopy bands: outer distance beyond the edge (m) and cell size (m); crowns grow with distance because they stand for forest masses, not single trees */
- canopyBands:[{to:260,cell:22},{to:700,cell:40},{to:1500,cell:80},{to:4200,cell:150}] as readonly {to:number;cell:number}[],
+ canopyBands:[{to:260,cell:22},{to:700,cell:34},{to:1500,cell:56},{to:4200,cell:96}] as readonly {to:number;cell:number}[],
  /** ground heights above water for the snowline and tree line */
  snowlineMetres:250,treelineMetres:190,
  mountainMetres:210,hillMetres:34,
  /** triangle cost of one canopy blob (open hemisphere, 7 segments, 2 rings: a rounded mound, never a pyramid) */
  canopyTriangles:21,
  /** a forest mass stands about as tall as a canopy (m), however wide the blob: far masses read as a low dark mat, never as peaks */
- canopyMaxHeight:24,
+ canopyMaxHeight:24,canopyMaxRadius:52,
 } as const;
 export type HorizonInput={
  seed:number;half:number;
@@ -151,16 +151,20 @@ export function placeCanopies(inp:HorizonInput,cap:number):Canopy[]{
    if(dd<=from+(from===0?18:0)||dd>to)continue;
    const h=horizonHeight(inp,x,z);if(h<seaY+1.5||h>seaY+HORIZON_RULES.treelineMetres)continue;const sp=cell*.5,slope=Math.hypot(horizonHeight(inp,x+sp,z)-h,horizonHeight(inp,x,z+sp)-h)/sp;
    if(slope>.75)continue;const g=horizonGround(seed,seaY,x,z,h,slope);
-   if(g.sea||g.forest<.42)continue;
-   if(hash2(gx*13.3+seed*.1,gz*17.9)>g.forest*1.15)continue;
-   const r=cell*(.5+hash2(gx*2.2,gz*9.1+seed)*.28);
+   if(g.sea||g.forest<.62)continue;
+   if(hash2(gx*13.3+seed*.1,gz*17.9)>g.forest*1.1)continue;
+   const r=Math.min(HORIZON_RULES.canopyMaxRadius,9+dd*.045,cell*(.5+hash2(gx*2.2,gz*9.1+seed)*.28));
    all.push({x,y:h-Math.min(4,r*.12),z,r,h:Math.min(HORIZON_RULES.canopyMaxHeight,r*(.9+hash2(gx+seed,gz*4.4)*.6)),tone:hash2(gx*5.5,gz*6.6)});
   }
   from=to;
  }
- if(all.length<=cap)return all;
- const keep=cap/all.length;
- for(const c of all)if(hash2(c.x*.37,c.z*.53)<keep)out.push(c);
+ // a forest mass is a mass: drop lone blobs (fewer than two neighbours within ~170 m)
+ const G=170,grid=new Map<number,Canopy[]>(),gk=(a:number,b:number)=>a*7919+b;
+ for(const c of all){const k=gk(Math.floor(c.x/G),Math.floor(c.z/G));let l=grid.get(k);if(!l)grid.set(k,l=[]);l.push(c);}
+ const kept=all.filter(c=>{let n=0;const ix=Math.floor(c.x/G),iz=Math.floor(c.z/G);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(const o of grid.get(gk(ix+a,iz+b))||[])if(o!==c&&Math.hypot(o.x-c.x,o.z-c.z)<G)n++;return n>=2;});
+ if(kept.length<=cap)return kept;
+ const keep=cap/kept.length;
+ for(const c of kept)if(hash2(c.x*.37,c.z*.53)<keep)out.push(c);
  return out.slice(0,cap);
 }
 /** Horizon cost for the budget report and tests. */
