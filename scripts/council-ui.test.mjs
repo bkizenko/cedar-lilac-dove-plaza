@@ -14,6 +14,7 @@ test('diplomacy sheet lists standing grievances in both directions with lapse an
  const html=renderToStaticMarkup(h(DiplomacySheet,{neighbours:[{...nb[0],casus}],onAct(){}}));
  assert.match(html,/Standing grievances/);assert.match(html,/We hold<\/span> raids and cattle-lifting; lapses in 3 yr/);assert.match(html,/They hold<\/span> a claim on their lands; lapses in under a year/);assert.match(html,/costs 5 legitimacy/);
  assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:nb,onAct(){}})),/Standing grievances/);
+ assert.match(html,/Needs attention: 1 claim held against us/);assert.doesNotMatch(renderToStaticMarkup(h(DiplomacySheet,{neighbours:nb,onAct(){}})),/claim.? held against us/);
 });
 test('leader portrait is deterministic and stays unknown without a recorded relation',()=>{
  const p={leaderId:7,worldSeed:5,era:2,name:'Ada',society:'Marsh Folk',colors:{primary:'#315847',secondary:'#733d35'}};
