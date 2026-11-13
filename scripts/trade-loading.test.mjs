@@ -23,3 +23,18 @@ test('ordinary procurement dispatch uses unpaid physical loading rather than rem
 test('a real defense alarm suspends unpaid loading saveably and restores the same unpaid journey',async()=>{
  const{callVillageDefense,emergencyResponse}=await import('../src/game/defense.ts');const{g,u,foreign}=fixture();assert.equal(beginTradeLoading(g,u,deal,1,foreign),true);const foe=g.spawnUnit('spearman',u.x+2,u.z,3);callVillageDefense(g,{x:u.x,z:u.z},[foe],true,0);assert.equal(u.emergency.resume.order,'trade');emergencyResponse(g,u,.1);assert.notEqual(u.order,'trade');assert.equal(u.tradeLoading,true);assert.equal(u.carry,0);assert.equal(g.tribe(0).wood,100);assert.equal(validTradeLoadingUnit(u),true);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));foe.hp=0;g.state.time+=40;emergencyResponse(g,u,.1);assert.equal(u.order,'trade');assert.equal(u.tradeLoading,true);assert.equal(u.carry,0);assert.equal(g.tribe(0).wood,100);assert.equal(validTradeLoadingUnit(u),true);
 });
+
+test('physical food payment reaches the seller as the same mixed lots and the purchased goods return home',()=>{
+ const{g,u,foreign}=fixture();Object.assign(g.tribe(0),{food:20,foodLots:{fish:15,bread:5}});Object.assign(g.tribe(1),{food:0,foodLots:{}});
+ assert.equal(beginTradeLoading(g,u,{give:'food',giveAmt:20,get:'stone',getAmt:1},1,foreign),true);driveLoad(g,u);assert.deepEqual(u.carryFoodLots,{fish:15,bread:5});assert.equal(g.tribe(0).food,0);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ for(let i=0;i<3000&&u.trade;i++){g.state.time+=.1;g.navBudget=8;g.tradeAI(u,.1);}
+ assert.equal(u.trade,null);assert.equal(g.tribe(1).foodLots.fish,15);assert.equal(g.tribe(1).foodLots.bread,5);assert.equal(g.tribe(1).foodLots.provisions||0,0);assert.equal(u.carryType,'stone');const bought=u.carry;assert.ok(bought>=1);assert.equal(u.carryFoodLots,undefined);
+ for(let i=0;i<3000&&u.carry;i++){g.state.time+=.1;g.navBudget=8;g.workerAI(u,.1);}assert.equal(u.carry,0);assert.equal(g.tribe(0).stone,bought);
+});
+test('physical food purchase collects exact seller lots and delivers them without converting nourishment into units',()=>{
+ const{g,u,foreign}=fixture();Object.assign(g.tribe(0),{food:0,foodLots:{}});Object.assign(g.tribe(1),{food:300,foodLots:{fish:2,bread:298}});
+ assert.equal(beginTradeLoading(g,u,{give:'wood',giveAmt:2,get:'food',getAmt:1},1,foreign),true);driveLoad(g,u);
+ for(let i=0;i<3000&&u.trade;i++){g.state.time+=.1;g.navBudget=8;g.tradeAI(u,.1);}
+ assert.equal(u.trade,null);const bought=u.carry;assert.equal(u.carryType,'food',u.workReason);assert.ok(bought>2);assert.deepEqual(u.carryFoodLots,{fish:2,bread:bought-2});assert.equal(g.tribe(1).food,300-bought);assert.equal(g.tribe(0).food,0);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ for(let i=0;i<3000&&u.carry;i++){g.state.time+=.1;g.navBudget=8;g.workerAI(u,.1);}assert.equal(u.carry,0);assert.equal(g.tribe(0).food,bought);assert.equal(g.tribe(0).foodLots.fish,2);assert.equal(g.tribe(0).foodLots.bread,bought-2);assert.equal(g.tribe(0).foodLots.provisions||0,0);
+});

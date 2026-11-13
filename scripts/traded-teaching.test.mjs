@@ -50,3 +50,12 @@ test('native command/read model are bounded and pure; hostility and lapse never 
  assert.equal(isEngineReadQuery(q),true);assert.equal(isEngineDispatchCommand(command),true);assert.equal(isEngineDispatchCommand({...command,qty:-1}),false);const before=JSON.stringify(encodeGame(g));const model=applyEngineReadQuery(g,q);assert.equal(model.learner.id,learner.id);assert.equal(model.offers[0].methodId,METHOD);assert.equal(JSON.stringify(encodeGame(g)),before);assert.equal(applyEngineCommand(g,command).accepted,true);g.tribe(teacher.team).hostile=true;tradedTeachingAI(g,learner,.2);assert.equal(g.state.teachingOffers[0].phase,'cancelled');assert.equal(learner.carry,1);assert.equal(learner.productionSkills?.[METHOD],undefined);
  const a=localContact();assert.equal(beginTradedTeaching(a.g,{...command,learnerId:a.learner.id}).accepted,true);a.g.state.time=a.g.state.teachingOffers[0].validUntil+.1;tradedTeachingAI(a.g,a.learner,.2);assert.equal(a.g.state.teachingOffers[0].phase,'cancelled');assert.equal(a.learner.carry,1);
 });
+
+test('a mixed-food lesson promises and delivers one actual kind, keeping the other carried lot',async()=>{
+ const{setCarriedFood}=await import('../src/game/tradeFood.ts');const {g,learner,teacher,site}=localContact();
+ // Controlled payment fixture only; meeting and travel are real on native terrain.
+ setCarriedFood(learner,{bread:4,fish:2});
+ const reply=beginTradedTeaching(g,{learnerId:learner.id,teacherId:teacher.id,siteId:site.id,methodId:METHOD,good:'food',qty:3});assert.equal(reply.accepted,true,reply.reason);
+ const offer=g.state.teachingOffers.at(-1);assert.equal(offer.consideration[0].foodKind,'bread');assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+ drive(g,40,()=>offer.paidAt!==undefined);assert.deepEqual(learner.carryFoodLots,{bread:1,fish:2});assert.equal(learner.carry,3);assert.equal(learner.carryFood,undefined);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
+});

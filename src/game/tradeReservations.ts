@@ -1,3 +1,4 @@
+import {planFoodWithdrawal,commitFoodWithdrawal,receiveFoodLots} from './tradeFood';
 import type {Game} from './sim';
 import type {Unit,TradeDeal} from './types';
 import {receiveFood} from './pantry';
@@ -6,8 +7,9 @@ import {receiveFood} from './pantry';
 export function reserveTradeGoods(g:Game,u:Unit,team:number,deal:TradeDeal){
   const seller=g.tribe(team);
   if(u.tradeReservation||!seller||seller[deal.get]<deal.getAmt)return false;
-  g.spend(team,{[deal.get]:deal.getAmt});
-  u.tradeReservation={team,kind:deal.get,amount:deal.getAmt};
+  const foodLots=deal.get==='food'?planFoodWithdrawal(g,team,deal.getAmt):undefined;if(deal.get==='food'&&(!foodLots||!commitFoodWithdrawal(g,team,foodLots)))return false;
+  if(deal.get!=='food')g.spend(team,{[deal.get]:deal.getAmt});
+  u.tradeReservation={team,kind:deal.get,amount:deal.getAmt,...(foodLots?{foodLots}:{})};
   return true;
 }
 export function hasTradeReservation(u:Unit){
@@ -18,7 +20,7 @@ export function releaseTradeReservation(g:Game,u:Unit){
   const r=u.tradeReservation;if(!r)return;
   u.tradeReservation=undefined;
   const seller=g.tribe(r.team);if(!seller)return;
-  if(r.kind==='food')receiveFood(g,r.team,r.amount);else seller[r.kind]+=r.amount;
+  if(r.kind==='food'){if(r.foodLots)receiveFoodLots(g,r.team,r.foodLots);else receiveFood(g,r.team,r.amount);}else seller[r.kind]+=r.amount;
 }
 export function reconcileTradeReservations(g:Game){
   for(const u of g.state.units)if(u.tradeReservation&&
