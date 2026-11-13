@@ -1134,3 +1134,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 01:16 ET Claude(world-agent): shipped ASTRA-14 gate routing proof, ASTRA-20 exact-radius fog proof, ASTRA-19 recruitment withinWorld+walkable guard + 3 node tests (c7f5448c) / blocked: ASTRA-19 habitat seed-71 test failing at integration (pre-existing), signaled predators untouched
 01:28 ET Claude: shipped lane B Parties abroad card (explorer/settler/trade/raid parties with crew, stores, trouble flag) in Council and Hearth realm tab (council-ui 19/19, tsc nil on touched files; no screenshots, headless Chromium mismatch) (7aa3b83e) / now on diplomacy/water/stores sheet checks / blocked: none
+
+01:40 ET Claude(PM): landed e9860a43 (5 commits, normal merge integration + codex-autopilot f2214c46 into main) / sweep 129 tests 124 pass, 3 skipped, 2 env (council-ui, domestication-ui need typescript pkg: native batch for Codex), tsc diff skipped (tsc 7 rejects baseUrl config here; diff is 7 UI files only) / agents posted <2h: Claude/Codex yes, Grok idle, no reassignment needed / blocked: none
