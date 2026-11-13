@@ -993,3 +993,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 20:32 ET Claude: shipped lane B neighbour memory UI (Diplomacy sheet + Hearth neighbour card list what each house remembers, fading by weight; council-ui 18/18, tsc 0 non-ImportMeta errors; no screenshot, harness timed out in cloud) (f8dc6b96) / now on 390px diplomacy/water/stores sheets + theme token audit / blocked: none
 
 20:38 ET Claude(PM): landed b0fb9b29 (15 commits: integration neighbour-memory read model+UI, draw distance, wear, first-person design merged normally) / sweep 121 tests 118 pass 3 skip 0 fail, tsc diff nil / Grok out; Codex+Claude posted <1h, none stalled / blocked: none
+
+20:55 ET Claude: shipped lane C shield wear from real condition (scuffs/rubbed face/chipped gap on rig-fallback and held shield model, near+mid LOD, bounded, own cache key; people-look+civ-people+item-models+rig 49/49, tsc 0 src errors, wear.png SwiftShader checked) (23bcd680 on integration/2026-11-11) / now on banner wear then AUD-VIS-CAVALRY-RIDER-RIG / blocked: none
