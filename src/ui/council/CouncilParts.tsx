@@ -1,6 +1,7 @@
 import type {CouncilModel} from '../../game/rulersView';
 import {dedupeFeed,countLabel} from './feedDedupe';
 /** Lane B council parts: each one reads only the plain council model, so they survive the worker boundary. */
+import {factionReason} from './factionReason';
 type Faction=CouncilModel['factions'][number];
 export const FACTION_LABEL:Record<string,string>={kin:'Kin',warriors:'War-leaders',priests:'Priests',elders:'Elders',merchants:'Merchants',landholders:'Landholders',commons:'Common folk',assembly:'Assembly'};
 const LAW_LABEL:Record<string,string>={primogenitureMale:'eldest son inherits',primogenitureAny:'eldest child inherits',ultimogeniture:'youngest child inherits',partible:'eldest holds the title; lands are shared',agnaticSeniority:'eldest male of the house',tanistry:'the ablest kinsman is chosen',electiveAssembly:'the assembly chooses',councilElders:'the elders choose',designated:'the ruler names a successor'};
@@ -41,8 +42,8 @@ export function FameFeed({log}:{log:string[]}){
 export function FactionsStrip({factions,coalitionLoss}:{factions:Faction[];coalitionLoss:number}){
  if(!factions.length)return null;
  return <Card label="Factions" title="Who must be kept content">
-  <div role="img" aria-label="Faction weight and mood" className="flex h-3 overflow-hidden rounded">{factions.map(f=><span key={f.kind} title={`${FACTION_LABEL[f.kind]??f.kind}: ${loyaltyWord(f.loyalty)}`} style={{flexGrow:Math.max(4,f.power),background:tone(f.loyalty),borderRight:'1px solid rgba(0,0,0,.45)'}}/>)}</div>
-  <ul className="space-y-0.5">{factions.map(f=><li key={f.kind} className="grid grid-cols-[6.5rem_1fr_auto] items-baseline gap-2"><span className="text-parchment">{FACTION_LABEL[f.kind]??f.kind}</span><span className="text-parchment-dim">wants {f.demand}</span><span className="text-[10px] uppercase" style={{color:tone(f.loyalty)}}>{loyaltyWord(f.loyalty)}</span></li>)}</ul>
+  <div role="img" aria-label="Faction weight and mood" className="flex h-3 overflow-hidden rounded">{factions.map(f=><span key={f.kind} title={`${FACTION_LABEL[f.kind]??f.kind}: ${loyaltyWord(f.loyalty)}. ${factionReason(f.kind,f.demand,f.loyalty)}`} style={{flexGrow:Math.max(4,f.power),background:tone(f.loyalty),borderRight:'1px solid rgba(0,0,0,.45)'}}/>)}</div>
+  <ul className="space-y-0.5">{factions.map(f=><li key={f.kind} title={factionReason(f.kind,f.demand,f.loyalty)} className="grid grid-cols-[6.5rem_1fr_auto] items-baseline gap-2"><span className="text-parchment">{FACTION_LABEL[f.kind]??f.kind}</span><span className="text-parchment-dim">wants {f.demand}</span><span className="text-[10px] uppercase" style={{color:tone(f.loyalty)}}>{loyaltyWord(f.loyalty)}</span></li>)}</ul>
   {coalitionLoss>0&&<p className="text-red-300">{coalitionLoss}% of the realm's weight is restless.</p>}
  </Card>;
 }

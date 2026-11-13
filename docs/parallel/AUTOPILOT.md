@@ -1402,7 +1402,7 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | AUD-FEEL-HARVEST-FEAST | audit | Game feel: a harvest feast beat consumes real stored food, raises village mood and shows a short cue; skipped when stores are low, no invented food | Claude | Claude lane A/B | open | |
 | AUD-SOC-HEIR-EDUCATION | audit | Societies: a young heir's skills (council, war, trade) grow from real tutors or fosterage years and show on the succession card; no free stats, none if no tutor house | Claude | Claude lane A | open | |
 | AUD-VIS-FAMINE-PEOPLE | audit | Visuals: villagers show lean frames, patched cloaks and fewer lit hearths in a real shortage from existing food state, near-only, reverts on recovery | Claude | Claude lane C | open | |
-| AUD-UI-FACTION-TOOLTIP-REASON | audit | UI: each faction chip in the strip explains in one line what it wants and what real stat drives it, readable at 390px | Claude | Claude lane B | open | |
+| AUD-UI-FACTION-TOOLTIP-REASON | audit | UI: each faction chip in the strip explains in one line what it wants and what real stat drives it, readable at 390px | Claude | Claude lane B | source-pushed-not-live (factionReason: strip segments and rows in Classic and Hearth carry the ruler traits each faction judges plus the demand's yearly drift; display only; council-ui 23/23, tsc nil on touched files) | |
 | AUD-FEEL-RIVER-CROSSING-CUE | audit | Game feel: wading or ford crossings show a splash and slow movement by existing water depth; no shrunk collision, no teleport | Claude | Claude lane C | open | |
 | 11-13 06:00 | Codex | 0 | 0 | 0 | no agent branches ahead of integration |
 | 11-13 06:00 | Claude | 25 | landed 8 | Kaaltun house polish + small-building grounding fix | integration landed to main |

@@ -6,6 +6,7 @@ import {societyIdentity} from '../../game/societyIdentity';
 import {LeaderPortrait} from '../h/LeaderPortrait';
 import {GameTooltip} from '../GameTooltip';
 import {lawLabel} from '../council/CouncilParts';
+import {factionReason} from '../council/factionReason';
 import type {CapitulationOutcome} from '../../game/capitulation';
 import {TERMS} from '../council/CapitulationTerms';
 import {useOwnerReadModels} from '../useOwnerReadModels';
@@ -71,8 +72,8 @@ export function FactionsCard({factions,coalitionLoss}:{factions:CouncilModel['fa
  const word=(n:number)=>n<20?'Hostile':n<35?'Restless':n<50?'Uneasy':n<65?'Steady':n<85?'Content':'Devoted';
  const sorted=[...factions].sort((a,b)=>b.power-a.power);
  return <section className="hw-card hw-factions" aria-label="Factions"><div className="hw-card-head"><h3>Who must be kept content</h3>{coalitionLoss>0&&<span className="hw-chip t-bad"><TriangleAlert size={16}/>{coalitionLoss}% restless</span>}</div>
-  <div className="hw-strip" role="img" aria-label={'Faction weight and mood: '+sorted.map(f=>`${FACTION_NAME[f.kind]??f.kind} ${word(f.loyalty)}`).join(', ')}>{sorted.map(f=><span key={f.kind} style={{flexGrow:Math.max(4,f.power),background:MOOD_COLOR[mood(f.loyalty)]}}/>)}</div>
-  <ul className="hw-list">{sorted.map(f=><li key={f.kind} className="hw-faction"><span className={cx('hw-dot','d-'+mood(f.loyalty))} aria-hidden/><b>{FACTION_NAME[f.kind]??f.kind}</b><em className={'t-'+mood(f.loyalty)}>{word(f.loyalty)}</em><span className="hw-sub">wants {f.demand}</span></li>)}</ul></section>;
+  <div className="hw-strip" role="img" aria-label={'Faction weight and mood: '+sorted.map(f=>`${FACTION_NAME[f.kind]??f.kind} ${word(f.loyalty)}`).join(', ')}>{sorted.map(f=><span key={f.kind} title={`${FACTION_NAME[f.kind]??f.kind}: ${word(f.loyalty)}. ${factionReason(f.kind,f.demand,f.loyalty)}`} style={{flexGrow:Math.max(4,f.power),background:MOOD_COLOR[mood(f.loyalty)]}}/>)}</div>
+  <ul className="hw-list">{sorted.map(f=><li key={f.kind} className="hw-faction" title={factionReason(f.kind,f.demand,f.loyalty)}><span className={cx('hw-dot','d-'+mood(f.loyalty))} aria-hidden/><b>{FACTION_NAME[f.kind]??f.kind}</b><em className={'t-'+mood(f.loyalty)}>{word(f.loyalty)}</em><span className="hw-sub">wants {f.demand}</span></li>)}</ul></section>;
 }
 
 /** Renown: bars share one scale (the largest stream fills it) and are ranked, so the player sees what the house is actually famous for. */
