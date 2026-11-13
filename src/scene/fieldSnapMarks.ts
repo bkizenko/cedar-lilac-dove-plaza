@@ -2,8 +2,10 @@ import * as THREE from 'three';
 import type {SnapEdge} from '../game/fieldSnap';
 /** Warm ribbon laid along the seam where a field being placed snaps to its neighbour. Render only. */
 export class FieldSnapMarks{
+ private scene:THREE.Scene;private height:(x:number,z:number)=>number;
  private mesh:THREE.Mesh;private positions:Float32Array;private readonly maxEdges=12;private readonly seg=24;
- constructor(private scene:THREE.Scene,private height:(x:number,z:number)=>number){
+ constructor(scene:THREE.Scene,height:(x:number,z:number)=>number){
+  this.scene=scene;this.height=height;
   this.positions=new Float32Array(this.maxEdges*this.seg*6*3);
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(this.positions,3));geo.setDrawRange(0,0);
   this.mesh=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0xf2c76b,transparent:true,opacity:.92,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));

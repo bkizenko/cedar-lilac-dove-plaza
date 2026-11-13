@@ -13,7 +13,7 @@ function rig(){
   const home=g.campOf(0);let spot=null;for(let r=40;r<240&&!spot;r+=6)for(let k=0;k<24;k++){const x=Math.round((home.x+Math.cos(k/24*6.283)*r)/2)*2,z=Math.round((home.z+Math.sin(k/24*6.283)*r)/2)*2;if(!g.placementIssue(TYPE,x,z)&&!g.placementIssue(TYPE,x,z,0,undefined,undefined,undefined,true)){spot={x,z};break;}}
   assert.ok(spot,'open site');
   const e=Object.create(Engine.prototype),ghosts=[];Object.assign(e,{game:g,waterDraft:null,quarterTurn:false,gateFacing:'north',gateFacingExplicit:false,plotWidth:1,plotDepth:1,plotSize:undefined,plotStart:null,plotPointerStart:null,bridgeSpan:undefined,ghostPos:{x:0,z:0},pointer:{x:1,y:1},nextFieldPreviewAt:0,plotPreviewKey:'',loggingMode:false,moveMode:false});
-  e.view={groundAt:()=>({...spot}),setLinePreview(){},setGhost:(...a)=>ghosts.push(a)};e.pushHud=()=>{};e.audio={play(){}};e.keyboard={mode:false};
+  e.view={groundAt:()=>({...spot}),setLinePreview(){},setFieldSnap(){},setGhost:(...a)=>ghosts.push(a)};e.pushHud=()=>{};e.audio={play(){}};e.keyboard={mode:false};
   return{g,e,spot,ghosts};
 }
 test('R/Rotate toggles a quarter turn only for turnable buildings and resets on a new placement',()=>{

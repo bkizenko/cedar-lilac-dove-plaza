@@ -25,9 +25,11 @@ function wheelGeometry(){
  const m=mergeGeometries(parts,false)!;m.computeBoundingSphere();return m;
 }
 export class IrrigationLayer{
+ private scene:THREE.Scene;private height:(x:number,z:number)=>number;
  private ribbons:THREE.Mesh;private positions=new Float32Array(MAX_SEGMENTS*6*3);private colours=new Float32Array(MAX_SEGMENTS*6*3);
  private lifts=new Map<LiftKind,THREE.InstancedMesh>();private signature='';private preview:Preview|null=null;private previewDirty=false;
- constructor(private scene:THREE.Scene,private height:(x:number,z:number)=>number){
+ constructor(scene:THREE.Scene,height:(x:number,z:number)=>number){
+  this.scene=scene;this.height=height;
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(this.positions,3));g.setAttribute('color',new THREE.BufferAttribute(this.colours,3));g.setDrawRange(0,0);
   this.ribbons=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:.94,depthWrite:false,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
   this.ribbons.frustumCulled=false;this.ribbons.renderOrder=6;this.ribbons.raycast=()=>{};this.ribbons.visible=false;scene.add(this.ribbons);

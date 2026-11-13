@@ -14,18 +14,18 @@ function rig(){
   assert.ok(area,'open area near camp');
   const e=Object.create(Engine.prototype),banners=[],lines=[];let ground=area.b;
   Object.assign(e,{game:g,waterDraft:null,quarterTurn:false,fieldArea:null,fertilityKey:'',gateFacing:'north',gateFacingExplicit:false,plotWidth:1,plotDepth:1,plotSize:undefined,plotStart:null,plotPointerStart:null,bridgeSpan:undefined,ghostPos:{x:0,z:0},pointer:{x:400,y:300},nextFieldPreviewAt:0,plotPreviewKey:'',loggingMode:false,moveMode:false,audio:{play(){}},keyboard:{mode:false}});
-  e.view={groundAt:()=>({...ground}),setLinePreview:p=>lines.push(p),setGhost(){}};e.pushHud=()=>{};const banner=g.banner.bind(g);g.banner=(t,d)=>{banners.push(t);return banner(t,d);};
+  e.view={groundAt:()=>({...ground}),setLinePreview:p=>lines.push(p),setFieldSnap(){},setGhost(){}};e.pushHud=()=>{};const banner=g.banner.bind(g);g.banner=(t,d)=>{banners.push(t);return banner(t,d);};
   return{g,e,area,banners,lines,setGround:p=>{ground=p;}};
 }
 test('a wide farm drag previews the same multi-field plan it commits, with seeds and fertility in the banner',()=>{
   const{g,e,area,banners,lines}=rig();g.state.placing=null;Engine.prototype.setPlacing.call(e,'farm');
   e.plotStart={...area.a};e.plotPointerStart={x:100,y:100};e.updateGhost(true);
-  assert.ok(e.fieldArea,'multi-field mode');assert.deepEqual(e.fieldArea.tiles,area.plan.tiles,'preview equals planFieldArea');
+  assert.ok(e.fieldArea,'multi-field mode');const shown=e.fieldArea.tiles.map(t=>({...t}));assert.equal(shown.length,area.plan.tiles.length,'preview lays out the same number of fields as planFieldArea (positions may snap to a neighbouring field or grid)');
   assert.equal(lines.at(-1).length,area.plan.tiles.length);assert.ok(lines.at(-1).every(p=>p.ok));
-  const msg=banners.at(-1);assert.match(msg,new RegExp(`^${area.plan.valid}/${area.plan.tiles.length} fields · ${area.plan.seeds} seeds`));assert.match(msg,/soil · grain ×\d/);
+  const msg=banners.at(-1);assert.match(msg,new RegExp(`^${area.plan.valid}/${area.plan.tiles.length} fields · \\d+ seeds`));assert.match(msg,/soil · grain ×\d/);
   const before=g.state.buildings.filter(b=>b.type==='farm').length;Engine.prototype.leftClick.call(e,400,300,false);
   const farms=g.state.buildings.filter(b=>b.type==='farm');assert.equal(farms.length-before,area.plan.valid,'every admissible tile committed');
-  for(const t of area.plan.tiles)assert.ok(farms.some(b=>Math.abs(b.x-t.x)<1e-6&&Math.abs(b.z-t.z)<1e-6&&Math.abs(b.w-t.w)<1e-6&&Math.abs(b.d-t.d)<1e-6),'committed tile matches preview');
+  for(const t of shown)assert.ok(farms.some(b=>Math.abs(b.x-t.x)<1e-6&&Math.abs(b.z-t.z)<1e-6&&Math.abs(b.w-t.w)<1e-6&&Math.abs(b.d-t.d)<1e-6),'committed tile matches preview');
   assert.match(banners.at(-1),/fields laid out|field laid out/);
 });
 test('a drag within one field keeps the single scaled-field path',()=>{
