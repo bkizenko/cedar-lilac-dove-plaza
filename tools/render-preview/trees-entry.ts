@@ -5,7 +5,7 @@ import {botanicalTree} from '@/scene/treeBotany';
 import {SPECIES_BY_ID} from '@/scene/botanicalSpecies';
 import {makeBotanicalMaterial} from '@/scene/botanicalMaterial';
 import {painterSway} from '@/scene/painterVegetationMaterial';
-type Spec={species:string[];variants?:number[];lod?:0|1;leaf?:number;snow?:number;autumn?:number;width:number;height:number;yaw?:number;pitch?:number;dist?:number;spacing?:number;rows?:number;hue?:number;scale?:number;time?:number;lookY?:number;fov?:number};
+type Spec={species:string[];variants?:number[];lod?:0|1|2;leaf?:number;snow?:number;autumn?:number;width:number;height:number;yaw?:number;pitch?:number;dist?:number;spacing?:number;rows?:number;hue?:number;scale?:number;time?:number;lookY?:number;fov?:number};
 const w=window as unknown as {renderSheet:(s:Spec)=>Promise<unknown>};
 let renderer:THREE.WebGLRenderer|null=null;
 w.renderSheet=async(S:Spec)=>{

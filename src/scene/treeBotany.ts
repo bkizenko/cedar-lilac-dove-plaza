@@ -2,19 +2,22 @@ import * as THREE from 'three';
 import {rngFrom} from './painterTrees';
 import {TILE,tileUV} from './botanicalMaterial';
 import {BOTANICAL_SPECIES,SPECIES_BY_ID,VARIANTS_PER_SPECIES,type BotanicalSpecies,type Rgb} from './botanicalSpecies';
+import {heroPass,type Seg} from './treeHero';
 /** Botanical tree geometry. Every species is grown from its architecture: a tapered, flared trunk tube with bark bands baked into vertex
  * colour, a branching skeleton (decurrent limbs that fork, or excurrent whorls), then leaf mass built from clumps of alpha-cut leaf cards around
  * a dark inner core so crowns have ragged silhouettes and depth rather than smooth lobes. All randomness is seeded per species x variant; the two
  * LODs share one skeleton (same seeds), only detail differs. One merged geometry per (species, variant, LOD): position, normal, uv, colour, `aLeaf`
  * (0 wood .. 1 leaf; hue tint amount) and `aShed` (leaf-fall threshold, -1 never shed). Rooted at y=0, finite, deterministic. */
 export type V3=[number,number,number];
-type Lod=0|1;
+/** 0 full, 1 mid, 2 hero (the full tree plus the near-detail pass of treeHero.ts: same skeleton, more twigs, leaves, bark relief, fruit); the hero tier is built from the lod 0 skeleton with a separate generator */
+type Lod=0|1|2;
 const add=(a:V3,b:V3):V3=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a:V3,b:V3):V3=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul=(a:V3,k:number):V3=>[a[0]*k,a[1]*k,a[2]*k],len=(a:V3)=>Math.hypot(a[0],a[1],a[2]);
 const norm=(a:V3):V3=>{const l=len(a)||1;return [a[0]/l,a[1]/l,a[2]/l];},cross=(a:V3,b:V3):V3=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],dot=(a:V3,b:V3)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
 const lerp=(a:number,b:number,t:number)=>a+(b-a)*t,clamp=(v:number,a=0,b=1)=>v<a?a:v>b?b:v,mix=(a:Rgb,b:Rgb,t:number):Rgb=>[lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)];
 const smooth=(a:number,b:number,x:number)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t);};
 const UP:V3=[0,1,0];
 class Acc{
+ /** hero tier only: every tube the builders lay (limbs, twigs) for the hero pass, and the bark relief amplitude */rec:Seg[]|null=null;hero=false;relief=0;
  pos:number[]=[];nrm:number[]=[];uv:number[]=[];col:number[]=[];leaf:number[]=[];shed:number[]=[];idx:number[]=[];
  get n(){return this.pos.length/3;}
  v(p:V3,n:V3,uv:[number,number],c:Rgb,leaf:number,shed:number){this.pos.push(p[0],p[1],p[2]);this.nrm.push(n[0],n[1],n[2]);this.uv.push(uv[0],uv[1]);this.col.push(c[0],c[1],c[2]);this.leaf.push(leaf);this.shed.push(shed);return this.n-1;}
@@ -62,11 +65,13 @@ function frame(tan:V3,prev:V3|null):[V3,V3]{
 }
 /** Tapered tube along a polyline; vertex colour from the bark function. Parallel-transport frames so bends never twist. */
 function tube(a:Acc,pts:V3[],radii:number[],sides:number,col:BarkFn,tint=1,leaf=0,cap=false){
- const n=pts.length;let prev:V3|null=null;const base=a.n;
+ const n=pts.length;if(a.rec)a.rec.push({pts,radii});
+ // hero tier: thick wood gets more sides and ridged relief (bark plates, fluting) so trunks and limbs read as bark, not tubes
+ const rel=a.hero&&radii[0]>.06?a.relief:0;if(a.hero&&radii[0]>.06)sides=Math.max(sides,radii[0]>.2?15:11);let prev:V3|null=null;const base=a.n;
  for(let i=0;i<n;i++){
   const tan=norm(sub(pts[Math.min(n-1,i+1)],pts[Math.max(0,i-1)])),[nx,bx]=frame(tan,prev);prev=nx;const t=i/(n-1);
   for(let s=0;s<=sides;s++){
-   const ang=s/sides*Math.PI*2,ca=Math.cos(ang),sa=Math.sin(ang),dir:V3=[nx[0]*ca+bx[0]*sa,nx[1]*ca+bx[1]*sa,nx[2]*ca+bx[2]*sa],r=radii[i]*(1+.05*Math.sin(ang*3+i*1.7));
+   const ang=s/sides*Math.PI*2,ca=Math.cos(ang),sa=Math.sin(ang),dir:V3=[nx[0]*ca+bx[0]*sa,nx[1]*ca+bx[1]*sa,nx[2]*ca+bx[2]*sa],r=radii[i]*(1+.05*Math.sin(ang*3+i*1.7))*(rel?1+rel*(Math.abs(Math.sin(ang*(sides>12?7:5)+i*.9+Math.sin(i*2.3+ang*2)))-.45)*(i<2?1.5:1):1);
    const c=col(t,ang),sh=.86+.14*ca;
    a.v([pts[i][0]+dir[0]*r,pts[i][1]+dir[1]*r,pts[i][2]+dir[2]*r],dir,SOLID_UV,[c[0]*sh*tint,c[1]*sh*tint,c[2]*sh*tint],leaf,-1);
   }
@@ -312,10 +317,12 @@ export function botanicalTree(speciesId:string,variant:number,lod:Lod=0):TreeGeo
  const v=((variant%VARIANTS_PER_SPECIES)+VARIANTS_PER_SPECIES)%VARIANTS_PER_SPECIES,key=`${speciesId}|${v}|${lod}`,hit=cache.get(key);if(hit)return hit;
  const sp=SPECIES_BY_ID[speciesId];if(!sp)throw new Error('unknown tree species '+speciesId);
  const idx=BOTANICAL_SPECIES.indexOf(sp),seed=idx*7919+v*104729+17,m=AGE[['mature','young','old'][v] as 'mature'];
- const a=new Acc(),rnd=rngFrom(seed),H=sp.H*m.h*(.94+.12*rngFrom(seed+3)());
+ const a=new Acc(),hero=lod===2,L=(hero?0:lod) as 0|1,rnd=rngFrom(seed),H=sp.H*m.h*(.94+.12*rngFrom(seed+3)());
  const crown:Crown={c:[0,H*.5,0],r:[sp.crownR,H*.45,sp.crownR],top:sp.top,bottom:sp.bottom,dark:.55};
- const ctx:Ctx={sp,v,lod,a,r:rnd,rd:rngFrom(seed*3+11),bark:barkFn(sp,rngFrom(seed+9)()),H,age:v,crown,sideFor:()=>1};
+ if(hero){a.hero=true;a.rec=[];a.relief=({ridged:.2,rough:.22,gnarled:.28,scaly:.14,peeling:.12,ringed:.06,smooth:.05,birch:.06} as Record<string,number>)[sp.bark.pattern]??.1;}
+ const ctx:Ctx={sp,v,lod:L,a,r:rnd,rd:rngFrom(seed*3+11),bark:barkFn(sp,rngFrom(seed+9)()),H,age:v,crown,sideFor:()=>1};
  BUILDERS[sp.arch](ctx);
+ if(hero){const base=a.idx.length/3;a.hero=false;const rec=a.rec!;a.rec=null;heroPass(BOTANICAL_PRIMS,{sp,a,crown,H,age:v,rh:rngFrom(seed*5+23),bark:ctx.bark},rec,base);}
  const g=a.geometry(),pos=g.attributes.position,leaf=g.attributes.aLeaf;let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9,minZ=1e9,maxZ=-1e9,any=false;
  for(let i=0;i<pos.count;i++){if(leaf.getX(i)<.5)continue;any=true;const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);minZ=Math.min(minZ,z);maxZ=Math.max(maxZ,z);}
  if(!any){minX=-.5;maxX=.5;minY=H*.7;maxY=H;minZ=-.5;maxZ=.5;}
