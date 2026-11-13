@@ -97,3 +97,5 @@ Updated 2026-11-13T02:53:05.633863+00:00
 - FULL_GAME_BACKLOG.json and COMPLETION_LOG.md record scoped source/qualified/live states; agents own their handoffs and Codex reconciles publication. Grok b3174e2 navigation/field/fertility slices remain separately reviewed, not wholesale integrated. Art and1845 visible context messages remain indexed; Option H is the original warm carved-wood bottom-middle panel. No broad art approval or external-session activity is inferred from a branch assignment.
 
 LIVE 2026-11-13T03-32-14-127Z-7c81460 /7c81460f bothportsverified: newborn equipmentconservation and paidseedtrial originalsite;43/43scope+19/19supporting, tsc/buildPASS, original53preserved;37/98 unchanged. docs/metrics/trial-newborn-release-2026-11-12.json
+
+LIVE 2026-11-13T04-22-31-462Z-03f3198 /03f31981 bothportsverified: actualNPCrecord purchase4physical logs→sameasset home→publicpaidstudy/usefulreplication;11/11scope+17/17supporting, fulltsc/buildPASS, original53preserved;37/98 unchanged. docs/metrics/method-record-purchase-release-2026-11-12.json

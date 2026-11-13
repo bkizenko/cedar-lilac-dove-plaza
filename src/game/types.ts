@@ -256,6 +256,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   studyCrop?: CropKind;
   methodRecordCargoId?:number;
   methodRecordPickupId?:number;
+  methodRecordTrade?:import('./methodRecordTrade').MethodRecordTradeOrder;
   farmToolCargoId?:number;
   farmTool?: FarmToolKind;
   farmToolCondition?:number;

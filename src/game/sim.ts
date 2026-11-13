@@ -4,7 +4,8 @@ import {returnPackJourneyCare,packJourneyReturnBudgetLow} from './packJourneyCar
 import {returnExpeditionProvisions} from './expeditionProvisions';
 import {reviewRivalMethodRecords} from './rivalMethodRecords';
 import {cancelMethodRecordPickup,methodRecordPickupAI} from './methodRecordPickup';
-import {reconcileMethodRecords} from './methodRecords';
+import {cancelMethodRecordTrade,methodRecordTradeAI,reconcileMethodRecordTrades} from './methodRecordTrade';
+import {reconcileMethodRecords,depositMethodRecord} from './methodRecords';
 import {draftCartAI,interruptDraftCartOrder,releaseDraftCart,recordDraftCartStep} from './draftCart';
 import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
 import {copperOreEnabled} from './copperMetallurgy';
@@ -1881,6 +1882,7 @@ export class Game {
   }
 
   interruptMission(u:Unit) {
+    cancelMethodRecordTrade(this,u);
     cancelMethodRecordPickup(this,u);
     interruptDraftCartOrder(this,u);
     pauseNavalWork(this,u);
@@ -4503,6 +4505,7 @@ export class Game {
       u.tx=spot.x;u.tz=spot.z;
       if(!supplyReached(this,u,home,spot)){this.steer(u,dt);return;}
       deliverWaterCargo(this,u);
+      if(u.methodRecordCargoId!==undefined&&u.productionProjectId===undefined&&!depositMethodRecord(this,u))return;
       if(!deliverProductionCargo(this,u))return;
       if(u.carryType&&u.carry>0){if(!deliverSamples(this,u))return;recordSimulationEvent(this,'cargo_delivered',u.team,u.carryType,u.carry,u.id);if(u.carryType==="food")receiveFood(this,u.team,u.carry,u.carryFood);else this.tribe(u.team)[u.carryType]+=u.carry;recordHaulDelivery(this,u);u.carry=0;u.carryType=null;u.carryFood=undefined;}
       if(u.expedition){returnPackJourneyCare(this,u);returnExpeditionProvisions(this,u);}
@@ -5928,8 +5931,10 @@ export class Game {
             if(riverboatAI(this,u,sdt))continue;
             if (emergencyResponse(this, u, sdt)) {
               cancelMethodRecordPickup(this,u,'Record pickup stopped — this resident is answering a local alarm');
+              cancelMethodRecordTrade(this,u,'Record purchase stopped — this resident is answering a local alarm');
               continue;
             }
+            if(methodRecordTradeAI(this,u,sdt))continue;
             if(methodRecordPickupAI(this,u,sdt))continue;
             if(navalWorkerCommitted(this,u))continue;
             if(coastalTradeAI(this,u,sdt))continue;
@@ -6066,6 +6071,7 @@ export class Game {
         tickStolenCargo(this,0);
         reconcileFarmToolCargo(this);
         reconcileMethodRecords(this);
+        reconcileMethodRecordTrades(this);
         reconcileWeaponCargo(this);
         this.state.units = this.state.units.filter((u) => u.hp > 0||wildBodyMustRemain(u)||cargoBodyMustRemain(u)||farmToolBodyMustRemain(u)||!!u.weaponCargo);
         tickRaidDefense(this);
