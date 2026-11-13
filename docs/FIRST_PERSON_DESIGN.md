@@ -351,7 +351,7 @@ Pointer lock works on a trackpad but is the most error-prone scheme (accidental 
 Two-finger scroll adjusts FOV or zoom-to-inspect, never reply. Tap-to-click is respected; a dead zone setting suppresses jitter. **Which scheme the platform allows first, and how the pointer-lock API behaves under the current browser build on the M1, is (unverified).**
 
 ### Reply UI
-A single Hearth card pinned bottom-centre, not covering the reporter: a medal (role icon), the line (at most two short lines), the icon row of facts, up to four reply buttons, one gold (the default). **No portrait close-ups, no full-screen dialogue.** The existing `LeaderConversation`/`EncounterDialog` flow is a modal; in first person it becomes the same card placed in the scene.
+A single Hearth card docked low and to the side of the reporter, so it never covers them (the mockup puts it bottom-left in Walk and bottom-centre in the hall): a medal (role icon), the line (at most two short lines), the icon row of facts, up to four reply buttons, one gold (the default). **No portrait close-ups, no full-screen dialogue.** The existing `LeaderConversation`/`EncounterDialog` flow is a modal; in first person it becomes the same card placed in the scene.
 
 ### Accessibility
 - **Everything is readable without audio:** dialogue is text; every sound cue has a visual counterpart (a small icon pulse at the screen edge in the direction of an urgent emitter).
@@ -411,10 +411,10 @@ The rulers, great-person and fame specs listed as project docs (`claude/rulers-i
 
 ## Mockups
 
-Design mockups, not in-game screenshots. They are HTML/CSS drawn by `tools/render-preview/firstperson-mockups.mjs` and show intent, not the final renderer.
+Design mockups, not in-game screenshots. They are HTML/CSS/SVG drawn by `tools/render-preview/firstperson-mockups.mjs` (sources in `docs/renders/firstperson/mockups/`; run `node tools/render-preview/firstperson-mockups.mjs`) and show intent, not the final renderer. Each was looked at and iterated once: the first pass had the steward off-screen (a feet-versus-head origin bug), a muddled hand and hoe, and role labels covering faces in the hall; all three were fixed and re-rendered.
 
 | File | Shows |
 |---|---|
-| `docs/renders/firstperson/walk-steward.jpg` | Eye-level village; a steward approaching with a report card |
+| `docs/renders/firstperson/walk-steward.jpg` | Eye-level village at 1.65 m and 60 degrees vertical FOV; a steward four metres away with a report card, and the same report as a pin on the well |
 | `docs/renders/firstperson/ride-farmer.jpg` | Riding a farmer's eyes; needs shown through the body, not bars |
 | `docs/renders/firstperson/audience-hall.jpg` | A ruler's audience: a line of petitioners, an envoy, short replies |

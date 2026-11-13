@@ -30,3 +30,16 @@ test('people v2: life layer is deterministic, finite and small',{skip},()=>{
   for(const x of JSON.parse(a).parts.armL.concat(JSON.parse(a).parts.head,JSON.parse(a).parts.spine)){assert.ok(Number.isFinite(x));assert.ok(Math.abs(x)<1.6);}}
  for(let x=-3;x<3;x+=.13)assert.ok(Number.isFinite(Life.strikeEase(x)));
 });
+test('people v2: worn armor and helmets add cosmetic near-only wear from real condition, never change what is owned',{skip},()=>{
+ const count=(o)=>Object.values(o.bones).reduce((n,a)=>n+a.length,0);
+ for(const s of skins().slice(0,6)){
+  const mk=(c)=>outfit(s,'spearman','adult','soldier','summer','lightClothes',{armor:{kind:'paddedTorso',condition:c},helmet:{kind:'ironHelm',condition:c}});
+  const fresh=mk(.95),mid=mk(.5),ruin=mk(.1),zero=mk(0);
+  assert.equal(fresh.key,mk(.9).key,'high condition shares one pristine outfit');
+  assert.notEqual(mid.key,fresh.key);assert.notEqual(ruin.key,mid.key,'wear tiers are distinct cache keys');
+  assert.ok(count(mid)>count(fresh)&&count(ruin)>=count(mid),s.id);
+  assert.deepEqual(mid.rendered.armor,fresh.rendered.armor);assert.equal(mid.rendered.helmet,fresh.rendered.helmet);
+  assert.equal(zero.rendered.armor,undefined,'ruined to zero condition is not drawn at all');
+  const extra=ruin.bones.spine.length-fresh.bones.spine.length;assert.ok(extra>0&&extra<=10,'bounded wear parts');
+ }
+});
