@@ -68,3 +68,14 @@ test('mourning banners hang at half-mast, stay inside the footprint and budgets,
   assert.ok(tri(b,'mid')<=tri(a,'mid')+0,c+' '+r+' mid budget unchanged (band is near-only)');
  }
 });
+test('weathered banners add exactly one near-only torn patch per banner from high wear, inside budgets',()=>{
+ let more=0;
+ for(const c of CIV_IDS)for(const r of['house','civic'])for(let i=0;i<5;i++){
+  const a=generateCivBuilding(c,r,ctx(i,{wear:.54,wealth:1})),b=generateCivBuilding(c,r,ctx(i,{wear:.56,wealth:1})),h=generateCivBuilding(c,r,ctx(i,{wear:.95,wealth:1}));
+  const banners=a.parts.filter(p=>p.shape==='cone'&&p.lod===0&&p.size[1]>.2&&p.size[1]<.3).length;
+  if(b.parts.length-a.parts.length>0)more++;
+  assert.ok(b.parts.length-a.parts.length>=0&&b.parts.length-a.parts.length<=Math.max(banners,6),c+' '+r+' patch count bounded');
+  assert.ok(tri(h,'near')<=1600&&tri(h,'mid')<=1000,c+' '+r+' budgets');
+ }
+ assert.ok(more>=20,'torn patches appear across civs, got '+more);
+});

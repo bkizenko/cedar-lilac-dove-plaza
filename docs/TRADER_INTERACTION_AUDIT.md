@@ -50,4 +50,20 @@ Reproduction harness: `scripts/trader-interaction.test.mjs` (added with this aud
 
 ## Restoration plan (implemented in the same branch)
 
-See the sections appended below after implementation.
+Implemented on `claude/trader-interaction-audit` (merged into `integration/2026-11-11`). Code: `src/game/traderInteraction.ts` (new), `encounters.ts`, `stolenCargo.ts`, `captivity.ts`, `captiveDealings.ts`, `sim.ts` (one kill hook), `types.ts` (two optional fields), UI `src/ui/TraderVerbs.tsx`, `ContactActions.tsx`, `hearth/parts.tsx`. Tests: `scripts/trader-interaction.test.mjs` (13 cases).
+
+| Verb | Now |
+|---|---|
+| Attack | Unchanged physical combat; the verb is on the selection card (icon plus consequence icons) in Hearth and in the contact panel. A killing records a witnessed incident. |
+| Kill | Unchanged parcels; test proves exact conservation (resource `carry` and bulk `itemCargo`) for caravan carriers, visitors and envoy carriers. |
+| Capture | Unchanged rule (unarmed adult, local superiority, guard, escort). New: the prisoner carries a capture-time `trade` knowledge snapshot (route, offer terms, prices, seen sites, rumours). |
+| Rob | New contact action `rob` (Demand's forced twin). A free armed adult with empty hands walks to the person, the society turns hostile, and if local force is superior takes the exact `carry` and bulk `itemCargo` (up to the robber's capacity). The load is marked with its owner, walked to a real cache (`beginLootReturn`), and owner adults pursue within the existing bounded rules, now also for item-only loads. A broken walk home resumes. |
+| Interrogate | New player action on a held person in custody (takes real time with a guard present); yields only the stored snapshot. A report lists home as it was at capture plus what the trader carried. |
+| Ransom / release | Player can name a ransom (carried by real origin people) or release the person to walk home. |
+| Consequences | `makeHostile` and `recordSocietyAttack` as before, plus an incident ledger: witnesses of the victim society walk the news home; on arrival the victim's grievance and trust change, and its trading friends lose a little trust. No witness: a weaker change after a long silence. Switchable (`traderIncidents.enabled=false`; Rob is then refused and Demand remains). |
+
+## Still open
+
+- Foreign boats cannot be selected or attacked, so coastal traders afloat are untouched; armed escorts of a caravan cannot be captured; animals and gear carried by a trader have no robbery adapter (they stay on the body). Attack-move still ignores peaceful traders by design.
+- Reputation is expressed only through society trust and grievance; there is no separate prestige score for harming traders.
+- UI is not rendered or play-tested here (no `node_modules`/browser in the sandbox); the contact-panel render test needs `typescript`.

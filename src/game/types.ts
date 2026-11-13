@@ -185,7 +185,7 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   spareGarment?:import('./textiles').Garment;
   exploreAfterDelivery?:true;
   campMoveId?:number;
-  contactDemand?:{targetId:number;lastTimeSeconds:number};
+  contactDemand?:{targetId:number;lastTimeSeconds:number;forced?:true};
   contactAttackTargetId?:number;
   contactSurrender?:{team:number;until:number};
   conflictIntent?:ConflictIntent;
@@ -553,6 +553,7 @@ export type GameState = {
   methodRecords?:import('./methodRecords').MethodRecordsState;
   farmToolCargo?:import('./farmToolCargo').FarmToolCargoState;
   droppedCargo?:import('./stolenCargo').DroppedCargoState;
+  traderIncidents?:import('./traderInteraction').TraderIncidentState;
   rivalActivity?:import('./rivalActivity').RivalActivityJournal;
   rivalActivityNextReview?:{team:number;timeSeconds:number}[];
   towerPlacement?:import('./towerPlatforms').TowerPlatform;

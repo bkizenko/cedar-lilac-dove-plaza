@@ -9,6 +9,7 @@ import {isRivalTeam} from './factions';
 import {releasePrisoner,type CaptiveKnowledge,type PrisonerUnit} from './captivity';
 import {recordConflict} from './conflictMetrics';
 import {invalidatePrisonerGuardQueries} from './prisonerGuardQueries';
+import {validTraderKnowledge} from './traderInteraction';
 
 /**
  * What happens to people in custody after the escort: interrogation, ransom,
@@ -193,6 +194,7 @@ export function validCaptiveDealingsState(state:unknown){
 function validKnowledge(k:unknown){
  if(!k||typeof k!=='object'||Array.isArray(k))return false;const c=k as CaptiveKnowledge;const fin=(n:unknown,max=1e9)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max;
  if(!fin(c.asOf)||!Number.isInteger(c.team)||c.team<0||c.team>=32||!fin(c.homeArmed,4096)||!fin(c.homeResidents,4096)||!fin(c.homeFood)||!fin(c.homeWood))return false;
+ if(!validTraderKnowledge(c.trade,32))return false;
  if(c.homeHallId!==undefined&&(!Number.isSafeInteger(c.homeHallId)||c.homeHallId<1))return false;
  if(c.home!==undefined&&(!c.home||!Number.isFinite(c.home.x)||!Number.isFinite(c.home.z)||Math.abs(c.home.x)>1e5||Math.abs(c.home.z)>1e5))return false;
  return true;

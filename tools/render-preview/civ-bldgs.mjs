@@ -16,12 +16,12 @@ export const civBuildingsScene = (civs = ['mekhari', 'sandrill'], mourn = false)
   base.add(slab(cw * 4 + 6, civs.length * rd + 6, .6, palette.CARVED_TERRAIN.bands[0], .5), { x: 0, z: 0 });
   civs.forEach((civ, row) => {
     const z = -civs.length * rd / 2 + rd * (row + .5);
-    (mourn ? [['original', 'house'], ['original', 'house', 1], ['original', 'civic'], ['original', 'civic', 1]] : [['original', 'house'], ['original', 'civic'], ['legacy', 'house'], ['legacy', 'civic']]).forEach(([gs, role, mo], c) => {
+    (mourn === 'worn' ? [['original', 'house'], ['original', 'house', 2], ['original', 'civic'], ['original', 'civic', 2]] : mourn ? [['original', 'house'], ['original', 'house', 1], ['original', 'civic'], ['original', 'civic', 1]] : [['original', 'house'], ['original', 'civic'], ['legacy', 'house'], ['legacy', 'civic']]).forEach(([gs, role, mo], c) => {
       cb.setGrammarSet(gs);
-      const spec = cb.generateCivBuilding(civ, role, { seed: 11 + row, era: 3, wealth: .6, wear: .1, ...(mo ? { mourning: true } : {}), footprint: role === 'house' ? { w: 8, d: 7 } : { w: 14, d: 9 } }, ['civ', civ, role, gs, row, mo ? 'mourn' : ''].join('|'));
+      const spec = cb.generateCivBuilding(civ, role, { seed: 11 + row, era: mourn === 'worn' ? 5 : 3, wealth: mourn === 'worn' ? 1 : .6, wear: mo === 2 ? .95 : .1, ...(mo === 1 ? { mourning: true } : {}), footprint: role === 'house' ? { w: 8, d: 7 } : { w: 14, d: 9 } }, ['civ', civ, role, gs, row, mo ? 'mourn' + mo : ''].join('|'));
       const x = -cw * 2 + cw * (c + .5);
       soup.add(civMesh(spec), { x, y: .3, z, yaw: -.5 });
-      labels.push({ world: [x - 5, .3, z + 8], text: `${civ} ${role} (${mo ? 'mourning' : gs})`, align: 'left', size: 10 });
+      labels.push({ world: [x - 5, .3, z + 8], text: `${civ} ${role} (${mo === 2 ? 'worn' : mo ? 'mourning' : gs})`, align: 'left', size: 10 });
     });
   });
   cb.setGrammarSet('original');

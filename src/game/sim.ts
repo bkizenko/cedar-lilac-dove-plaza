@@ -24,6 +24,7 @@ import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectangle
 import {reconcileWeaponCargo} from './weaponCargo';
 import {reconcileFarmToolCargo,farmToolBodyMustRemain} from './farmToolCargo';
 import {cargoBodyMustRemain,tickStolenCargo} from './stolenCargo';
+import {noteTraderIncident} from './traderInteraction';
 import {recoverySurfaceHeight,steerHullRecovery,hullLossRecoveryAI} from './hullLossRecovery';
 import {initializeSheep} from './sheep';
 import {initializeHorses} from './horses';
@@ -4921,6 +4922,7 @@ export class Game {
     raiseAttackAlarm(this,target,attackerTeam);
     if (target.hp <= 0) {
       target.hp = 0;
+      if(target.kind==='unit'&&attackerTeam===0)noteTraderIncident(this,target,'killed');
       if(target.kind==='unit')recordPrisonerDeath(this,target);
       if(attackerTeam===0&&isRivalTeam(target.team))this.state.conquestAt=this.state.time;
       this.addBurst(target.x, target.y + 1, target.z, target.team === 0 ? "#888" : "#e07030", 12);

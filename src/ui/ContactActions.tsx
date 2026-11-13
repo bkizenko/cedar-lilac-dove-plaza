@@ -6,6 +6,7 @@ import type {Engine} from '../game/engine';
 import {contactActions,performContactAction,type ContactAction} from '../game/encounters';
 import {personName} from '../game/people';
 import {carryingCapacity} from '../game/haulage';
+import {TraderVerbs} from './TraderVerbs';
 
 /** Conversation stays in the meeting; travel and exchanges use real actors. */
 export function ContactActions({engine,strangerId,personId,conversation=true}:{engine:Engine;strangerId:number;personId?:number;conversation?:boolean}){
@@ -16,6 +17,7 @@ export function ContactActions({engine,strangerId,personId,conversation=true}:{e
  const button='min-h-11 w-full rounded-md border border-bronze/40 px-3 py-2 text-left text-sm';
  const hint='text-xs text-parchment-dim';
  return <section className="mt-3 space-y-3" aria-label="Contact actions">
+  <TraderVerbs engine={engine} strangerId={strangerId} personId={personId}/>
   <div className="grid grid-cols-2 gap-2">
    {conversation&&<button type="button" className={button} aria-expanded={branch==='talk'} onClick={()=>{setBranch(branch==='talk'?null:'talk');setFeedback('');}}>Talk</button>}
    <button type="button" className={button} aria-expanded={branch==='trade'} onClick={()=>{setBranch(branch==='trade'?null:'trade');setFeedback('');}}>Trade</button>
@@ -32,7 +34,7 @@ export function ContactActions({engine,strangerId,personId,conversation=true}:{e
   {!actions.prisoner&&stranger&&stranger.team!==0&&<TradedTeachingActions engine={engine} teacherId={strangerId} personId={personId} open={branch==='trade'}/>}
   {(feedback||conversation&&actions.question.report)&&<div className="rounded-md border border-bronze/30 p-3" role="status" aria-live="polite"><p className={hint}>{feedback||actions.question.report}</p>{branch==='talk'&&stranger?.carryType&&stranger.carry>0&&<button type="button" className={button} onClick={()=>{setBranch('trade');setFeedback('');}}>Discuss their offer</button>}</div>}
   <details><summary className="cursor-pointer text-sm text-parchment-dim">Other choices</summary><div className="mt-2 space-y-2">
-   {!actions.prisoner&&<><button type="button" className={button} onClick={()=>run('demand')}>Demand carried goods</button><button type="button" className={button} onClick={()=>run('capture')}>Capture</button><button type="button" className={button} onClick={()=>run('attack')}>Attack</button></>}
+   {!actions.prisoner&&<button type="button" className={button} onClick={()=>run('demand')}>Demand carried goods</button>}
    {actions.prisoner?<button type="button" className={button} onClick={()=>run('release-prisoner')}>Release prisoner to return home</button>:<button type="button" className={button} onClick={()=>run('ask-visitor-leave')}>Ask visitor to leave</button>}
    {actions.scout&&<button type="button" className={button} onClick={()=>run('send-scout-home')}>Send {personName(actions.scout)} home</button>}
   </div></details>
