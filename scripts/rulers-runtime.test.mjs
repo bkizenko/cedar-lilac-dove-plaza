@@ -535,3 +535,19 @@ test('party read model: explorer, trade caravan and raid units are shown with re
  s.prisoner={};assert.ok(!expansionParties(g,1).some(p=>p.kind==='explore'),'a captive is not on an expedition');
  delete g.state.worldOptions.rulersVersion;assert.deepEqual(expansionParties(g),[]);
 });
+test('decision feed: a known court\'s breakaway and reintegration are public news; plans and reasons stay private; unmet courts silent; old saves empty',async()=>{
+ const {neighbourNews}=await import('../src/game/rulersRuntime.ts');
+ const {ensureDecisions}=await import('../src/game/societyRuntime.ts');
+ const g=fixture();g.state.time=RULERS_YEAR_SECONDS*3;advanceRulers(g);
+ const d=ensureDecisions(g);
+ d.history['1']=[{year:2,kind:'breakaway',text:'recognised Eastfold as its own'},{year:3,kind:'reintegration',text:'brought Eastfold back under the hall by force'},{year:3,kind:'plan',text:'changed its plan to raid for settle: SECRET-REASON'}];
+ g.state.societyRelations=[];
+ assert.equal(neighbourNews(g).some(n=>n.kind==='breakaway'||n.kind==='reintegration'),false,'unmet court: silent');
+ g.state.societyRelations=[{from:0,to:1,known:true,trust:.5,grievance:0,hostile:false,peaceUntil:0,lastContactSeconds:0}];
+ const news=neighbourNews(g);
+ assert.ok(news.some(n=>n.kind==='breakaway'&&/recognised Eastfold/.test(n.text)));
+ assert.ok(news.some(n=>n.kind==='reintegration'));
+ assert.equal(JSON.stringify(news).includes('SECRET-REASON'),false,'private plan reasons never leak');
+ assert.equal(neighbourNews(g,RULERS_YEAR_SECONDS*3).some(n=>n.kind==='breakaway'),false,'since filter applies');
+ const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourNews(old),[]);
+});
