@@ -1,0 +1,107 @@
+/** Browser entry for the whole-map render harness (bundled by map.mjs with esbuild; REAL three.js, SwiftShader headless).
+ * Builds the real Game world and the real WorldView, so every pixel is game output: terrain, water, vegetation, fields, sky, light, post. */
+import * as THREE from 'three';
+import {Game} from '@/game/sim';
+import {WorldView} from '@/scene/world';
+import {wearTrail} from '@/game/trails';
+type Spec={seed:number;version?:number;preset?:string;size?:number;time?:number;weather?:string;width:number;height:number;look?:[number,number];yaw:number;pitch:number;dist:number;style?:string;quality?:'low'|'med'|'high';settle?:number;
+ prep?:{buildings?:{type:string;x:number;z:number}[];farms?:{x:number;z:number;kind?:'grain'|'pulses'|'tubers';stage?:'bare'|'sprout'|'young'|'mature'|'ripe'|'stubble';w?:number;d?:number}[];trails?:{from:[number,number];to:[number,number];wear?:number}[]};
+ probe?:[number,number][];
+ fov?:number;drawDistance?:'low'|'medium'|'high'|'ultra';measure?:boolean;lookY?:number;mapStyle?:string;treeSet?:string;passes?:number;keep?:number[];bloom?:number;renderStyle?:string;light?:{sun?:number;sunColor?:string;hemi?:number;sky?:string;ground?:string;exposure?:number;fog?:string;fogMul?:number};hour?:number;season?:'spring'|'summer'|'autumn'|'winter'};
+const w=window as unknown as {renderMap:(s:Spec)=>Promise<unknown>;__game?:Game;__view?:WorldView};
+{const g=HTMLCanvasElement.prototype.getContext as (this:HTMLCanvasElement,k:string,o?:object)=>unknown;
+ (HTMLCanvasElement.prototype as unknown as {getContext:unknown}).getContext=function(this:HTMLCanvasElement,k:string,o?:object){return g.call(this,k,k.startsWith('webgl')?{...(o||{}),preserveDrawingBuffer:true}:o);};}
+let cache:{key:string;game:Game;view:WorldView}|null=null;
+w.renderMap=async(S:Spec)=>{
+ (globalThis as {__PAINTER_DEBUG?:string}).__PAINTER_DEBUG=(S as {debug?:string}).debug;
+ const key=`${S.renderStyle??''}/${S.seed}/${S.version??''}/${S.preset??''}/${S.size??''}/${S.style??''}/${S.quality??''}/${S.mapStyle??''}/${S.treeSet??''}/${JSON.stringify(S.prep??null)}`;
+ let canvas=document.getElementById('c') as HTMLCanvasElement|null;
+ if(!canvas){canvas=document.createElement('canvas');canvas.id='c';document.body.appendChild(canvas);}
+ canvas.style.cssText=`width:${S.width}px;height:${S.height}px;display:block`;canvas.width=S.width;canvas.height=S.height;
+ const t0=performance.now();
+ if(!cache||cache.key!==key){
+  try{if(S.mapStyle)localStorage.setItem('hearthwild:map-style',S.mapStyle);else localStorage.removeItem('hearthwild:map-style');}catch{/* ok */}
+  try{if(S.treeSet)localStorage.setItem('hearthwild:tree-set',S.treeSet);else localStorage.removeItem('hearthwild:tree-set');}catch{/* ok */}
+  try{if(S.renderStyle)localStorage.setItem('hearthwild:render-style-v2',S.renderStyle);else localStorage.removeItem('hearthwild:render-style-v2');}catch{/* ok */}
+  const game=new Game();game.testMode=true;game.revealMap=true;
+  game.reset(S.seed,S.version,{...(S.preset?{preset:S.preset as never}:{}),...(S.size?{size:S.size as never}:{})});game.enterIsland();game.state.paused=true;
+  const view=new WorldView(canvas);
+  if(S.quality)view.applyQuality(S.quality);
+  if(S.prep){
+   const t=game.tribe(0);Object.assign(t,{age:(S.prep as {age?:number}).age??0,food:900,wood:300,stone:100,seeds:40,cultivated:['grain','pulses','tubers']});game.vision.fill(2);
+   for(const pb of S.prep.buildings??[]){
+    const before=game.state.buildings.length;
+    const ok=game.placeBuilding(pb.type as never,pb.x,pb.z);
+    const b=game.state.buildings.slice(before)[0] as unknown as {build:number;hp:number;plannedCost?:unknown}|undefined;
+    if(!ok||!b){console.warn('building placement failed',pb.type,pb.x,pb.z,game.state.banner);continue;}
+    b.build=1;delete b.plannedCost;
+   }
+   for(const f of S.prep.farms??[]){
+    const before=game.state.buildings.length;
+    const ok=game.placeBuilding('farm',f.x,f.z);
+    const b=game.state.buildings.slice(before).find(q=>q.type==='farm')??game.state.buildings.filter(q=>q.type==='farm').at(-1);
+    if(!ok||!b){console.warn('farm placement failed',f.x,f.z,game.state.banner);continue;}
+    const st=f.stage??'mature',bb=b as unknown as {build:number;hp:number;plannedCost?:unknown;crop?:Record<string,unknown>;cropType?:string;w:number;d:number;fallowYear?:number};
+    bb.build=1;delete bb.plannedCost;if(f.w)bb.w=f.w;if(f.d)bb.d=f.d;bb.cropType=f.kind??'grain';
+    const stages:Record<string,[number,number,boolean,number]>={bare:[0,0,false,1],sprout:[.12,0,false,1],young:[.45,.2,false,1],mature:[1,.7,false,1],ripe:[1,1,true,1],stubble:[1,1,true,0]};
+    const [planted,tended,ripened,remaining]=stages[st];bb.crop={kind:f.kind??'grain',planted,tended,ripened,remaining};
+   }
+   for(const tr of S.prep.trails??[]){const [ax,az]=tr.from,[bx,bz]=tr.to,len=Math.hypot(bx-ax,bz-az),n=Math.ceil(len/1.5);
+    for(let rep=0;rep<Math.ceil((tr.wear??.7)*2.7);rep++)for(let i=0;i<=n;i++){const x=ax+(bx-ax)*i/n,z=az+(bz-az)*i/n;wearTrail(game,x,z,(bx-ax)/len*1.5,(bz-az)/len*1.5);}}
+  }
+  view.rebuild(game);
+  cache={key,game,view};w.__game=game;w.__view=view;
+ }
+ const {game,view}=cache;
+ const t1=performance.now();
+ if(S.time!==undefined)game.state.time=S.time;
+ if(S.hour!==undefined||S.season){const g=game as unknown as Record<string,unknown>,hour=S.hour??15.5,season=S.season??'summer',winter=season==='winter';
+  g.dayPhase=()=>hour/24;g.daylight=()=>winter?{sunrise:7.9,sunset:16.3,hours:8.4}:{sunrise:5.7,sunset:19.7,hours:14};g.isNight=()=>{const d=winter?[7.9,16.3]:[5.7,19.7];return hour<d[0]||hour>=d[1];};
+  const mix={spring:{spring:1,summer:0,autumn:0,winter:0,snow:0},summer:{spring:0,summer:1,autumn:0,winter:0,snow:0},autumn:{spring:0,summer:0,autumn:1,winter:0,snow:0},winter:{spring:0,summer:0,autumn:0,winter:1,snow:.9}}[season];
+  g.seasonMix=()=>({name:season,yearFrac:0,...mix});view.seasonDirty();}
+ if(S.weather)game.state.weather=S.weather as never;
+ if(view.fowMesh)view.fowMesh.visible=false;
+ view.renderer.setSize(S.width,S.height,false);view.renderer.setPixelRatio(1);view.camera.aspect=S.width/S.height;if(S.fov)view.camera.fov=S.fov;view.camera.updateProjectionMatrix();
+ view.composer?.setSize(S.width,S.height);
+ const c0=game.world.camps.find(c=>c.team===0)||game.world.camps[0]||{x:0,z:0};
+ const lx=S.look?S.look[0]:c0.x,lz=S.look?S.look[1]:c0.z;
+(view as unknown as {cameraGround:unknown}).cameraGround=null;
+ view.look.set(lx,game.height(lx,lz)+(S.lookY??.55),lz);view.yaw=S.yaw;view.pitch=S.pitch;view.dist=S.dist;
+ for(let i=0;i<(S.settle??3);i++){view.updateCamera(0);view.sync(game,.5);}
+ // The harness has no camera-vs-terrain collision (it must be deterministic): lift the pitch until the eye clears the ground, like the in-game orbit camera does.
+ for(let k=0;k<30;k++){view.updateCamera(0);const cp=view.camera.position;if(cp.y>game.height(cp.x,cp.z)+4||view.pitch>=1.3)break;view.pitch+=.05;}
+ view.updateCamera(0);
+ if(S.drawDistance)view.setDrawDistance(S.drawDistance);
+ view.sync(game,5);view.sync(game,5);
+ // filler chunks are generated under a per-frame time budget in play; here let them all finish so the picture is the settled one
+ for(let k=0;k<600;k++){const bs=(view as unknown as {biomeScene?:{lastFiller:{deferred:number}|null}}).biomeScene;if(!bs?.lastFiller||bs.lastFiller.deferred===0)break;view.sync(game,5);}
+ if((S as {hide?:string[]}).hide)view.scene.traverse(o=>{if((S as {hide?:string[]}).hide!.some(h=>(h[0]==='='?o.name===h.slice(1):o.name.includes(h))))o.visible=false;});
+ if(S.bloom!==undefined&&view.bloom)view.bloom.strength=S.bloom;
+ if(S.passes!==undefined&&view.composer)view.composer.passes=view.composer.passes.slice(0,S.passes);
+ if(S.keep&&view.composer)view.composer.passes=view.composer.passes.filter((_,i)=>S.keep!.includes(i));
+ {const L=S.light,v=view as unknown as {sun:THREE.DirectionalLight;hemi:THREE.HemisphereLight};if(L){if(L.sun!==undefined)v.sun.intensity*=L.sun;if(L.sunColor)v.sun.color.set(L.sunColor);if(L.hemi!==undefined)v.hemi.intensity*=L.hemi;if(L.sky)v.hemi.color.set(L.sky);if(L.ground)v.hemi.groundColor.set(L.ground);if(L.exposure!==undefined)view.renderer.toneMappingExposure*=L.exposure;const f=view.scene.fog as THREE.Fog|THREE.FogExp2|null;if(f&&L.fog)f.color.set(L.fog);if(f&&L.fogMul&&'density' in f)f.density*=L.fogMul;}}
+ view.render();
+ const info=view.renderer.info;
+ const extra=S.measure?measure(view,game,S):undefined;
+ const near=(a:{x:number;z:number}[])=>a.map(n=>({x:Math.round(n.x),z:Math.round(n.z),d:Math.hypot(n.x-c0.x,n.z-c0.z)})).sort((p,q)=>p.d-q.d).slice(0,3).map(n=>[n.x,n.z]);
+ const probes=(S.probe??[]).map(([px,pz])=>{const geo=(view as unknown as {terrain:{geometry:{attributes:Record<string,{count:number;getX:(i:number)=>number;getY:(i:number)=>number;getZ:(i:number)=>number;array:Float32Array}>}}}).terrain.geometry,pos=geo.attributes.position;let best=0,bd=1e9;for(let i=0;i<pos.count;i++){const d=Math.hypot(pos.getX(i)-px,pos.getZ(i)-pz);if(d<bd){bd=d;best=i;}}
+  const c=geo.attributes.color.array,r=geo.attributes.surfaceRock?.array,sd=geo.attributes.surfaceSand?.array;return {at:[px,pz],h:+pos.getY(best).toFixed(2),color:[c[best*3],c[best*3+1],c[best*3+2]].map(v=>+v.toFixed(3)),rock:r?+r[best].toFixed(2):null,sand:sd?+sd[best].toFixed(2):null};});
+ return {probes,nodes:{stone:near(game.state.stones),copper:near(game.state.copper),iron:near(game.state.iron)},build:Math.round(t1-t0),frame:Math.round(performance.now()-t1),calls:info.render.calls,tris:info.render.triangles,camp:[Math.round(c0.x),Math.round(c0.z)],size:game.world.size,waterY:game.world.waterY,
+  dd:S.drawDistance,extra,camps:game.world.camps.map(c=>[Math.round(c.x),Math.round(c.z),c.team]),features:(game.world.features||[]).map((f:any)=>[f.kind,Math.round(f.x),Math.round(f.z)]).slice(0,40)};
+};
+/** Per-band cost for the distance-quality report: triangles by object class from the scene graph (what was submitted this frame), renderer counters, JS heap, and the median of 3 renders in ms (SwiftShader: relative only). */
+function measure(view:WorldView,game:Game,S:Spec){
+ const groups:Record<string,{objects:number;instances:number;tris:number}>={};
+ const add=(k:string,n:number,i:number,t:number)=>{const g=groups[k]??(groups[k]={objects:0,instances:0,tris:0});g.objects+=n;g.instances+=i;g.tris+=t;};
+ view.scene.traverse(o=>{const m=o as unknown as {isMesh?:boolean;isInstancedMesh?:boolean;visible:boolean;count?:number;geometry?:{index?:{count:number}|null;attributes:{position?:{count:number}}}};
+  if(!m.isMesh&&!m.isInstancedMesh)return;let v:THREE.Object3D|null=o;while(v){if(!v.visible)return;v=v.parent;}
+  const g=m.geometry;if(!g)return;const per=((g.index?g.index.count:g.attributes.position?.count)||0)/3,n=m.isInstancedMesh?(m.count??0):1;if(n<=0)return;
+  const name=o.name||'';const k=name==='terrain'?'terrain':name.startsWith('filler-horizon')?'filler horizon crowns':name.startsWith('filler-far')?'filler far crowns+trunks':/^resource-(far|.*-t[01]|stumps|contact)/.test(name)||name.startsWith('resource-')?(name.startsWith('resource-far')?'sim far crowns+trunks':'sim trees near/mid'):name.startsWith('people')?'people':name.startsWith('nonblocking')?'ground dressing':/water|river|sea/.test(name)?'water':'buildings, props, other';
+  add(k,1,n,per*n);});
+ const times:number[]=[];const gl=view.renderer.getContext();for(let i=0;i<3;i++){const t=performance.now();view.render();gl.finish();times.push(performance.now()-t);}times.sort((a,b)=>a-b);
+ // CPU cost of the scene sync (tree refresh included) as the camera pans, ms per sync: the real, device-independent half of the frame cost
+ const syncMs:number[]=[];{const lx=view.look.x,lz=view.look.z;for(let k=0;k<7;k++){view.look.x=lx+k*7;view.look.z=lz-k*5;view.updateCamera(0);const t=performance.now();view.sync(game,.12);syncMs.push(performance.now()-t);}view.look.x=lx;view.look.z=lz;view.updateCamera(0);view.sync(game,.12);}syncMs.sort((a,b)=>a-b);
+ const mem=(performance as unknown as {memory?:{usedJSHeapSize:number}}).memory,i=view.renderer.info;
+ const bs=(view as unknown as {biomeScene?:{lastFiller:unknown}}).biomeScene;
+ return {groups,ms:Math.round(times[1]),syncMs:+syncMs[3].toFixed(2),msAll:times.map(Math.round),heapMB:mem?Math.round(mem.usedJSHeapSize/1048576):null,geometries:i.memory.geometries,textures:i.memory.textures,programs:i.programs?.length,filler:bs?.lastFiller,far:view.camera.far,fog:(view.scene.fog as THREE.FogExp2).density,bands:view.getDrawBands()};
+}
