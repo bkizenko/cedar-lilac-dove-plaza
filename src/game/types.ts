@@ -457,7 +457,7 @@ export type Tribe = {
   copperExperiment?: boolean;
   cultivated?: CropKind[];
   cultivationEvidence?: Partial<Record<CropKind,import("./cultivation").CultivationEvidence>>;
-  cropTrial?: {kind:CropKind; progress:number; duration:number;workActorIds?:number[]};
+  cropTrial?: {kind:CropKind; progress:number; duration:number;workActorIds?:number[];anchor?:import("./communityHandoverTypes").HandoverAnchor};
   wood: number;
   stone: number;
   copper: number;

@@ -1,12 +1,12 @@
 import type {Game} from './sim';
-import {CROPS,cropTrialWorkplace} from './cultivation';
+import {CROPS,cropTrialWorkplace,cropTrialWorkplaceIssue} from './cultivation';
 import {calendar,YEAR_SECONDS} from './settlement';
 export type FarmingProgress={stage:string;detail:string;completed?:number;required?:number;action:'knowledge'|'field'};
 /** Read-only summary: never initializes crops, advances work or promises an arrival time. */
 export function farmingProgress(g:Game):FarmingProgress {
  const t=g.tribe(0),trial=t.cropTrial,paused=g.state.paused?' Paused — resume play for travel and work.':'';
  if(trial){const person=g.state.units.find(u=>u.team===0&&u.hp>0&&u.studyCrop===trial.kind),remaining=Math.max(0,trial.duration-trial.progress);
-  return {stage:`${trial.kind} seed trial · ${Math.round(100*trial.progress/trial.duration)}%`,detail:`${remaining.toFixed(0)} work seconds remain. ${person?(person.workReason||`${person.name||'Resident'} assigned`):'No experimenter assigned; resume the trial in Knowledge.'}${paused}`,completed:trial.progress,required:trial.duration,action:'knowledge'};}
+  return {stage:`${trial.kind} seed trial · ${Math.round(100*trial.progress/trial.duration)}%`,detail:`${remaining.toFixed(0)} work seconds remain. ${cropTrialWorkplaceIssue(g,0)||(person?(person.workReason||`${person.name||'Resident'} assigned`):'No experimenter assigned; resume the trial in Knowledge.')}${paused}`,completed:trial.progress,required:trial.duration,action:'knowledge'};}
  if(!t.cultivated?.length){
   const kind=CROPS.find(k=>(t.cropSamples?.[k]||0)>=4),samples=Math.max(0,...CROPS.map(k=>t.cropSamples?.[k]||0));
   const carried=g.state.units.filter(u=>u.team===0&&u.hp>0).reduce((sum,u)=>sum+Object.values(u.seedSamples||{}).reduce((n,v)=>n+(v||0),0),0);
