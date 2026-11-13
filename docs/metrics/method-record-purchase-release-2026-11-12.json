@@ -1,0 +1,120 @@
+{
+  "release": {
+    "release": "2026-11-13T04-22-31-462Z-03f3198",
+    "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T04-22-31-462Z-03f3198",
+    "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T03-32-14-127Z-7c81460",
+    "commit": "03f31981e6b745b9e7a7a2758105a4c6dac8b26d",
+    "retained": {
+      "linked": 1466,
+      "copied": 0,
+      "existing": 12
+    }
+  },
+  "scope": "Peaceful physical method-record purchase, home custody, paid study and useful replication",
+  "batch": {
+    "passed": 11,
+    "total": 11,
+    "nativeGroups": {
+      "physicalPurchaseReturnStudyReplicationAndInterruptions": 3,
+      "typedCommandsAndEpoch": 3,
+      "strictTradedReceipts": 3
+    },
+    "actualBuilt": 2
+  },
+  "supporting": {
+    "passed": 17,
+    "total": 17,
+    "foreignRecordVisibility": 2,
+    "compactKnowledge": 2,
+    "incomingCameraMusicMenuGallery": 13
+  },
+  "regeneratedSource": {
+    "passed": 1,
+    "credit": "Necessary actual NPC record checkpoint regeneration only, not additional feature or gate credit"
+  },
+  "compiler": "PASS full tsc --noEmit",
+  "build": "PASS npm run build; expected DATABASE_URL skip with browser PGLite fallback",
+  "builtEvidence": {
+    "passed": 2,
+    "total": 2,
+    "scope": "Actual NPC three-batch/fired record, public purchase through finite payment and physical return, public paid study and useful replication; original53 durable continuity. Source opening declares finite infrastructure/materials/geographic familiarity; no natural discovery/campaign/performance credit.",
+    "purchase": {
+      "recordId": 3107,
+      "source": {
+        "recipe": "twistCordage",
+        "makerId": 2968,
+        "makerName": "Auseae",
+        "team": 1,
+        "teamName": "Kelush",
+        "successfulBatches": 3,
+        "demonstratedAt": 89.20000000000073
+      },
+      "acquisition": {
+        "kind": "traded",
+        "fromTeam": 1,
+        "toTeam": 0,
+        "at": 544.3999999999868,
+        "by": 3094,
+        "payment": {
+          "kind": "wood",
+          "amount": 4
+        },
+        "returnedAt": 554.9999999999892
+      },
+      "study": {
+        "personId": 3094,
+        "studiedAt": 677.0000000000169,
+        "studyProjectId": 3108,
+        "replicatedAt": 787.200000000042,
+        "replicationProjectId": 3117
+      },
+      "publicTypedPurchase": true,
+      "publicStudyAndReplication": true,
+      "strictDurable": true
+    },
+    "legacy": {
+      "residents": 53,
+      "strictDurable": true
+    },
+    "inputsUnchanged": true,
+    "errors": []
+  },
+  "network": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T04-22-31-462Z-03f3198",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "policy": {
+    "quote": "4 real wood units, shared named coefficient METHOD_RECORD_TRADE_PRICE_WOOD",
+    "consent": "Known peaceful living nonraider society, actual visible cached record, no paid commitment/reservation",
+    "limitations": [
+      "Foot courier only for this new path; pack record-trade qualification remains open",
+      "Starting source geography/infrastructure/materials explicitly declared; no natural encounter/discovery claim",
+      "No school/library institution or instant technique grant",
+      "No full 98-gate, campaign, art or FPS credit",
+      "Newer main irrigation/fields/placement/animation source excluded from frozen artifact"
+    ]
+  }
+}
