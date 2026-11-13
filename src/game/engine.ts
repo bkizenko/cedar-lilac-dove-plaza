@@ -23,8 +23,10 @@ import {AutosaveController} from './autosave';
 import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
 import {advanceFrameSimulation} from './frameSimulation';
 import {towerBuildConfiguration} from './towerPlatforms';
-import {rememberGraphicsQuality,rememberRenderStyle,type RenderStyle} from './graphics';
-import {rememberDrawDistance,DRAW_DISTANCE_LABELS,type DrawDistance} from './drawDistance';
+import {rememberRenderStyle,type RenderStyle} from './graphics';
+import type {DrawDistance} from './drawDistance';
+import {GraphicsSettings,type Effective,type GraphicsChoice,type DrawChoice,type TreeChoice,type Knob} from './graphicsSettings';
+import {rememberDetailLevel,type DetailLevel} from './detailLevel';
 import {gateFacing as normalizeGateFacing,rotateGateFacing,snapGate,suggestGateSnap,placeFacingGate,type GateFacing} from './gateGeometry';
 import {RuntimeProfile,RUNTIME_PROFILE_RULES} from './runtimeProfile';
 import {projectedTreeInBox} from './treeDesignation';
@@ -95,7 +97,7 @@ export class Engine {
     const previous={game:this.game,host:this.workerHost??null},quality=this.game.quality,muted=this.game.muted;
     if(next.host)next.host.projection.setDisplaySettings(quality,this.fps);else{next.game.quality=quality;next.game.muted=muted;this.bindNativeCallbacks(next.game);}
     // Renderer preparation may fail. Keep the real paused owner alive until it succeeds.
-    try{this.view.rebuild(next.game);const c=next.game.campOf(0);this.view.look.set(c.x,next.game.height(c.x,c.z)+.55,c.z);this.audio.unlock();this.canvas.focus();if(!next.host)this.profile?.personMethods.attach(next.game);}catch(error){if(next.host&&next.host!==previous.host)next.host.dispose();try{this.view.rebuild(previous.game);}catch{/* Existing owner and durable checkpoint remain; never construct a fallback village. */}throw error;}
+    try{this.gfx?.hold();this.view.rebuild(next.game);const c=next.game.campOf(0);this.view.look.set(c.x,next.game.height(c.x,c.z)+.55,c.z);this.audio.unlock();this.canvas.focus();if(!next.host)this.profile?.personMethods.attach(next.game);}catch(error){if(next.host&&next.host!==previous.host)next.host.dispose();try{this.gfx?.hold();this.view.rebuild(previous.game);}catch{/* Existing owner and durable checkpoint remain; never construct a fallback village. */}throw error;}
     this.workerHost=next.host;this.game=next.game;this.workerBridgeTransition=false;this.dispatchGeneration=(this.dispatchGeneration??1)+1;
     this.dispatchObservedState=next.host?undefined:next.game.state;this.dispatchRevision=0;this.dispatchSequence=0;this.readModelCache?.clear();this.presentationFeedback=null;
     this.autosave.invalidate();this.simAccumulator=0;this.keyboard.groups.clear();
@@ -176,7 +178,7 @@ export class Engine {
     try{
       await host.initialize(snapshot,context);if(this.disposed||this.closing||this.game!==original||this.dispatchGeneration!==transitionEpoch)throw new Error('Worker startup was superseded by a village transition');
       host.projection.setDisplaySettings(this.view.quality,this.fps);this.workerHost=host;this.game=host.game;
-      this.simAccumulator=0;this.view.rebuild(this.game);this.view.resize();
+      this.simAccumulator=0;this.gfx?.hold();this.view.rebuild(this.game);this.view.resize();
       this.workerBridgeTransition=false;this.pushHud();return host.report;
     }catch(error){host.dispose();if(this.game===original&&this.dispatchGeneration===transitionEpoch){this.workerHost=null;this.workerBridgeTransition=false;}throw error;}
   }
@@ -331,7 +333,8 @@ export class Engine {
   disposed = false;
   ro: ResizeObserver | null = null;
   failFrames = 0;
-  slowFps = 0;
+  /** Display settings: what the player chose and what is in force. The only thing that may lower the picture automatically, and only for knobs left on Auto. */
+  gfx!: GraphicsSettings;
 
   constructor(canvas: HTMLCanvasElement, hud: HudFn) {
     this.canvas = canvas;
@@ -344,22 +347,19 @@ export class Engine {
     this.profile.setAutosaveReporter(()=>this.autosave.report(),()=>this.autosave.resetMeasurements());
     this.game.quality = this.view.quality;
     this.bindNativeCallbacks(this.game);
-    // frames stayed over budget: the view eased the draw distance one level (before graphics quality is touched)
-    this.view.onDrawDistanceEased = level => { try { this.game.banner(`Draw distance eased to ${DRAW_DISTANCE_LABELS[level]} to keep the village responsive`, 3.2); } catch { /* the banner is a courtesy */ } };
-    this.view.onContextLost = () => {
-      if (this.game.quality !== "low")
-        this.setQuality(this.game.quality === "high" ? "med" : "low");
-    };
+    this.gfx = new GraphicsSettings((e, changed) => this.applyEffective(e, changed));
+    this.gfx.start();
+    this.view.onContextLost = () => { this.safetyLower('the graphics context was lost'); };
     this.view.onContextRestored = () => {
       try {
-        this.view.rebuild(this.game);
+        this.gfx?.hold();this.view.rebuild(this.game);
         this.view.resize();
         this.game.banner("The island steadies", 2);
         this.pushHud();
       } catch {
-        this.setQuality("low");
+        this.safetyLower('the scene could not be rebuilt');
         try {
-          this.view.rebuild(this.game);
+          this.gfx?.hold();this.view.rebuild(this.game);
         } catch {
           /* stay paused on lost context */
         }
@@ -386,18 +386,18 @@ export class Engine {
       else {this.game.reset();this.game.awaitingStart = true;}
       if(this.game.awaitingStart)this.game.enterIsland();
       this.game.state.paused = true;
-      this.view.rebuild(this.game);
+      this.gfx?.hold();this.view.rebuild(this.game);
       this.homeLook();
       this.view.resize();
     } catch (err) {
       console.error(err);
       if(storedVillage)throw err;
-      this.setQuality("low");
+      this.safetyLower('the scene could not be built');
       try {
         this.game.reset();
         this.game.enterIsland();
         this.game.state.paused = true;
-        this.view.rebuild(this.game);
+        this.gfx?.hold();this.view.rebuild(this.game);
         this.homeLook();
         this.view.resize();
       } catch (err2) {
@@ -414,7 +414,7 @@ export class Engine {
 
   async configureNewWorld(request:WorldRequest,previewRiverbanks=false,wildCraft=false):Promise<boolean>{
     if(this.originalGame&&!this.game.testMode)return false;
-    return this.restart({...request,geologyVersion:1},previewRiverbanks&&this.game.testMode?19:21,wildCraft); // fresh worlds carry the geology layer; saved v21 worlds without the flag regenerate unchanged
+    return this.restart({...request,geologyVersion:1,forestEcologyVersion:1},previewRiverbanks&&this.game.testMode?19:21,wildCraft); // fresh worlds carry the geology layer; saved v21 worlds without the flag regenerate unchanged
   }
 
   enterIsland() {
@@ -903,9 +903,10 @@ export class Engine {
     const issue = geometryIssue ?? (type==='farm'?fieldSeedIssue(this.game.tribe(0).seeds||0,buildingCost(type,this.game,0,this.plotSize).seeds||0):null);
     this.game.state.placeIssue = issue;
     // Graded slope: say what the ground costs (tier word, goods, labour, foundation) once per change, like the field/pen cost line.
-    if(!issue&&this.game.state.slopeModel==='graded'&&type!=='bridge'&&!this.plotStart){
-      const dims=this.plotSize??(this.placementTurn()?turnedFootprint(type):BUILDINGS[type]),sa=slopeClassOf(type)==='exempt'?null:this.game.siteAssessment(type,x,z,dims.w,dims.d),note=sa?`${sa.label} · ${sa.detail}`:'';
-      if(note!==this.slopeNoteKey){this.slopeNoteKey=note;if(sa&&sa.tier!=='level')this.game.banner(note,3);}
+    if(this.game.state.slopeModel==='graded'&&type!=='bridge'&&!this.plotStart&&(!issue||(!!this.game.state.terrainModel&&/^(Too steep|Bare rock|Stone|Drystone|Terrace|Needs terraces)/.test(issue)))){
+      // Terrain model v2 also names level sites that carry a nuance (Natural shelf, Sun slope...), points at a nearby shelf when the ground is refused, and says what a terrace field still needs.
+      const dims=this.plotSize??(this.placementTurn()?turnedFootprint(type):BUILDINGS[type]),v2=!!this.game.state.terrainModel,sa=slopeClassOf(type)==='exempt'?null:this.game.siteAssessment(type,x,z,dims.w,dims.d,v2),note=sa?(issue&&!sa.ok?`${issue}${sa.shelfHint?` · ${sa.shelfHint}`:''}`:`${sa.label} · ${sa.detail}`):'';
+      if(note!==this.slopeNoteKey){this.slopeNoteKey=note;if(sa&&(sa.tier!=='level'||!sa.ok||(v2&&(sa.tags?.length||sa.terrace?.k&&sa.terrace.k!=='none'))))this.game.banner(note,3);}
     }
     this.ghostPos.x = x;
     this.ghostPos.z = z;
@@ -1156,16 +1157,37 @@ export class Engine {
     rememberRenderStyle(style);
   }
 
-  /** Draw distance (how far the world is drawn): render-only, browser preference, never part of a save. Choosing a level also resets the automatic easing. */
-  setDrawDistance(level: DrawDistance) {
-    this.view.setDrawDistance(level);
-    rememberDrawDistance(level);
+  /** The player's explicit picks (or Auto). Persisted as chosen; never overridden by the governor; picking anything clears an earlier automatic easing. */
+  chooseGraphics(v: GraphicsChoice) { this.gfx.choose('graphics', v); this.noticeBanner(); this.pushHud(); }
+  chooseDrawDistance(v: DrawChoice) { this.gfx.choose('draw', v); this.noticeBanner(); this.pushHud(); }
+  chooseTreeDetail(v: TreeChoice) { this.gfx.choose('trees', v); this.noticeBanner(); this.pushHud(); }
+  /** "Restore my setting": undo every automatic or safety lowering. */
+  restoreGraphics() { this.gfx.restore(); this.pushHud(); }
+  /** Kept for callers that set the draw distance directly: same as choosing it. */
+  setDrawDistance(level: DrawDistance) { this.chooseDrawDistance(level); }
+  /** Lower the picture because it cannot run (not because the player asked): not persisted, shown with Restore. */
+  private safetyLower(reason: string) {
+    const n = this.gfx.safetyDowngrade(reason);
+    if (n) { try { this.game.banner(n.text, 4); } catch { /* the banner is a courtesy */ } }
+  }
+  private noticeBanner() { if (this.gfx.notice) { try { this.game.banner(this.gfx.notice.text, 4); } catch { /* courtesy */ } } }
+  /** Put the effective tiers in force. Never stores anything: persistence belongs to chooseX only. */
+  private applyEffective(e: Effective, changed: readonly Knob[]) {
+    if (changed.includes('draw')) this.view.setEffectiveDrawDistance(e.draw);
+    if (changed.includes('trees')) this.view.setTreeDetail(e.trees);
+    if (changed.includes('graphics') && e.graphics !== this.view.quality) this.setQuality(e.graphics);
+  }
+  /** Apply a graphics tier to the renderer (no persistence; also re-applies the current tier after a shadow toggle). */
+
+  /** Detail (model-tier distances and High/Ultra fidelity): render-only, browser preference, never part of a save. */
+  setDetailLevel(level: DetailLevel) {
+    this.view.setDetailLevel(level);
+    rememberDetailLevel(level);
   }
 
   setQuality(q: "low" | "med" | "high") {
     if(this.workerHost)this.workerHost.projection.setDisplaySettings(q,this.fps);else this.game.quality = q;
     this.view.applyQuality(q);
-    rememberGraphicsQuality(q);
   }
 
   focusMinimap(nx: number, nz: number) {
@@ -1236,7 +1258,7 @@ export class Engine {
       this.profile.measure('scene',()=>this.view.sync(this.game, dt));
       this.profile.measure('draw',()=>this.view.render());
       this.profile.recordRenderer(this.view.latestRenderMetrics);
-      if(!this.workerHost)this.tuneQuality(dt);
+      if(!this.workerHost){const n=this.gfx.observe(frameGap);if(n){try{this.game.banner(n.text,5);}catch{/* courtesy */}}}
 
       this.hudAcc += dt;
       if (this.hudAcc > 0.12) {
@@ -1254,28 +1276,10 @@ export class Engine {
       this.failFrames++;
       if (this.failFrames >= 2 && this.game.quality !== "low") {
         this.failFrames = 0;
-        this.setQuality(this.game.quality === "high" ? "med" : "low");
-        if(!this.workerHost)this.game.banner("The valley eases", 1.8);
+        this.safetyLower('the renderer reported errors');
       }
     }
   };
-
-  private tuneQuality(dt: number) {
-    if (this.game.quality === "low") {
-      this.slowFps = 0;
-      return;
-    }
-    if (this.fps > 0 && this.fps < 18 && this.frames + this.fpsAcc > 0) {
-      this.slowFps += dt;
-      if (this.slowFps > 3.2) {
-        this.slowFps = 0;
-        this.setQuality(this.game.quality === "high" ? "med" : "low");
-        this.game.banner("Graphics reduced to keep the village responsive", 3);
-      }
-    } else {
-      this.slowFps = Math.max(0, this.slowFps - dt * 0.5);
-    }
-  }
 
   pushHud() {
     if(this.workerHost){if(this.workerHost.ready){const notice=this.presentationFeedback&&this.presentationFeedback.expires>performance.now()?this.presentationFeedback.message:this.workerHost.hud.banner;this.hud({...this.workerHost.hud,fps:this.fps,banner:notice});}return;}

@@ -19,6 +19,10 @@ import {HelpScreen} from './helpScreen';
 import {RoadsCard} from './roadsCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
 import {MinimapReopen,useMinimapCollapsed} from './minimapToggle';
+import {useHudHotkeys,Foldable} from './fold';
+import {layout,PANELS} from './hudLayout';
+import {useTestLabButton} from './useTestLabButton';
+import {FlaskConical} from 'lucide-react';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
 import './hearth.css';
 import './glance.css';
@@ -30,9 +34,16 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const [screen,setScreen]=useState<null|{k:'village'|'council'|'ages'|'menu'|'trade'|'help';tab?:string}>(null);
  const [tray,setTray]=useState(false),[tab,setTab]=useState('Village'),[map,setMap]=useState(false),[test,setTest]=useState(false),[hidden,setHidden]=useState(false),[trade,setTrade]=useState<number|null>(null);
  const [mapCollapsed,setMapCollapsed]=useMinimapCollapsed();
+ const [showTestLab,setShowTestLab]=useTestLabButton();
  const founding=hud.founding;
  const alerts=useGlanceAlerts(hud.started&&!hud.awaitingStart?engine:null);
  useEffect(()=>{if(hud.placing)setTray(false);},[hud.placing]);
+ // O: sound effects, U: hide or show the interface, Shift+U: minimise or show every panel. M (mute) and Shift+M (map) are handled elsewhere.
+ useHudHotkeys({
+  sfx:()=>{engine?.audio?.toggleSfxOff();engine?.pushHud?.();},
+  hide:()=>setHidden(v=>!v),
+  allPanels:()=>{const shown=PANELS.some(p=>!layout.isCollapsed(p.id)&&!['testlab','wonders','skills'].includes(p.id));layout.setAll(shown,PANELS.filter(p=>!['testlab','wonders','skills'].includes(p.id)).map(p=>p.id));},
+ },hud.started&&!hud.awaitingStart);
  if(!hud.started||hud.awaitingStart)return null;
  if(hidden)return <button type="button" className="hw hw-restore" onClick={()=>setHidden(false)}>Show interface</button>;
  const close=()=>setScreen(null);
@@ -47,6 +58,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {!founding&&!screen&&<AlertPins engine={engine} alerts={alerts}/>}
   {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})} onOpenHelp={()=>setScreen({k:'help'})}/>}
   <header className="hw-top"><ResourceBar hud={hud} engine={engine} onOpen={k=>setScreen(k==='council'?{k:'council'}:{k:'village',tab:'stores'})}/><TimeCard hud={hud} engine={engine} onAges={()=>setScreen({k:'ages'})} onMenu={()=>setScreen({k:'menu'})}/></header>
+  {!founding&&showTestLab&&<Foldable id="testlab" icon={<FlaskConical size={24}/>} className="hw-testlab-fold"><button type="button" className="hw-testlab" aria-label="Test lab" title="Open the Test lab" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),(o:unknown)=>{if(o)setTest(true);})}><FlaskConical size={24}/><span>Test lab</span></button></Foldable>}
   {!founding&&<Rail hud={hud} engine={engine} workOpen={screen?.k==='village'&&screen.tab==='work'} onWork={()=>setScreen({k:'village',tab:'work'})}/>}
   <NotesStack hud={hud} engine={engine} onOpen={open} hidden={false} alerts={alerts}/>
   {!founding&&!screen&&<RoadsCard engine={engine}/>}
@@ -74,7 +86,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {screen?.k==='council'&&engine&&<CouncilScreen engine={engine} initial={screen.tab} onClose={close}/>}
   {screen?.k==='ages'&&<AgesScreen hud={hud} engine={engine} onClose={close}/>}
   {screen?.k==='help'&&<HelpScreen onClose={close}/>}
-  {screen?.k==='menu'&&<MenuScreen hud={hud} engine={engine} lifecycle={lifecycle as never} onClose={close} onTest={()=>setTest(true)} onHide={()=>setHidden(true)}/>}
+  {screen?.k==='menu'&&<MenuScreen hud={hud} engine={engine} lifecycle={lifecycle as never} onClose={close} onTest={()=>setTest(true)} showTestLab={showTestLab} onShowTestLab={setShowTestLab} onHide={()=>setHidden(true)}/>}
   {trade!==null&&engine&&<Screen title={`Trade · ${engine.game.tribe(trade)?.name??''}`} icon={<Handshake size={32}/>} onClose={()=>setTrade(null)}><div className="hw-legacy">{knownSettlement(engine.game,trade)?<TradeProposal key={trade} engine={engine} team={trade} expanded/>:<p>Find their settlement before sending a shipment.</p>}</div></Screen>}
 
   {hud.pendingAge&&<div className="hw-scrim"><div className="hw-screen hw-choice" role="dialog" aria-modal="true" aria-label={`Enter the ${hud.pendingAge.next} Age`}>

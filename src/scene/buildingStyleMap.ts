@@ -6,6 +6,7 @@
  * Geometry is shared per variant (family x era bucket x material x climate x
  * variant index) so instancing stays possible: a village of 60 houses draws a
  * handful of distinct cottages, not 60 unique meshes. */
+import {withNearDetail} from './nearDetail';
 import {hashSeed,type BuildingSpec} from './buildingParts';
 import {getBuildingMute} from './buildingDetail';
 import {generateCivBuilding,type CivContext,type CivRole} from './civBuildings';
@@ -161,8 +162,8 @@ export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|nul
 }
 /** The spec for a resolved variant: the skin's civ grammar, or the Village family (repainted from the skin when one is worn). */
 export function variantSpec(v:CarvedVariantKey):BuildingSpec{
- if(v.civ)return generateCivBuilding(v.civ.grammar,v.civ.role,v.civ.ctx,v.key) as BuildingSpec;
- const spec=generateFamily(v.family,v.ctx,v.key);return v.tint?{...spec,materials:v.tint}:spec;
+ if(v.civ)return withNearDetail(generateCivBuilding(v.civ.grammar,v.civ.role,v.civ.ctx,v.key) as BuildingSpec);
+ const spec=generateFamily(v.family,v.ctx,v.key);return withNearDetail(v.tint?{...spec,materials:v.tint}:spec);
 }
 export function carvedBuildingSpec(input:CarvedBuildingInput):BuildingSpec|null{
  const v=carvedVariantFor(input);return v?variantSpec(v):null;

@@ -78,3 +78,61 @@ test('ghost contract: the placement ghost and the finished building both go thro
   assert.ok(/buildCarvedMesh\(variantSpec\(variant\),0\)/.test(w)&&/buildingGroundSupports\(game,c\.fake\)/.test(w));
   assert.ok(/this\.ghost\.add\(new THREE\.Mesh\(geo,mat\)\)/.test(w));
 });
+
+// ---- foundation audit 2026-11-13: no gap under a footprint, doors at grade, same path for the ghost and the finished building -------------------------
+import {setGroundPlanProvider,foundationProfile} from '../src/scene/foundations.ts';
+import {buildingGroundSupports} from '../src/scene/buildingGrounding.ts';
+import {groundPlanOf} from '../src/scene/groundPlan.ts';
+import {assessSite,siteRecord} from '../src/game/slopeTiers.ts';
+import {BUILDINGS} from '../src/game/constants.ts';
+import {buildingGeos} from '../src/scene/meshes.ts';
+buildingGeos();
+const realBuilt=(type,civ,era,deg,yaw)=>{
+  const t=Math.tan(deg*Math.PI/180),H=(x,z)=>10+t*x,fp=BUILDINGS[type];
+  const spec=variantSpec(carvedVariantFor({worldSeed:4,type,id:5,era,footprint:{w:fp.w,d:fp.d},settlementSeed:0,...(civ?{skin:presetSkin(civ)}:{})})),plan={...groundPlanOf(spec),yaw};
+  const site=siteRecord(assessSite(H,type,0,0,fp.w,fp.d,{})),b={id:5,type,team:0,x:0,z:0,y:0,w:fp.w,d:fp.d,hp:100,build:1,...(site?{site}:{})};
+  const g={world:{heights:new Float32Array(9)},state:{buildings:[],time:0},height:H,terrainRevision:()=>0,exploredAt:()=>true};
+  setGroundPlanProvider(()=>plan);
+  try{const f=foundationProfile(g,b),sup=buildingGroundSupports(g,b);return {H,spec,plan,f,sup,b,site};}finally{setGroundPlanProvider(null);}
+};
+/** lowest solid bottom (metres) among real parts and real supports that cover the point (within `reach` horizontally), or Infinity */
+function lowestAt(r,x,z,reach=.5){
+  const c=Math.cos(r.plan.yaw),s=Math.sin(r.plan.yaw);let low=Infinity;
+  for(const p of r.spec.parts){if(p.lod<1)continue;const q=partBounds(p);if(q.maxY-q.minY<.05)continue;
+   // point into the part's local frame (yaw of the instance): local = R(-yaw) * world
+   const lx=c*x-s*z,lz=s*x+c*z;if(lx>=q.minX-reach&&lx<=q.maxX+reach&&lz>=q.minZ-reach&&lz<=q.maxZ+reach)low=Math.min(low,r.f.level+q.minY);}
+  for(const u of r.sup){const cs=Math.cos(u.yaw),sn=Math.sin(u.yaw),dx=x-u.x,dz=z-u.z,lx=cs*dx-sn*dz,lz=sn*dx+cs*dz;if(Math.abs(lx)<=u.length/2+reach&&Math.abs(lz)<=u.width/2+reach)low=Math.min(low,u.y-u.height/2);}
+  return low;
+}
+const CASES=[['hut','sandrill',0],['hut','hanrei',1],['hut','aureline',2],['house','aureline',1],['house','vedara',2],['workshop','aureline',1],['warehouse',null,1],['warehouse','hanrei',1]];
+test('no gap under the footprint on flat ground: the lowest real part sits within 6 cm of the terrain at the centre and every wall corner',()=>{
+  for(const [type,civ,era] of CASES)for(const yaw of[0,Math.PI/2]){
+    const r=realBuilt(type,civ,era,0,yaw),lifted=Math.max(0,...r.plan.lifts);
+    // flat ground needs no footing, except under a wall the generator itself starts on a base course (then a footing up to that course, no more)
+    for(const u of r.sup.filter(u=>u.kind!=='step'))assert.ok(lifted>0&&u.kind==='footing'&&u.y+u.height/2<=r.f.level+lifted+1e-6,`${type}/${civ}: flat ground needs no ${u.kind}`);
+    const pts=[...(r.plan.raised?[]:[{x:0,z:0}]),...r.plan.polys.flat().map(q=>({x:Math.cos(yaw)*q.x+Math.sin(yaw)*q.z,z:-Math.sin(yaw)*q.x+Math.cos(yaw)*q.z})),...r.plan.piers.map(q=>({x:Math.cos(yaw)*q.x+Math.sin(yaw)*q.z,z:-Math.sin(yaw)*q.x+Math.cos(yaw)*q.z}))];
+    for(const p of pts){const low=lowestAt(r,p.x,p.z),ground=r.H(p.x,p.z);assert.ok(low<=ground+.06,`${type}/${civ}/${era} yaw ${yaw}: gap ${(low-ground).toFixed(2)} m at ${p.x.toFixed(1)},${p.z.toFixed(1)}`);}
+    assert.ok(r.f.level-r.H(0,0)<=.06&&r.f.level-r.H(0,0)>=0,`${type}: floor ${(r.f.level-r.H(0,0)).toFixed(2)} m above the ground on flat ground`);
+  }
+});
+test('no gap on gentle and moderate slopes either: floor within a hand-span of the ground at the centre, footing meets the terrain at every wall corner, no posts',()=>{
+  for(const deg of[3,6,10])for(const [type,civ,era] of CASES){
+    const r=realBuilt(type,civ,era,deg,0);if(!['none','pad'].includes(r.site?.foundation||'none'))continue; // a terraced site is tested with the terrace tier
+    assert.ok(!r.sup.some(u=>u.kind==='post'||u.kind==='beam'),'no posts on dry gentle ground');
+    assert.ok(Math.abs(r.f.level-r.H(0,0))<=.12,`${type} ${deg}: floor ${(r.f.level-r.H(0,0)).toFixed(2)} m from the ground at the centre`);
+    for(const p of[...r.plan.polys.flat(),...r.plan.piers]){const low=lowestAt(r,p.x,p.z,.45),ground=r.H(p.x,p.z);assert.ok(low<=ground+.06,`${type}/${civ} ${deg} deg: gap ${(low-ground).toFixed(2)} m under a wall corner`);}
+  }
+});
+test('doors at grade: a downhill door has steps from the floor to the earth, an uphill door is not buried more than a hand-span',()=>{
+  for(const deg of[6,10]){const r=realBuilt('house','aureline',1,deg,0),e=r.plan.entry;if(!e)continue;
+    const out={x:e.x,z:e.z+.5},g0=r.H(out.x,out.z),gap=r.f.level-g0;
+    if(gap>.14)assert.ok(r.sup.some(u=>u.kind==='step'),`${deg} deg: ${gap.toFixed(2)} m above the door ground needs steps`);
+    assert.ok(g0-r.f.level<=.2,`${deg} deg: door ground ${(g0-r.f.level).toFixed(2)} m above the floor`);
+    const steps=r.sup.filter(u=>u.kind==='step');for(const u of steps){assert.ok(u.y-u.height/2<=r.H(u.x,u.z)+1e-6,'steps reach the ground');assert.ok(u.y+u.height/2<=r.f.level+.03,'steps stay below the floor');}
+  }
+});
+test('staddle-stone granary: stone columns under every stone on a slope, bottom in the ground, none on flat ground',()=>{
+  const flat=realBuilt('warehouse','hanrei',1,0,0);assert.equal(flat.plan.raised,true);assert.equal(flat.sup.length,0);
+  const sl=realBuilt('warehouse','hanrei',1,6,0),cols=sl.sup.filter(u=>u.kind==='footing');assert.ok(cols.length>=2,'columns under the downhill stones');
+  for(const u of cols){assert.ok(u.y-u.height/2<=sl.H(u.x,u.z)+1e-6);assert.ok(u.y+u.height/2<=sl.f.level+1e-6);assert.ok(u.width<=.9,'column, not a slab');}
+});

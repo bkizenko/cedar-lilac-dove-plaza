@@ -7,7 +7,8 @@ import * as THREE from 'three';
 import {ensureInstanceCapacity} from './instanceCapacity';
 import {heldItemMesh,heldKey,itemEraForAge,conditionBucket,CONDITION_BUCKET_MID} from './itemRegistry';
 import {meshGeometry,itemMaterial} from './itemGeometry';
-import {RIG_BONES,RIG_PIVOTS,bodyClassFor,boneMatrices,farParts,itemParts,mul,newBoneMatrices,composeEuler,rigMeshData,rigOutfit,tierForDistance,type BodyClass,type ItemId,type RigGear,type RigOutfit,type RigPart,type RigSlot,type RigBone} from './characterRig';
+import {personTierAt} from '../game/detailLevel';
+import {RIG_BONES,RIG_PIVOTS,bodyClassFor,boneMatrices,farParts,itemParts,mul,newBoneMatrices,composeEuler,rigMeshData,rigOutfit,type BodyClass,type ItemId,type RigGear,type RigOutfit,type RigPart,type RigSlot,type RigBone} from './characterRig';
 import {DeathTracker,newAnimState,stepAnimator,CORPSE_RULES,type AnimContext,type AnimState,type UnitLike} from './characterAnim';
 import {lifePose} from './peopleLife';
 import {NEUTRAL_POSE,poseAtTier,type Pose} from './animationClips';
@@ -15,6 +16,8 @@ import {hashSeed} from './buildingParts';
 import {SEASONS,type Culture,type Season} from './cultureGrammar';
 import type {LodTier} from './buildingParts';
 import {individualFor,roleOf,type Individual,type PeopleLook,type Role} from './peopleLook';
+import {carryStyleFor,quantizeChoice,type CarryChoice} from './carryStyles';
+import {carryLoadParts} from './carryLoads';
 
 export type PeopleSet='rig'|'legacy';
 export const PEOPLE_RULES={maxVariants:900,startCapacity:16,maxBodies:900,/** meshes unused for this many frames are kept; geometry is tiny */shadowTier:1,/** set true to switch off the people-v2 procedural life layer (breathing, sway, gestures) */noLife:false as boolean} as const;
@@ -33,6 +36,8 @@ function toGeometry(parts:readonly RigPart[],pivot:readonly number[],colors:Reco
  g.setAttribute('position',new THREE.BufferAttribute(d.positions,3));g.setAttribute('normal',new THREE.BufferAttribute(d.normals,3));g.setAttribute('color',new THREE.BufferAttribute(linear(d.colors),3));
  g.computeBoundingSphere();if(g.boundingSphere)g.boundingSphere.radius=Math.max(g.boundingSphere.radius,1.5);return g;
 }
+/** Clips in which a person wears what they carry; at work (chop, till, build...) the hands and shoulders are busy. */
+const CARRY_WORN=new Set<string>(['carry','idle','walk','run','row']);
 const hash=(s:string)=>(hashSeed(s)>>>0).toString(36);
 /** Items v2: a held item's detailed procedural model (society, era, shield kind), or null to fall back to the first rig's parts. */
 const heldItemGeometry=(item:ItemId,o:RigOutfit,era:number,tier:LodTier,condition?:number)=>{const m=heldItemMesh(item,{skin:o.look?.id,era,lod:tier===0?0:2,shieldKind:o.rendered.shield,condition});if(!m)return null;const g=meshGeometry(m);if(g.boundingSphere)g.boundingSphere.radius=Math.max(g.boundingSphere.radius,1.5);return g;};
@@ -52,6 +57,8 @@ export class CharacterRigLayer{
   this.scene=scene;this.root.name='people-rig';scene.add(this.root);
   this.material=new THREE.MeshStandardMaterial({vertexColors:true,color:0xffffff,roughness:.9,metalness:0,side:THREE.FrontSide});
  }
+ /** people nearer than this (3-D metres) may use the near tier; the adapter lowers it when more than DETAIL_RULES.maxNearPeople are inside the near radius */
+ nearLimit=Infinity;
  beginFrame(world:PeopleWorld,camera:THREE.Vector3,quality:'low'|'med'|'high',shadows:boolean){
   this.world=world;this.camera.copy(camera);this.shadows=shadows&&quality!=='low';this.frame++;
   for(const v of this.variants.values()){v.count=0;}
@@ -85,7 +92,7 @@ export class CharacterRigLayer{
  }
  /** Bone signatures are pure per outfit and tier: computed once, not every frame. */
  private sigOf(o:RigOutfit,tier:LodTier,b:RigBone,parts:readonly RigPart[]){let m=SIGS.get(o);if(!m){m=new Map();SIGS.set(o,m);}const k=tier+b;let s=m.get(k);if(s===undefined){s=boneSignature(parts,o.colors,tier);m.set(k,s);}return s;}
- private variant(key:string,make:()=>THREE.BufferGeometry):Variant|null{
+ private variant(key:string,make:()=>THREE.BufferGeometry,soft=false):Variant|null{
   let v=this.variants.get(key);if(v)return v;
   if(this.variants.size>=PEOPLE_RULES.maxVariants){
    // Retire only an unused draw. Anything already written this frame stays pinned,
@@ -93,7 +100,7 @@ export class CharacterRigLayer{
    let oldestKey:string|undefined,oldest:Variant|undefined;
    for(const [k,candidate]of this.variants)if(candidate.count===0&&(!oldest||candidate.lastUsed<oldest.lastUsed)){oldestKey=k;oldest=candidate;}
    if(oldest&&oldestKey!==undefined){this.root.remove(oldest.mesh);oldest.mesh.geometry.dispose();oldest.mesh.dispose();this.variants.delete(oldestKey);}
-   else{this.stats.fallbacks++;return null;}
+   else{if(!soft)this.stats.fallbacks++;return null;}
   }
   const geo=make(),mesh=new THREE.InstancedMesh(geo,geo.getAttribute('aTex')?itemMaterial():this.material,PEOPLE_RULES.startCapacity);mesh.count=0;mesh.frustumCulled=false;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   mesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(PEOPLE_RULES.startCapacity*3),3);mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);mesh.name='people:'+key;mesh.receiveShadow=true;
@@ -103,21 +110,44 @@ export class CharacterRigLayer{
   if(v.count>=v.mesh.instanceMatrix.count){v.mesh=ensureInstanceCapacity(this.scene,v.mesh,v.count+1);this.root.add(v.mesh);}
   v.mesh.instanceMatrix.array.set(m as number[],v.count*16);const ic=v.mesh.instanceColor!.array as Float32Array;ic[v.count*3]=c.r;ic[v.count*3+1]=c.g;ic[v.count*3+2]=c.b;v.count++;v.lastUsed=this.frame;
  }
+ private carries=new Map<number,{key:string;c:CarryChoice}>();
+ /** The load this person carries on foot and how (carryStyles): from the real cargo kind and amount, the society and the unit id. Cached per unit. */
+ private carryOf(u:UnitLike,w:PeopleWorld,society:string,onFoot:boolean):CarryChoice|null{
+  const planting=!!u.plantingWork,kind=planting?'food':u.carryType;
+  if(!onFoot||!kind||!(planting||(u.carry??0)>0)){this.carries.delete(u.id);return null;}
+  const load=planting?.2:Math.max(.08,w.loadOf(u)),key=society+'|'+kind+'|'+Math.round(load*10);let e=this.carries.get(u.id);
+  if(!e||e.key!==key){e={key,c:carryStyleFor({society,kind,load,seed:u.id})};this.carries.set(u.id,e);if(this.carries.size>PEOPLE_RULES.maxBodies*3){for(const k of this.carries.keys()){if(!this.states.has(k))this.carries.delete(k);if(this.carries.size<=PEOPLE_RULES.maxBodies*2)break;}}}
+  return e.c;
+ }
+ /** Draw a carried load on the bones that carry it (spine for back, shoulder and yoke loads, head for head loads); geometry is shared between people with the same style, cargo, fill bucket and variety. */
+ private drawLoad(c:CarryChoice,tier:LodTier,outfit:RigOutfit,col:THREE.Color){
+  const q=quantizeChoice(c),base=`load|${q.style}|${q.kind}|${q.pieces}|${Math.round(q.variety*6)}|${Math.round(q.load*4)}`;let parts:ReturnType<typeof carryLoadParts>|null=null;
+  for(const b of RIG_BONES){
+   const key=`${base}|t${tier}|${b}`;let v=this.variants.get(key);
+   if(!v){
+    parts??=carryLoadParts(q,hashSeed(base));const list=parts[b];if(!list||!list.some(p=>p.lod>=tier))continue;
+    v=this.variant(key,()=>toGeometry(list,RIG_PIVOTS[b],outfit.colors,tier),true)??undefined;if(!v)continue;
+   }
+   mul(_w,_u,this.matrices[b]);this.push(v,_w,col);
+  }
+ }
+
  /** Draw one person (or a corpse when `pose` is given). `scale` is the legacy body scale so the rig matches the old size. Returns false if not drawn. */
- write(u:UnitLike,scale:readonly [number,number,number],bob:number,brightness:number,tintHue:number,override?:{pose:Pose;sink:number;outfit?:RigOutfit;cls?:BodyClass;/** held items to show with a review pose (render sheets) */items?:{itemR?:ItemId;itemL?:ItemId}}){
+ write(u:UnitLike,scale:readonly [number,number,number],bob:number,brightness:number,tintHue:number,override?:{pose:Pose;sink:number;outfit?:RigOutfit;cls?:BodyClass;/** held items to show with a review pose (render sheets) */items?:{itemR?:ItemId;itemL?:ItemId};/** a carried load to show with a review pose */carry?:CarryChoice}){
   const w=this.world;if(this.disposed||!w)return false;
   const cls=override?.cls??bodyClassFor(u,w.time);
-  const dx=u.x-this.camera.x,dz=u.z-this.camera.z,dy=u.y-this.camera.y,raw=tierForDistance(Math.hypot(dx,dy,dz)),tier=(override&&raw>1?1:raw) as LodTier;
+  const dx=u.x-this.camera.x,dz=u.z-this.camera.z,dy=u.y-this.camera.y,dist3=Math.hypot(dx,dy,dz),raw=dist3<this.nearLimit?personTierAt(dist3):Math.max(1,personTierAt(dist3)),tier=(override&&raw>1?1:raw) as LodTier;
   const outfit=override?.outfit??this.outfitFor(u,cls,w,tier);
   if(!override)this.stats.tiers[tier]++;
-  let pose:Pose,itemR=outfit.itemR,itemL=outfit.itemL;
-  if(override){pose=override.pose;if(override.items){itemR=override.items.itemR;itemL=override.items.itemL;}}
+  let pose:Pose,itemR=outfit.itemR,itemL=outfit.itemL,carry:CarryChoice|null=null;
+  if(override){pose=override.pose;carry=override.carry??null;if(override.items){itemR=override.items.itemR;itemL=override.items.itemL;}}
   else{
    this.deaths.see(u,w.time,scale[0],outfit.key,cls,{outfit,scale:[scale[0],scale[1],scale[2]]});
+   carry=this.carryOf(u,w,outfit.look?.id??w.identity(u.team).culture.key,!u.haulage&&!u.boat);
    if(tier<2){
     let st=this.states.get(u.id);if(!st){st=newAnimState(u,w.time);this.states.set(u.id,st);}
-    const f=stepAnimator(st,u,{time:w.time,project:w.projectFor(u),fireLit:w.fireLitNear(u),load:w.loadOf(u),farm:w.farmFor(u)});
-    pose=f.pose;if(!itemR&&f.itemR)itemR=f.itemR;if(!itemR&&f.clip==='craft'&&outfit.role==='smith')itemR='hammer';
+    const f=stepAnimator(st,u,{time:w.time,project:w.projectFor(u),fireLit:w.fireLitNear(u),load:w.loadOf(u),farm:w.farmFor(u),carry:carry&&!u.plantingWork?{style:carry.style,mass:carry.mass}:null});
+    pose=f.pose;if(carry&&!CARRY_WORN.has(f.clip))carry=null;if(!itemR&&f.itemR)itemR=f.itemR;if(!itemR&&f.clip==='craft'&&outfit.role==='smith')itemR='hammer';
     if(tier===1)pose=poseAtTier(pose,1);else if(outfit.look&&f.clip!=='row'&&!PEOPLE_RULES.noLife)pose=lifePose(pose,f.clip,w.time,u.id,this.inds.get(u.id)?.ind.age);
    }else pose=NEUTRAL_POSE;
   }
@@ -132,13 +162,14 @@ export class CharacterRigLayer{
   if(tier===2){
    // merged silhouette: neutral pose, drawn through the hips matrix of the neutral rig
    const key=`far|${outfit.key}`,v=this.variant(key,()=>toGeometry(farParts(outfit,w.identity(u.team).culture),[0,0,0],outfit.colors,2));
-   if(!v)return false;this.push(v,_u,col);this.stats.people++;return true;
+   if(!v)return false;this.push(v,_u,col);if(carry)this.drawLoad(carry,2,outfit,col);this.stats.people++;return true;
   }
   for(const b of RIG_BONES){
    const parts=outfit.bones[b],sig=this.sigOf(outfit,tier,b,parts),pivot=RIG_PIVOTS[b];
    const v=this.variant(`t${tier}|${b}|${sig}`,()=>toGeometry(parts,pivot,outfit.colors,tier));if(!v)continue;
    mul(_w,_u,this.matrices[b]);this.push(v,_w,col);
   }
+  if(carry)this.drawLoad(carry,tier,outfit,col);
   for(const [sock,item] of [['itemR',itemR],['itemL',itemL]] as const){
    if(!item)continue;const id=w.identity(u.team),held=w.heldOf?.(u,item)??null,hEra=held?.era??itemEraForAge(w.era),hBucket=conditionBucket(held?.condition??(item==='shield'?outfit.rendered.shieldCondition:undefined));
    const v=this.variant(`t${tier}|${item}|c${hBucket}|${heldKey(item,outfit.look?.id,hEra,outfit.rendered.shield)}|${item==='standard'||item==='shield'?hash(outfit.colors.flag+outfit.colors.flag2+outfit.colors.charge+(outfit.look?.shield??'')+(outfit.rendered.shield??'')+id.culture.flag.division):item==='staff'?hash((outfit.look?.id??'')+outfit.colors.trim):''}`,()=>heldItemGeometry(item,outfit,hEra,tier,CONDITION_BUCKET_MID[hBucket])??toGeometry(itemParts(item,id.culture,outfit.look,{shield:outfit.rendered.shield as never,shieldCondition:outfit.rendered.shieldCondition}),[0,0,0],outfit.colors,tier));

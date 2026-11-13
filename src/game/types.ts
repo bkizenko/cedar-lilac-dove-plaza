@@ -383,6 +383,8 @@ export type Building = {
   penWater?:import('./penWater').PenWater;
   pasture?: {condition:number;feed:number;care:number;initialFeed?:number;feedDelivered?:number;feedConsumed?:number;grazedFood?:number};
   fertility?: number;
+  /** Fraction of the soil washed off this field by erosion (terrain model v2); lowers the harvest by that share. */
+  soilLoss?: number;
   fallowYear?: number;
   cerealProcessingVersion?:1;
   cropType?: CropKind;
@@ -612,6 +614,9 @@ export type GameState = {
   growthPolicy?: "stable" | "welcome" | "eager";
   /** 'graded' = tiered slope model (slopeTiers.ts); absent = the earlier single linear tolerance, so old saves behave as before. */
   slopeModel?: "graded";
+  /** 'v2' = terrain nuance + terraces assigned automatically by slope (slopeNuance.ts, terraceFarming.ts); 'v3' = the same nuance, but hillside farming is ordinary (contour furrows, lower-edge bank) and terraces are an optional upgrade (hillFarming.ts).
+   *  Both need slopeModel 'graded'. Absent = the plain graded tiers (fields refused above 22 degrees). Saves keep the model they were made with. */
+  terrainModel?: "v2" | "v3";
   laborPolicy?: "balanced" | "food" | "build" | "wood" | "stone" | "hunt" | "explore" | "trade";
   conflict?: "quiet" | "balanced" | "dangerous";
   seed: number;
