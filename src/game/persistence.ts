@@ -1,3 +1,4 @@
+import {validDomesticationState} from './domestication';
 import {validCropTrialAnchor} from './cultivation';
 import {validExpeditionProvisions} from './expeditionProvisions';
 import {validPackJourneySupplies} from './packJourneyCare';
@@ -216,7 +217,7 @@ function validateGamePayload(raw: unknown) {
   if(!validFiniteCamps(s)||!validRaidIntents(s)||!validRaidDefense(s)||!validContactState(s)||!validSeaRaiderReturns(s))fail();
   if(!validSocietyRelations(s.societyRelations,s.tribes.length)||!validRivalActivityState(s,s.tribes.length))fail();
   if(s.rivalMissions?.some((m:any)=>m.id>=s.nextId||m.actors.some((a:any)=>a.id>=s.nextId)))fail();
-  if(!validPenWaterState(s)||!validPenBeddingState(s))fail();
+  if(!validPenWaterState(s)||!validPenBeddingState(s)||!validDomesticationState(s))fail();
   if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validMethodRecords(s)||!validMethodRecordPickups(s)||!validMethodRecordTrades(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
   if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s)||!validRouteWear(s)||!validWaystations(s)||!validWonders(s)||!validTerrainInfluence(s)||!validCommanders(s)||!validNaval(s))fail();
   if(!validBoatPractice(s)||!validSailingState(s))fail();

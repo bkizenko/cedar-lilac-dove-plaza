@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {domesticationReport} from '../game/domestication';
 import {useLifecycleAction} from './useLifecycleAction';
 import type {HusbandryCommand} from '../game/husbandryCommands';
 import {penBeddingReport} from '../game/penBedding';
@@ -20,7 +21,7 @@ function HusbandryControlsInner({engine,pen}:{engine:Engine;pen:number}) {
  const action=useLifecycleAction(engine),[feedback,setFeedback]=useState(''),epoch=engine.dispatchEpoch;
  const g=engine.game,b=g.state.buildings.find(b=>b.id===pen&&b.team===0&&b.type==='pen'&&g.finished(b));
  if(!b)return null;
- const animals=penAnimals(g,pen);
+ const animals=penAnimals(g,pen),handling=domesticationReport(g,0);
  const away=(g.state.livestock??[]).filter(a=>a.pen===pen&&a.hp>0&&a.ledBy!==undefined).length;
  const water=b?penWaterReport(g,b):null,bedding=b?penBeddingReport(g,b):null;
  const report=b?penPastureReport(g,b):null,capacity=report?.eligibleCapacity??0;
@@ -48,8 +49,9 @@ function HusbandryControlsInner({engine,pen}:{engine:Engine;pen:number}) {
  const goatPack=packAction('goat','Fit pack harness','2 logs · uses one adult goat'),horsePack=packAction('horse','Train pack horse','Reachable stable · 6 logs · 60s · uses one adult horse'),cattlePack=packAction('cattle','Train draft cattle','Reachable stable · 8 logs · 90s · uses one adult');
  const run=(command:Omit<HusbandryCommand,'kind'|'penId'>)=>{if(engine.disposed||engine.dispatchEpoch!==epoch)return;void action.run(()=>engine.dispatch({kind:'husbandry-order',penId:pen,...command}),reply=>{if(reply.epoch===epoch&&engine.dispatchEpoch===epoch)setFeedback(reply.reason);});};
  return <div className="craft-group"><fieldset className="craft-options" disabled={action.busy} style={{border:0,margin:0,padding:0,minWidth:0}}>
-  <strong>{animals.length} animals · {penPlacesOccupied(g,pen)}/{capacity} pasture places{herdSummary?` · ${herdSummary}`:''}{taming?` · ${taming} coming home`:''}{away?` · ${away} away (places reserved)`:''}</strong>
+  <strong>{animals.length} animals · {penPlacesOccupied(g,pen)}/{capacity} pasture places{herdSummary?` · ${herdSummary}`:''}{taming?` · ${taming} being handled`:''}{away?` · ${away} away (places reserved)`:''}</strong>
   <p>{female} female · {animals.length-female} male · {kids} young</p>
+  {handling.paidAttempts>0&&<details><summary>Handling history</summary><p>Village: {handling.arrivals} home · {handling.refusals} refused · {handling.paidAttempts} attempts</p><p>{handling.baitSpent} food{handling.woodSpent>0?` · ${handling.woodSpent} logs`:""} used for handling · {handling.successes} successful handling attempts</p><ul>{handling.recent.slice(-3).map(r=><li key={`${r.animalId}:${r.attempt}:${r.handlerId}`}>{r.purpose==='pack'?'Pack '+r.species:r.species} · {r.outcome==='refused'?'Refused':r.outcome==='success'?'Handled':'Interrupted'} · {r.paidFood} food used</li>)}</ul></details>}
   <p>Usable pasture {Math.round(report?.usableAreaSquareMeters||0)} m² · Grass {Math.round((b?.pasture?.condition??1)*100)}%</p>
   <p>Stored plant feed {(b?.pasture?.feed||0).toFixed(1)} / {Math.round(report?.feedCapacity||0)} · {report?.storedFeedSeconds===Infinity?'no demand':`${Math.floor((report?.storedFeedSeconds||0)/60)} min at current herd size`}</p>
   {water?.enabled&&<p>Drinking water {water.liters.toFixed(1)} / {water.capacity} L · {(water.demand*60).toFixed(1)} L/min{water.inTransit>0?` · ${water.inTransit.toFixed(1)} L carried`:""}{water.thirsty?` · ${water.thirsty} thirsty`:""}</p>}
