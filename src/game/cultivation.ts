@@ -1,7 +1,8 @@
 import {siteBlocksRegrowth} from './sitePreparation';
-import {campAnchor,supplyDrops,supplyApproach,type SupplyDrop} from './campAnchor';
+import {campAnchor,supplyApproach,type SupplyDrop} from './campAnchor';
 import {hasTaskCommitment} from './workCommitments';
 import type {Game} from "./sim";
+import type {HandoverAnchor} from './communityHandoverTypes';
 import type {CropKind,Unit,ResourceNode,Building,GameState} from "./types";
 import {HABITATS,habitatAt,habitatKindAt,soilQuality} from "./ecology";
 import {calendar,crop,isDependent,reserveSeconds} from "./settlement";
@@ -76,13 +77,34 @@ export function cultivationIssue(g:Game,team=0){
 }
 /** A settlement uses its primary completed hearth; a nomadic household uses
  * its real finite communal cache. Neither choice creates architecture or stock. */
-export function cropTrialWorkplace(g:Game,team=0):SupplyDrop|null {
+export function cropTrialCache(g:Game,team=0):SupplyDrop|null {
   const origin=g.campOf(team),hall=g.state.buildings.filter(b=>b.team===team&&b.type==="townhall"&&g.finished(b)).sort((a,b)=>Math.hypot(a.x-origin.x,a.z-origin.z)-Math.hypot(b.x-origin.x,b.z-origin.z)||a.id-b.id)[0];
   return hall||campAnchor(g,team);
 }
+/** A paid seed plot is a workplace, NOT another communal treasury. A camp
+ * may move later; only real work at this same plot retains its paid progress. */
+function anchoredTrialWorkplace(g:Game,team:number,a:HandoverAnchor):SupplyDrop|null{
+ if(a.kind==='building')return g.state.buildings.find(b=>b.id===a.id&&b.team===team&&b.x===a.x&&b.z===a.z&&g.finished(b))||null;
+ return {kind:'camp',team,x:a.x,y:g.height(a.x,a.z),z:a.z,radius:3};
+}
+export function cropTrialWorkplace(g:Game,team=0):SupplyDrop|null{
+ const a=g.tribe(team).cropTrial?.anchor;return a?anchoredTrialWorkplace(g,team,a):cropTrialCache(g,team);
+}
+export function cropTrialWorkplaceIssue(g:Game,team=0){
+ return g.tribe(team).cropTrial?.anchor&&!cropTrialWorkplace(g,team)?'The original paid seed-trial building is unavailable; progress remains at its original site':null;
+}
+export function validCropTrialAnchor(s:GameState,a:unknown):a is HandoverAnchor{
+ if(!a||typeof a!=='object'||Array.isArray(a))return false;const p=a as HandoverAnchor,half=(s.worldOptions?.size||1040)/2+32;
+ if(Object.keys(p).some(k=>!['kind','id','x','y','z'].includes(k))||!['camp','building'].includes(p.kind)||![p.x,p.y,p.z].every(Number.isFinite)||Math.abs(p.x)>half||Math.abs(p.z)>half)return false;
+ if(p.kind==='camp')return p.id===undefined;
+ if(!Number.isSafeInteger(p.id)||p.id!<1||p.id!>=s.nextId)return false;
+ const b=s.buildings.find(b=>b.id===p.id);if(b)return b.x===p.x&&b.z===p.z;
+ // A genuinely destroyed building remains a valid blocked historical site;
+ // an existing other asset's id cannot masquerade as the original building.
+ return !s.units.some(u=>u.id===p.id)&&!s.wildlife.some(a=>a.id===p.id)&&!(s.livestock||[]).some(a=>a.id===p.id)&&!(s.boats||[]).some(a=>a.id===p.id);
+}
 export function inheritedTrialWorkplace(g:Game,team:number,q:NonNullable<ReturnType<Game['tribe']>['inheritedCropTrials']>[number]):SupplyDrop|null{
- if(q.anchor.kind==='building')return g.state.buildings.find(b=>b.id===q.anchor.id&&b.team===team&&g.finished(b))||null;
- return supplyDrops(g,team).find(p=>p.kind==='camp'&&Math.hypot(p.x-q.anchor.x,p.z-q.anchor.z)<.01)||null;
+ return anchoredTrialWorkplace(g,team,q.anchor);
 }
 const inheritedActors=(g:Game,team:number)=>new Set((g.tribe(team).inheritedCropTrials||[]).flatMap(q=>q.actorIds));
 export function beginInheritedCropTrial(g:Game,handoverId:number,unitId?:number,team=0){
@@ -104,8 +126,7 @@ export function beginCropTrial(g:Game,kind:CropKind,team=0,automatic=false,unitI
   if(!t.cropTrial){
     if((t.cropSamples?.[kind]||0)<4)return false;
     t.cropSamples![kind]=(t.cropSamples![kind]||0)-4;
-    const home=g.campOf(team);
-    t.cropTrial={kind,progress:0,duration:30+Math.round((1-soilQuality(g,home.x,home.z))*15)};
+    t.cropTrial={kind,progress:0,duration:30+Math.round((1-soilQuality(g,workplace.x,workplace.z))*15),anchor:{kind:workplace.kind==='camp'?'camp':'building',...(workplace.kind==='camp'?{}:{id:workplace.id}),x:workplace.x,y:workplace.y,z:workplace.z}};
   }
   g.interruptMission(u);for(const q of t.inheritedCropTrials||[])q.actorIds=q.actorIds.filter(id=>id!==u.id);u.studyCrop=kind;u.node=null;u.target=null;u.order="hold";u.workReason=`Testing cultivation of ${kind}`;return true;
 }
@@ -114,7 +135,7 @@ export function cropStudyAI(g:Game,u:Unit,dt:number){
   const t=g.tribe(u.team),inherited=t.inheritedCropTrials?.find(q=>q.actorIds.includes(u.id)),trial=inherited?.trial||t.cropTrial;
   if(u.order!=="hold"||!trial||trial.kind!==u.studyCrop||isDependent(g,u)) {u.studyCrop=undefined;return false;}
   const workplace=inherited?inheritedTrialWorkplace(g,u.team,inherited):cropTrialWorkplace(g,u.team);
-  if(!workplace){u.studyCrop=undefined;u.order="idle";return false;}
+  if(!workplace){if(inherited?.anchor||t.cropTrial?.anchor){u.workReason="Seed trial paused — original paid building is missing, unfinished or belongs to another community";return true;}u.studyCrop=undefined;u.order="idle";return false;}
   const spot=supplyApproach(g,u,workplace),place=workplace.kind==='camp'?'camp seed patch':'hearth';
   if(!spot){u.workReason=`Cultivation trial needs a reachable ${place}`;return true;}
   if(Math.hypot(u.x-spot.x,u.z-spot.z)>1){u.tx=spot.x;u.tz=spot.z;g.steer(u,dt);u.workReason=`Bringing cultivation work to the ${place}`;return true;}
