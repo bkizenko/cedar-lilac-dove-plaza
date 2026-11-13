@@ -1,0 +1,442 @@
+{
+  "release": "2026-11-13T02-46-35-813Z-054b680",
+  "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T02-46-35-813Z-054b680",
+  "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T01-30-46-182Z-ad6eece",
+  "commit": "054b6809b866f22c9ada59e91a706175e58b92e3",
+  "retained": {
+    "linked": 1452,
+    "copied": 0,
+    "existing": 14
+  },
+  "verifiedLivePorts": [
+    8086,
+    8101
+  ],
+  "scopedChecks": {
+    "passed": 46,
+    "total": 46,
+    "native": {
+      "passed": 42,
+      "groups": {
+        "drawDistance": 7,
+        "fillerForest": 9,
+        "characterLook": 5,
+        "animalOrdersPhysicalLoadingHunting": 5,
+        "ownedHusbandryCommandsAndTypedCapture": 5,
+        "packedFoodCustody": 9,
+        "neighbourMemoryRuntime": 1,
+        "diplomacyMemoryUI": 1
+      }
+    },
+    "built": {
+      "passed": 4,
+      "total": 4,
+      "husbandry": {
+        "passed": 2,
+        "total": 2,
+        "scope": "Actual owned earned horse/pen public typed queue/cancel/physical pasture return, then real goat-search request/persistence/cancellation with finite supplies. No authored goods, actors, positions, fog, unearned goat-capture completion, screenshots or FPS/full-gate claims.",
+        "pasture": {
+          "pen": 6363,
+          "handler": 6223,
+          "animal": 6354,
+          "queueCancelTyped": true,
+          "sameAnimalPhysicalReturn": true,
+          "samePaidHarness": true,
+          "strictDurable": true
+        },
+        "captureAttempt": {
+          "animalId": 6296,
+          "queue": {
+            "requestedAt": 320.1999999999904,
+            "nextAttemptAt": 325.1999999999904,
+            "state": "complete",
+            "searchedCells": [
+              10685,
+              10690,
+              11645,
+              11650,
+              11655
+            ],
+            "animal": 6296
+          },
+          "reason": []
+        },
+        "search": {
+          "capturedOriginalWildId": 6296,
+          "actualPhysicalCaptureEscortPen": true,
+          "persistentRequest": true,
+          "canceledSecondRequestTyped": true,
+          "retainedPaidTasks": 0,
+          "retainedScoutPackets": 1
+        },
+        "commands": [
+          {
+            "action": "return-pack",
+            "penId": 6363,
+            "unitId": 6223,
+            "accepted": true
+          },
+          {
+            "action": "cancel-return",
+            "penId": 6363,
+            "unitId": 6223,
+            "accepted": true
+          },
+          {
+            "action": "return-pack",
+            "penId": 6363,
+            "unitId": 6223,
+            "accepted": true
+          },
+          {
+            "action": "search",
+            "penId": 6363,
+            "accepted": true
+          },
+          {
+            "action": "search",
+            "penId": 6363,
+            "accepted": true
+          },
+          {
+            "action": "cancel-search",
+            "penId": 6363,
+            "accepted": true
+          }
+        ],
+        "inputUnchanged": true,
+        "errors": []
+      },
+      "graphics": {
+        "passed": 2,
+        "total": 2,
+        "profiles": {
+          "low:low": {
+            "quality": "low",
+            "drawDistance": "low",
+            "effectiveDistance": "low",
+            "memory": {
+              "geometries": 410,
+              "textures": 33
+            },
+            "programs": 98,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 157,
+              "triangles": 1230711,
+              "lines": 0,
+              "points": 24,
+              "geometries": 410,
+              "textures": 33,
+              "programs": 98
+            }
+          },
+          "low:medium": {
+            "quality": "low",
+            "drawDistance": "medium",
+            "effectiveDistance": "medium",
+            "memory": {
+              "geometries": 410,
+              "textures": 33
+            },
+            "programs": 98,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 161,
+              "triangles": 1211655,
+              "lines": 0,
+              "points": 24,
+              "geometries": 410,
+              "textures": 33,
+              "programs": 98
+            }
+          },
+          "low:high": {
+            "quality": "low",
+            "drawDistance": "high",
+            "effectiveDistance": "high",
+            "memory": {
+              "geometries": 410,
+              "textures": 33
+            },
+            "programs": 98,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 161,
+              "triangles": 1226243,
+              "lines": 0,
+              "points": 24,
+              "geometries": 410,
+              "textures": 33,
+              "programs": 98
+            }
+          },
+          "low:ultra": {
+            "quality": "low",
+            "drawDistance": "ultra",
+            "effectiveDistance": "ultra",
+            "memory": {
+              "geometries": 410,
+              "textures": 33
+            },
+            "programs": 98,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 161,
+              "triangles": 1250195,
+              "lines": 0,
+              "points": 24,
+              "geometries": 410,
+              "textures": 33,
+              "programs": 98
+            }
+          },
+          "med:low": {
+            "quality": "med",
+            "drawDistance": "low",
+            "effectiveDistance": "low",
+            "memory": {
+              "geometries": 411,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 212,
+              "triangles": 1389320,
+              "lines": 0,
+              "points": 24,
+              "geometries": 411,
+              "textures": 46,
+              "programs": 105
+            }
+          },
+          "med:medium": {
+            "quality": "med",
+            "drawDistance": "medium",
+            "effectiveDistance": "medium",
+            "memory": {
+              "geometries": 411,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 216,
+              "triangles": 1372296,
+              "lines": 0,
+              "points": 24,
+              "geometries": 411,
+              "textures": 46,
+              "programs": 105
+            }
+          },
+          "med:high": {
+            "quality": "med",
+            "drawDistance": "high",
+            "effectiveDistance": "high",
+            "memory": {
+              "geometries": 411,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 216,
+              "triangles": 1399124,
+              "lines": 0,
+              "points": 24,
+              "geometries": 411,
+              "textures": 46,
+              "programs": 105
+            }
+          },
+          "med:ultra": {
+            "quality": "med",
+            "drawDistance": "ultra",
+            "effectiveDistance": "ultra",
+            "memory": {
+              "geometries": 411,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 216,
+              "triangles": 1403732,
+              "lines": 0,
+              "points": 24,
+              "geometries": 411,
+              "textures": 46,
+              "programs": 105
+            }
+          },
+          "high:low": {
+            "quality": "high",
+            "drawDistance": "low",
+            "effectiveDistance": "low",
+            "memory": {
+              "geometries": 411,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 225,
+              "triangles": 1462686,
+              "lines": 0,
+              "points": 24,
+              "geometries": 411,
+              "textures": 46,
+              "programs": 105
+            }
+          },
+          "high:medium": {
+            "quality": "high",
+            "drawDistance": "medium",
+            "effectiveDistance": "medium",
+            "memory": {
+              "geometries": 411,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 229,
+              "triangles": 1446022,
+              "lines": 0,
+              "points": 24,
+              "geometries": 411,
+              "textures": 46,
+              "programs": 105
+            }
+          },
+          "high:high": {
+            "quality": "high",
+            "drawDistance": "high",
+            "effectiveDistance": "high",
+            "memory": {
+              "geometries": 411,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 229,
+              "triangles": 1472850,
+              "lines": 0,
+              "points": 24,
+              "geometries": 411,
+              "textures": 46,
+              "programs": 105
+            }
+          },
+          "high:ultra": {
+            "quality": "high",
+            "drawDistance": "ultra",
+            "effectiveDistance": "ultra",
+            "memory": {
+              "geometries": 411,
+              "textures": 46
+            },
+            "programs": 105,
+            "itemPrograms": 2,
+            "linked": true,
+            "metrics": {
+              "calls": 229,
+              "triangles": 1477458,
+              "lines": 0,
+              "points": 24,
+              "geometries": 411,
+              "textures": 46,
+              "programs": 105
+            }
+          }
+        },
+        "picking": {
+          "pickedId": 2759,
+          "sourceCandidateId": 2759,
+          "kind": "tree",
+          "actualAuthoritativeIdentity": true,
+          "sourceCount": 2
+        },
+        "boundedPausedResources": true,
+        "classic": {
+          "style": "village",
+          "map": "classic",
+          "quality": "low",
+          "chosenDistance": "high",
+          "effectiveDistance": "high",
+          "strictDurable": true,
+          "optionalFieldsUnchanged": true
+        },
+        "originalUnchanged": true,
+        "errors": [],
+        "shaderErrors": []
+      }
+    }
+  },
+  "additionalQueueHandoffRegression": {
+    "passed": 11,
+    "total": 11,
+    "scope": "Current frozen source: bounded waiting/retry/exhaustion, protected paid/custody workers, no hidden-target selection, physical unload/search/handoff and strict ownership. Supporting regression, not new frozen-gate credit."
+  },
+  "compiler": "PASS final source full tsc",
+  "build": "PASS exact frozen054b6809",
+  "oldAssetNetwork": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-13T02-46-35-813Z-054b680",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "frozenAcceptance": {
+    "baseline": "hearthwild-first-release-gates-v1",
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  },
+  "changes": [
+    "Pen buttons dispatch validated owned commands with lifecycle/epoch guards, busy protection and feedback; foreign pen private supplies are not rendered.",
+    "Scout capture pays from its exact typed journey lots; ordinary home capture removes normalized lots. Valid transported tamers retain actual land gear only with their valid expedition.",
+    "Actual samehorse6354 returns to originalpen6363 with harness unchanged; realpublicSearch scouts/captures/escorts wildgoat6296 insidepen and cancellation preserves paid provisions.",
+    "Approved Claude draw-distance/filler/horizon/condition detail and neighbour memory source integrated; settings persist without modifying saved physical state."
+  ],
+  "limits": [
+    "No successful foreign pack-trade/interception or fullW1/N6 acceptance claim.",
+    "Private paused6.25Hz presentation is not100resident frame-time/FPS evidence.",
+    "Colour-grading equivalence/full visual fidelity and mounted-combat/armor acquisition are not established here.",
+    "Later Claude civic, society and additional armor source onmain beyond054b is outside this artifact."
+  ]
+}
