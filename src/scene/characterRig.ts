@@ -116,7 +116,7 @@ export function rigMeshData(parts:readonly RigPart[],pivot:readonly number[],col
 export type RigInput={type:UnitKind;bodyClass:BodyClass;seed:number;gear:RigGear;culture:Culture;season:Season;era?:number;/** people v2: the society's PeopleLook, this person's Individual and role. Absent = the first rig's culture-colour look (kept as ?people=rig1). */look?:PeopleLook;individual?:Individual;role?:Role;unitId?:number;/** TEAM_STYLE[team].unit: the readable team marker on bare bodies */teamColor:string;/** armorAffiliationColor(g,team) for the armor stitching */affiliation?:string};
 export type RigOutfit={key:string;bones:Record<RigBone,RigPart[]>;colors:Record<RigSlot,string>;itemR?:ItemId;itemL?:ItemId;bodyClass:BodyClass;
  /** people v2 only */look?:PeopleLook;role?:Role;ind?:Individual;frame?:{height:number;build:number;dirt:number};
- rendered:{garment?:GarmentId;cut?:Dress['cut'];headwear?:Dress['headwear'];insignia?:UnitKind;armor?:'paddedTorso';helmet?:string;shield?:string;weapon?:'spear'|'bow'|'blade';standard?:boolean};ignored:string[];fit:BodyClass};
+ rendered:{garment?:GarmentId;cut?:Dress['cut'];headwear?:Dress['headwear'];insignia?:UnitKind;armor?:'paddedTorso';helmet?:string;shield?:string;shieldCondition?:number;weapon?:'spear'|'bow'|'blade';standard?:boolean};ignored:string[];fit:BodyClass};
 const SKINS=['#d8a577','#c48a5c','#a8704a','#8a5a3c'];
 const rel=(p:Part)=>p;
 const R=(slot:RigSlot,shape:Part['shape'],size:[number,number,number],pos:[number,number,number],lod:LodTier,rot?:[number,number,number],sides?:number,onlyFrom?:LodTier):RigPart=>({...part(shape,'cloth',size,pos,lod,rot,sides),slot,...(onlyFrom!==undefined?{onlyFrom}:{})});
@@ -189,7 +189,7 @@ const L=(slot:RigSlot,a:[number,number,number],b:[number,number,number],t:number
  const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],len=Math.hypot(dx,dy,dz),pitch=Math.atan2(Math.hypot(dx,dz),dy),yaw=Math.atan2(dx,dz);
  return {...part('box','cloth',[t,len,t],a,lod,[pitch,yaw,0]),slot};
 };
-export function itemParts(item:ItemId,culture?:Culture,look?:PeopleLook,opts?:{shield?:ShieldKind}):RigPart[]{
+export function itemParts(item:ItemId,culture?:Culture,look?:PeopleLook,opts?:{shield?:ShieldKind;shieldCondition?:number}):RigPart[]{
  switch(item){
   case 'hammer':return hammerParts('#7a756d');
   case 'staff':return staffParts(look??({id:'x'} as PeopleLook),{accent:culture?.palette.accent??'#c9a23c',trim:culture?.palette.trim??'#c9a23c',metal:'#b08a3a'});
@@ -201,7 +201,7 @@ export function itemParts(item:ItemId,culture?:Culture,look?:PeopleLook,opts?:{s
   case 'hoe':return [R('wood','cylinder',[.04,.95,.035],[0,-.25,0],2,undefined,5),R('wood','box',[.04,.2,.14],[0,.62,.05],2,[-.5,0,0])];
   case 'rod':return [L('wood',[0,-.25,0],[0,1.1,.28],.03,2),L('trim',[0,1.1,.28],[0,.55,.62],.012,0)];
   case 'bow':return [L('wood',[0,-.55,-.02],[0,-.27,.09],.04,1),L('wood',[0,-.27,.09],[0,0,.11],.04,1),L('wood',[0,0,.11],[0,.27,.09],.04,1),L('wood',[0,.27,.09],[0,.55,-.02],.04,1),L('trim',[0,-.55,-.02],[0,.55,-.02],.012,0),R('wood','box',[.045,.14,.045],[0,-.07,.09],2)];
-  case 'shield':{if(look&&culture)return shieldParts(look.shield,{fields:culture.flag.fields,chargeColor:culture.flag.chargeColor,division:culture.flag.division},opts?.shield??'woodShield');const f=(culture?.flag.fields[0]??'#c0a060') as string;void f;return [R('flag','cylinder',[.5,.05,.5],[-.12,.1,.1],2,[Math.PI/2,0,0],9),R('metal','sphere',[.12,.12,.08],[-.12,.0,.14],1,[Math.PI/2,0,0]),R('trim','cylinder',[.52,.02,.52],[-.12,.1,.095],1,[Math.PI/2,0,0],9)];}
+  case 'shield':{if(look&&culture)return shieldParts(look.shield,{fields:culture.flag.fields,chargeColor:culture.flag.chargeColor,division:culture.flag.division},opts?.shield??'woodShield',undefined,opts?.shieldCondition);const f=(culture?.flag.fields[0]??'#c0a060') as string;void f;return [R('flag','cylinder',[.5,.05,.5],[-.12,.1,.1],2,[Math.PI/2,0,0],9),R('metal','sphere',[.12,.12,.08],[-.12,.0,.14],1,[Math.PI/2,0,0]),R('trim','cylinder',[.52,.02,.52],[-.12,.1,.095],1,[Math.PI/2,0,0],9)];}
   case 'standard':return [R('wood','cylinder',[.04,2.5,.04],[0,-.7,0],2,undefined,5),R('metal','sphere',[.1,.1,.1],[0,1.8,0],2),R('flag','box',[.62,.5,.03],[.31,1.26,0],2),R('flag2','box',[.62,.1,.034],[.31,1.62,0],2),R('flag2','box',[.62,.07,.034],[.31,1.3,0],2),R('charge','box',[.18,.18,.036],[.31,1.38,0],2,[0,0,Math.PI/4]),R('flag','box',[.2,.3,.03],[.72,1.34,0],1),R('flag2','box',[.2,.3,.03],[.92,1.38,0],0)];
  }
 }
@@ -212,7 +212,7 @@ export const TOOL_FOR_CLIP:Partial<Record<string,ItemId>>={chop:'axe',quarry:'pi
 /** One merged static silhouette for far tier: every bone at rest, plus item parts in their stance. */
 export function farParts(o:RigOutfit,culture?:Culture):RigPart[]{
  const out:RigPart[]=[];for(const b of RIG_BONES)out.push(...o.bones[b]);
- const place=(item:ItemId|undefined,at:readonly number[],tilt=0)=>{if(!item)return;for(const p of itemParts(item,culture,o.look,{shield:o.rendered.shield as ShieldKind|undefined}))out.push({...p,pos:[p.pos[0]+at[0],p.pos[1]*Math.cos(tilt)+at[1],p.pos[2]+at[2]+p.pos[1]*Math.sin(tilt)]});};
+ const place=(item:ItemId|undefined,at:readonly number[],tilt=0)=>{if(!item)return;for(const p of itemParts(item,culture,o.look,{shield:o.rendered.shield as ShieldKind|undefined,shieldCondition:o.rendered.shieldCondition}))out.push({...p,pos:[p.pos[0]+at[0],p.pos[1]*Math.cos(tilt)+at[1],p.pos[2]+at[2]+p.pos[1]*Math.sin(tilt)]});};
  place(o.itemR,[.21,.6,.1],0);place(o.itemL,[-.22,.64,.08],0);return out;
 }
 /** `near/mid/far` are the ceiling over every kit (leader, helmet, shield, armor, richest trim); `typical` is what an ordinary garment-and-weapon person must fit. */
@@ -221,7 +221,7 @@ const tri=(parts:readonly RigPart[],tier:LodTier)=>parts.filter(p=>p.lod>=tier&&
 /** Triangles one person costs at a tier, items included (far uses the merged silhouette). */
 export function rigTriangles(o:RigOutfit,tier:LodTier,culture?:Culture):number{
  if(tier===2)return tri(farParts(o,culture),2);
- return RIG_BONES.reduce((n,b)=>n+tri(o.bones[b],tier),0)+[o.itemR,o.itemL].reduce((n,i)=>n+(i?tri(itemParts(i,culture,o.look,{shield:o.rendered.shield as ShieldKind|undefined}),tier):0),0);
+ return RIG_BONES.reduce((n,b)=>n+tri(o.bones[b],tier),0)+[o.itemR,o.itemL].reduce((n,i)=>n+(i?tri(itemParts(i,culture,o.look,{shield:o.rendered.shield as ShieldKind|undefined,shieldCondition:o.rendered.shieldCondition}),tier):0),0);
 }
 export const rigVertices=(o:RigOutfit,tier:LodTier,culture?:Culture)=>rigTriangles(o,tier,culture)*3;
 /** Gear-only triangles (no body, no items): what the old appearance budget measured. */

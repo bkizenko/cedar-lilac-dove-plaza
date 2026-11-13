@@ -79,7 +79,7 @@ export function helmetParts(c:KitCtx,kind:HelmKind,style:HelmStyle,leader:boolea
 export type ShieldKind='woodShield'|'hideShield'|'bronzeShield';
 const SHIELD_BASE:Record<ShieldKind,string>={woodShield:'#8a6a42',hideShield:'#b3946c',bronzeShield:'#b48e3e'};
 /** A shield face painted from the society's flag (division, colours, charge), so the motif matches banner and insignia. */
-export function shieldParts(shape:ShieldShape,flag:{fields:readonly string[];chargeColor:string;division:string},kind:ShieldKind,metal='#8a8478'):RigPart[]{
+export function shieldParts(shape:ShieldShape,flag:{fields:readonly string[];chargeColor:string;division:string},kind:ShieldKind,metal='#8a8478',cond?:number):RigPart[]{
  const f0=flag.fields[0]??SHIELD_BASE[kind],f1=flag.fields[1]??f0,ink=flag.chargeColor,rim=kind==='bronzeShield'?'#b48e3e':'#5a4a38',cx=-.12,cy=.1,z0=.09;
  const R=(col:string,s:Parameters<typeof Q>[1],size:[number,number,number],pos:[number,number,number],lod:0|1|2,rot?:[number,number,number],sides?:number)=>Q(col,s,size,pos,lod,rot,sides);
  const o:RigPart[]=[];const H=Math.PI/2,div=flag.division,vert=/vertical|triband-v/.test(div),hor=/horizontal|triband-h/.test(div),diag=/diagonal|saltire|quarters|canton|pall|checker/.test(div);
@@ -96,6 +96,10 @@ export function shieldParts(shape:ShieldShape,flag:{fields:readonly string[];cha
   case 'tower':o.push(R(f0,'box',[.4,.8,.05],[cx,cy-.25,z0],2),R(f0,'cylinder',[.4,.05,.4],[cx,cy+.55,z0],1,[H,0,0],8),R(rim,'box',[.42,.035,.056],[cx,cy-.25,z0],1),R(rim,'box',[.42,.035,.056],[cx,cy+.53,z0],1),R(metal,'sphere',[.1,.1,.06],[cx,cy+.1,z0+.06],1));motif(.3,.7,cy-.2);break;
   case 'wicker':o.push(R(mix(f0,'#b89a62',.5),'cylinder',[.5,.05,.5],[cx,cy,z0],2,[H,0,0],9),...[.42,.32,.2].map((d,i)=>R(i%2?'#8a6a42':'#c8aa70','cylinder',[d,.012,d],[cx,cy,z0+.032],0,[H,0,0],9)),R(metal,'sphere',[.12,.12,.07],[cx,cy-.02,z0+.06],1,[H,0,0]),R(rim,'cylinder',[.52,.022,.52],[cx,cy,z0],1,[H,0,0],9));break;
  }
+ if(cond!==undefined&&Number.isFinite(cond)&&cond<.75){const wear=Math.min(1,(.75-Math.max(0,cond))/.75),n=Math.min(6,1+Math.floor(wear*6)),dk=shade(f0,.55),lt=shade(f0,1.22);
+  // cosmetic only: scuffs and a rubbed rim, then a chipped gap and a split plank when badly worn (near LOD, bounded)
+  for(let i=0;i<n;i++){const h=hashSeed(`shield-wear-${kind}-${shape}-${i}`),u=(h%97)/97,v=((h>>>7)%89)/89;o.push(R(i%3===2?lt:dk,'box',[.05+u*.07,.03+v*.04,.012],[cx+(u-.5)*.3,cy+(v-.5)*.3,z0+.036],0,[0,0,(u-.5)*1.4]));}
+  if(wear>.55)o.push(R('#1c1712','box',[.1,.09,.02],[cx+.12,cy+.14,z0+.04],0,[0,0,.4]),R(dk,'box',[.012,.3,.012],[cx-.06,cy,z0+.04],0,[0,0,.12]));}
  return o;
 }
 export function hammerParts(metal:string):RigPart[]{return [Q('#8a5a2c','cylinder',[.04,.5,.035],[0,-.15,0],2,undefined,5),Q(metal,'box',[.07,.1,.16],[0,.35,0],2),Q(shade(metal,.8),'box',[.05,.06,.05],[0,.35,-.1],1)];}
@@ -176,12 +180,12 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
  }
  // sockets
  const itemR=type==='leader'?'standard':type==='spearman'?'spear':type==='swordsman'?'blade':type==='warden'?'axe':role==='priest'?'staff':undefined,itemL=type==='archer'||type==='ranger'?'bow':gear.shield&&gear.shield.condition>0?'shield':undefined;
- if(itemR)rendered.weapon=itemR==='spear'?'spear':itemR==='blade'?'blade':undefined;if(itemL==='bow')rendered.weapon='bow';if(itemR==='standard')rendered.standard=true;if(itemL==='shield')rendered.shield=gear.shield!.kind;
+ if(itemR)rendered.weapon=itemR==='spear'?'spear':itemR==='blade'?'blade':undefined;if(itemL==='bow')rendered.weapon='bow';if(itemR==='standard')rendered.standard=true;if(itemL==='shield'){rendered.shield=gear.shield!.kind;if(gear.shield!.condition<.75)rendered.shieldCondition=gear.shield!.condition;}
  const colors={} as Record<RigSlot,string>;
  const garmentColor=pal.cloth,trimColor=pal.trim;
  Object.assign(colors,{garment:garmentColor,trim:trimColor,leather:pal.leather,padding:PADDED_BASE[look.armor.padded],stitch:input.affiliation??'#c2b080',wood:'#8a5a2c',metal:pal.metal,hair:pal.hair,skin:pal.skin,body:garmentColor,cloak:mix(flag.fields[0] as string,'#000000',.12),flag:flag.fields[0] as string,flag2:flag.fields[1] as string,charge:flag.chargeColor,team:input.teamColor,boot:shade(pal.leather,.6)});
  for(const k of SLOT_KINDS)if(!colors[k])colors[k]='#808080';
- const key=['rig2',look.id,bodyClass,type,role,rendered.garment??'-',item??'-',cut.torso,cut.mantle,hk,rendered.armor?look.armor.padded+(gear.armor?.kind??''):'-',rendered.helmet??'-',rendered.shield??'-',ind.skinTone,ind.hairColour,ind.hair,ind.beard,ind.jewel.join('+'),ind.mark?ind.mark.pattern+ind.mark.sites.join(''):'-',ind.patches,ind.variant,ind.hand,season,rich,culture.key,input.teamColor,input.affiliation??'-',g?Math.round((g.condition)*4):'-',wearTier(gear.armor?.condition),wearTier(gear.helmet?.condition)].join('|');
+ const key=['rig2',look.id,bodyClass,type,role,rendered.garment??'-',item??'-',cut.torso,cut.mantle,hk,rendered.armor?look.armor.padded+(gear.armor?.kind??''):'-',rendered.helmet??'-',rendered.shield??'-',ind.skinTone,ind.hairColour,ind.hair,ind.beard,ind.jewel.join('+'),ind.mark?ind.mark.pattern+ind.mark.sites.join(''):'-',ind.patches,ind.variant,ind.hand,season,rich,culture.key,input.teamColor,input.affiliation??'-',g?Math.round((g.condition)*4):'-',wearTier(gear.armor?.condition),wearTier(gear.helmet?.condition),itemL==='shield'?wearTier(gear.shield?.condition):'-'].join('|');
  void CLS_HEIGHT;void hashSeed;void lookForSkin;void individualFor;
  return {key,bones,colors,itemR,itemL,bodyClass,rendered,ignored,fit:bodyClass,look,role,ind,frame:{height:look.body.height*ind.height,build:ind.build,dirt:ind.dirt}} as RigOutfit;
 }

@@ -108,8 +108,8 @@ async function wear() {
   const parts = [];
   for (const skin of ['civ:aureline', 'civ:steppan']) {
     const r = await shoot(`wear-${skin}`, { width: 1600, height: 470, season: 'summer', era: 3, seconds: .5, cam: { pos: [0, 1.6, 4.6], target: [0, 1.0, 0], fov: 31 },
-      people: [.95, .7, .5, .3, .1].map((c, i) => P(skin, 'spearman', (i - 2) * 1.0, 0, { id: 400 + i * 5, facing: .25 }, 'summer', { armor: { kind: i % 2 ? 'scaleCuirass' : 'paddedTorso', condition: c }, helmet: { kind: i % 2 ? 'bronzeHelm' : 'leatherCap', condition: c } })) });
-    parts.push({ label: `${skin}: owned armor + helmet wear by condition .95 .7 .5 .3 .1 (cosmetic; near LOD only)`, img: r.out });
+      people: [.95, .7, .5, .3, .1].map((c, i) => P(skin, 'spearman', (i - 2) * 1.0, 0, { id: 400 + i * 5, facing: .25 }, 'summer', { armor: { kind: i % 2 ? 'scaleCuirass' : 'paddedTorso', condition: c }, helmet: { kind: i % 2 ? 'bronzeHelm' : 'leatherCap', condition: c }, shield: { kind: i % 2 ? 'bronzeShield' : 'woodShield', condition: c } })) });
+    parts.push({ label: `${skin}: owned armor + helmet + shield wear by condition .95 .7 .5 .3 .1 (cosmetic; near LOD only)`, img: r.out });
   }
   await stack(path.join(outDir, 'wear.png'), parts);
 }

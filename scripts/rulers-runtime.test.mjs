@@ -459,3 +459,22 @@ test('neighbourMemory: acts between two houses fade with a ten-year half-life, t
  assert.ok(neighbourMemory(g,0,2).every(x=>x.kind!=='foster'),'a ward of house 1 is not a memory with house 2');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;assert.deepEqual(neighbourMemory(old,0,1),[]);
 });
+
+test('AUD-SOC-SAVE-ROUNDTRIP: a multi-unit founding party survives encode/decode with units, leader, timber, rations and position unchanged; no duplicates, no teleport',async()=>{
+ const {encodeGame,decodeGame}=await import('../src/game/persistence.ts');
+ const {expansionParties}=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();const t=g.tribe(1);
+ const us=g.state.units.filter(u=>u.team===1&&u.hp>0).slice(0,3);assert.ok(us.length>=2);
+ const dx=us[0].x+40,dz=us[0].z+10;
+ us.forEach((u,i)=>{u.foundingJourney={x:dx,z:dz,leader:i===0,timber:20,...(i===0?{rations:6}:{})};});
+ us[0].carry=20;us[0].carryType='wood';
+ const before=expansionParties(g,1),n0=g.state.units.length,food0=t.food;
+ const back=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));
+ assert.equal(back.state.units.length,n0,'no units created or lost by a reload');
+ assert.equal(new Set(back.state.units.map(u=>u.id)).size,n0,'no duplicate unit ids');
+ for(const u of us){const v=back.state.units.find(x=>x.id===u.id);assert.ok(v,'party member present');
+  assert.deepEqual(v.foundingJourney,u.foundingJourney,'journey record intact');assert.equal(v.x,u.x);assert.equal(v.z,u.z);}
+ assert.equal(back.state.units.filter(u=>u.foundingJourney?.leader&&u.team===1).length,1,'exactly one leader');
+ assert.deepEqual(expansionParties(back,1),before,'read model identical after reload');
+ assert.equal(back.tribe(1).food,food0,'pantry unchanged by reload');
+});
