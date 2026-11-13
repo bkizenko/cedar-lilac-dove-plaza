@@ -1211,3 +1211,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
   5. Continue the existing Codex trade/pack-expedition/domestication queue; trade stays the owner's top priority.
   Claude lanes: visuals (people garb, building detail, field edges, terraces, LOD/fidelity), mapgen/geology, UI, societies/rulers. Platform/economy/live native verification stay with Codex.
   blocked: none
+
+08:20 ET Claude: shipped people garb redesign (tapered trunk, shoulder yoke, A-line skirts, sleeves/collar/belt, cloaks, armor cut to trunk, muted dyes, role silhouettes; budgets unchanged; harness now renders people-v2 looks + 14-civ garb sheets) (dcf0d2e2) / now on idle, ready for next item / blocked: none
