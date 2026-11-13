@@ -1,5 +1,6 @@
+import {tradeCargoCapacity,PACK_TRADE_TRAVEL_RULES} from './tradeCargo';
+import {returnPackJourneyCare,packJourneyReturnBudgetLow} from './packJourneyCare';
 import {returnExpeditionProvisions} from './expeditionProvisions';
-import {returnPackJourneyCare} from './packJourneyCare';
 import {reviewRivalMethodRecords} from './rivalMethodRecords';
 import {cancelMethodRecordPickup,methodRecordPickupAI} from './methodRecordPickup';
 import {reconcileMethodRecords} from './methodRecords';
@@ -3157,7 +3158,7 @@ export class Game {
     }
   }
 
-  dispatchTrade(worker: Unit, deal: TradeDeal, team: number, accepted = true) {
+  dispatchTrade(worker: Unit, deal: TradeDeal, team: number, accepted = true, caravanRoute?: number) {
     const rival = this.tribe(team),
       hall = knownSettlementSite(this,team);
     if (
@@ -3173,8 +3174,9 @@ export class Game {
       !this.canAfford(0, { [deal.give]: deal.giveAmt })
     )
       return false;
+    if(deal.giveAmt>tradeCargoCapacity(worker,deal.give)||deal.getAmt>tradeCargoCapacity(worker,deal.get)){worker.workReason='Trade load needs more carriers or transport capacity';return false;}
     // The offer is unpaid until the real carrier reaches a friendly cache.
-    return beginTradeLoading(this,worker,deal,team,hall,accepted);
+    return beginTradeLoading(this,worker,deal,team,hall,accepted,caravanRoute);
   }
 
   haltSelected() {
@@ -4716,6 +4718,7 @@ export class Game {
       const frontage=drop.kind!=='camp'&&(dx>=0||dz>=0)&&Math.hypot(Math.max(0,dx),Math.max(0,dz))<=1.8;
       if(!frontage&&Math.hypot(u.x-spot.x,u.z-spot.z)>1){this.steer(u,dt);return;}
       const reviewFood=isCerealPickup(u)||(u.itemCargo?.grainSheaves||0)>0||u.team===0&&(!!u.rawHuntMeat||['grain','fish','berries'].includes(u.carryFood||'')||(!u.carry&&!u.itemCargo));
+      if(u.packJourneySupplies&&!returnPackJourneyCare(this,u)){this.steer(u,dt);u.workReason='Bringing animal supplies to the actual cache frontage';return;}
       if(!deliverProductionCargo(this,u))return;
       if (u.carry > 0 && u.carryType) {
         const tr = this.tribe(u.team);
@@ -4741,6 +4744,10 @@ export class Game {
 
   tradeAI(u: Unit, dt: number) {
     if(tradeLoadingAI(this,u,dt))return;
+    const home=u.packJourneySupplies?this.nearestDrop(u.x,u.z,u.team):null;
+    if(home&&packJourneyReturnBudgetLow(this,u,Math.hypot(home.x-u.x,home.z-u.z)*PACK_TRADE_TRAVEL_RULES.pathMargin/Math.max(PACK_TRADE_TRAVEL_RULES.minimumPace,this.travelSpeed(u)))){
+      releaseTradeReservation(this,u);u.trade=null;u.procurement=undefined;u.customOffer=undefined;u.order='return';u.workReason='Returning with the shipment before animal feed or water runs out';return;
+    }
     const deal = u.trade;
     if (!deal) {
       u.order = "idle";
