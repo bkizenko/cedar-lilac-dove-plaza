@@ -756,7 +756,7 @@ export class WorldView {
     const frustum = this.viewFrustum, sphere = this.viewSphere, y = this.look.y;
     const inView = (x: number, z: number, r: number) => { sphere.center.set(x, y, z); sphere.radius = r + 60; return frustum.intersectsSphere(sphere); };
     const key = `${Math.round(p.x / 6)}|${Math.round(p.z / 6)}|${Math.round(this.yaw * 14)}|${Math.round(this.pitch * 14)}|${Math.round(this.dist / 12)}`;
-    return { bands: this.drawBandsNow, inView, key, prime, detail: TREE_DETAIL[this.treeStep] };
+    return { bands: this.drawBandsNow, minFar: 800 + this.dist * 2, inView, key, prime, detail: TREE_DETAIL[this.treeStep] };
   }
 
   applyQuality(q: "low" | "med" | "high") {
