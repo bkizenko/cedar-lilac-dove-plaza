@@ -1495,3 +1495,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 06:19 ET Claude: shipped lane A era-gated scout provisioning (launch reserve band 450/chiefdom 400/state 360, turn-back 240/200/180, cap only, behind rulersVersion, no goods/units created; rulers 87/87, tsc not run: no node_modules) (15036579) / now on raid venture crew gating audit, remaining lane A / blocked: none
 06:29 ET Claude: shipped lane B building hover summary (era built, sound/worn/needs repair, repair progress or stall reason on canvas hover; no worker list, no data; building-hover-text 2/2, tsc nil on touched files, not browser-rendered) (a9c22dfc) / now on AUDIT-UI-TOOLTIP-REASONS, river hover / blocked: none
+
+06:46 ET Claude: shipped lane C early huts now shrink their mass, not their doorway, to fit the footprint (adult doors kept, footprint unchanged) + heraldry test fixed (part count was capped); placement-fixes 14/14, civ/people/skin/civic/art 68/68, tsc nil on touched files, SwiftShader hut sheet docs/renders/visuals/hut-sheet-a-adult-doors-2026-11-14.png checked (50a31ddd) / now on Option H polish, vegetation shots / blocked: none
