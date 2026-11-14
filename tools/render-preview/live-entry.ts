@@ -9,6 +9,7 @@ import {skinOfTeam,buildSkins} from '@/game/skinState';
 import {generateCiv} from '@/game/civGenerator';
 import {skinFromCiv} from '@/scene/civSkin';
 const w=window as any;
+import {setPresentationSurvivalView} from '@/game/presentationSurvivalView';
 type Opts={shot:string;style:'village'|'current'|'optionH';seed:number;age:number;dist:number|null;yaw:number|null;pitch:number|null;frames:number;time:number|null;x:number|null;z:number|null;skins?:string[];skin?:string;seeds?:number[];family?:string};
 const dry=(g:Game,x:number,z:number)=>g.height(x,z)>g.waterAt(x,z)+.02;
 function findSite(g:Game,type:'watermill'|'windmill',step:number){
@@ -46,6 +47,7 @@ w.hwShot=async(o:Opts)=>{
   const canvas=document.getElementById('c') as HTMLCanvasElement;
   const g=new Game();g.reset(o.seed,18,{size:1040,layout:'pangaea'} as any);g.enterIsland();(g as any).testMode=true;g.revealMap=true;g.updateVision(0);
   Object.assign(g.state,{weather:'clear',weatherT:1e5,raidT:1e5,paused:true});
+  if((o as any).night)(g as any).isNight=()=>true;// review-only: force the night lighting/fire path
   const t=g.tribe(0);t.wood+=9999;t.stone+=9999;t.food+=999;t.age=Math.max(t.age,o.age);
   const info:any={};let focus:{x:number;z:number}|null=null;
   if(o.shot==='watermill'||o.shot==='all'){const s=findSite(g,'watermill',12);if(s){const b=finish(g,'watermill',s.x,s.z);if(b){focus={x:b.x,z:b.z};info.mill={x:b.x,z:b.z,site:watermillSite(g,b.x,b.z)};}}}
@@ -76,10 +78,12 @@ w.hwShot=async(o:Opts)=>{
     info.slots=[];const camps=g.world.camps;for(let team=0;team<4;team++){const camp=camps.find(c=>c.team===team);if(!camp)continue;g.tribe(team).age=Math.max(g.tribe(team).age,o.age);info.slots.push({team,skin:skinOfTeam(g.state,team)?.id,placed:settle(g,camp,team,SKIN_VILLAGE,.85).length});}
     focus={x:camps[0].x,z:camps[0].z};
   }
+  if((o as any).night){const hh=g.state.buildings.find(b=>b.type==='hearth');if(hh)focus={x:hh.x,z:hh.z};}// review-only: frame the lit hearth
   if(o.x!=null&&o.z!=null)focus={x:o.x,z:o.z};
   if(o.shot==='societies')for(const c of g.world.camps)for(const tr of g.state.trees){if(Math.hypot(tr.x-c.x,tr.z-c.z)<30)tr.amount=0;}
   if(focus&&o.shot!=='societies')for(const tr of g.state.trees){if(Math.hypot(tr.x-focus.x,tr.z-focus.z)<(o.shot==='village'?9:o.shot==='skins'||o.shot==='wonders'?34:22))tr.amount=0;}
   const view=new WorldView(canvas);if(!(o as any).lowq)view.applyQuality('med');
+  if((o as any).night){(g.state as any).survivalVersion=1;setPresentationSurvivalView(g,g.state.buildings.filter(b=>b.type==='hearth').map(b=>b.id),[0]);}// review-only: lit hearths + burning hall fire
   view.setStyle(o.style);
   view.applyQuality('low');
   view.resize();

@@ -587,3 +587,10 @@
 .hw-chip-btn{min-height:44px;cursor:pointer;font:inherit;font-size:var(--hw-fs-s);color:inherit;background:transparent;border:1px solid var(--hw-line-strong);border-radius:999px;padding:0 var(--hw-s4)}
 .hw-chip-btn:hover,.hw-chip-btn:focus-visible{background:rgba(255,236,190,.1)}
 .hw-chip-btn.is-muted{opacity:.55;text-decoration:line-through}
+
+/* Previously recap: top-centre, dismissible, 44px close target. */
+.hw-prev{pointer-events:auto;position:absolute;left:50%;transform:translateX(-50%);top:calc(var(--hw-s6,48px) + var(--hw-s3));z-index:6;max-width:min(520px,calc(100% - 24px));padding:var(--hw-s3) 52px var(--hw-s3) var(--hw-s4);border-radius:12px;background:rgba(40,28,16,.94);border:1px solid var(--hw-line-strong);color:var(--hw-text);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.hw-prev h3{display:flex;align-items:center;gap:8px;margin:0 0 var(--hw-s2);font-size:var(--hw-fs-m)}
+.hw-prev ul{margin:0;padding-left:1.1em;font-size:var(--hw-fs-s);line-height:1.4}
+.hw-prev-x{position:absolute;top:2px;right:2px;width:44px;height:44px;display:grid;place-items:center;background:transparent;border:0;color:inherit;cursor:pointer;border-radius:10px}
+.hw-prev-x:hover,.hw-prev-x:focus-visible{background:rgba(255,236,190,.1)}
