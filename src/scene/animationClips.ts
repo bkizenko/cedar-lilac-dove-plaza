@@ -44,8 +44,8 @@ export const CLIPS:Record<ClipId,Clip>={
  idle:{id:'idle',period:4,events:[],keys:[k(0,{spine:[0,0,0],head:[0,0,0]}),k(.5,{spine:[-1.5,0,0],head:[1,0,0],root:[0,.006,0]}),k(1,{spine:[0,0,0],head:[0,0,0]})]},
  // Walk: hips and shoulders counter-rotate, the planted foot sets the hip height (lock), no flight.
  walk:{id:'walk',period:1,strideMetres:1.6,lock:1,events:[{at:.0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
-  k(0,{legL:[26,0,GAIT_ADD],legR:[-26,0,-GAIT_ADD],armL:[-22,0,3],armR:[22,0,-3],hips:[0,-5,0],spine:[2,5,0]}),k(.25,{legL:[0,0,GAIT_ADD],legR:[0,0,-GAIT_ADD],armL:[0,0,0],armR:[0,0,0],hips:[0,0,0],spine:[3,0,0]}),
-  k(.5,{legL:[-26,0,GAIT_ADD],legR:[26,0,-GAIT_ADD],armL:[22,0,3],armR:[-22,0,-3],hips:[0,5,0],spine:[2,-5,0]}),k(.75,{legL:[0,0,GAIT_ADD],legR:[0,0,-GAIT_ADD],armL:[0,0,0],armR:[0,0,0],hips:[0,0,0],spine:[3,0,0]}),k(1,{legL:[26,0,GAIT_ADD],legR:[-26,0,-GAIT_ADD],armL:[-22,0,3],armR:[22,0,-3],hips:[0,-5,0],spine:[2,5,0]})]},
+  k(0,{legL:[26,0,GAIT_ADD],legR:[-26,0,-GAIT_ADD],armL:[-22,0,3],armR:[22,0,-3],hips:[0,-5,0],spine:[2,5,0]}),k(.25,{legL:[-6,0,GAIT_ADD],legR:[16,0,-GAIT_ADD],armL:[0,0,0],armR:[0,0,0],hips:[0,0,0],spine:[3,0,0]}),
+  k(.5,{legL:[-26,0,GAIT_ADD],legR:[26,0,-GAIT_ADD],armL:[22,0,3],armR:[-22,0,-3],hips:[0,5,0],spine:[2,-5,0]}),k(.75,{legL:[16,0,GAIT_ADD],legR:[-6,0,-GAIT_ADD],armL:[0,0,0],armR:[0,0,0],hips:[0,0,0],spine:[3,0,0]}),k(1,{legL:[26,0,GAIT_ADD],legR:[-26,0,-GAIT_ADD],armL:[-22,0,3],armR:[22,0,-3],hips:[0,-5,0],spine:[2,5,0]})]},
  // Run: forward lean, longer stride, high front knee (the forward leg swings further than the trailing one), bent-arm pump, hips/shoulder twist,
  // and a flight phase (root rises twice a cycle while both feet are off the ground). Phase from distance like the walk; blended by speed (see gaitBlend).
  run:{id:'run',period:1,strideMetres:2.6,lock:1,events:[{at:.0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[

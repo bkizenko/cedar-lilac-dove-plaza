@@ -35,7 +35,7 @@ export function shoalFor(n:FishNode,t:number):{fish:ShoalFish[];ripples:Ripple[]
   fish.push({kind,x,z,facing,phase:(t*(kind==='eel'?1.3:kind==='trout'?2.2:1.5)*(.8+.4*r())+ph)%1000,depth,size:sc*lenScale*(.8+.35*r()),pitch,leaping,speed});
   if(rise&&jumpT<1.2)ripples.push({x,z,age:jumpT,life:1.8,radius:.35+.8*jumpT});
  }
- // every swimming fish leaves a faint, short wake ring behind it
- for(const f of fish.slice(0,3))ripples.push({x:f.x-Math.cos(f.facing)*.3,z:f.z+Math.sin(f.facing)*.3,age:.3+.2*Math.sin(t*2+f.x),life:1,radius:.25});
+ // every fish, not a few, carries its own pulsing ring on the surface so each one reads as a catchable fish (rings breathe out of phase)
+ fish.forEach((f,i)=>{if(!f.leaping)ripples.push({x:f.x,z:f.z,age:((t*.6+i*.37+(f.x*7.1%1+1)%1)%1)*.9,life:1,radius:.22*Math.max(.8,f.size)});});
  return {fish,ripples};
 }

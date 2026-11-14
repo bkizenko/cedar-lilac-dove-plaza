@@ -18,7 +18,7 @@ export function readAnimalSet():AnimalSet{
 }
 /** Models face +X; the sim's facing is atan2(vx,vz) (forward = +Z at facing 0). */
 /** Surface ripple rings around fish read as stray circles; off. */
-const RIPPLES_ON=false;
+const RIPPLES_ON=true;
 export const FACING_OFFSET=-Math.PI/2;
 export type AnimalRow={c:{id:number;species:string;x:number;y:number;z:number;facing:number;scale:number;hp:number;fly:number;beh?:{st:string};vx?:number;vz?:number;adultScale?:number;sex?:'female'|'male'};domestic:boolean;
  /** 0 spring .. 3 winter and progress within it */season:number;within:number;shore:boolean};
@@ -67,7 +67,7 @@ export class AnimalAdapter{
 type Water={waterAt(x:number,z:number):number};
 /** Fish in the fishing grounds, replacing the grey marker wedge. */
 export class FishAdapter{
- readonly layer:AnimalRigLayer;private ripples:THREE.InstancedMesh;private cap=96;
+ readonly layer:AnimalRigLayer;private ripples:THREE.InstancedMesh;private cap=320;
  private scene:THREE.Scene;
  constructor(scene:THREE.Scene){
   this.scene=scene;this.layer=new AnimalRigLayer(scene,false,{opacity:.88,renderOrder:3});
