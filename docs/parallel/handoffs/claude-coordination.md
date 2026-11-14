@@ -1390,3 +1390,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 21:39 ET Claude: shipped Boris playtest fixes: Arm selected adults now walks adults to the stores when none are in reach (was silent no-op, test 2/2), villages no longer start paused (test lab stays paused); also lane B 'Previously' recap card; play-flow/council-ui/arm tests 37/37, tsc nil (549db41c) / now on request-audit gaps (real-Earth window, donkey/mule/camel, liquids+cash crops, specialty goods, mutators) / blocked: none
 
 21:44 ET Claude: shipped Boris playtest fixes: Field build tiles wrap + scroll (wheel did nothing on sideways row), selection panels open by default (no extra click for building/unit controls); council-ui/construction-queue-ui 34/34, tsc nil; pen not yet touched (need what is broken) (2df18eed) / now on pen / blocked: Boris's claude.ai chat messages are not readable from this session (only project docs)
+
+21:45 ET Claude: shipped people no longer squat to work: harvest/plant/tend legs +-24 deg (was +-42, a deep lunge that read as squatting); people-animation 6/6, no render checked (7336c03b) / now on animal pen (need symptom) / blocked: none
