@@ -42,6 +42,7 @@ export function productionKnowledgeTopics(g:Game):KnowledgeTopic[]{
    for(const source of capturedRecipeSources(g.state,0,[recipe])){const maker=g.state.units.find(u=>u.id===source.originMakerId),societyName=g.tribe(source.sourceTeam)?.name||'another society';provenance.push({kind:'captured',method:recipe,sourceTeam:source.sourceTeam,sourcePersonId:source.originMakerId,at:source.learnedAt,summary:`${PRODUCTION_RECIPES[recipe].name} · ${maker?.name||'Integrated artisan'} · ${societyName}`});}
    for(const source of proofs)if(source.recipes.includes(recipe))provenance.push({kind:'inherited',method:recipe,sourceTeam:source.sourceTeam,sourceName:source.sourceName,at:source.observedAt,summary:`${PRODUCTION_RECIPES[recipe].name} shared by ${source.sourceName}`});
   }
+  for(const recipe of chain.recipes){const o=tribe.observedMethods?.[recipe];if(o&&o.seconds>=10)provenance.push({kind:'observed',method:recipe,sourceTeam:o.sourceTeam,sourceName:o.sourceName,at:o.lastAt,summary:`Watched ${o.sourceName} work ${PRODUCTION_RECIPES[recipe].name.toLowerCase()} for ${Math.round(o.seconds)}s; watching alone is not a method`});}
   provenance.sort((a,b)=>Number(b.kind==='captured')-Number(a.kind==='captured'));
   const methodKnown=proven>0||provenance.some(p=>(chain.proof||chain.recipes).includes(p.method as ProductionRecipe)&&['demonstrated','taught','inherited','captured','traded'].includes(p.kind));
   if(current.length)provenance.push({kind:'experimented',summary:`${current.length} actual paid batches in progress`});

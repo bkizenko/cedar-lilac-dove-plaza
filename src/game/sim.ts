@@ -81,6 +81,7 @@ import {tickAnimals,initAnimalGroups,spawnWolfPacks,animalRand} from './animalBe
 import{tickTradeIntel}from'./tradeIntel';
 import{fibreAI,tickFibre,pauseFibreWork,reconcileFibreDeaths}from'./fibre';
 import {scoutIndependentNeeds,tickScoutProvisions} from './scoutProvisions';
+import {tickObservedMethods} from './observedKnowledge';
 import {productionApprenticeAI,pauseProductionLesson,tickProductionLessons} from './productionPractice';
 import {beginDefenseNeighbors,updateDefenseNeighbors,endDefenseNeighbors} from './defenseNeighbors';
 import {clayAI,tickClay} from './pottery';
@@ -5970,6 +5971,7 @@ export class Game {
         for(const team of this.state.tribes)reviewAutomaticFoodProcessing(this,team.id);
         tickTradedTeaching(this);
         tickProductionLessons(this);
+        tickObservedMethods(this);
         tickPracticalHelpers(this);
         tickVillageDefense(this);
         phases?.mark('missions');

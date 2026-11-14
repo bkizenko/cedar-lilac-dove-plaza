@@ -461,6 +461,7 @@ export type Tribe = {
   inheritedCropTrials?:import("./communityHandoverTypes").InheritedCropTrial[];
   animalProcessingVersion?:1;
   productionPractice?:Partial<Record<import('./production').ProductionRecipe,import('./productionPractice').ProductionDemonstration>>;
+  observedMethods?:Partial<Record<import('./production').ProductionRecipe,import('./observedKnowledge').ObservedMethod>>;
   basketOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
   potteryOrigins?:{origin:import('./pottery').PotteryOrigin;count:number}[];
   items?:import('./production').ItemStock;
