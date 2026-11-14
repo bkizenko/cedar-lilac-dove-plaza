@@ -3,7 +3,7 @@ import {queueStandDown} from './demobilization';
 import type {Unit,ResKind} from './types';
 import {captureTarget} from './conflictIntent';
 import {releasePrisoner,PRISONER_RULES,escortYieldsWhenOutnumbered} from './captivity';
-import {isDependent} from './settlement';
+import {isDependent,foodDemand} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
 import {beginSettlementJourney} from './barter';
 import {supplyDrops,supplyApproach} from './campAnchor';
@@ -16,6 +16,17 @@ import {noteTraderIncident,isTraderUnit,heldItems,heldGear,robGear,tickTraderInc
 import {markStolenLoad,stolenMarkRoom,beginLootReturn,PARCEL_ITEMS} from './stolenCargo';
 import {interrogateCaptive,proposeRansom,captiveIntel} from './captiveDealings';
 /** Contact requires people actually meeting in sight; remembered maps are insufficient. */
+/** A peaceful stranger on first meeting usually has something to swap: they bring part of their own society's real surplus (finite, taken from its stores), never goods from nowhere. */
+function equipStrangerForTrade(g:Game,u:Unit){
+ if(u.type!=='worker'||u.carry>0||u.visit||u.prisoner||isDependent(g,u)||g.isFoe(0,u.team))return;
+ const t=g.tribe(u.team);if(!t)return;
+ const kinds=(['food','wood','stone','copper','iron'] as const).filter(k=>!(k==='copper'&&t.age<1)&&!(k==='iron'&&t.age<2));
+ let best:ResKind|null=null,spare=0;
+ for(const k of kinds){const keep=k==='food'?foodDemand(g,u.team)*240:k==='wood'?20:10,s=t[k]-keep;if(s>spare){spare=s;best=k;}}
+ if(!best||spare<4)return;
+ const amount=Math.min(12,Math.floor(spare));
+ g.spend(u.team,{[best]:amount});u.carry=amount;u.carryType=best;u.carryFood=best==='food'?'provisions':undefined;
+}
 export function tickEncounters(g:Game){
  if(!g.started||g.awaitingStart)return;
  tickContactOrders(g);
@@ -31,6 +42,7 @@ export function tickEncounters(g:Game){
    g.banner(`Hostile party sighted — armed villagers defend nearby homes and workplaces`,5);
    continue;
   }
+  equipStrangerForTrade(g,stranger);
   g.state.encounter={team:stranger.team,person:person.id,stranger:stranger.id,resume:!g.state.paused};
   g.state.paused=true;g.banner(`Your people encounter ${g.tribe(stranger.team).name}`,5);return;
  }
