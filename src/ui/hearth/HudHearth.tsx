@@ -15,7 +15,7 @@ import {TradeBlock} from '../Hud';
 import {UiThemeBoot} from '../uiTheme';
 import {StartupHint} from './StartupHint';
 import {PreviouslyCard} from './PreviouslyCard';
-import {OldSaveNote} from './OldSaveNote';
+import {OldSaveNoteCard} from './OldSaveNoteCard';
 import {AlertPins,useGlanceAlerts} from './glance';
 import {DisputeChip} from './DisputeChip';
 import {HelpScreen} from './helpScreen';
@@ -62,7 +62,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  return <div className="hw" data-hw="hearth">
   <UiThemeBoot/>
   {!founding&&!screen&&<AlertPins engine={engine} alerts={alerts}/>}
-  {!founding&&!screen&&engine&&<OldSaveNote engine={engine}/>}
+  {!founding&&!screen&&engine&&<OldSaveNoteCard engine={engine}/>}
   {!founding&&!screen&&engine&&<PreviouslyCard engine={engine}/>}
   {!founding&&!screen&&engine&&<DisputeChip engine={engine} onOpen={tab=>setScreen({k:'council',tab})}/>}
   {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})} onOpenHelp={()=>setScreen({k:'help'})}/>}

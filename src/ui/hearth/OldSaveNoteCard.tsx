@@ -4,7 +4,7 @@ import type {Engine} from '@/game/engine';
 import {oldSaveNote,oldSaveNoteDismissed,dismissOldSaveNote} from './oldSaveNote';
 
 /** One dismissible card when an older save is loaded, listing the systems that start fresh. Read-only; never blocks play. */
-export function OldSaveNote({engine}:{engine:Engine}){
+export function OldSaveNoteCard({engine}:{engine:Engine}){
  const key=`${engine.game.state.seed}:${engine.game.tribe(0).name}`,note=oldSaveNote(engine.game.state.worldOptions);
  const [gone,setGone]=useState(()=>oldSaveNoteDismissed(key));
  if(!note||gone)return null;
