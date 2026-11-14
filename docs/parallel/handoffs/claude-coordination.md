@@ -1389,3 +1389,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 21:44 ET Claude: shipped Boris playtest fixes: Field build tiles wrap + scroll (wheel did nothing on sideways row), selection panels open by default (no extra click for building/unit controls); council-ui/construction-queue-ui 34/34, tsc nil; pen not yet touched (need what is broken) (2df18eed) / now on pen / blocked: Boris's claude.ai chat messages are not readable from this session (only project docs)
 
 21:45 ET Claude: shipped people no longer squat to work: harvest/plant/tend legs +-24 deg (was +-42, a deep lunge that read as squatting); people-animation 6/6, no render checked (7336c03b) / now on animal pen (need symptom) / blocked: none
+
+21:49 ET Claude: shipped lane C hearth lawn glow (soft warm light pool under every lit hearth and hall firepit, flickering, night strong/day faint, render only, follows real lit fires; civ/people/skin/era/wonder 54/54, tsc nil on scene; SwiftShader docs/renders/visuals/hearth-lawn-glow-2026-11-14.png, live-shot --night added) (2ac9b9a0) / now on Option H adapter polish, vegetation shots / blocked: none
