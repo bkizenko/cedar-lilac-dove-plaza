@@ -48,6 +48,7 @@ import {WorldSetup} from '../WorldSetup';
 import {UiThemeToggle} from '../uiTheme';
 import {TradeBlock} from '../Hud';
 import {IconBtn,cx} from './parts';
+import {useEscapeClose} from './escapeStack';
 import {HelpBody} from './help';
 import {loadMapStyle,rememberMapStyle,MAP_STYLE_KEY,type MapStyle} from '@/scene/mapStyle';
 import {MAP_GALLERY,galleryPose} from '@/scene/mapGallery';
@@ -60,11 +61,12 @@ export function Screen({title,icon,onClose,tabs,tab,setTab,children,wide}:{title
  const ref=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   const prev=document.activeElement as HTMLElement|null;ref.current?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
-  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();onClose();}
+  const key=(e:KeyboardEvent)=>{
    if(e.key!=='Tab'||!ref.current)return;const f=Array.from(ref.current.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]),select:not([disabled]),summary,[tabindex="0"]')).filter(n=>n.getClientRects().length);
    if(!f.length)return;if(e.shiftKey&&document.activeElement===f[0]){e.preventDefault();f[f.length-1].focus();}else if(!e.shiftKey&&document.activeElement===f[f.length-1]){e.preventDefault();f[0].focus();}};
   window.addEventListener('keydown',key,true);return()=>{window.removeEventListener('keydown',key,true);prev?.focus();};
- },[onClose]);
+ },[]);
+ useEscapeClose(onClose);
  return <div className="hw-scrim" onPointerDown={e=>{if(e.target===e.currentTarget)onClose();}}>
   <div ref={ref} className={cx('hw-screen',wide&&'is-wide')} role="dialog" aria-modal="true" aria-label={title}>
    <header className="hw-screen-head"><span className="hw-medal">{icon}</span><h1>{title}</h1><IconBtn label="Close" tip="Esc" onClick={onClose} className="hw-close"><X size={26}/></IconBtn></header>
@@ -228,12 +230,12 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade,s
   {tab==='play'&&<div className="hw-stack">
    <section className="hw-card"><h3>Interface</h3><div className="hw-legacy hw-ui-switch"><UiThemeToggle/></div><MapStyleToggle engine={engine}/></section>
    <section className="hw-card" aria-label="Sound"><h3>Sound</h3><MusicPanel engine={engine}/></section>
-   <section className="hw-card" aria-label="Interface layout"><h3>Layout</h3><p className="hw-sub">Every panel has a Minimise button and leaves a labelled handle where it was. Your layout is remembered on this device.</p><LayoutControls/><div className="hw-row"><button type="button" className="hw-btn-wide" onClick={()=>{onClose();onHide();}}>Hide interface</button></div></section>
-   <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Restore the last protected village; save the current run first." onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}<SaveStatus engine={engine} refresh={lifecycle.busy?0:1}/><div className="hw-row"><RestartControl busy={!engine||lifecycle.busy} onRestart={()=>void lifecycle.run(()=>engine!.restart(undefined,21,true))}/></div></section>
+   <section className="hw-card" aria-label="Interface layout"><h3>Layout</h3><p className="hw-sub">Each panel can be minimised. A small tab stays behind. Saved on this device.</p><LayoutControls/><div className="hw-row"><button type="button" className="hw-btn-wide" onClick={()=>{onClose();onHide();}}>Hide interface</button></div></section>
+   <section className="hw-card"><h3>Save</h3><div className="hw-legacy hw-row"><VillageSaveButton engine={engine}/><button type="button" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.resumeSaved())}>Load</button><button type="button" disabled={!engine||lifecycle.busy||engine.game.testMode} title="Go back to the last safe copy" onClick={()=>void lifecycle.run(()=>engine!.resumeSaved(true))}>Restore checkpoint</button></div><div className="hw-legacy"><VillageFileTransfer engine={engine}/></div>{lifecycle.error&&<p role="status" className="t-bad">{lifecycle.error}</p>}<SaveStatus engine={engine} refresh={lifecycle.busy?0:1}/><div className="hw-row"><RestartControl busy={!engine||lifecycle.busy} onRestart={()=>void lifecycle.run(()=>engine!.restart(undefined,21,true))}/></div></section>
    <section className="hw-card"><h3>Display</h3><div className="hw-form">
     <GraphicsSettingsPanel engine={engine} variant="hearth"/>
     <label>Detail<select aria-label="Detail" value={engine?.view.getDetailLevel?.()??'standard'} onChange={e=>{engine?.setDetailLevel(e.target.value as DetailLevel);engine?.pushHud();}}>{DETAIL_LEVELS.map(l=><option key={l} value={l}>{DETAIL_LABELS[l]}</option>)}</select></label>
-    <label>World style<select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village (new buildings)</option><option value="optionH">Carved honey (legacy)</option><option value="current">Original blocks (legacy)</option></select></label>
+    <label>World style<select aria-label="World visual style" value={engine?.view.getStyle()??'village'} onChange={e=>{engine?.setRenderStyle(e.target.value as 'current'|'optionH'|'village');engine?.pushHud();}}><option value="village">Village</option><option value="optionH">Carved (old)</option><option value="current">Blocks (old)</option></select></label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.shadowsEnabled} onChange={e=>{if(engine){engine.view.shadowsEnabled=e.target.checked;engine.setQuality(engine.gfx.effective.graphics);engine.pushHud();}}}/>Shadows</label>
     <label className="hw-check"><input type="checkbox" checked={!!engine?.view.unitRingsEnabled} onChange={e=>{if(engine){engine.view.unitRingsEnabled=e.target.checked;engine.pushHud();}}}/>Selection rings</label>
     {onShowTestLab&&<label className="hw-check"><input type="checkbox" checked={showTestLab} onChange={e=>onShowTestLab(e.target.checked)}/>Show Test lab on main screen</label>}
@@ -251,7 +253,7 @@ export function MenuScreen({hud,engine,onClose,lifecycle,onTest,onHide,onTrade,s
   {tab==='tools'&&<div className="hw-stack"><section className="hw-card"><div className="hw-row">
    <button type="button" className="hw-btn-wide" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),(o:unknown)=>{if(o){onClose();onTest();}})}>Test lab</button>
    <button type="button" className="hw-btn-wide" onClick={()=>{onClose();onHide();}}>Hide interface</button>
-   <button type="button" className="hw-btn-wide" onClick={()=>{engine?.game.planReturnCrossing();engine?.pushHud();}} title="Plan a bridge on explored banks for cut-off residents">Return crossing</button>
+   <button type="button" className="hw-btn-wide" onClick={()=>{engine?.game.planReturnCrossing();engine?.pushHud();}} title="Bridge for cut-off people">Return crossing</button>
    <RestartControl busy={!engine||lifecycle.busy} onRestart={()=>void lifecycle.run(()=>engine!.restart(undefined,21,true))}/></div></section></div>}
  </Screen>;
 }

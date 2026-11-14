@@ -12,3 +12,10 @@
 .hw-road-main small,.hw-road-more{font-size:var(--hw-fs-s);color:var(--hw-warn)}
 .hw-road-bar{display:block;height:8px;border-radius:4px;background:rgba(0,0,0,.45);overflow:hidden;min-width:120px}
 .hw-road-bar i{display:block;height:100%;background:var(--hw-good)}
+.hw-roads{padding-right:60px}
+.hw-roads .hw-roads-min{position:absolute;top:2px;right:2px;min-width:44px;min-height:44px;border-color:transparent;background:transparent}
+.hw-fold-handle.at-roads{position:absolute;left:84px;top:92px}
+.hw-trader-wrap{position:absolute;right:16px;bottom:7rem;z-index:30;pointer-events:none}
+.hw-trader-wrap>.hw-trader-min{position:absolute;top:-52px;right:0;pointer-events:auto}
+.hw-trader-wrap .hud-panel{position:static;max-height:min(50dvh,420px);overflow-y:auto;overscroll-behavior:contain}
+.hw-fold-handle.at-trader{position:absolute;right:16px;bottom:7rem;z-index:30}

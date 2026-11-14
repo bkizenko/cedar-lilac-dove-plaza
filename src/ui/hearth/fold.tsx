@@ -1,6 +1,6 @@
 import {useCallback,useEffect,useRef,useState,useSyncExternalStore,type ReactNode} from 'react';
 import {Minimize2,PanelTop,RotateCcw,Maximize2} from 'lucide-react';
-import {layout,panelLabel,PANELS,FOLD_MS,hudKeyAction,type PanelId} from './hudLayout';
+import {layout,panelLabel,PANELS,BULK_SKIP,bulkIds,FOLD_MS,hudKeyAction,type PanelId} from './hudLayout';
 import {cx} from './kit';
 
 /** Collapsible HUD panels. A panel that is minimised is not rendered at all (so it cannot leave an invisible, click-blocking box);
@@ -59,9 +59,9 @@ export function LayoutControls(){
  return <div className="hw-layout hw-stack" role="group" aria-label="Interface layout">
   <div className="hw-row">
    <button type="button" className="hw-btn-wide" disabled={open===0} onClick={()=>layout.setAll(false)}><Maximize2 aria-hidden="true"/>Show all</button>
-   <button type="button" className="hw-btn-wide" onClick={()=>layout.setAll(true,PANELS.filter(p=>!['testlab','wonders','skills'].includes(p.id)).map(p=>p.id))}><PanelTop aria-hidden="true"/>Minimise all</button>
+   <button type="button" className="hw-btn-wide" onClick={()=>layout.setAll(true,bulkIds())}><PanelTop aria-hidden="true"/>Minimise all</button>
    <button type="button" className="hw-btn-wide" onClick={()=>layout.reset()}><RotateCcw aria-hidden="true"/>Reset layout</button>
   </div>
-  <div className="hw-layout-list" role="list">{PANELS.filter(p=>!['testlab','wonders','skills'].includes(p.id)).map(p=>{const off=layout.isCollapsed(p.id);return <button key={p.id} role="listitem" type="button" className="hw-chip hw-chip-btn" aria-pressed={!off} onClick={()=>layout.toggle(p.id)} title={`${off?'Show':'Minimise'} ${p.label} (${p.where})`}>{p.label}<em>{off?'minimised':'shown'}</em></button>;})}</div>
+  <div className="hw-layout-list" role="list">{PANELS.filter(p=>!BULK_SKIP.includes(p.id)).map(p=>{const off=layout.isCollapsed(p.id);return <button key={p.id} role="listitem" type="button" className="hw-chip hw-chip-btn" aria-pressed={!off} onClick={()=>layout.toggle(p.id)} title={`${off?'Show':'Minimise'} ${p.label} (${p.where})`}>{p.label}<em>{off?'minimised':'shown'}</em></button>;})}</div>
  </div>;
 }

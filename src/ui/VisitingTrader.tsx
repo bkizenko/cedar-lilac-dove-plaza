@@ -1,8 +1,20 @@
 import {useState} from 'react';
+import {Handshake} from 'lucide-react';
+import {FoldHandle,FoldMin,useFold} from './hearth/fold';
 import type { Engine } from '@/game/engine';
 import {visitorPrice,visitorTradeCache,visitorTradeIssue,acceptVisitorTrade,declineVisitorVisit} from '@/game/visitors';
 import type {ResKind} from '@/game/types';
-export function VisitingTrader({engine}:{engine:Engine}) {
+export function VisitingTrader({engine,fold}:{engine:Engine;fold?:boolean}) {
+  return fold?<HearthTrader engine={engine}/>:<TraderCard engine={engine}/>;
+}
+function HearthTrader({engine}:{engine:Engine}){
+  const f=useFold('trader');
+  const g=engine.game,u=g.state.units.find(u=>u.hp>0&&u.visit?.phase==='waiting'&&u.visit.team===undefined&&g.visibleAt(u.x,u.z));
+  if(!u||!u.carryType)return null;
+  if(!f.showPanel)return <FoldHandle f={f} icon={<Handshake size={24}/>} className="at-trader"/>;
+  return <div className={'hw-trader-wrap '+f.cls}><FoldMin f={f} className="hw-trader-min"/><TraderCard engine={engine}/></div>;
+}
+function TraderCard({engine}:{engine:Engine}) {
   const [feedback,setFeedback]=useState<{id:number;reason:string}|null>(null),[openId,setOpenId]=useState<number|null>(null);
   const g=engine.game,u=g.state.units.find(u=>u.hp>0&&u.visit?.phase==='waiting'&&u.visit.team===undefined&&g.visibleAt(u.x,u.z));
   if(!u||!u.carryType)return null;

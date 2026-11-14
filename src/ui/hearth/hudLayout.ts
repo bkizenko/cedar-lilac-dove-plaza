@@ -3,7 +3,7 @@
  *  The minimap keeps its own long-standing key (MINIMAP_KEY) so an old "map hidden" choice survives; every other panel lives in one JSON object. */
 import {MINIMAP_KEY,readMinimapCollapsed,writeMinimapCollapsed} from './minimapPrefs';
 
-export type PanelId='resources'|'time'|'audio'|'rail'|'dock'|'selection'|'alerts'|'notes'|'tips'|'map'|'testlab'|'wonders'|'skills';
+export type PanelId='resources'|'time'|'audio'|'rail'|'dock'|'selection'|'alerts'|'notes'|'tips'|'map'|'testlab'|'wonders'|'skills'|'roads'|'trader';
 export type PanelDef={id:PanelId;label:string;/** where the handle sits, read by CSS (`at-<id>`) */where:string;key?:string};
 /** One row per panel. `label` is the visible 16px word on the handle and the minimise button. */
 export const PANELS:readonly PanelDef[]=[
@@ -20,7 +20,12 @@ export const PANELS:readonly PanelDef[]=[
  {id:'testlab',label:'Test lab',where:'right edge'},
  {id:'wonders',label:'Wonders',where:'right edge'},
  {id:'skills',label:'Skills',where:'left edge'},
+ {id:'roads',label:'Roads',where:'left edge'},
+ {id:'trader',label:'Trader',where:'bottom right'},
 ];
+/** Panels that "Minimise all" leaves alone: they are not always on screen, or an offer must not be hidden by a bulk action. */
+export const BULK_SKIP:readonly PanelId[]=['testlab','wonders','skills','trader'];
+export const bulkIds=():PanelId[]=>PANELS.filter(p=>!BULK_SKIP.includes(p.id)).map(p=>p.id);
 export const PANEL_IDS=PANELS.map(p=>p.id) as readonly PanelId[];
 export const panelLabel=(id:PanelId)=>PANELS.find(p=>p.id===id)?.label??id;
 export const LAYOUT_KEY='hearthwild.ui.hudLayout.v1';

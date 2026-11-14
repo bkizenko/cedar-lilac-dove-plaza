@@ -622,3 +622,20 @@ span[data-mood=bad]{background-image:repeating-linear-gradient(135deg,rgba(0,0,0
 .hw-dispute-x{border-left:1px solid currentColor!important;opacity:.8;min-width:44px;justify-content:center;font-size:18px}
 .hw-dispute-word{font-weight:600;letter-spacing:.02em}
 @media (max-width:760px){.hw-dispute{left:8px;top:calc(8px + 112px);max-width:calc(100vw - 16px)}.hw-dispute-word{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+/* ---- softer, tighter menus; every panel scrolls when taller than the screen ---- */
+.hw-screen{border-radius:26px;border-color:var(--hw-line);box-shadow:0 18px 48px rgba(0,0,0,.5)}
+.hw-screen-head{padding:var(--hw-s2) var(--hw-s3);border-bottom-color:rgba(246,226,184,.1)}
+.hw-screen-tabs{border-bottom-color:rgba(246,226,184,.1);background:transparent}
+.hw-screen-body{padding:var(--hw-s3);gap:var(--hw-s3);overscroll-behavior:contain;min-height:0}
+.hw-card{border-color:rgba(246,226,184,.12);border-radius:var(--hw-r-l);padding:var(--hw-s3);gap:var(--hw-s2)}
+.hw-btn-wide,.hw-primary,.hw-btn,.hw-era{border-color:rgba(246,226,184,.14);border-radius:var(--hw-r-l)}
+.hw-tray,.hw-place,.hw-dock,.hw-rail,.hw-map{border-color:rgba(246,226,184,.14);border-radius:var(--hw-r-l)}
+.hw-tray{padding:var(--hw-s2) var(--hw-s3) var(--hw-s2);max-height:min(60dvh,520px);overflow-y:auto;overscroll-behavior:contain}
+.hw-place{max-height:min(50dvh,420px);overflow-y:auto;overscroll-behavior:contain}
+.hw-roads{max-height:min(40dvh,360px);overflow-y:auto;overscroll-behavior:contain;border-radius:var(--hw-r-l);border-color:rgba(246,226,184,.14)}
+.hw-prev{max-height:min(46dvh,380px);overflow-y:auto;overscroll-behavior:contain;border-radius:var(--hw-r-l)}
+.hw-hint{max-height:30dvh;overflow-y:auto}
+.hw-map{max-height:calc(100dvh - 24px);overflow-y:auto}
+.hw .test-panel,.test-panel{max-height:min(90dvh,880px);overflow-y:auto;overscroll-behavior:contain;border-radius:var(--hw-r-l)}
+.hw-choice .hw-screen-body{overflow-y:auto}

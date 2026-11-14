@@ -1,4 +1,5 @@
 import{commandExecutionDiagnostics}from'../game/commandExecution';
+import {useEscapeClose} from './hearth/escapeStack';
 import {useLifecycleAction} from './useLifecycleAction';
 import {hasTestLabSave} from '../game/save';
 import {VillageSaveButton} from './VillageSaveButton';
@@ -15,6 +16,7 @@ import {AGES} from '../game/constants';
 import {PROVINCE_PROFILES} from '../game/ecologicalProvinces';
 export function TestPanel({engine,close}:{engine:Engine;close:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),[,refresh]=useState(0);
+ useEscapeClose(close);
  useEffect(()=>{dialog.current?.showModal();return()=>dialog.current?.close();},[]);
  const [saveStatus,setSaveStatus]=useState("");
  const lifecycle=useLifecycleAction(engine);

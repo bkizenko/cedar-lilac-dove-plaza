@@ -106,7 +106,7 @@ export function CostChips({cost,have,extra}:{cost:Record<string,number|undefined
 export function BuildTray({hud,engine,tab,setTab,onPick,onClose}:{hud:HudSnapshot;engine:Engine|null;tab:string;setTab:(t:string)=>void;onPick:()=>void;onClose?:()=>void}){
  const have={seeds:engine?.game.tribe(0).seeds||0,wood:hud.wood,stone:hud.stone,food:hud.food,copper:hud.copper,iron:hud.iron};
  return <section className="hw-tray" aria-label="Build">
-  <div className="hw-tabs" role="tablist" aria-label="Building categories">{CATS.map(c=><button key={c} role="tab" type="button" aria-label={c} aria-selected={tab===c} onClick={()=>setTab(c)}>{CAT_ICON[c]}<span>{c}</span></button>)}{onClose&&<button type="button" className="hw-tray-x" aria-label="Minimise build menu" title="Minimise · Esc" onClick={onClose}><Minimize2 size={24}/></button>}</div>
+  <div className="hw-tabs" role="tablist" aria-label="Building categories">{CATS.map(c=><button key={c} role="tab" type="button" aria-label={c} aria-selected={tab===c} onClick={()=>setTab(c)}>{CAT_ICON[c]}<span>{c}</span></button>)}{onClose&&<button type="button" className="hw-tray-x" aria-label="Minimise build menu" title="Close · Esc" onClick={onClose}><Minimize2 size={24}/></button>}</div>
   <div className="hw-tiles">
    {hud.buildOptions.filter(b=>catOf(b.type)===tab).map(b=>{
     const home=b.type==='house'&&engine?housingAdoptionIssue(engine.game):null;

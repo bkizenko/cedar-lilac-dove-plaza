@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {Tent,Home,Hotel,Hammer,Flame} from 'lucide-react';
 import type {Engine} from '../../game/engine';
 import {stationViews,stationsOf,type StationView} from '../../game/waystations';
+import {FoldHandle,FoldMin,useFold} from './fold';
 import './roads.css';
 
 /** Hearth card for road stops: one short row per stop on the player's long routes. No paragraphs: what it is, what is in the store, who used it. */
@@ -12,10 +13,12 @@ export function roadsRows(engine:Engine|null):StationView[]{
 export function RoadsCard({engine}:{engine:Engine|null}){
  const [rows,setRows]=useState<StationView[]>(()=>roadsRows(engine));
  useEffect(()=>{const id=globalThis.setInterval(()=>setRows(roadsRows(engine)),1000);setRows(roadsRows(engine));return()=>globalThis.clearInterval(id);},[engine]);
+ const f=useFold('roads');
  if(!rows.length)return null;
+ if(!f.showPanel)return <FoldHandle f={f} icon={<Tent size={24}/>} badge={rows.length} className="at-roads"/>;
  const shown=rows.slice(0,3);
- return <section className="hw-roads" aria-label="Road stops">
-  <h3>Road stops</h3>
+ return <section className={'hw-roads '+f.cls} aria-label="Road stops">
+  <h3>Road stops</h3><FoldMin f={f} className="hw-roads-min"/>
   {shown.map(r=>{const Icon=ICON[Math.max(0,Math.min(3,r.stage))]||Tent;
    return <button key={r.id} type="button" className={'hw-road'+(r.raided?' is-raided':'')} onClick={()=>{if(engine){engine.focusMinimap(r.x,r.z);engine.pushHud();}}} title="Look at this stop">
     <span className="hw-road-ico"><Icon size={24}/></span>

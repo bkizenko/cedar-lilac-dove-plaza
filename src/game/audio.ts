@@ -14,7 +14,27 @@ export class GameAudio {
   seed = 1;
   settings: AudioSettings = loadSettings(typeof localStorage === "undefined" ? null : localStorage);
   private noise: AudioBuffer | null = null;
+  /** True once the player has pressed a key or clicked/tapped (User Activation API). Browsers without it are not blocked. */
+  static userActive(): boolean {
+    try { const ua = (globalThis as { navigator?: { userActivation?: { hasBeenActive?: boolean } } }).navigator?.userActivation; return ua ? !!ua.hasBeenActive : true; } catch { return true; }
+  }
+  private waiting = false;
+  /** Starts audio. Before the first user interaction nothing is created (no AudioContext, no music); the first click, tap or key then starts it. */
   unlock() {
+    if (!this.unlocked && !GameAudio.userActive()) {
+      if (!this.waiting && typeof window !== "undefined" && window.addEventListener) {
+        this.waiting = true;
+        const evs = ["pointerdown", "pointerup", "keydown", "touchend"] as const;
+        const go = () => {
+          if (!GameAudio.userActive()) return;
+          for (const t of evs) window.removeEventListener(t, go, true);
+          this.waiting = false;
+          try { this.unlock(); } catch { /* audio unavailable */ }
+        };
+        for (const t of evs) window.addEventListener(t, go, true);
+      }
+      return;
+    }
     if (this.unlocked) {
       if (this.ctx?.state === "suspended") void this.ctx.resume();
       this.score.unlock();

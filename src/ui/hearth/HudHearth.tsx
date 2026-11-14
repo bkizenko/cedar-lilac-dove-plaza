@@ -23,7 +23,8 @@ import {RoadsCard} from './roadsCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
 import {MinimapReopen,useMinimapCollapsed} from './minimapToggle';
 import {useHudHotkeys,Foldable} from './fold';
-import {layout,PANELS} from './hudLayout';
+import {layout,bulkIds} from './hudLayout';
+import {useEscapeClose} from './escapeStack';
 import {useTestLabButton} from './useTestLabButton';
 import {FlaskConical} from 'lucide-react';
 import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screens';
@@ -43,12 +44,13 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const founding=hud.founding;
  const alerts=useGlanceAlerts(hud.started&&!hud.awaitingStart?engine:null);
  useEffect(()=>{if(hud.placing)setTray(false);},[hud.placing]);
- useEffect(()=>{if(!tray)return;const k=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!e.defaultPrevented){setTray(false);}};window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k);},[tray]);
+ useEscapeClose(()=>setTray(false),tray);
+ useEscapeClose(()=>setMap(false),map);
  // O: sound effects, U: hide or show the interface, Shift+U: minimise or show every panel. M (mute) and Shift+M (map) are handled elsewhere.
  useHudHotkeys({
   sfx:()=>{engine?.audio?.toggleSfxOff();engine?.pushHud?.();},
   hide:()=>setHidden(v=>!v),
-  allPanels:()=>{const shown=PANELS.some(p=>!layout.isCollapsed(p.id)&&!['testlab','wonders','skills'].includes(p.id));layout.setAll(shown,PANELS.filter(p=>!['testlab','wonders','skills'].includes(p.id)).map(p=>p.id));},
+  allPanels:()=>{const ids=bulkIds(),shown=ids.some(id=>!layout.isCollapsed(id));layout.setAll(shown,ids);},
  },hud.started&&!hud.awaitingStart);
  if(!hud.started||hud.awaitingStart)return null;
  if(hidden)return <button type="button" className="hw hw-restore" onClick={()=>setHidden(false)}>Show interface</button>;
@@ -89,7 +91,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   <div className={cx('hw-map-wrap',mapCollapsed&&'is-collapsed')}>{mapCollapsed?<MinimapReopen onClick={()=>setMapCollapsed(false)}/>:<MinimapCard hud={hud} engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})} onCollapse={()=>setMapCollapsed(true)}/>}
    {map&&<MinimapCard phone hud={hud} engine={engine} onNeighbours={()=>{setMap(false);setScreen({k:'council',tab:'neighbours'});}} onClose={()=>setMap(false)}/>}</div>
 
-  {engine&&<VisitingTrader engine={engine}/>}
+  {engine&&<VisitingTrader engine={engine} fold/>}
   {test&&engine&&<TestPanel engine={engine} close={()=>setTest(false)}/>}
   {screen?.k==='village'&&engine&&<VillageScreen hud={hud} engine={engine} initial={screen.tab} onClose={close} onKnowledge={()=>setScreen({k:'ages'})} onOffer={t=>setTrade(t)}/>}
   {screen?.k==='council'&&engine&&<CouncilScreen engine={engine} initial={screen.tab} onClose={close}/>}
