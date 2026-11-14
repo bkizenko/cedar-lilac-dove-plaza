@@ -1596,7 +1596,7 @@ export class WorldView {
     this.bankLayer?.sync(game);
     if(game.state.excavations?.length){this.ensureExcavationLayer(game);this.excavationLayer?.sync(game);}
     this.updateDay(game, dt);
-    this.biomeScene?.sync(game,this.camera.position,this.quality,dt,this.treeView(false));this.biomeScene?.setTime(game.state.time);
+    this.biomeScene?.sync(game,this.camera.position,this.quality,dt,this.treeView(false));this.biomeScene?.setTime(game.state.time);this.biomeScene?.setWind?.(game.state.weather==='storm'?.8:game.state.weather==='rain'||game.state.weather==='flood'?.25:.04);
     this.wildPlantLayer?.sync(game);
     this.syncNature(game);
     this.syncWildlife(game);

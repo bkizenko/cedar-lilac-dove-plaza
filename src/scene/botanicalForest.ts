@@ -25,7 +25,10 @@ const AUTUMN_CACHE=new Map<string,THREE.Color>();const autumnColor=(hex:string)=
 const smooth=(a:number,b:number,x:number)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
 export class BotanicalForest{
  private scene:THREE.Scene;private o:ForestOptions;private sway:PainterSway=painterSway();private mat:THREE.MeshStandardMaterial;private farMat:THREE.MeshStandardMaterial;
- private batches=new Map<number,Batch>();private stumps:Batch|null=null;private recs=new Map<number,Rec>();private info=new Map<number,TreeGeometry>();
+ private batches=new Map<number,Batch>();private standing=new Set<number>();private falling=new Map<number,number>();private fallAxis=new THREE.Vector3();private fallQuat=new THREE.Quaternion();
+ /** 0 = not falling; (0,1] = a tree seen standing that has just been felled topples over about 1.5 s, then becomes a stump */
+ private fallProgress(id:number,felled:boolean,filler:boolean):number{if(filler)return 0;if(!felled){this.standing.add(id);this.falling.delete(id);return 0;}if(!this.standing.has(id))return 0;const now=performance.now();let t0=this.falling.get(id);if(t0===undefined){t0=now;this.falling.set(id,t0);}const f=(now-t0)/1500;if(f>=1){this.standing.delete(id);this.falling.delete(id);return 0;}return Math.max(.001,f);}
+private stumps:Batch|null=null;private recs=new Map<number,Rec>();private info=new Map<number,TreeGeometry>();
  private farTrunk:THREE.InstancedMesh;private farTrunkIds:number[]=[];private far:THREE.InstancedMesh[];private farIds:number[][]=[[],[]];
  private shadows:THREE.InstancedMesh|null=null;private shadowMat:THREE.MeshBasicMaterial;private sunAz=new THREE.Vector2(-.6,.8);private sunElev=.8;private shadowOpacity=.34;
  private matrix=new THREE.Matrix4();private pos=new THREE.Vector3();private scale=new THREE.Vector3();private quat=new THREE.Quaternion();private euler=new THREE.Euler(0,0,0,'XZY');private color=new THREE.Color();private hsl={h:0,s:0,l:0};private snowColor=new THREE.Color('#d4e0dd');
@@ -115,7 +118,7 @@ export class BotanicalForest{
   for(const list of [nodes,ctx.filler?.trees??[]])for(const node of list){
    if(!ctx.known(node.x,node.z))continue;
    const dx=node.x-ctx.camera.x,dz=node.z-ctx.camera.z,distance=Math.hypot(dx,dz);if(distance>reach)continue;
-   const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=(rec.size??node.scale)*growth;
+   const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],rawStump=node.amount<=0&&!node.planted,fall=this.fallProgress(node.id,rawStump,!!node.filler),stump=rawStump&&fall===0,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=(rec.size??node.scale)*growth;
    const tier:0|1|2=node.filler?2:distance<=d0?0:distance<=d1?1:2,heroTier:0|1|2=tier===0&&distance<=heroD&&!node.filler?2:tier; // cosmetic filler never uses the pickable individual tiers
    if(tier===2&&ctx.inView&&!ctx.inView(node.x,node.z,10))continue;
    if(node.filler)fillerCounts.trees++;
@@ -140,7 +143,7 @@ export class BotanicalForest{
    if(tier!==2){
     const key=(rec.sp*VARIANTS_PER_SPECIES+rec.v)*3+heroTier,need=(tally.get(key)??0)+1;tally.set(key,need);
     const b=this.batch(rec.sp,rec.v,heroTier as 0|1|2,need),i=b.n++;b.ids.push(node.id);
-    this.pos.set(node.x,node.y,node.z);this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);this.scale.set(s*rec.sx,s*rec.sy,s*rec.sx);this.matrix.compose(this.pos,this.quat,this.scale);
+    this.pos.set(node.x,node.y,node.z);this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);this.scale.set(s*rec.sx,s*rec.sy,s*rec.sx);if(fall>0){this.fallAxis.set(Math.cos(rec.yaw),0,Math.sin(rec.yaw));this.fallQuat.setFromAxisAngle(this.fallAxis,(Math.PI/2)*fall*fall*.97);this.quat.premultiply(this.fallQuat);}this.matrix.compose(this.pos,this.quat,this.scale);
     b.mesh.setMatrixAt(i,this.matrix);b.mesh.setColorAt(i,this.color);b.state.setXY(i,density,snow);
     if(tier===0)fullTrees++;else midTrees++;if(heroTier===2)heroTrees++;if(density>.05||sp.evergreen)leafy++;
    }else{

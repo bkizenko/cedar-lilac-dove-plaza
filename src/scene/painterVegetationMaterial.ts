@@ -4,7 +4,7 @@ import * as THREE from 'three';
  * back-light on leaves. Render-only; instance matrices, picking and collision never see the sway. */
 export type PainterSway={uTime:{value:number};uWind:{value:number}};
 let shared:PainterSway|null=null;
-export const painterSway=():PainterSway=>shared??(shared={uTime:{value:0},uWind:{value:.8}});
+export const painterSway=():PainterSway=>shared??(shared={uTime:{value:0},uWind:{value:.04}});
 export const PAINTER_WIND_RULES={treeSway:.0068,grassSway:.34,flutter:.012} as const;
 function patch(material:THREE.MeshStandardMaterial,sway:PainterSway,mode:'tree'|'leaf'|'grass',key:string){
  material.customProgramCacheKey=()=>`painter-veg-${key}-v1`;

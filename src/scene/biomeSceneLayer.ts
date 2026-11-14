@@ -223,6 +223,7 @@ export class BiomeSceneLayer {
   this.dressing=new BiomeDressing(scene,style,treeSet);
  }
  setTime(t:number){this.trees.setTime(t);this.dressing.setTime(t);}
+ setWind(k:number){this.trees.setWind(k);}
  setSun(dir:THREE.Vector3,strength:number,realShadows=false){this.trees.setSun(dir,strength,realShadows);}
  /** Hard filter for cosmetic filler: never within `buildingClearMetres` (plus the footprint) of a building, so a settlement that grows over the forest edge never has trees growing through it. */
  private nearBuilding(game:BiomeSceneGame){

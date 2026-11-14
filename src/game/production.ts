@@ -162,7 +162,9 @@ export function exposedHarvestByKind(g:Game,team:number){
 /** Quantity facade for urgency scoring. Exposure itself is allocated by packed volume. */
 export function exposedHarvestUnits(g:Game,team:number){return sum(exposedHarvestByKind(g,team));}
 /** Ground sacks at a real store keep the food chain moving when a harvest exceeds covered space. */
-function canLeaveFlourOutside(g:Game,team:number,recipe:ProductionRecipe,u?:Unit){return !!PRODUCTION_RECIPES[recipe].outputs.flour&&supplyDrops(g,team).some(drop=>drop.kind!=='camp'&&g.state.buildings.some(b=>b.id===drop.id&&b.team===team&&b.type==='warehouse'&&g.finished(b))&&(!u||(()=>{const spot=supplyApproach(g,u,drop);return !!spot&&supplyReached(g,u,drop,spot);})()));}
+/** Finished food (flour, bread, cooked meat or fish, dairy) never waits for shelf space: when the stores are full the carrier leaves it outside, beside the warehouse or the hall. */
+function producesFood(recipe:ProductionRecipe){const r=PRODUCTION_RECIPES[recipe] as {outputs:Record<string,number>;food?:number;foodOutputs?:Record<string,number>};return !!r.outputs.flour||(r.food||0)>0||Object.values(r.foodOutputs||{}).some(n=>n>0);}
+function canLeaveFlourOutside(g:Game,team:number,recipe:ProductionRecipe,u?:Unit){return producesFood(recipe)&&supplyDrops(g,team).some(drop=>drop.kind!=='camp'&&g.state.buildings.some(b=>b.id===drop.id&&b.team===team&&(b.type==='warehouse'||b.type==='townhall')&&g.finished(b))&&(!u||(()=>{const spot=supplyApproach(g,u,drop);return !!spot&&supplyReached(g,u,drop,spot);})()));}
 /** Paid food parcels may sit at a real warehouse frontage, separate from its
  * covered slots. The global project bound still limits parcels; exposure ages
  * the same committed input batch until collection. Other crafts get no bypass. */
