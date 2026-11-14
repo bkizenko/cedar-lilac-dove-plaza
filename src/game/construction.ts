@@ -120,6 +120,19 @@ export function assignPlacedConstruction(g: Game, b: Building) {
       if (builders.length === 2) break;
     }
   }
+  // Still nobody: a build order outranks everything but emergencies, so even residents holding a task commitment are called over.
+  if (!builders.length) {
+    const anyone = g.state.units.filter(u =>
+      u.team === 0 && u.type === 'worker' && u.hp > 0 && !isDependent(g, u) &&
+      !u.buildOrder && !u.shelterId && !u.prisoner && !u.emergency && !u.militia && !u.recalled &&
+      !u.tributeJourney && !u.envoy && !u.scout && !u.expedition && !u.foundingJourney && !u.visit && u.drill == null && u.escortId === undefined
+    ).sort((a, c) => Math.hypot(a.x - b.x, a.z - b.z) - Math.hypot(c.x - b.x, c.z - b.z));
+    for (const resident of anyone) {
+      if (!g.buildingWorkReached(resident, b) && !g.interactionSpot(resident, b)) continue;
+      builders.push(resident);
+      if (builders.length === 2) break;
+    }
+  }
   if (!builders.length) return;
   if (b.plannedCost) queueConstruction(g, b, builders);
   else orderConstruction(g, b, builders);
@@ -138,7 +151,7 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
     (b.type==='bridge'?!!bridgeApproach(g,u,b):g.buildingWorkReached(u,b)||!!g.interactionSpot(u,b)))
     .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).slice(0,2))
     .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)).filter(u=>{const reason=productionOwnershipIssue(g,u)||fibreOrderIssue(u);if(reason){u.workReason=reason;g.banner(reason,4);return false;}return true;}).slice(0,b.renovation?1:undefined);
-  if(!chosen.length){if(!workers.some(u=>productionOwnershipIssue(g,u)||fibreOrderIssue(u)))g.banner(workers.length?'Select adult residents to build this project.':'No free builder can reach this site. Existing orders and carried goods are kept.',3);return false;}
+  if(!chosen.length){if(!workers.some(u=>productionOwnershipIssue(g,u)||fibreOrderIssue(u)))if(workers.length)g.banner('Select adult residents to build this project.',3);return false;}
   b.planPaused=b.plannedCost?false:undefined;
   for(const u of chosen){
     if(pendingSitePreparation(b)){g.interruptMission(u);recordImmediateConstruction(g,u,b);if(u.carry>0||Object.values(u.itemCargo||{}).some(n=>n>0)){u.sitePreparationId=b.id;u.order='return';u.node=null;}else assignSitePreparation(g,u,b);queueConstruction(g,b,[u]);continue;}

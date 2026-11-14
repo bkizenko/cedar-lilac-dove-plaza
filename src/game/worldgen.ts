@@ -1007,7 +1007,7 @@ function generateWorldCandidate(seed: number, version = 1, request: WorldRequest
     const forageCount = habitat === "plains" ? 28 + Math.floor(habitatRandom() * 12)
       : habitat === "forest" ? 16 + Math.floor(habitatRandom() * 8) : 12 + Math.floor(habitatRandom() * 6);
     const stoneCount = habitat === "hills" ? 12 + Math.floor(habitatRandom() * 8)
-      : 2 + Math.floor(habitatRandom() * 3);
+      : 7 + Math.floor(habitatRandom() * 4); // loose surface stones lie about every habitat, not only quarries and hills
     // Food comes first so dense woodland cannot crowd out its edible understory.
     dress(forage, "forage", forageCount, 8);
     dress(trees, "tree", treeCount, 7);

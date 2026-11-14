@@ -3038,13 +3038,13 @@ export class WorldView {
         this.terrData[o] = 196;
         this.terrData[o + 1] = 154;
         this.terrData[o + 2] = 92;
-        this.terrData[o + 3] = Math.round(255 * (game.territoryStrength[i] || 0));
+        this.terrData[o + 3] = (game.territoryStrength[i] || 0) > 0.12 ? 255 : 0;
       } else {
         const c = cols[team] || cols[0];
         this.terrData[o] = c[0];
         this.terrData[o + 1] = c[1];
         this.terrData[o + 2] = c[2];
-        this.terrData[o + 3] = Math.round(255 * (game.territoryStrength[i] || 0));
+        this.terrData[o + 3] = (game.territoryStrength[i] || 0) > 0.12 ? 255 : 0; // owned or not: the only line drawn is the outer edge
       }
     }
     // Soften the territory edge: two 3x3 passes over the alpha channel turn grid stair-steps into a smooth contour.
