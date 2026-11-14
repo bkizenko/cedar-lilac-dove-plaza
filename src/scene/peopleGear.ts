@@ -177,6 +177,9 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
   else if(type==='leader')ins.push(Q(pal.trim,'box',[.15,.15,.02],[0,.6,frontZ(F,.67)+.02],0));
   if(ins.length){rendered.insignia=type;for(const q of ins)bones.spine.push(q);}}
  roleKit(c,role,type);
+ // society colour on the back at mid LOD: a small tab cut from the society's affiliation colour so a walking party (envoy, escort, caravan crew)
+ // reads as whose it is without a panel. Render only, mid tier and nearer, one box; no gear is granted.
+ if(input.affiliation)bones.spine.push(Q(input.affiliation,'box',[.2,.3,.03],[0,.58,-(frontZ(frameOf(look.body),.67)+.03)],1));
  // armor: owned padded torso built in the society's padded style; other protection kinds draw by kind
  if(gear.armor){
   const k=gear.armor.kind as string,style:ArmorStyle|null=k==='paddedTorso'?look.armor.padded:k==='hideCuirass'?'hide':k==='scaleCuirass'?'scale':k==='lamellar'?'lamellar':k==='mail'?'mail':k==='plate'?'plate':null;
