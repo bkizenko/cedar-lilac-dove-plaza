@@ -337,6 +337,7 @@
 .hw-portrait figure{margin:0;max-width:112px}
 .hw-portrait svg{width:112px;height:112px;border-radius:var(--hw-r-m);border:2px solid rgba(227,173,79,.6);display:block}
 .hw-portrait figcaption{display:none}
+.hw-mourn{display:grid;gap:4px;padding:8px 10px;border-radius:10px;background:rgba(20,16,14,.45);border:1px solid rgba(190,150,150,.35)}
 .hw-handover.is-watch{border-color:rgba(242,199,107,.55);background:rgba(242,199,107,.07)}
 .hw-heir{display:flex;gap:var(--hw-s3);align-items:center}
 .hw-pressure{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
@@ -578,3 +579,5 @@
 
 .hw-elder{margin:0;padding-top:var(--hw-s2,8px);border-top:1px solid var(--hw-line,rgba(255,255,255,.12));font:400 var(--hw-fs-s,14px)/1.4 var(--font-body,inherit);color:var(--hw-text-dim,var(--hw-text))}
 .hw-elder b{color:var(--hw-text)}
+.hw-more{justify-self:start;margin-top:var(--hw-s2);min-height:44px;padding:0 var(--hw-s4);border-radius:10px;border:1px solid var(--hw-line-strong);background:transparent;color:inherit;font:inherit;font-size:var(--hw-fs-s);cursor:pointer}
+.hw-more:hover,.hw-more:focus-visible{background:rgba(255,236,190,.1)}

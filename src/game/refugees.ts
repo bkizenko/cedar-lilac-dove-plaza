@@ -14,7 +14,7 @@ import {lifeEvent} from './communities';
 export const REFUGEE_RULES={hunger:.85,minHome:6,maxPending:2,patienceYears:3,hallReach:14};
 const busy=(u:Unit)=>!!(u.foundingJourney||u.envoy||u.scout||u.visit||u.expedition||u.trade||u.tributeJourney||u.recalled||u.emergency||u.prisoner||u.buildOrder||u.escortId!==undefined||u.societyMissionId||u.refugee);
 /** Where a society gathers: its finished hall, else its camp (nomads, or a hall not yet raised). */
-const hallOf=(g:Game,team:number)=>{const c=g.campOf(team);return c?{x:c.x,z:c.z,id:g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&b.hp>0&&g.finished(b))?.id}:null;};
+export const hallOf=(g:Game,team:number)=>{const c=g.campOf(team);return c?{x:c.x,z:c.z,id:g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&b.hp>0&&g.finished(b))?.id}:null;};
 
 /** People of a starving society who would leave: one free adult and the children recorded as theirs, capped by the era's party size. */
 function pickFamily(g:Game,team:number):Unit[]{
