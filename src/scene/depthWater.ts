@@ -127,6 +127,21 @@ export function clippedRiverGeometry(points:{x:number;y:number;z:number;w?:numbe
  stitched.dispose();
  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(out,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geo.computeVertexNormals();geo.computeBoundingSphere();return geo;
 }
+/** Render-only: Chaikin-round the channel polyline (ends kept) and taper small streams toward the source so the ribbon meanders softly instead of reading as blocky strips. Physics keeps the raw points. */
+export function smoothRiverPoints(points:{x:number;y:number;z:number;w?:number}[],width:number){
+ if(points.length<3||points.length>600)return points;
+ let pts=points.map(p=>({...p,w:p.w??width}));
+ for(let pass=0;pass<2;pass++){
+  const next=[pts[0]];
+  for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],mix=(t:number)=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t,w:a.w+(b.w-a.w)*t});
+   if(i>0)next.push(mix(.25));if(i<pts.length-2)next.push(mix(.75));}
+  next.push(pts[pts.length-1]);pts=next;
+ }
+ let total=0;for(let i=1;i<pts.length;i++)total+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z);
+ if(width<=8&&total>0){let run=0;const taperLen=Math.min(total*.35,40);
+  for(let i=0;i<pts.length;i++){if(i)run+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z);const t=Math.min(1,run/taperLen),k=.5+.5*t*t*(3-2*t);pts[i].w*=k;}}
+ return pts;
+}
 export function addLocalWaters(group:THREE.Group,bodies:RenderWaterBody[],falls:RenderWaterfall[],waterMaterial:THREE.Material,fallMaterial:THREE.Material,riverMaterial:THREE.Material=waterMaterial){
  const lakes=bodies.filter((body):body is Extract<LocalWaterBody,{kind:'lake'}>=>body.kind==='lake');
  for(const body of bodies){
@@ -135,7 +150,7 @@ export function addLocalWaters(group:THREE.Group,bodies:RenderWaterBody[],falls:
    let geo:THREE.BufferGeometry;
    if(body.shoreline?.length){const shape=new THREE.Shape();body.shoreline.forEach((p,i)=>i?shape.lineTo(p.x,-p.z):shape.moveTo(p.x,-p.z));shape.closePath();geo=new THREE.ShapeGeometry(shape);geo.rotateX(-Math.PI/2);mesh=new THREE.Mesh(geo,waterMaterial);mesh.position.y=body.surfaceY;}
    else {geo=new THREE.CircleGeometry(body.rx,64);geo.rotateX(-Math.PI/2);geo.scale(1,1,body.rz/body.rx);mesh=new THREE.Mesh(geo,waterMaterial);mesh.position.set(body.x,body.surfaceY,body.z);}
-  }else{if(body.pts.length<2)continue;mesh=new THREE.Mesh(clippedRiverGeometry(body.pts,body.width,lakes,body.surfaceVersion===2?body:undefined),riverMaterial);}
+  }else{if(body.pts.length<2)continue;mesh=new THREE.Mesh(clippedRiverGeometry(body.surfaceVersion===2?body.pts:smoothRiverPoints(body.pts,body.width),body.width,lakes,body.surfaceVersion===2?body:undefined),riverMaterial);}
   mesh.name=`water-${body.kind}-${body.id}`;mesh.renderOrder=1;mesh.raycast=()=>{};group.add(mesh);
  }
  for(const [index,fall] of falls.entries()){

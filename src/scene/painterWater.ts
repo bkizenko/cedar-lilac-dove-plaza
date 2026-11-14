@@ -83,6 +83,7 @@ export function painterWaterFragment(surface:TerrainSurface,falling:boolean,kind
    float alpha=mix(.34,.94,smoothstep(.0,3.2,depth))+fres*.05;
    alpha=mix(alpha,.96,foam*.7);
    alpha*=smoothstep(.0,.05,depth)*.5+.5;
+   ${kind==='river'?'alpha*=mix(.45,1.,smoothstep(.0,.2,vWaterUv.x)*(1.-smoothstep(.8,1.,vWaterUv.x)));':''}
    alpha=${falling?'fallAlpha':'alpha'};
    gl_FragColor=vec4(col*mix(.68,1.,uLight),clamp(alpha,0.,.98));
    #include <tonemapping_fragment>
