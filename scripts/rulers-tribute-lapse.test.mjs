@@ -1,0 +1,20 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {Game} from '../src/game/sim.ts';
+import {ensureRulers,grudgeOf} from '../src/game/rulersRuntime.ts';
+import {tributeLapse,unpaidInstallments} from '../src/game/tributeLapse.ts';
+import {rulersOf} from '../src/game/rulersState.ts';
+const fixture=(on=true)=>{const g=new Game();g.reset(123456,10);g.enterIsland();if(on)g.state.worldOptions={...(g.state.worldOptions||{}),rulersVersion:1};ensureRulers(g);return g;};
+const owe=(g,id,n)=>{const t=g.tribe(id);t.hostile=false;t.peaceTerm='tribute';t.tribute={amount:20,remaining:3,next:1e9,owed:20*n,paid:0};return t;};
+test('tribute lapse: unpaid installments breed a grudge, three break the tribute; nothing minted; carrier on road = late not lapsed; off without rulers',()=>{
+ const g=fixture();const t=owe(g,1,1);assert.equal(unpaidInstallments(g,1),1);
+ assert.deepEqual(tributeLapse(g),[],'one late installment is only late');assert.equal(grudgeOf(g,1,0),0);
+ t.tribute.owed=40;const wood=t.wood,units=g.state.units.length;
+ assert.deepEqual(tributeLapse(g),[]);assert.ok(grudgeOf(g,1,0)>0,'tributary resents');assert.ok(grudgeOf(g,0,1)>0,'patron notes the default');assert.ok(t.tribute,'still tributary');
+ t.tribute.owed=60;assert.ok(grudgeOf(g,1,0)<.3,'grudge below the bar yet');
+ const carrier=g.state.units.find(u=>u.team===1&&u.hp>0&&u.type==='worker');carrier.tributeJourney={phase:'pickup',amount:0};
+ assert.deepEqual(tributeLapse(g),[],'carrier on the road: late, not lapsed');assert.ok(t.tribute);carrier.tributeJourney=undefined;
+ assert.deepEqual(tributeLapse(g),[1]);assert.equal(t.tribute,undefined);assert.equal(t.peaceTerm,'whitePeace');
+ assert.equal(t.wood,wood,'no goods minted or taken');assert.equal(g.state.units.length,units,'nobody spawned');
+ assert.ok(rulersOf(JSON.parse(JSON.stringify({rulers:g.state.rulers}))),'rulers state valid after round trip');
+ const h=fixture(false);h.state.worldOptions={...(h.state.worldOptions||{}),rulersVersion:0};owe(h,1,5);assert.deepEqual(tributeLapse(h),[],'old/off worlds run as before');assert.ok(h.tribe(1).tribute);
+});

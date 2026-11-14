@@ -11,7 +11,7 @@ import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,
 import {commissionWaterEngineering,previewWaterEngineering,type WaterEngineeringKind,type WaterEngineeringPoint} from './waterEngineering';
 import {queueConstruction} from "./constructionQueue";
 import {turnableBuilding,orientableBuilding} from "./footprints";
-import {planFieldArea,placeFieldArea,type FieldAreaPlan} from './fieldArea';
+import {planFieldArea,fieldRefusalSummary,placeFieldArea,type FieldAreaPlan} from './fieldArea';
 import {snapFieldRect,snapFieldPoint,type SnapResult} from './fieldSnap';
 import {fertilityPreview} from './fertilityPreview';
 import {advanceTide} from './tides';
@@ -861,8 +861,8 @@ export class Engine {
       if(plan.tiles.length>1){
         this.fieldArea=plan;this.view.setLinePreview(plan.tiles.map(t=>({x:t.x,z:t.z,y:this.game.height(t.x,t.z),ok:!t.issue})));
         const fert=fertilityPreview(this.game,{x:(this.plotStart.x+g.x)/2,z:(this.plotStart.z+g.z)/2,w:Math.abs(g.x-this.plotStart.x),d:Math.abs(g.z-this.plotStart.z)});
-        const key=`area${plan.valid}/${plan.tiles.length}/${plan.seeds}`;
-        if(key!==this.plotPreviewKey){this.plotPreviewKey=key;this.game.banner(`${plan.valid}/${plan.tiles.length} fields · ${plan.seeds} seeds · headlands between${fert.summary?` · ${fertilityText(fert)}`:''}${plan.valid<plan.tiles.length?' · red plots blocked':''}`,4);}
+        const key=`area${plan.valid}/${plan.tiles.length}/${plan.seeds}/${fieldRefusalSummary(plan)}`;
+        if(key!==this.plotPreviewKey){this.plotPreviewKey=key;this.game.banner(`${plan.valid}/${plan.tiles.length} fields · ${plan.seeds} seeds · headlands between${fert.summary?` · ${fertilityText(fert)}`:''}${plan.valid<plan.tiles.length?` · red plots: ${fieldRefusalSummary(plan)}`:''}`,4);}
       }
     }
     this.fieldSnap=null;

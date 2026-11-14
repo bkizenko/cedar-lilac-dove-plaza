@@ -39,6 +39,17 @@ export function planFieldArea(g:Game,a:{x:number;z:number},b:{x:number;z:number}
  return{tiles,columns:cx.n,rows:cz.n,valid,seeds};
 }
 
+/** Why red plots are red: the most common refusal among blocked tiles, in the words placementIssue already uses. Pure read; '' when nothing is blocked. */
+export function fieldRefusalSummary(plan:FieldAreaPlan):string{
+ const counts=new Map<string,number>();
+ for(const t of plan.tiles)if(t.issue)counts.set(t.issue,(counts.get(t.issue)||0)+1);
+ if(!counts.size)return'';
+ const [top,n]=[...counts.entries()].sort((a,b)=>b[1]-a[1]||(a[0]<b[0]?-1:1))[0];
+ const short=top.length>48?top.slice(0,47)+'…':top;
+ const more=counts.size>1?` +${counts.size-1} other reason${counts.size>2?'s':''}`:'';
+ return`${n} blocked: ${short}${more}`;
+}
+
 /** Commit the plan's admissible tiles through the ordinary placement path.
  * Each is re-validated at commit; seed shortages stop like a single field. */
 export function placeFieldArea(g:Game,plan:FieldAreaPlan,team=0){
