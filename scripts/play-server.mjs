@@ -43,9 +43,21 @@ export function createPlayServer(root,app){
   });
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
- const root=realpathSync(resolve(process.argv[2]||'.play/current')),port=Number(process.env.PLAY_PORT||8086);
+ const link=resolve(process.argv[2]||'.play/current'),port=Number(process.env.PLAY_PORT||8086);
  if(!Number.isInteger(port)||port<1||port>65535)throw new Error('Invalid play port');
- const {default:app}=await import(pathToFileURL(resolve(root,'functions/__server.func/index.mjs')).href);
- const server=createPlayServer(root,app);server.listen(port,'127.0.0.1',()=>console.log('Hearthwild play server: http://127.0.0.1:'+port));
+ // Hot release switch: when .play/current is repointed at a new complete release, new requests use it within seconds.
+ // No restart and no manual step; open villages keep working because hashed assets of older releases are retained.
+ const load=async r=>{const {default:app}=await import(pathToFileURL(resolve(r,'functions/__server.func/index.mjs')).href);return createPlayServer(r,app).listeners('request')[0];};
+ let root=realpathSync(link),handler=await load(root),switching=false;
+ const server=createServer((req,res)=>handler(req,res));
+ server.listen(port,'127.0.0.1',()=>console.log('Hearthwild play server: http://127.0.0.1:'+port));
+ setInterval(async()=>{
+  if(switching)return;
+  try{
+   const next=realpathSync(link);
+   if(next===root||!existsSync(resolve(next,'functions/__server.func/index.mjs'))||!existsSync(resolve(next,'static')))return;
+   switching=true;handler=await load(next);root=next;console.log('Hearthwild play release switched to '+next.split(sep).pop());
+  }catch(error){console.error('Release switch failed; still serving the previous release',error);}finally{switching=false;}
+ },3000).unref();
  for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>server.close(()=>process.exit(0)));
 }
