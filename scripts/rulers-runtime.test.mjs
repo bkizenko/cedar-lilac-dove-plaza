@@ -743,3 +743,12 @@ test('lane A: era gating caps a raiding force by polity tier; null (old behaviou
  const units=g.state.units.length;raidForceCap(g,1);assert.equal(g.state.units.length,units);
  delete g.state.worldOptions.rulersVersion;assert.equal(raidForceCap(g,1),null);
 });
+
+test('lane A: era gating caps raid reach by polity tier (supply range); null when rulers off; nothing created',async()=>{
+ const {raidReachCap,ERA_RAID_REACH,ensureRulers}=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();ensureRulers(g);
+ for(const t of ['band','chiefdom','state']){g.state.rulers.societies['1'].civ.polity.tier=t;assert.equal(raidReachCap(g,1),ERA_RAID_REACH[t]);}
+ assert.ok(ERA_RAID_REACH.band<ERA_RAID_REACH.chiefdom&&ERA_RAID_REACH.chiefdom<=ERA_RAID_REACH.state&&ERA_RAID_REACH.state<=700);
+ const units=g.state.units.length;raidReachCap(g,1);assert.equal(g.state.units.length,units);
+ delete g.state.worldOptions.rulersVersion;assert.equal(raidReachCap(g,1),null);
+});

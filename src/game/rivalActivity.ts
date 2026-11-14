@@ -6,7 +6,7 @@ import type {Game} from './sim';
 import type {Building,Unit} from './types';
 import type {RivalRaidPlan} from './rivalOperations';
 import {OPERATION_RULES} from './rivalOperations';
-import {raidForceCap} from './rulersRuntime';
+import {raidForceCap,raidReachCap} from './rulersRuntime';
 import {isRivalTeam} from './factions';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent,reserveSeconds,FOOD_PER_PERSON_SECOND} from './settlement';
@@ -72,7 +72,7 @@ export function assessRivalPairRaid(g:Game,team:number,reserve:number,partner?:n
   return societiesAreFoes(g,team,other)||relation.grievance>.52||t.aggro>.65&&relation.trust<.35;
  });
  counts.eligiblePartners=partners.length;if(!partners.length)return blocked('No known partner is eligible after treaty, grievance and opening protection checks');
- const facts=knownStructures(g,team);const candidates=facts.filter(p=>partners.includes(p.site.team)&&p.site.type!=='townhall'&&distance(home,p.site)<Math.min(700,Math.max(180,g.world.size*.4))).map(rememberedStructure)
+ const facts=knownStructures(g,team);const candidates=facts.filter(p=>partners.includes(p.site.team)&&p.site.type!=='townhall'&&distance(home,p.site)<Math.min(raidReachCap(g,team)??700,Math.max(180,g.world.size*.4))).map(rememberedStructure)
   .sort((a,b)=>(values[b.type]??1)-(values[a.type]??1)||distance(home,a)-distance(home,b)).slice(0,OPERATION_RULES.maxTargets);
  counts.knownTargets=candidates.length;if(!candidates.length)return blocked('No exposed known structure offers a raid target');
  let best:RivalRaidPlan|null=null;for(const target of candidates){
