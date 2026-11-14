@@ -164,7 +164,7 @@ test('lane A: yearly step settles wards and weds rivals; expansion party plan fo
 test('lane A: journeyPermit steers explore/trade/raid parties from the drivers; states need a raid claim; old saves unchanged',async()=>{
  const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');
  const g=fixture();
- const ex=R.journeyPermit(g,1,'explore');assert.ok(ex&&ex.allow&&[300,450].includes(ex.reserve));
+ const ex=R.journeyPermit(g,1,'explore');assert.ok(ex&&ex.allow&&[300,360,400,450].includes(ex.reserve));
  const tr=R.journeyPermit(g,1,'trade');assert.ok(tr&&[60,120].includes(tr.cadence));
  for(const [tier,cap] of [['band',16],['chiefdom',24],['state',32]]){g.state.rulers.societies['1'].civ.polity.tier=tier;assert.equal(R.journeyPermit(g,1,'trade').cargo,cap,'era caps one caravan load: '+tier);}
  // a peaceful, known target; make the striker a state in conquer mode by pinning the cached drive
