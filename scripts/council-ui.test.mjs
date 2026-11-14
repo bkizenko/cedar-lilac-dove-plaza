@@ -164,7 +164,7 @@ test('faction chips explain the ruler traits and demand that drive their mood',a
  assert.match(html,/boldness, cruelty and ambition/);assert.match(html,/turning against you/);
 });
 test('attention inbox lists claims, wards due, hostility and unrest worst first, with glyph and word, hidden when empty',async()=>{
- const {attentionInbox}=await import('../src/ui/council/attentionInbox.ts');const {AttentionInbox}=await import('../src/ui/council/AttentionInbox.tsx');
+ const {attentionInbox}=await import('../src/ui/council/attentionInbox.ts');const {AttentionInbox}=await import('../src/ui/council/AttentionInboxPanel.tsx');
  assert.deepEqual(attentionInbox(undefined),[]);assert.equal(renderToStaticMarkup(h(AttentionInbox,{council:{enabled:true,neighbours:[],log:[]}})),'');
  const c={enabled:true,neighbours:[{...nb[0],casus:[{byUs:true,kind:'raid',strength:20,endsIn:3,cost:2,reason:'We hold raids.'}],wards:[{name:'Ana',age:9,kind:'foster',heldByUs:true,sinceYear:1,endsIn:1,effect:''}]},{...nb[1],casus:[{byUs:false,kind:'claim',strength:60,endsIn:2,cost:5,reason:'They hold a claim on their lands.'}]}],log:[],handover:{law:'tanistry',rulerAge:60,yearlyRisk:12,extinct:false,others:[],pressure:{unrest:80,stage:'Restless',claimsAgainst:1,why:['hard winters']}}};
  const items=attentionInbox(c);assert.equal(items[0].tone,'danger');assert.equal(items.at(-1).tone,'note');assert.ok(items.some(i=>i.label==='Ward to return'));
@@ -185,7 +185,7 @@ test('elder counsel: best-skilled living elder from real stats, hidden when none
 });
 
 test('attention inbox offers take-in / turn-away buttons for hungry families waiting at the hall',async()=>{
- const {attentionInbox}=await import('../src/ui/council/attentionInbox.ts');const {AttentionInbox}=await import('../src/ui/council/AttentionInbox.tsx');
+ const {attentionInbox}=await import('../src/ui/council/attentionInbox.ts');const {AttentionInbox}=await import('../src/ui/council/AttentionInboxPanel.tsx');
  const c={enabled:true,neighbours:[],log:[],refugees:[{team:3,name:'Sandrill',count:3,yearsLeft:2}]};
  const it=attentionInbox(c).find(i=>i.key==='refugees-3');assert.ok(it);assert.match(it.text,/3 people from Sandrill ask to be taken in\. They leave in 2 years/);assert.deepEqual(it.actions.map(a=>a.command),['take-in-refugees','turn-away-refugees']);
  const html=renderToStaticMarkup(h(AttentionInbox,{council:c,onAnswer(){}}));assert.match(html,/data-refugee-action="take-in-refugees"/);assert.match(html,/Turn away/);
