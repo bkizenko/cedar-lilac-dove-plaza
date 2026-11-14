@@ -3,7 +3,9 @@
 Claude is PM and architect. Codex owns logic for saves, reservations/replay,
 physical inventory, equipment, production, food, progression, knowledge/practice,
 and performance profiling/remembered graphics choices. No grass/tree appearance
-work. Integration/publication is HOLD until Claude has pushed the pending edits;
+work. Boris subsequently explicitly requested merging the qualified logic branch
+into GitHub main (14 November); this supersedes the earlier integration hold.
+Publication is a separate step and reserved files remain reserved;
 trade and livestock/transport remain Claude's. Vague village systems are deferred
 until split into concrete assignments.
 

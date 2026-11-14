@@ -1,8 +1,10 @@
 # Codex logic queue — 14 November 2026
 
 Latest Boris assignment governs. Claude is PM/architect. Work stays on
-`codex/logic-reliability-20261114`; integration/publication waits for Claude's
-pending push. Source tests do not earn live acceptance: 37/98 remains frozen.
+`codex/logic-reliability-20261114`. Boris explicitly authorized merging this
+branch into main on 14 November; that supersedes the earlier integration hold.
+Publication remains separate from a GitHub merge, and the reserved-file list
+still applies. Source tests do not earn live acceptance: 37/98 remains frozen.
 
 Never edit `encounters.ts`, `ContactActions.tsx`, `engine.ts`,
 `buildingFamilies.ts`, `civBuildings.ts`, or `src/ui/hearth/`. No visual changes,
