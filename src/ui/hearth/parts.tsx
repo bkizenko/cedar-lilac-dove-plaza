@@ -62,12 +62,13 @@ export function TimeCard({hud,engine,onAges,onMenu}:{hud:HudSnapshot;engine:Engi
 /* ---------- left rail ---------- */
 export function Rail({hud,engine,workOpen,onWork}:{hud:HudSnapshot;engine:Engine|null;workOpen:boolean;onWork:()=>void}){
  const auto=engine?.game.state.autoWorkEnabled!==false;
- const f=useFold('rail');
+ const f=useFold('rail'),game=engine?.game,win=Math.floor(performance.now()/2000);
+ const load=useMemo(()=>game?Math.round(measureVillageWorkload(game).workloadPercent??0):null,[game,game?.state,win]);
  if(!f.showPanel)return <FoldHandle f={f} icon={<Wrench size={24}/>}/>;
  return <nav className={cx('hw-rail',f.cls)} aria-label="Village commands">
   <FoldMin f={f}/>
   <IconBtn label={auto?'Auto work on':'Auto work off'} tip="Residents follow village priorities. Direct orders and paid work stay protected." active={auto} onClick={()=>{if(engine){engine.game.setAutoWork(!auto);engine.pushHud();}}}><Repeat size={26}/></IconBtn>
-  <IconBtn label="Workload" tip="Planned work, capacity, blocked tasks" active={workOpen} onClick={onWork}><ClipboardList size={26}/></IconBtn>
+  <IconBtn label={load===null?"Workload":`Workload ${load}%`} tip={load===null?"Planned work, capacity, blocked tasks":`Work planned is ${load}% of what residents can do. Over 100% means a backlog.`} active={workOpen} onClick={onWork}><span style={{display:"flex",flexDirection:"column",alignItems:"center",lineHeight:1}}><ClipboardList size={24}/>{load!==null&&<b style={{fontSize:15,marginTop:3,fontWeight:800,color:load>100?"#ff8a6b":load>80?"#ffd36b":"#b8e6a0"}}>{load}%</b>}</span></IconBtn>
   <IconBtn label="Mark trees" tip="Drag over trees to mark them for felling (N)" active={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}><Axe size={26}/></IconBtn>
   <IconBtn label="Recall" tip="Call everyone home (V)" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}><Home size={26}/></IconBtn>
   <IconBtn label="Defense horn" tip="Call nearby adults to arms" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}><Shield size={26}/></IconBtn>
