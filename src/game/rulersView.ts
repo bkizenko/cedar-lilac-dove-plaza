@@ -22,7 +22,7 @@ import {pendingRefugees,REFUGEE_RULES} from './refugees';
 export type CouncilModel={
  enabled:boolean;stage:string;showSuccession:boolean;showFactions:boolean;
  ruler?:{name:string;age:number;headline:string;contradiction:string|null;wants:string[];fears:string;competences:Record<string,string>;values:string[]};
- house?:{name:string;generation:number;family:{name:string;age:number;role:string;adult:boolean;care?:string}[]};
+ house?:{name:string;generation:number;family:{name:string;age:number;role:string;adult:boolean;care?:string;id?:string;parent?:string;spouse?:string}[]};
  polity?:{form:string;law:string;tier:string};
  factions:{kind:FactionKind;power:number;loyalty:number;demand:string}[];coalitionLoss:number;
  glory:{stream:string;value:number}[];gloryScore:number;
@@ -106,7 +106,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
  return {
   handover,mourning:(m=>m?{from:m.from,to:m.to,relation:m.relation,contested:m.contested,kind:m.kind,secondsLeft:Math.max(0,Math.round(m.mourningUntil-g.state.time)),carried:m.carried,strained:m.strained,lapsed:m.lapsed}:undefined)(mourningOf(g,team)),enabled:true,stage:f.stage,showSuccession:f.showSuccessionUI,showFactions:f.factions,
   ruler:person?{...(({name,age,headline,contradiction,wants,fears,competences,values})=>({name,age,headline,contradiction,wants:wants.map(String),fears:String(fears),competences,values:values as string[]}))(dossier(person))}:undefined,
-  house:{name:d.house,generation:d.generation,family:Object.values(d.people).filter(p=>p.alive).map(p=>{const oc=ocs.find(o=>o.child===p.id);return {name:p.name,age:p.age,role:role(p.id),adult:p.age>=16,...(oc?{care:`raised by ${d.people[oc.guardian]?.name??'the hall'} (${oc.relation})`}:{})};})},
+  house:{name:d.house,generation:d.generation,family:Object.values(d.people).filter(p=>p.alive).map(p=>{const oc=ocs.find(o=>o.child===p.id);return {name:p.name,age:p.age,role:role(p.id),adult:p.age>=16,id:p.id,...(p.parent?{parent:p.parent}:{}),...(p.spouse?{spouse:p.spouse}:{}),...(oc?{care:`raised by ${d.people[oc.guardian]?.name??'the hall'} (${oc.relation})`}:{})};})},
   polity:{form:me.civ.polity.form,law:me.civ.polity.succession,tier:me.civ.polity.tier},
   factions:factions.map(x=>({kind:x.kind,power:Math.round(x.power*100),loyalty:x.loyalty,demand:x.demand})),coalitionLoss:coalitionLoss(factions),
   glory:STREAMS.map(s=>({stream:s,value:Math.round(me.ledger[s])})),gloryScore:Math.round(score(me.ledger)),

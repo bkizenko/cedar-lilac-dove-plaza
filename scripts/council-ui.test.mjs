@@ -239,3 +239,11 @@ test('diplomacy timeline lists ultimatums, claims lapsing, wards and fosterage s
  const t=diplomacyTimeline(c);assert.deepEqual(t.map(i=>i.kind),['ultimatum','foster','claim','ward']);assert.ok(t[0].text.includes('tribute of grain')&&t[0].text.includes('within a year'));assert.ok(t[3].text.includes('in Ridge Clan'));
  const html=renderToStaticMarkup(h(DiplomacyTimeline,{council:c}));assert.match(html,/Coming up · 4/);assert.match(html,/Ultimatum/);assert.match(html,/Fosterage ends/);assert.match(html,/min-h-11/);
 });
+test('kin tree stacks generations by descent, tags spouses and marks the ruler; old models without links still render',async()=>{
+ const {KinTree,kinGenerations}=await import('../src/ui/hearth/kinTree.tsx');
+ const fam=[{id:'a',name:'Ada',age:44,role:'ruler',adult:true,spouse:'b'},{id:'b',name:'Bran',age:40,role:'spouse',adult:true,spouse:'a'},{id:'c',name:'Cai',age:9,role:'child',adult:false,parent:'a',care:'raised by Ada (parent)'}];
+ const rows=kinGenerations(fam);assert.equal(rows.length,2);assert.equal(rows[1][0].name,'Cai');
+ const html=renderToStaticMarkup(h(KinTree,{house:{name:'Oak',generation:0,family:fam},rulerName:'Ada'}));
+ assert.match(html,/House Oak/);assert.match(html,/is-ruler/);assert.match(html,/wed to Bran/);
+ assert.equal(kinGenerations(fam.map(({id,parent,spouse,...r})=>r)).length,1);
+});

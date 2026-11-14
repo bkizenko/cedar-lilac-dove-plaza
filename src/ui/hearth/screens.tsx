@@ -17,6 +17,7 @@ import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
 import {CivicPanel} from './civicPanel';
 import {VillageSkillsCard} from './skillsCard';
+import {KinTree} from './kinTree';
 import {HearthCaptiveCard,HearthCapitulationTerms,HandoverCard,RulerPortrait,FameFeed,NeighbourNewsFeed,FactionsCard,RenownCard} from './councilCards';
 const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
 import {FACTION_LABEL,lawLabel,loyaltyWord,partyLabel} from '../council/CouncilParts';
@@ -136,7 +137,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
     <div className="hw-chips">{Object.entries(c.ruler.competences).map(([k,v])=><span key={k} className="hw-chip hw-chip-soft">{nice(k)} {v}</span>)}</div>
    </section>}
    {c.handover&&<HandoverCard h={c.handover} mourning={c.mourning}/>}
-   {c.house&&<section className="hw-card"><div className="hw-card-head"><h3>House</h3></div><ul className="hw-chips">{c.house.family.map(p=><li key={p.name+p.age} className="hw-chip hw-chip-soft"><Users size={16}/>{p.name} · {p.role} · {p.age}</li>)}</ul></section>}
+   {c.house&&<KinTree house={c.house} rulerName={c.ruler?.name}/>}
   </div>}
   {active==='realm'&&<div className="hw-grid-2">
    {c.showFactions&&c.factions.length>0&&<FactionsCard factions={c.factions} coalitionLoss={c.coalitionLoss}/>}
