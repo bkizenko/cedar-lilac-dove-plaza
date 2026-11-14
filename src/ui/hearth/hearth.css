@@ -160,7 +160,7 @@
 .hw .hw-note-act{min-height:var(--hw-hit);padding:0 var(--hw-s4);border-radius:var(--hw-r-s);background:var(--hw-wood-800);color:var(--hw-text);font-weight:750;border:0;cursor:pointer}
 .hw-note-x{display:grid;place-items:center;width:44px;height:44px;border-radius:var(--hw-r-s);background:transparent;border:0;color:var(--hw-ink);cursor:pointer}
 .hw-note-x:hover{background:rgba(43,32,22,.1)}
-.hw-note-more{margin:0;padding:4px 12px;font-size:13px;color:var(--hw-ink-dim,var(--hw-ink));opacity:.8;text-align:center}
+.hw-note-more{margin:0;padding:4px 12px;font-size:var(--hw-fs-s,16px);color:var(--hw-ink-dim,var(--hw-ink));opacity:.8;text-align:center}
 .hw-legacy-note{display:grid;gap:var(--hw-s2)}
 .hw-legacy-note .hud-toast{pointer-events:auto;margin:0;text-align:left;font-size:var(--hw-fs);line-height:1.35;background:var(--hw-parch);color:var(--hw-ink);border:1px solid rgba(43,32,22,.25);border-left:6px solid var(--hw-gold);border-radius:var(--hw-r-m);padding:10px 14px;box-shadow:var(--hw-shadow)}
 .hw-legacy-note .hud-toast button{color:var(--hw-ink);min-height:44px}
@@ -354,7 +354,9 @@
 .hw-faction{display:grid;grid-template-columns:14px minmax(7em,auto) auto 1fr;gap:var(--hw-s2) var(--hw-s3);align-items:baseline}
 .hw-faction em{font-style:normal;font-weight:700;font-size:var(--hw-fs-s)}
 .hw-faction .hw-sub{font-size:var(--hw-fs-s)}
-.hw-dot{width:12px;height:12px;border-radius:50%;align-self:center;background:var(--hw-warn)}.hw-dot.d-bad{background:var(--hw-bad)}.hw-dot.d-good{background:var(--hw-good)}
+.hw-dot{width:12px;height:12px;border-radius:2px;align-self:center;background:var(--hw-warn)}.hw-dot.d-bad{background:var(--hw-bad);border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%)}.hw-dot.d-good{background:var(--hw-good);border-radius:50%}
+/* Colour is never the only cue: mood also has a shape (triangle restless, square wavering, circle loyal) and a strip texture (stripes restless, dots wavering, plain loyal). */
+span[data-mood=bad]{background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.34) 0 3px,transparent 3px 7px)}span[data-mood=mid]{background-image:radial-gradient(rgba(0,0,0,.34) 1.2px,transparent 1.6px);background-size:6px 6px}
 .hw-renown .hw-meter.is-top i{background:linear-gradient(90deg,var(--hw-gold),var(--hw-gold-2))}
 @media (max-width:640px){.hw-faction{grid-template-columns:14px 1fr auto}.hw-faction .hw-sub{grid-column:2/4}}
 /* civic panel */
@@ -598,3 +600,8 @@
 .hw-tabs{align-items:center}
 .hw-tabs .hw-tray-x{margin-left:auto;flex:none;display:grid;place-items:center;width:44px;height:44px;min-height:44px;padding:0;border:1px solid var(--hw-line-strong);border-radius:10px;background:transparent;color:inherit;cursor:pointer}
 .hw-tabs .hw-tray-x:hover,.hw-tabs .hw-tray-x:focus-visible{background:rgba(255,236,190,.12)}
+
+/* Test lab: a small centred tab under the top bar, clear of the left rail and the build/selection panels */
+.hw-testlab,.hw-testlab-fold{left:50%!important;top:84px!important;transform:translateX(-50%)}
+.hw-testlab-fold>.hw-testlab{left:auto!important;top:auto!important;transform:none}
+@media (max-width:760px){.hw-testlab,.hw-testlab-fold{top:70px!important}}

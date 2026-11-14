@@ -427,6 +427,7 @@ export class WorldView {
   fowData = new Uint8Array(FOW * FOW * 4);
   terrTex: THREE.DataTexture | null = null;
   terrData = new Uint8Array(FOW * FOW * 4);
+  private terrBlur: Uint8Array | null = null;
   fowMesh: THREE.Mesh | null = null;
   rain: THREE.Points | null = null;
   rainGeo: THREE.BufferGeometry | null = null;
@@ -2942,7 +2943,7 @@ export class WorldView {
           float seen = smoothstep(0.12, 0.28, v);
           // Colored land remains visible without concealing terrain detail.
           float contour = smoothstep(0.08,0.16,terr.a)*(1.0-smoothstep(0.22,0.32,terr.a));
-          float wash = seen * (terr.a*mix(0.23,0.43,live) + contour*mix(0.24,0.45,live));
+          float wash = seen * (terr.a*mix(0.07,0.14,live) + contour*mix(0.30,0.52,live));
           float a = max(shroudA, wash);
           if (a < 0.012) discard;
           float cloud = sin(vUv.x * 115.0 + uTime * 0.08) * sin(vUv.y * 93.0 - uTime * 0.06);
@@ -3040,6 +3041,14 @@ export class WorldView {
         this.terrData[o + 1] = c[1];
         this.terrData[o + 2] = c[2];
         this.terrData[o + 3] = Math.round(255 * (game.territoryStrength[i] || 0));
+      }
+    }
+    // Soften the territory edge: two 3x3 passes over the alpha channel turn grid stair-steps into a smooth contour.
+    {
+      const n=FOW,a=this.terrData,t=this.terrBlur&&this.terrBlur.length===n*n?this.terrBlur:(this.terrBlur=new Uint8Array(n*n));
+      for(let pass=0;pass<2;pass++){
+        for(let y=0;y<n;y++){const y0=Math.max(0,y-1),y1=Math.min(n-1,y+1);for(let x=0;x<n;x++){const x0=Math.max(0,x-1),x1=Math.min(n-1,x+1);let sum=0;for(let yy=y0;yy<=y1;yy++){const r=yy*n;for(let xx=x0;xx<=x1;xx++)sum+=a[(r+xx)*4+3];}t[y*n+x]=Math.round(sum/((x1-x0+1)*(y1-y0+1)));}}
+        for(let i=0;i<n*n;i++){a[i*4+3]=t[i];if(a[i*4+3]>0&&a[i*4]+a[i*4+1]+a[i*4+2]===0){a[i*4]=196;a[i*4+1]=154;a[i*4+2]=92;}}
       }
     }
     this.fowTex.needsUpdate = true;

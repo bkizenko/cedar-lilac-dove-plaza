@@ -17,6 +17,8 @@ export function readAnimalSet():AnimalSet{
  return 'rig';
 }
 /** Models face +X; the sim's facing is atan2(vx,vz) (forward = +Z at facing 0). */
+/** Surface ripple rings around fish read as stray circles; off. */
+const RIPPLES_ON=false;
 export const FACING_OFFSET=-Math.PI/2;
 export type AnimalRow={c:{id:number;species:string;x:number;y:number;z:number;facing:number;scale:number;hp:number;fly:number;beh?:{st:string};vx?:number;vz?:number;adultScale?:number;sex?:'female'|'male'};domestic:boolean;
  /** 0 spring .. 3 winter and progress within it */season:number;within:number;shore:boolean};
@@ -88,7 +90,7 @@ export class FishAdapter{
     const sizeK=f.size,y=surf-f.depth;
     L.add({model:rig,x:f.x,y,z:f.z,facing:f.facing,size:sizeK,mats:posed?.mats,lift:0,tier,rz:f.pitch,coat:{spots:0,winter:0,seed:(n.id%97)/97,tint:[1,1,1],scale:1.4}});
    }
-   for(const r of ripples){if(ri>=this.cap)break;const k=r.age/r.life,rad=r.radius+r.age*.5;
+   for(const r of (RIPPLES_ON?ripples:[])){if(ri>=this.cap)break;const k=r.age/r.life,rad=r.radius+r.age*.5;
     this.p.set(r.x,surf+.03,r.z);this.s.set(rad,1,rad);this.q.identity();this.m.compose(this.p,this.q,this.s);this.ripples.setMatrixAt(ri,this.m);
     const a=Math.max(0,1-k)*.9;this.col.setRGB(a,a,a);this.ripples.setColorAt(ri,this.col);ri++;}
   }

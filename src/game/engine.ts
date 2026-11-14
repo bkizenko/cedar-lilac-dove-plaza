@@ -9,6 +9,7 @@ import {applyEngineReadQuery,isEngineReadQuery,ENGINE_READ_MODEL_RULES,type Engi
 import {SimulationWorkerHost} from './simulationWorkerHost';
 import {applyEngineCommand,type EngineDispatchCommand,type EngineDispatchResult,type EngineSelection} from './engineDispatch';
 import {commissionWaterEngineering,previewWaterEngineering,type WaterEngineeringKind,type WaterEngineeringPoint} from './waterEngineering';
+import {queueConstruction} from "./constructionQueue";
 import {turnableBuilding,orientableBuilding} from "./footprints";
 import {planFieldArea,placeFieldArea,type FieldAreaPlan} from './fieldArea';
 import {snapFieldRect,snapFieldPoint,type SnapResult} from './fieldSnap';
@@ -739,7 +740,7 @@ export class Engine {
         this.updateGhost();this.pushHud();return;
       }
       if(this.game.state.placing==='gate')placeFacingGate(this.game,this.ghostPos,this.gateFacing);
-      else if(this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan,this.placementTurn(),this.placementTurns())&&this.game.state.autoWorkEnabled===false)this.game.setAutoWork(true); // paying for a site means the village builds it
+      else{const before=new Set(this.game.state.buildings.map(b=>b.id));if(this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan,this.placementTurn(),this.placementTurns())){const site=this.game.state.buildings.find(b=>!before.has(b.id)&&b.team===0);if(site)queueConstruction(this.game,site,[]);}} // a laid-out site is built: the two nearest free adults are given it, manual or auto
       this.updateGhost();
       this.pushHud();
       return;
