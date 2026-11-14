@@ -214,6 +214,24 @@ const _haulEuler = new THREE.Euler(0, 0, 0, "YXZ");
 const CARGO_COLORS = {food:"#c5ad71",wood:"#73502f",stone:"#a2a3a2",copper:"#bc7a4c",iron:"#666e78"};
 const FARM_TOOL_COLORS = {stoneHoe:"#bcb6a6",copperTools:"#d38a55",ironTools:"#afbdc7"};
 
+/** Soft radial warm pool (additive, no depth write) drawn flat on the ground under lit fires. */
+function buildLawnGlow(): THREE.InstancedMesh {
+  const N = 32, d = new Uint8Array(N * N * 4);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const r = Math.hypot((x + .5) / N - .5, (y + .5) / N - .5) * 2, a = Math.max(0, 1 - r), v = Math.pow(a, 1.6) * .6;
+    const i = (y * N + x) * 4; d[i] = 255 * v; d[i + 1] = 150 * v; d[i + 2] = 60 * v; d[i + 3] = 255 * v;
+  }
+  const tex = new THREE.DataTexture(d, N, N, THREE.RGBAFormat); tex.magFilter = THREE.LinearFilter; tex.minFilter = THREE.LinearFilter; tex.generateMipmaps = false; tex.needsUpdate = true; tex.colorSpace = THREE.SRGBColorSpace;
+  const geo = new THREE.PlaneGeometry(1, 1); geo.rotateX(-Math.PI / 2);
+  const mat = new THREE.MeshBasicMaterial({
+    map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: true,
+    polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+  });
+  const m = new THREE.InstancedMesh(geo, mat, 48);
+  m.frustumCulled = false; m.count = 0; m.renderOrder = 2;
+  return m;
+}
+
 function instCap(mesh: THREE.InstancedMesh) {
   return ((mesh.instanceMatrix.array as Float32Array).length / 16) | 0;
 }
@@ -250,6 +268,8 @@ export class WorldView {
   sun: THREE.DirectionalLight;
   fill: THREE.AmbientLight;
   hearth: THREE.PointLight;
+  /** warm light pool laid on the ground under lit fires (render only; follows real lit hearths/pits) */
+  private lawnGlow?: THREE.InstancedMesh;
   torchLights: THREE.PointLight[] = [];
   look = new THREE.Vector3(0, 1.2, 0);
   private cameraGround:CameraGround|null=null;
@@ -1306,6 +1326,8 @@ export class WorldView {
     this.pits.count = Math.min(halls.length,64);
     this.flames.count = 0;
     this.scene.add(this.pits, this.flames);
+    this.lawnGlow = buildLawnGlow();
+    this.scene.add(this.lawnGlow);
     const home = halls.find((h) => h.team === 0);
     if (home) this.hearth.position.set(home.x + 1.6, home.y + 0.8, home.z + 4.2);
   }
@@ -2753,6 +2775,25 @@ export class WorldView {
           this.flames.setMatrixAt(fi++, _m);
           torches++;
         }
+      }
+      if (this.lawnGlow) {
+        // one pool per lit hearth, hall firepit and night camp; breathes with the same flicker bands as the hearth light
+        const t = game.state.time, fl = Math.sin(t * 9) * .14 + Math.sin(t * 23.7 + 1.3) * .09 + Math.sin(t * 5.1 + 2.1) * .07;
+        const base = night ? 1 : .22;
+        let gi = 0;
+        const put = (x: number, y: number, z: number, r: number) => {
+          if (gi >= 48) return;
+          const k = r * (base + fl * (night ? .5 : .15));
+          _p.set(x, y + .32, z); _q.identity(); _s.set(k, 1, k); _m.compose(_p, _q, _s);
+          this.lawnGlow!.setMatrixAt(gi++, _m);
+        };
+        for (const b of game.state.buildings) {
+          if (!litHearths.has(b.id) || !(b.team === 0 || game.visibleAt(b.x, b.z))) continue;
+          put(b.x, foundationProfile(game, b).level, b.z, 8);
+        }
+        for (const h of halls) put(h.x + 1.6, h.y, h.z + 4.2, 9);
+        this.lawnGlow.count = gi;
+        this.lawnGlow.instanceMatrix.needsUpdate = true;
       }
       this.flames.count = fi;
       this.flames.instanceMatrix.needsUpdate = true;
