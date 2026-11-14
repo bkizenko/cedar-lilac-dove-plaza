@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {SkillStrip} from './skillsCard';
-import {Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound} from 'lucide-react';
+import {Minimize2,Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import {MusicChip} from './MusicControls';
 import {FoldHandle,FoldMin,useFold} from './fold';
@@ -106,7 +106,7 @@ export function CostChips({cost,have,extra}:{cost:Record<string,number|undefined
 export function BuildTray({hud,engine,tab,setTab,onPick,onClose}:{hud:HudSnapshot;engine:Engine|null;tab:string;setTab:(t:string)=>void;onPick:()=>void;onClose?:()=>void}){
  const have={seeds:engine?.game.tribe(0).seeds||0,wood:hud.wood,stone:hud.stone,food:hud.food,copper:hud.copper,iron:hud.iron};
  return <section className="hw-tray" aria-label="Build">
-  <div className="hw-tabs" role="tablist" aria-label="Building categories">{CATS.map(c=><button key={c} role="tab" type="button" aria-label={c} aria-selected={tab===c} onClick={()=>setTab(c)}>{CAT_ICON[c]}<span>{c}</span></button>)}{onClose&&<button type="button" className="hw-tray-x" aria-label="Close build menu" title="Close · Esc" onClick={onClose}><X size={22}/></button>}</div>
+  <div className="hw-tabs" role="tablist" aria-label="Building categories">{CATS.map(c=><button key={c} role="tab" type="button" aria-label={c} aria-selected={tab===c} onClick={()=>setTab(c)}>{CAT_ICON[c]}<span>{c}</span></button>)}{onClose&&<button type="button" className="hw-tray-x" aria-label="Minimise build menu" title="Minimise · Esc" onClick={onClose}><Minimize2 size={24}/></button>}</div>
   <div className="hw-tiles">
    {hud.buildOptions.filter(b=>catOf(b.type)===tab).map(b=>{
     const home=b.type==='house'&&engine?housingAdoptionIssue(engine.game):null;
