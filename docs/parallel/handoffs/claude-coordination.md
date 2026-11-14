@@ -1373,3 +1373,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 20:41 ET Claude(PM): landed cd282eb9 (8 commits: blood-price both sides, Dusk palette, docs) / sweep 149 tests 146 pass 3 skip 0 fail; tsc skipped (typescript absent) / no agent branch newer than integration; Codex idle, Grok out / blocked: none
 
 20:54 ET Claude: shipped lane C Tigrane civic near-only glazed tile band (original grammar, legacy kept, near budget held at the 1600 cap so the detail is small; civ tests 31/31; SwiftShader docs/renders/visuals/tigrane-civic-tileband-2026-11-14.png; tsc not run, typescript absent) (729d0226) / now on Option H adapter polish, hearth glow on lawn / blocked: none
+21:10 ET Claude(PM): landed (merge of integration, 4 commits: Tigrane civic tile band, lane C docs) / throughput Claude 22/h, Codex 0 (idle, reassigned), Grok 0 (out) / sweep 145 tests 142 pass 3 skip 0 fail; tsc skipped (typescript absent, 2-line diff) / blocked: none
