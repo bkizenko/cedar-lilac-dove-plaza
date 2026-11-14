@@ -70,7 +70,7 @@ export function FirstContact({engine}:{engine:Engine}){
    {!hostile&&<><ul className="fc-list" aria-label={v.groups.deal}>
     <LedgerRow icon={<Repeat size={24}/>} say label={v.prompts.trade} line={stranger?.carryType&&stranger.carry>0?v.trader.offers(Math.floor(stranger.carry),stranger.carryType):v.trader.empty} expanded={trade} onClick={()=>{ask('trade');setTrade(!trade);}}/>
     {trade&&actions.trade.options.map(o=><LedgerRow key={o.id} icon={<Repeat size={24}/>} label={o.label} onClick={()=>run('trade',o.id)}/>)}
-    {trade&&!actions.trade.options.length&&(actions.approach.reason===null?<LedgerRow icon={<Footprints size={24}/>} label={v.trader.closer} onClick={()=>run('approach-trade')}/>:<li className="fc-quiet">{actions.trade.reason}</li>)}
+    {trade&&!actions.trade.options.length&&(actions.invite.reason===null?<LedgerRow icon={<Footprints size={24}/>} label="Invite them to your village" line="They walk to your hall; trade there." onClick={()=>run('invite-trade')}/>:actions.approach.reason===null?<LedgerRow icon={<Footprints size={24}/>} label={v.trader.closer} onClick={()=>run('approach-trade')}/>:<li className="fc-quiet">{actions.trade.reason}</li>)}
     {trade&&stranger?.visit?.phase==='waiting'&&stranger.visit.team===undefined&&<LedgerRow icon={<MessageCircle size={24}/>} label={v.trader.decline} onClick={()=>run('decline-trade')}/>}
    </ul>{trade&&stranger&&stranger.team!==0&&<div className="fc-quiet"><TradedTeachingActions engine={engine} teacherId={stranger.id} personId={encounter.person} open={trade}/></div>}</>}
    <ul className="fc-list"><LedgerRow icon={<Sword size={24}/>} label={v.groups.force} expanded={force} onClick={()=>setForce(!force)}/></ul>
