@@ -6,6 +6,7 @@ import type {Game} from './sim';
 import type {Building,Unit} from './types';
 import type {RivalRaidPlan} from './rivalOperations';
 import {OPERATION_RULES} from './rivalOperations';
+import {raidForceCap} from './rulersRuntime';
 import {isRivalTeam} from './factions';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent,reserveSeconds,FOOD_PER_PERSON_SECOND} from './settlement';
@@ -58,7 +59,7 @@ export function assessRivalPairRaid(g:Game,team:number,reserve:number,partner?:n
  counts.adults=adults.length;counts.readyFighters=ready.length;
  const guards=Math.max(1,Math.ceil(adults.length*OPERATION_RULES.guardFraction));
  const homeGuards=ready.filter(u=>distance(u,home)<OPERATION_RULES.localDefenseRadius).sort((a,b)=>distance(a,home)-distance(b,home)).slice(0,guards);counts.retainedGuards=homeGuards.length;if(homeGuards.length<guards)return blocked('Not enough ready guards would remain near home');
- const available=ready.filter(u=>!homeGuards.includes(u));const count=Math.min(12+t.age*3,Math.max(2,Math.floor(adults.length*OPERATION_RULES.raidFraction)),available.length);counts.availableFighters=available.length;if(count<2)return blocked('At least two available fighters are needed after retaining guards');
+ const available=ready.filter(u=>!homeGuards.includes(u));const count=Math.min(raidForceCap(g,team)??Infinity,12+t.age*3,Math.max(2,Math.floor(adults.length*OPERATION_RULES.raidFraction)),available.length);counts.availableFighters=available.length;if(count<2)return blocked('At least two available fighters are needed after retaining guards');
  const strength=(u:Unit)=>Math.max(.2,u.dmg/10)*Math.min(1,u.hp/Math.max(1,u.maxHp));
  const fighters=available.sort((a,b)=>strength(b)-strength(a)||a.id-b.id).slice(0,count),power=fighters.reduce((n,u)=>n+strength(u),0);
  const values:Partial<Record<Building['type'],number>>={warehouse:7,farm:5,lumber:5,quarry:4,market:6,cornerstone:3,hut:2,dock:4};

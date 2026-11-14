@@ -706,3 +706,14 @@ test('lane A: a starving neighbour sends its own people on foot; the player take
  if(r.ok){assert.ok(party.every(u=>u.team===0&&!u.refugee&&!u.foundingJourney),'taken in: their own people join');assert.equal(g.state.units.length,before);}
  else assert.match(r.reason,/room/);void n;void turned;
 });
+
+test('lane A: era gating caps a raiding force by polity tier; null (old behaviour) when rulers are off; no fighters created',async()=>{
+ const {raidForceCap,ERA_RAID_FORCE,ensureRulers}=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();ensureRulers(g);
+ const tier=g.state.rulers.societies['1'].civ.polity.tier;
+ assert.equal(raidForceCap(g,1),ERA_RAID_FORCE[tier]);
+ for(const t of ['band','chiefdom','state']){g.state.rulers.societies['1'].civ.polity.tier=t;assert.equal(raidForceCap(g,1),ERA_RAID_FORCE[t]);}
+ assert.ok(ERA_RAID_FORCE.band<ERA_RAID_FORCE.chiefdom&&ERA_RAID_FORCE.chiefdom<ERA_RAID_FORCE.state);
+ const units=g.state.units.length;raidForceCap(g,1);assert.equal(g.state.units.length,units);
+ delete g.state.worldOptions.rulersVersion;assert.equal(raidForceCap(g,1),null);
+});

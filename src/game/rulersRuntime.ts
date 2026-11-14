@@ -231,6 +231,12 @@ export const ERA_REACH:Record<'band'|'chiefdom'|'state',{crew:number;slow:number
  chiefdom:{crew:3,slow:1.15,organised:true,note:'a chiefdom can spare a modest party'},
  state:{crew:4,slow:1,organised:true,note:''},
 };
+/** Era gating of raiding forces: the most fighters a polity of this tier can send out on one raid. Only a cap; no fighter is created. Null when rulers are off (old behaviour). */
+export const ERA_RAID_FORCE:Record<'band'|'chiefdom'|'state',number>={band:5,chiefdom:8,state:12};
+export function raidForceCap(g:Game,team:number):number|null{
+ if(!rulersEnabled(g))return null;
+ return ERA_RAID_FORCE[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'];
+}
 export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;rations:number;why:string[]};
 export function expansionParty(g:Game,team:number,raw=false):PartyPlan|null{
  const d=expansionOf(g,team);if(!d)return null;
