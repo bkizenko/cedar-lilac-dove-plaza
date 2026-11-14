@@ -182,6 +182,7 @@ import {wonderDefenceFactor} from "./wonderEffects";
 import {lootRuins} from "./ruinsWorld";
 import {tickScouts,scoutAI} from "./scouting";
 import { tickVisitors, visitorAI } from "./visitors";
+import {tickTradeParties} from "./tradeParties";
 import { personName, citizenName, prehistoricName, predisposition } from "./people";
 import { sendDelegation, delegationAI } from "./delegations";
 import {settlePeace, tickPeace, tributeJourneyAI} from './peace';
@@ -6093,6 +6094,7 @@ export class Game {
         fadeTrails(this,sdt);
         tickRouteWear(this,sdt);tickWaystations(this,sdt);tickWonders(this,sdt);
         tickVisitors(this,sdt);
+        tickTradeParties(this,sdt);
         phases?.mark('economy');
         this.tickRoutes(sdt);
         tickTradeFocus(this);

@@ -6,6 +6,7 @@ import {knownSettlement} from '@/game/barter';
 import {useLifecycleAction} from '../useLifecycleAction';
 import {TestPanel} from '../TestPanel';
 import {VisitingTrader} from '../VisitingTrader';
+import {TradeExpeditions} from './tradeExpeditions';
 import {TradeProposal} from '../TradeProposal';
 import {ExcavationControls} from '../ExcavationControls';
 import {TowerPlatformControls} from '../TowerPlatformControls';
@@ -92,6 +93,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
    {map&&<MinimapCard phone hud={hud} engine={engine} onNeighbours={()=>{setMap(false);setScreen({k:'council',tab:'neighbours'});}} onClose={()=>setMap(false)}/>}</div>
 
   {engine&&<VisitingTrader engine={engine} fold/>}
+  {engine&&<TradeExpeditions engine={engine}/>}
   {test&&engine&&<TestPanel engine={engine} close={()=>setTest(false)}/>}
   {screen?.k==='village'&&engine&&<VillageScreen hud={hud} engine={engine} initial={screen.tab} onClose={close} onKnowledge={()=>setScreen({k:'ages'})} onOffer={t=>setTrade(t)}/>}
   {screen?.k==='council'&&engine&&<CouncilScreen engine={engine} initial={screen.tab} onClose={close}/>}

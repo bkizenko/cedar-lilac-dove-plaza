@@ -89,6 +89,7 @@ import {validConflictJournal} from './conflictMetrics';
 import{validPenWaterState}from'./penWater';
 import {validSurvivalState} from './survivalNeeds';
 import {validSeasonReports} from './seasonReports';
+import {validTradePartyState} from './tradeParties';
 import {validSimulationEvents} from './simulationEvents';
 import {syncHaulageProjects,validHaulageProjects} from './haulage';
 import {generateWorld,sampleHeight} from './worldgen';
@@ -229,7 +230,7 @@ function validateGamePayload(raw: unknown) {
   if(!validArmorState(s)||!validSiegeRamState(s)||!validFarmToolCargo(s)||!validMethodRecords(s)||!validMethodRecordPickups(s)||!validMethodRecordTrades(s)||!validWeaponCargoState(s)||!validHullLossRecovery(s))fail();
   if(!validSocietyIdentities(s)||!validCombatDoctrine(s)||!validGuardDuties(s)||!validRaidReports(s)||!validTransit(s)||!validRouteWear(s)||!validWaystations(s)||!validWonders(s)||!validRuins(s)||!validTerrainInfluence(s)||!validCommanders(s)||!validNaval(s))fail();
   if(!validBoatPractice(s)||!validSailingState(s))fail();
-  if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validSurvivalState(s))fail();
+  if(!validConflictIntentState(s)||!validPrisonerState(s)||!validConflictJournal(s.conflictJournal)||!validHaulageProjects(s)||!validSimulationEvents(s.simulationEvents)||!validSeasonReports(s.seasonReports,s.time)||!validTradePartyState(s)||!validSurvivalState(s))fail();
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
   const rivalTeam=(team:number)=>validTeam(team)&&team>0&&team!==3;
   if(s.contacts!==undefined&&(!Array.isArray(s.contacts)||s.contacts.length>s.tribes.length-1||new Set(s.contacts).size!==s.contacts.length||s.contacts.some((t:number)=>(!validTeam(t)||t===0))))fail();

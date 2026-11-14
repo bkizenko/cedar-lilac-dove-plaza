@@ -59,6 +59,21 @@ function measureSeason(g: Game, report: SeasonReports): SeasonSample {
  return current;
 }
 
+/** One short plain-language line per finished season; only notable changes, no popup. */
+export function seasonSummaryLine(done:SeasonSample,previous?:SeasonSample){
+ const name=SEASON_NAMES[done.season%4],notes:string[]=[];
+ for(const key of SEASON_METRICS){
+  const now=done.totals[key],before=previous?.totals[key];
+  if(before===undefined||Math.abs(now-before)<5||before>0&&Math.abs(now-before)/before<.3)continue;
+  const label=key==='weapons'?'weapons made':key==='food'?'food gathered':key==='wood'?'logs hauled':key+' delivered';
+  notes.push(`${label} ${now>before?'up':'down'} to ${Math.round(now)}`);
+ }
+ const spoiled=done.foodFlow?.spoiled??0;if(spoiled>=10)notes.push(`${Math.round(spoiled)} food spoiled`);
+ return `${name} ended: ${notes.length?notes.slice(0,3).join(', '):'no notable changes'}.`;
+}
+function logSeasonSummary(g:Game,done:SeasonSample,previous?:SeasonSample){
+ const history=(g.state.lifeHistory??=[]);history.push({team:0,text:seasonSummaryLine(done,previous),time:g.state.time});if(history.length>256)history.shift();
+}
 export function currentSeasonReport(g: Game) {
  const report = g.state.seasonReports;
  return report ? measureSeason(g, report) : undefined;
@@ -80,7 +95,9 @@ export function updateSeasonReports(g: Game) {
   return;
  }
  const completed = measureSeason(g, report);
+ const previous=report.history[report.history.length-1];
  report.history.push(completed);
+ if(!completed.partial)logSeasonSummary(g,completed,previous);
  if (report.history.length > SEASON_REPORT_LIMIT) report.history.shift();
  report.active = sample(g, season, report.weaponsMade);
 }
