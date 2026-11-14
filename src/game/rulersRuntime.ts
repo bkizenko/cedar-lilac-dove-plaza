@@ -202,6 +202,20 @@ export function npcMarriages(g:Game):[number,number][]{
  return out;
 }
 
+/** Fame-feed data for NPC pledges: each house's own dynasty chronicle records who went to whom (names, year). Private to the two houses: neighbourNews
+ * never reads the chronicle of a pair that excludes the player, so no remote receipt is invented. Log capped at 40 like every other line. */
+function chronicleKinPledge(g:Game,a:number,b:number,action:'fosterage'|'hostageExchange',wards:Ward[]){
+ const r=st(g).rulers;if(!r)return;const societies={...r.societies};
+ for(const [me,other] of [[a,b],[b,a]]){
+  const s=societies[String(me)];if(!s)continue;const out=wards.find(w=>Number(w.from)===me),inn=wards.find(w=>Number(w.to)===me);
+  const nm=(id:string|undefined,t:number)=>id?societies[String(t)]?.dynasty.people[id]?.name:undefined;
+  const sent=nm(out?.person,me),got=nm(inn?.person,other),host=g.tribe(other)?.name??`Society ${other}`;
+  if(!sent||!got)continue;
+  const line=`${r.year}: ${action==='fosterage'?'fosterage':'hostage exchange'} with ${host}: ${sent} goes to their hall, ${got} comes to ours`;
+  societies[String(me)]={...s,dynasty:{...s.dynasty,log:[...s.dynasty.log,line].slice(-40)}};
+ }
+ st(g).rulers={...r,societies};
+}
 /** Rival houses pledge kin to each other (lane A: fosterage and hostages for NPCs, same exchangeKin path as the player commands). Dynastic year %8==2
  * houses foster a child each, year %8==6 uneasy neighbours (no marriage-grade trust yet) trade a hostage kinsman. Both houses need the scale feature,
  * be mutually known and not at war, and have no ward between them already; each house joins at most one pledge a year. Never touches the player
@@ -214,7 +228,8 @@ export function npcKinPledges(g:Game):[number,number,'fosterage'|'hostageExchang
  for(const a of ids){if(used.has(a))continue;
   const b=ids.find(x=>x>a&&!used.has(x)&&!bound(a,x)&&!societyRelation(g,a,x).hostile&&societyRelation(g,a,x).known&&societyRelation(g,x,a).known);
   if(b===undefined)continue;
-  if((action==='fosterage'?fosterHouses:exchangeHostages)(g,a,b)){used.add(a);used.add(b);out.push([a,b,action]);}}
+  const res=(action==='fosterage'?fosterHouses:exchangeHostages)(g,a,b);
+  if(res){used.add(a);used.add(b);out.push([a,b,action]);chronicleKinPledge(g,a,b,action,res.wards);}}
  return out;
 }
 

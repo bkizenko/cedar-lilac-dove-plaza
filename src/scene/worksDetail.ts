@@ -43,7 +43,12 @@ export function dressWorks(spec:BuildingSpec,trade?:string,wear=.3,wealth=.4):Bu
   case 'quay':{for(let i=0;i<3;i++)cyl('woodDark',.3,.8,[-fw*.7+i*fw*.7,0,front(.3)],0,6);cyl('cloth',.5,.12,[fw*.4,0,front(.2)],0,8);box('woodMid',[.8,.5,.6],[-fw*.3,0,rear(-.9)],1);box('woodDark',[.6,.4,.5],[fw*.5,0,rear(-.9)],0,[0,.5,0]);break;}
   case 'tower':{box('woodDark',[.9,.5,.7],[flank(.6),0,front(.3)],0);cyl('iron',.5,.25,[flank(.6),.5,front(.3)],0,8);box('clothRed',[.06,1.4,.5],[side*(mass.maxX-.2),0,front(.1)],0);break;}
   case 'gate':{for(const s of[-1,1]){box('iron',[.12,.12,.12],[ex+s*range(r,1.1,1.5),range(r,1.4,1.8),front(.05)],0);cyl('woodDark',.12,range(r,1.0,1.6),[ex+s*range(r,1.4,1.8),0,front(.2)],0,5);}box('stoneDark',[.8,.3,.5],[ex,0,front(.6)],0);break;}
-  case 'palisade':{const n=Math.round(range(r,3,6));for(let i=0;i<n;i++)box(pick(r,['woodDark','woodMid']),[.14,range(r,.35,.7),.14],[-fw*.7+i*fw*1.4/n+(r()-.5)*.3,range(r,1.7,2.1),front(.0)],0,[(r()-.5)*.3,0,(r()-.5)*.3]);break;}
+  case 'palisade':{
+   // Lashings sit on real stakes only: a join mask (wall continues one way) or a gate gap removes stakes, so x/z come from the stakes that exist.
+   const stakes=spec.parts.filter(p=>p.shape==='cylinder'&&p.pos[1]<.05&&p.size[1]>1.5);
+   if(!stakes.length)break;const n=Math.round(range(r,3,6));
+   for(let i=0;i<n;i++){const st=pick(r,stakes);box(pick(r,['woodDark','woodMid']),[.14,range(r,.35,.7),.14],[st.pos[0]+(r()-.5)*.1,range(r,1.7,2.1),st.pos[2]+.1],0,[(r()-.5)*.3,0,(r()-.5)*.3]);}
+   break;}
   case 'hearth':{for(let i=0;i<4;i++)cyl('stoneDark',.3,.2,[Math.sin(i*1.57)*.7,0,Math.cos(i*1.57)*.7+front(.8)],0,6);log(flank(.6),front(.4),.12,.9,0.4);break;}
   case 'mill':{for(let i=0;i<3;i++)box('cloth',[.45,.34,.3],[awayFromDoor(-side*(mass.maxX-.5))+i*.28,0,front(.4)],0,[0,i*.4,0]);cyl('stone',1.1,.25,[flank(.9),0,front(.8)],1,9);cyl('stoneDark',.25,.3,[flank(.9),.25,front(.8)],0,6);break;}
   case 'college':{for(const s of[-1,1])box('stone',[.5,.5,.5],[ex+s*2.0,0,front(.6)],0);box('woodMid',[.8,.45,.35],[flank(.7),0,front(.5)],0);break;}
