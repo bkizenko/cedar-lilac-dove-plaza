@@ -67,7 +67,7 @@ function darkSlot(g:G):Slot{const t=(g.look?.palette??CIVS[g.civ].materials) as 
 const HUT:{plan:HutPlan}={plan:{kx:1,kz:1,apse:false,doorK:[1,1],doorSpread:1}};
 function hutDoor(g:G,x:number,z:number,wd=.95,h=1.65){
  const dk=darkSlot(g),fr:Slot=dk==='trim'?'wall':'trim';
- wd*=HUT.plan.doorK[0];h*=HUT.plan.doorK[1];
+ wd*=HUT.plan.doorK[0];h*=h>=1.65?Math.max(1,HUT.plan.doorK[1]):HUT.plan.doorK[1]; // an adult-height opening never shrinks under 1.65 m
  g.B(dk,[wd,h,.1],[x,0,z],1);
  for(const s of[-1,1])g.B(fr,[.14,h+.14,.2],[x+s*(wd/2+.07),0,z+.04],1);
  g.B(fr,[wd+.4,.16,.2],[x,h,z+.04],1);g.B('wall2',[wd+.7,.1,.5],[x,0,z+.22],1);}
@@ -91,14 +91,14 @@ function poorBase(g:G):Out{const {w,d,r}=g,alt=(getHutVariety()?POOR_ALT_RICH:PO
    for(let i=0;i<3;i++)g.parts.push(part('cylinder',matId(g.civ,'trim') as Part['mat'],[.11,bw*.96,.11],[0,wh+.26+i*.0,-bd*.3+i*bd*.3],0,[0,0,Math.PI/2],5));hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
   case 'hipbox':{const bw=W*range(r,1,1.2),bd=W*range(r,.9,1.1),wh=range(r,1.7,2.1);g.B('wall',[bw,wh,bd],[0,0,0],2);g.B('wall2',[bw+.1,.3,bd+.1],[0,0,0],1);g.parts.push({...part('hip',matId(g.civ,'roof') as Part['mat'],[bw*1.3,range(r,1,1.5),bd*1.3],[0,wh-.05,0],2),inset:bd*.3});hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
   case 'dome':{const wh=1.65;g.Cy('wall',W,wh,[0,0,0],2,10);g.Pr('sphere','wall',[W*1.04,W*.85,W*1.04],[0,wh-.1,0],2,undefined,10);g.Cy('wall2',W*1.06,.14,[0,wh-.12,0],1,10);hutDoor(g,dx,R*.951+.03,.9,1.55);return {entry:{x:dx,z:R+.5,width:.9}};}
-  case 'conehut':{g.Cy('wall',W,1.55,[0,0,0],2,10);g.Pr('cone','roof',[W*1.45,2.4,W*1.45],[0,1.4,0],2,undefined,10);hutDoor(g,dx,R*.951+.03,.85,1.5);g.Cy('trim',W*1.02,.12,[0,1.1,0],1,10);return {entry:{x:dx,z:R+.5,width:.9}};}
+  case 'conehut':{g.Cy('wall',W,1.8,[0,0,0],2,10);g.Pr('cone','roof',[W*1.45,2.4,W*1.45],[0,1.65,0],2,undefined,10);hutDoor(g,dx,R*.951+.03,.85,1.65);g.Cy('trim',W*1.02,.12,[0,1.35,0],1,10);return {entry:{x:dx,z:R+.5,width:.9}};}
   case 'sod':{const bw=W*1.15,bd=W*.95,wh=1.75;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.7,1.5,bd+.7],[0,wh-.05,0],2);g.B('wall2',[bw+.2,.3,bd+.2],[0,0,0],1);hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
   case 'lean':{const bw=W*1.0,bd=W*1.0,wh=1.6;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.6,2.2,bd+.8],[0,wh-.05,0],2);g.post('trim',-bw/2,bd/2+.1,wh+.4,.14,1);g.post('trim',bw/2,bd/2+.1,wh+.4,.14,1);hutDoor(g,dx,bd/2+.02,.9,1.5);return {entry:{x:dx,z:bd/2+.5,width:.9}};}
   case 'dugout':{const bw=W*1.15,bd=W*.95,wh=1.85;g.B('wall',[bw,wh,bd],[0,0,0],2);for(let i=0;i<4;i++)g.B('wall2',[bw+.12,.2,.2],[0,.15+i*.45,bd/2+.04],1);g.Pr('prism','roof',[bw+.8,1.5,bd+.8],[0,wh-.05,0],2);g.post('trim',0,0,wh+1.55,.1,1);hutDoor(g,dx,bd/2+.1);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
   case 'tent':{g.Cy('wall',W*1.05,1.6,[0,0,0],2,10);g.Pr('cone','roof',[W*1.35,2.2,W*1.35],[0,1.55,0],2,undefined,10);g.post('trim',0,0,3.8,.07,1);hutDoor(g,dx,R*1.05*.951+.03,.9,1.5);return {entry:{x:dx,z:R+.5,width:.9}};}
   case 'longhut':{const bw=W*1.25,bd=W*.85,wh=1.7;g.B('wall',[bw,wh,bd],[0,0,0],2);g.Pr('prism','roof',[bw+.8,1.4,bd+.8],[0,wh-.05,0],2);g.B('wall2',[bw+.15,.35,bd+.15],[0,0,0],1);hutDoor(g,dx,bd/2+.02);return {entry:{x:dx,z:bd/2+.5,width:.95}};}
-  case 'raft':{const bw=W*.95,bd=W*.8,fh=.26;for(const x of[-1,1])for(const z of[-1,1])g.post('trim',x*bw*.46,z*bd*.44,fh,.14,2);g.B('wall2',[bw+.3,.14,bd+.3],[0,fh,0],2);g.B('wall',[bw,1.6,bd],[0,fh+.14,0],2);g.Pr('prism','roof',[bw+.8,1.4,bd+.8],[0,fh+1.7,0],2);
-   g.B('trim',[.9,.1,.9],[dx,fh+.04,bd/2+.4],1);g.Pr('wedge','wall2',[.9,fh,.9],[dx,0,bd/2+1.1],1,[0,Math.PI,0]);const dk=darkSlot(g);g.B(dk,[.85,1.35,.1],[dx,fh+.14,bd/2+.02],1);for(const s of[-1,1])g.B('trim',[.12,1.45,.18],[dx+s*.5,fh+.14,bd/2+.04],0);g.B('trim',[1.1,.14,.18],[dx,fh+1.49,bd/2+.04],0);return {entry:{x:dx,z:bd/2+1.2,width:.9}};}
+  case 'raft':{const bw=W*.95,bd=W*.8,fh=.26;for(const x of[-1,1])for(const z of[-1,1])g.post('trim',x*bw*.46,z*bd*.44,fh,.14,2);g.B('wall2',[bw+.3,.14,bd+.3],[0,fh,0],2);g.B('wall',[bw,1.85,bd],[0,fh+.14,0],2);g.Pr('prism','roof',[bw+.8,1.4,bd+.8],[0,fh+1.95,0],2);
+   g.B('trim',[.9,.1,.9],[dx,fh+.04,bd/2+.4],1);g.Pr('wedge','wall2',[.9,fh,.9],[dx,0,bd/2+1.1],1,[0,Math.PI,0]);const dk=darkSlot(g);g.B(dk,[.85,1.65,.1],[dx,fh+.14,bd/2+.02],1);for(const s of[-1,1])g.B('trim',[.12,1.75,.18],[dx+s*.5,fh+.14,bd/2+.04],0);g.B('trim',[1.1,.14,.18],[dx,fh+1.79,bd/2+.04],0);return {entry:{x:dx,z:bd/2+1.2,width:.9}};}
   default:{g.Cy('wall',W,h*.85,[0,0,0],2,8);g.Cy('wall2',W*1.04,.3,[0,0,0],1,8);g.Pr('cone','roof',[W*1.4,2.0,W*1.4],[0,h*.85-.1,0],2,undefined,8);hutDoor(g,dx,R*.924+.03);return {entry:{x:dx,z:R+.5,width:.95}};}}
 }
 // ---------------------------------------------------------------- houses
