@@ -1416,3 +1416,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 22:42 ET Claude(PM): landed ed0ab4ca (18 commits, integration -> main) / sweep 158/162 pass, only boat-selection fails (env: 'three' not installed, same on base), tsc diff nil; no new agent branches; all lanes posted <2h / blocked: none
 22:37 ET Claude: shipped distinct work animations spin/weave/scrape/knead/stir/hang per recipe, not browser-verified (6c1cd69e) / now on building height + craft unloading / blocked: none
+22:52 ET Claude: lane C verified merged integration+main renders clean (village vegetation SwiftShader shot docs/renders/visuals/village-vegetation-2026-11-14.png; civ/people/skin/adapter/animation 52/52); no new source this run, earlier lane C commits already on integration / now on Option H adapter polish, people armor shots / blocked: none (repo playwright mismatches sandbox chromium; live-shot works with node_modules/playwright moved aside)
