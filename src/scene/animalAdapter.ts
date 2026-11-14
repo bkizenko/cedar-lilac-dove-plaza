@@ -9,6 +9,7 @@ import {BIRDS} from './animalFlyers';
 import {QUADS,type QuadId} from './animalSpecs';
 import {hashSeed} from './buildingParts';
 import type {Gait} from './animalPose';
+import {advancePhase,turnToward,slopePitch,easeTo,turnLean,angleDiff} from './animalMotion';
 
 export type AnimalSet='rig'|'legacy';
 export function readAnimalSet():AnimalSet{
@@ -22,9 +23,11 @@ const RIPPLES_ON=false;
 export const FACING_OFFSET=-Math.PI/2;
 export type AnimalRow={c:{id:number;species:string;x:number;y:number;z:number;facing:number;scale:number;hp:number;fly:number;beh?:{st:string};vx?:number;vz?:number;adultScale?:number;sex?:'female'|'male'};domestic:boolean;
  /** 0 spring .. 3 winter and progress within it */season:number;within:number;shore:boolean};
+/** Max heading change rate (rad/s) at walk/trot/gallop. */
+const TURN_RATE=[2.4,3.2,2.2] as const;
 const bucket=(n:number)=>Math.round(n*4)/4;
 export class AnimalAdapter{
- readonly layer:AnimalRigLayer;readonly motion=new MotionTracker();private smooth=new Map<number,{x:number;y:number;z:number;f:number;phase:number}>();private wallT=0;private looks=new Map<string,Look|null>();stats={animals:0};
+ readonly layer:AnimalRigLayer;readonly motion=new MotionTracker();private smooth=new Map<number,{x:number;y:number;z:number;f:number;phase:number;pitch:number;roll:number}>();private wallT=0;private looks=new Map<string,Look|null>();stats={animals:0};
  constructor(scene:THREE.Scene){this.layer=new AnimalRigLayer(scene);}
  private look(r:AnimalRow){
   const k=r.c.id+':'+r.c.species+':'+(r.domestic?1:0)+':'+r.season+':'+bucket(r.within)+':'+r.c.scale.toFixed(2);
@@ -44,11 +47,11 @@ export class AnimalAdapter{
    let gait:Gait|'fly'|'swim'|'glide'=corpse?'dead':mot.gait==='idle'?mot.idle:mot.gait,phase=mot.phase;
    if(bird&&!corpse){const sp=BIRDS[look.species as 'duck'];gait=flying?(look.species==='raptor'?'glide':'fly'):mot.gait==='idle'?'idle':'walk';phase=(now*sp.hz*(flying?1:.3)+look.seed%10/10)%1000;}
    let sm=this.smooth.get(c.id);seenIds.add(c.id);
-   if(!sm||Math.hypot(c.x-sm.x,c.z-sm.z)>3){sm={x:c.x,y:c.y,z:c.z,f:c.facing,phase:phase};this.smooth.set(c.id,sm);}
+   if(!sm||Math.hypot(c.x-sm.x,c.z-sm.z)>3){sm={x:c.x,y:c.y,z:c.z,f:c.facing,phase:phase,pitch:0,roll:0};this.smooth.set(c.id,sm);}
    else{
     const px=sm.x,pz=sm.z;sm.x+=(c.x-sm.x)*kp;sm.z+=(c.z-sm.z)*kp;sm.y+=(c.y-sm.y)*kp;
-    let df=c.facing-sm.f;df=Math.atan2(Math.sin(df),Math.cos(df));if(Math.hypot(c.vx??0,c.vz??0)>.05||Math.abs(df)>1.2)sm.f+=df*kf;
-    if(!bird&&!corpse&&mot.gait!=='idle'){const st=e.gait.stride[mot.gait==='walk'?0:mot.gait==='trot'?1:2];sm.phase=(sm.phase+Math.hypot(sm.x-px,sm.z-pz)/st)%1;}
+    const pf=sm.f,py=sm.y;if(Math.hypot(c.vx??0,c.vz??0)>.05||Math.abs(Math.atan2(Math.sin(c.facing-sm.f),Math.cos(c.facing-sm.f)))>1.2)sm.f=turnToward(sm.f,c.facing,dtw,TURN_RATE[mot.gait==='trot'?1:mot.gait==='gallop'?2:0],9);void kf;
+    if(!bird&&!corpse&&mot.gait!=='idle'){const st=e.gait.stride[mot.gait==='walk'?0:mot.gait==='trot'?1:2];const dd=Math.hypot(sm.x-px,sm.z-pz);sm.phase=advancePhase(sm.phase,dd,st);if(dtw>0){sm.pitch=easeTo(sm.pitch,slopePitch(sm.y-py,dd),dtw,5);const tr=angleDiff(sm.f,pf)/dtw;sm.roll=easeTo(sm.roll,turnLean(tr,dd/dtw),dtw,6);}}else if(!bird&&!corpse){sm.pitch=easeTo(sm.pitch,0,dtw,5);sm.roll=easeTo(sm.roll,0,dtw,6);}
     if(!bird&&!corpse)phase=sm.phase;
    }
    const size=look.size;
@@ -57,7 +60,7 @@ export class AnimalAdapter{
    const lift=posed?posed.lift:(e.pose(look.sex,look.seed,{gait:'idle',phase:0,t:0,seed:c.id,age:1}).lift);
    const corpseShift=corpse?(QUADS[look.species as QuadId]?.T?.[3]?.[3]??.15)*.95:0;
    L.add({model:e.rig(look.sex,look.seed),x:sm.x,y:corpse?sm.y+corpseShift*size:sm.y,z:sm.z,facing:sm.f+FACING_OFFSET,size,mats:posed?.mats,lift:corpse?0:lift,tier,fly:flying,
-    coat:{spots:look.coat.spots,winter:look.coat.winter,seed:look.coat.seed,tint:look.coat.tint,scale:look.coat.scale},rx:corpse?Math.PI/2:0,
+    coat:{spots:look.coat.spots,winter:look.coat.winter,seed:look.coat.seed,tint:look.coat.tint,scale:look.coat.scale},rx:corpse?Math.PI/2:tier===2?0:sm.roll,rz:corpse||bird?0:tier===2?0:sm.pitch,
     hidden:look.horns?undefined:['hornL','hornR']});
   }
   this.motion.prune();for(const id of this.smooth.keys())if(!seenIds.has(id))this.smooth.delete(id);L.endFrame();
