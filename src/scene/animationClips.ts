@@ -49,11 +49,11 @@ export const CLIPS:Record<ClipId,Clip>={
  // Run: forward lean, longer stride, high front knee (the forward leg swings further than the trailing one), bent-arm pump, hips/shoulder twist,
  // and a flight phase (root rises twice a cycle while both feet are off the ground). Phase from distance like the walk; blended by speed (see gaitBlend).
  run:{id:'run',period:1,strideMetres:2.6,lock:1,events:[{at:.0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
-  k(0,{legL:[-42,0,RUN_ADD],legR:[34,0,-RUN_ADD],armR:[-64,0,-12],armL:[42,0,10],hips:[0,-9,0],spine:[14,9,0],head:[-9,0,0],root:[0,0,0]}),
-  k(.25,{legL:[18,0,RUN_ADD],legR:[-68,0,-RUN_ADD],armR:[-14,0,-10],armL:[-14,0,10],hips:[0,0,0],spine:[15,0,0],head:[-9,0,0],root:[0,.12,.02]}),
-  k(.5,{legL:[34,0,RUN_ADD],legR:[-42,0,-RUN_ADD],armL:[-64,0,12],armR:[42,0,-10],hips:[0,9,0],spine:[14,-9,0],head:[-9,0,0],root:[0,0,0]}),
-  k(.75,{legL:[-68,0,RUN_ADD],legR:[18,0,-RUN_ADD],armR:[-14,0,-10],armL:[-14,0,10],hips:[0,0,0],spine:[15,0,0],head:[-9,0,0],root:[0,.12,.02]}),
-  k(1,{legL:[-42,0,RUN_ADD],legR:[34,0,-RUN_ADD],armR:[-64,0,-12],armL:[42,0,10],hips:[0,-9,0],spine:[14,9,0],head:[-9,0,0],root:[0,0,0]})]},
+  k(0,{legL:[-30,0,RUN_ADD],legR:[28,0,-RUN_ADD],armR:[-64,0,-12],armL:[42,0,10],hips:[0,-9,0],spine:[14,9,0],head:[-9,0,0],root:[0,0,0]}),
+  k(.25,{legL:[8,0,RUN_ADD],legR:[-36,0,-RUN_ADD],armR:[-14,0,-10],armL:[-14,0,10],hips:[0,0,0],spine:[15,0,0],head:[-9,0,0],root:[0,.12,.02]}),
+  k(.5,{legL:[28,0,RUN_ADD],legR:[-30,0,-RUN_ADD],armL:[-64,0,12],armR:[42,0,-10],hips:[0,9,0],spine:[14,-9,0],head:[-9,0,0],root:[0,0,0]}),
+  k(.75,{legL:[-36,0,RUN_ADD],legR:[8,0,-RUN_ADD],armR:[-14,0,-10],armL:[-14,0,10],hips:[0,0,0],spine:[15,0,0],head:[-9,0,0],root:[0,.12,.02]}),
+  k(1,{legL:[-30,0,RUN_ADD],legR:[28,0,-RUN_ADD],armR:[-64,0,-12],armL:[42,0,10],hips:[0,-9,0],spine:[14,9,0],head:[-9,0,0],root:[0,0,0]})]},
  carry:{id:'carry',period:1,strideMetres:1.1,lock:1,events:[{at:0,kind:'dust',count:1,needsDrySurface:true,at3:[-.1,0,0]},{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[.1,0,0]}],keys:[
   k(0,{legL:[20,0,GAIT_ADD],legR:[-20,0,-GAIT_ADD],armL:[-55,0,8],armR:[-55,0,-8],spine:[4,0,0],root:[0,0,0]}),k(.25,{legL:[0,0,GAIT_ADD],legR:[0,0,-GAIT_ADD],armL:[-58,0,8],armR:[-58,0,-8],spine:[5,0,0],root:[0,.02,0]}),
   k(.5,{legL:[-20,0,GAIT_ADD],legR:[20,0,-GAIT_ADD],armL:[-55,0,8],armR:[-55,0,-8],spine:[4,0,0],root:[0,0,0]}),k(.75,{legL:[0,0,GAIT_ADD],legR:[0,0,-GAIT_ADD],armL:[-58,0,8],armR:[-58,0,-8],spine:[5,0,0],root:[0,.02,0]}),k(1,{legL:[20,0,GAIT_ADD],legR:[-20,0,-GAIT_ADD],armL:[-55,0,8],armR:[-55,0,-8],spine:[4,0,0],root:[0,0,0]})]},
