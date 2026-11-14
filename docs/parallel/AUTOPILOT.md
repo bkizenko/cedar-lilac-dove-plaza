@@ -1153,6 +1153,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-13 11:00 | Claude | 12 (last hour, main+integration) | 12 | ~2 (death-in-custody trust/defence, mourning hearth dim) | lanes A-D + PM posted <1h |
 | 11-13 11:00 | Grok | 0 | 0 | 0 | out; World rows with Claude lanes/background agents |
 | 11-13 11:00 | Total | 12 | main = integration after 11:20 landing (7 commits) | ~2 | sweep 133 tests 130 pass/3 skip/0 fail; tsc diff nil; all work/*-2026-11-13 branches already 0 ahead of main; M2-11/14/16, M4-07..09, CAT-117, M5-04 are source-pushed (wired on main) awaiting native evidence only |
+| 11-13 20:00 | Codex | 0 (since 19:00 ET, all branches) | 0 | 0 | IDLE (no commit since 04:20 ET; reassigned 08:49); work with Claude lanes |
+| 11-13 20:00 | Claude | 28 (since 19:00 ET, all branches) | 8 via PM landing | ~3 (Sandrill civic niches, blood-price, handover mourning card) | lanes A-D posted <1h |
+| 11-13 20:00 | Grok | 0 | 0 | 0 | out; World rows with Claude lanes/background agents |
+| 11-13 20:00 | Total | 28 | main = integration after 20:1x landing (merge b45769b6) | ~3 | sweep 144 tests 141 pass 3 skip 0 fail; tsc skipped (4-file diff, 4 lines in src/scene); no other agent branch ahead |
 
 ## Process improvements
 
