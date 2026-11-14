@@ -4,9 +4,9 @@ import {readFileSync} from 'node:fs';
 import {readTestLabButton,writeTestLabButton,TESTLAB_BUTTON_KEY} from '../src/ui/hearth/testLabPrefs.ts';
 const rd=f=>readFileSync(new URL(f,import.meta.url),'utf8');
 const hud=rd('../src/ui/hearth/HudHearth.tsx'),screens=rd('../src/ui/hearth/screens.tsx'),css=rd('../src/ui/hearth/hearth.css');
-test('setting defaults on, survives throwing storage',()=>{
- assert.equal(readTestLabButton(null),true);
- assert.equal(readTestLabButton({getItem:()=>{throw new Error('blocked');}}),true);
+test('setting defaults off, survives throwing storage',()=>{
+ assert.equal(readTestLabButton(null),false);
+ assert.equal(readTestLabButton({getItem:()=>{throw new Error('blocked');}}),false);
  assert.equal(readTestLabButton({getItem:()=>'0'}),false);
  assert.equal(readTestLabButton({getItem:()=>'1'}),true);
  const seen={};writeTestLabButton(false,{setItem:(k,v)=>{seen[k]=v;}});assert.equal(seen[TESTLAB_BUTTON_KEY],'0');

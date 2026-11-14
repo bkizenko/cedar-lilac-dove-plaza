@@ -1038,6 +1038,7 @@ export class Game {
     return m;
   }
 
+  thinStoresNoticeAt = 0;
   banner(text: string, t = 2) {
     this.state.banner = eraText(text, this.state.tribes?.[0]?.age ?? this.state.age);
     this.state.bannerT = t;
@@ -3738,8 +3739,10 @@ export class Game {
       const pop = counts[tr.id];
       const upkeep = foodDemand(this, tr.id);
       mealDeficits.set(tr.id,consumeAndSpoilFood(this,tr.id,upkeep,dt));
-      if (tr.id === 0 && reserveSeconds(this,0) < 35 && this.state.bannerT <= 0)
+      if (tr.id === 0 && reserveSeconds(this,0) < 35 && this.state.bannerT <= 0 && this.state.time >= this.thinStoresNoticeAt) {
+        this.thinStoresNoticeAt = this.state.time + 300; // once per five game-minutes, not every couple of seconds
         this.banner("The stores run thin", 2);
+      }
     }
 
     for (const u of this.state.units) {

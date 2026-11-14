@@ -109,7 +109,7 @@ export function farmAvailable(g: Game, b: Building) {
   return p === 0
     ? c.planted < 1
     : p === 1
-      ? c.planted > 0 && c.tended < 1
+      ? c.planted < 1 || (c.planted > 0 && c.tended < 1) // a field laid out after the spring window can still be sown
       : p === 2
         ? c.remaining > 0
         : false;
@@ -123,14 +123,15 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
     return;
   }
   u.stride+=dt*8;u.facing=Math.atan2(b.x-u.x,b.z-u.z);
+  const sowing = p === 0 || (p === 1 && c.planted < 1);
   u.workReason =
-    p === 0 ? "Sowing the spring crop" : p === 1 ? "Tending the crop" : "Harvesting before winter";
+    sowing ? "Sowing the crop" : p === 1 ? "Tending the crop" : "Harvesting before winter";
   const open = GATHER_WORK_RATE * (b.team === 0 && g.state.agePicks[3] === "econ" ? 1.4 : 1)*farmToolRate(u,p);
-  const toolSeconds=p===0?Math.min(dt,(1-c.planted)*180*plotArea(b)/open):p===1?Math.min(dt,(1-c.tended)*220*plotArea(b)/open):dt;
+  const toolSeconds=sowing?Math.min(dt,(1-c.planted)*180*plotArea(b)/open):p===1?Math.min(dt,(1-c.tended)*220*plotArea(b)/open):dt;
   recordDraftTractionWork(u,p,toolSeconds);
-  const usesTool=u.farmTool!=='woodenArd'||p===0&&draftTractionReady(u)&&farmToolRate(u,p)>1;
+  const usesTool=u.farmTool!=='woodenArd'||sowing&&draftTractionReady(u)&&farmToolRate(u,p)>1;
   if(usesTool&&wearFarmTool(u,toolSeconds)&&u.team===0)g.banner('A farming tool broke — hand work continues; repair it at a toolmaking workplace',4);
-  if (p === 0) c.planted = Math.min(1, c.planted + (dt / (180*plotArea(b))) * open);
+  if (sowing) c.planted = Math.min(1, c.planted + (dt / (180*plotArea(b))) * open);
   else if (p === 1) c.tended = Math.min(1, c.tended + (dt / (220*plotArea(b))) * open);
   else {
     u.gatherT += dt;
