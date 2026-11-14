@@ -1,0 +1,720 @@
+{
+  "source": "42f48822efafc088734c1ba9b188a54bb3609de3",
+  "changedPaths": [],
+  "runtime": "v24.22.1",
+  "measuredAt": "2026-11-14T15:17:03.816Z",
+  "scope": "Actual headless Game.step phase timing only; diagnostic endowments explicitly labeled. No built FPS, renderer, real-player-village or campaign acceptance claim. Ambient RNG isolation is benchmark setup, not persistent simulation replay.",
+  "results": [
+    {
+      "kind": "native-opening",
+      "playerResidents": 5,
+      "totalLivingUnits": 34,
+      "warmupSteps": 20,
+      "measuredSteps": 240,
+      "simulationSeconds": 7.99999999999998,
+      "step": {
+        "samples": 240,
+        "meanMs": 28.99780192083331,
+        "p95Ms": 39.08416700000089,
+        "maxMs": 67.7621250000002
+      },
+      "phases": [
+        {
+          "phase": "observation",
+          "label": "Vision and encounters",
+          "samples": 240,
+          "meanMs": 16.875077033333266,
+          "p95Ms": 22.470417000000452,
+          "maxMs": 27.54741699999977
+        },
+        {
+          "phase": "geography",
+          "label": "Geographic influence",
+          "samples": 240,
+          "meanMs": 8.391281429166641,
+          "p95Ms": 12.6176660000001,
+          "maxMs": 14.740499999999884
+        },
+        {
+          "phase": "people",
+          "label": "Individual decisions and work",
+          "samples": 240,
+          "meanMs": 2.2359255458333527,
+          "p95Ms": 8.940833000000566,
+          "maxMs": 37.650792000000365
+        },
+        {
+          "phase": "ecology",
+          "label": "Wildlife and communities",
+          "samples": 240,
+          "meanMs": 0.5694482625000432,
+          "p95Ms": 0.8322499999994761,
+          "maxMs": 4.191625000001295
+        },
+        {
+          "phase": "society",
+          "label": "Influence, survival and population",
+          "samples": 240,
+          "meanMs": 0.5132407791667257,
+          "p95Ms": 0.8641250000000582,
+          "maxMs": 4.059832999999344
+        },
+        {
+          "phase": "rivals",
+          "label": "Rival strategy",
+          "samples": 240,
+          "meanMs": 0.1290785291666263,
+          "p95Ms": 0.1796249999988504,
+          "maxMs": 9.39575000000059
+        },
+        {
+          "phase": "combat",
+          "label": "Movement and combat",
+          "samples": 240,
+          "meanMs": 0.09275382083327485,
+          "p95Ms": 0.11187500000050932,
+          "maxMs": 3.4217080000007627
+        },
+        {
+          "phase": "reconciliation",
+          "label": "Final reconciliation",
+          "samples": 240,
+          "meanMs": 0.06327828333344314,
+          "p95Ms": 0.08779200000026322,
+          "maxMs": 0.15720900000087568
+        },
+        {
+          "phase": "production",
+          "label": "Crafting and maintenance",
+          "samples": 240,
+          "meanMs": 0.0380663208334037,
+          "p95Ms": 0.05970800000068266,
+          "maxMs": 0.10391700000036508
+        },
+        {
+          "phase": "economy",
+          "label": "Routes, farms and yields",
+          "samples": 240,
+          "meanMs": 0.028957133333354552,
+          "p95Ms": 0.047792000000299595,
+          "maxMs": 0.08287500000005821
+        },
+        {
+          "phase": "construction",
+          "label": "Construction and ownership",
+          "samples": 240,
+          "meanMs": 0.025711245833353283,
+          "p95Ms": 0.041291999999884865,
+          "maxMs": 0.20062499999949068
+        },
+        {
+          "phase": "missions",
+          "label": "Missions and trade planning",
+          "samples": 240,
+          "meanMs": 0.017355370833286088,
+          "p95Ms": 0.025958000000173342,
+          "maxMs": 0.2716660000005504
+        },
+        {
+          "phase": "navigation",
+          "label": "Navigation grid",
+          "samples": 240,
+          "meanMs": 0.00792191666665379,
+          "p95Ms": 0.0008340000003954628,
+          "maxMs": 0.37895799999932933
+        },
+        {
+          "phase": "preparation",
+          "label": "Step preparation",
+          "samples": 240,
+          "meanMs": 0.00312377499996046,
+          "p95Ms": 0.007040999999844644,
+          "maxMs": 0.02974999999969441
+        },
+        {
+          "phase": "effects",
+          "label": "Particles and messages",
+          "samples": 240,
+          "meanMs": 0.0031090208332481477,
+          "p95Ms": 0.007458000000042375,
+          "maxMs": 0.04170799999974406
+        }
+      ],
+      "unchangedTerrain": "fe735fb22b7388366cdbaac6bd6e1681f6bc65f5a43dc22cb912778169e4e15d",
+      "simulationErrors": []
+    },
+    {
+      "kind": "declared-80-resident-load",
+      "playerResidents": 80,
+      "totalLivingUnits": 109,
+      "warmupSteps": 20,
+      "measuredSteps": 240,
+      "simulationSeconds": 7.99999999999998,
+      "step": {
+        "samples": 240,
+        "meanMs": 30.051454166666613,
+        "p95Ms": 49.1517500000009,
+        "maxMs": 58.77716700000019
+      },
+      "phases": [
+        {
+          "phase": "observation",
+          "label": "Vision and encounters",
+          "samples": 240,
+          "meanMs": 14.461733562500134,
+          "p95Ms": 21.676250000000437,
+          "maxMs": 27.999959000000672
+        },
+        {
+          "phase": "geography",
+          "label": "Geographic influence",
+          "samples": 240,
+          "meanMs": 7.153538891666752,
+          "p95Ms": 12.286458000002312,
+          "maxMs": 13.553332999999839
+        },
+        {
+          "phase": "people",
+          "label": "Individual decisions and work",
+          "samples": 240,
+          "meanMs": 6.515574462499899,
+          "p95Ms": 19.448292000000947,
+          "maxMs": 27.97895900000003
+        },
+        {
+          "phase": "ecology",
+          "label": "Wildlife and communities",
+          "samples": 240,
+          "meanMs": 0.7464809124999495,
+          "p95Ms": 0.9057079999984126,
+          "maxMs": 3.9949169999999867
+        },
+        {
+          "phase": "society",
+          "label": "Influence, survival and population",
+          "samples": 240,
+          "meanMs": 0.5500103916665618,
+          "p95Ms": 0.603291999999783,
+          "maxMs": 3.724792000000889
+        },
+        {
+          "phase": "combat",
+          "label": "Movement and combat",
+          "samples": 240,
+          "meanMs": 0.28680850416675036,
+          "p95Ms": 0.32412500000282307,
+          "maxMs": 3.64862500000163
+        },
+        {
+          "phase": "rivals",
+          "label": "Rival strategy",
+          "samples": 240,
+          "meanMs": 0.11015948749992882,
+          "p95Ms": 0.1829169999982696,
+          "maxMs": 4.800291999999899
+        },
+        {
+          "phase": "reconciliation",
+          "label": "Final reconciliation",
+          "samples": 240,
+          "meanMs": 0.06822261666666236,
+          "p95Ms": 0.09520899999915855,
+          "maxMs": 0.10833300000012969
+        },
+        {
+          "phase": "economy",
+          "label": "Routes, farms and yields",
+          "samples": 240,
+          "meanMs": 0.047141325000090245,
+          "p95Ms": 0.09337500000037835,
+          "maxMs": 0.17070899999816902
+        },
+        {
+          "phase": "production",
+          "label": "Crafting and maintenance",
+          "samples": 240,
+          "meanMs": 0.042280929166645366,
+          "p95Ms": 0.0647080000017013,
+          "maxMs": 0.0849579999994603
+        },
+        {
+          "phase": "missions",
+          "label": "Missions and trade planning",
+          "samples": 240,
+          "meanMs": 0.0279799791668817,
+          "p95Ms": 0.020916999998007668,
+          "maxMs": 0.9561659999999392
+        },
+        {
+          "phase": "construction",
+          "label": "Construction and ownership",
+          "samples": 240,
+          "meanMs": 0.02631567916653997,
+          "p95Ms": 0.04629199999908451,
+          "maxMs": 0.13862499999959255
+        },
+        {
+          "phase": "navigation",
+          "label": "Navigation grid",
+          "samples": 240,
+          "meanMs": 0.008946312499892884,
+          "p95Ms": 0.0007499999992433004,
+          "maxMs": 0.357665999999881
+        },
+        {
+          "phase": "preparation",
+          "label": "Step preparation",
+          "samples": 240,
+          "meanMs": 0.0021444791666453966,
+          "p95Ms": 0.0032079999982670415,
+          "maxMs": 0.0039590000014868565
+        },
+        {
+          "phase": "effects",
+          "label": "Particles and messages",
+          "samples": 240,
+          "meanMs": 0.001725012499961546,
+          "p95Ms": 0.004624999997759005,
+          "maxMs": 0.020625000001018634
+        }
+      ],
+      "unchangedTerrain": "fe735fb22b7388366cdbaac6bd6e1681f6bc65f5a43dc22cb912778169e4e15d",
+      "simulationErrors": []
+    }
+  ],
+  "cpuAttribution": {
+    "scope": "Follow-up whole-process V8 sampling includes setup and both diagnostic populations; sampled self time is attribution, not frame/FPS acceptance.",
+    "profileSource": "42f48822efafc088734c1ba9b188a54bb3609de3",
+    "topGameFunctions": [
+      {
+        "function": "exactWaterMemoAt",
+        "file": "src/game/exactWaterMemo.ts",
+        "line": 10,
+        "sampledSelfMs": 4008.81
+      },
+      {
+        "function": "indexedWaterAt",
+        "file": "src/game/indexedLocalWater.ts",
+        "line": 22,
+        "sampledSelfMs": 2199.64
+      },
+      {
+        "function": "waterSurfaceAt",
+        "file": "src/game/localWater.ts",
+        "line": 41,
+        "sampledSelfMs": 1974.97
+      },
+      {
+        "function": "findPath",
+        "file": "src/game/navigation.ts",
+        "line": 2,
+        "sampledSelfMs": 1071.87
+      },
+      {
+        "function": "dynamicLayers",
+        "file": "src/game/terrainInfluenceRuntime.ts",
+        "line": 75,
+        "sampledSelfMs": 1015.47
+      },
+      {
+        "function": "waterAt",
+        "file": "src/game/sim.ts",
+        "line": 402,
+        "sampledSelfMs": 951.75
+      },
+      {
+        "function": "hash2",
+        "file": "src/game/rng.ts",
+        "line": 12,
+        "sampledSelfMs": 927.74
+      },
+      {
+        "function": "walkable",
+        "file": "src/game/sim.ts",
+        "line": 1132,
+        "sampledSelfMs": 699.13
+      },
+      {
+        "function": "sampleWorldHeight",
+        "file": "src/game/worldgen.ts",
+        "line": 1152,
+        "sampledSelfMs": 655.2
+      },
+      {
+        "function": "travelHeight",
+        "file": "src/game/sim.ts",
+        "line": 395,
+        "sampledSelfMs": 546.13
+      },
+      {
+        "function": "get",
+        "file": "src/game/indexedLocalWater.ts",
+        "line": 65,
+        "sampledSelfMs": 379.54
+      },
+      {
+        "function": "generateWorldCandidate",
+        "file": "src/game/worldgen.ts",
+        "line": 163,
+        "sampledSelfMs": 338.33
+      },
+      {
+        "function": "generateWorld",
+        "file": "src/game/worldgen.ts",
+        "line": 151,
+        "sampledSelfMs": 317.04
+      },
+      {
+        "function": "prepareOwnedWaterWorld",
+        "file": "src/game/indexedLocalWater.ts",
+        "line": 63,
+        "sampledSelfMs": 312.21
+      },
+      {
+        "function": "seaSurfaceY",
+        "file": "src/game/localWater.ts",
+        "line": 40,
+        "sampledSelfMs": 309.17
+      },
+      {
+        "function": "localWaterAt",
+        "file": "src/game/localWater.ts",
+        "line": 24,
+        "sampledSelfMs": 296.75
+      },
+      {
+        "function": "height",
+        "file": "src/game/sim.ts",
+        "line": 404,
+        "sampledSelfMs": 267.75
+      },
+      {
+        "function": "openingCampSurvey",
+        "file": "src/game/openingWater.ts",
+        "line": 39,
+        "sampledSelfMs": 246.29
+      },
+      {
+        "function": "lakeContains",
+        "file": "src/game/localWater.ts",
+        "line": 6,
+        "sampledSelfMs": 224.54
+      },
+      {
+        "function": "step",
+        "file": "src/game/sim.ts",
+        "line": 5922,
+        "sampledSelfMs": 171.25
+      },
+      {
+        "function": "ownedWaterIndexValue",
+        "file": "src/game/indexedLocalWater.ts",
+        "line": 48,
+        "sampledSelfMs": 164.08
+      },
+      {
+        "function": "nearest",
+        "file": "src/game/composedGeography.ts",
+        "line": 12,
+        "sampledSelfMs": 162.84
+      },
+      {
+        "function": "height",
+        "file": "src/game/worldgen.ts",
+        "line": 441,
+        "sampledSelfMs": 159.25
+      },
+      {
+        "function": "vistaAt",
+        "file": "src/game/scenicBeauty.ts",
+        "line": 19,
+        "sampledSelfMs": 156.46
+      },
+      {
+        "function": "workerAI",
+        "file": "src/game/sim.ts",
+        "line": 4541,
+        "sampledSelfMs": 145.79
+      }
+    ],
+    "totalSampledMilliseconds": 24117.25
+  },
+  "instrumentedRepeat": [
+    {
+      "kind": "native-opening",
+      "playerResidents": 5,
+      "totalLivingUnits": 34,
+      "warmupSteps": 20,
+      "measuredSteps": 240,
+      "simulationSeconds": 7.99999999999998,
+      "step": {
+        "samples": 240,
+        "meanMs": 29.05273512083337,
+        "p95Ms": 39.670249999999214,
+        "maxMs": 71.43812500000058
+      },
+      "phases": [
+        {
+          "phase": "observation",
+          "label": "Vision and encounters",
+          "samples": 240,
+          "meanMs": 16.750662687500004,
+          "p95Ms": 22.386708,
+          "maxMs": 27.163957999999184
+        },
+        {
+          "phase": "geography",
+          "label": "Geographic influence",
+          "samples": 240,
+          "meanMs": 8.350650200000022,
+          "p95Ms": 12.998625000000175,
+          "maxMs": 17.903415999999197
+        },
+        {
+          "phase": "people",
+          "label": "Individual decisions and work",
+          "samples": 240,
+          "meanMs": 2.380247804166625,
+          "p95Ms": 7.948667000000569,
+          "maxMs": 42.139124999999694
+        },
+        {
+          "phase": "ecology",
+          "label": "Wildlife and communities",
+          "samples": 240,
+          "meanMs": 0.598587329166594,
+          "p95Ms": 0.8878330000006827,
+          "maxMs": 4.727374999998574
+        },
+        {
+          "phase": "society",
+          "label": "Influence, survival and population",
+          "samples": 240,
+          "meanMs": 0.543849116666657,
+          "p95Ms": 0.8902910000015254,
+          "maxMs": 4.453708999999435
+        },
+        {
+          "phase": "rivals",
+          "label": "Rival strategy",
+          "samples": 240,
+          "meanMs": 0.14322186249997534,
+          "p95Ms": 0.1507500000006985,
+          "maxMs": 10.561749999999847
+        },
+        {
+          "phase": "combat",
+          "label": "Movement and combat",
+          "samples": 240,
+          "meanMs": 0.08806889166669786,
+          "p95Ms": 0.12970800000039162,
+          "maxMs": 1.4736250000005384
+        },
+        {
+          "phase": "reconciliation",
+          "label": "Final reconciliation",
+          "samples": 240,
+          "meanMs": 0.0635607791666833,
+          "p95Ms": 0.08925000000090222,
+          "maxMs": 0.1549169999998412
+        },
+        {
+          "phase": "production",
+          "label": "Crafting and maintenance",
+          "samples": 240,
+          "meanMs": 0.03817637916667612,
+          "p95Ms": 0.05720900000051188,
+          "maxMs": 0.0897080000013375
+        },
+        {
+          "phase": "economy",
+          "label": "Routes, farms and yields",
+          "samples": 240,
+          "meanMs": 0.03412709166672509,
+          "p95Ms": 0.05383299999994051,
+          "maxMs": 0.3714589999999589
+        },
+        {
+          "phase": "construction",
+          "label": "Construction and ownership",
+          "samples": 240,
+          "meanMs": 0.026202204166637936,
+          "p95Ms": 0.039792000001398264,
+          "maxMs": 0.19920799999999872
+        },
+        {
+          "phase": "missions",
+          "label": "Missions and trade planning",
+          "samples": 240,
+          "meanMs": 0.017647608333356858,
+          "p95Ms": 0.022124999999505235,
+          "maxMs": 0.2691660000000411
+        },
+        {
+          "phase": "navigation",
+          "label": "Navigation grid",
+          "samples": 240,
+          "meanMs": 0.008028779166681942,
+          "p95Ms": 0.0008749999997235136,
+          "maxMs": 0.3962089999995442
+        },
+        {
+          "phase": "preparation",
+          "label": "Step preparation",
+          "samples": 240,
+          "meanMs": 0.003397233333331921,
+          "p95Ms": 0.007209000000329979,
+          "maxMs": 0.03295799999978044
+        },
+        {
+          "phase": "effects",
+          "label": "Particles and messages",
+          "samples": 240,
+          "meanMs": 0.0031064083333338507,
+          "p95Ms": 0.007958000000144239,
+          "maxMs": 0.04679200000009587
+        }
+      ],
+      "unchangedTerrain": "fe735fb22b7388366cdbaac6bd6e1681f6bc65f5a43dc22cb912778169e4e15d",
+      "simulationErrors": []
+    },
+    {
+      "kind": "declared-80-resident-load",
+      "playerResidents": 80,
+      "totalLivingUnits": 109,
+      "warmupSteps": 20,
+      "measuredSteps": 240,
+      "simulationSeconds": 7.99999999999998,
+      "step": {
+        "samples": 240,
+        "meanMs": 29.97750748750004,
+        "p95Ms": 49.58412500000122,
+        "maxMs": 59.40095899999869
+      },
+      "phases": [
+        {
+          "phase": "observation",
+          "label": "Vision and encounters",
+          "samples": 240,
+          "meanMs": 14.2217208458332,
+          "p95Ms": 21.679583000001003,
+          "maxMs": 27.214374999999563
+        },
+        {
+          "phase": "geography",
+          "label": "Geographic influence",
+          "samples": 240,
+          "meanMs": 6.98080330000001,
+          "p95Ms": 12.477417000001878,
+          "maxMs": 13.346166999999696
+        },
+        {
+          "phase": "people",
+          "label": "Individual decisions and work",
+          "samples": 240,
+          "meanMs": 6.676181912499927,
+          "p95Ms": 20.083167000000685,
+          "maxMs": 29.476290999999037
+        },
+        {
+          "phase": "ecology",
+          "label": "Wildlife and communities",
+          "samples": 240,
+          "meanMs": 0.8140748625001833,
+          "p95Ms": 1.2045839999991586,
+          "maxMs": 4.51154100000349
+        },
+        {
+          "phase": "society",
+          "label": "Influence, survival and population",
+          "samples": 240,
+          "meanMs": 0.5976862666667027,
+          "p95Ms": 0.7307499999988067,
+          "maxMs": 4.795584000003146
+        },
+        {
+          "phase": "combat",
+          "label": "Movement and combat",
+          "samples": 240,
+          "meanMs": 0.2981923833333288,
+          "p95Ms": 0.3748750000013388,
+          "maxMs": 3.177750000002561
+        },
+        {
+          "phase": "rivals",
+          "label": "Rival strategy",
+          "samples": 240,
+          "meanMs": 0.14569704166685066,
+          "p95Ms": 0.17416700000103447,
+          "maxMs": 8.223374999997759
+        },
+        {
+          "phase": "reconciliation",
+          "label": "Final reconciliation",
+          "samples": 240,
+          "meanMs": 0.07164880833336913,
+          "p95Ms": 0.09979200000088895,
+          "maxMs": 0.11562499999854481
+        },
+        {
+          "phase": "production",
+          "label": "Crafting and maintenance",
+          "samples": 240,
+          "meanMs": 0.05076335416682317,
+          "p95Ms": 0.06458399999974063,
+          "maxMs": 0.9966249999997672
+        },
+        {
+          "phase": "economy",
+          "label": "Routes, farms and yields",
+          "samples": 240,
+          "meanMs": 0.048014912499760004,
+          "p95Ms": 0.09341700000004494,
+          "maxMs": 0.16537500000049477
+        },
+        {
+          "phase": "missions",
+          "label": "Missions and trade planning",
+          "samples": 240,
+          "meanMs": 0.029148633333291703,
+          "p95Ms": 0.02308400000038091,
+          "maxMs": 0.9740000000019791
+        },
+        {
+          "phase": "construction",
+          "label": "Construction and ownership",
+          "samples": 240,
+          "meanMs": 0.027906595833337634,
+          "p95Ms": 0.04404100000101607,
+          "maxMs": 0.13249999999970896
+        },
+        {
+          "phase": "navigation",
+          "label": "Navigation grid",
+          "samples": 240,
+          "meanMs": 0.009227970833368697,
+          "p95Ms": 0.0009160000008705538,
+          "maxMs": 0.38104200000088895
+        },
+        {
+          "phase": "preparation",
+          "label": "Step preparation",
+          "samples": 240,
+          "meanMs": 0.0022307124999467,
+          "p95Ms": 0.0034999999988940544,
+          "maxMs": 0.005667000001267297
+        },
+        {
+          "phase": "effects",
+          "label": "Particles and messages",
+          "samples": 240,
+          "meanMs": 0.0016013166665137153,
+          "p95Ms": 0.003916999998182291,
+          "maxMs": 0.01641599999857135
+        }
+      ],
+      "unchangedTerrain": "fe735fb22b7388366cdbaac6bd6e1681f6bc65f5a43dc22cb912778169e4e15d",
+      "simulationErrors": []
+    }
+  ]
+}
