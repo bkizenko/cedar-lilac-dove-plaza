@@ -482,7 +482,7 @@ function validateGamePayload(raw: unknown) {
     if(u.homeHall!==undefined&&(!Number.isSafeInteger(u.homeHall)||u.homeHall<1))fail();
     if(u.parents!==undefined&&(!Array.isArray(u.parents)||u.parents.length>2||new Set(u.parents).size!==u.parents.length||u.parents.some((id:unknown)=>!Number.isSafeInteger(id)||Number(id)<1||id===u.id)))fail();
     if(u.foundingJourney!==undefined){const m=u.foundingJourney;if(!obj(m)||!num(m.x)||!num(m.z)||Math.abs(m.x)>HALF||Math.abs(m.z)>HALF||typeof m.leader!=="boolean"||(m.timber!==undefined&&(!Number.isSafeInteger(m.timber)||m.timber<20||m.timber>100000))||(m.rations!==undefined&&(!num(m.rations)||m.rations<0||m.rations>48)))fail();}
-    if(u.bloodPrice!==undefined){const m=u.bloodPrice;if(!obj(m)||!Number.isSafeInteger(m.to)||m.to<1||!['going','home'].includes(m.phase)||!obj(m.lots)||Object.entries(m.lots).some(([k,v])=>typeof k!=='string'||!num(v as number)||(v as number)<0||(v as number)>500))fail();}
+    if(u.bloodPrice!==undefined){const m=u.bloodPrice;if(!obj(m)||!Number.isSafeInteger(m.to)||m.to<0||(m.to===0?!(u.team!==0&&Number.isSafeInteger(m.from)&&(m.from as number)>=1):u.team!==0||m.from!==undefined)||!['going','home'].includes(m.phase)||!obj(m.lots)||Object.entries(m.lots).some(([k,v])=>typeof k!=='string'||!num(v as number)||(v as number)<0||(v as number)>500))fail();}
     if(u.refugee!==undefined){const m=u.refugee;if(!obj(m)||!Number.isSafeInteger(m.home)||m.home<1||!['walking','waiting','home'].includes(m.phase)||!Number.isFinite(m.year))fail();}
     if(u.fatigue!==undefined&&(!num(u.fatigue)||u.fatigue<0||u.fatigue>1))fail();
     if(u.resting!==undefined&&typeof u.resting!=="boolean")fail();

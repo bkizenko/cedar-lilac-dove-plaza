@@ -27,6 +27,7 @@ import {CouncilScreen,VillageScreen,AgesScreen,MenuScreen,Screen} from './screen
 import {WondersScreen} from './wondersScreen';
 import './hearth.css';
 import './glance.css';
+import './palette.css';
 import './wildPanel.css';
 
 /** The Hearth interface: calm parchment-and-wood chrome, big icons and numbers, a contextual command card and a small number of full screens. */
