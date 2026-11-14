@@ -1170,6 +1170,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-13 22:00 | Claude | 36 (since 21:00 ET, all branches, 14 excl. board/merge) | landed by PM 22:1x | ~5 (Esc closes panels, tree zoom-out fix, villages start running, Arm-to-stores, 4-facing placement + animal motion easing, building open-work panel) | lanes A-D posted <1h; Boris live bug orders: ESC/TREES-ZOOM done, ANIMAL-GLITCH eased (31b30254), LIMBS / ANIMAL-SELECT-CAPTURE / LONE-HOUSE still queued as Claude top |
 | 11-13 22:00 | Grok | 0 | 0 | 0 | out; World rows with Claude lanes/background agents (M2-11/14/16, CAT-117, M4-07..09 are source-pushed on main, only native evidence outstanding) |
 | 11-13 22:00 | Total | 39 | main = integration (PM landing 22:1x ET) | ~6 | sweep 154 tests 151 pass 3 skip 0 fail (incl. arm-walks-to-stores, people-animation); tsc (v7, baseUrl stripped) 146 errors on both trees, identical besides line shifts; council-ui is NATIVE-ONLY here (no typescript pkg); no other agent branch ahead |
+| 11-14 04:00 | Codex | 0 (since 22:00 ET, all branches) | 0 | 0 | IDLE (last commit 21:43 ET 11-13 native release branch); missed >2 hourly lines, items stay with Claude lanes |
+| 11-14 04:00 | Claude | ~173 commits since 22:00 ET all branches (53 excl. board/merge) | landed by PM 04:1x | ~4 (oaths/debts/grudges ledger, NPC fosterage chronicle, Vedara rounded house, report-age badge) | lanes A-D posted <1h |
+| 11-14 04:00 | Grok | 0 | 0 | 0 | out; World rows with Claude lanes |
+| 11-14 04:00 | Total | ~173 | main = integration after eae1421f landing | ~4 | sweep 152 tests 148 pass 3 skip, 1 env fail (unit-render-admission needs three pkg; no node_modules, passed on lane D); tsc skipped (no node_modules; 23-line scene/script diff); no other agent branch ahead |
 
 ## Process improvements
 
