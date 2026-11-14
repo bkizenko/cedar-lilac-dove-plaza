@@ -3,6 +3,7 @@ import type {Engine} from '../game/engine';
 import {PLAYER_TRADE_NAMES,type PlayerTradeCommand,type PlayerTradeModel} from '../game/playerTrade';
 import {useOwnerReadModels} from './useOwnerReadModels';
 import {useLifecycleAction} from './useLifecycleAction';
+import {offerAge} from './tradeOfferAge';
 
 type GoodKind=PlayerTradeModel['goods'][number]['kind'];
 const button='min-h-9 rounded border border-bronze/40 px-2 py-1 text-xs disabled:opacity-50';
@@ -30,6 +31,7 @@ export function NeedsTradeSheet({model,inboxOnly,busy,run}:{model:PlayerTradeMod
    const incoming=offer.to===0,pay=incoming?offer.get:offer.give,take=incoming?offer.give:offer.get;
    return <div key={offer.id} className="space-y-1 border-t border-bronze/20 pt-2">
     <p>{offer.partnerName} · {offer.status}</p>
+    {(()=>{const age=offerAge(offer);return age&&<p className={age.tone==='gone'?'text-parchment-dim italic':age.tone==='soon'?'font-semibold':'text-parchment-dim'}>{age.tone==='gone'?'✕ ':age.tone==='soon'?'⏳ ':'· '}{age.text}</p>;})()}
     <p>Give {pay.amount} {PLAYER_TRADE_NAMES[pay.kind].toLowerCase()} · Receive {take.amount} {PLAYER_TRADE_NAMES[take.kind].toLowerCase()}{offer.ownCarriers!==null?` · ${offer.ownCarriers} carriers`:''}</p>
     {incoming&&offer.canAnswer&&<>
      <div className="flex flex-wrap gap-2"><button type="button" className={button} disabled={busy||!!offer.answerIssue} title={offer.answerIssue||'Agree to these goods and quantities'} onClick={()=>run({kind:'answer-needs-trade',offerId:offer.id,accept:true})}>Accept</button><button type="button" className={button} disabled={busy} onClick={()=>run({kind:'answer-needs-trade',offerId:offer.id,accept:false})}>Decline</button></div>
