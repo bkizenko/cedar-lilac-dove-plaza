@@ -40,7 +40,7 @@ test('fight clips follow the weapon the unit really has, in reach only',()=>{
 test('phase comes from real progress: walking by metres moved, production by its own progress, swings by cooldown, pause freezes',()=>{
  const phaseOf=(st,u,c)=>stepAnimator(st,u,c).phase;
  // standing still while time passes never advances a walk
- const u=U({order:'move',vx:2,vz:0}),st=newAnimState(u,0),p0=phaseOf(st,u,C({time:0}));let p=p0;for(let t=.1;t<3;t+=.1)p=phaseOf(st,u,C({time:t}));assert.ok(Math.abs(p-p0)<1e-9,'no metres, no stride');
+ const u=U({order:'move',vx:2,vz:0}),st=newAnimState(u,0);phaseOf(st,u,C({time:0}));let fr;for(let t=.1;t<3;t+=.1)fr=stepAnimator(st,u,C({time:t}));assert.equal(fr.clip,'idle','commanded speed but no metres: shown standing, never frozen mid-stride');
  // metres moved advance it, one stride is one cycle
  const w=CLIPS.walk,s2=newAnimState(u,0);phaseOf(s2,u,C({time:0}));const a=phaseOf(s2,{...u,x:w.strideMetres/2},C({time:.5}));const b=phaseOf(s2,{...u,x:w.strideMetres},C({time:1}));assert.ok(Math.abs(((b-a)%1+1)%1-.5)<1e-6);
  // production phase = the project's own progress

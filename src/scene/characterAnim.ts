@@ -39,12 +39,16 @@ export function activityFor(u:UnitLike,ctx:AnimContext):Activity{
  a.warming=(!!u.warming||u.workReason==='Warming up by the lit hearth')&&!moving;a.fireLit=ctx.fireLit;
  return a;
 }
-export type AnimState={x:number;z:number;dist:number;/** walk cycles accumulated at the speed-blended stride (continuous phase through walk->run) */gait:number;/** smoothed 0..1 walk->run blend */run:number;work:number;time:number;variation:Variation;clip:ClipId;seen:number};
+export type AnimState={x:number;z:number;/** smoothed real speed in m/s */actual?:number;dist:number;/** walk cycles accumulated at the speed-blended stride (continuous phase through walk->run) */gait:number;/** smoothed 0..1 walk->run blend */run:number;work:number;time:number;variation:Variation;clip:ClipId;seen:number};
 export const newAnimState=(u:UnitLike,time:number):AnimState=>({x:u.x,z:u.z,dist:0,gait:0,run:0,work:0,time,variation:unitVariation(u.id),clip:'idle',seen:time});
 export type AnimFrame={clip:ClipId;phase:number;pose:Pose;load:number;reason:string;itemR?:ItemId;itemL?:ItemId};
 /** Advance one unit's animation from real state. `moved` clamps teleports (a unit placed elsewhere does not slide its feet). */
 export function stepAnimator(st:AnimState,u:UnitLike,ctx:AnimContext):AnimFrame{
- const act=activityFor(u,ctx),sel=clipForActivity(act),clip=CLIPS[sel.clip],dt=Math.max(0,Math.min(1,ctx.time-st.time)),moved=Math.min(3,Math.hypot(u.x-st.x,u.z-st.z));
+ const act=activityFor(u,ctx),dt=Math.max(0,Math.min(1,ctx.time-st.time)),moved=Math.min(3,Math.hypot(u.x-st.x,u.z-st.z));
+ // A unit pushing against a wall or a crowd has velocity but goes nowhere: judge walking by metres actually covered, so it does not freeze mid-stride.
+ if(dt>1e-3){const inst=moved/dt;st.actual=(st.actual??inst)+(inst-(st.actual??inst))*Math.min(1,dt*4);}
+ if(act.moving&&st.actual!==undefined&&st.actual<.12&&(act.order==='move'||act.order==='hold'||act.order==='idle'||act.order==='gather'||act.order==='build'))act.moving=false;
+ const sel=clipForActivity(act),clip=CLIPS[sel.clip];
  st.dist+=moved;st.x=u.x;st.z=u.z;st.time=ctx.time;st.seen=ctx.time;
  if(sel.clip!==st.clip){st.clip=sel.clip;st.work=0;}
  let work=st.work;
