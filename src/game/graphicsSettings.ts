@@ -40,9 +40,9 @@ export const TREE_DETAIL:Record<TreeStep,TreeDetail>={
  /** step 1 is below the old Low: shortest near radius, half the cards, only the cheap merged crowns beyond it */
  1:{step:1,label:'Sparse',nearMetres:Math.round(NEAR.low*.55),farScale:.3,fillerCap:.08,fillerDetail:.4,cardScale:.55},
  /** step 2 is the new Low: the old Low radius, but fewer leaf cards and a lighter filler forest, so it is cheaper than the old Low */
- 2:{step:2,label:'Light',nearMetres:NEAR.low,farScale:.4,fillerCap:.3,fillerDetail:.5,cardScale:.7},
+ 2:{step:2,label:'Light',nearMetres:NEAR.low,farScale:.45,fillerCap:.4,fillerDetail:.55,cardScale:.72},
  /** the default for Auto: the middle of Low and Medium */
- 3:{step:3,label:'Balanced',nearMetres:Math.round((NEAR.low+NEAR.med)/2),farScale:.7,fillerCap:.6,fillerDetail:.75,cardScale:.82},
+ 3:{step:3,label:'Balanced',nearMetres:Math.round((NEAR.low+NEAR.med)/2),farScale:.72,fillerCap:.65,fillerDetail:.78,cardScale:.85},
  /** step 4 equals the Medium graphics tier's trees */
  4:{step:4,label:'Rich',nearMetres:NEAR.med,farScale:1,fillerCap:1,fillerDetail:1,cardScale:1},
  /** step 5 equals the High graphics tier's trees */
@@ -60,8 +60,8 @@ export const SETTINGS_RULES={
  legacyDrawKey:DRAW_DISTANCE_RULES.key,
  /** what 'auto' starts at (graphics, draw distance, tree step): 8 GB M1 safe, trees in the middle of Low and Medium */
  autoStart:{graphics:'med' as GraphicsQuality,draw:'medium' as DrawDistance,trees:3 as TreeStep},
- /** with an explicit graphics tier and trees on Auto, trees follow the tier (Low is cheaper than before, Medium and High are exactly as before) */
- treesForGraphics:{low:2,med:4,high:5} as Record<GraphicsQuality,TreeStep>,
+ /** with an explicit graphics tier and trees on Auto, trees follow the tier (Low is cheaper than before, Medium is the Balanced middle tier (step 3, the same as Auto) so it sits between a sparse Low and a High that an 8 GB M1 cannot hold, High is as before; step 4 'Rich' stays selectable) */
+ treesForGraphics:{low:2,med:3,high:5} as Record<GraphicsQuality,TreeStep>,
  /** Auto eases only when the mean frame time stays over `budgetMs` for `overSeconds`. 40 ms = 25 fps: slower than that for six seconds is not a hiccup. */
  budgetMs:40,overSeconds:6,hitchMs:250,
  /** after load, a rebuild or any change, frames are not judged for this long (shader compiles, chunk generation, a hidden tab coming back) */

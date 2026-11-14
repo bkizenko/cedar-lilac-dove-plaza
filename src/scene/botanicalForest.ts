@@ -2,7 +2,7 @@ import {detailScale,getDetailLevel,DETAIL_RULES} from '../game/detailLevel';
 import * as THREE from 'three';
 import {BOTANICAL_SPECIES,DEFAULT_SITE,VARIANTS_PER_SPECIES,pickSpecies,pickVariant,stableUnit,type BaseForm,type BotanicalSpecies,type TreeSite} from './botanicalSpecies';
 import {botanicalTree,botanicalStump,type TreeGeometry} from './treeBotany';
-import {makeBotanicalMaterial,makeBotanicalFarMaterial,makeFarFade} from './botanicalMaterial';
+import {makeBotanicalMaterial,makeBotanicalFarMaterial,makeFarFade,FAR_FADE_EYE} from './botanicalMaterial';
 import {FillerLayer} from './fillerLayer';
 import type {StandField} from '../game/forestEcology';
 import type {FillerBlob} from './fillerForest';
@@ -110,6 +110,7 @@ private stumps:Batch|null=null;private recs=new Map<number,Rec>();private info=n
   // with the cosmetic filler on, sim trees beyond the individual-detail radius draw as one cheap low-poly crown (hand-over is a dithered cross-fade); the budget's real reach bounds both
   const detailEff=ctx.filler?ctx.filler.detailEff:Infinity;this.cheapIds[0].length=this.cheapIds[1].length=0;
   const reach=ctx.filler?Math.min(cullFar,ctx.filler.farEff):cullFar;
+  FAR_FADE_EYE.value.set(ctx.camera.x,ctx.camera.z);
   if(fadeM>0)this.simFade.value.set((ctx.filler?detailEff:cullFar)-fadeM,ctx.filler?detailEff:cullFar,-2,-1);else this.simFade.value.set(1e9,1e9+1,-2,-1);
   const fillerCounts={trees:0,far:0,blobs:0,cheap:0};this.fill.begin();
   const farCounts=[0,0];let farTrunks=0,blobs=0,midTrees=0,fullTrees=0,heroTrees=0,leafy=0;this.farTrunkIds.length=0;this.farIds[0].length=this.farIds[1].length=0;

@@ -65,9 +65,9 @@ test('mixed: explicit graphics stays, Auto knobs ease; picking a level clears ea
  assert.ok(g.notice);g.choose('draw','ultra');assert.equal(g.notice,null,'choosing resets');assert.equal(g.effective.draw,'ultra');assert.equal(g.effective.trees,5,'Auto knobs return to their start');
 });
 
-test('with an explicit graphics tier and trees on Auto, trees follow the tier; Low trees keep the Low radius with fewer cards, Medium and High equal the Medium and High radii',()=>{
+test('with an explicit graphics tier and trees on Auto, trees follow the tier; Low trees keep the Low radius with fewer cards, Medium is the middle Balanced step, High equals the High radius',()=>{
  assert.equal(resolveChoices({graphics:'low',draw:'auto',trees:'auto'}).trees,2);
- assert.equal(resolveChoices({graphics:'med',draw:'auto',trees:'auto'}).trees,4);
+ assert.equal(resolveChoices({graphics:'med',draw:'auto',trees:'auto'}).trees,3);
  assert.equal(resolveChoices({graphics:'high',draw:'auto',trees:'auto'}).trees,5);
  assert.equal(TREE_DETAIL[4].nearMetres,DETAIL_RULES.treeNear.med);assert.equal(TREE_DETAIL[5].nearMetres,DETAIL_RULES.treeNear.high);assert.equal(TREE_DETAIL[2].nearMetres,DETAIL_RULES.treeNear.low);
  assert.ok(TREE_DETAIL[2].cardScale<1,'Low draws fewer leaf cards than before');
