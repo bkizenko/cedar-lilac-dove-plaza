@@ -260,3 +260,10 @@ test('diplomacy ledger lists pledges, claims owed and grudges per house from the
  const l=diplomacyLedger(c);assert.equal(l[0].name,'Ridge Clan');assert.equal(l[1].pledges.length,2);assert.match(l[0].owed[0],/They hold raids on their herds/);assert.equal(l[0].grudges.length,2);
  const html=renderToStaticMarkup(h(DiplomacyLedger,{council:c}));assert.match(html,/Oaths, debts and grudges · 2 houses/);assert.match(html,/Pledges/);assert.match(html,/Owed/);assert.match(html,/Grudges/);
 });
+
+test('handover card names the sitting regent, years to majority and the real limits in both palettes',async()=>{
+ const {HandoverCard:Hearth}=await import('../src/ui/hearth/councilCards.tsx');
+ const hv={law:'primogeniture',rulerAge:9,yearlyRisk:1,extinct:false,others:[],regent:'Aunt Sela',regency:{yearsLeft:7,limits:['no new casus belli may be cited','legitimacy -5 until majority']}};
+ for(const C of [HandoverCard,Hearth]){const html=renderToStaticMarkup(h(C,{h:hv}));assert.ok(html.includes('Aunt Sela holds the seat for a ruler too young to rule.'),html);assert.ok(html.includes('Majority in about 7 years.'));assert.ok(html.includes('No new casus belli may be cited.'));assert.ok(html.includes('Legitimacy -5 until majority.'));}
+ assert.ok(!renderToStaticMarkup(h(HandoverCard,{h:{...hv,regency:undefined}})).includes('data-regency'));
+});

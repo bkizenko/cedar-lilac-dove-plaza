@@ -1,3 +1,4 @@
+import {regencyText} from '../council/regencyText';
 import {useState,type ReactNode} from 'react';
 import {Crown,Skull,Unlock,Home,Shield,Users,Swords,TriangleAlert,Scroll,Hourglass,Handshake} from 'lucide-react';
 import type {Engine} from '../../game/engine';
@@ -39,6 +40,7 @@ export function HandoverCard({h,mourning}:{h:Handover;mourning?:CouncilModel['mo
     <span className={cx('hw-chip',urgent&&'t-warn')} tabIndex={0} aria-label={`About ${h.yearlyRisk} percent a year the seat passes`}><Hourglass size={18}/>{h.yearlyRisk}%/y</span>
    </GameTooltip></div>
   {m&&<div className="hw-mourn" role="status"><span className="hw-chip hw-chip-soft"><Scroll size={16}/>{m.kind}</span><p className="hw-sub">{m.headline}</p>{m.contested&&<p className="hw-sub t-warn"><TriangleAlert size={16}/> The succession is contested.</p>}<p className="hw-sub">{m.left}.{m.pacts&&<> {m.pacts}</>}</p></div>}
+  {h.regency&&(r=>(<div className="hw-mourn" role="status" data-regency="1"><span className="hw-chip t-warn"><Hourglass size={16}/>Regency</span><p className="hw-sub">{r.headline} {r.left}</p><ul className="hw-why">{r.limits.map(l=><li key={l}>{l}</li>)}</ul></div>))(regencyText(h.regent,h.regency))}
   {h.extinct?<p className="t-bad hw-sub"><Skull size={18}/> No living kin. The line ends unless a claimant rises.</p>
    :h.heir?<div className="hw-heir"><span className="hw-medal hw-medal-s"><Crown size={22}/></span><div><h4>{h.heir.name}</h4><p className="hw-sub">{sentence(h.heir.role)}, {h.heir.age}. {h.heir.headline}</p></div></div>
    :<p className="hw-sub">A regent will hold the seat{h.regent?`: ${h.regent}`:''}.</p>}
