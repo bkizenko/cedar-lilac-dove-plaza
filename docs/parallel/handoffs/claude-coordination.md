@@ -1476,3 +1476,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 04:17 ET Claude: shipped lane A era-gated trade ventures (one caravan load capped band 16/chiefdom 24/state 32, caravan waits out a risky road like founding parties; behind rulersVersion, no goods/units created; rulers 85/85, tsc not run: no node_modules) (717ab932) / now on explorer party crew/provisioning by era, casus belli unrest audit / blocked: none
 
 04:29 ET Claude: shipped lane B Hearth old-save note (older save shows what starts fresh: rulers/houses/wards; dismissible, read-only, old saves unchanged; old-save-note 1/1, council-ui 34/34, tsc nil on touched files, not browser-rendered; backlog items already shipped) (20f4de12) / now on job-feed legibility, Hearth 390px sheets audit / blocked: none
+
+04:43 ET Claude: shipped lane C Vedara civic softened to a round lotus-dome hall (stepped round plinths, pilastered drum, petal ring, onion dome; original grammar only, legacy kept, footprint unchanged; civ/people/civic/era/wonder 52/52, tsc not run: no node_modules, SwiftShader sheet checked) (6f3abe44) / now on Rusvolt house, Option H adapter polish / blocked: none
