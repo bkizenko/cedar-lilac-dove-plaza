@@ -1,3 +1,4 @@
+import {BuildingActionItems} from './BuildingActionItems';
 import {NeedsTradeControls} from './NeedsTradeControls';
 import {CommanderControls} from './CommanderControls';
 import {GraphicsSettingsPanel} from './GraphicsSettingsPanel';
@@ -818,6 +819,7 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
   const showJobs = !selMin && hud.workerSelected > 0;
   const showFight = !selMin && (hud.militarySelected > 0 || hud.workerSelected > 0);
   return (<>
+        {!selMin&&engine&&sel.kind==='building'&&sel.team===0&&sel.completed&&<BuildingActionItems engine={engine} buildingName={sel.name||sel.type||''}/>}
         {sel.kind==='building'&&sel.type==='townhall'&&sel.team!==0&&sel.buildingId&&<div className="mt-2">
           <button type="button" className="min-h-11 w-full rounded-md border border-bronze/40 px-3 py-2 text-left" onClick={()=>{if(engine){massRaid(engine.game,sel.buildingId!);engine.pushHud();}}}>Mass raid · send all armed residents</button>
           {!selMin&&<p className="text-xs text-parchment-dim">Carriers unload first. Unarmed workers stay home. Civilian militia return to work when their raid ends.</p>}
