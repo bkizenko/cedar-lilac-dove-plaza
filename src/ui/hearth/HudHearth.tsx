@@ -41,6 +41,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  const founding=hud.founding;
  const alerts=useGlanceAlerts(hud.started&&!hud.awaitingStart?engine:null);
  useEffect(()=>{if(hud.placing)setTray(false);},[hud.placing]);
+ useEffect(()=>{if(!tray)return;const k=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!e.defaultPrevented){setTray(false);}};window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k);},[tray]);
  // O: sound effects, U: hide or show the interface, Shift+U: minimise or show every panel. M (mute) and Shift+M (map) are handled elsewhere.
  useHudHotkeys({
   sfx:()=>{engine?.audio?.toggleSfxOff();engine?.pushHud?.();},
@@ -76,7 +77,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
       {hud.placing==='watchtower'&&engine&&<TowerPlatformControls engine={engine}/>}
       {hud.placing==='gate'&&engine&&<GateRotationControl facing={engine.gateFacing} onChange={f=>engine.setGateFacing(f)}/>}
       {engine?.canRotateAnyPlacement()&&<RotateButtons engine={engine} gate={hud.placing==='gate'}/>}</>}/>
-     :tray&&<BuildTray hud={hud} engine={engine} tab={tab} setTab={setTab} onPick={()=>setTray(false)}/>}
+     :tray&&<BuildTray hud={hud} engine={engine} tab={tab} setTab={setTab} onPick={()=>setTray(false)} onClose={()=>setTray(false)}/>}
     <SelectionCard hud={hud} engine={engine} onOffer={t=>setTrade(t)}/>
     <Dock active={screen?.k==='village'?'village':screen?.k==='ages'?'ages':screen?.k==='council'?'council':screen?.k==='wonders'?'wonders':tray?'build':map?'map':null} onPick={open} onHome={()=>engine?.focusHome()} hasMap alerts={{}}/>
    </>}

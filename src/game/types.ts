@@ -380,6 +380,8 @@ export type Building = {
   gateOpen?: boolean;
   gateMode?: "auto" | "open" | "closed";
   gateFacing?: "north" | "east" | "south" | "west";
+  /** Player-chosen orientation in quarter turns (0..3). Absent = default facing. */
+  turn?: 0 | 1 | 2 | 3;
   raiderCamp?: boolean;
   campEconomy?:import('./finiteCamp').CampEconomy;
   lootClaimed?: boolean;

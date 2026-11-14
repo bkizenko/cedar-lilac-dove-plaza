@@ -103,10 +103,10 @@ const COSTS=[['seeds','seeds'],['wood','wood'],['stone','stone'],['food','food']
 export function CostChips({cost,have,extra}:{cost:Record<string,number|undefined>;have:Record<string,number>;extra?:{fibre?:number}}){
  return <span className="hw-cost">{COSTS.filter(([k])=>cost[k]).map(([k,icon])=>{const I=RES_ICON[icon as keyof typeof RES_ICON];const short=(have[k]??0)<(cost[k]||0);return <span key={k} className={cx(short&&'t-bad')} title={`${cost[k]} ${RES_NAME[icon]}`}><I size={16}/>{cost[k]}</span>;})}{!!extra?.fibre&&<span title="Plant fibre"><Package size={16}/>{extra.fibre}</span>}</span>;
 }
-export function BuildTray({hud,engine,tab,setTab,onPick}:{hud:HudSnapshot;engine:Engine|null;tab:string;setTab:(t:string)=>void;onPick:()=>void}){
+export function BuildTray({hud,engine,tab,setTab,onPick,onClose}:{hud:HudSnapshot;engine:Engine|null;tab:string;setTab:(t:string)=>void;onPick:()=>void;onClose?:()=>void}){
  const have={seeds:engine?.game.tribe(0).seeds||0,wood:hud.wood,stone:hud.stone,food:hud.food,copper:hud.copper,iron:hud.iron};
  return <section className="hw-tray" aria-label="Build">
-  <div className="hw-tabs" role="tablist" aria-label="Building categories">{CATS.map(c=><button key={c} role="tab" type="button" aria-label={c} aria-selected={tab===c} onClick={()=>setTab(c)}>{CAT_ICON[c]}<span>{c}</span></button>)}</div>
+  <div className="hw-tabs" role="tablist" aria-label="Building categories">{CATS.map(c=><button key={c} role="tab" type="button" aria-label={c} aria-selected={tab===c} onClick={()=>setTab(c)}>{CAT_ICON[c]}<span>{c}</span></button>)}{onClose&&<button type="button" className="hw-tray-x" aria-label="Close build menu" title="Close · Esc" onClick={onClose}><X size={22}/></button>}</div>
   <div className="hw-tiles">
    {hud.buildOptions.filter(b=>catOf(b.type)===tab).map(b=>{
     const home=b.type==='house'&&engine?housingAdoptionIssue(engine.game):null;

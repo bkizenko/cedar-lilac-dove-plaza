@@ -158,7 +158,7 @@ import {tickEncounters,contactYieldingTo} from "./encounters";
 import {villageAppeal,foodAttention,migrationSettings} from "./migration";
 import {FORTIFICATIONS,earthworkPace,tickGates,earthwork} from "./fortifications";
 import {unitSightRadius,buildingSightRadius} from "./sightRadii";
-import {turnableBuilding,turnedFootprint} from "./footprints";
+import {turnableBuilding,turnedFootprint,orientableBuilding} from "./footprints";
 import {flowPath,resetFlowFields,setFlowFieldsEnabled} from "./flowFields";
 import {scenicStartReport} from "./scenicBeauty";
 import {advanceTide} from "./tides";
@@ -1530,7 +1530,7 @@ export class Game {
     return null;
   }
 
-  placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan,quarterTurn=false) {
+  placeBuilding(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan,quarterTurn=false,turn=0) {
     if (this.state.ended || (size&&(!scalablePlot(type)||!validPlot(type,size)))) return false;
     if(type==="house")return planAdvancedHome(this,x,z,team);
     const d = BUILDINGS[type];
@@ -1588,6 +1588,7 @@ export class Game {
     const siteRec=siteInfo&&siteRecord(siteInfo);if(siteRec)b.site=siteRec;
     if(size){b.w=size.w;b.d=size.d;}
     if(quarterTurn){const t=turnedFootprint(type);b.w=t.w;b.d=t.d;}
+    if(turn>0&&turn<4&&orientableBuilding(type))b.turn=turn as 1|2|3;
     if(type==="farm"){b.cropType=tribe.cultivated?.[0]||"grain";crop(this,b);}
     if(planned)b.plannedCost=cost;
     if (type!=="farm"&&(planned || BUILD_TIME[type] > 0 || type === "townhall")) {

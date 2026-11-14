@@ -11,6 +11,8 @@ import type {BldType,Building} from './types';
  * footprints (a turn changes nothing physical). */
 const FIXED:ReadonlySet<BldType>=new Set(['bridge','dock','quarry','trench','moat','gate','house'] as BldType[]);
 export function turnableBuilding(type:BldType){const d=BUILDINGS[type];return !!d&&!FIXED.has(type)&&!expandablePlot(type)&&!linearStructure(type)&&Math.abs(d.w-d.d)>1e-6;}
+/** Any building that can be oriented in four directions (square footprints included: the door turns even though the footprint does not). */
+export function orientableBuilding(type:BldType){const d=BUILDINGS[type];return !!d&&!FIXED.has(type)&&!expandablePlot(type)&&!linearStructure(type);}
 export function turnedFootprint(type:BldType){const d=BUILDINGS[type];return{w:d.d,d:d.w};}
 /** 0 or 1 quarter turns, derived from the saved footprint (for the renderer). */
-export function buildingQuarterTurns(b:Pick<Building,'type'|'w'|'d'>){const d=BUILDINGS[b.type];return turnableBuilding(b.type)&&Math.abs(b.w-d.d)<1e-6&&Math.abs(b.d-d.w)<1e-6?1:0;}
+export function buildingQuarterTurns(b:Pick<Building,'type'|'w'|'d'>&{turn?:number}){if(typeof b.turn==='number'&&b.turn>=0&&b.turn<=3&&orientableBuilding(b.type))return b.turn;const d=BUILDINGS[b.type];return turnableBuilding(b.type)&&Math.abs(b.w-d.d)<1e-6&&Math.abs(b.d-d.w)<1e-6?1:0;}

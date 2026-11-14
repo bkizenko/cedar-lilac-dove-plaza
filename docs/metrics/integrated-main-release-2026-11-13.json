@@ -1,0 +1,72 @@
+{
+  "release": {
+    "release": "2026-11-14T02-58-34-340Z-1e42a6f",
+    "path": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-14T02-58-34-340Z-1e42a6f",
+    "previous": "/Users/boriskizenko/Documents/Codex/2026-09-26/https-github-com-bkizenko-cedar-lilac-2/work/hearthwild.nosync/.play/releases/2026-11-13T09-09-19-758Z-1aa5ab3",
+    "commit": "1e42a6fcca747b30bbed949557a3dbe73374c481",
+    "retained": {
+      "linked": 1501,
+      "copied": 0,
+      "existing": 12
+    }
+  },
+  "batch": {
+    "passed": 85,
+    "total": 85,
+    "nativeDistinct": 84,
+    "nativeInitialExecutions": 82,
+    "nativeFollowupExecutions": 30,
+    "repeatedNativeScenarios": 28,
+    "finalBuiltLegacyCompatibility": 1
+  },
+  "supportingRender": {
+    "passed": 2,
+    "total": 2,
+    "builtCommit": "0d1fef8c5ced5b9d689cc4b90a4bcfc135b75bc3",
+    "scope": "Actual rig/painterly and Classic/legacy linked shaders, real picking, paused render resource stability and durable original53. Final source scene identical; not a second final-artifact full-render run or FPS proof."
+  },
+  "compiler": "PASS full final tsc --noEmit",
+  "build": "PASS final npm run build",
+  "network": {
+    "passed": 5,
+    "total": 5,
+    "release": "2026-11-14T02-58-34-340Z-1e42a6f",
+    "assets": [
+      {
+        "port": 8086,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8086,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/routes-y3A9lzBK.js",
+        "sameDecodedSha256": "8df659116edfa1eb43bfb01d981a012f6b6f678cd2144db8d04afc9215925889"
+      },
+      {
+        "port": 8101,
+        "url": "/assets/styles-CEdjSfRz.css",
+        "sameDecodedSha256": "98bbe7142f58c9b3e9fc261431270ef805a68d996accc88771c60ee1d273f34d"
+      }
+    ]
+  },
+  "originalVillageSha256": "61a2a13a1558c62857cba16b082a0e4a0fb85573ec2ee430d0e6a301dbd92cc6",
+  "changes": [
+    "Integrated main since live1aa5ab39: society/ruler, diplomacy/Council/chronicle, cultural building/people/tree/lighting/UI work including Esc and far-tree fixes",
+    "Case-insensitive Mac module collision fixed by renaming presentation component AttentionInboxPanel.tsx; pure attentionInbox.ts unchanged"
+  ],
+  "limits": [
+    "No full campaign, all-feature,100-person FPS or visual-design approval claim",
+    "Native tests only targeted Council/rulers/heir education/tree/distance; other merged subsystems not individually requalified",
+    "No existing private user game or save edited; browser tests used disposable isolated profiles"
+  ],
+  "firstReleaseGates": {
+    "passed": 37,
+    "total": 98,
+    "percent": 37.76
+  }
+}
