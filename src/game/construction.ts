@@ -103,6 +103,23 @@ export function assignPlacedConstruction(g: Game, b: Building) {
     builders.push(resident);
     if (builders.length === 2) break;
   }
+  // Placing a building is an order: when too few residents are idle, the nearest ones on ordinary work (gathering, a standing job) are pulled over.
+  // Anyone with a real commitment (paid maker, escort, envoy, militia, shelter, emergency) is still left alone.
+  if (builders.length < 2) {
+    const busy = g.state.units.filter(u =>
+      u.team === 0 && u.type === 'worker' && u.hp > 0 && !isDependent(g, u) && !builders.includes(u) &&
+      (u.order === 'gather' || u.order === 'idle' || u.order === 'hold' || u.order === 'return') &&
+      !u.buildOrder && !u.constructionQueue && !u.shelterId && !u.prisoner &&
+      !u.emergency && !u.militia && !u.recalled && !u.tributeJourney &&
+      !u.envoy && !u.scout && !u.expedition && !u.foundingJourney && !u.visit &&
+      u.drill == null && u.escortId === undefined && !hasTaskCommitment(u)
+    ).sort((a, c) => Math.hypot(a.x - b.x, a.z - b.z) - Math.hypot(c.x - b.x, c.z - b.z));
+    for (const resident of busy) {
+      if (!g.buildingWorkReached(resident, b) && !g.interactionSpot(resident, b)) continue;
+      builders.push(resident);
+      if (builders.length === 2) break;
+    }
+  }
   if (!builders.length) return;
   if (b.plannedCost) queueConstruction(g, b, builders);
   else orderConstruction(g, b, builders);
@@ -116,8 +133,8 @@ export function orderConstruction(g:Game,b:Building,workers:Unit[]=g.selectedUni
   // Select usable adults before the nearest-two limit; paid makers and loaded
   // carriers must not hide a free builder farther from the selected building.
   const chosen=(workers.length?workers:g.state.units.filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.prisoner&&!u.militia&&!u.emergency&&
-    !u.jobLock&&!u.buildOrder&&(!u.constructionQueue||!u.constructionQueue.paused&&u.constructionQueue.sites.includes(b.id))&&!u.stationOnArrival&&!u.resting&&!u.shelterId&&!u.recalled&&!u.envoy&&!u.scout&&!u.expedition&&!u.visit&&!u.foundingJourney&&!u.tributeJourney&&u.escortId===undefined&&u.drill==null&&
-    u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u)&&['idle','hold','gather'].includes(u.order)&&
+    !u.buildOrder&&(!u.constructionQueue||!u.constructionQueue.paused&&u.constructionQueue.sites.includes(b.id))&&!u.stationOnArrival&&!u.resting&&!u.shelterId&&!u.recalled&&!u.envoy&&!u.scout&&!u.expedition&&!u.visit&&!u.foundingJourney&&!u.tributeJourney&&u.escortId===undefined&&u.drill==null&&
+    !hasTaskCommitment(u)&&['idle','hold','gather','return'].includes(u.order)&&
     (b.type==='bridge'?!!bridgeApproach(g,u,b):g.buildingWorkReached(u,b)||!!g.interactionSpot(u,b)))
     .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z)).slice(0,2))
     .filter(u=>u.team===0&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)).filter(u=>{const reason=productionOwnershipIssue(g,u)||fibreOrderIssue(u);if(reason){u.workReason=reason;g.banner(reason,4);return false;}return true;}).slice(0,b.renovation?1:undefined);
