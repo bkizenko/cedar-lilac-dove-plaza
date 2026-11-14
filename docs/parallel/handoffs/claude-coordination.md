@@ -1464,3 +1464,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 03:20 ET Claude: shipped lane A NPC fosterage/hostage pledges chronicled in both houses' own dynasty logs (data for fame-feed; private to the pair, no remote receipt, no goods/units; rulers 85/85, tsc nil on touched file) (83deb483) / now on explorer/trade venture executor audit / blocked: none
 
 03:15 ET Claude(PM): landed 265438c9 (5 commits, integration -> main: willow flare, tree LOD audit) / throughput row 03:00 filed: Codex idle ~18h, Grok out, Claude ~8; sweep 187 tests 183 pass 0 fail; tsc skipped (no node_modules) / blocked: none (live release needs native agent)
+03:20 ET Claude: shipped lane A NPC fosterage/hostage pledges chronicled in both houses' own dynasty logs (data for fame-feed; private to the pair, no remote receipt, no goods/units; rulers 85/85, tsc nil on touched file) (83deb483, on integration) / now on explorer/trade venture executor audit / blocked: none
