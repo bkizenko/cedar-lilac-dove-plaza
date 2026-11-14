@@ -5,6 +5,7 @@ import{carryVisitorRefusal,visitorOfferOnCooldown,VISITOR_REFUSAL_RULES}from'./v
 import{observePartnerTrade,deliverTradeIntel}from'./tradeIntel';
 import {equipCaravan} from "./caravans";
 import {isRivalTeam} from "./factions";
+import {societyRelation} from './societyRelations';
 import {settleRivalBarter,reportRivalRefusal} from "./rivalTrade";
 import {receiveFood} from "./pantry";
 import type { Game } from './sim';
@@ -19,12 +20,13 @@ export function tickVisitors(g:Game,dt:number) {
   const rivals=g.state.tribes.filter(t=>isRivalTeam(t.id)&&t.alive&&!t.hostile);
   for(const t of rivals) {
     const home=knownSettlementSite(g,0,t.id);if(!home)continue;
+    if(!societyRelation(g,0,t.id).known)continue; // quick trades unlock only after the first meeting: strangers do not send traders
     if(reserveSeconds(g,t.id)<240||g.popNow(t.id)<5||g.state.units.some(u=>u.team===t.id&&u.hp>0&&u.visit))continue;
     const u=g.state.units.find(u=>u.team===t.id&&u.type==='worker'&&u.hp>0&&!isDependent(g,u)&&!u.emergency&&u.carry===0&&!u.visit&&!u.scout&&!u.expedition&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&!u.recalled&&!u.envoy&&u.drill==null&&!u.buildOrder&&!u.jobLock&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&['idle','gather'].includes(u.order)&&!!g.interactionSpot(u,home));
     if(!u)continue;
     const available=(['food','wood','stone','copper','iron'] as ResKind[]).filter(good=>!(good==='copper'&&t.age<1)&&!(good==='iron'&&t.age<2))
       .map(good=>({good,spare:t[good]-(good==='food'?foodDemand(g,t.id)*240:good==='wood'?20:10)}))
-      .filter(item=>item.spare>=8).sort((a,b)=>(b.good===t.spec?30:0)+b.spare*worth[b.good]-(a.good===t.spec?30:0)-a.spare*worth[a.good]);
+      .filter(item=>item.spare>=4).sort((a,b)=>(b.good===t.spec?30:0)+b.spare*worth[b.good]-(a.good===t.spec?30:0)-a.spare*worth[a.good]);
     if(!available.length)continue;
     const chosen=available.find(({good,spare})=>{const amount=Math.min(24,Math.floor(spare));return !visitorOfferOnCooldown(g,t.id,good,amount,visitorQuoteTerms(g,t.id,good,amount));});if(!chosen)continue;
     const {good,spare}=chosen,amount=Math.min(24,Math.floor(spare));
