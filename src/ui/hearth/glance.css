@@ -113,3 +113,7 @@
 
 /* First needs strip */
 .hw-firstneeds{align-items:center}.hw-fn-label{font-size:var(--hw-fs-s);font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--hw-ink-dim,inherit);padding:0 var(--hw-s2)}
+
+/* no dashed ring around the pinned person; the chip alone marks a critical alert */
+.hw-pin-ring{display:none}
+.hw-pin:not(.is-crit){display:none}

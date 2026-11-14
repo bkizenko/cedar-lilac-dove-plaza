@@ -2553,16 +2553,16 @@ export class WorldView {
     if(this.linePreview.instanceColor)this.linePreview.instanceColor.needsUpdate=true;
   }
 
-  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}, gateFacing?:GateFacing, towerPlatform?:TowerPlatform, quarterTurn=false) {
+  setGhost(type: BldType | null, x: number, z: number, y: number, ok: boolean, quality?: number, bridge?: import("@/game/transport").BridgeSpan|null, size?:{w:number;d:number}, gateFacing?:GateFacing, towerPlatform?:TowerPlatform, quarterTurn=false, turns=0) {
     if (!type) {
       this.clearGhost();
       this.ghost.visible = false;
       return;
     }
     this.ghost.visible = true;
-    const carved=this.carvedGhostInput(type,x,z,quarterTurn,size,bridge,towerPlatform);
+    const carved=this.carvedGhostInput(type,x,z,quarterTurn,size,bridge,towerPlatform,turns);
     this.ghost.position.set(x, carved?carved.y:y, z);
-    this.ghost.rotation.set(0,carved?carved.yaw:type==='gate'?gateOrientation(gateFacing).yawRadians:quarterTurn?Math.PI/2:0,0);this.ghost.scale.set(1,1,1);
+    this.ghost.rotation.set(0,carved?carved.yaw:type==='gate'?gateOrientation(gateFacing).yawRadians:turns*Math.PI/2,0);this.ghost.scale.set(1,1,1);
     if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const carvedVariant=carved?carvedVariantFor(carved.input):null;
@@ -2647,12 +2647,12 @@ export class WorldView {
   }
 
   /** Same builder as the finished building (carvedInputFor), or null when this type keeps the classic ghost (fort lines, plots, bridges, towers on platforms, modular stores). */
-  private carvedGhostInput(type:BldType,x:number,z:number,quarterTurn:boolean,size?:{w:number;d:number},bridge?:unknown,tower?:unknown){
+  private carvedGhostInput(type:BldType,x:number,z:number,quarterTurn:boolean,size?:{w:number;d:number},bridge?:unknown,tower?:unknown,turns=0){
     const game=this.ghostGame;
     if(!game||this.renderStyle!=='carved'||size||bridge||tower||!CARVED_TYPES.includes(type)||CARVED_KEEP_CURRENT.has(type))return null;
     if(['palisade','gate','stonewall','trench','moat','warehouse','dock','aqueduct','quarry','cornerstone','cairn','grove','watchtower','canal'].includes(type))return null;
     const t=quarterTurn?turnedFootprint(type):BUILDINGS[type];
-    const fake={id:game.state.nextId,kind:'building',type,team:0,x,y:game.height(x,z),z,w:t.w,d:t.d,hp:1,maxHp:1,build:1} as unknown as import("@/game/types").Building;
+    const fake={id:game.state.nextId,kind:'building',type,team:0,x,y:game.height(x,z),z,w:t.w,d:t.d,hp:1,maxHp:1,build:1,...(turns>0?{turn:turns}:{})} as unknown as import("@/game/types").Building;
     const sa=game.state.slopeModel==='graded'?game.siteAssessment(type,x,z,t.w,t.d):null,rec=sa&&sa.ok?siteRecord(sa):undefined;if(rec)fake.site=rec;
     const input=this.carvedInputFor(game,fake,type,1);
     return {input,y:input.y,yaw:input.yaw,fake};

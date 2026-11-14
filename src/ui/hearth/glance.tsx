@@ -176,6 +176,7 @@ const pinInset=(w:number)=>w<760?{left:76,top:176,right:64,bottom:120}:{left:132
  * gets the same chip on the viewport edge with an arrow toward it. The layer never takes a click except on a chip itself.
  */
 export function AlertPins({engine,alerts}:{engine:Engine|null;alerts:readonly Alert[]}){
+ // Non-critical pins are hidden by CSS (glance.css): world pins are for real emergencies only.
  const pins=useMemo(()=>pinSet(alerts),[alerts]);
  const box=useRef<HTMLDivElement>(null),els=useRef(new Map<AlertKind,HTMLButtonElement>()),arrows=useRef(new Map<AlertKind,HTMLElement>());
  useEffect(()=>{
