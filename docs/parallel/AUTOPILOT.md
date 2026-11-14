@@ -1569,6 +1569,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-14 01:00 | Claude | ~5 since 00:00 ET (lane C doorways, lane B timeline, workload %) | all landed by PM 00:43 ET | 2 (adult-height hut doorways; diplomacy Coming-up timeline) | shipping and landing |
 | 11-14 01:00 | Grok | 0 | 0 | 0 | out; World rows with Claude queue |
 | 11-14 01:00 | Total | ~5 | main = integration, no agent branch ahead | 2 | nothing new to land at 01:07; done 210, not-started ~265 by text count |
+| 11-14 02:00 | Codex | 0 (idle ~17h) | 0 | 0 | idle; 4+ hourly lines missed; rows stay with Claude lanes; remaining gate rows need native evidence, no agent spawned |
+| 11-14 02:00 | Claude | ~21 since 01:00 ET (lanes A-D: new-patron seeking, kin tree, society back tab, fixes) | all landed by PM 01:50 + 02:10 ET | 3 (new-patron seeking; Hearth kin tree; society-colour back tab at mid LOD) | shipping and landing |
+| 11-14 02:00 | Grok | 0 | 0 | 0 | out; World rows with Claude queue |
+| 11-14 02:00 | Total | ~21 | main = integration after 02:10 landing | 3 | sweep 179 tests 162 pass 1 fail (people-terrain-integration needs `three`, env, same on base) 16 skip; tsc skipped (no typescript); done 210, not-started ~265 by text count |
 
 | LANE-B-HANDOVER-MOURNING | Claude B | handover card names who takes the seat, relation, contested, mourning time left and agreements carried/strained/lapsed (councilModel.mourning), Field + Hearth | Claude | Claude B | source-pushed-not-live | council-ui 28/28, tsc nil on touched files, no screenshot (5bba3644) || AUD-SOC-REFUGEE-MIRROR | audit | Societies: the player's own hungry families can walk to a kind neighbour's hall (mirror of hunger refugees); accepted moves real adults only, refused walk home, no spawned people or food | Claude | Claude lane A | open | gap found 11-13 lane D audit (19:5x ET) |
 | AUD-VIS-STORM-DAMAGE-READ | audit | Visuals: after a storm/flood, roofs and fences show real damage tied to the existing repair/maintenance state (loose thatch, fallen rail) and clear when repaired; no new durability rules | Claude | Claude lane C | open | gap found 11-13 lane D audit |
