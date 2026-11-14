@@ -18,7 +18,7 @@ export const PARTS:readonly Part[]=['hips','spine','head','armL','armR','legL','
 export type Pose={parts:Record<Part,[number,number,number]>;root:[number,number,number];
  /** whole-body rotation about the feet (rx,ry,rz): only the death clips use it */rootRot:[number,number,number];
  /** held-item rotation relative to the TORSO (not the arm), so a spear stays a spear while the arm swings: main hand / off hand */itemR:[number,number,number];itemL:[number,number,number]};
-export type ClipId='idle'|'walk'|'carry'|'row'|'fight'|'thresh'|'winnow'|'grind'|'bake'|'tend'|'chop'|'quarry'|'plant'|'harvest'|'craft'|'build'|'haul'|'fish'|'till'|'thrust'|'shoot'|'slash'|'run';
+export type ClipId='idle'|'walk'|'carry'|'row'|'fight'|'thresh'|'winnow'|'grind'|'bake'|'tend'|'chop'|'quarry'|'plant'|'harvest'|'craft'|'build'|'haul'|'fish'|'till'|'thrust'|'shoot'|'slash'|'run'|'spin'|'weave'|'scrape'|'knead'|'stir'|'hang';
 export type EffectKind='dust'|'chaff'|'smoke'|'steam';
 type Deg=Partial<Record<Part|'root'|'rootRot'|'itemR'|'itemL',number[]>>;
 type Key={t:number;pose:Deg};
@@ -112,6 +112,25 @@ export const CLIPS:Record<ClipId,Clip>={
   k(.3,J(S2(-8,0),{armR:[-150,0,-8],armL:[-40,0,8],head:[-2,0,0],itemR:[110,0,0]},plant(-4,10,10))),
   k(.5,J(S2(8,0),{armR:[-40,0,-8],armL:[-30,0,8],head:[4,0,0],root:[0,0,.04],itemR:[20,0,0]},plant(-14,8,10))),
   k(1,J(S2(2,0),{armR:[-35,0,-10],armL:[-25,0,8],head:[4,0,0],itemR:[40,0,0]},plant(-6,6,10)))]},
+ // Trade clips: each family of paid work reads differently at a glance. Stance stays a shallow stagger; the arms and head do the work.
+ // Spin / twist: the left hand holds the fibre at the chest, the right draws it out to the side and back.
+ spin:{id:'spin',period:1.4,lock:1,events:[],keys:[
+  k(0,J(S2(8,0),{armL:[-85,0,12],armR:[-45,0,-12],head:[9,0,0]},plant(-6,6,8))),k(.5,J(S2(10,0),{armL:[-85,0,12],armR:[-75,0,-58],head:[9,0,0]},plant(-6,6,8))),k(1,J(S2(8,0),{armL:[-85,0,12],armR:[-45,0,-12],head:[9,0,0]},plant(-6,6,8)))]},
+ // Weave / felt / sew: both hands low and busy, alternating a pass left to right, head bent to the work.
+ weave:{id:'weave',period:1.3,lock:1,events:[],keys:[
+  k(0,J(S2(10,4),{armL:[-70,0,8],armR:[-40,0,-8],head:[9,0,0]},plant(-5,5,8))),k(.5,J(S2(10,-4),{armL:[-40,0,8],armR:[-70,0,-8],head:[9,0,0]},plant(-5,5,8))),k(1,J(S2(10,4),{armL:[-70,0,8],armR:[-40,0,-8],head:[9,0,0]},plant(-5,5,8)))]},
+ // Scrape / flesh / wash: a long two-handed push away and pull back, weight carried over the front foot.
+ scrape:{id:'scrape',period:1.5,lock:1,events:[{at:.5,kind:'dust',count:1,needsDrySurface:true,at3:[0,.1,.6]}],keys:[
+  k(0,J(S2(11,0),{armL:[-60,0,6],armR:[-60,0,-6],head:[8,0,0],root:[0,0,.02]},plant(-14,14,10))),k(.5,J(S2(11,0),{armL:[-105,0,6],armR:[-105,0,-6],head:[9,0,0],root:[0,0,.1]},plant(-20,20,12))),k(1,J(S2(11,0),{armL:[-60,0,6],armR:[-60,0,-6],head:[8,0,0],root:[0,0,.02]},plant(-14,14,10)))]},
+ // Knead / form clay: both hands press down and fold, back bent over the work.
+ knead:{id:'knead',period:1.6,lock:1,events:[],keys:[
+  k(0,J(S2(11,0),{armL:[-70,0,10],armR:[-70,0,-10],head:[9,0,0],root:[0,0,.04]},plant(-12,12,10))),k(.35,J(S2(11,0),{armL:[-100,0,4],armR:[-100,0,-4],head:[9,0,0],root:[0,0,.08]},plant(-14,14,10))),k(.7,J(S2(11,0),{armL:[-80,0,14],armR:[-80,0,-14],head:[9,0,0],root:[0,0,.05]},plant(-12,12,10))),k(1,J(S2(11,0),{armL:[-70,0,10],armR:[-70,0,-10],head:[9,0,0],root:[0,0,.04]},plant(-12,12,10)))]},
+ // Stir / brew / strain: the left hand steadies the vessel, the right circles a paddle.
+ stir:{id:'stir',period:1.6,lock:1,events:[{at:.5,kind:'steam',count:1,needsFire:true,at3:[0,.9,.5]}],keys:[
+  k(0,J(S2(10,0),{armL:[-60,0,12],armR:[-80,0,-18],head:[9,0,0]},plant(-8,8,8))),k(.25,J(S2(10,3),{armL:[-60,0,12],armR:[-65,0,8],head:[9,0,0]},plant(-8,8,8))),k(.5,J(S2(10,0),{armL:[-60,0,12],armR:[-50,0,22],head:[9,0,0]},plant(-8,8,8))),k(.75,J(S2(10,-3),{armL:[-60,0,12],armR:[-65,0,6],head:[9,0,0]},plant(-8,8,8))),k(1,J(S2(10,0),{armL:[-60,0,12],armR:[-80,0,-18],head:[9,0,0]},plant(-8,8,8)))]},
+ // Hang / rack: reach up, lay the item over the rack, lower the hands, again.
+ hang:{id:'hang',period:2.4,lock:1,events:[],keys:[
+  k(0,J(S2(4,0),{armL:[-60,0,10],armR:[-60,0,-10],head:[4,0,0]},plant(-6,6,8))),k(.45,J(S2(-6,0),{armL:[-150,0,12],armR:[-150,0,-12],head:[-8,0,0]},plant(-6,6,8))),k(.65,J(S2(-4,0),{armL:[-135,0,14],armR:[-135,0,-14],head:[-6,0,0]},plant(-6,6,8))),k(1,J(S2(4,0),{armL:[-60,0,10],armR:[-60,0,-10],head:[4,0,0]},plant(-6,6,8)))]},
  // Dig/till: wide lunge, torso ~18 degrees at the bite, hoe pulled back with the arms.
  till:{id:'till',period:2,lock:1,events:[{at:.45,kind:'dust',count:1,needsDrySurface:true,at3:[0,.05,.6]}],keys:[
   k(0,J(S2(8,-8),{hips:[0,6,0],head:[0,0,0],armR:[-110,0,-6],armL:[-92,0,6],root:[0,0,-.02],itemR:[-10,0,0]},plant(-12,16,18))),
@@ -136,7 +155,7 @@ export type Activity={order?:string;/** ProductionProject.phase of the unit's li
  inRange?:boolean;moving?:boolean;/** what the unit actually wields (its real type), picks the fight clip */weapon?:'spear'|'bow'|'blade';
  /** u.node is a fish node while gathering */fishing?:boolean;/** field task read from the real crop: 'till' (soil or tending), 'plant', 'harvest' */fieldAction?:'plant'|'harvest'|'till';
  /** pulling a sled or cart (Unit.haulage) */hauling?:boolean;/** carried amount over capacity (Unit.carry / carryingCapacity) or held items over capacity */load?:number;warming?:boolean;fireLit?:boolean};
-const RECIPE_CLIP:[RegExp,ClipId][]=[[/^thresh/,'thresh'],[/^winnow/,'winnow'],[/^grind/,'grind'],[/^bake/,'bake'],[/^(cook|manualSmoke|smoke|fireClay|ferment)/,'tend'],[/^(airDry|dryClay|drySkin)/,'craft']];
+const RECIPE_CLIP:[RegExp,ClipId][]=[[/^thresh/,'thresh'],[/^winnow/,'winnow'],[/^grind/,'grind'],[/^bake/,'bake'],[/^(spin|twistCordage|authorCordage|studyCordage)/,'spin'],[/^(weave|felt|sew)/,'weave'],[/^(fleshHide|tanHide|extractTannin|washWool)/,'scrape'],[/^formClay/,'knead'],[/^(cookPorridge|brew|sproutGrain|strainCulturedCurd|fermentMilk)/,'stir'],[/^(airDry|dryClay|drySkin)/,'hang'],[/^consolidate/,'build'],[/^(cook|manualSmoke|smoke|fireClay|ferment|smelt|makeCharcoal)/,'tend']];
 export function clipForActivity(a:Activity):{clip:ClipId;load:number;reason:string}{
  const load=Math.max(0,Math.min(1,Number.isFinite(a.load)?a.load!:0));
  if(a.rowing)return {clip:'row',load:0,reason:'aboard a moving boat'};
