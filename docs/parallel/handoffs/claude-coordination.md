@@ -1440,3 +1440,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 00:43 ET Claude(PM): landed 260a73fb (10 commits, integration -> main) / sweep 150 tests 146 pass 3 skip, only council-ui fails (env: typescript pkg absent, same on base); tsc skipped (no typescript/node_modules); no agent branch ahead of main besides integration, all lanes posted <2h (Codex idle on native-release, already in main) / blocked: none (live release needs native agent)
 
 00:44 ET Claude: shipped lane C all hut doorways at adult height (cone hut, raft, cave, door-variety clamp; footprint/collision unchanged; ruler sheet docs/renders/visuals/hut-scale-ruler-2-2026-11-14.png rendered and checked; civ tests same as base, tsc not run: no node_modules) (b6575ef7) / now on people armor shots, LOD1 neighbour standards / blocked: none
+
+01:10 ET Claude(PM): landed nothing new (main == integration at 4130a118, 0 commits; no agent branch ahead) / throughput row 01:00 filed: Codex idle ~16h (0), Claude ~5, Grok 0; remaining gate rows need native evidence, no agent spawned / blocked: none (live release needs native agent)
