@@ -752,3 +752,12 @@ test('lane A: era gating caps raid reach by polity tier (supply range); null whe
  const units=g.state.units.length;raidReachCap(g,1);assert.equal(g.state.units.length,units);
  delete g.state.worldOptions.rulersVersion;assert.equal(raidReachCap(g,1),null);
 });
+
+test('lane A: era gating floors the food a society must hold before a raid leaves (band 300 > chiefdom 240 > state 180); null when rulers off; nothing created',async()=>{
+ const {raidLaunchReserve,ERA_RAID_LAUNCH_RESERVE,ensureRulers}=await import('../src/game/rulersRuntime.ts');
+ const g=fixture();ensureRulers(g);
+ for(const t of ['band','chiefdom','state']){g.state.rulers.societies['1'].civ.polity.tier=t;assert.equal(raidLaunchReserve(g,1),ERA_RAID_LAUNCH_RESERVE[t]);}
+ assert.ok(ERA_RAID_LAUNCH_RESERVE.band>ERA_RAID_LAUNCH_RESERVE.chiefdom&&ERA_RAID_LAUNCH_RESERVE.chiefdom>ERA_RAID_LAUNCH_RESERVE.state&&ERA_RAID_LAUNCH_RESERVE.state>=180);
+ const units=g.state.units.length;raidLaunchReserve(g,1);assert.equal(g.state.units.length,units);
+ delete g.state.worldOptions.rulersVersion;assert.equal(raidLaunchReserve(g,1),null);
+});

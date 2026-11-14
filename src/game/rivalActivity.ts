@@ -6,7 +6,7 @@ import type {Game} from './sim';
 import type {Building,Unit} from './types';
 import type {RivalRaidPlan} from './rivalOperations';
 import {OPERATION_RULES} from './rivalOperations';
-import {raidForceCap,raidReachCap} from './rulersRuntime';
+import {raidForceCap,raidReachCap,raidLaunchReserve} from './rulersRuntime';
 import {isRivalTeam} from './factions';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent,reserveSeconds,FOOD_PER_PERSON_SECOND} from './settlement';
@@ -52,7 +52,7 @@ export function assessRivalPairRaid(g:Game,team:number,reserve:number,partner?:n
  const counts={adults:0,readyFighters:0,retainedGuards:0,availableFighters:0,knownPartners:0,eligiblePartners:0,knownTargets:0,reachableTargets:0};
  const blocked=(reason:string):RivalRaidAssessment=>({plan:null,reason,counts});
  if(!isRivalTeam(team)||!g.tribe(team)?.alive)return blocked('No living rival society can dispatch this party');
- if(reserve<OPERATION_RULES.minFoodSeconds)return blocked('Food reserve is below the raid departure minimum');
+ if(reserve<Math.max(OPERATION_RULES.minFoodSeconds,raidLaunchReserve(g,team)??0))return blocked('Food reserve is below the raid departure minimum');
  const t=g.tribe(team),home=supplyDrops(g,team)[0];if(!home)return blocked('No existing home cache can support a round trip');
  const adults=g.state.units.filter(u=>u.team===team&&u.hp>0&&!isDependent(g,u));
  const ready=adults.filter(u=>u.type!=='leader'&&(u.militia||u.type!=='worker')&&u.hp>=u.maxHp*OPERATION_RULES.militaryReadinessHealthRatio&&freeActor(g,u));

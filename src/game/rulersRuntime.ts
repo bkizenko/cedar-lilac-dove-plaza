@@ -275,6 +275,12 @@ export function raidReachCap(g:Game,team:number):number|null{
  if(!rulersEnabled(g))return null;
  return ERA_RAID_REACH[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'];
 }
+/** Era gating of raid departure stores: seconds of food a society must hold at home before it sends a strike (a band packs by guess and needs a fatter pantry, a state keeps a supply train). Only a floor on an existing check; nothing is created. Null when rulers are off. */
+export const ERA_RAID_LAUNCH_RESERVE:Record<'band'|'chiefdom'|'state',number>={band:300,chiefdom:240,state:180};
+export function raidLaunchReserve(g:Game,team:number):number|null{
+ if(!rulersEnabled(g))return null;
+ return ERA_RAID_LAUNCH_RESERVE[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'];
+}
 export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;rations:number;why:string[]};
 export function expansionParty(g:Game,team:number,raw=false):PartyPlan|null{
  const d=expansionOf(g,team);if(!d)return null;

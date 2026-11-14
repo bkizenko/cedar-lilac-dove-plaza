@@ -1,4 +1,4 @@
-import {journeyPermit,spendRaidClaim} from './rulersRuntime';
+import {journeyPermit,spendRaidClaim,raidLaunchReserve} from './rulersRuntime';
 import {raidGate,militaryBonus} from './societyRuntime';
 import {planRivalPairRaid,dispatchPairRaid,isSocietyPeaceMessengerFor} from './rivalActivity';
 import {AGE_STAT,UNITS} from './constants';
@@ -51,7 +51,7 @@ export function rivalOperationIntent(g:Game,team:number,reserve:number):'recover
  if(g.state.time<(t.recoveryUntil||0))return 'recover';
  const home=g.campOf(team);
  if(g.state.units.some(u=>u.hp>0&&!isSocietyPeaceMessengerFor(g,u,team)&&g.isFoe(team,u.team)&&distance(u,home)<55))return 'defend';
- if(reserve<OPERATION_RULES.minFoodSeconds)return 'trade';
+ if(reserve<Math.max(OPERATION_RULES.minFoodSeconds,raidLaunchReserve(g,team)??0))return 'trade';
  if(planRivalRaid(g,team,reserve))return 'raid';
  if(t.ally||g.state.time<(t.compactUntil||0))return 'trade';
  return reserve<450?'trade':'defend';
