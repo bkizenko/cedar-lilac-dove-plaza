@@ -1386,7 +1386,7 @@ export class WorldView {
       if(a.species!=='horse'&&a.species!=='cattle'&&a.species!=='goat'&&a.species!=='sheep')continue;
       rows.push({c:a,domestic:true,season:cal.phase,within,shore:shore(a)});
     }
-    ad.frame(rows,this.camera.position,game.state.time);
+    ad.frame(rows,this.camera.position,game.state.time,performance.now()/1000);
   }
 
   updateCamera(dt: number) {
