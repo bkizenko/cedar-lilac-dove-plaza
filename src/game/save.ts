@@ -1,5 +1,5 @@
 import {parseStoredSave,serializeStoredSave,isStoredSaveEnvelope,encodeStoredJson} from './storageCodec';
-import { SAVE_KEY, SAVE_VERSION } from "./constants";
+import { SAVE_KEY } from "./constants";
 import type { Game } from "./sim";
 import type {SaveSlots} from "./autosaveProtocol";
 import { encodeGame, decodeGame, validateGameSave } from "./persistence";
@@ -109,10 +109,12 @@ export function loadRaw(protectedOnly=false) {
   } catch {return null;}
 }
 export function hasSave() {
+  // Presence is deliberately separate from compatibility. Engine.begin uses
+  // this guard to refuse a fresh world when an existing village cannot load.
+  // Damaged JSON and older/newer schemas must remain held for recovery too.
   return [SAVE_KEY, SAVE_KEY + ":bak", SAVE_KEY + ":protected"].some((k) => {
     try {
-      const d = JSON.parse(localStorage.getItem(k) || "null");
-      return isStoredSaveEnvelope(d)||(d?.version === SAVE_VERSION && !!d.state);
+      return localStorage.getItem(k) !== null;
     } catch {
       return false;
     }

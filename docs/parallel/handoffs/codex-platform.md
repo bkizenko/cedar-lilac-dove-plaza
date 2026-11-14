@@ -1,3 +1,65 @@
+# Latest assignment — Boris, 14 November 2026
+
+Claude is PM and architect. Codex owns logic for saves, reservations/replay,
+physical inventory, equipment, production, food, progression, knowledge/practice,
+and performance profiling/remembered graphics choices. No grass/tree appearance
+work. Boris subsequently explicitly requested merging the qualified logic branch
+into GitHub main (14 November); this supersedes the earlier integration hold.
+Publication is a separate step and reserved files remain reserved;
+trade and livestock/transport remain Claude's. Vague village systems are deferred
+until split into concrete assignments.
+
+Reserved, DO NOT EDIT: `encounters.ts`, `ContactActions.tsx`, `engine.ts`,
+`buildingFamilies.ts`, `civBuildings.ts`, and everything in `src/ui/hearth/`.
+This dated assignment overrides older broad/shared-write or integration-first text.
+
+Current isolated source branch: `codex/logic-reliability-20261114`, based on
+`11d07977`. Running release was read-only verified as `1e42a6f`; no publication,
+real-village writes, save migration, or new 98-gate credit in this batch.
+
+Four implemented fixes: held unreadable saves never count as empty profiles;
+invalid resident IDs cannot reserve real capacity; armor admission checks its
+actual reached depot; completed prepared meals age while returning/paused, with
+one grace interval for historic meals lacking a completion clock. New regressions
+reproduced each failure before its fix. One existing food-preservation regex was
+corrected to match unchanged fuel wording; its actual paid pause/reload/resume
+case passed afterward.
+
+Verification: 72 distinct passing tests / 73 selected (98.63%), 1 unavailable
+own-QA fixture skipped, across the serial run plus one focused wording rerun.
+Full typecheck reports TS1261/TS2693 in the reserved Hearth OldSaveNote import
+(case collision between `OldSaveNote.tsx` and `oldSaveNote.ts` on this machine).
+The unchanged base reproduced the same two diagnostics; this batch adds no
+compiler diagnostics. No reserved-file workaround or build/publication attempted.
+
+Second source batch 42f48822: newly equipped, actually debited water jars now
+retain unique identity through real 32 L collection/delivery, trip wear, resident
+handover and strict reload. Legacy no-id jars remain compatible; invalid,
+duplicate and cross-asset identities are refused. New native regressions 4/4;
+existing pottery, graphics preferences/quality and RNG-purity checks 23/23.
+Second batch 27/27 (100%); both batches 99 distinct pass/100 selected (99%),
+one unavailable own-QA fixture skipped. Final compiler remains the same two
+base-only reserved Hearth errors, with no new diagnostics. A possible owner fix
+is an explicit `./OldSaveNote.tsx` component import or a distinct model filename;
+Codex did not edit either file.
+
+Bounded actual simulation profiling at 42f48822: 20 warmup + 240 measured steps
+per natural opening and declared 80-resident diagnostic. Original p95 step CPU
+39.08/49.15 ms respectively, no simulation errors or terrain edits. Optional phase
+timing and a separate V8 sampling run identify exact/local water queries,
+pathfinding and geographic-influence work as the next measured investigation
+targets. No FPS/render/real-player-village claim or optimization/visual edit.
+Full scoped results: docs/metrics/codex-logic-profile-2026-11-14.json.
+
+Full cached-container identity/tare/seal/maker remains open. Replay is also open:
+saved terrain seeds, pure validation and Worker message deduplication do not save
+simulation randomness or provide an exact command/tick replay journal. Existing
+brewing, practice, prestige and graphics-preference work must be reconciled rather
+than restarted; broader chain/progression/knowledge acceptance is still partial.
+The exact restricted queue is docs/parallel/CODEX_LOGIC_QUEUE.md.
+
+---
+
 # Codex platform and integration reply
 
 Updated 2026-11-11T21:03:32.280919+00:00; reviewed Claude coordinationee46b0c, Societies8d3325e, Experiencebb26421.

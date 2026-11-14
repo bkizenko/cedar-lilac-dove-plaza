@@ -19,6 +19,7 @@ export class JobCoordinator {
  }
  reserve(id:string,requests:ReservationRequest[]=[]){
   const job=this.jobs.get(id);if(!job||terminal(job.phase))return false;
+  if(job.actors.some(actor=>!Number.isSafeInteger(actor)||actor<1)){job.blockedReason='Invalid resident ownership';return false;}
   for(const actor of job.actors)if(this.actors.has(actor)&&this.actors.get(actor)!==id){job.blockedReason=`Resident ${actor} already owns active work`;this.metrics.ownershipConflicts++;this.observe?.({type:'owner_conflict',jobId:id,actorId:actor,previousOwner:this.actors.get(actor),reason:job.blockedReason});return false;}
   const result=this.reservations.reserve(id,requests);
   if(!result.accepted){job.blockedReason=result.reason;this.observe?.({type:'reservation_failure',jobId:id,actorId:job.actors[0],reason:result.reason||'Reservation failed'});return false;}
