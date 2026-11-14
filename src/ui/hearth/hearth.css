@@ -354,7 +354,9 @@
 .hw-faction{display:grid;grid-template-columns:14px minmax(7em,auto) auto 1fr;gap:var(--hw-s2) var(--hw-s3);align-items:baseline}
 .hw-faction em{font-style:normal;font-weight:700;font-size:var(--hw-fs-s)}
 .hw-faction .hw-sub{font-size:var(--hw-fs-s)}
-.hw-dot{width:12px;height:12px;border-radius:50%;align-self:center;background:var(--hw-warn)}.hw-dot.d-bad{background:var(--hw-bad)}.hw-dot.d-good{background:var(--hw-good)}
+.hw-dot{width:12px;height:12px;border-radius:2px;align-self:center;background:var(--hw-warn)}.hw-dot.d-bad{background:var(--hw-bad);border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%)}.hw-dot.d-good{background:var(--hw-good);border-radius:50%}
+/* Colour is never the only cue: mood also has a shape (triangle restless, square wavering, circle loyal) and a strip texture (stripes restless, dots wavering, plain loyal). */
+span[data-mood=bad]{background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.34) 0 3px,transparent 3px 7px)}span[data-mood=mid]{background-image:radial-gradient(rgba(0,0,0,.34) 1.2px,transparent 1.6px);background-size:6px 6px}
 .hw-renown .hw-meter.is-top i{background:linear-gradient(90deg,var(--hw-gold),var(--hw-gold-2))}
 @media (max-width:640px){.hw-faction{grid-template-columns:14px 1fr auto}.hw-faction .hw-sub{grid-column:2/4}}
 /* civic panel */
