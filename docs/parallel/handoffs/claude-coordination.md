@@ -1380,3 +1380,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 21:28 ET Claude: shipped lane B Hearth chronicle category mute chips (Household/Court/Neighbours/Wild, shown only when lines span categories, 44px toggles; council-ui 29/29, tsc nil on touched files, no screenshot: no full-app render harness here) (b1ddd87c) / now on collapsed unread count, then Dusk full-app shot / blocked: none
 21:40 ET Claude(PM): shipped Esc closes panels (793c9b42) + zoom-out tree fix (fe1544f4); queued Boris's bug orders (limbs, animal select/capture/drag, animal glitch, lone house) as TOP PRIORITY in AUTOPILOT; next run starts them / blocked: live release needs native agent
+
+21:42 ET Claude(PM): landed 0f6e7379 (6 commits: Esc closes panels, zoom-out tree fix, chronicle mute chips, heir education, Boris bug orders queued) / sweep 146 tests 143 pass 3 skip 0 fail; tsc skipped (typescript absent, small UI diffs) / no agent branch newer than 4h; Codex idle, Grok out, release still needs native agent / blocked: live release needs native agent
