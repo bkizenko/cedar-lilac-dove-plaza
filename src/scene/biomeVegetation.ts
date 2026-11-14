@@ -12,7 +12,7 @@ export type ResourceTree={id:number;x:number;y:number;z:number;amount:number;sca
 export const BIOME_VEGETATION_RULES={version:1,nearMetres:{low:28,med:75,high:115},farMetres:700,lowFarMetres:420,stumpHeightScale:.075,
  dressingMaxInstances:{low:0,med:512,high:1024},dressingDistanceMetres:65} as const;
 const defaults:Record<VegetationBiome,Partial<Record<TreeForm,number>>>={
- meadow:{broadleaf:1},'mixed-woodland':{broadleaf:.8,conifer:.2},'conifer-forest':{conifer:1},alpine:{stunted:1},wetland:{willow:.85,broadleaf:.15},'dry-scrub':{scrub:.7,acacia:.3},arid:{scrub:.6,acacia:.4},'warm-coast':{palm:.6,acacia:.4},
+ meadow:{broadleaf:1},'mixed-woodland':{broadleaf:.8,conifer:.2},'conifer-forest':{conifer:1},alpine:{stunted:1},wetland:{willow:.85,broadleaf:.15},'dry-scrub':{scrub:.7,acacia:.3},arid:{scrub:.6,acacia:.4},'warm-coast':{broadleaf:.62,conifer:.18,willow:.14,palm:.04,acacia:.02},
 };
 function stableUnit(id:number,seed:number){let n=(id^seed^0x4bc73a9)|0;n=Math.imul(n^(n>>>16),0x45d9f3b);n=Math.imul(n^(n>>>16),0x45d9f3b);return ((n^(n>>>16))>>>0)/4294967296;}
 export function resourceTreeForm(id:number,profile:VegetationProfile,seed:number):TreeForm{

@@ -98,7 +98,8 @@ export const BIOME_PRIORS:Record<string,Record<string,number>>={
  wetland:{willow:1,poplar:.7,birch:.4,oak:.15,hawthorn:.1,mangrove:.8,tamarisk:.1,spruce:.1},
  'dry-scrub':{olive:.8,acacia:.8,juniper:.7,hawthorn:.5,tamarisk:.5,cypress:.5,stonePine:.5,eucalyptus:.3,scotsPine:.3,cedar:.2,oak:.2,datePalm:.15,baobab:.15},
  arid:{acacia:1,tamarisk:.7,datePalm:.5,juniper:.3,baobab:.3,olive:.2,cypress:.1},
- 'warm-coast':{coconutPalm:1,mangrove:.8,acacia:.4,datePalm:.3,eucalyptus:.3,stonePine:.3,tamarisk:.3,olive:.2,cypress:.2,poplar:.1,willow:.1,baobab:.1},
+ // A mild warm coast is a Mediterranean/Atlantic coast (pines, cypress, olive, oak, willow); tropical species stay a rare accent and never take over a stand beside oaks.
+ 'warm-coast':{oak:.8,stonePine:.7,olive:.6,cypress:.5,poplar:.3,willow:.3,tamarisk:.1,coconutPalm:.05,mangrove:.08,datePalm:.03,acacia:.04,eucalyptus:.03,baobab:.01},
 };
 /** patch scale (m) of each species' own noise field: pioneers and riparian species form small patches, spruce, beech and pines big ones */
 const PATCH_SCALE:Record<string,number>={beech:170,spruce:190,fir:150,oak:140,maple:110,scotsPine:160,stonePine:140,cedar:130,cypress:100,juniper:110,krummholz:120,birch:70,poplar:75,willow:80,hawthorn:60,
