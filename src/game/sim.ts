@@ -1485,7 +1485,27 @@ export class Game {
       u.workReason="Armed civilian — ready to defend or raid";
       n++;
     }
-    if (team===0 && !n) this.banner("Bring empty-handed adults to your camp, hall, store or barracks; craft weapons first",3);
+    if (team===0 && !n) {
+      // Weapons are issued at a store. Instead of failing silently, walk the empty-handed adults there; press again on arrival.
+      const have=(t.blades||0)+(t.bows||0)+(t.spears||0);
+      const far=have>0?(selected.length ? selected : this.state.units).filter(
+        u => u.team===team && u.hp>0 && !u.prisoner && u.type==="worker" && !u.militia && !u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId && !isDependent(this,u) &&
+          u.carry===0 && !u.expedition && !u.envoy && !u.visit && !u.scout && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.waterWork && !u.boat,
+      ).slice(0,have):[];
+      if (far.length) {
+        const stores=this.state.buildings.filter(b=>b.team===team&&this.finished(b)&&['townhall','warehouse','barracks'].includes(b.type));
+        const camp=this.campOf(team);
+        const spot=stores.length?stores.reduce((a,b)=>Math.hypot(far[0].x-b.x,far[0].z-b.z)<Math.hypot(far[0].x-a.x,far[0].z-a.z)?b:a):camp;
+        far.forEach((u,i)=>{
+          this.interruptMission(u);
+          const a=i*2.4,r=4+1.4*Math.floor(i/6);
+          u.tx=spot.x+Math.cos(a)*r;u.tz=spot.z+Math.sin(a)*r;u.pillage=-1;u.stationOnArrival=true;
+          u.workReason="Walking to the stores to take up arms";u.order="move";u.attackDestination=null;u.target=null;u.node=null;
+        });
+        this.state.walkDirty=true;
+        this.banner(far.length+" adults are walking to the stores. Press Arm again when they arrive.",4);
+      } else this.banner("Bring empty-handed adults to your camp, hall, store or barracks; craft weapons first",3);
+    }
     if (team === 0 && n) this.banner(n + " villagers take up arms", 1.8);
     return n;
   }
