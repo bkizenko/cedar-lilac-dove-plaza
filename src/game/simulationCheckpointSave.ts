@@ -15,7 +15,9 @@ export class SimulationCheckpointSaver{
  async save(destination:CheckpointSaveDestination='village',deliberate=true):Promise<CheckpointSaveResult>{
   const no=(status:'superseded'|'failed',reason:string):CheckpointSaveResult=>({status,reason});
   if(!this.authority.allowed())return no('superseded','No active authoritative village');
-  const epoch=this.authority.currentEpoch(),generation=invalidateAutosaveWrites();
+  // Exports are read-only: retain session/staleness checks without cancelling
+  // an already pending durable checkpoint or another independent export.
+  const epoch=this.authority.currentEpoch(),generation=destination==='export'?currentSaveGeneration():invalidateAutosaveWrites();
   let expected:ReturnType<typeof readSaveSlots>={primary:null,backup:null,protected:null},labBefore:string|null=null;
   try{if(destination!=='export'){expected=readSaveSlots(this.storage);labBefore=this.storage.getItem(SAVE_KEY+':test-lab');}}catch{return no('failed','Village storage is unavailable');}
   const current=()=>this.authority.allowed()&&this.authority.currentEpoch()===epoch&&currentSaveGeneration()===generation;
