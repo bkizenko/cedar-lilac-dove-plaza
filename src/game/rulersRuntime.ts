@@ -269,6 +269,12 @@ export function raidForceCap(g:Game,team:number):number|null{
  if(!rulersEnabled(g))return null;
  return ERA_RAID_FORCE[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'];
 }
+/** Era gating of raid reach: how far from its home cache a polity can supply a strike (a band carries what its fighters can, a state keeps a supply train). Only a cap on target distance; no goods or units are created. Null when rulers are off. */
+export const ERA_RAID_REACH:Record<'band'|'chiefdom'|'state',number>={band:360,chiefdom:520,state:700};
+export function raidReachCap(g:Game,team:number):number|null{
+ if(!rulersEnabled(g))return null;
+ return ERA_RAID_REACH[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'];
+}
 export type PartyPlan={allow:boolean;mode:string;crew:number;cooldown:number;minReserve:number;rations:number;why:string[]};
 export function expansionParty(g:Game,team:number,raw=false):PartyPlan|null{
  const d=expansionOf(g,team);if(!d)return null;
