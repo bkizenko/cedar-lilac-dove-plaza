@@ -1,5 +1,6 @@
 import {MethodRecordLayer} from './methodRecordLayer';
 import {GroundItemLayer} from './groundItemLayer';
+import {TradeVisualLayer} from './tradeVisualLayer';
 import {DraftCartLayer,DRAFT_CART_RENDER} from './draftCartLayer';
 import {SiegeRamLayer} from './siegeRams';
 import {SailRigs} from './sailRigs';
@@ -374,6 +375,7 @@ export class WorldView {
   private methodRecordMarkers:MethodRecordLayer|null=null;
   private groundItems:GroundItemLayer|null=null;
   private draftCarts:DraftCartLayer|null=null;
+  private tradeVisuals:TradeVisualLayer|null=null;
   private fibreWork:FibreWorkLayer|null=null;
   trailMesh!: THREE.InstancedMesh;
   private trailHalo: THREE.InstancedMesh | null = null;
@@ -1275,6 +1277,7 @@ export class WorldView {
       this.scene.add(mesh);this.cargoMeshes.set(kind,mesh);
     }
     this.draftCarts=new DraftCartLayer(this.scene,this.mats.timber);
+    try{this.tradeVisuals=new TradeVisualLayer(this.scene);}catch(e){console.error('trade visuals disabled:',e);this.tradeVisuals=null;}
     this.methodRecordMarkers=new MethodRecordLayer(this.scene,this.mats.stone);
     try{this.groundItems=new GroundItemLayer(this.scene);}catch(e){console.error('ground item models disabled:',e);this.groundItems=null;}
     for (const kind of ['sled', 'cart', 'canoe', 'pack'] as const) {
@@ -2244,6 +2247,7 @@ export class WorldView {
   private syncCargo(game: Game) {
     this.housingPackets?.sync(game);
     this.draftCarts?.sync(game,this.quality,this.shadowsEnabled);
+    try{this.tradeVisuals?.sync(game,this.shadowsEnabled&&this.quality!=='low');}catch(e){console.error('trade visuals disabled:',e);this.tradeVisuals?.dispose();this.tradeVisuals=null;}
     this.methodRecordMarkers?.sync(game,this.quality,this.shadowsEnabled);
     try{this.groundItems?.sync(game,this.camera.position,this.quality,this.shadowsEnabled);}catch(e){console.error('ground item models disabled:',e);this.groundItems?.dispose();this.groundItems=null;}
     const counts:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0};
@@ -3336,6 +3340,7 @@ export class WorldView {
     this.siegeRamLayer?.dispose();this.siegeRamLayer=null;
     this.housingPackets?.dispose();this.housingPackets=null;
     this.draftCarts?.dispose();this.draftCarts=null;
+    this.tradeVisuals?.dispose();this.tradeVisuals=null;
     this.methodRecordMarkers?.dispose();this.methodRecordMarkers=null;
     this.groundItems?.dispose();this.groundItems=null;
     this.waterVessels?.dispose();this.waterVessels=null;
