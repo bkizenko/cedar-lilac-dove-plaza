@@ -198,9 +198,9 @@ export function selectionStats(sel:HudSnapshot['selection'],hud:HudSnapshot,coun
 /** A selected foreign person or held prisoner shows its hostile verbs on the card itself, not behind More orders. */
 function SelectedForeignVerbs({engine}:{engine:Engine}){const u=engine.game.state.units.find(p=>p.selected&&p.hp>0&&(p.team!==0||!!(p as {prisoner?:unknown}).prisoner));return u?<TraderVerbs engine={engine} strangerId={u.id}/>:null;}
 export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engine|null;onOffer:(t:number)=>void}){
- const sel=hud.selection,[more,setMore]=useState(false),[info,setInfo]=useState(false),[tab,setTab]=useState('');
+ const sel=hud.selection,[more,setMore]=useState(sel.kind==='building'&&sel.team===0&&!!sel.completed),[info,setInfo]=useState(false),[tab,setTab]=useState('');
  const f=useFold('selection');
- useEffect(()=>{setMore(false);setInfo(false);setTab('');},[sel.kind,sel.name,sel.buildingId]);
+ useEffect(()=>{setMore(sel.kind==='building'&&sel.team===0&&!!sel.completed);setInfo(false);setTab('');},[sel.kind,sel.name,sel.buildingId]);
  if(sel.kind==='none')return null;
  if(!f.showPanel)return <FoldHandle f={f} icon={<UserRound size={24}/>}/>;
  const hp=sel.maxHp>0?Math.round(100*sel.hp/sel.maxHp):0;

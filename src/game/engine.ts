@@ -546,7 +546,7 @@ export class Engine {
     if(e.code==='Escape'&&this.waterDraft)this.cancelWaterEngineering();
     const target=e.target as HTMLElement|null;
     const rot=e.code==='KeyR'?(e.shiftKey?-1:1):e.code==='KeyQ'?-1:e.code==='KeyE'?1:0;
-    if(rot&&this.canRotateAnyPlacement()&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],button,a,summary,dialog[open],[role=dialog]')){
+    if(rot&&this.canRotateAnyPlacement()&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!target?.closest?.('input,textarea,select,[contenteditable=true],dialog[open],[role=dialog]')){
       e.preventDefault();if(!e.repeat)this.rotatePlacementBy(rot);return;
     }
     this.keyboard.key(e);
