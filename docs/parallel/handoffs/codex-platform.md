@@ -13,8 +13,9 @@ Reserved, DO NOT EDIT: `encounters.ts`, `ContactActions.tsx`, `engine.ts`,
 `buildingFamilies.ts`, `civBuildings.ts`, and everything in `src/ui/hearth/`.
 This dated assignment overrides older broad/shared-write or integration-first text.
 
-Current isolated source branch: `codex/logic-reliability-20261114`, based on
-`11d07977`. Running release was read-only verified as `1e42a6f`; no publication,
+Logic batches normally merged and pushed to GitHub main as `be8072c1` after
+Boris explicitly requested the merge. The qualified source branch was
+`codex/logic-reliability-20261114`, based on `11d07977`. Running release was read-only verified as `1e42a6f`; no publication,
 real-village writes, save migration, or new 98-gate credit in this batch.
 
 Four implemented fixes: held unreadable saves never count as empty profiles;
