@@ -89,7 +89,7 @@ test('grain station pointer placement keeps quarter-metre gaps on the actual bui
  const {g}=fixture(),e=Object.create(Engine.prototype);
  let validated,drawn;
  e.game=g;e.pointer={x:50,y:50};e.ghostPos={x:0,z:0};
- e.view={setLinePreview:()=>{},groundAt:()=>({x:11.28,z:-14.49}),
+ e.view={setLinePreview:()=>{},setFieldSnap:()=>{},groundAt:()=>({x:11.28,z:-14.49}),
   setGhost:(type,x,z,y,ok)=>{drawn={type,x,z,ok};}};
  g.state.placing='oven';
  g.placementIssue=(type,x,z)=>{validated={type,x,z};return null;};
@@ -106,7 +106,7 @@ test('clicking a green threshing floor ghost places a real unfinished floor',()=
  g.state.placing='threshingFloor';
  let green=false;
  e.game=g;e.pointer={x:20,y:30};e.ghostPos={x:0,z:0};e.pushHud=()=>{};
- e.view={setLinePreview:()=>{},groundAt:()=>({x:25.28,z:-20.48}),
+ e.view={setLinePreview:()=>{},setFieldSnap:()=>{},groundAt:()=>({x:25.28,z:-20.48}),
   setGhost:(_type,_x,_z,_y,ok)=>{green=ok;}};
  e.updateGhost();assert.equal(green,true);
  e.leftClick(20,30,false);
