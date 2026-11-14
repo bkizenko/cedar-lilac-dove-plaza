@@ -71,3 +71,12 @@ test('GW-10 review: an all-hidden plot reports unknown with no summary; mixed vi
  const known=mixed.cells.filter(Boolean);assert.ok(known.length&&known.length<mixed.cells.length);
  const soil=known.reduce((a,c)=>a+c.soil,0)/known.length;assert.ok(Math.abs(mixed.summary.soil-soil)<1e-12,'summary = explored cells only');
 });
+
+// Lane B: red plots name their refusal.
+{
+  const {fieldRefusalSummary}=await import('../src/game/fieldArea.ts');
+  const none=fieldRefusalSummary({tiles:[{x:0,z:0,w:1,d:1,issue:null}],columns:1,rows:1,valid:1,seeds:0});
+  const some=fieldRefusalSummary({tiles:[{x:0,z:0,w:1,d:1,issue:'Too steep'},{x:1,z:0,w:1,d:1,issue:'Too steep'},{x:2,z:0,w:1,d:1,issue:'Water'}],columns:3,rows:1,valid:0,seeds:0});
+  if(none!==''||some!=='2 blocked: Too steep +1 other reason')throw new Error('refusal summary: '+JSON.stringify([none,some]));
+  console.log('ok field refusal summary');
+}
