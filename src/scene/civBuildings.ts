@@ -565,7 +565,20 @@ function liftToPeopleHeight(parts:Part[]):Part[]{
  let top=0;for(const p of parts)top=Math.max(top,partBounds(p).maxY);
  if(top<=0||top>=MIN_PEAK)return parts;
  const k=MIN_PEAK/top;
- return parts.map(p=>({...p,pos:[p.pos[0],p.pos[1]*k,p.pos[2]] as V,size:p.rot?p.size:[p.size[0],p.size[1]*k,p.size[2]] as V,...(p.ends?{ends:[[p.ends[0][0],p.ends[0][1]*k,p.ends[0][2]],[p.ends[1][0],p.ends[1][1]*k,p.ends[1][2]]] as const}:{})}));
+ return parts.map(p=>{
+  const ends=p.ends?{ends:[[p.ends[0][0],p.ends[0][1]*k,p.ends[0][2]],[p.ends[1][0],p.ends[1][1]*k,p.ends[1][2]]] as const}:{};
+  const pos=[p.pos[0],p.pos[1]*k,p.pos[2]] as V;
+  const rot=p.rot;
+  if(!rot||(!rot[0]&&!rot[2]))return {...p,pos,size:[p.size[0],p.size[1]*k,p.size[2]] as V,...ends};
+  // Tilted pieces (pitched roof panels, braces): stretching the world's vertical axis by k changes the slope and the length along it, so the piece is
+  // re-angled and re-lengthened to keep touching the walls it sits on. Pieces tilted about both axes are scaled uniformly in height instead.
+  if(!rot[1]&&!(rot[0]&&rot[2])){
+   const x=!!rot[0],th=x?rot[0]:rot[2],c=Math.cos(th),sn=Math.sin(th),along=Math.hypot(c,k*sn),thick=Math.hypot(k*c,sn),ang=Math.atan2(k*sn,c);
+   const size=(x?[p.size[0],p.size[1]*thick,p.size[2]*along]:[p.size[0]*along,p.size[1]*thick,p.size[2]]) as V;
+   return {...p,pos,size,rot:(x?[ang,rot[1],rot[2]]:[rot[0],rot[1],ang]) as unknown as typeof p.rot,...ends};
+  }
+  return {...p,pos,size:[p.size[0],p.size[1]*k,p.size[2]] as V,...ends};
+ });
 }
 export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,variantKey=''):CivSpec{
  const look=ctx.eraMode==='fixed'?{era:ctx.built?.era??ctx.era,wealth:ctx.built?.wealth??ctx.wealth}:{era:ctx.era,wealth:ctx.wealth},fp0=ctx.footprint,ext=ctx.extensions??[],c2:CivContext={...ctx,...look,footprint:ext.length?{w:fp0.w*.7,d:fp0.d}:fp0};
