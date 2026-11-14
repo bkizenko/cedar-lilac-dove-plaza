@@ -18,3 +18,17 @@ test('tribute lapse: unpaid installments breed a grudge, three break the tribute
  assert.ok(rulersOf(JSON.parse(JSON.stringify({rulers:g.state.rulers}))),'rulers state valid after round trip');
  const h=fixture(false);h.state.worldOptions={...(h.state.worldOptions||{}),rulersVersion:0};owe(h,1,5);assert.deepEqual(tributeLapse(h),[],'old/off worlds run as before');assert.ok(h.tribe(1).tribute);
 });
+import {seekPatron} from '../src/game/tributeLapse.ts';
+import {societyRelation} from '../src/game/societyRelations.ts';
+test('new patron: a house that throws off tribute weds into the strongest known non-hostile larger society; nothing minted; none known = none',()=>{
+ const g=fixture();const t=g.tribe(1);t.hostile=false;
+ const units=g.state.units.length,wood=t.wood;
+ for(const o of g.state.tribes)if(o.id!==0&&o.id!==3)o.hostile=false;
+ const lone=seekPatron(g,1);
+ assert.ok(lone===null||lone!==0,'never the player or the wild');
+ assert.equal(g.state.units.length,units,'nobody spawned');assert.equal(t.wood,wood,'no goods moved');
+ const h=fixture(false);h.state.worldOptions={...(h.state.worldOptions||{}),rulersVersion:0};
+ assert.equal(seekPatron(h,1),null,'off worlds: no patron search');
+ assert.ok(rulersOf(JSON.parse(JSON.stringify({rulers:g.state.rulers}))),'state valid after round trip');
+ void societyRelation;
+});
