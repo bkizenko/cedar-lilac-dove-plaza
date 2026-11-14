@@ -73,9 +73,9 @@ export const CLIPS:Record<ClipId,Clip>={
   k(0,J(S2(12,0),{armL:[-55,0,0],armR:[-55,0,0],head:[2,0,0],root:[0,0,.05]},plant(-24,18,12))),k(.5,J(S2(16,0),{armL:[-20,0,0],armR:[-20,0,0],head:[0,0,0],root:[0,0,.12]},plant(-30,22,14))),k(1,J(S2(12,0),{armL:[-55,0,0],armR:[-55,0,0],head:[2,0,0],root:[0,0,.05]},plant(-24,18,12)))]},
  bake:{id:'bake',period:2.2,lock:1,events:[{at:.5,kind:'steam',count:1,needsFire:true,at3:[0,.9,.6]}],keys:[
   k(0,J(S2(8,0),{armL:[-60,0,12],armR:[-60,0,-12],head:[6,0,0]},plant(-8,8,10))),k(.5,J(S2(14,0),{armL:[-35,0,6],armR:[-35,0,-6],head:[8,0,0],root:[0,0,.04]},plant(-12,8,10))),k(1,J(S2(8,0),{armL:[-60,0,12],armR:[-60,0,-12],head:[6,0,0]},plant(-8,8,10)))]},
- // Tending a fire: a low squat, torso mostly upright, head up toward the flame.
+ // Tending a fire: a shallow stagger, torso mostly upright, head up toward the flame.
  tend:{id:'tend',period:3,lock:1,events:[{at:.3,kind:'smoke',count:1,needsFire:true,at3:[0,.6,.6]},{at:.8,kind:'smoke',count:1,needsFire:true,at3:[0,.6,.6]}],keys:[
-  k(0,J(S2(14,0),{armR:[-50,0,0],armL:[-20,0,0],head:[-6,0,0],root:[0,0,.06]},plant(-40,-40,32))),k(.4,J(S2(17,0),{armR:[-25,0,-10],armL:[-20,0,0],head:[-9,0,0],root:[0,0,.08]},plant(-44,-44,36))),k(1,J(S2(14,0),{armR:[-50,0,0],armL:[-20,0,0],head:[-6,0,0],root:[0,0,.06]},plant(-34,-34,32)))]},
+  k(0,J(S2(14,0),{armR:[-50,0,0],armL:[-20,0,0],head:[-6,0,0],root:[0,0,.06]},plant(-24,-24,32))),k(.4,J(S2(17,0),{armR:[-25,0,-10],armL:[-20,0,0],head:[-9,0,0],root:[0,0,.08]},plant(-26,-26,36))),k(1,J(S2(14,0),{armR:[-50,0,0],armL:[-20,0,0],head:[-6,0,0],root:[0,0,.06]},plant(-22,-22,32)))]},
  // Chop: weight goes from the back foot to the front foot as the shoulders and arms bring the axe down; the spine stays within ~14 degrees.
  chop:{id:'chop',period:1.5,lock:1,events:[{at:.4,kind:'dust',count:1,needsDrySurface:true,at3:[0,0,.6]}],keys:[
   k(0,J(S2(-6,-14),{hips:[0,8,0],head:[2,0,0],armR:[-168,0,-10],armL:[-150,0,10],root:[0,0,-.04],itemR:[-30,0,0]},plant(-8,14,12))),
@@ -86,17 +86,17 @@ export const CLIPS:Record<ClipId,Clip>={
   k(0,J(S2(-4,-12),{hips:[0,6,0],head:[2,0,0],armR:[-140,0,-8],armL:[-100,0,8],root:[0,0,-.03],itemR:[-20,0,0]},plant(-10,14,14))),
   k(.4,J(S2(12,8),{hips:[0,-6,0],head:[-6,0,0],armR:[-24,0,-4],armL:[-18,0,4],root:[0,0,.1],itemR:[115,0,0]},plant(-28,16,16))),
   k(1,J(S2(-4,-12),{hips:[0,6,0],head:[2,0,0],armR:[-140,0,-8],armL:[-100,0,8],root:[0,0,-.03],itemR:[-20,0,0]},plant(-10,14,14)))]},
- // Forage and farm-gather clips: the only deep stances. A fore-aft lunge (legs pitched +-40 degrees, never splayed sideways), hips drop ~0.12, torso ~16 degrees, head held up.
+ // Forage and farm-gather clips: the only deep stances. A shallow fore-aft stagger (legs pitched about +-24 degrees, never splayed sideways), hips drop ~0.12, torso ~16 degrees, head held up.
  plant:{id:'plant',period:2.4,lock:1,events:[],keys:[
-  k(0,J(S2(6,0),{armR:[-20,0,0],armL:[-8,0,0],head:[-2,0,0]},plant(-10,-10,10))),
-  k(.35,J(S2(16,0),{armR:[-30,0,-6],armL:[-20,0,6],head:[-12,0,0],root:[0,0,.06]},plant(-42,-42,38))),
-  k(.7,J(S2(18,0),{armR:[-38,0,-6],armL:[-22,0,6],head:[-12,0,0],root:[0,0,.06]},plant(-42,-42,38))),
-  k(1,J(S2(6,0),{armR:[-20,0,0],armL:[-8,0,0],head:[-2,0,0]},plant(-10,-10,10)))]},
+  k(0,J(S2(6,0),{armR:[-20,0,0],armL:[-8,0,0],head:[-2,0,0]},plant(-8,-8,10))),
+  k(.35,J(S2(16,0),{armR:[-30,0,-6],armL:[-20,0,6],head:[-12,0,0],root:[0,0,.06]},plant(-24,-24,38))),
+  k(.7,J(S2(18,0),{armR:[-38,0,-6],armL:[-22,0,6],head:[-12,0,0],root:[0,0,.06]},plant(-24,-24,38))),
+  k(1,J(S2(6,0),{armR:[-20,0,0],armL:[-8,0,0],head:[-2,0,0]},plant(-8,-8,10)))]},
  harvest:{id:'harvest',period:1.8,lock:1,events:[{at:.5,kind:'chaff',count:1,at3:[0,.3,.4]}],keys:[
-  k(0,J(S2(6,0),{armR:[-50,0,0],armL:[-30,0,0],head:[-4,0,0]},plant(-24,-24,26))),
-  k(.4,J(S2(16,0),{armR:[-24,0,-4],armL:[-14,0,4],head:[-12,0,0],root:[0,0,.06]},plant(-40,-40,38))),
-  k(.7,J(S2(10,0),{armR:[-45,0,0],armL:[-24,0,0],head:[-8,0,0]},plant(-32,-32,32))),
-  k(1,J(S2(6,0),{armR:[-50,0,0],armL:[-30,0,0],head:[-4,0,0]},plant(-24,-24,26)))]},
+  k(0,J(S2(6,0),{armR:[-50,0,0],armL:[-30,0,0],head:[-4,0,0]},plant(-14,-14,26))),
+  k(.4,J(S2(16,0),{armR:[-24,0,-4],armL:[-14,0,4],head:[-12,0,0],root:[0,0,.06]},plant(-24,-24,38))),
+  k(.7,J(S2(10,0),{armR:[-45,0,0],armL:[-24,0,0],head:[-8,0,0]},plant(-20,-20,32))),
+  k(1,J(S2(6,0),{armR:[-50,0,0],armL:[-30,0,0],head:[-4,0,0]},plant(-14,-14,26)))]},
  craft:{id:'craft',period:2.6,lock:1,events:[],keys:[k(0,J(S2(6,0),{armL:[-60,0,10],armR:[-60,0,-10],head:[12,0,0]},plant(-4,4,8))),k(.5,J(S2(8,0),{armL:[-48,0,6],armR:[-72,0,-6],head:[14,0,0]},plant(-4,4,8))),k(1,J(S2(6,0),{armL:[-60,0,10],armR:[-60,0,-10],head:[12,0,0]},plant(-4,4,8)))]},
  // ---- Job and weapon clips (ASTRA-12). Loop seamlessly; `itemR`/`itemL` are torso-relative item angles.
  build:{id:'build',period:1.8,lock:1,events:[{at:.4,kind:'dust',count:1,needsDrySurface:true,at3:[0,.1,.5]}],keys:[
