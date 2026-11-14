@@ -107,6 +107,29 @@ test('npcMarriages: only rivals, only on cadence, only when scale and acquaintan
  delete g.state.worldOptions.rulersVersion;delete g.state.rulers;g.state.time=0;assert.deepEqual(npcMarriages(g),[]);
 });
 
+test('npcKinPledges: rivals foster/exchange hostages on cadence only, never the player, no repeat pair, wards are real, old saves untouched',async()=>{
+ const R=await import('../src/game/rulersRuntime.ts');const {societyRelation}=await import('../src/game/societyRelations.ts');const g=fixture();R.ensureRulers(g);
+ // two scaled, mutually known rival houses (real units for population, a child and an older kinsman each)
+ for(const t of [1,2]){const u=g.state.units.find(u=>u.team===t&&u.hp>0);for(let i=0;i<60;i++)g.state.units.push({...u,id:g.state.units.length+9700+i+t*100});
+  const d=g.state.rulers.societies[String(t)].dynasty,k=Object.values(d.people).find(p=>p.alive);
+  d.people[t+'-kid']={...k,id:t+'-kid',name:'Kid'+t,age:8,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:1};
+  d.people[t+'-kin']={...k,id:t+'-kin',name:'Kin'+t,age:22,spouse:undefined,parent:undefined,ruler:undefined,claimStrength:1};}
+ {const {recordSocietyContact}=await import('../src/game/societyRelations.ts');const u1=g.state.units.find(u=>u.team===1&&u.hp>0),u2=g.state.units.find(u=>u.team===2&&u.hp>0);u2.x=u1.x;u2.z=u1.z;assert.ok(recordSocietyContact(g,u1,u2),'a real meeting makes them known');}
+ assert.ok(societyRelation(g,1,2).known&&societyRelation(g,2,1).known);
+ g.state.rulers.year=3;assert.deepEqual(R.npcKinPledges(g),[],'off-cadence year does nothing');
+ const wards0=JSON.stringify(g.state.rulers.wards??[]);
+ for(const [yr,kind,ward] of [[2,'fosterage','foster'],[6,'hostageExchange','hostage']]){
+  g.state.rulers.year=yr;const out=R.npcKinPledges(g);
+  assert.ok(out.every(([a,b,k])=>a!==0&&b!==0&&a!==3&&b!==3&&k===kind),'player and wild team never pledged');
+  for(const [a,b] of out){const w=R.wardsOf(g,a).filter(x=>(Number(x.from)===a&&Number(x.to)===b)||(Number(x.from)===b&&Number(x.to)===a));
+   assert.equal(w.length>=2,true,'both houses send one kinsman');assert.ok(w.every(x=>x.kind===ward));
+   const d=g.state.rulers.societies[String(a)].dynasty;assert.ok(w.filter(x=>Number(x.from)===a).every(x=>d.people[x.person]?.alive),'ward is a living person still in his own dynasty record');}
+  const again=R.npcKinPledges(g);assert.ok(again.every(([a,b])=>!out.some(([c,d])=>c===a&&d===b)),'a bound pair is not pledged twice');
+ }
+ assert.ok(JSON.stringify(g.state.rulers.wards??[]).length>=wards0.length);
+ delete g.state.worldOptions.rulersVersion;delete g.state.rulers;g.state.time=0;assert.deepEqual(R.npcKinPledges(g),[],'old saves untouched');
+});
+
 test('lane A: yearly step settles wards and weds rivals; expansion party plan follows drivers; claims gate, expire, cite and raise unrest; save round-trip',async()=>{
  const R=await import('../src/game/rulersRuntime.ts');const {validRulersState}=await import('../src/game/rulersState.ts');const {societyRelation}=await import('../src/game/societyRelations.ts');
  const g=fixture();
