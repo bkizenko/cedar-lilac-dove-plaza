@@ -1393,3 +1393,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 21:44 ET Claude: shipped Boris playtest fixes: Field build tiles wrap + scroll (wheel did nothing on sideways row), selection panels open by default (no extra click for building/unit controls); council-ui/construction-queue-ui 34/34, tsc nil; pen not yet touched (need what is broken) (2df18eed) / now on pen / blocked: Boris's claude.ai chat messages are not readable from this session (only project docs)
 
 21:45 ET Claude: shipped people no longer squat to work: harvest/plant/tend legs +-24 deg (was +-42, a deep lunge that read as squatting); people-animation 6/6, no render checked (7336c03b) / now on animal pen (need symptom) / blocked: none
+
+21:49 ET Claude: shipped selected-building panel now lists that building's open work/blockers inline (BuildingActionItems, no Workload drawer click); tsc nil, council-ui 34/34, not browser-checked (1b73cbeb) / now on pen / blocked: none
