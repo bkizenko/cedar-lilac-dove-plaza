@@ -191,6 +191,21 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
     window.addEventListener('keydown',key,true);
     return()=>{window.removeEventListener('keydown',key,true);previous?.focus();};
   },[tradeOpen]);
+  // Escape backs out of whatever is open: the engine already cancels placement/selection; this closes the panels (one layer per press, build panel last).
+  useEffect(()=>{
+    const key=(e:KeyboardEvent)=>{
+      if(e.key!=='Escape'||e.defaultPrevented||tradeOpen!==null)return;
+      if(techOpen){setTechOpen(false);return;}
+      if(historyOpen){setHistoryOpen(false);return;}
+      if(testOpen){setTestOpen(false);return;}
+      if(statusPane){setStatusPane(null);return;}
+      if(hud.placing)return;
+      if(!toolsMin){setToolsMin(true);return;}
+      if(!buildMin)setBuildMin(true);
+    };
+    window.addEventListener('keydown',key);
+    return()=>window.removeEventListener('keydown',key);
+  },[tradeOpen,techOpen,historyOpen,testOpen,statusPane,toolsMin,buildMin,hud.placing]);
   useEffect(() => {
     if (hud.selection.kind !== "none") setSelMin(false);
   }, [hud.selection.kind, hud.selection.name]);
