@@ -853,7 +853,7 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
             )}
             {sel.kind==="resource"&&sel.type==="tree"&&engine&&<button className="mt-2 min-h-11 rounded-md border border-bronze/40 px-3" onClick={()=>{
               const tree=engine.game.selectedResource;
-              if(tree?.kind==="tree"){engine.game.markChop([tree.id],false);engine.pushHud();}
+              if(tree?.kind==="tree"){engine.markTrees([tree.id],false);engine.pushHud();}
             }}>Fell tree</button>}
             {sel.kind==='building'&&typeof sel.team==='number'&&sel.team!==0&&sel.team!==3&&engine&&knownSettlement(engine.game,sel.team)&&<button className="mt-2 min-h-9 rounded-md border border-bronze/40 px-3" onClick={()=>setTradeOpen(sel.team!)}>Offer trade</button>}
             {sel.kind === "building" && sel.team === 0 && (

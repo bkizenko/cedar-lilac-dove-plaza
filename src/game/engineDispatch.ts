@@ -92,6 +92,7 @@ export type EngineDispatchCommand=
  |{kind:'site-preparation-pause';buildingId:number;paused:boolean}
  |{kind:'paused-plan';buildingId:number;paused:boolean}
  |{kind:'queue-construction';buildingId:number}|{kind:'order-construction';buildingId:number}
+ |{kind:'mark-chop';treeIds:number[];clear?:boolean}
  |{kind:'construction-queue-control';unitId:number;action:'pause'|'resume'|'up'|'down'|'remove';siteId?:number}
  |{kind:'craft-site-control';buildingId:number;jobKind:CraftSiteJob['kind'];projectId?:number;actorId:number|null;action:'pause'|'resume'|'unload'};
 export type EngineCommandOutcome={accepted:boolean;reason:string;projectId?:number};
@@ -249,6 +250,7 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     else{const job=craftSiteReport(g,b)?.jobs.find(j=>j.kind===command.jobKind&&j.projectId===command.projectId&&j.actorId===command.actorId);if(!job)return no('Original workplace task unavailable');accepted=controlCraftSiteJob(g,b,job,command.action);}
     return{accepted,reason:accepted?'Original building/task updated':g.state.banner||'Building request refused'};
    }
+   case 'mark-chop':{const n=g.markChop(command.treeIds,command.clear!==false);return{accepted:n>0,reason:n>0?'Trees marked for felling':g.state.banner||'No tree could be marked'};}
    case 'construction-queue-control':{
     const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0&&u.hp>0);if(!u)return no('Original owned builder unavailable');
     const accepted=command.action==='pause'?pauseConstructionQueue(g,u):command.action==='resume'?resumeConstructionQueue(g,u):command.siteId!==undefined&&editConstructionQueue(g,u,command.siteId,command.action);
@@ -296,6 +298,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'boat-stop':{boatId:id},'free-captives':{team:v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0},'repatriate-captive':{unitId:id},'escort-captive':{unitId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'pay-blood-price':{team:id},'take-in-refugees':{team:id},'turn-away-refugees':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},'naval-order':{action:v=>['port-work','resume-port-work','resume-commission','commission','board','attack','resupply'].includes(v as string),dockId:optionalId,work:v=>v===undefined||PORT_WORK_IDS.includes(v as PortWork),design:v=>v===undefined||DESIGN_IDS.includes(v as string),builderId:optionalId,projectId:optionalId,boatId:optionalId,targetBoatId:optionalId,food:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1000,missileLoads:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=100},'commander-order':{action:v=>['appoint','replace','assign','release','promote'].includes(v as string),unitId:optionalId,commanderId:optionalId,commandKind:v=>v===undefined||v==='army'||v==='fleet',ids:v=>v===undefined||Array.isArray(v)&&v.length<=32&&v.every(id)&&new Set(v).size===v.length,promotionId:v=>v===undefined||typeof v==='string'&&v.length<=32,replacesId:optionalId},
   'site-preparation-pause':{buildingId:id,paused:bool},'paused-plan':{buildingId:id,paused:bool},
   'queue-construction':{buildingId:id},'order-construction':{buildingId:id},
+  'mark-chop':{treeIds:v=>Array.isArray(v)&&v.length>=1&&v.length<=1024&&v.every(integer),clear:v=>v===undefined||bool(v)},
   'construction-queue-control':{unitId:id,action:v=>v==='pause'||v==='resume'||v==='up'||v==='down'||v==='remove',siteId:optionalId},
   'craft-site-control':{buildingId:id,jobKind:v=>['production','haulage','weapon','tool','copper','helper'].includes(v as string),projectId:optionalId,actorId:v=>v===null||id(v),action},
  };

@@ -234,7 +234,7 @@ export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engin
   {ctx==='command'&&engine&&cmdOk&&<>{sel.kind==='boat'&&<BoatStrip engine={engine}/>}<CommanderStrip engine={engine}/></>}
   <div className="hw-actions">
    {sel.kind==='building'&&own&&!sel.completed&&engine?.game.state.selBld&&<button type="button" className="hw-primary" onClick={()=>{engine.game.orderConstruction(engine.game.state.selBld!);engine.pushHud();}}><Hammer size={26}/>Build</button>}
-   {sel.kind==='resource'&&sel.type==='tree'&&engine&&<button type="button" className="hw-primary" onClick={()=>{const t=engine.game.selectedResource;if(t?.kind==='tree'){engine.game.markChop([t.id],false);engine.pushHud();}}}><Axe size={26}/>Fell</button>}
+   {sel.kind==='resource'&&sel.type==='tree'&&engine&&<button type="button" className="hw-primary" onClick={()=>{const t=engine.game.selectedResource;if(t?.kind==='tree'){engine.markTrees([t.id],false);engine.pushHud();}}}><Axe size={26}/>Fell</button>}
    {hud.idleWorkers>0&&sel.kind!=='boat'&&<GameTooltip title={`${hud.idleWorkers} idle`} description="Jump to the next idle resident"><button type="button" className="hw-btn-wide" aria-label={`${hud.idleWorkers} idle`} onClick={()=>engine?.focusIdle()}><Users size={26}/>{hud.idleWorkers}</button></GameTooltip>}
    {sel.canRecycle&&<IconBtn label={sel.planned?'Cancel plan':'Recycle'} onClick={()=>engine?.recycle()}><Recycle size={26}/></IconBtn>}
    {person&&<><IconBtn label="Previous person" tip="Shift+," onClick={()=>engine?.cycleVillager(-1)}><ChevronLeft size={26}/></IconBtn><IconBtn label="Next person" tip="," onClick={()=>engine?.cycleVillager(1)}><ChevronRight size={26}/></IconBtn></>}

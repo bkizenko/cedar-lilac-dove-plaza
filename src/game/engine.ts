@@ -674,6 +674,11 @@ export class Engine {
         if(this.workerHost){
           const ids=e.shiftKey?this.game.selectedUnits().map(u=>u.id):[];
           for(const u of this.game.state.units){if(u.team!==0||u.hp<=0)continue;const point=this.view.project(u.x,u.y+.6,u.z);if(!point.behind&&point.x>=Math.min(this.drag.sx,this.drag.x)&&point.x<=Math.max(this.drag.sx,this.drag.x)&&point.y>=Math.min(this.drag.sy,this.drag.y)&&point.y<=Math.max(this.drag.sy,this.drag.y)&&!ids.includes(u.id))ids.push(u.id);}
+          if(!ids.length){
+            const box={minx:Math.min(this.drag.sx,this.drag.x),maxx:Math.max(this.drag.sx,this.drag.x),miny:Math.min(this.drag.sy,this.drag.y),maxy:Math.max(this.drag.sy,this.drag.y)},treeIds:number[]=[];
+            for(const tree of this.game.state.trees){if(tree.amount<=0||!this.game.visibleAt(tree.x,tree.z))continue;if(projectedTreeInBox((x,y,z)=>this.view.project(x,y,z),tree,box))treeIds.push(tree.id);}
+            if(treeIds.length){this.markTrees(treeIds);this.drag=null;this.pushHud();return;}
+          }
           this.workerHost.select({selectedUnitIds:ids});this.drag=null;this.pushHud();return;
         }
         if (!e.shiftKey && !this.loggingMode) this.game.clearSelect();
@@ -697,7 +702,7 @@ export class Engine {
             if (tree.amount <= 0 || !this.game.visibleAt(tree.x, tree.z)) continue;
             if (projectedTreeInBox((x,y,z)=>this.view.project(x,y,z),tree,{minx,maxx,miny,maxy})) ids.push(tree.id);
           }
-          if (ids.length) this.game.markChop(ids);
+          if (ids.length) this.markTrees(ids);
           else if(this.loggingMode)this.game.banner("No visible trees in the box — drag across the trunks or crowns",3);
         }
       } else {
@@ -714,6 +719,12 @@ export class Engine {
       this.game.height(ground.x,ground.z) >= this.game.waterAt(ground.x,ground.z)) return ground;
     const water = this.view.waterAt(cx,cy,seaSurfaceY(this.game.world));
     return water && this.game.height(water.x,water.z) < this.game.waterAt(water.x,water.z) ? water : ground;
+  }
+
+  /** Fell marks: in worker mode the real simulation owns them, so the order is sent as a command; otherwise the game takes it directly. */
+  markTrees(ids:number[],clear=true){
+    if(this.workerHost){void this.dispatch({kind:'mark-chop',treeIds:ids.slice(0,1024),clear}).catch(console.error);return;}
+    this.game.markChop(ids,clear);
   }
 
   leftClick(cx: number, cy: number, additive: boolean) {
@@ -756,7 +767,7 @@ export class Engine {
       const tree = this.game.state.trees.filter(t => t.amount > 0 && this.game.visibleAt(t.x, t.z))
         .filter(t => Math.hypot(t.x - g.x, t.z - g.z) < 8)
         .sort((a, b) => Math.hypot(a.x - g.x, a.z - g.z) - Math.hypot(b.x - g.x, b.z - g.z))[0];
-      if (tree) this.game.markChop([tree.id]);
+      if (tree) this.markTrees([tree.id]);
       else this.game.banner("Aim at a visible tree, or drag over a stand", 1.8);
       this.pushHud();
       return;
