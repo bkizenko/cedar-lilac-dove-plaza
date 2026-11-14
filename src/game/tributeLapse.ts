@@ -4,7 +4,8 @@
  * past the bar the house throws the burden off: the tribute ends (peaceTerm falls to whitePeace; nothing is paid or forgiven into goods, no envoy teleports) and the
  * chronicle says so. Read-only over peace.ts tribute state: no new saved field, nothing minted. Yearly and behind rulersVersion; old saves have no lapse and run as before. */
 import type {Game} from './sim';
-import {rulersEnabled,ensureRulers,addGrudge,grudgeOf} from './rulersRuntime';
+import {rulersEnabled,ensureRulers,addGrudge,grudgeOf,marryHouses,livingPeople} from './rulersRuntime';
+import {societyRelation} from './societyRelations';
 import {lifeEvent} from './communities';
 
 export const LAPSE_RULES={warnInstallments:2,breakInstallments:3,resent:.15,patronNote:.1,breakGrudge:.3};
@@ -23,7 +24,21 @@ export function tributeLapse(g:Game):number[]{
    const puppet=t.peaceTerm==='puppet';
    t.tribute=undefined;t.peaceTerm='whitePeace';broke.push(t.id);
    lifeEvent(g,0,`${t.name} has stopped paying and throws off the ${puppet?'yoke':'tribute'}; ${n} unpaid installments stay on the record against them`);
+   const p=seekPatron(g,t.id);if(p!==null)lifeEvent(g,0,`${t.name} looks abroad for a new protector and weds into ${g.tribe(p).name}`);
   }else lifeEvent(g,0,`${t.name} is ${n} installments behind on its tribute and mutters against your house`);
  }
  return broke;
+}
+
+/** A house that has just thrown off its patron looks for a new one: the strongest known, not-hostile society (never the player, never the wild) that is larger than
+ * itself, and seals the bond through marryHouses (a real spouse exchange, population-gated, signed ties). No goods, units or tribute move; null when nobody
+ * suitable is known or the families cannot exchange spouses at their scale. Pure choice over saved state, so it replays and round-trips. */
+export function seekPatron(g:Game,team:number):number|null{
+ const me=livingPeople(g,team);let best:number|null=null,bestPop=me;
+ for(const o of g.state.tribes){
+  if(o.id===team||o.id===0||o.id===3||!o.alive)continue;
+  const rel=societyRelation(g,team,o.id);if(!rel.known||rel.hostile||g.isFoe(team,o.id))continue;
+  const pop=livingPeople(g,o.id);if(pop>bestPop){best=o.id;bestPop=pop;}
+ }
+ return best!==null&&marryHouses(g,team,best)?best:null;
 }
