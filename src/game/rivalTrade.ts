@@ -1,4 +1,4 @@
-import {journeyPermit} from './rulersRuntime';
+import {journeyPermit,partyRisk} from './rulersRuntime';
 import {knownSettlementSite,localSettlementHall,beginSettlementJourney} from './barter';
 import{observePartnerTrade,tradeIntelAdvice}from'./tradeIntel';
 import{hasTaskCommitment}from'./workCommitments';
@@ -36,7 +36,7 @@ const reviews=new WeakMap<Game,Map<number,number>>();
 export function dispatchRivalBarter(g:Game,team:number){
   if(!isRivalTeam(team)||!g.tribe(team).alive||g.popNow(team)<6||reserveSeconds(g,team)<600)return false;
   let clock=reviews.get(g);if(!clock){clock=new Map();reviews.set(g,clock);}
-  const due=clock.get(team)||0;const cadence=journeyPermit(g,team,'trade')?.cadence??120;
+  const due=clock.get(team)||0;const permit=journeyPermit(g,team,'trade'),cadence=permit?.cadence??120;
   if(due>g.state.time&&due<=g.state.time+cadence)return false;
   clock.set(team,g.state.time+cadence);
   if(g.state.units.some(u=>u.team===team&&u.hp>0&&u.visit))return false;
@@ -59,7 +59,9 @@ export function dispatchRivalBarter(g:Game,team:number){
   let chosen:typeof choices[number]|undefined,u:Unit|undefined;
   search:for(const choice of choices)for(const candidate of workers)if(g.interactionSpot(candidate,choice.destination)){chosen=choice;u=candidate;break search;}
   if(!u||!chosen)return false;const{wanted,offered,destination}=chosen;
-  const amount=Math.min(32,Math.floor(t[offered]-rivalTradeReserve(g,team,offered)));
+  // rulers: a caravan waits out a road with armed strangers on it (same read as founding parties); null (old behaviour) when rulers are off
+  const road=permit?partyRisk(g,team,u,destination):null;if(road&&road.risk>=.6)return false;
+  const amount=Math.min(permit?.cargo??32,Math.floor(t[offered]-rivalTradeReserve(g,team,offered)));
   equipCaravan(g,u);
   g.spend(team,{[offered]:amount});u.carry=amount;u.carryType=offered;u.carryFood=offered==='food'?'provisions':undefined;
   u.visit={phase:'outbound',wait:0,team:destination.team,wanted};u.order='move';u.node=null;u.target=null;u.job=null;u.jobLock=false;u.stuckT=0;

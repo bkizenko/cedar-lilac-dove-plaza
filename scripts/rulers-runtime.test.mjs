@@ -166,6 +166,7 @@ test('lane A: journeyPermit steers explore/trade/raid parties from the drivers; 
  const g=fixture();
  const ex=R.journeyPermit(g,1,'explore');assert.ok(ex&&ex.allow&&[300,450].includes(ex.reserve));
  const tr=R.journeyPermit(g,1,'trade');assert.ok(tr&&[60,120].includes(tr.cadence));
+ for(const [tier,cap] of [['band',16],['chiefdom',24],['state',32]]){g.state.rulers.societies['1'].civ.polity.tier=tier;assert.equal(R.journeyPermit(g,1,'trade').cargo,cap,'era caps one caravan load: '+tier);}
  // a peaceful, known target; make the striker a state in conquer mode by pinning the cached drive
  const a=1,b=2;g.state.rulers.societies[String(a)].civ.polity.tier='state';
  const d=R.expansionOf(g,a);d.mode='conquer'; // the cached Drivers object is what journeyPermit reads
@@ -182,6 +183,7 @@ test('lane A: journeyPermit steers explore/trade/raid parties from the drivers; 
  d.mode='stay';g.state.rulers.societies[String(a)].civ.polity.tier='state';
  if(!g.isFoe(a,b))assert.equal(R.journeyPermit(g,a,'raid',b).allow,false,'a state in stay mode does not strike a peaceful neighbour');
  const old=fixture();delete old.state.worldOptions.rulersVersion;delete old.state.rulers;
+ assert.equal(R.partyRisk(old,1,{x:0,z:0},{x:50,z:50}),null,'old saves: no road-risk gate');
  for(const k of ['explore','trade','raid'])assert.equal(R.journeyPermit(old,1,k,2),null,'old saves: null permit');
 });
 

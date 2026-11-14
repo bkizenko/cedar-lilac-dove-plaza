@@ -15,6 +15,7 @@ import {TradeBlock} from '../Hud';
 import {UiThemeBoot} from '../uiTheme';
 import {StartupHint} from './StartupHint';
 import {PreviouslyCard} from './PreviouslyCard';
+import {OldSaveNote} from './OldSaveNote';
 import {AlertPins,useGlanceAlerts} from './glance';
 import {HelpScreen} from './helpScreen';
 import {RoadsCard} from './roadsCard';
@@ -60,6 +61,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  return <div className="hw" data-hw="hearth">
   <UiThemeBoot/>
   {!founding&&!screen&&<AlertPins engine={engine} alerts={alerts}/>}
+  {!founding&&!screen&&engine&&<OldSaveNote engine={engine}/>}
   {!founding&&!screen&&engine&&<PreviouslyCard engine={engine}/>}
   {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})} onOpenHelp={()=>setScreen({k:'help'})}/>}
   <header className="hw-top"><ResourceBar hud={hud} engine={engine} onOpen={k=>setScreen(k==='council'?{k:'council'}:{k:'village',tab:'stores'})}/><TimeCard hud={hud} engine={engine} onAges={()=>setScreen({k:'ages'})} onMenu={()=>setScreen({k:'menu'})}/></header>
