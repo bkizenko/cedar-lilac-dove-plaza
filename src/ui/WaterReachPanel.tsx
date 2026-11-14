@@ -21,7 +21,7 @@ export function WaterReachPanel({engine,reach}:{engine:Engine;reach:WaterReach})
    {report.fishCapacity>0&&<p className="text-parchment-dim" aria-label="Fish recovery rate">{report.fishRecoveryPerMinute>=0.05?`Recovering about ${report.fishRecoveryPerMinute.toFixed(1)} fish per game minute now.`:report.fishCount>=report.fishCapacity?'Stock is full.':'Not recovering right now (season, weather or fishing pressure).'}</p>}
    {report.section&&<p className="text-parchment-dim" aria-label="River section">Section {report.section.index+1}: {Math.round(report.section.lengthMetres)} m long, {Math.round(report.section.widthMetres)} m wide.</p>}
    {report.fishRecovery>0&&<p className="text-parchment-dim">Next catch in about {Math.max(1,Math.ceil(report.fishRecovery/60))} game min if rested.</p>}
-   <button className={button} disabled={!report.fisher} onClick={()=>refresh(()=>fishWaterReach(game,reach))}>Fish from bank</button>
+   <button className={button} disabled={!report.fisher} title={!report.fisher?(report.fishCount<1?'No fish to catch in this reach right now.':'Needs a free adult and a reachable bank with room.'):undefined} onClick={()=>refresh(()=>fishWaterReach(game,reach))}>Fish from bank</button>
    {!report.fisher&&report.fishCount>=1&&<p className="text-parchment-dim">Needs a free adult and a reachable bank with room.</p>}
   </section>
   <section aria-label="Local clay deposits">

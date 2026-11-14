@@ -15,6 +15,6 @@ export function AgeReadiness({hud,engine,onAdvance}:{hud:HudSnapshot;engine:Engi
   </div>)}</div>
   <p>Required reserves stay in your stores.</p>
   {issues.map(issue=><p className="text-bronze-bright" key={issue}>{issue}</p>)}
-  <button type="button" disabled={!hud.canAge||!!hud.ended} onClick={()=>{engine?.ageUp();onAdvance();}}>Choose next age</button>
+  <button type="button" disabled={!hud.canAge||!!hud.ended} title={hud.ended?'This village has ended.':!hud.canAge?(issues[0]||rows.filter(r=>r.have<r.need).map(r=>`${r.name} ${Math.floor(r.have)}/${r.need}`).join(' · ')||'Requirements for the next age are not met yet.'):undefined} onClick={()=>{engine?.ageUp();onAdvance();}}>Choose next age</button>
  </section>;
 }
