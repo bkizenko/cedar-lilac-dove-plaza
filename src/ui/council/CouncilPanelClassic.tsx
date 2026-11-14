@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {reportAgeLabel} from './DiplomacySheet';
 import type {Engine} from '../../game/engine';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 const QUERY={kind:'rulers-council'} as const;
@@ -29,7 +30,7 @@ export function CouncilPanelClassic({engine}:{engine:Engine}){
   {c.glory.some(g=>g.value>0)&&<article aria-label="Renown"><h4 className="font-semibold text-parchment">Renown</h4>
    <ul>{c.glory.filter(g=>g.value>0).map(g=><li key={g.stream} className="flex items-center gap-2"><span className="w-16 capitalize">{g.stream}</span><span className="h-1.5 rounded bg-bronze" style={{width:Math.min(100,g.value)+'%'}}/></li>)}</ul></article>}
   {c.neighbours.length>0&&<article aria-label="Neighbours"><h4 className="font-semibold text-parchment">Neighbouring houses</h4>
-   <ul>{c.neighbours.map(n=><li key={n.team} className="border-b border-parchment/10 py-1"><div className="flex items-center justify-between gap-2"><span>{n.name}: <b>{n.bond}</b></span>
+   <ul>{c.neighbours.map(n=><li key={n.team} className="border-b border-parchment/10 py-1"><div className="flex items-center justify-between gap-2"><span>{n.name}: <b>{n.bond}</b>{n.report&&<span data-report-age="1" data-stale={n.report.stale?'1':'0'} className="ml-1 text-parchment-dim">({reportAgeLabel(n.report)})</span>}</span>
     {n.canMarry&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-0.5" onClick={()=>void marry(n.team)}>Arrange a marriage</button>}</div>
     {n.means.length>0&&<p className="text-parchment-dim">{n.means.join('; ')}</p>}</li>)}</ul>
    {feedback&&<p role="status">{feedback}</p>}</article>}
