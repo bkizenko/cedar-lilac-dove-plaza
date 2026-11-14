@@ -219,3 +219,15 @@ test('hearth fame feed shows category chips only when lines span categories',asy
  assert.ok(mixed.includes('aria-pressed="true"'));assert.ok(mixed.includes('Wild')&&mixed.includes('Household'));
  assert.ok(!renderToStaticMarkup(h(F,{log:['Harvest brought in','Barley sown']})).includes('aria-pressed'));
 });
+
+test('previously recap lists only unseen chronicle lines and stays silent on first visit',async()=>{
+ const store=new Map();globalThis.localStorage={getItem:k=>store.has(k)?store.get(k):null,setItem:(k,v)=>store.set(k,String(v))};
+ const {previousLines,rememberLines}=await import('../src/ui/hearth/previously.ts');
+ assert.deepEqual(previousLines('w:a',['x','y']),[]);
+ rememberLines('w:a',['x','y']);
+ assert.deepEqual(previousLines('w:a',['x','y']),[]);
+ assert.deepEqual(previousLines('w:a',['x','y','z','q']),['z','q']);
+ assert.equal(previousLines('w:a',Array.from({length:9},(_,i)=>'n'+i)).length,5);
+ delete globalThis.localStorage;
+ assert.deepEqual(previousLines('w:a',['x']),[]);
+});
