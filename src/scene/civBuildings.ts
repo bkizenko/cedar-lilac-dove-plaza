@@ -321,6 +321,10 @@ CIVIC.sandrill=g=>{const {w,d,r}=g,gap=1.3;
  for(const s of[-1,1]){const mh=s<0?7:5.9,cx=s*(w*.17+gap/2);P(g,'cylinder','wall',[w*.34*1.12,mh,d*.7*1.12],[cx,0,-d*.05],[0,s*.18,0],10);
   P(g,'cylinder','trim',[w*.34*1.12+.5,.18,d*.7*1.12+.5],[cx,mh*.55,-d*.05],[0,s*.18,0],10,1);P(g,'hip','wall2',[w*.34*1.5,.7,d*.7*1.5],[cx,0,-d*.05],undefined,undefined,1);
   P(g,'sphere','wall2',[w*.34*1.0,.9,d*.7*1.0],[cx,mh,-d*.05],undefined,undefined,1);}
+ // near-only carved window niches in two rows on each drum (dark slot, lintel slab above), original Sandrill cliff-dwelling grammar
+ for(const s of[-1,1]){const mh=s<0?7:5.9,rx=w*.17*1.12,rz=d*.7*.56,cx=s*(w*.17+gap/2);
+  for(const row of[.3,.62])for(let k=-1;k<=1;k++){const u=k*.5*rx*.9,zz=-d*.05+rz*Math.sqrt(1-(u/rx)**2)*.93,y=mh*row;
+   g.B('wall2',[.62,.12,.3],[cx+u,y+.62,zz],0);g.B(darkSlot(g),[.4,.7,.34],[cx+u,y,zz],0);}}
  P(g,'box','wall2',[gap+.4,1.4,d*.7],[0,0,-d*.05]);P(g,'cylinder','accent',[1.5,.18,1.5],[0,4.2,-d*.05],[Math.PI/2,0,0],14);
  for(let i=0;i<5;i++)P(g,'cylinder',i%2?'wall2':'wall',[w*(.9-i*.1),.35,1.4+i*.1],[(i%2?1:-1)*i*.3,5.9+i*.4+(i<1?1.1:0),-d*.05+((i%3)-1)*.5],[0,(i-2)*.22,0],10,1);
  for(let i=0;i<9;i++)g.B('trim',[2.2,.3,.6],[-w*.36-.6,i*.65,d*.34-i*.0-i*.55*(d/9/.55)*.5],1);
