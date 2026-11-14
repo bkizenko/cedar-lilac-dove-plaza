@@ -1391,3 +1391,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 21:45 ET Claude: shipped people no longer squat to work: harvest/plant/tend legs +-24 deg (was +-42, a deep lunge that read as squatting); people-animation 6/6, no render checked (7336c03b) / now on animal pen (need symptom) / blocked: none
 
 21:49 ET Claude: shipped lane C hearth lawn glow (soft warm light pool under every lit hearth and hall firepit, flickering, night strong/day faint, render only, follows real lit fires; civ/people/skin/era/wonder 54/54, tsc nil on scene; SwiftShader docs/renders/visuals/hearth-lawn-glow-2026-11-14.png, live-shot --night added) (2ac9b9a0) / now on Option H adapter polish, vegetation shots / blocked: none
+
+21:49 ET Claude: shipped selected-building panel now lists that building's open work/blockers inline (BuildingActionItems, no Workload drawer click); tsc nil, council-ui 34/34, not browser-checked (1b73cbeb) / now on pen / blocked: none
