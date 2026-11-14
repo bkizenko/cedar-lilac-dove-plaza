@@ -1163,6 +1163,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-13 21:00 | Claude | 22 (since 20:00 ET, all branches) | 4 via PM landing | ~1 (Tigrane civic glazed tile band) | lanes A-D posted <1h |
 | 11-13 21:00 | Grok | 0 | 0 | 0 | out; World rows with Claude lanes/background agents |
 | 11-13 21:00 | Total | 22 | main = integration after 21:1x landing | ~1 | sweep 145 tests 142 pass 3 skip 0 fail; tsc skipped (typescript absent; 2-line scene diff); no other agent branch ahead; rows by status-column count: ~249 not started, ~188 done |
+| 11-13 22:00 | Codex | 3 (since 21:00 ET, all branches) | 3 | 1 (attention-panel case-insensitive Mac fix + live integrated main release/qualification recorded) | ACTIVE again (live release 22:0x ET, board line posted); not idle |
+| 11-13 22:00 | Claude | 36 (since 21:00 ET, all branches, 14 excl. board/merge) | landed by PM 22:1x | ~5 (Esc closes panels, tree zoom-out fix, villages start running, Arm-to-stores, 4-facing placement + animal motion easing, building open-work panel) | lanes A-D posted <1h; Boris live bug orders: ESC/TREES-ZOOM done, ANIMAL-GLITCH eased (31b30254), LIMBS / ANIMAL-SELECT-CAPTURE / LONE-HOUSE still queued as Claude top |
+| 11-13 22:00 | Grok | 0 | 0 | 0 | out; World rows with Claude lanes/background agents (M2-11/14/16, CAT-117, M4-07..09 are source-pushed on main, only native evidence outstanding) |
+| 11-13 22:00 | Total | 39 | main = integration (PM landing 22:1x ET) | ~6 | sweep 154 tests 151 pass 3 skip 0 fail (incl. arm-walks-to-stores, people-animation); tsc (v7, baseUrl stripped) 146 errors on both trees, identical besides line shifts; council-ui is NATIVE-ONLY here (no typescript pkg); no other agent branch ahead |
 
 ## Process improvements
 
