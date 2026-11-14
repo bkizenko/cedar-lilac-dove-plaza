@@ -287,18 +287,20 @@ function locomote(ctx:Ctx,c:Critter,dt:number,aim:{x:number;z:number},target:num
 export function tickAnimals(g:Game,animals:Critter[],dt:number,ob:WildlifeObstacles){
  if(!animals.length)return;
  if(animals.some(c=>!c.beh))initAnimalGroups(g,animals.filter(c=>!c.beh));// wild herds added after world creation (sheep, horses, cattle) are grouped on first sight
- const ctx=buildCtx(g,animals,ob),players=g.state.units.filter(u=>u.team===0&&u.hp>0);
+ const players=g.state.units.filter(u=>u.team===0&&u.hp>0),camp=g.campOf(0);
  const due:{c:Critter;lag:number}[]=[];
  for(const c of animals){
   const b=(c.beh??=newBeh(g,c));b.acc+=dt;
-  const dd=lodDistance(g,c,players),iv=dd<ANIMAL_RULES.lodNear?ANIMAL_RULES.intervalNear:dd<ANIMAL_RULES.lodMid?ANIMAL_RULES.intervalMid:ANIMAL_RULES.intervalFar;
+  const dd=lodDistance(camp,c,players),iv=dd<ANIMAL_RULES.lodNear?ANIMAL_RULES.intervalNear:dd<ANIMAL_RULES.lodMid?ANIMAL_RULES.intervalMid:ANIMAL_RULES.intervalFar;
   if(b.acc>=iv)due.push({c,lag:b.acc-iv});
  }
  if(due.length>ANIMAL_RULES.maxStepsPerTick)due.sort((a,b)=>b.lag-a.lag||a.c.id-b.c.id).length=ANIMAL_RULES.maxStepsPerTick;
  due.sort((a,b)=>a.c.id-b.c.id);
+ if(!due.length)return;// nothing is due this tick: skip the whole-world context build
+ const ctx=buildCtx(g,animals,ob);
  for(const {c} of due){const step=Math.min(c.beh!.acc,ANIMAL_RULES.maxStep);c.beh!.acc=0;stepOne(ctx,c,step);}
 }
-function lodDistance(g:Game,c:Critter,players:{x:number;z:number}[]){let d=Math.hypot(g.campOf(0).x-c.x,g.campOf(0).z-c.z)*.8;for(const p of players){const e=Math.hypot(p.x-c.x,p.z-c.z);if(e<d)d=e;}return d;}
+function lodDistance(camp:{x:number;z:number},c:Critter,players:{x:number;z:number}[]){let d=Math.hypot(camp.x-c.x,camp.z-c.z)*.8,d2=d*d;for(const p of players){const dx=p.x-c.x,dz=p.z-c.z,e2=dx*dx+dz*dz;if(e2<d2){d2=e2;d=Math.sqrt(e2);}}return d;}
 
 /** Pen-interior life for domesticated stock: grazing, resting and wandering at walking pace without spinning; young stay by a dam. */
 export function penStep(g:Game,a:Critter&{born?:number;sex?:string},pen:{x:number;z:number;w:number;d:number},dt:number,inside:(x:number,z:number)=>boolean,mates:Critter[],handlerNear:boolean){

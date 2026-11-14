@@ -51,7 +51,18 @@ export function calendar(g: Game) {
 export function isDependent(g: Game, u: Unit) {
   return u.maturesAt !== undefined && u.maturesAt > g.state.time;
 }
+/** Per-step memo: foodDemand is O(units) and workers ask for it every tick, so a full village was O(n^2) per tick. Only active inside Game.step. */
+const demandTick=new WeakMap<Game,Map<string,number>>();
+export function beginFoodDemandTick(g:Game){demandTick.set(g,new Map());}
+export function endFoodDemandTick(g:Game){demandTick.delete(g);}
 export function foodDemand(g: Game, team = 0, phase = calendar(g).phase) {
+  const memo=demandTick.get(g),key=memo?`${team}|${phase}|${g.state.units.length}|${g.state.weather}`:"";
+  if(memo){const hit=memo.get(key);if(hit!==undefined)return hit;}
+  const value=foodDemandUncached(g,team,phase);
+  memo?.set(key,value);
+  return value;
+}
+function foodDemandUncached(g: Game, team: number, phase: number) {
   let mouths = 0;
   for (const u of g.state.units) {
     if (!(u.team === team && u.hp > 0 && !u.expedition && !navalIndependentFood(g,u)&&!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u))) continue;

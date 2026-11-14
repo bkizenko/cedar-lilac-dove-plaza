@@ -201,6 +201,8 @@ import {
   crop,
   farmAvailable,
   reserveSeconds,
+  beginFoodDemandTick,
+  endFoodDemandTick,
   neighborIntent,
   foodDemand,
   isDependent,
@@ -260,6 +262,7 @@ const WALK_CLEARANCE = 0.12;
 const YEAR_DAYS = SIM_CALENDAR_RULES.daysPerYear;
 const DAY_RATE = (86400 * YEAR_DAYS) / SIM_CALENDAR_RULES.yearSeconds;
 
+const EMPTY_BUCKET: number[] = [];
 export class Game {
   testMode = false;
   revealMap = false;
@@ -2608,6 +2611,8 @@ export class Game {
   tickWildlife(dt: number) {
     const obstacles=new WildlifeObstacles(this.state.buildings.filter(b=>this.solidBuilding(b)));
     const modern=this.state.animalBehaviourVersion===1,active:Critter[]=[];
+    // Few residents are ever taming; scanning every unit per animal was O(wildlife x units) each tick.
+    const tamers=this.state.units.filter(u=>u.hp>0&&u.tamingWork&&!u.tamingWork.paused&&u.order==='hold');
     for (const c of this.state.wildlife) {
       if (c.hp <= 0) {
         if(updateCarcass(this,c))continue;
@@ -2636,7 +2641,7 @@ export class Game {
         }
         continue;
       }
-      const handler=this.state.units.find(u=>u.hp>0&&u.tamingWork?.animal===c.id&&!u.tamingWork.paused&&u.order==='hold'&&Math.hypot(u.x-c.x,u.z-c.z)<8);
+      const handler=tamers.find(u=>u.tamingWork?.animal===c.id&&Math.hypot(u.x-c.x,u.z-c.z)<8);
       if(handler){c.vx=0;c.vz=0;c.facing=Math.atan2(handler.x-c.x,handler.z-c.z);continue;}
       c.wanderT -= dt;
       // Externally placed animals pinned with a huge legacy wander timer (fixtures, scripted scenes) keep the old tick exactly.
@@ -4468,12 +4473,15 @@ export class Game {
       .map(p=>[p.actorId!,p]));
     const canYield=(u:Unit)=>u.order!=="hold"||
       productionTravel.get(u.id)?.id===u.productionProjectId&&productionTravel.get(u.id)?.team===u.team;
-    const cell = Math.max(2, ...us.map((u) => u.r * 2));
-    const buckets = new Map<string, number[]>();
+    let cell = 2;
+    for (let i = 0; i < us.length; i++) { const r2 = us[i].r * 2; if (r2 > cell) cell = r2; }
+    // Numeric cell keys: template-string keys allocated ~10 strings per unit per tick.
+    const cellKey = (x: number, z: number) => (x + 1048576) * 2097152 + (z + 1048576);
+    const buckets = new Map<number, number[]>();
     for (let i = 0; i < us.length; i++) {
       const u = us[i];
       if (u.hp <= 0||u.boat?.phase==='aboard') continue;
-      const key = `${Math.floor(u.x / cell)},${Math.floor(u.z / cell)}`;
+      const key = cellKey(Math.floor(u.x / cell), Math.floor(u.z / cell));
       const bucket = buckets.get(key) || [];
       bucket.push(i);
       buckets.set(key, bucket);
@@ -4485,7 +4493,7 @@ export class Game {
         cz = Math.floor(a.z / cell);
       for (let z = cz - 1; z <= cz + 1; z++)
         for (let x = cx - 1; x <= cx + 1; x++) {
-          for (const j of buckets.get(`${x},${z}`) || []) {
+          for (const j of buckets.get(cellKey(x, z)) || EMPTY_BUCKET) {
             if (j <= i) continue;
             const b = us[j];
             const dx = a.x - b.x,
@@ -4943,15 +4951,16 @@ export class Game {
     let best: Unit | Building | null = null;
     let bd = radius * radius;
     for (const o of this.state.units) {
+      // Cheap range/liveness rejects first: nearly every unit is out of range, and the predicates below are pure.
+      const d = (o.x - u.x) ** 2 + (o.z - u.z) ** 2;
+      if (!(d < bd) || o.hp <= 0 || o.team === u.team) continue;
       if (
         (o.envoy?.kind === "peace" && o.envoy.team === u.team) || contactYieldingTo(this,o,u.team) || isSocietyPeaceMessengerFor(this,o,u.team) || !missionMayTargetCivilian(this,u,o) ||
-        o.hp <= 0 || o.shelterId ||
-        o.team === u.team ||
+        o.shelterId ||
         !this.isFoe(u.team, o.team) ||
         (u.team === 0 && !this.visibleAt(o.x, o.z))
       )
         continue;
-      const d = (o.x - u.x) ** 2 + (o.z - u.z) ** 2;
       if (d < bd) {
         bd = d;
         best = o;
@@ -5931,6 +5940,7 @@ export class Game {
   step(dt: number, phaseProfile?:SimulationPhaseProfile) {
     if (!this.started) return;
     const phases=phaseProfile?.begin();
+    beginFoodDemandTick(this);
     try {
     const spd = this.state.speed >= 3 ? 4 : this.state.speed === 2 ? 2 : 1;
     const nightMul = this.isNight()?1.6:1;
@@ -6180,7 +6190,7 @@ export class Game {
       this.state.bannerT -= vdt;
       if (this.state.bannerT <= 0) this.state.banner = "";
     }
-    } finally { phases?.end(); }
+    } finally { endFoodDemandTick(this); phases?.end(); }
   }
 
   entityAt(x: number, z: number): Unit | Building | null {
