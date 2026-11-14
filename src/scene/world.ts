@@ -60,6 +60,7 @@ import {DrawDistanceGovernor,drawBands,type DrawBands,type DrawDistance} from '.
 import {currentRenderStyle,type RenderStyle} from './renderStyle';
 import {loadMapStyle,rememberMapStyle,type MapStyle} from './mapStyle';
 import {painterAtmosphere,makePainterSky,PAINTER_GRADE_SHADER} from './painterAtmosphere';
+import {painterSway} from './painterVegetationMaterial';
 import {setBuildingGrammar} from './buildingFamilies';
 import {skinOfTeam} from '@/game/skinState';
 import {WonderLayer} from './wonderLayer';
@@ -476,6 +477,7 @@ export class WorldView {
 
   constructor(canvas: HTMLCanvasElement) {
     this.quality = initialEffective().graphics;
+    painterSway().uWind.value = this.quality === "low" ? 0 : this.quality === "med" ? 0.35 : 0.8;
     setDetailLevel(loadDetailLevel());
     this.setStyle(this.styleId);
     this.renderer = new THREE.WebGLRenderer({
@@ -782,6 +784,8 @@ export class WorldView {
 
   applyQuality(q: "low" | "med" | "high") {
     this.quality = q;
+    // Wind sway of grass and trees is the costly, busy part: still on Low, gentle on Medium, full only on High.
+    painterSway().uWind.value = q === "low" ? 0 : q === "med" ? 0.35 : 0.8;
     this.renderer.setPixelRatio(
       graphicsPixelRatio(q,this.renderer.domElement?.clientWidth||800,this.renderer.domElement?.clientHeight||600,window.devicePixelRatio||1),
     );
