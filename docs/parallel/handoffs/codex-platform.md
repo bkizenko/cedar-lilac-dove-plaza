@@ -30,13 +30,31 @@ Full typecheck reports TS1261/TS2693 in the reserved Hearth OldSaveNote import
 The unchanged base reproduced the same two diagnostics; this batch adds no
 compiler diagnostics. No reserved-file workaround or build/publication attempted.
 
-Next concrete inventory slice: unique identity for newly equipped, actually
-debited water jars, with legacy compatibility, custody/wear and strict reload.
+Second source batch 42f48822: newly equipped, actually debited water jars now
+retain unique identity through real 32 L collection/delivery, trip wear, resident
+handover and strict reload. Legacy no-id jars remain compatible; invalid,
+duplicate and cross-asset identities are refused. New native regressions 4/4;
+existing pottery, graphics preferences/quality and RNG-purity checks 23/23.
+Second batch 27/27 (100%); both batches 99 distinct pass/100 selected (99%),
+one unavailable own-QA fixture skipped. Final compiler remains the same two
+base-only reserved Hearth errors, with no new diagnostics. A possible owner fix
+is an explicit `./OldSaveNote.tsx` component import or a distinct model filename;
+Codex did not edit either file.
+
+Bounded actual simulation profiling at 42f48822: 20 warmup + 240 measured steps
+per natural opening and declared 80-resident diagnostic. Original p95 step CPU
+39.08/49.15 ms respectively, no simulation errors or terrain edits. Optional phase
+timing and a separate V8 sampling run identify exact/local water queries,
+pathfinding and geographic-influence work as the next measured investigation
+targets. No FPS/render/real-player-village claim or optimization/visual edit.
+Full scoped results: docs/metrics/codex-logic-profile-2026-11-14.json.
+
 Full cached-container identity/tare/seal/maker remains open. Replay is also open:
 saved terrain seeds, pure validation and Worker message deduplication do not save
 simulation randomness or provide an exact command/tick replay journal. Existing
 brewing, practice, prestige and graphics-preference work must be reconciled rather
 than restarted; broader chain/progression/knowledge acceptance is still partial.
+The exact restricted queue is docs/parallel/CODEX_LOGIC_QUEUE.md.
 
 ---
 
