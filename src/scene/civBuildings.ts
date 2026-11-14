@@ -249,8 +249,9 @@ const yawOf=(x:number,z:number)=>Math.atan2(x,z);
 HOUSE.aureline=g=>{const {w,d,r}=g,n=5,R=w*.7,span=1.45,h=range(r,1.7,2.1),ch=2*R*Math.sin(span/(2*(n-1)))*1.06+.15;
  g.B('wall2',[w*.95,.3,d*.8],[0,0,d*.12],2);
  for(let i=0;i<n;i++){const a=(i/(n-1)-.5)*span,cx=Math.sin(a)*R,cz=-Math.cos(a)*R+R*.72,hh=h+(i%2?.4:0),nx=-Math.sin(a),nz=Math.cos(a);
-  P(g,'box','wall',[ch,hh,2.3],[cx,.3,cz],[0,-a,0]);P(g,'sphere','roof',[ch*1.04,1.25,2.6],[cx,.3+hh-.45,cz],[0,-a,0]);
-  P(g,'box','trim',[ch*.96,.1,2.35],[cx,.3+hh*.55,cz],[0,-a,0],undefined,0);
+  // salt-white drum modules (rounded elliptical walls, shell vaults on top); the legacy set keeps boxes
+  P(g,'cylinder','wall',[ch*1.08,hh,2.4],[cx,.3,cz],[0,-a,0],8);P(g,'sphere','roof',[ch*1.04,1.25,2.6],[cx,.3+hh-.45,cz],[0,-a,0]);
+  P(g,'cylinder','trim',[ch*1.1,.1,2.46],[cx,.3+hh*.55,cz],[0,-a,0],8,0);
   P(g,'box','accent',[.8,1.35,.1],[cx+nx*1.17,.3,cz+nz*1.17],[0,-a,0],undefined,0);P(g,'sphere','accent',[.8,.7,.1],[cx+nx*1.17,.3+1.3,cz+nz*1.17],[0,-a,0],undefined,0);
   if(i%2===0)P(g,'box','trim',[.5,.5,.1],[cx+nx*1.17+.9,.3+hh*.55,cz+nz*1.17],[0,-a,0],undefined,0);}
  g.B('wall2',[1.8,.3,.9],[g.off*.3,.3,R*.72-R+.2+2.1],1);P(g,'wedge','wall2',[.5,hh0(h)+1.6,1.4],[w*.46,.3,-d*.25],[0,Math.PI,0],undefined,1);
