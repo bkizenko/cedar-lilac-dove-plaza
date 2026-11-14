@@ -4,8 +4,8 @@ export type PlayerTradeCommand={kind:'propose-needs-trade';team:number;give:Good
 export const PLAYER_TRADE_RULES={maximumOffers:12,maximumPartners:64} as const;
 export const PLAYER_TRADE_NAMES:Record<GoodKind,string>={food:'Food',wood:'Timber',stone:'Stone',copper:'Copper',iron:'Iron',spears:'Spears',bows:'Bows',blades:'Blades',paddedArmor:'Padded armour',cordage:'Cordage',basket:'Baskets',pottery:'Pottery',cloth:'Cloth',leather:'Leather',skinClothes:'Skin clothing',hideCoat:'Hide coats',woolCloth:'Wool cloth',woolCoat:'Wool coats',goat:'Goats'};
 export const playerTradeGood=(v:unknown):v is GoodKind=>typeof v==='string'&&TRADE_SELECTABLE_KINDS.includes(v as GoodKind);
-export type PlayerTradeOfferView={id:number;from:number;to:number;partner:number;partnerName:string;give:{kind:GoodKind;amount:number};get:{kind:GoodKind;amount:number};phase:TradeOfferPhase;status:string;canAnswer:boolean;answerIssue:string|null;answerBy:number|null;ownCarriers:number|null};
-export type PlayerTradeModel={kind:'needs-trade';team:number|null;partnerKnown:boolean;partners:{id:number;name:string}[];goods:{kind:GoodKind;label:string;held:number;maxOffer:number}[];offers:PlayerTradeOfferView[]};
+export type PlayerTradeOfferView={id:number;from:number;to:number;partner:number;partnerName:string;give:{kind:GoodKind;amount:number};get:{kind:GoodKind;amount:number};phase:TradeOfferPhase;status:string;canAnswer:boolean;answerIssue:string|null;answerBy:number|null;ownCarriers:number|null;/** seconds of game time left to answer (incoming, still open) */answerLeft?:number|null;};
+export type PlayerTradeModel={kind:'needs-trade';/** game clock when read, so the sheet can age offers without a second source */now?:number;team:number|null;partnerKnown:boolean;partners:{id:number;name:string}[];goods:{kind:GoodKind;label:string;held:number;maxOffer:number}[];offers:PlayerTradeOfferView[]};
 /** Saved facts only. A display query never observes distant halls or creates knowledge. */
 function knownPartners(g:Game){
  const ids=new Set((g.state.observedSettlements||[]).filter(f=>f.observer===0&&f.active).map(f=>f.owner));
@@ -35,9 +35,9 @@ export function playerTradeModel(g:Game,team?:number):PlayerTradeModel{
    else{phase='loading';status='Awaiting caravan';}
   }
   const issue=incoming?answerIssue(g,o):null;
-  return{id:o.id,from:o.from,to:o.to,partner,partnerName:g.tribe(partner)?.name||'Another village',give:{kind:o.give.kind,amount:o.quoted?.giveAmount??(Number.isFinite(o.volume)?Math.round(o.volume/TRADE_GOODS[o.give.kind].worth):o.give.amount||o.giveDelivered||0)},get:{kind:o.get.kind,amount:o.quoted?.getAmount??Math.min(TRADE_GOODS[o.get.kind].maxLot,Math.floor(o.fairGet*(1-o.spread)+1e-9))},phase,status,canAnswer:incoming&&o.phase==='proposed'&&!expired,answerIssue:issue,answerBy:incoming&&o.phase==='proposed'?o.answerAt+TRADE_NEEDS_RULES.playerAnswerSeconds:null,ownCarriers:o.from===0?o.carriers.length:null};
+  return{id:o.id,from:o.from,to:o.to,partner,partnerName:g.tribe(partner)?.name||'Another village',give:{kind:o.give.kind,amount:o.quoted?.giveAmount??(Number.isFinite(o.volume)?Math.round(o.volume/TRADE_GOODS[o.give.kind].worth):o.give.amount||o.giveDelivered||0)},get:{kind:o.get.kind,amount:o.quoted?.getAmount??Math.min(TRADE_GOODS[o.get.kind].maxLot,Math.floor(o.fairGet*(1-o.spread)+1e-9))},phase,status,canAnswer:incoming&&o.phase==='proposed'&&!expired,answerIssue:issue,answerBy:incoming&&o.phase==='proposed'?o.answerAt+TRADE_NEEDS_RULES.playerAnswerSeconds:null,ownCarriers:o.from===0?o.carriers.length:null,answerLeft:incoming&&o.phase==='proposed'?Math.max(0,o.answerAt+TRADE_NEEDS_RULES.playerAnswerSeconds-now):null};
  });
- return{kind:'needs-trade',team:team??null,partnerKnown:team!==undefined&&partners.some(p=>p.id===team),partners,goods:TRADE_SELECTABLE_KINDS.map(kind=>({kind,label:PLAYER_TRADE_NAMES[kind],held:tradeStock(g,0,kind),maxOffer:TRADE_GOODS[kind].maxLot})),offers};
+ return{kind:'needs-trade',now,team:team??null,partnerKnown:team!==undefined&&partners.some(p=>p.id===team),partners,goods:TRADE_SELECTABLE_KINDS.map(kind=>({kind,label:PLAYER_TRADE_NAMES[kind],held:tradeStock(g,0,kind),maxOffer:TRADE_GOODS[kind].maxLot})),offers};
 }
 export function applyPlayerTradeCommand(g:Game,c:PlayerTradeCommand){
  const no=(reason:string)=>({accepted:false,reason});
