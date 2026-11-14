@@ -4713,6 +4713,11 @@ export class Game {
         u.gatherT -= period;
         if("type" in node&&node.type==="dock"){catchDockFish(this,u,node);return;}
         if("type" in node&&node.type==="quarry"){digStone(this,u,node);return;}
+        if("kind" in node&&node.kind==="tree"&&t==="wood"){
+          // a standing tree gives no wood: it must be knocked over first, then cut up and carried back
+          if(node.felledAt===undefined){node.fellStrokes=(node.fellStrokes||0)+1;u.workReason="Felling the tree";if(u.team===0&&Math.random()<.6)this.onSfx("chop");if(node.fellStrokes>=4)node.felledAt=this.state.time;return;}
+          u.workReason="Cutting up the fallen tree";
+        }
         const rich = "rich" in node ? ((node as ResourceNode).rich ?? 1) : 1;
         let gained = 1;
         if (rich < 0.7) {
@@ -4750,7 +4755,7 @@ export class Game {
           if(node.kind==="forage")applyForagePressure(node);
           if (node.amount <= 0) {
             node.amount = 0;
-            if (node.kind === "tree") this.chopMarks.delete(node.id);
+            if (node.kind === "tree") {this.chopMarks.delete(node.id);delete node.felledAt;delete node.fellStrokes;}
             if(node.kind!=="fish")node.regenT =
               node.kind === "tree"
                 ? 600 + Math.random() * 600

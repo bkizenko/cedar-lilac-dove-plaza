@@ -26,8 +26,8 @@ const smooth=(a:number,b:number,x:number)=>{const t=Math.max(0,Math.min(1,(x-a)/
 export class BotanicalForest{
  private scene:THREE.Scene;private o:ForestOptions;private sway:PainterSway=painterSway();private mat:THREE.MeshStandardMaterial;private farMat:THREE.MeshStandardMaterial;
  private batches=new Map<number,Batch>();private standing=new Set<number>();private falling=new Map<number,number>();private fallAxis=new THREE.Vector3();private fallQuat=new THREE.Quaternion();
- /** 0 = not falling; (0,1] = a tree seen standing that has just been felled topples over about 1.5 s, then becomes a stump */
- private fallProgress(id:number,felled:boolean,filler:boolean):number{if(filler)return 0;if(!felled){this.standing.add(id);this.falling.delete(id);return 0;}if(!this.standing.has(id))return 0;const now=performance.now();let t0=this.falling.get(id);if(t0===undefined){t0=now;this.falling.set(id,t0);}const f=(now-t0)/1500;if(f>=1){this.standing.delete(id);this.falling.delete(id);return 0;}return Math.max(.001,f);}
+ /** 0 = standing; (0,1) = toppling for about 1.5 s after the fellers' last stroke; 1 = lying down until cut up, then it becomes a stump */
+ private fallProgress(id:number,felledAt:number|undefined,stump:boolean,filler:boolean):number{if(filler)return 0;if(stump){this.standing.delete(id);this.falling.delete(id);return 0;}if(felledAt===undefined){this.standing.add(id);this.falling.delete(id);return 0;}if(!this.standing.has(id))return 1;const now=performance.now();let t0=this.falling.get(id);if(t0===undefined){t0=now;this.falling.set(id,t0);}const f=(now-t0)/1500;if(f>=1){this.standing.delete(id);this.falling.delete(id);return 1;}return Math.max(.001,f);}
 private stumps:Batch|null=null;private recs=new Map<number,Rec>();private info=new Map<number,TreeGeometry>();
  private farTrunk:THREE.InstancedMesh;private farTrunkIds:number[]=[];private far:THREE.InstancedMesh[];private farIds:number[][]=[[],[]];
  private shadows:THREE.InstancedMesh|null=null;private shadowMat:THREE.MeshBasicMaterial;private sunAz=new THREE.Vector2(-.6,.8);private sunElev=.8;private shadowOpacity=.34;
@@ -118,7 +118,7 @@ private stumps:Batch|null=null;private recs=new Map<number,Rec>();private info=n
   for(const list of [nodes,ctx.filler?.trees??[]])for(const node of list){
    if(!ctx.known(node.x,node.z))continue;
    const dx=node.x-ctx.camera.x,dz=node.z-ctx.camera.z,distance=Math.hypot(dx,dz);if(distance>reach)continue;
-   const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],rawStump=node.amount<=0&&!node.planted,fall=this.fallProgress(node.id,rawStump,!!node.filler),stump=rawStump&&fall===0,growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=(rec.size??node.scale)*growth;
+   const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,fall=this.fallProgress(node.id,(node as {felledAt?:number}).felledAt,stump,!!node.filler),growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=(rec.size??node.scale)*growth;
    const tier:0|1|2=node.filler?2:distance<=d0?0:distance<=d1?1:2,heroTier:0|1|2=tier===0&&distance<=heroD&&!node.filler?2:tier; // cosmetic filler never uses the pickable individual tiers
    if(tier===2&&ctx.inView&&!ctx.inView(node.x,node.z,10))continue;
    if(node.filler)fillerCounts.trees++;

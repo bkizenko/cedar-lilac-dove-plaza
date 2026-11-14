@@ -411,6 +411,9 @@ export type ResourceNode = {
   amount: number;
   maxAmt: number;
   regenT: number;
+  /** trees: game time the tree was knocked down; wood can only be cut once it is down */
+  felledAt?: number;
+  fellStrokes?: number;
   scale: number;
   rich: number;
   pressure?: number;

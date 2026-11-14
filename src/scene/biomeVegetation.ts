@@ -8,7 +8,7 @@ import {makePainterFoliage,makePainterBark,makePainterGrass,makePainterProp,pain
 export const VEGETATION_BIOMES=['meadow','mixed-woodland','conifer-forest','alpine','wetland','dry-scrub','arid','warm-coast'] as const;
 export type VegetationBiome=typeof VEGETATION_BIOMES[number];
 export type VegetationProfile={kind:VegetationBiome;treeForms?:Partial<Record<TreeForm,number>>};
-export type ResourceTree={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean};
+export type ResourceTree={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean;felledAt?:number;fellStrokes?:number};
 export const BIOME_VEGETATION_RULES={version:1,nearMetres:{low:28,med:75,high:115},farMetres:700,lowFarMetres:420,stumpHeightScale:.075,
  dressingMaxInstances:{low:0,med:512,high:1024},dressingDistanceMetres:65} as const;
 const defaults:Record<VegetationBiome,Partial<Record<TreeForm,number>>>={

@@ -1,5 +1,5 @@
 /** "Show Test lab on main screen": remembered per browser, default off (it lives in the main menu), never required (storage can throw). */
-export const TESTLAB_BUTTON_KEY='hearthwild.ui.testLabButton';
+export const TESTLAB_BUTTON_KEY='hearthwild.ui.testLabButton.v2';
 export function readTestLabButton(storage?:Pick<Storage,'getItem'>|null):boolean{
  try{const s=storage===undefined?(typeof localStorage==='undefined'?null:localStorage):storage;return s?.getItem(TESTLAB_BUTTON_KEY)==='1';}catch{return false;}
 }
