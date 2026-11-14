@@ -252,3 +252,11 @@ test('kin tree stacks generations by descent, tags spouses and marks the ruler; 
  assert.match(html,/House Oak/);assert.match(html,/is-ruler/);assert.match(html,/wed to Bran/);
  assert.equal(kinGenerations(fam.map(({id,parent,spouse,...r})=>r)).length,1);
 });
+
+test('diplomacy ledger lists pledges, claims owed and grudges per house from the read model only, hidden when empty',async()=>{
+ const {diplomacyLedger}=await import('../src/ui/council/dipLedger.ts');const {DiplomacyLedger}=await import('../src/ui/council/DiplomacyLedger.tsx');
+ assert.deepEqual(diplomacyLedger(undefined),[]);assert.equal(renderToStaticMarkup(h(DiplomacyLedger,{council:{enabled:true,neighbours:[{team:1,name:'Quiet',bond:'strangers',trust:30,grievance:2,canMarry:false,means:[]}],log:[]}})),'');
+ const c={enabled:true,log:[],neighbours:[{team:1,name:'Marsh Folk',bond:'allied by marriage',trust:70,grievance:5,canMarry:true,means:[],wards:[{name:'Ona',age:9,kind:'foster',heldByUs:true,sinceYear:1,endsIn:3,effect:''}]},{team:2,name:'Ridge Clan',bond:'rivals',trust:10,grievance:60,canMarry:false,means:[],casus:[{byUs:false,kind:'raid',strength:40,endsIn:2,cost:2,reason:'They hold raids on their herds; x'}],memory:[{kind:'raid',text:'We raided their herds',year:3,weight:80}]}]};
+ const l=diplomacyLedger(c);assert.equal(l[0].name,'Ridge Clan');assert.equal(l[1].pledges.length,2);assert.match(l[0].owed[0],/They hold raids on their herds/);assert.equal(l[0].grudges.length,2);
+ const html=renderToStaticMarkup(h(DiplomacyLedger,{council:c}));assert.match(html,/Oaths, debts and grudges · 2 houses/);assert.match(html,/Pledges/);assert.match(html,/Owed/);assert.match(html,/Grudges/);
+});

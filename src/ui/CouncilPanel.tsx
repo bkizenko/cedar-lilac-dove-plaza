@@ -8,6 +8,7 @@ import {SocietiesStrip,focusKnownSettlement} from './council/SocietiesStrip';
 import {AttentionInbox} from './council/AttentionInboxPanel';
 import {DiplomacySheet} from './council/DiplomacySheet';
 import {DiplomacyTimeline} from './council/DiplomacyTimeline';
+import {DiplomacyLedger} from './council/DiplomacyLedger';
 import {useCouncilLayout} from './council/councilLayout';
 const QUERY={kind:'rulers-council'} as const,QELDER={kind:'elder-counsel'} as const;
 const MODE_LABEL:Record<string,string>={stay:'Content to stay',settle:'Looking to settle new ground',migrate:'Pressed to move on',conquer:'Eyeing a neighbour',trade:'Seeking trade',explore:'Itching to explore',mission:'Wanting to spread the faith'};
@@ -43,6 +44,7 @@ export function CouncilPanel({engine}:{engine:Engine}){
    {c.expansion.why.length>0?<p className="text-parchment-dim">Because {c.expansion.why.join('; ')}.</p>:<p className="text-parchment-dim">Nothing presses the people to leave.</p>}</Card>}
   {!!c.parties?.length&&<PartiesCard parties={c.parties}/>}
   <DiplomacyTimeline council={c} onFocus={t=>focusKnownSettlement(engine,t)}/>
+  <DiplomacyLedger council={c} onFocus={t=>focusKnownSettlement(engine,t)}/>
   <DiplomacySheet neighbours={c.neighbours} onAct={(t,k)=>void marry(t,k)}/>
   <FeedbackList items={fb.items}/>
  </section>;
