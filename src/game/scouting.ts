@@ -117,7 +117,7 @@ export function scoutAI(g: Game, u: Unit, dt: number) {
     u.workReason="Scouting return needs a reachable camp, store or crossing";
     return true;
   }
-  if (u.stuckT > 8 || m.legs >= (journeyPermit(g,u.team,'explore')?.legs ?? 5) || reserveSeconds(g,u.team)<180) m.returning = true;
+  if (u.stuckT > 8 || m.legs >= (journeyPermit(g,u.team,'explore')?.legs ?? 5) || reserveSeconds(g,u.team)<(journeyPermit(g,u.team,'explore')?.recall??180)) m.returning = true;
   if (m.returning) {
     const homes=supplyDrops(g,u.team).sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z));
     const destination=homes.map(h=>({h,spot:supplyApproach(g,u,h)})).find(p=>p.spot);

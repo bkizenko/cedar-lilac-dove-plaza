@@ -42,6 +42,7 @@ import { cultivationIssue } from "./cultivation";
 import { encodeGame, decodeGame,validateGameSave } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
 import { BUILD_ORDER, BUILDINGS, TILE, SAVE_KEY } from "./constants";
+import { buildingHoverText } from "./buildingHoverText";
 import {slopeClassOf} from "./slopeTiers";
 import {turnedFootprint} from "./footprints";
 import { Game } from "./sim";
@@ -298,6 +299,8 @@ export class Engine {
   loggingMode = false;
   pointer = { x: 0, y: 0 };
   private nextHoverAt=0;
+  /** Hover card for a building under the cursor (era, condition, repair) via the plain `title`; empty when none. */
+  private hoverBuildingTitle(x:number,y:number){const hit=this.view.pickEntity(x,y,this.game);const b=hit?.kind==='building'?this.game.state.buildings.find(v=>v.id===hit.id):undefined;return b&&b.hp>0?buildingHoverText(b as never,BUILDINGS[b.type]?.name):"";}
   private onPointerLeave=()=>{this.view.hoveredUnitId=null;this.canvas.title="";};
   gateFacing:GateFacing="north";
   /** GW-08 / T8 (Grok): quarter-turn for the current placement; preview and commit both read it. */
@@ -602,7 +605,7 @@ export class Engine {
     this.pointer.y = p.y;
     const now=performance.now();
     if(this.game.state.placing||this.loggingMode||this.drag||this.panDrag||this.rotDrag)this.view.hoveredUnitId=null;
-    else if(now>=this.nextHoverAt){this.nextHoverAt=now+80;this.view.hoveredUnitId=this.view.hoverPerson(p.x,p.y,this.game);const animal=this.view.hoveredUnitId===null?this.view.pickWildlife(p.x,p.y,this.game):null;this.canvas.title=animal?(animal.hp>0?`Wild ${animal.species} · right-click with hunters to hunt`:`${animal.species} carcass · ${Math.ceil(animal.carcass?.meat||0)} raw meat remains`):"";}
+    else if(now>=this.nextHoverAt){this.nextHoverAt=now+80;this.view.hoveredUnitId=this.view.hoverPerson(p.x,p.y,this.game);const animal=this.view.hoveredUnitId===null?this.view.pickWildlife(p.x,p.y,this.game):null;this.canvas.title=animal?(animal.hp>0?`Wild ${animal.species} · right-click with hunters to hunt`:`${animal.species} carcass · ${Math.ceil(animal.carcass?.meat||0)} raw meat remains`):(this.view.hoveredUnitId===null?this.hoverBuildingTitle(p.x,p.y):"");}
     if (this.panDrag) {
       const dx = e.clientX - this.panDrag.x;
       const dy = e.clientY - this.panDrag.y;

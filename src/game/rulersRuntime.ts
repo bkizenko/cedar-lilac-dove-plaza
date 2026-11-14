@@ -464,11 +464,13 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
 export const ERA_TRADE_CARGO:Record<'band'|'chiefdom'|'state',number>={band:16,chiefdom:24,state:32};
 /** Era gating of exploration: the most survey legs one scout walks before turning home (a band ranges near its camp, a state keeps relay posts). Only a cap; nothing is created. */
 export const ERA_SCOUT_LEGS:Record<'band'|'chiefdom'|'state',number>={band:4,chiefdom:5,state:6};
-export type JourneyPermit={allow:boolean;reserve?:number;cadence?:number;cargo?:number;legs?:number;why:string[]};
+export type JourneyPermit={allow:boolean;reserve?:number;cadence?:number;cargo?:number;legs?:number;recall?:number;why:string[]};
+/** Scout provisioning by era (cap only, no goods): seconds of food a scout party must hold to leave, and the reserve at which it turns for home. A band packs by guess and turns back early; a state keeps stores and provisions the leg. */
+export const ERA_SCOUT_PROVISION:Record<'band'|'chiefdom'|'state',{launch:number;recall:number}>={band:{launch:450,recall:240},chiefdom:{launch:400,recall:200},state:{launch:360,recall:180}};
 export function journeyPermit(g:Game,team:number,kind:'explore'|'trade'|'raid',target?:number):JourneyPermit|null{
  const d=expansionOf(g,team);if(!d)return null;
  const org=ERA_REACH[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'].organised; // bands have no standing provisioning or market habit to speed up
- if(kind==='explore')return {allow:true,legs:ERA_SCOUT_LEGS[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'],reserve:d.mode==='explore'&&org?300:450,why:d.mode==='explore'&&org?d.why:[]};
+ if(kind==='explore')return {allow:true,legs:ERA_SCOUT_LEGS[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'],reserve:d.mode==='explore'&&org?300:ERA_SCOUT_PROVISION[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'].launch,recall:ERA_SCOUT_PROVISION[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'].recall,why:d.mode==='explore'&&org?d.why:[]};
  if(kind==='trade')return {allow:true,cargo:ERA_TRADE_CARGO[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'],cadence:Math.round((d.mode==='trade'&&org?60:120)*tradeCadenceBias(g,team)),why:d.mode==='trade'&&org?d.why:[]};
  const council=raidGate(g,team); // society decision layer: a strike leaves only under a raid plan, against the planned target
  if(council&&(!council.allow||(target!==undefined&&council.target!==target)))return {allow:false,why:[council.allow?'the council named another target':council.why]};
