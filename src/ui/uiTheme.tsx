@@ -5,7 +5,8 @@ import {useEffect,useSyncExternalStore} from 'react';
  * `classic` the original warm-brown palette on the previous interface. Archived, fully working. */
 export type UiTheme='hearth'|'field'|'classic';
 const KEY='hearthwild.ui.theme';
-const read=():UiTheme=>{try{const v=globalThis.localStorage?.getItem(KEY);return v==='classic'||v==='field'?v:'hearth';}catch{return 'hearth';}};
+/** The new interface is always used unless a review link asks for an archived one (?ui=classic|field). A saved Classic choice no longer applies, so old browsers cannot show the old HUD by accident. */
+const read=():UiTheme=>{try{const q=new URLSearchParams(globalThis.location?.search??'').get('ui');return q==='classic'||q==='field'?q:'hearth';}catch{return 'hearth';}};
 let current:UiTheme=read();
 const listeners=new Set<()=>void>();
 const apply=(t:UiTheme)=>{if(typeof document==='undefined')return;const r=document.documentElement;if(t==='hearth')delete r.dataset.hwUi;else r.dataset.hwUi=t;};
