@@ -232,16 +232,16 @@ export class BiomeSceneLayer {
  }
  /** `view` carries the draw-distance bands and a conservative frustum test; its `key` changes when the camera moved or turned enough to need a fresh far list. `prime` lifts the per-frame
   * time budget for generating filler chunks (first build after a world loads). Without `view` the original radii apply and no filler is drawn. */
- sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number,view?:{bands:DrawBands;inView?:(x:number,z:number,r:number)=>boolean;key?:string;prime?:boolean;detail?:TreeDetail}){
+ sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number,view?:{bands:DrawBands;/** floor (m) on how far trees are drawn: zooming out must never pull the tree edge in front of the visible ground */minFar?:number;inView?:(x:number,z:number,r:number)=>boolean;key?:string;prime?:boolean;detail?:TreeDetail}){
   this.treeIn-=Math.max(0,dt);this.dressingIn-=Math.max(0,dt);const detail=view?.detail,changed=quality!==this.lastQuality,treeChanged=changed||detail!==this.lastDetail||(view?.bands!==undefined&&view.bands!==this.lastBands)||(view?.key!==undefined&&view.key!==this.lastViewKey);this.lastQuality=quality;this.lastDetail=detail;this.lastBands=view?.bands??null;this.lastViewKey=view?.key??'';
   let treeReport:ReturnType<BiomeVegetation['sync']>|undefined,dressingCount:number|undefined,changedAgain=false;
   const context:VegetationContext={quality,detail:detail&&{nearMetres:detail.nearMetres,cardScale:detail.cardScale},camera,known:(x,z)=>game.exploredAt(x,z),marked:id=>game.chopMarks?.has(id)??false,...game.seasonMix()};
   if(this.treeIn<=0||treeChanged){
    const bands=view?.bands;
-   if(bands){const tb=detail?treeBudget(bands,detail.step):null,low=detail?1:quality==='low'?.6:1;context.farMetres=tb?tb.treeFar:bands.treeFar*low;context.fadeMetres=bands.fadeMetres;context.inView=view.inView;
+   if(bands){const tb=detail?treeBudget(bands,detail.step):null,low=detail?1:quality==='low'?.6:1;const floorFar=Math.min(bands.cameraFar*.92,view.minFar??0);context.farMetres=Math.max(floorFar,tb?tb.treeFar:bands.treeFar*low);context.fadeMetres=bands.fadeMetres;context.inView=view.inView;
     if(this.filler&&(tb?tb.fillerFar>0:bands.fillerFar>0)){
      this.filler.setSimTrees(game.state.trees);
-     const r=this.filler.collect(camera,{detail:tb?tb.fillerDetail:bands.fillerDetail*low,far:tb?tb.fillerFar:bands.fillerFar*low,fade:bands.fadeMetres,maxTrees:tb?tb.fillerMaxTrees:Math.floor(bands.fillerMaxTrees*(quality==='low'?.5:1)),maxBlobs:tb?tb.fillerMaxBlobs:Math.floor(bands.fillerMaxBlobs*(quality==='low'?.5:1)),buildMs:view.prime?Infinity:3,inView:view.inView,exclude:this.nearBuilding(game)},this.fillerOut);
+     const r=this.filler.collect(camera,{detail:tb?tb.fillerDetail:bands.fillerDetail*low,far:bands.fillerFar>0?Math.max(floorFar,tb?tb.fillerFar:bands.fillerFar*low):0,fade:bands.fadeMetres,maxTrees:tb?tb.fillerMaxTrees:Math.floor(bands.fillerMaxTrees*(quality==='low'?.5:1)),maxBlobs:tb?tb.fillerMaxBlobs:Math.floor(bands.fillerMaxBlobs*(quality==='low'?.5:1)),buildMs:view.prime?Infinity:3,inView:view.inView,exclude:this.nearBuilding(game)},this.fillerOut);
      context.filler={trees:this.fillerOut.trees,blobs:this.fillerOut.blobs,detailEff:r.detailEff,farEff:r.farEff};
      this.lastFiller={detailEff:r.detailEff,farEff:r.farEff,trees:this.fillerOut.trees.length,blobs:this.fillerOut.blobs.length,deferred:r.deferred,treeCapped:r.treeCapped,blobCapped:r.blobCapped};
      // chunks still being generated: look again next frame instead of waiting a full refresh
