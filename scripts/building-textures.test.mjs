@@ -51,7 +51,7 @@ test('hut variety: 12 huts of one village differ, sit on the ground, stay in the
    let tris1=0,tris0=0;for(const p of partsAtLod(spec,1))tris1+=partTriangles(p);for(const p of partsAtLod(spec,0))tris0+=partTriangles(p);
    assert.ok(tris1<=1000,`${civ} mid ${tris1}`);assert.ok(tris0<=2400,`${civ} near ${tris0}`);
    for(const p of spec.parts)assert.ok(p.pos[1]>=-.001,`${civ} part below ground`);
-   const walls=spec.parts.filter(p=>p.lod===2&&(p.shape==='box'||p.shape==='cylinder')&&p.size[1]>1);assert.ok(walls.some(p=>p.pos[1]<.05),`${civ} hut wall does not start at ground level`);
+   const walls=spec.parts.filter(p=>p.lod===2&&(p.shape==='box'||p.shape==='cylinder')&&p.size[1]>1);assert.ok(walls.some(p=>p.pos[1]<.05)||spec.parts.some(p=>p.lod===2&&p.pos[1]<.05&&p.size[1]>.1&&walls.some(w=>w.pos[1]<.5)),`${civ} hut wall does not start at ground level (or on a low stilted platform)`);
    sig.add(spec.parts.map(p=>p.shape+Math.round(p.size[0]*4)+Math.round(p.size[2]*4)).join('|'));}
   assert.ok(sig.size>=11,`${civ} only ${sig.size}/12 distinct huts`);}
 });

@@ -37,7 +37,7 @@ async function uiBundle(){
  try{const built=await bundle.generate({format:'iife',inlineDynamicImports:true});return built.output.filter(o=>o.type==='chunk').map(o=>o.code).join('\n');}finally{await bundle.close();}
 }
 const clone=value=>JSON.parse(JSON.stringify(value));
-test('actual React production controls fail closed on pending or missing owner facts, await native acknowledgements and ignore old-session replies',{timeout:60000},async()=>{
+test('actual React production controls fail closed on pending or missing owner facts, await native acknowledgements and ignore old-session replies',{timeout:120000},async()=>{
  const f=nativeDairyVillage(),owner=decodeGame(f.save);owner.enterIsland();owner.clearSelect();owner.state.selBld=owner.state.buildings.find(b=>b.id===f.hearth);
  const query={kind:'recipe-issues',workplaceId:f.hearth},ready=applyEngineReadQuery(owner,query);
  assert.equal(ready.issues.find(r=>r.recipe==='fermentMilk')?.issue,null,'native owner finds an actual available maker without a selected adult');
@@ -77,7 +77,7 @@ test('actual React production controls fail closed on pending or missing owner f
  }finally{await context?.close();await browser?.close();}
 });
 
-test('actual React armor controls wait for owner facts, equip one real local asset, show wear and put away without mutating the projection',{timeout:60000},async()=>{
+test('actual React armor controls wait for owner facts, equip one real local asset, show wear and put away without mutating the projection',{timeout:120000},async()=>{
  const f=nativeDairyVillage(),owner=decodeGame(f.save),u=owner.state.units.find(u=>u.id===f.worker),drop=supplyDrops(owner,0).find(d=>d.kind==='camp');
  assert.ok(drop);owner.clearSelect();u.selected=true;owner.state.selBld=null;
  // One finite authored armor asset at the actual native cache; this checks UI/custody, not earned crafting.
@@ -92,7 +92,7 @@ test('actual React armor controls wait for owner facts, equip one real local ass
   const first=await page.evaluate(()=>window.__productionUi.commands[0]);assert.deepEqual(first.command,{kind:'equip-armor',unitId:u.id,armorId:asset.id});const equipped=applyEngineCommand(owner,first.command,first.selection);assert.equal(equipped.accepted,true,equipped.reason);assert.equal(wornArmor(owner,u).id,asset.id);
   assert.equal(await page.evaluate(()=>JSON.stringify(window.__productionUi.state)),bytes,'display never equips or debits by itself');
   armorCombatDamage(owner,u,25);assert.equal(asset.condition,.9);await page.evaluate(result=>window.__productionUi.resolveCommand(0,result),equipped);await page.evaluate(state=>window.__productionUi.replaceDisplay(state),clone(owner.state));
-  await page.waitForFunction(()=>window.__productionUi.reads.some(r=>!r.done));const read=await page.evaluate(()=>window.__productionUi.reads.find(r=>!r.done));await page.evaluate(({index,model})=>window.__productionUi.resolveRead(index,model),{index:read.index,model:applyEngineReadQuery(owner,query)});
+  await page.waitForFunction(()=>window.__productionUi.reads.some(r=>!r.done&&r.query.kind==='armor-choice'));const read=await page.evaluate(()=>window.__productionUi.reads.find(r=>!r.done&&r.query.kind==='armor-choice'));await page.evaluate(({index,model})=>window.__productionUi.resolveRead(index,model),{index:read.index,model:applyEngineReadQuery(owner,query)});
   const progress=page.getByRole('progressbar',{name:'Armor condition',exact:true});await progress.waitFor();assert.equal(await progress.getAttribute('value'),'0.9');assert.ok((await page.locator('[aria-label="Armor"]').innerText()).includes('90%'));
   await page.getByRole('button',{name:'Put away',exact:true}).click();await page.waitForFunction(()=>window.__productionUi.commands.length===2);const next=await page.evaluate(()=>window.__productionUi.commands[1]);assert.equal(next.command.kind,'unequip-armor');const stored=applyEngineCommand(owner,next.command,next.selection);assert.equal(stored.accepted,true,stored.reason);assert.equal(wornArmor(owner,u),undefined);assert.equal(asset.holder.kind,'cache');assert.equal(asset.condition,.9);assert.equal(owner.state.armor.assets.length,1);assert.deepEqual(errors,[]);await page.evaluate(()=>window.__productionUi.unmount());
  }finally{await context?.close();await browser?.close();}

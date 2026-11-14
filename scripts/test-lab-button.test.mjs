@@ -13,7 +13,7 @@ test('setting defaults off, survives throwing storage',()=>{
  assert.doesNotThrow(()=>writeTestLabButton(true,{setItem:()=>{throw new Error('blocked');}}));
 });
 test('main HUD wires a Test lab button that starts the session and opens the panel',()=>{
- assert.match(hud,/showTestLab&&<button[\s\S]*?className="hw-testlab"[\s\S]*?startTestSession\(\)[\s\S]*?setTest\(true\)/);
+ assert.match(hud,/showTestLab&&<Foldable[\s\S]*?<button[\s\S]*?className="hw-testlab"[\s\S]*?startTestSession\(\)[\s\S]*?setTest\(true\)/);
  assert.match(hud,/<span>Test lab<\/span>/);
 });
 test('Menu keeps Test lab and offers the setting',()=>{
