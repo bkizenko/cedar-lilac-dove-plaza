@@ -49,7 +49,8 @@ import {CARVED_TYPES} from './buildingStyleMap';
 import {villageHeraldry} from './villageIdentity';
 import {facesPlaza,nearestAnchor,plazaQuarterTurns} from './placementFacing';
 import {lineIndex,joinMaskFor,LINE_OF_TYPE,waterSideFor} from './carvedLines';
-import {fabricContext} from '@/game/buildingFabric';
+import {fabricContext,supportsEraUpgrade} from '@/game/buildingFabric';
+import {growthView} from '@/game/buildingGrowth';
 import {hearthHeating} from '@/game/survivalNeeds';
 import {towerPlatformGeos,towerPlatformGeometryKey} from './towerPlatformKit';
 import type {TowerPlatform} from '../game/towerPlatforms';
@@ -345,6 +346,8 @@ export class WorldView {
   private fieldSurface: FieldSurface | null = null;
   buildingSyncIn=0;
   private synchronizedState:Game["state"]|null=null;
+  /** Smoothed visual growth scale per building id so a completed upgrade eases in rather than popping. */
+  growthSmooth = new Map<number,number>();
   buildingInstances = new Map<THREE.Object3D, import("@/game/types").Building[]>();
   cargoMeshes = new Map<ResKind, THREE.InstancedMesh>();
   haulageMeshes = new Map<HaulageKind, THREE.InstancedMesh>();
@@ -2053,16 +2056,19 @@ export class WorldView {
           continue;
         }
         const scalable=type==="farm"||modular;
-        const write=(part:'timber'|'roof'|'extra',x:number,z:number,sx:number,sz:number)=>{
+        const grow=!scalable&&!fort&&type!=='pen'&&!b.bridge&&b.build>=1&&supportsEraUpgrade(type)?growthView(b):null;
+        let gs=1;if(grow){const cur=this.growthSmooth.get(b.id)??grow.scale;gs=Math.abs(cur-grow.scale)<.002?grow.scale:cur+(grow.scale-cur)*.06;this.growthSmooth.set(b.id,gs);}
+        const write=(part:'timber'|'roof'|'extra',x:number,z:number,sx:number,sz:number,pg=gs,lift=0)=>{
           const mesh=meshes[part];if(!mesh||!mesh.geometry.getAttribute('position')?.count||counts[part]>=instCap(mesh))return;
           const wx=b.x+x,wz=b.z+z;
           const ground=type==="farm"||type==='pen'?game.height(wx,wz):foundationProfile(game,b).level;
-          _p.set(wx,ground,wz);
+          _p.set(wx,ground+lift,wz);
           const terrainWork=type==="dock",limit=.2;
           const pitch=terrainWork?Math.max(-limit,Math.min(limit,Math.atan((game.height(wx,wz+2)-game.height(wx,wz-2))/4))):0;
           const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(wx+2,wz)-game.height(wx-2,wz))/4))):0;
           _e.set(pitch,type==='gate'?gateOrientation(b.gateFacing).yawRadians:fort||scalable||type==='pen'?0:st.yaw+buildingQuarterTurns(b)*Math.PI/2,roll);
           _s.set(scalable?sx:fort||type==='pen'?1:st.sx,ys*(scalable||fort||type==='pen'?1:st.sy),scalable?sz:fort||type==='pen'?1:st.sz);
+          if(pg!==1){_s.x*=pg;_s.y*=pg;_s.z*=pg;}
           if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_p.y=Math.max((game.height(span.ax,span.az)+game.height(span.bx,span.bz))/2+.18,game.waterAt((span.ax+span.bx)/2,(span.az+span.bz)/2)+.6);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
           if(part!=="timber"){
             if(b.build<.55||(type==="gate"&&b.gateOpen))_s.set(.001,.001,.001);
@@ -2092,7 +2098,14 @@ export class WorldView {
           write('timber',0,0,b.w/BUILDINGS.farm.w,b.d/BUILDINGS.farm.d);
           // A marked/planted plot has no roof building or free tool/storage shed.
           if(!this.contourFields)for(const m of plotModules(b))write('extra',m.x,m.z,m.sx,m.sz);
-        }else for(const part of ['timber','roof','extra'] as const)write(part,0,0,1,1);
+        }else{
+          for(const part of ['timber','roof','extra'] as const)write(part,0,0,1,1);
+          // Growth pieces: a smaller wing beside the original, and an extra storey stacked on top, shown once the stage is reached.
+          if(grow&&gs>1.001){
+            if(grow.wing)for(const part of ['timber','roof'] as const)write(part,b.w*.55*gs,0,1,1,gs*.62);
+            if(grow.extraStoreys>0)for(const part of ['timber','roof'] as const)write(part,0,0,1,1,gs*.8,2.6*gs*.8);
+          }
+        }
       }
       for(const part of ['timber','roof','extra'] as const){const mesh=meshes[part];if(!mesh)continue;mesh.count=counts[part];mesh.instanceMatrix.needsUpdate=true;const art=mesh.geometry.getAttribute('buildingArt')as THREE.InstancedBufferAttribute|undefined;if(art)art.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;}
     }

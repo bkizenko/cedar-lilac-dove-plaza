@@ -8,7 +8,7 @@ import {SURVIVAL_RULES,ambientTemperature} from './survivalNeeds';
 export type ClothingSeason='cold'|'mild'|'hot';
 export type ClothingMaterial='hide'|'wool'|'linen';
 export type ClothingNeed={residents:number;without:number;worn:number;season:ClothingSeason;material:ClothingMaterial;kind:GarmentKind;recipe:string;chain:string[];inStock:number;sewn:boolean;summary:string};
-export const CLOTHING_RULES={/** Degrees above the cold threshold still counted as a cold season. */coldMargin:6,/** Era (tribe age) from which wool is the cold-weather cloth. */woolAge:1} as const;
+export const CLOTHING_RULES={/** Degrees above the cold threshold still counted as a cold season. */coldMargin:6,/** Era (tribe age) from which wool is the cold-weather cloth. */woolAge:1,/** Share of normal cold recovery kept by a resident with no serviceable garment in a cold season. */unclothedRecoveryFactor:.4} as const;
 const CHAINS:Record<ClothingMaterial,{kind:GarmentKind;recipe:string;chain:string[]}>={
  hide:{kind:'hideCoat',recipe:'sewHideCoat',chain:['fleshHide','tanHide','sewHideCoat']},
  wool:{kind:'woolCoat',recipe:'sewWoolCoat',chain:['washWool','spinWool','weaveWool','sewWoolCoat']},

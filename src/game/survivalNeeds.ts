@@ -9,6 +9,7 @@ import{herdWaterDemand}from'./penWater';
 import {scoutIndependentNeeds} from './scoutProvisions';
 import{waterVesselCapacity,wearWaterVessel}from'./pottery';
 import {coastalIndependentNeeds} from './coastalTrade';
+import {CLOTHING_RULES} from './clothingNeed';
 import {clothingWarmth,PRODUCTION_RECIPES} from './production';
 import {campMoveIndependentNeeds} from './nomadicCamp';
 import {societyMissionIndependentNeeds} from './rivalActivity';
@@ -308,7 +309,9 @@ export function tickSurvival(g:Game,dt:number){
    if(u.garment)tickGarmentHeat(u,localTemp,dt);
    const effective=localTemp+clothingWarmth(u)+fire*rules.fireWarmthCelsius+shelterWarmth(g,u);
    const exposure=Math.max(0,Math.min(2,(rules.coldThresholdCelsius-effective)/6)),before=u.coldSeconds??0;
-   u.coldSeconds=Math.max(0,before+dt*(exposure>0?exposure:-rules.recoverySecondsPerSecond));stock.coldExposurePersonSeconds+=dt*exposure;
+   // G7: without a serviceable garment in a cold season, chill lingers (slower recovery) even when not yet in danger.
+   const unclothedChill=exposure<=0&&!(u.garment&&u.garment.condition>0)&&localTemp<rules.coldThresholdCelsius+CLOTHING_RULES.coldMargin?CLOTHING_RULES.unclothedRecoveryFactor:1;
+   u.coldSeconds=Math.max(0,before+dt*(exposure>0?exposure:-rules.recoverySecondsPerSecond*unclothedChill));stock.coldExposurePersonSeconds+=dt*exposure;
    const coldDamage=Math.max(0,u.coldSeconds-rules.coldGraceSeconds)-Math.max(0,before-rules.coldGraceSeconds);
    if(coldDamage>0)u.hp-=coldDamage*u.maxHp/rules.coldFatalExposureSeconds;
   }

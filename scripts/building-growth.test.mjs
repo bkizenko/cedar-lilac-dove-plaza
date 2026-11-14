@@ -16,3 +16,6 @@ test('the next stage is gated by population, era and resources',()=>{
  assert.match(growthReadiness(b,{...ok,wood:1}),/wood/);
  assert.equal(growthReadiness({fabric:{upgrades:Array(3).fill(up('rebuild'))}},ok),'Fully grown');
 });
+test('growth guidance text avoids numbered levels',()=>{
+ for(const s of[{},{fabric:{upgrades:[up('rebuild')]}}]){const r=growthReadiness(s,{population:0,wood:0,stone:0,era:0});assert.doesNotMatch(r,/level/i);}
+});

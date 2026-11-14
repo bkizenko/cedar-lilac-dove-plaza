@@ -14,3 +14,13 @@ test('residents without a serviceable garment are counted and shrink as they are
  people[0].garment.condition=0;assert.equal(clothingNeed(g,0,-5).without,people.length,'a worn-out garment does not count');
  for(const u of people)u.garment={item:'woolCoat',condition:1};assert.equal(clothingNeed(g,0,-5).summary,'Everyone is clothed');
 });
+test('an unclothed resident recovers from cold more slowly than a clothed one in a cold season',async()=>{
+ const{tickSurvival,ambientTemperature}=await import('../src/game/survivalNeeds.ts');
+ const g=new Game();g.reset(7,10);g.enterIsland();g.state.survivalVersion=1;
+ const[a,b]=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker');
+ a.coldSeconds=100;b.coldSeconds=100;b.garment={item:'woolCoat',condition:1};
+ g.state.units=g.state.units.filter(u=>u.team!==0||u===a||u===b);
+ const t=ambientTemperature(g);if(t>=12)return;
+ tickSurvival(g,1);
+ assert.ok(a.coldSeconds>=b.coldSeconds,'unclothed keeps at least as much chill');
+});

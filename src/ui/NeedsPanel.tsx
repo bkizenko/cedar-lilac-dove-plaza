@@ -2,6 +2,7 @@ import {useState} from 'react';
 import {Droplets,Flame,Wind,ChevronDown} from 'lucide-react';
 import type {Engine} from '../game/engine';
 import {isDependent} from '../game/settlement';
+import {clothingNeed} from '../game/clothingNeed';
 import {survivalStatus,beginWaterCollection,waterCollectionIssue} from '../game/survivalNeeds';
 
 export function reserveLabel(seconds:number){
@@ -17,6 +18,7 @@ export function NeedsPanel({engine,expanded=false}:{engine:Engine;expanded?:bool
  const [open,setOpen]=useState(false);
  const g=engine.game,status=survivalStatus(g);
  if(!status.enabled)return null;
+ const clothing=clothingNeed(g,0);
  const residue=status.residueFuel,hasResidue=residue.availableWoodEquivalent>0,quantity=(n:number)=>Number(n.toFixed(1)),fuelLabel=`${Math.floor(status.fuel)} logs${hasResidue?' + residues':''}`;
  const blocked=g.state.ended?'The chapter has ended':null;
  const waterIssue=blocked||((expanded||open)?waterCollectionIssue(g):null);
@@ -37,6 +39,7 @@ export function NeedsPanel({engine,expanded=false}:{engine:Engine;expanded?:bool
    <div><dt className="text-parchment-dim">Fuel in stores</dt><dd className="font-medium">{fuelLabel} · {reserveLabel(status.fuelSeconds)}</dd><dd>{status.fuelWorkers} gathering timber</dd>{(hasResidue||residue.strawReserved>0)&&<dd className="text-parchment-dim">{quantity(residue.chaff)} chaff · {quantity(residue.straw)} straw · {quantity(residue.strawReserved)} straw reserved</dd>}</div>
   </dl>
   <p className="text-parchment-dim" title="Shelter and fuel help recovery">{status.temp}°C · {status.coldResidents?`${status.coldResidents} cold`:'warm'} · {status.sheltered} sheltered</p>
+  {clothing.residents>0&&<p className={clothing.without&&clothing.season==='cold'?'text-blood':'text-parchment-dim'} aria-label="Clothing" title={`Made from: ${clothing.chain.join(' → ')}`}>{clothing.summary}{clothing.without>0&&clothing.inStock>0?` · ${clothing.inStock} sewn and waiting`:''}</p>}
   {status.warnings.length>0&&<ul className="space-y-1 text-blood" aria-label="Survival warnings">{status.warnings.map(warning=><li key={warning}>{warning}</li>)}</ul>}
   <div className="grid grid-cols-2 gap-2">
    <div><button type="button" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze/40 bg-ink-soft px-2 py-2 disabled:opacity-50" disabled={!!waterIssue} title={waterIssue||'Send a resident to collect and carry water home'} onClick={collectWater}><Droplets className="size-4"/>Collect water</button>{waterIssue&&<p className="mt-1 text-parchment-dim">{waterIssue}</p>}</div>
