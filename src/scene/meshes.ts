@@ -20,6 +20,18 @@ function box(w: number, h: number, d: number, x: number, y: number, z: number, r
   return g;
 }
 
+/** Bridge, span along Z (12 long, 5.2 wide), deck top at y=0: plank deck with gaps, stringers, rails, posts and end piers. */
+function bridgeParts(){
+  const parts:THREE.BufferGeometry[]=[box(5.2,.14,12,0,-.34,0),box(.22,.3,12,-2.1,-.3,0),box(.22,.3,12,2.1,-.3,0)];
+  for(let i=0;i<24;i++)parts.push(box(4.8,.1,.42,0,-.1,-5.75+i*.5));
+  for(const sx of [-1,1]){
+    parts.push(box(.1,.1,12,sx*2.45,.8,0),box(.08,.08,12,sx*2.45,.38,0));
+    for(let i=0;i<=6;i++)parts.push(box(.16,.95,.16,sx*2.45,-.02,-5.9+i*1.97));
+  }
+  for(const sz of [-1,1])for(const sx of [-1.9,1.9])parts.push(box(.34,1.6,.34,sx,-1.5,sz*5.2));
+  return parts;
+}
+
 function cyl(rt: number, rb: number, h: number, x: number, y: number, z: number, segs = 8) {
   const g = new THREE.CylinderGeometry(rt, rb, h, segs);
   g.translate(x, y + h / 2, z);
@@ -262,7 +274,7 @@ export function buildingGeos(): Record<BldType, BldGeo> {
     lumber: { timber: merge(lumberT), roof: merge(lumberR) },
     workshop: {timber:merge([box(3.8,.2,1.5,0,1.0,0),box(.3,1,.3,-1.5,0,0),box(.3,1,.3,1.5,0,0),box(.2,2.5,.2,-2,0,-1.5),box(.2,2.5,.2,2,0,-1.5)]),roof:merge([box(5,.15,4,0,2.5,0,.12)])},
     dock: { timber: merge(dockT), roof: merge(dockR) },
-    bridge: {timber:merge([box(5.2,.25,12,0,-.25,0),box(.2,.9,12,-2.5,0,0),box(.2,.9,12,2.5,0,0)]),roof:merge([box(.1,.1,.1,0,0,0)])},
+    bridge: {timber:merge(bridgeParts()),roof:merge([box(.1,.1,.1,0,0,0)])},
     quarry: { timber: merge(quarryT), roof: merge([box(0.1, 0.1, 0.1, 0, 0, 0)]), extra: merge(quarryE), extraMat: "stone" },
     warehouse: { timber: merge(wareT), roof: merge(wareR), extra:merge([
       box(1.2,1.5,.12,0,.02,2.34),box(.7,.55,.12,-1.8,.9,2.34),

@@ -2060,7 +2060,7 @@ export class WorldView {
           const roll=terrainWork?Math.max(-limit,Math.min(limit,-Math.atan((game.height(wx+2,wz)-game.height(wx-2,wz))/4))):0;
           _e.set(pitch,type==='gate'?gateOrientation(b.gateFacing).yawRadians:fort||scalable||type==='pen'?0:st.yaw+buildingQuarterTurns(b)*Math.PI/2,roll);
           _s.set(scalable?sx:fort||type==='pen'?1:st.sx,ys*(scalable||fort||type==='pen'?1:st.sy),scalable?sz:fort||type==='pen'?1:st.sz);
-          if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
+          if(b.bridge){const span=b.bridge,len=Math.hypot(span.bx-span.ax,span.bz-span.az);_p.y=Math.max((game.height(span.ax,span.az)+game.height(span.bx,span.bz))/2+.18,game.waterAt((span.ax+span.bx)/2,(span.az+span.bz)/2)+.6);_e.set(-Math.atan2(game.height(span.bx,span.bz)-game.height(span.ax,span.az),len),Math.atan2(span.bx-span.ax,span.bz-span.az),0);_s.set(1,ys,len/12);}
           if(part!=="timber"){
             if(b.build<.55||(type==="gate"&&b.gateOpen))_s.set(.001,.001,.001);
             else if(type!=="farm"&&type!=="pen"&&!["market","temple","university","house"].includes(type))_s.y*=identity.roofHeight*(fort?1:character.roofHeight);
@@ -2568,7 +2568,7 @@ export class WorldView {
     const carved=this.carvedGhostInput(type,x,z,quarterTurn,size,bridge,towerPlatform,turns);
     this.ghost.position.set(x, carved?carved.y:y, z);
     this.ghost.rotation.set(0,carved?carved.yaw:type==='gate'?gateOrientation(gateFacing).yawRadians:turns*Math.PI/2,0);this.ghost.scale.set(1,1,1);
-    if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.position.set((bridge.ax+bridge.bx)/2,y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
+    if(bridge){const len=Math.hypot(bridge.bx-bridge.ax,bridge.bz-bridge.az),gg=this.ghostGame;this.ghost.position.set((bridge.ax+bridge.bx)/2,gg?Math.max((gg.height(bridge.ax,bridge.az)+gg.height(bridge.bx,bridge.bz))/2+.18,gg.waterAt((bridge.ax+bridge.bx)/2,(bridge.az+bridge.bz)/2)+.6):y,(bridge.az+bridge.bz)/2);this.ghost.rotation.y=Math.atan2(bridge.bx-bridge.ax,bridge.bz-bridge.az);this.ghost.scale.z=len/12;}
     const qualityStep = quality === undefined ? null : Math.round(quality*10)/10;
     const carvedVariant=carved?carvedVariantFor(carved.input):null;
     const key = type + (ok ? "-ok" : "-bad") + qualityStep+JSON.stringify(size)+(type==='watchtower'&&towerPlatform?towerPlatformGeometryKey(towerPlatform):'')+(carvedVariant?`|${carvedVariant.key}|${Math.round(carved!.y*20)}|${Math.round(x*2)},${Math.round(z*2)}|${carved!.fake.site?.foundation??''}`:'');
