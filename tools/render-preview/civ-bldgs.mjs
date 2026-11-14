@@ -11,17 +11,18 @@ function civMesh(spec) {
     for (let i = 0; i < n; i++, v++) { const a = m.colors[v * 3] || 1; colors[v * 3] = c[0]; colors[v * 3 + 1] = c[1]; colors[v * 3 + 2] = c[2]; mats[v] = MAT.plaster ?? 0; } }
   return { ...m, colors, mats };
 }
-export const civBuildingsScene = (civs = ['mekhari', 'sandrill'], mourn = false) => async ({ rig }) => {
+export const civBuildingsScene = (civs = ['mekhari', 'sandrill'], mourn = false, ruler = false) => async ({ rig }) => {
   const soup = new Soup('buildings'), base = new Soup('plinths'), labels = [], cw = 16, rd = 20;
   base.add(slab(cw * 4 + 6, civs.length * rd + 6, .6, palette.CARVED_TERRAIN.bands[0], .5), { x: 0, z: 0 });
   civs.forEach((civ, row) => {
     const z = -civs.length * rd / 2 + rd * (row + .5);
-    (mourn === 'worn' ? [['original', 'house'], ['original', 'house', 2], ['original', 'civic'], ['original', 'civic', 2]] : mourn ? [['original', 'house'], ['original', 'house', 1], ['original', 'civic'], ['original', 'civic', 1]] : [['original', 'house'], ['original', 'civic'], ['legacy', 'house'], ['legacy', 'civic']]).forEach(([gs, role, mo], c) => {
+    (ruler ? [['original', 'house'], ['original', 'house', 3], ['original', 'house', 4], ['original', 'house', 5]] : mourn === 'worn' ? [['original', 'house'], ['original', 'house', 2], ['original', 'civic'], ['original', 'civic', 2]] : mourn ? [['original', 'house'], ['original', 'house', 1], ['original', 'civic'], ['original', 'civic', 1]] : [['original', 'house'], ['original', 'civic'], ['legacy', 'house'], ['legacy', 'civic']]).forEach(([gs, role, mo], c) => {
       cb.setGrammarSet(gs);
-      const spec = cb.generateCivBuilding(civ, role, { seed: 11 + row, era: mourn === 'worn' ? 5 : 3, wealth: mourn === 'worn' ? 1 : .6, wear: mo === 2 ? .95 : .1, ...(mo === 1 ? { mourning: true } : {}), footprint: role === 'house' ? { w: 8, d: 7 } : { w: 14, d: 9 } }, ['civ', civ, role, gs, row, mo ? 'mourn' + mo : ''].join('|'));
+      const spec = cb.generateCivBuilding(civ, role, { seed: ruler ? 3 * (mo ?? 1) + row : 11 + row, era: ruler ? 0 : mourn === 'worn' ? 5 : 3, wealth: ruler ? .3 : mourn === 'worn' ? 1 : .6, wear: mo === 2 ? .95 : .1, ...(mo === 1 ? { mourning: true } : {}), footprint: role === 'house' ? { w: 8, d: 7 } : { w: 14, d: 9 } }, ['civ', civ, role, gs, row, mo ? 'mourn' + mo : ''].join('|'));
       const x = -cw * 2 + cw * (c + .5);
       soup.add(civMesh(spec), { x, y: .3, z, yaw: -.5 });
-      labels.push({ world: [x - 5, .3, z + 8], text: `${civ} ${role} (${mo === 2 ? 'worn' : mo ? 'mourning' : gs})`, align: 'left', size: 10 });
+      if (ruler) soup.add(specMesh({ ...spec, parts: [{ shape: 'box', mat: 'plaster', size: [.5, 1.65, .5], pos: [0, 0, 0], lod: 0 }] }, 0), { x: x + 3.4, y: .3, z: z + 4.2, yaw: 0 }); // 1.65 m adult-height ruler
+      labels.push({ world: [x - 5, .3, z + 8], text: `${civ} ${role} (${ruler ? '1.65 m ruler' : mo === 2 ? 'worn' : mo ? 'mourning' : gs})`, align: 'left', size: 10 });
     });
   });
   cb.setGrammarSet('original');
