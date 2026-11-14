@@ -20,3 +20,12 @@ test('Hearth primary buttons: ink on gold meets AA',()=>{
 test('Hearth parchment sheets: ink on parchment meets AAA',()=>{
  for(const p of ['hw-parch','hw-parch-2'])assert.ok(ratio(tok['hw-ink'],tok[p])>=7,`ink on ${p}`);
 });
+// Dusk palette variant (palette.css) keeps the same AA floor.
+const pcss=readFileSync(new URL('../src/ui/hearth/palette.css',import.meta.url),'utf8');
+const dusk=Object.fromEntries([...pcss.match(/\[data-hw-pal="dusk"\]\{([\s\S]*?)\n\}/)[1].matchAll(/--(hw-[\w-]+):(#[0-9a-f]{6})/gi)].map(m=>[m[1],m[2]]));
+test('Hearth Dusk palette meets AA on every panel stop and keeps AAA ink on parchment',()=>{
+ for(const fg of ['hw-text','hw-dim','hw-gold','hw-gold-2','hw-good','hw-bad','hw-warn','hw-water'])
+  for(const bg of ['hw-wood-700','hw-wood-800','hw-wood-900'])assert.ok(ratio(dusk[fg],dusk[bg])>=4.5,`dusk ${fg} on ${bg} = ${ratio(dusk[fg],dusk[bg]).toFixed(2)}`);
+ for(const g of ['hw-gold','hw-gold-2'])assert.ok(ratio(dusk['hw-gold-ink'],dusk[g])>=4.5,`dusk ink on ${g}`);
+ for(const p of ['hw-parch','hw-parch-2'])assert.ok(ratio(dusk['hw-ink'],dusk[p])>=7,`dusk ink on ${p}`);
+});

@@ -1,0 +1,21 @@
+/* Hearth palette variants, chosen per viewer in Settings > Interface (data-hw-pal on <html>).
+ * "warm" is the default and has no rules here. "dusk" is a cooler, higher-contrast, roomier reading of the
+ * same layout: slate-ink surfaces, brighter text, a clearer gold accent, a slightly larger type scale.
+ * Scoped to the Hearth interface only; the archived Field/Classic HUDs never see it. */
+:root:not([data-hw-ui])[data-hw-pal="dusk"]{
+ --hw-wood-950:#0d1218; --hw-wood-900:#141b24; --hw-wood-800:#1c2631; --hw-wood-700:#283544; --hw-wood-600:#38485b;
+ --hw-line:rgba(206,224,244,.22); --hw-line-strong:rgba(206,224,244,.45);
+ --hw-parch:#f3efe4; --hw-parch-2:#e4ddca; --hw-ink:#1a1f27;
+ --hw-text:#f6f8fb; --hw-dim:#c9d4e2;
+ --hw-gold:#f0b84e; --hw-gold-2:#ffd98a; --hw-gold-ink:#1a1f27;
+ --hw-good:#9fe0a6; --hw-bad:#ff9d8a; --hw-warn:#ffd36b; --hw-water:#8fd3ee;
+ --hw-fs-s:15px; --hw-fs:17px; --hw-fs-m:19px; --hw-fs-l:24px; --hw-fs-xl:32px;
+ --hw-r-s:8px; --hw-r-m:12px; --hw-r-l:18px;
+ --hw-panel:linear-gradient(180deg,var(--hw-wood-700),var(--hw-wood-800));
+ --hw-shadow:0 1px 0 rgba(0,0,0,.4),0 12px 30px rgba(3,8,14,.55),inset 0 1px 0 rgba(220,236,255,.08);
+ --color-ink:var(--hw-wood-900); --color-ink-soft:var(--hw-wood-700); --color-ink-panel:var(--hw-wood-800);
+ --color-parchment:var(--hw-text); --color-parchment-dim:var(--hw-dim);
+ --color-bronze:#f0b84e; --color-bronze-bright:var(--hw-gold-2); --color-blood:var(--hw-bad); --color-ok:var(--hw-good); --color-dawn:#ffd9a8;
+}
+:root:not([data-hw-ui])[data-hw-pal="dusk"] .hw-res li:nth-child(3) svg{color:#dfe6ef}
+:root:not([data-hw-ui])[data-hw-pal="dusk"] .hw-tile.is-on{background:rgba(240,184,78,.2)}
