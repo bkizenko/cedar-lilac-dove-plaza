@@ -598,3 +598,8 @@
 .hw-tabs{align-items:center}
 .hw-tabs .hw-tray-x{margin-left:auto;flex:none;display:grid;place-items:center;width:44px;height:44px;min-height:44px;padding:0;border:1px solid var(--hw-line-strong);border-radius:10px;background:transparent;color:inherit;cursor:pointer}
 .hw-tabs .hw-tray-x:hover,.hw-tabs .hw-tray-x:focus-visible{background:rgba(255,236,190,.12)}
+
+/* Test lab: a small centred tab under the top bar, clear of the left rail and the build/selection panels */
+.hw-testlab,.hw-testlab-fold{left:50%!important;top:84px!important;transform:translateX(-50%)}
+.hw-testlab-fold>.hw-testlab{left:auto!important;top:auto!important;transform:none}
+@media (max-width:760px){.hw-testlab,.hw-testlab-fold{top:70px!important}}

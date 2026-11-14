@@ -62,16 +62,14 @@ export function SeasonReport({game,hidden=false}:{game:Game;hidden?:boolean}) {
    setNotice({game,season:latest.season});
   }
  },[game,latest?.season]);
+ useEffect(()=>{if(!notice)return;const t=window.setTimeout(()=>setNotice(undefined),12000);return()=>window.clearTimeout(t);},[notice]);
  if(hidden||!latest||!notice||notice.game!==game||notice.season!==latest.season)return null;
- const prior=!latest.partial?history?.find(row=>row.season===latest.season-4&&!row.partial):undefined;
- return <aside className="hud-panel w-[23rem] max-w-full rounded-lg p-3 space-y-2 text-xs" aria-label="Village seasonal report">
+ // The toast is a glance, not a ledger: what came in this season in plain words. Full tables live in the Production ledger.
+ const short:[string,number][]=([['Food',latest.totals.food],['Logs',latest.totals.wood],['Stone',latest.totals.stone]] as [string,number][]).filter(([,n])=>n>0);
+ return <aside className="hud-panel w-[18rem] max-w-full rounded-lg p-3 text-xs" aria-label="Village seasonal report">
   <div className="flex items-center justify-between gap-3"><strong>{period(latest.season)} ended</strong>
-   <button type="button" className="px-2 py-1" onClick={()=>setNotice(undefined)}>Dismiss</button></div>
-  {latest.partial&&<p>Recording started partway through the season.</p>}
-  {prior&&<p className="text-parchment-dim">Change from {period(prior.season)}</p>}
-  <Totals row={latest} prior={prior}/>
-  <FoodFlow row={latest}/>
-  <p className="text-xs text-parchment-dim">Ready food excludes raw grain and fish. Nourishment includes bread’s 20% bonus. Gross receipts include intermediate products. * Partial recording.</p>
+   <button type="button" className="min-h-9 px-2 py-1" onClick={()=>setNotice(undefined)}>Dismiss</button></div>
+  <p className="mt-1">{short.length?short.map(([k,n])=>`${k} ${units(n)}`).join(' · '):'A quiet season.'}</p>
  </aside>;
 }
 
