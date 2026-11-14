@@ -30,7 +30,7 @@ export function waterDays(g:Game):number|null{
 /** Foes the player can currently see within raider range of the hall or any own resident, nearest to home first. */
 export function visibleRaiders(g:Game){
  const home=g.campOf(0),mine=residents(g);
- return g.state.units.filter(u=>u.hp>0&&u.team!==0&&g.isFoe(0,u.team)&&g.visibleAt(u.x,u.z)&&(Math.hypot(u.x-home.x,u.z-home.z)<=RAIDER_SIGHT_METERS||mine.some(m=>Math.hypot(u.x-m.x,u.z-m.z)<=RAIDER_SIGHT_METERS/2)))
+ return g.state.units.filter(u=>u.hp>0&&u.team!==0&&g.isFoe(0,u.team)&&!u.visit&&!(u.caravanArmed&&u.carry>0)&&!u.envoy&&g.visibleAt(u.x,u.z)&&(Math.hypot(u.x-home.x,u.z-home.z)<=RAIDER_SIGHT_METERS||mine.some(m=>Math.hypot(u.x-m.x,u.z-m.z)<=RAIDER_SIGHT_METERS/2)))
   .sort((a,b)=>Math.hypot(a.x-home.x,a.z-home.z)-Math.hypot(b.x-home.x,b.z-home.z));
 }
 
