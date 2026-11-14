@@ -44,7 +44,7 @@ export function advanceRulers(g:Game){
  sampleClimate(g,r);
  if(decisionsEnabled(g))beginCivic(g); // M2-14: prehistory recorded once at the start (cheap no-op afterwards)
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){const genBefore:Record<string,number>={};for(const [k,v] of Object.entries(s.rulers!.societies))genBefore[k]=v.dynasty.generation;s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));tutorWards(g);settleWards(g);settleOrphans(g);fadeGrudges(g,genBefore);npcMarriages(g);expireClaims(g);harvestGathering(g);sendRefugees(g);rivalBloodPrice(g);tributeLapse(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
+ while(s.rulers!.year<target&&guard++<4){const genBefore:Record<string,number>={};for(const [k,v] of Object.entries(s.rulers!.societies))genBefore[k]=v.dynasty.generation;s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));tutorWards(g);settleWards(g);settleOrphans(g);fadeGrudges(g,genBefore);npcMarriages(g);npcKinPledges(g);expireClaims(g);harvestGathering(g);sendRefugees(g);rivalBloodPrice(g);tributeLapse(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -199,6 +199,22 @@ export function npcMarriages(g:Game):[number,number][]{
  const ids=g.state.tribes.map((_,i)=>i).filter(i=>i!==0&&i!==3&&!!g.tribe(i)),out:[number,number][]=[];
  for(const a of ids){const b=ids.find(x=>x>a&&!societyRelation(g,a,x).hostile&&societyRelation(g,a,x).known&&societyRelation(g,x,a).known);
   if(b!==undefined&&marryHouses(g,a,b))out.push([a,b]);}
+ return out;
+}
+
+/** Rival houses pledge kin to each other (lane A: fosterage and hostages for NPCs, same exchangeKin path as the player commands). Dynastic year %8==2
+ * houses foster a child each, year %8==6 uneasy neighbours (no marriage-grade trust yet) trade a hostage kinsman. Both houses need the scale feature,
+ * be mutually known and not at war, and have no ward between them already; each house joins at most one pledge a year. Never touches the player
+ * or the wild team. Children and kin stay in their dynasty records and are only listed as wards (no teleporting, nothing created). */
+export function npcKinPledges(g:Game):[number,number,'fosterage'|'hostageExchange'][]{
+ const r=ensureRulers(g);if(!r)return [];
+ const m=r.year%8,action=m===2?'fosterage':m===6?'hostageExchange':null;if(!action)return [];
+ const ids=g.state.tribes.map((_,i)=>i).filter(i=>i!==0&&i!==3&&!!g.tribe(i)),used=new Set<number>(),out:[number,number,'fosterage'|'hostageExchange'][]=[];
+ const bound=(a:number,b:number)=>(st(g).rulers?.wards??[]).some(w=>(Number(w.from)===a&&Number(w.to)===b)||(Number(w.from)===b&&Number(w.to)===a));
+ for(const a of ids){if(used.has(a))continue;
+  const b=ids.find(x=>x>a&&!used.has(x)&&!bound(a,x)&&!societyRelation(g,a,x).hostile&&societyRelation(g,a,x).known&&societyRelation(g,x,a).known);
+  if(b===undefined)continue;
+  if((action==='fosterage'?fosterHouses:exchangeHostages)(g,a,b)){used.add(a);used.add(b);out.push([a,b,action]);}}
  return out;
 }
 
