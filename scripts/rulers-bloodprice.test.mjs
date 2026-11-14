@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {ensureRulers,addGrudge,grudgeOf} from '../src/game/rulersRuntime.ts';
-import {payBloodPrice,bloodPriceFor} from '../src/game/bloodPrice.ts';
+import {payBloodPrice,bloodPriceFor,rivalBloodPrice} from '../src/game/bloodPrice.ts';
 import {foodInventory} from '../src/game/pantry.ts';
 import {rulersOf} from '../src/game/rulersState.ts';
 const sum=t=>Object.values(foodInventory(t)).reduce((a,b)=>a+b,0);
@@ -36,4 +36,22 @@ test('blood-price carrier mid-road survives a save round trip (strict validator)
  assert.ok(payBloodPrice(g,1).ok);const copy=JSON.parse(JSON.stringify(g.state.units.find(u=>u.bloodPrice)));
  assert.equal(copy.bloodPrice.to,1);assert.equal(copy.bloodPrice.phase,'going');assert.ok(Object.values(copy.bloodPrice.lots).reduce((a,b)=>a+b,0)>=4);
  const old=JSON.parse(JSON.stringify(g.state.units.find(u=>!u.bloodPrice)));assert.equal(old.bloodPrice,undefined);
+});
+test('rival blood-price: a surplus house that wronged us walks its own food to our hall; nothing minted, refusal at war returns it, poor house keeps the grudge',()=>{
+ const g=new Game();g.reset(123456,10);g.enterIsland();g.state.worldOptions={...(g.state.worldOptions||{}),rulersVersion:1};ensureRulers(g);
+ for(let i=0;i<200;i++)g.step(.25);
+ const T=1;g.state.societyRelations=[{from:0,to:1,known:true,trust:.5,grievance:0,hostile:false,peaceUntil:0,lastContactSeconds:0},{from:1,to:0,known:true,trust:.5,grievance:0,hostile:false,peaceUntil:0,lastContactSeconds:0}];
+ const free=g.state.units.find(u=>u.team===T&&u.type==='worker'&&!u.militia);free.carry=0;free.order='idle';
+ addGrudge(g,0,T,.5,'custody');const price=Math.ceil(.5*24);
+ const poor=g.tribe(T);poor.foodLots={...foodInventory(poor),grain:0,provisions:0};poor.food=Math.min(poor.food,price);
+ assert.equal(rivalBloodPrice(g).length,0,'a poor house sends nothing');
+ const t=g.tribe(T);t.foodLots={...foodInventory(t),grain:400};t.food=400;
+ const s0=sum(g.tribe(0)),sT=sum(g.tribe(T)),units=g.state.units.length;
+ const sent=rivalBloodPrice(g);assert.deepEqual(sent,[T]);assert.equal(g.state.units.length,units,'nobody spawned');
+ const b=g.state.units.find(u=>u.bloodPrice&&u.team===T);assert.ok(b);assert.equal(b.bloodPrice.to,0);assert.equal(b.bloodPrice.from,T);
+ assert.ok(Math.abs(sum(g.tribe(T))-(sT-price))<1e-6,'goods left THEIR pantry');assert.ok(Math.abs(sum(g.tribe(0))-s0)<1,'not delivered yet: no teleport');
+ assert.deepEqual(rivalBloodPrice(g),[],'one bearer on the road per house');
+ const copy=JSON.parse(JSON.stringify(b));assert.equal(copy.bloodPrice.from,T);
+ const h=g.campOf(0);b.x=h.x;b.z=h.z;for(let i=0;i<40&&b.bloodPrice?.phase!=='home'&&g.state.units.some(u=>u.bloodPrice);i++)g.step(.25);
+ assert.ok(Math.abs(sum(g.tribe(0))-(s0+price))<4,'goods arrived in OUR pantry');assert.equal(grudgeOf(g,0,T),0,'our grudge against them is laid down');
 });
