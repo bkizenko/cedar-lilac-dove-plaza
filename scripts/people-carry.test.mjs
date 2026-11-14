@@ -11,7 +11,7 @@ const sample=(clip,f,load=0,style)=>{for(let i=0;i<N;i++)f(samplePose(CLIPS[clip
 /** Foot centre in the PELVIS frame (so hip yaw does not count as stance width): leg pivot offset plus the leg's own rotation of its length. */
 const foot=(pose,side)=>{const part=side<0?'legL':'legR',m=new Array(16).fill(0);composeEuler(m,[0,0,0],pose.parts[part]);const v=transformPoint(m,[0,-.5,0]);return [side*.085+v[0],v[1],v[2]];};
 const width=(pose)=>Math.abs(foot(pose,1)[0]-foot(pose,-1)[0]);
-const GAIT=['walk','carry','haul','run'],STANCE=['chop','quarry','till','build','plant','harvest','tend','thresh','grind','bake','craft','fight','thrust','shoot','slash','fish','winnow'];
+const GAIT=['walk','carry','haul','run'],STANCE=['chop','quarry','till','build','plant','harvest','tend','thresh','grind','bake','craft','fight','thrust','shoot','slash','fish','winnow','spin','weave','scrape','knead','stir','hang'];
 
 test('walk, carry, haul and run: feet land under the hips with a narrow step width, toes forward, no splay',()=>{
  for(const id of GAIT)sample(id,(p)=>{

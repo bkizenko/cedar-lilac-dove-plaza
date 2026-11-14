@@ -11,6 +11,8 @@ const distance=(a:{x:number;z:number},b:{x:number;z:number})=>Math.hypot(a.x-b.x
 export function diplomaticAccount(g:Game,team:number):DiplomaticAccount{const t=g.tribe(team);return {version:1,team,observedAt:g.state.time,hostile:!!t.hostile,ally:!!t.ally,trust:t.trust||0,tension:t.tension||0,compactUntil:t.compactUntil||0};}
 export function publishDiplomaticReport(g:Game,account:DiplomaticAccount,sourceId:number,via:DiplomaticReport['via']){
  const old=g.state.diplomaticReports?.find(r=>r.team===account.team);if(old&&old.observedAt>account.observedAt)return false;
+ // the same dated account from the same source is not new news: keep the first receipt time
+ if(old&&old.via===via&&old.sourceId===sourceId&&(Object.keys(account) as (keyof DiplomaticAccount)[]).every(k=>old[k]===account[k]))return false;
  const report:DiplomaticReport={...account,receivedAt:g.state.time,sourceId,via};g.state.diplomaticReports=(g.state.diplomaticReports||[]).filter(r=>r.team!==account.team);g.state.diplomaticReports.push(report);return true;
 }
 /** Presentation reads dated evidence, never the current private mood. A treaty

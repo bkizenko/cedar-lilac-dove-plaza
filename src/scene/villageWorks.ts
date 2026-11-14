@@ -124,7 +124,7 @@ export const workshop:Generator=(ctx,r)=>{
    if(trade==='pottery'||trade==='kiln'){pole(.5);cyl(parts,'tile',.62,.5,[ex,ey+.5,z0],1,8,undefined,.36);cyl(parts,'tile',.4,.1,[ex,ey+1.0,z0],1,8);}
    else if(trade==='loom'){pole(1.5);box(parts,'clothBlue',[.7,.4,.05],[ex+.4,ey+1.05,z0],1);box(parts,'clothRed',[.55,.3,.05],[ex+.34,ey+.7,z0],1);}
    else if(trade==='rack'){pole(1.4);box(parts,'woodDark',[.7,.06,.06],[ex,ey+1.4,z0],1);box(parts,'clothRed',[.6,.8,.05],[ex,ey+.6,z0],1);}
-   else if(trade==='saw'){pole(.4);box(parts,'iron',[1.3,.3,.05],[ex,ey+.55,z0],1);for(let i=0;i<5;i++)box(parts,'iron',[.1,.12,.05],[ex-.55+i*.27,ey+.74,z0],0);}
+   else if(trade==='saw'){pole(.6);box(parts,'iron',[1.3,.3,.05],[ex,ey+.55,z0],1);for(let i=0;i<5;i++)box(parts,'iron',[.1,.12,.05],[ex-.55+i*.27,ey+.74,z0],0);}
    else if(trade==='bench'){pole(1.0);box(parts,'woodDark',[.1,.7,.1],[ex,ey+.6,z0],1);box(parts,'iron',[.55,.22,.2],[ex,ey+1.0,z0],1);}}
   // work-yard clutter that every shed shares
   if(chance(r,.6))barrel(parts,-W/2+.3,0,zf+.3,1);
