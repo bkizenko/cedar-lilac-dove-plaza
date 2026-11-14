@@ -1,6 +1,8 @@
 import type {Unit} from './types';
 /** Rings are the player's own selection feedback only: raiders and other societies' people never wear a circle/badge. */
-export function unitFeedbackVisible(u:Pick<Unit,'id'|'hp'|'shelterId'|'selected'>&{team?:number},hovered:number|null,persistent:boolean){return u.hp>0&&!u.shelterId&&(u.team===undefined||u.team===0)&&(u.id===hovered||persistent&&u.selected);}
+/** The ground circle that followed people when hovered or selected is off: selection reads from the HUD card instead. */
+export const UNIT_RINGS_ON=false;
+export function unitFeedbackVisible(u:Pick<Unit,'id'|'hp'|'shelterId'|'selected'>&{team?:number},hovered:number|null,persistent:boolean){return UNIT_RINGS_ON&&u.hp>0&&!u.shelterId&&(u.team===undefined||u.team===0)&&(u.id===hovered||persistent&&u.selected);}
 type Point={x:number;y:number;behind?:boolean};
 /** Cheap screen-space prefilter: detailed scene picking runs only near a visible body. */
 export function pointerNearPerson(cx:number,cy:number,units:Unit[],project:(x:number,y:number,z:number)=>Point,visible:(u:Unit)=>boolean){

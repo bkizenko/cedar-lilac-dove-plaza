@@ -398,7 +398,7 @@ export type Building = {
   fallowYear?: number;
   cerealProcessingVersion?:1;
   cropType?: CropKind;
-  crop?: { year: number; planted: number; tended: number; remaining: number; ripened: boolean; water?:number; kind?:CropKind };
+  crop?: { year: number; planted: number; tended: number; remaining: number; ripened: boolean; /** game time sowing began; the crop needs a fixed growing time after this */ sownAt?: number; water?:number; kind?:CropKind };
 };
 
 export type ResourceNode = {

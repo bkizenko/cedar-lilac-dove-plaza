@@ -76,6 +76,7 @@ export function farmHarvestEstimate(g:Game,b:Building,planted=1,tended=1,water=b
   const yieldFactor=kind==="tubers"?land.tubers:land.grain*(kind==="pulses"?.85:1);
   return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*water*yieldFactor*irrigationYield(g,b)*terraceYieldFor(g,b,kind));
 }
+export const CROP_GROW_SECONDS = Math.round(YEAR_SECONDS * 0.45);
 export function crop(g: Game, b: Building) {
   const { year, phase } = calendar(g);
   if (!b.crop || b.crop.year !== year) {
@@ -95,7 +96,8 @@ export function crop(g: Game, b: Building) {
       );
     b.crop = { year, planted: 0, tended: 0, remaining: 0, ripened: false, water:1,kind:b.cropType||"grain" };
   }
-  if (phase === 2 && !b.crop.ripened) {
+  // a fixed growing time: sown late in spring it is ready late in autumn, sown in high summer it may not make it before winter
+  if (phase === 2 && !b.crop.ripened && (b.crop.sownAt === undefined || g.state.time - b.crop.sownAt >= CROP_GROW_SECONDS)) {
     b.crop.remaining = farmHarvestEstimate(g,b,b.crop.planted,b.crop.tended,b.crop.water??1);
     b.crop.ripened = true;
   }
@@ -131,6 +133,7 @@ export function farmWork(g: Game, u: Unit, b: Building, dt: number) {
   recordDraftTractionWork(u,p,toolSeconds);
   const usesTool=u.farmTool!=='woodenArd'||sowing&&draftTractionReady(u)&&farmToolRate(u,p)>1;
   if(usesTool&&wearFarmTool(u,toolSeconds)&&u.team===0)g.banner('A farming tool broke — hand work continues; repair it at a toolmaking workplace',4);
+  if (sowing && c.sownAt === undefined) c.sownAt = g.state.time;
   if (sowing) c.planted = Math.min(1, c.planted + (dt / (180*plotArea(b))) * open);
   else if (p === 1) c.tended = Math.min(1, c.tended + (dt / (220*plotArea(b))) * open);
   else {
