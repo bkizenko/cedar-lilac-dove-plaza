@@ -1400,3 +1400,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 21:49 ET Claude: shipped selected-building panel now lists that building's open work/blockers inline (BuildingActionItems, no Workload drawer click); tsc nil, council-ui 34/34, not browser-checked (1b73cbeb) / now on pen / blocked: none
 
 22:08 ET Claude: shipped Boris playtest batch: placement rotates 4 ways (also square halls), build menu Esc+close button, paid site turns Auto work on so adults build it, animals ease position/heading (no jitter), non-critical world alert rings hidden; tsc nil, arm/hearth-glance/animal-models/play-flow green, game.test.mjs fails 9/14/15/16... identically on base 9d89f01f (pre-existing); starting clothes attempted but breaks garment-repair test so NOT shipped; not browser-checked (2233df39) / now on: unclear 'cannot plant' red tile, craft jobs blocked 'no empty-handed adult' while Stores full 7 (carriers should unload beside the store) / blocked: none
+
+22:14 ET Claude(PM): landed 642c7056 (integration -> main, ~25 commits) / throughput row 22:00 filed (Codex 3, Claude 36, Grok 0), sweep 154/151 pass 0 fail, tsc diff nil / blocked: none
