@@ -13,7 +13,6 @@ import {SocietyIdentityEditor} from './SocietyIdentityEditor';
 import {TradeProposal} from './TradeProposal';
 import {tradeJourney} from '../game/caravans';
 import {WaterReachPanel} from './WaterReachPanel';
-import {SeasonReport} from './SeasonReport';
 import { ResidentInventory } from './ResidentInventory';
 import { VillageAlerts } from './VillageAlerts';
 import { RulerEventToast } from './RulerEventToast';
@@ -443,7 +442,6 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         {engine && <VillageAlerts engine={engine}/>}
         {engine && <RulerEventToast engine={engine}/>}
         {engine && <WorkDeliveryCue engine={engine}/>}
-        {engine&&<SeasonReport game={engine.game} hidden={!!hud.placing}/>}
         {hud.placing ? (
           <div className="hud-toast hud-placement" role="status">
             <div>

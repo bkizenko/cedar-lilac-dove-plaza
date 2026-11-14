@@ -19,7 +19,6 @@ import {MinimapCollapseButton} from './minimapToggle';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {RulerEventToast} from '../RulerEventToast';
 import {WorkDeliveryCue} from '../WorkDeliveryCue';
-import {SeasonReport} from '../SeasonReport';
 import {housingAdoptionIssue,HOUSING_RULES} from '../../game/housing';
 import {buildingHelp} from '../buildingHelp';
 import {shortName,SelectionDetails,resWord} from '../Hud';
@@ -292,7 +291,7 @@ export function NotesStack({hud,engine,onOpen,hidden,alerts}:{hud:HudSnapshot;en
  const own=useGlanceAlerts(alerts?null:engine);
  return <PriorityStack hud={hud} engine={engine} alerts={alerts??own} onOpen={onOpen} hidden={hidden} extra={<>
   {engine&&<RaidNote engine={engine}/>}
-  {engine&&<div className="hw-legacy-note"><RulerEventToast engine={engine}/><WorkDeliveryCue engine={engine}/><SeasonReport game={engine.game} hidden={!!hud.placing}/></div>}</>}/>;
+  {engine&&<div className="hw-legacy-note"><RulerEventToast engine={engine}/><WorkDeliveryCue engine={engine}/></div>}</>}/>;
 }
 
 /* ---------- minimap + neighbours ---------- */
