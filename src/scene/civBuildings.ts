@@ -443,17 +443,19 @@ HOUSE.vedara=g=>{const {w,d,r}=g,W=w*.84*jit(r,.05),D=d*.8,ph=range(r,.4,.55),h=
  for(let i=0;i<3;i++)g.B('trim',[1.0-i*.24,.18,.4-i*.08],[0,ph+h-.05+rh*.9+i*.2,0],0);P(g,'cone','accent',[.3,.6,.3],[0,ph+h+rh*.9+.55,0],undefined,6,0);
  return {entry:{x:dx,z:D/2+.5,width:1.1}};};
 /** Nilemark: whitewashed mudbrick blocks with parapets, roof stairs and palm pergolas; the civic hall is a gate of two battered towers before a columned court. */
-HOUSE.nilemark=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,h=range(r,2.5,3);
- g.B('wall2',[W+.2,.3,D+.2],[0,0,0],2);g.B('wall',[W,h,D],[0,.3,0],2);
- for(const [x,z,sx,sz] of[[0,D/2-.12,W+.1,.25],[0,-D/2+.12,W+.1,.25],[W/2-.12,0,.25,D],[-W/2+.12,0,.25,D]] as number[][])g.B('wall',[sx,.4,sz],[x,.3+h,z],1);
- P(g,'wedge','wall',[1.0,h*.95,2.4],[W*.5+.55,.3,-D*.1],[0,Math.PI/2,0],undefined,1);
+HOUSE.nilemark=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,h=range(r,2.5,3),bt=.34,Wt=W-bt,Dt=D-bt*.7;
+ g.B('wall2',[W+.2,.3,D+.2],[0,0,0],2);
+ // battered mud-brick walls: three stepped courses narrowing upward (original grammar; the plain box stays in the legacy set)
+ for(let i=0;i<3;i++){const k=i/2;g.B(i%2?'wall2':'wall',[W-bt*k,h/3+.02,D-bt*.7*k],[0,.3+i*h/3,0],2);}
+ for(const [x,z,sx,sz] of[[0,Dt/2-.12,Wt+.1,.25],[0,-Dt/2+.12,Wt+.1,.25],[Wt/2-.12,0,.25,Dt],[-Wt/2+.12,0,.25,Dt]] as number[][])g.B('wall',[sx,.4,sz],[x,.3+h,z],1);
+ P(g,'wedge','wall',[1.0,h*.95,2.4],[W*.5+.4,.3,-D*.1],[0,Math.PI/2,0],undefined,1);
  // near-only mud-brick detail: vertical corner torus rolls, a flared cavetto cornice and palm-log ends poking through the front parapet
- for(const sx of[-1,1])for(const sz of[-1,1])P(g,'cylinder','wall2',[.3,h+.35,.3],[sx*(W/2+.02),.3,sz*(D/2+.02)],undefined,8,0);
- g.B('wall2',[W+.5,.12,D+.5],[0,.3+h+.4,0],0);g.B('trim',[W+.3,.1,D+.3],[0,.3+h+.34,0],0);
- for(let i=0;i<7;i++)g.B('trim',[.17,.17,.55],[-W*.42+i*W*.14,.3+h-.28,D*.5+.02],0);
+ for(const sx of[-1,1])for(const sz of[-1,1])P(g,'cylinder','wall2',[.36,h+.35,.36],[sx*(W/2-bt*.35),.3,sz*(D/2-bt*.25)],undefined,8,1);
+ g.B('wall2',[Wt+.5,.12,Dt+.5],[0,.3+h+.4,0],0);g.B('trim',[Wt+.3,.1,Dt+.3],[0,.3+h+.34,0],0);
+ for(let i=0;i<7;i++)g.B('trim',[.17,.17,.55],[-W*.42+i*W*.14,.3+h-.28,Dt*.5+.02],0);
  for(const sx of[-1,1])for(const sz of[-1,1])g.post('wall2',sx*W*.28,sz*D*.25,h+1.9,.12,1);g.B('roof',[W*.7,.12,D*.62],[0,.3+h+1.85,0],1);
  g.B('trim',[1.15,.14,.14],[g.off*.3,.3+1.75,D*.5+.04],0);for(const s of[-1,1])g.B('trim',[.14,1.8,.14],[g.off*.3+s*.53,.3,D*.5+.04],0);g.B('accent',[.92,1.65,.08],[g.off*.3,.3,D*.5+.03],0);
- for(let i=0;i<3;i++)g.B('accent',[.3,.34,.06],[-W*.3+i*W*.3,.3+h*.72,D*.5+.03],0);for(const s of[-1,1])g.Cy('wall2',.5,.7,[g.off*.3+s*1.2,.3,D*.5+.4],0,8,.35);
+ for(let i=0;i<3;i++)g.B('accent',[.3,.34,.06],[-W*.3+i*W*.3,.3+h*.72,Dt*.5+.03],0);for(const s of[-1,1])g.Cy('wall2',.5,.7,[g.off*.3+s*1.2,.3,D*.5+.4],0,8,.35);
  return {entry:{x:g.off*.3,z:D*.5+.5,width:1}};};
 CIVIC.nilemark=g=>{const {w,d,r}=g,tw=w*.26,td=d*.34,zf=d*.28;
  g.B('wall2',[w*.96,.35,d*.96],[0,0,0],2);
