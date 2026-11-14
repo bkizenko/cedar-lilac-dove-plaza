@@ -31,6 +31,7 @@ import {rememberDetailLevel,type DetailLevel} from './detailLevel';
 import {gateFacing as normalizeGateFacing,rotateGateFacing,snapGate,suggestGateSnap,placeFacingGate,type GateFacing} from './gateGeometry';
 import {RuntimeProfile,RUNTIME_PROFILE_RULES} from './runtimeProfile';
 import {projectedTreeInBox} from './treeDesignation';
+import {orderGatherTargets} from './treeDesignation';
 import type {WorldRequest} from './worldOptions';
 import {linearStructure,joinedConstructionLine,placeConstructionLine} from './linearConstruction';
 import {buildingCost} from './construction';
@@ -678,6 +679,7 @@ export class Engine {
             const box={minx:Math.min(this.drag.sx,this.drag.x),maxx:Math.max(this.drag.sx,this.drag.x),miny:Math.min(this.drag.sy,this.drag.y),maxy:Math.max(this.drag.sy,this.drag.y)},treeIds:number[]=[];
             for(const tree of this.game.state.trees){if(tree.amount<=0||!this.game.visibleAt(tree.x,tree.z))continue;if(projectedTreeInBox((x,y,z)=>this.view.project(x,y,z),tree,box))treeIds.push(tree.id);}
             if(treeIds.length){this.markTrees(treeIds);this.drag=null;this.pushHud();return;}
+            if(this.gatherInBox(box)){this.drag=null;this.pushHud();return;}
           }
           this.workerHost.select({selectedUnitIds:ids});this.drag=null;this.pushHud();return;
         }
@@ -703,6 +705,7 @@ export class Engine {
             if (projectedTreeInBox((x,y,z)=>this.view.project(x,y,z),tree,{minx,maxx,miny,maxy})) ids.push(tree.id);
           }
           if (ids.length) this.markTrees(ids);
+          else if(!this.loggingMode&&this.gatherInBox({minx,maxx,miny,maxy})){/* stone / animal order issued */}
           else if(this.loggingMode)this.game.banner("No visible trees in the box — drag across the trunks or crowns",3);
         }
       } else {
@@ -719,6 +722,16 @@ export class Engine {
       this.game.height(ground.x,ground.z) >= this.game.waterAt(ground.x,ground.z)) return ground;
     const water = this.view.waterAt(cx,cy,seaSurfaceY(this.game.world));
     return water && this.game.height(water.x,water.z) < this.game.waterAt(water.x,water.z) ? water : ground;
+  }
+
+  /** Box-select of stone or huntable animals orders extraction through Game.issueGather (worker mode: a command). */
+  gatherInBox(box:{minx:number;maxx:number;miny:number;maxy:number}):boolean{
+    const inBox=(n:{x:number;z:number},y:number)=>{const p=this.view.project(n.x,y+.6,n.z);return !p.behind&&p.x>=box.minx&&p.x<=box.maxx&&p.y>=box.miny&&p.y<=box.maxy;};
+    const stoneIds=this.game.state.stones.filter(n=>n.amount>0&&this.game.exploredAt(n.x,n.z)&&inBox(n,this.game.height(n.x,n.z))).map(n=>n.id).slice(0,512);
+    const animalIds=this.game.state.wildlife.filter(c=>c.hp>0&&this.game.visibleAt(c.x,c.z)&&inBox(c,this.game.height(c.x,c.z))).map(c=>c.id).slice(0,512);
+    if(!stoneIds.length&&!animalIds.length)return false;
+    if(this.workerHost){void this.dispatch({kind:'gather-targets',stoneIds,animalIds}).catch(console.error);return true;}
+    return orderGatherTargets(this.game,stoneIds,animalIds)>0||true;
   }
 
   /** Fell marks: in worker mode the real simulation owns them, so the order is sent as a command; otherwise the game takes it directly. */
@@ -885,9 +898,13 @@ export class Engine {
     }
     this.fieldSnap=null;
     const dragging=!!dragStart&&plotDragIntent(this.plotPointerStart,this.pointer,dragStart,g);
-    if(type==='farm'&&!this.fieldArea&&!dragging){
-      const size=this.plotSize??{w:BUILDINGS.farm.w,d:BUILDINGS.farm.d},snap=snapFieldRect(this.game,{x,z,w:size.w,d:size.d},0);
-      if(snap.snapped){x=snap.rect.x;z=snap.rect.z;this.fieldSnap=snap;}
+    if(type==='farm'&&!this.fieldArea){
+      const size=this.plotSize??{w:BUILDINGS.farm.w,d:BUILDINGS.farm.d};
+      // Grid: put the plot's own corner (not its centre) on the tile grid so edges, not middles, line up.
+      if(!dragging){x=Math.round((x-size.w/2)/snap)*snap+size.w/2;z=Math.round((z-size.d/2)/snap)*snap+size.d/2;}
+      // Neighbours: flush against an adjacent field; a dragged plot keeps its size and is only nudged flush.
+      const fs=snapFieldRect(this.game,{x,z,w:size.w,d:size.d},0);
+      if(fs.snapped){x=fs.rect.x;z=fs.rect.z;this.fieldSnap=fs;}
     }
     this.view.setFieldSnap(this.fieldSnap?this.fieldSnap.edges:[]);
     if(type==='farm'&&!this.fieldArea){

@@ -18,3 +18,12 @@ test('mark-chop is a valid command and marks trees in the real simulation (worke
  assert.equal(out.accepted,true);
  for(const id of ids)assert.ok(g.chopMarks.has(id),'tree '+id);
 });
+test('gather-targets is a valid command and sends an idle worker to a stone',()=>{
+ const g=fixture(),st=g.state.stones.find(n=>n.amount>0&&g.exploredAt(n.x,n.z));
+ assert.ok(st);
+ assert.equal(isEngineDispatchCommand({kind:'gather-targets',stoneIds:[st.id],animalIds:[]}),true);
+ assert.equal(isEngineDispatchCommand({kind:'gather-targets',stoneIds:['a'],animalIds:[]}),false);
+ const out=applyEngineCommand(g,{kind:'gather-targets',stoneIds:[st.id],animalIds:[]});
+ assert.equal(out.accepted,true);
+ assert.ok(g.state.units.some(u=>u.order==='gather'&&u.node===st));
+});
