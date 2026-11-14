@@ -1413,3 +1413,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 22:32 ET Claude: shipped frozen-stride fix (unit with velocity but no real displacement now shows idle, not a legs-apart walk pose; character-anim/people-animation/animation-clips 23/23) + fishing value (dock work period x0.8, bank fishing x1.35 slower, ~1.7x ratio; fishing tests unchanged vs base); not browser-checked (1d1f754c) / now on building height, pen, craft-blocked/stores-full / blocked: none
 22:37 ET Claude: shipped distinct work animations spin/weave/scrape/knead/stir/hang per recipe, not browser-verified (6c1cd69e) / now on building height + craft unloading / blocked: none
+
+22:42 ET Claude(PM): landed ed0ab4ca (18 commits, integration -> main) / sweep 158/162 pass, only boat-selection fails (env: 'three' not installed, same on base), tsc diff nil; no new agent branches; all lanes posted <2h / blocked: none
