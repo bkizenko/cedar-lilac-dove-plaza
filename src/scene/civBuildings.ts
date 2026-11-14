@@ -496,7 +496,12 @@ CIVIC.rusvolt=g=>{const {w,d,r}=g,b=Math.min(w,d)*.82;
  let y=2.3;for(let i=0;i<4;i++){const s=b*.8*(.8**i),rot:V=[0,i%2?Math.PI/4:0,0];g.parts.push(part('box',matId(g.civ,'wall2') as Part['mat'],[s,1.3,s],[0,y,0],2,rot));g.B('wall',[s*1.04,.1,s*1.04],[0,y+.5,0],0,rot);
   P(g,'pyramid','roof',[s*1.38,1.9,s*1.38],[0,y+1.3,0],rot);y+=1.3+.95;}
  P(g,'cone','accent',[.5,2.2,.5],[0,y,0],undefined,6);P(g,'sphere','trim',[.5,.5,.5],[0,y+2.1,0],undefined,undefined,1);
- g.door(0,b*.5+.02,1.3,2);g.banner(b*.55,b*.55,4.2);return {entry:{x:0,z:b*.5,width:1.4}};};
+ // log-built base (original Rusvolt hall): corner log-ends in alternating courses, near-only; log-course lines at mid LOD; a sheltering porch hood on two round posts
+ for(let j=0;j<5;j++)g.B('wall2',[b+.08,.07,b+.08],[0,.4+j*.42,0],1);
+ for(const sx of[-1,1])for(const sz of[-1,1])for(let j=0;j<5;j++){const a=j%2===0;P(g,'cylinder','wall2',[.34,.7,.34],[sx*(b*.5+(a?0:.04)),.4+j*.42,sz*(b*.5+(a?.04:0))],a?[0,0,Math.PI/2]:[Math.PI/2,0,0],6,0);}
+ for(const s of[-1,1])g.post('wall2',s*1.35,b*.5+1.05,2.1,.17,1);
+ P(g,'wedge','roof',[3.3,.8,1.7],[0,2.1,b*.5+.7],undefined,undefined,1);
+ g.door(0,b*.5+.02,1.3,2);g.banner(b*.55,b*.55,4.2);return {entry:{x:0,z:b*.5+1,width:1.4}};};
 /** Vedara civic (original grammar): a round lotus-dome hall. Two stepped round plinths carry a drum ringed with slim round pilasters, a ring of petal cones round the dome's foot, an onion-lotus dome, a stepped finial and round-arched door with a short stair; legacy stepped-tower set stays archived. Footprint stays within w x d. */
 CIVIC.vedara=g=>{const {w,d,r}=g,R=Math.min(w,d)*.32,zs=-d*.1,dh=range(r,2.6,3.2),y0=.56;
  P(g,'cylinder','wall2',[R*2.8,.28,R*2.8],[0,0,zs],undefined,16,2);P(g,'cylinder','wall',[R*2.5,.28,R*2.5],[0,.28,zs],undefined,16,2);

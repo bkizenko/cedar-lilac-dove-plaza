@@ -336,6 +336,7 @@ export const SCENES = {
   'civ-bldgs-h': civBuildingsScene(['steppan', 'brythen', 'tigrane'], false, true),
   'civ-bldgs-h2': civBuildingsScene(['sahelan', 'mekhari', 'sandrill'], false, true),
   'civ-bldgs-k': civBuildingsScene(['kaaltun', 'tigrane']),
+  'civ-bldgs-r': civBuildingsScene(['rusvolt', 'steppan']),
   'civ-bldgs-v': civBuildingsScene(['vedara', 'rusvolt', 'brythen']),
   ...Object.fromEntries(CIVS.map(c => ['civ-' + c.id, civScene(c)])),
 };
