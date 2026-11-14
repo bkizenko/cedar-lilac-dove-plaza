@@ -231,3 +231,11 @@ test('previously recap lists only unseen chronicle lines and stays silent on fir
  delete globalThis.localStorage;
  assert.deepEqual(previousLines('w:a',['x']),[]);
 });
+
+test('diplomacy timeline lists ultimatums, claims lapsing, wards and fosterage soonest first; hidden when empty; row centres the house',async()=>{
+ const {diplomacyTimeline}=await import('../src/ui/council/dipTimeline.ts');const {DiplomacyTimeline}=await import('../src/ui/council/DiplomacyTimeline.tsx');
+ assert.deepEqual(diplomacyTimeline(undefined),[]);assert.equal(renderToStaticMarkup(h(DiplomacyTimeline,{council:{enabled:true,neighbours:[],log:[]}})),'');
+ const c={enabled:true,log:[],neighbours:[{...nb[0],casus:[{byUs:true,kind:'raid',strength:20,endsIn:3,cost:2,reason:'We hold raids.'}],wards:[{name:'Ana',age:9,kind:'foster',heldByUs:true,sinceYear:1,endsIn:1,effect:''}]},{...nb[1],casus:[{byUs:false,kind:'claim',strength:60,endsIn:0,cost:5,reason:'They hold a claim.',demand:'tribute of grain',ultimatumYear:9}],wards:[{name:'Bo',age:12,kind:'hostage',heldByUs:false,sinceYear:2,endsIn:5,effect:''}]}]};
+ const t=diplomacyTimeline(c);assert.deepEqual(t.map(i=>i.kind),['ultimatum','foster','claim','ward']);assert.ok(t[0].text.includes('tribute of grain')&&t[0].text.includes('within a year'));assert.ok(t[3].text.includes('in Ridge Clan'));
+ const html=renderToStaticMarkup(h(DiplomacyTimeline,{council:c}));assert.match(html,/Coming up · 4/);assert.match(html,/Ultimatum/);assert.match(html,/Fosterage ends/);assert.match(html,/min-h-11/);
+});
