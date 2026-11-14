@@ -9,6 +9,11 @@ test('diplomacy sheet lists hostile neighbours first, shows bars and only offers
  assert.ok(html.indexOf('Ridge Clan')<html.indexOf('Marsh Folk'));assert.match(html,/At odds/);assert.match(html,/At peace/);
  assert.equal((html.match(/Exchange hostages/g)||[]).length,1);assert.match(html,/role="status"/);assert.equal(renderToStaticMarkup(h(DiplomacySheet,{neighbours:[],onAct(){}})),'');
 });
+test('diplomacy sheet shows how old each dated report is and flags stale ones',()=>{
+ const html=renderToStaticMarkup(h(DiplomacySheet,{neighbours:[{...nb[0],report:{ageSec:200,via:'message',stale:true}},{...nb[1],report:{ageSec:30,via:'visit',stale:false}}],onAct(){}}));
+ assert.match(html,/Report 3 min ago · stale/);assert.match(html,/Report 30s ago/);assert.equal((html.match(/data-stale="1"/g)||[]).length,1);
+ assert.equal(renderToStaticMarkup(h(DiplomacySheet,{neighbours:nb,onAct(){}})).includes('data-report-age'),false);
+});
 test('diplomacy sheet lists standing grievances in both directions with lapse and legitimacy cost',()=>{
  const casus=[{byUs:true,kind:'raid',strength:40,endsIn:3,cost:2,reason:'We hold raids and cattle-lifting; citing it costs the holder 2 legitimacy.'},{byUs:false,kind:'claim',strength:30,endsIn:0,cost:5,reason:'They hold a claim on their lands; citing it costs the holder 5 legitimacy.'}];
  const html=renderToStaticMarkup(h(DiplomacySheet,{neighbours:[{...nb[0],casus}],onAct(){}}));

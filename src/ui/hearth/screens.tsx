@@ -52,6 +52,7 @@ import {loadMapStyle,rememberMapStyle,MAP_STYLE_KEY,type MapStyle} from '@/scene
 import {MAP_GALLERY,galleryPose} from '@/scene/mapGallery';
 import {PLAN_ICON,PLAN_NAME,POSTURE_ICON,POSTURE_NAME,AGREEMENT_ICON,AGREEMENT_NAME,ROUTE_ICON,ago,freshness} from './icons';
 import {courtLine} from '../council/courtLine';
+import {reportAgeLabel} from '../council/DiplomacySheet';
 
 /** Full-height screen: one title, tabs, one close. Esc closes; focus moves in and returns. */
 export function Screen({title,icon,onClose,tabs,tab,setTab,children,wide}:{title:string;icon:ReactNode;onClose:()=>void;tabs?:{id:string;label:string;icon?:ReactNode;badge?:number}[];tab?:string;setTab?:(t:string)=>void;children:ReactNode;wide?:boolean}){
@@ -91,6 +92,7 @@ function NeighbourCard({n,soc,route,send}:{n:any;soc?:any;route?:any;send:(team:
  return <li id={`house-${n.team}`} className="hw-card hw-neighbour">
   <div className="hw-card-head">{n.identity&&<SocietyFlag identity={n.identity} label={`${n.name} flag`}/>}<h3>{n.name}</h3><span className={cx('hw-chip','t-'+mood[1])}>{mood[0]}</span></div>
   {n.voice&&<GameTooltip title={`Manner: ${n.voice.manner}`} description={`If refused: ${n.voice.refusal} If they give: ${n.voice.gift}`}><p className="hw-voice" data-manner={n.voice.manner} tabIndex={0}>{n.voice.greeting}</p></GameTooltip>}
+  {n.report&&<p className={cx('hw-court',n.report.stale&&'t-warn')} data-report-age="1" data-stale={n.report.stale?'1':'0'} title={`Received by ${n.report.via}; what we know may have changed.`}>{n.report.stale?'\u25CC ':'\u25CF '}{reportAgeLabel(n.report)}</p>}
   {courtLine(n.court)&&<p className="hw-court" data-court="1">{courtLine(n.court)}</p>}
   <div className="hw-meters"><GameTooltip title="Trust"><span className="hw-meter-row"><Handshake size={20}/>{bar(n.trust,'good')}<b>{n.trust}</b></span></GameTooltip><GameTooltip title="Grudge"><span className="hw-meter-row"><Swords size={20}/>{bar(n.grievance??0,'bad')}<b>{n.grievance??0}</b></span></GameTooltip></div>
   {soc&&<div className="hw-chips" aria-label={`What ${n.name} is doing`}>
