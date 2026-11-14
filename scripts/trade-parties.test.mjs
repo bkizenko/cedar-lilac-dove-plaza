@@ -31,7 +31,7 @@ test('foreign arrivals are deterministic, walk back to origin before removal, su
  const g=fixture();g.state.time=0;let p;for(let i=0;i<60&&!p;i++){g.state.time=i*TRADE_PARTY_RULES.arrivalReviewSeconds;p=reviewForeignArrivals(g);}assert.ok(p);
  g.state.tradeArrivalSlot=Math.floor(g.state.time/TRADE_PARTY_RULES.arrivalReviewSeconds);for(let t=0;t<p.travel+5;t++)tickTradeParties(g,1);assert.equal(p.phase,'trading');
  const g2=decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));assert.equal(g2.state.tradeParties.length,1);
- for(let t=0;t<TRADE_PARTY_RULES.tradeSeconds+p.travel/2;t++)tickTradeParties(g,1);assert.equal(p.phase,'returning');assert.equal(tradeParties(g).length,1,'still on the road');
+ for(let t=0;t<TRADE_PARTY_RULES.offerSeconds+p.travel/2;t++)tickTradeParties(g,1);assert.equal(p.phase,'returning');assert.equal(tradeParties(g).length,1,'still on the road');
  for(let t=0;t<p.travel+5;t++)tickTradeParties(g,1);assert.equal(tradeParties(g).length,0);
 });
 test('season summary is one short line of notable changes',()=>{

@@ -594,6 +594,8 @@ export type GameState = {
   seasonReports?:import('./seasonReports').SeasonReports;
   tradeParties?:import('./tradeParties').TradeParty[];
   tradeArrivalSlot?:number;
+  tradeRep?:Record<number,number>;
+  tradeFoes?:number[];
   simulationEvents?:import('./simulationEvents').SimulationEventLog;
   finiteRaiderCampVersion?:1;
   survivalVersion?:1;
