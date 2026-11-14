@@ -350,6 +350,8 @@ export function addGrudge(g:Game,holder:number,target:number,w:number,cause:'cus
  if(i>=0)list[i]={...list[i],w:Math.min(1,list[i].w+w),since:r.year,cause};else list.push({holder:h,target:t,w:Math.min(1,w),since:r.year,cause});
  st(g).rulers={...st(g).rulers!,grudges:list.slice(-24)};
 }
+/** A paid blood-price lays the matching grudge down entirely. */
+export function clearGrudge(g:Game,holder:number,target:number){const r=rulersOf(st(g));if(!r?.grudges)return;st(g).rulers={...r,grudges:r.grudges.filter(x=>!(x.holder===String(holder)&&x.target===String(target)))};}
 export const grudgeOf=(g:Game,holder:number,target:number):number=>rulersOf(st(g))?.grudges?.find(x=>x.holder===String(holder)&&x.target===String(target))?.w??0;
 /** Yearly: fade, and weaken where a house changed ruler since `genBefore` (generation per society id before the year stepped). */
 export function fadeGrudges(g:Game,genBefore:Record<string,number>){
