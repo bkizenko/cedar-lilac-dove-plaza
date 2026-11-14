@@ -3,7 +3,8 @@
 import type {Game} from './sim';
 import {initRulers,stepRulersYear,rulersOf,type RulersState,type Ward,type WardReturn,type Gathering} from './rulersState';
 import {familyStage,familyFeatures,kinshipEffectScale} from './familyScale';
-import {marry,heir,regencyOf,REGENCY_LEGIT_PENALTY} from './dynasty';
+import {marry,heir,regencyOf,REGENCY_LEGIT_PENALTY,ADULT} from './dynasty';
+import {COMPETENCES} from './rulerGenome';
 import {hash32,makeRng} from './rulerCore';
 import {assess,type Drivers,type DriverInputs} from './expansionDrivers';
 import {expansionPressure} from './polityModel';
@@ -42,7 +43,7 @@ export function advanceRulers(g:Game){
  sampleClimate(g,r);
  if(decisionsEnabled(g))beginCivic(g); // M2-14: prehistory recorded once at the start (cheap no-op afterwards)
  let guard=0;
- while(s.rulers!.year<target&&guard++<4){const genBefore:Record<string,number>={};for(const [k,v] of Object.entries(s.rulers!.societies))genBefore[k]=v.dynasty.generation;s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));settleWards(g);settleOrphans(g);fadeGrudges(g,genBefore);npcMarriages(g);expireClaims(g);harvestGathering(g);sendRefugees(g);rivalBloodPrice(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
+ while(s.rulers!.year<target&&guard++<4){const genBefore:Record<string,number>={};for(const [k,v] of Object.entries(s.rulers!.societies))genBefore[k]=v.dynasty.generation;s.rulers=stepRulersYear(s.rulers!,()=>.3,id=>livingPeople(g,Number(id)));tutorWards(g);settleWards(g);settleOrphans(g);fadeGrudges(g,genBefore);npcMarriages(g);expireClaims(g);harvestGathering(g);sendRefugees(g);rivalBloodPrice(g);eventClaims(g);tireOfWar(g);fadeCbDebt(g);domesticPressure(g);if(decisionsEnabled(g)){yearlySocieties(g);yearlyCivic(g);}}
  if(s.rulers&&s.rulers.year<target)s.rulers={...s.rulers,year:target};
 }
 /** Read-only view for UI: ruling house of a society with its stage (household..dynasty). */
@@ -143,6 +144,26 @@ function exchangeKin(g:Game,a:number,b:number,action:'fosterage'|'hostageExchang
  st(g).rulers={...st(g).rulers!,wards:[...(r.wards??[]),...wards]};
  return {why:tieChange(g,a,b,action,pa,pb),wards};
 }
+/** Yearly (AUD-SOC-HEIR-EDUCATION): a fostered child (6-15) learns from the host house's ruler. The one competence where the host most exceeds the child
+ * grows by 1 a year, never past the host's own value, and only while that ruler is alive and adult. No tutor house means no growth; nothing is created.
+ * Runs before settleWards so the year a child goes home still counts. Edits the dynasty record only (already saved), old saves unchanged. */
+export function tutorWards(g:Game):{child:string;skill:string;host:string}[]{
+ const r=ensureRulers(g);if(!r?.wards?.length)return [];
+ const out:{child:string;skill:string;host:string}[]=[];let societies=r.societies;
+ for(const w of r.wards){
+  if(w.kind!=='foster')continue;
+  const hd=societies[w.to]?.dynasty,hr=hd?.people[hd.rulerId],cd=societies[w.from]?.dynasty,c=cd?.people[w.person];
+  if(!hd||!hr?.alive||!hr.ruler||hr.age<ADULT||!cd||!c?.alive||!c.ruler||c.age<6||c.age>=ADULT)continue;
+  const sk=COMPETENCES.map(k=>({k,gap:hr.ruler!.comp[k]-c.ruler!.comp[k]})).sort((x,y)=>y.gap-x.gap)[0];
+  if(!sk||sk.gap<8)continue;
+  const nc={...c.ruler.comp,[sk.k]:Math.min(100,c.ruler.comp[sk.k]+1)},cp={...c,ruler:{...c.ruler,comp:nc}};
+  const nd={...societies[w.from].dynasty,people:{...societies[w.from].dynasty.people,[c.id]:cp},log:[...societies[w.from].dynasty.log,`${r.year}: ${c.name} learns ${sk.k} at ${hr.name}'s hall`].slice(-60)};
+  societies={...societies,[w.from]:{...societies[w.from],dynasty:nd}};out.push({child:c.id,skill:sk.k,host:hr.id});
+ }
+ if(out.length)st(g).rulers={...st(g).rulers!,societies};
+ return out;
+}
+
 /** Yearly: fosterlings go home at 16 (bond rises), hostages after a 8-year term; the dead are removed; war breaks the pledge with a grievance. */
 export function settleWards(g:Game){
  const r=ensureRulers(g);if(!r?.wards?.length)return;

@@ -207,3 +207,15 @@ test('hearth fame feed folds older lines behind a 44px toggle',async()=>{
  assert.ok(html.includes('Show 3 earlier'));assert.ok(html.includes('event number 8'));assert.ok(!html.includes('event number 0'));
  assert.ok(!renderToStaticMarkup(h(F,{log:log.slice(0,4)})).includes('earlier'));
 });
+
+test('hearth fame feed shows category chips only when lines span categories',async()=>{
+ const {FameFeed:F}=await import('../src/ui/hearth/councilCards.tsx');
+ const {feedCategory}=await import('../src/ui/council/feedCategory.ts');
+ assert.equal(feedCategory('The ruler died; the heir takes the seat'),'court');
+ assert.equal(feedCategory('Envoy from the river house offered a treaty'),'neighbours');
+ assert.equal(feedCategory('Wolves took a lamb'),'wild');
+ assert.equal(feedCategory('Harvest brought in'),'house');
+ const mixed=renderToStaticMarkup(h(F,{log:['Harvest brought in','Wolves took a lamb']}));
+ assert.ok(mixed.includes('aria-pressed="true"'));assert.ok(mixed.includes('Wild')&&mixed.includes('Household'));
+ assert.ok(!renderToStaticMarkup(h(F,{log:['Harvest brought in','Barley sown']})).includes('aria-pressed'));
+});

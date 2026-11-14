@@ -1,0 +1,22 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {Game} from '../src/game/sim.ts';
+import {ensureRulers,tutorWards,settleWards} from '../src/game/rulersRuntime.ts';
+import {rulersOf} from '../src/game/rulersState.ts';
+const mk=(id,age,comp,house)=>({id,name:id.toUpperCase(),age,sex:'m',alive:true,houseOf:house,legit:true,claimStrength:50,ruler:{id,comp,traits:{},ambitions:[],history:[],loyalties:[],age}});
+test('fostered child learns the host ruler\'s strongest gap, capped at the host; no tutor, no growth',()=>{
+ const g=new Game();g.reset(123456,10);g.enterIsland();g.state.worldOptions={...(g.state.worldOptions||{}),rulersVersion:1};const r=ensureRulers(g);
+ const A=r.societies['0'].dynasty,B=Object.values(r.societies).find((s,i)=>Object.keys(r.societies)[i]!=='0').dynasty,bk=Object.keys(r.societies).find(k=>k!=='0');
+ const host=B.people[B.rulerId];host.age=40;host.alive=true;host.ruler={...host.ruler,comp:{martial:50,statecraft:50,diplomacy:90,stewardship:50,learning:50}};
+ A.people.kid=mk('kid',8,{martial:50,statecraft:50,diplomacy:60,stewardship:50,learning:50},A.house);
+ const n=Object.keys(A.people).length,units=g.state.units.length;
+ assert.deepEqual(tutorWards(g),[],'no ward, no tutor, no growth');
+ g.state.rulers={...g.state.rulers,wards:[{kind:'foster',person:'kid',from:'0',to:bk,since:r.year}]};
+ const out=tutorWards(g);assert.equal(out.length,1);assert.equal(out[0].skill,'diplomacy');
+ const kid=()=>g.state.rulers.societies['0'].dynasty.people.kid;
+ assert.equal(kid().ruler.comp.diplomacy,61);assert.ok(g.state.rulers.societies['0'].dynasty.log.some(l=>/KID learns diplomacy/.test(l)));
+ for(let i=0;i<40;i++)tutorWards(g);assert.equal(kid().ruler.comp.diplomacy,83,'lessons stop within 8 points of the host, never past');
+ assert.equal(Object.keys(g.state.rulers.societies['0'].dynasty.people).length,n,'nobody spawned');assert.equal(g.state.units.length,units);
+ assert.ok(rulersOf(JSON.parse(JSON.stringify({rulers:g.state.rulers}))),'round trip valid');
+ const s=B.people[B.rulerId];g.state.rulers.societies[bk].dynasty.people[B.rulerId]={...s,alive:false};
+ kid().ruler.comp.diplomacy=60;assert.deepEqual(tutorWards(g),[],'dead host teaches nothing');
+});

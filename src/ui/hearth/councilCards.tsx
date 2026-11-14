@@ -13,6 +13,7 @@ import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
 import {mourningText} from '../council/mourningText';
 import {dedupeFeed} from '../council/feedDedupe';
+import {feedCategory,FEED_CATEGORIES,type FeedCategory} from '../council/feedCategory';
 
 const cx=(...a:(string|false|undefined|null)[])=>a.filter(Boolean).join(' ');
 const sentence=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,'$1 $2').toLowerCase();return t.charAt(0).toUpperCase()+t.slice(1);};
@@ -54,10 +55,14 @@ export function HandoverCard({h,mourning}:{h:Handover;mourning?:CouncilModel['mo
 
 /** Fame feed: the house's recent deeds and losses, newest first and larger, older ones fading, so a death or a coup reads as an event. */
 export function FameFeed({log,limit=6}:{log:string[];limit?:number}){
- const items=dedupeFeed([...log].reverse()),[all,setAll]=useState(false);
- if(!items.length)return <p className="hw-empty">Nothing has happened to the house yet.</p>;
+ const rows=dedupeFeed([...log].reverse()),[all,setAll]=useState(false),[muted,setMuted]=useState<readonly FeedCategory[]>([]);
+ if(!rows.length)return <p className="hw-empty">Nothing has happened to the house yet.</p>;
+ const present=FEED_CATEGORIES.filter(c=>rows.some(r=>feedCategory(r.text)===c.id));
+ const items=rows.filter(r=>!muted.includes(feedCategory(r.text))),muteCount=rows.length-items.length;
  const shown=all?items:items.slice(0,limit),hidden=items.length-shown.length;
- return <><ol className="hw-fame" aria-label="Chronicle">{shown.map((l,i)=><li key={i} className={cx(i===0&&'is-new',i>4&&'is-old')}>{i===0&&<Scroll size={20}/>}<span>{l.text}{l.count>1&&<b className="hw-count" title={`${l.count} times`}> ×{l.count}</b>}</span></li>)}</ol>
+ const flip=(id:FeedCategory)=>setMuted(m=>m.includes(id)?m.filter(x=>x!==id):[...m,id]);
+ return <>{present.length>1&&<div className="hw-chips hw-feed-filter" role="group" aria-label="Chronicle categories">{present.map(c=>{const off=muted.includes(c.id);return <button key={c.id} type="button" className={cx('hw-chip hw-chip-btn',off&&'is-muted')} aria-pressed={!off} onClick={()=>flip(c.id)}>{c.label}</button>;})}</div>}
+  {items.length===0?<p className="hw-empty">Every line is muted ({muteCount} hidden).</p>:<ol className="hw-fame" aria-label="Chronicle">{shown.map((l,i)=><li key={i} className={cx(i===0&&'is-new',i>4&&'is-old')}>{i===0&&<Scroll size={20}/>}<span>{l.text}{l.count>1&&<b className="hw-count" title={`${l.count} times`}> ×{l.count}</b>}</span></li>)}</ol>}
   {items.length>limit&&<button type="button" className="hw-more" aria-expanded={all} onClick={()=>setAll(v=>!v)}>{all?'Show fewer':`Show ${hidden} earlier`}</button>}</>;
 }
 
