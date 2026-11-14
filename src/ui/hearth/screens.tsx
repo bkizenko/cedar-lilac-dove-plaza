@@ -22,7 +22,7 @@ const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase
 import {FACTION_LABEL,lawLabel,loyaltyWord,partyLabel} from '../council/CouncilParts';
 import {SocietyFlag} from '../SocietyFlag';
 import {SocietiesStrip,focusKnownSettlement} from '../council/SocietiesStrip';
-import {AttentionInbox} from '../council/AttentionInbox';
+import {AttentionInbox} from '../council/AttentionInboxPanel';
 import {GameTooltip} from '../GameTooltip';
 import {GameDisclosure} from '../GameDisclosure';
 import {FoodStoreReadout} from '../FoodStoreReadout';

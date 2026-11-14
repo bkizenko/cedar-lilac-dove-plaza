@@ -160,7 +160,7 @@
 .hw .hw-note-act{min-height:var(--hw-hit);padding:0 var(--hw-s4);border-radius:var(--hw-r-s);background:var(--hw-wood-800);color:var(--hw-text);font-weight:750;border:0;cursor:pointer}
 .hw-note-x{display:grid;place-items:center;width:44px;height:44px;border-radius:var(--hw-r-s);background:transparent;border:0;color:var(--hw-ink);cursor:pointer}
 .hw-note-x:hover{background:rgba(43,32,22,.1)}
-.hw-note-more{margin:0;padding:4px 12px;font-size:13px;color:var(--hw-ink-dim,var(--hw-ink));opacity:.8;text-align:center}
+.hw-note-more{margin:0;padding:4px 12px;font-size:var(--hw-fs-s,16px);color:var(--hw-ink-dim,var(--hw-ink));opacity:.8;text-align:center}
 .hw-legacy-note{display:grid;gap:var(--hw-s2)}
 .hw-legacy-note .hud-toast{pointer-events:auto;margin:0;text-align:left;font-size:var(--hw-fs);line-height:1.35;background:var(--hw-parch);color:var(--hw-ink);border:1px solid rgba(43,32,22,.25);border-left:6px solid var(--hw-gold);border-radius:var(--hw-r-m);padding:10px 14px;box-shadow:var(--hw-shadow)}
 .hw-legacy-note .hud-toast button{color:var(--hw-ink);min-height:44px}
