@@ -5,7 +5,7 @@ import {CouncilPanelClassic} from './council/CouncilPanelClassic';
 import {PartiesCard,ElderCounselLine,HandoverCard,FameFeed,NeighbourNews,FactionsStrip,GloryBars,Card} from './council/CouncilParts';
 import {CapitulationTerms} from './council/CapitulationTerms';
 import {SocietiesStrip,focusKnownSettlement} from './council/SocietiesStrip';
-import {AttentionInbox} from './council/AttentionInbox';
+import {AttentionInbox} from './council/AttentionInboxPanel';
 import {DiplomacySheet} from './council/DiplomacySheet';
 import {useCouncilLayout} from './council/councilLayout';
 const QUERY={kind:'rulers-council'} as const,QELDER={kind:'elder-counsel'} as const;
