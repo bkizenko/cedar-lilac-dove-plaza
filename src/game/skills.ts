@@ -72,11 +72,14 @@ export function trainEntry(rec:SkillRecord,skill:SkillId,seconds:number,years:nu
  const learned=e[0]-before;if(learned>0){const share=teacher>0?(1+SKILL_RULES.teachBoost*teacher-1)/(1+SKILL_RULES.teachBoost*teacher):0;e[3]=clamp(e[3]+(share*100-e[3])*clamp(learned/(SKILL_SPECS[skill].tau*.5),0,1),0,100);}
  return e;
 }
+/** Every tuneable of skill decay in one place. Unused xp relaxes toward floor = peak * clamp(floorBase + floorDepth*depth + floorLore*lore + guild bonus, 0, floorMax)
+ *  with time constant stabilityDays*(1+depthStability*depth)*(1+peak mastery)*(guild multiplier). Practice (trainEntry) raises xp again, rusty skills faster. */
+export const SKILL_DECAY_RULES={stabilityDays:60,depthStability:3,guildStability:1.5,floorBase:.35,floorDepth:.35,floorLore:.2,guildFloor:.05,floorMax:.9} as const;
 /** Forgetting: xp relaxes toward a floor (a fraction of peak) with a time constant that grows with depth and mastery. Starts after a grace period. */
 export function forgetEntry(rec:SkillRecord,skill:SkillId,days:number,day:number,guild=false){
  const e=rec.x[skill];if(!e||days<=0||day-e[1]<=SKILL_RULES.graceDays)return;
- const sp=SKILL_SPECS[skill],pkM=peakMastery(rec,skill),stability=60*(1+3*sp.depth)*(1+pkM)*(guild?1.5:1);
- const floor=e[2]*clamp(.35+.35*sp.depth+.2*(e[3]/100)+(guild?.05:0),0,.9);
+ const sp=SKILL_SPECS[skill],pkM=peakMastery(rec,skill),D=SKILL_DECAY_RULES,stability=D.stabilityDays*(1+D.depthStability*sp.depth)*(1+pkM)*(guild?D.guildStability:1);
+ const floor=e[2]*clamp(D.floorBase+D.floorDepth*sp.depth+D.floorLore*(e[3]/100)+(guild?D.guildFloor:0),0,D.floorMax);
  if(e[0]>floor)e[0]=floor+(e[0]-floor)*Math.exp(-days/stability);
 }
 /** Hit points low enough to injure: severity heals, a small permanent scar stays. */
