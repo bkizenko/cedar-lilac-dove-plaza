@@ -77,6 +77,7 @@ export type FieldStyleOf=(field:RenderField)=>{era:number;variant:number};
 export interface FieldLookData{edges:[number,number,number,number];look:[number,number,number,number];soil:[number,number,number,number];stage:FieldStage}
 type FieldInstances={serial:number;key:string;plan:unknown;n:number;mat:Float32Array;col:Float32Array};
 type BoundaryItem={mesh:string;mat:Float32Array;col:[number,number,number]};
+const FIELD_EDGE_PIECES_ON=false;
 /** Seasonal multipliers (phase 0 spring .. 3 winter) on the instance colour of hedges, banks, wattle, gates and weeds. */
 const SEASON_TINT:Record<'hedge'|'bank'|'wood'|'weed',[number,number,number][]>={hedge:[[1.05,1.12,.9],[1,1,1],[1.2,.98,.72],[.86,.8,.74]],bank:[[1.05,1.1,.95],[1,1,1],[1.05,.97,.85],[.9,.88,.82]],wood:[[1,1,1],[1,1,1],[1,.98,.95],[.93,.92,.9]],weed:[[1,1.05,.95],[1,1,1],[1.15,.95,.7],[.8,.74,.66]]};
 const STONE_DEFAULT=new THREE.Color('#85807a');
@@ -249,6 +250,8 @@ export class ContourFields {
  }
  /** Instance data for one field's boundary: pieces follow the slope (pitch from the ground at both ends), run corner to corner, and carry local rock colour (stone) or season (the rest). */
  private boundaryItems(ground:FieldGround,field:RenderField,mask:number,kind:BoundaryKind,tier:number,season:number,crossings:{x:number;z:number}[],lowerEdge:{x:number;z:number}|null=null){
+  // A field is just the field. Fences, hurdles, hedges, banks and gates are not drawn unless the field is a stone-terraced one (the optional upgrade).
+  if(kind!=='stone'&&!FIELD_EDGE_PIECES_ON)return [] as BoundaryItem[];
   // a hillside field keeps its bank on the lower edge and flanks only; the upper edge is left open (water runs onto it, a ditch would sit there)
   const sites=boundarySites(field,mask,kind,{crossings}).filter(s=>!lowerEdge||((s.x-field.x)*lowerEdge.x+(s.z-field.z)*lowerEdge.z)>=-.2*Math.max(field.w,field.d)/2),items:BoundaryItem[]=[],c=new THREE.Color(),pale=new THREE.Color();
   for(const site of sites){

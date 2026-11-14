@@ -45,7 +45,10 @@ test('painterly field layer draws boundary, crops and weeds near, thins in the m
 test('boundary kind follows era and variant, and the sync is cached (no rebuild when nothing changed)',()=>{
  const {scene,view,g}=rig([field(1,0,'ripe')]);
  for(const [era,variant,name]of [[0,0,'field-boundary-bank'],[1,0,'field-boundary-wattle'],[2,0,'field-boundary-hedge'],[3,1,'field-boundary-stone']]){
-  view.sync(g,{x:0,z:0,y:20},()=>({era,variant}),{quality:'med'});assert.ok(scene.children.some(m=>m.isInstancedMesh&&m.count>0&&m.name.startsWith(name)),name);}
+  view.sync(g,{x:0,z:0,y:20},()=>({era,variant}),{quality:'med'});
+  const shown=scene.children.some(m=>m.isInstancedMesh&&m.count>0&&m.name.startsWith(name));
+  // A field is just the field: only the optional stone-terraced kind draws edge pieces (owner request 11-14).
+  assert.equal(shown,name==='field-boundary-stone',name);}
  const m=scene.children.find(m=>m.name.startsWith('field-boundary-stone')&&m.count>0),v=m.instanceMatrix.version;view.sync(g,{x:0,z:0,y:20},()=>({era:3,variant:1}),{quality:'med'});assert.equal(m.instanceMatrix.version,v,'unchanged sync uploads nothing');
  view.dispose();
 });
