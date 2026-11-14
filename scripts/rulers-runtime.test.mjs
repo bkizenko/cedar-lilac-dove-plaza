@@ -123,7 +123,8 @@ test('npcKinPledges: rivals foster/exchange hostages on cadence only, never the 
   assert.ok(out.every(([a,b,k])=>a!==0&&b!==0&&a!==3&&b!==3&&k===kind),'player and wild team never pledged');
   for(const [a,b] of out){const w=R.wardsOf(g,a).filter(x=>(Number(x.from)===a&&Number(x.to)===b)||(Number(x.from)===b&&Number(x.to)===a));
    assert.equal(w.length>=2,true,'both houses send one kinsman');assert.ok(w.every(x=>x.kind===ward));
-   const d=g.state.rulers.societies[String(a)].dynasty;assert.ok(w.filter(x=>Number(x.from)===a).every(x=>d.people[x.person]?.alive),'ward is a living person still in his own dynasty record');}
+   const d=g.state.rulers.societies[String(a)].dynasty;assert.ok(w.filter(x=>Number(x.from)===a).every(x=>d.people[x.person]?.alive),'ward is a living person still in his own dynasty record');
+   assert.ok(d.log.some(l=>l.includes(kind==='fosterage'?'fosterage with':'hostage exchange with')&&l.startsWith(yr+':')),'pledge is chronicled in both houses\' own logs');assert.ok(d.log.length<=40);}
   const again=R.npcKinPledges(g);assert.ok(again.every(([a,b])=>!out.some(([c,d])=>c===a&&d===b)),'a bound pair is not pledged twice');
  }
  assert.ok(JSON.stringify(g.state.rulers.wards??[]).length>=wards0.length);
