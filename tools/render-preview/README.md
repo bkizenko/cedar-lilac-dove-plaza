@@ -69,3 +69,7 @@ syntax-checked, and the exporter was run in Node.
 ## First-person (eye-level) frames of the real game
 
 `fp.mjs` (entry `fp-entry.tsx`, shots `fp-shots.json`, evidence shots `fp-findings.json`, crops `fp-crops.mjs`) renders the real `Game` + `WorldView` + `HudHearth` with the camera at an adult eye (1.55 m). Output is PNG with a mean-luminance guard (`--min-lum`, default 70). See `docs/FIRST_PERSON_DESIGN.md`, "Real eye-level renders".
+
+## Chromium version mismatch (sandbox note)
+
+If `npm ci` installs a Playwright whose pinned Chromium is not on the machine (`Executable doesn't exist`), run the harness with the preinstalled Playwright first on the path: move `node_modules/playwright*` aside and set `NODE_PATH=$(npm root -g)`, e.g. `NODE_PATH=$(npm root -g) node tools/render-preview/trees.mjs tools/render-preview/near-trees-shots.json --out=DIR`. Trees render clean (oak/birch/maple, pine/willow/olive checked 2026-11-14).
