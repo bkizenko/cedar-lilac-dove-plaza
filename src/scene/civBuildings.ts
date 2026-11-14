@@ -431,6 +431,17 @@ CIVIC.quillan=g=>{const {w,d,r}=g,W=w*.84,D=d*.56,z0=-d*.14;let y=0;
  for(let i=0;i<3;i++)g.B(i%2?'wall':'wall2',[1.5-i*.35,.34,1.5-i*.35],[-w*.3,y*.55+i*.34,d*.36],0);g.B('trim',[.3,.9,.3],[-w*.3,y*.55+1.02,d*.36],0);g.Pr('wedge','accent',[.34,.5,.34],[-w*.3,y*.55+1.92,d*.36],0);
  for(const s of[-1,1]){g.B('trim',[.3,.26,.3],[s*W*.56,hall+2.62,z0],0);g.B('accent',[.2,.34,.2],[s*W*.56,hall+2.88,z0],0);}
  g.banner(w*.4,d*.3,6.2);return {entry:{x:0,z:d*.42+.6,width:W*.3}};};
+/** Vedara (original grammar): a rounded courtyard house. A stepped plinth carries a hall whose corners are round pillar-towers (10-sided drums with lotus-bud caps), a shallow barrel-like roof saddle between them, a pillared porch with a round-arched doorway and a stepped lotus finial; legacy box-wing set stays archived. */
+HOUSE.vedara=g=>{const {w,d,r}=g,W=w*.84*jit(r,.05),D=d*.8,ph=range(r,.4,.55),h=range(r,2.4,2.9),tr=Math.min(.95,W*.12);
+ g.B('wall2',[W+.7,.22,D+.7],[0,0,0],1);g.B('wall',[W+.3,ph-.22,D+.3],[0,.22,0],2);
+ g.B('wall',[W-tr,h,D-tr*.6],[0,ph,0],2);
+ for(const sx of[-1,1])for(const sz of[-1,1]){const x=sx*(W/2-tr*.35),z=sz*(D/2-tr*.35);P(g,'cylinder','wall2',[tr*2,h+.35,tr*2],[x,ph,z],undefined,10,2);P(g,'cylinder','trim',[tr*2.25,.14,tr*2.25],[x,ph+h+.3,z],undefined,10,1);P(g,'sphere','roof',[tr*1.7,tr*1.5,tr*1.7],[x,ph+h+.38,z],undefined,8,1);}
+ const rh=range(r,.9,1.2);P(g,'cylinder','roof',[W*.86,rh*2,D*.82],[0,ph+h-.1,0],[0,0,0],12,2);P(g,'cylinder','trim',[W*.88,.12,D*.84],[0,ph+h-.1+rh*.5,0],undefined,12,1);
+ g.B('trim',[W*.7,.16,.2],[0,ph+h*.62,D*.4+.1],1);
+ const dx=g.off*.3;g.B('accent',[1.0,1.7,.1],[dx,ph,D/2-tr*.1+.02],0);P(g,'cylinder','accent',[1.0,.1,1.0],[dx,ph+1.7,D/2-tr*.1+.02],[Math.PI/2,0,0],8,0);
+ for(const s of[-1,1])g.post('wall2',dx+s*.75,D/2+.35,ph+1.9,.16,1);g.B('trim',[1.9,.14,.9],[dx,ph+1.9,D/2],1);
+ for(let i=0;i<3;i++)g.B('trim',[1.0-i*.24,.18,.4-i*.08],[0,ph+h-.05+rh*.9+i*.2,0],0);P(g,'cone','accent',[.3,.6,.3],[0,ph+h+rh*.9+.55,0],undefined,6,0);
+ return {entry:{x:dx,z:D/2+.5,width:1.1}};};
 /** Nilemark: whitewashed mudbrick blocks with parapets, roof stairs and palm pergolas; the civic hall is a gate of two battered towers before a columned court. */
 HOUSE.nilemark=g=>{const {w,d,r}=g,W=w*.8*jit(r,.05),D=d*.72,h=range(r,2.5,3);
  g.B('wall2',[W+.2,.3,D+.2],[0,0,0],2);g.B('wall',[W,h,D],[0,.3,0],2);
