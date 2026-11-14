@@ -1361,3 +1361,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 
 19:42 ET Claude: shipped lane C Sandrill civic near-only carved window niches (original grammar, legacy kept; civ tests 31/32, civ-skin fail identical on base; SwiftShader docs/renders/visuals/sandrill-civic-niches-2026-11-13.png; tsc not run, typescript absent) (d0f973c5) / now on Option H adapter polish, Tigrane civic detail / blocked: none
 19:45 ET Claude(PM): landed 0afb1889 (9 commits: blood-price, handover mourning card, chronicle fold, orphan type fix, sweep-recent, docs) / sweep 144 tests 141 pass 3 skip 0 fail; tsc skipped (typescript absent, small diffs) / no agent branch newer than integration (all others >11h old, already folded); Codex idle reassigned, Grok out / blocked: none
+
+19:42 ET Claude: shipped lane C Sandrill civic near-only carved window niches (original grammar, legacy kept; civ tests 31/32, civ-skin fail identical on base; SwiftShader docs/renders/visuals/sandrill-civic-niches-2026-11-13.png; tsc not run, typescript absent) (d0f973c5) / now on Option H adapter polish, Tigrane civic detail / blocked: none
