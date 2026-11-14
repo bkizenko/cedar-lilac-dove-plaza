@@ -1,3 +1,4 @@
+import {mourningText} from './mourningText';
 import type {CouncilModel} from '../../game/rulersView';
 import {dedupeFeed,countLabel} from './feedDedupe';
 /** Lane B council parts: each one reads only the plain council model, so they survive the worker boundary. */
@@ -12,9 +13,10 @@ const Heading=({children}:{children:React.ReactNode})=><h4 className="text-[10px
 export const Card=({label,title,children}:{label:string;title:string;children:React.ReactNode})=><article aria-label={label} className="rounded-md border border-parchment/10 bg-black/20 p-2"><Heading>{title}</Heading><div className="mt-1.5 space-y-1.5">{children}</div></article>;
 
 /** Who takes over, why, and how soon it may matter. Only shown once the polity has a line of succession. */
-export function HandoverCard({h}:{h:NonNullable<CouncilModel['handover']>}){
- const risk=h.yearlyRisk,urgent=risk>=10||h.rulerAge>=55;
- return <Card label="Handover" title="If the ruler falls">
+export function HandoverCard({h,mourning}:{h:NonNullable<CouncilModel['handover']>;mourning?:CouncilModel['mourning']}){
+ const risk=h.yearlyRisk,urgent=risk>=10||h.rulerAge>=55,m=mourning?mourningText(mourning):null;
+ return <Card label="Handover" title={m?'The seat has passed':'If the ruler falls'}>
+  {m&&<div className="rounded border border-parchment/15 bg-black/30 p-1.5" role="status"><p className="text-parchment">{m.headline}</p>{m.contested&&<p className="text-amber-200">The succession is contested.</p>}<p className="text-parchment-dim">{m.left}.{m.pacts&&<> {m.pacts}</>}</p></div>}
   {h.extinct?<p className="text-red-300">No living kin. The line ends unless a claimant rises.</p>:h.heir?<div className="flex items-baseline justify-between gap-2"><div><div className="text-sm font-semibold text-parchment">{h.heir.name}</div>
     <div className="text-parchment-dim">{h.heir.role}, {h.heir.age}. {h.heir.headline}</div></div>
     <span className={'rounded px-1.5 py-0.5 text-[10px] uppercase '+(h.heir.adult?'bg-green-900/40 text-green-200':'bg-amber-900/40 text-amber-200')}>{h.heir.adult?'of age':'too young'}</span></div>:<p>A regent will hold the seat{h.regent?`: ${h.regent}`:''}.</p>}

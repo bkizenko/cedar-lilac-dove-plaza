@@ -33,7 +33,7 @@ export function CouncilPanel({engine}:{engine:Engine}){
   </Card>}
   <AttentionInbox council={c} onFocus={t=>focusKnownSettlement(engine,t)} onAnswer={(team,kind)=>fb.send({kind,team})}/>
   <SocietiesStrip neighbours={c.neighbours} onFocus={t=>focusKnownSettlement(engine,t)}/>
-  {c.handover&&<HandoverCard h={c.handover}/>}
+  {c.handover&&<HandoverCard h={c.handover} mourning={c.mourning}/>}
   {c.showFactions&&<FactionsStrip factions={c.factions} coalitionLoss={c.coalitionLoss}/>}
   <GloryBars glory={c.glory} score={c.gloryScore}/>
   <FameFeed log={c.log}/>

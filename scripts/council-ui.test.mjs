@@ -191,3 +191,11 @@ test('attention inbox offers take-in / turn-away buttons for hungry families wai
  const html=renderToStaticMarkup(h(AttentionInbox,{council:c,onAnswer(){}}));assert.match(html,/data-refugee-action="take-in-refugees"/);assert.match(html,/Turn away/);
  assert.doesNotMatch(renderToStaticMarkup(h(AttentionInbox,{council:c})),/data-refugee-action/);assert.equal(attentionInbox({enabled:true,neighbours:[],log:[]}).some(i=>i.key.startsWith('refugees')),false);
 });
+
+test('handover card shows the hall mourning lines in both palettes',async()=>{
+ const {HandoverCard:Hearth}=await import('../src/ui/hearth/councilCards.tsx');
+ const hv={law:'primogeniture',rulerAge:30,yearlyRisk:3,extinct:false,others:[]};
+ const m={from:'Old Ardan',to:'Mira',relation:'child',contested:true,kind:'ruler-death',secondsLeft:600,carried:3,strained:1,lapsed:1};
+ for(const C of [HandoverCard,Hearth]){const html=renderToStaticMarkup(h(C,{h:hv,mourning:m}));assert.ok(html.includes('Old Ardan is mourned; Mira takes the seat as their child.'),html);assert.ok(html.includes('contested'));assert.ok(html.includes('10 min of mourning left'));assert.ok(html.includes('2 agreements carried over, 1 strained, 1 lapsed.'));}
+ assert.ok(!renderToStaticMarkup(h(HandoverCard,{h:hv})).includes('mourned'));
+});

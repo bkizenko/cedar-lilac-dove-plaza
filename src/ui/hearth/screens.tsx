@@ -134,7 +134,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
     {elder&&<p className="hw-elder" data-elder-counsel="1"><b>{elder.name}</b>, {elder.age}, {elder.level==='master'||elder.level==='expert'?`${elder.level} in ${elder.skillLabel}`:`skilled in ${elder.skillLabel}`}: <em>“{elder.line}”</em></p>}
     <div className="hw-chips">{Object.entries(c.ruler.competences).map(([k,v])=><span key={k} className="hw-chip hw-chip-soft">{nice(k)} {v}</span>)}</div>
    </section>}
-   {c.handover&&<HandoverCard h={c.handover}/>}
+   {c.handover&&<HandoverCard h={c.handover} mourning={c.mourning}/>}
    {c.house&&<section className="hw-card"><div className="hw-card-head"><h3>House</h3></div><ul className="hw-chips">{c.house.family.map(p=><li key={p.name+p.age} className="hw-chip hw-chip-soft"><Users size={16}/>{p.name} · {p.role} · {p.age}</li>)}</ul></section>}
   </div>}
   {active==='realm'&&<div className="hw-grid-2">

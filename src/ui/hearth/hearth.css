@@ -337,6 +337,7 @@
 .hw-portrait figure{margin:0;max-width:112px}
 .hw-portrait svg{width:112px;height:112px;border-radius:var(--hw-r-m);border:2px solid rgba(227,173,79,.6);display:block}
 .hw-portrait figcaption{display:none}
+.hw-mourn{display:grid;gap:4px;padding:8px 10px;border-radius:10px;background:rgba(20,16,14,.45);border:1px solid rgba(190,150,150,.35)}
 .hw-handover.is-watch{border-color:rgba(242,199,107,.55);background:rgba(242,199,107,.07)}
 .hw-heir{display:flex;gap:var(--hw-s3);align-items:center}
 .hw-pressure{display:flex;flex-wrap:wrap;gap:6px;align-items:center}

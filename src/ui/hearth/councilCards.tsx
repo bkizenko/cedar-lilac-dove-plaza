@@ -11,6 +11,7 @@ import type {CapitulationOutcome} from '../../game/capitulation';
 import {TERMS} from '../council/CapitulationTerms';
 import {useOwnerReadModels} from '../useOwnerReadModels';
 import {useActionFeedback,FeedbackList} from '../council/useActionFeedback';
+import {mourningText} from '../council/mourningText';
 import {dedupeFeed} from '../council/feedDedupe';
 
 const cx=(...a:(string|false|undefined|null)[])=>a.filter(Boolean).join(' ');
@@ -28,14 +29,15 @@ export function RulerPortrait({engine,name,fallback}:{engine:Engine;name:string;
 type Handover=NonNullable<CouncilModel['handover']>;
 /** The handover card as a story in four beats: who is next, how soon, what could go wrong, who else might rise. Succession is
  * the one place the player cannot act directly, so the card says plainly what will happen and what pushes on it. */
-export function HandoverCard({h}:{h:Handover}){
- const urgent=h.yearlyRisk>=10||h.rulerAge>=55,p=h.pressure,contested=h.heir&&!h.heir.legit;
+export function HandoverCard({h,mourning}:{h:Handover;mourning?:CouncilModel['mourning']}){
+ const urgent=h.yearlyRisk>=10||h.rulerAge>=55,p=h.pressure,contested=h.heir&&!h.heir.legit,m=mourning?mourningText(mourning):null;
  const stage=p&&p.stage&&p.stage!=='calm'&&p.stage!=='none'?p.stage:null;
  return <section className={cx('hw-card hw-handover',(urgent||contested||!!stage)&&'is-watch')} aria-label="Handover">
-  <div className="hw-card-head"><h3>Successor</h3>
+  <div className="hw-card-head"><h3>{m?'The seat has passed':'Successor'}</h3>
    <GameTooltip title="Chance the seat passes within a year" description={`Ruler aged ${h.rulerAge}. ${lawLabel(h.law)}.`}>
     <span className={cx('hw-chip',urgent&&'t-warn')} tabIndex={0} aria-label={`About ${h.yearlyRisk} percent a year the seat passes`}><Hourglass size={18}/>{h.yearlyRisk}%/y</span>
    </GameTooltip></div>
+  {m&&<div className="hw-mourn" role="status"><span className="hw-chip hw-chip-soft"><Scroll size={16}/>{m.kind}</span><p className="hw-sub">{m.headline}</p>{m.contested&&<p className="hw-sub t-warn"><TriangleAlert size={16}/> The succession is contested.</p>}<p className="hw-sub">{m.left}.{m.pacts&&<> {m.pacts}</>}</p></div>}
   {h.extinct?<p className="t-bad hw-sub"><Skull size={18}/> No living kin. The line ends unless a claimant rises.</p>
    :h.heir?<div className="hw-heir"><span className="hw-medal hw-medal-s"><Crown size={22}/></span><div><h4>{h.heir.name}</h4><p className="hw-sub">{sentence(h.heir.role)}, {h.heir.age}. {h.heir.headline}</p></div></div>
    :<p className="hw-sub">A regent will hold the seat{h.regent?`: ${h.regent}`:''}.</p>}
