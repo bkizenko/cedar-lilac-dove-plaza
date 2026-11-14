@@ -5,7 +5,7 @@ import type {Dynasty,Person} from './dynasty';
 import {ADULT} from './dynasty';
 
 export type OrphanKind='sibling'|'grandparent'|'kin'|'hall'|'regent';
-export type OrphanCare={child:string;guardian:string;kind:OrphanKind;relation:string};
+export type OrphanCare={child:string;guardian:string;kind:OrphanKind;/** optional: saved records (rulers.orphanCare) do not carry it; orphanLine derives it */relation?:string};
 const alive=(d:Dynasty,id?:string):Person|undefined=>{const p=id?d.people[id]:undefined;return p&&p.alive?p:undefined;};
 
 export function orphanCare(d:Dynasty):OrphanCare[]{
@@ -29,5 +29,6 @@ export function orphanCare(d:Dynasty):OrphanCare[]{
 /** One plain line for a card or the chronicle. */
 export const orphanLine=(d:Dynasty,o:OrphanCare):string=>{
  const c=d.people[o.child],g=d.people[o.guardian];if(!c||!g)return '';
- return o.kind==='hall'?`${c.name} has no kin left to raise them and is fed at the hall under ${g.name}`:o.kind==='regent'?`${c.name}, still a child, is raised in the hall under regent ${g.name}`:`${c.name} is taken in by ${g.name}, their ${o.relation}, and eats at that table`;
+ const rel=o.relation??(o.kind==='sibling'?(g.sex==='f'?'elder sister':'elder brother'):o.kind==='grandparent'?(g.sex==='f'?'grandmother':'grandfather'):o.kind==='kin'?(g.sex==='f'?'aunt':'uncle'):'kinsman');
+ return o.kind==='hall'?`${c.name} has no kin left to raise them and is fed at the hall under ${g.name}`:o.kind==='regent'?`${c.name}, still a child, is raised in the hall under regent ${g.name}`:`${c.name} is taken in by ${g.name}, their ${rel}, and eats at that table`;
 };
