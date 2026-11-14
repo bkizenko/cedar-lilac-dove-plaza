@@ -497,6 +497,18 @@ CIVIC.rusvolt=g=>{const {w,d,r}=g,b=Math.min(w,d)*.82;
   P(g,'pyramid','roof',[s*1.38,1.9,s*1.38],[0,y+1.3,0],rot);y+=1.3+.95;}
  P(g,'cone','accent',[.5,2.2,.5],[0,y,0],undefined,6);P(g,'sphere','trim',[.5,.5,.5],[0,y+2.1,0],undefined,undefined,1);
  g.door(0,b*.5+.02,1.3,2);g.banner(b*.55,b*.55,4.2);return {entry:{x:0,z:b*.5,width:1.4}};};
+/** Vedara civic (original grammar): a round lotus-dome hall. Two stepped round plinths carry a drum ringed with slim round pilasters, a ring of petal cones round the dome's foot, an onion-lotus dome, a stepped finial and round-arched door with a short stair; legacy stepped-tower set stays archived. Footprint stays within w x d. */
+CIVIC.vedara=g=>{const {w,d,r}=g,R=Math.min(w,d)*.32,zs=-d*.1,dh=range(r,2.6,3.2),y0=.56;
+ P(g,'cylinder','wall2',[R*2.8,.28,R*2.8],[0,0,zs],undefined,16,2);P(g,'cylinder','wall',[R*2.5,.28,R*2.5],[0,.28,zs],undefined,16,2);
+ P(g,'cylinder','wall',[R*2,dh,R*2],[0,y0,zs],undefined,14,2);
+ for(let j=0;j<10;j++){const a=j/10*Math.PI*2;if(Math.sin(a)>.82)continue;P(g,'cylinder','wall2',[.34,dh,.34],[Math.cos(a)*R*1.0,y0,zs+Math.sin(a)*R*1.0],undefined,8,1);}
+ P(g,'cylinder','trim',[R*2.3,.2,R*2.3],[0,y0+dh,zs],undefined,14,1);
+ P(g,'sphere','roof',[R*2.1,R*1.7,R*2.1],[0,y0+dh+.1,zs],undefined,12,2);
+ for(let j=0;j<8;j++){const a=j/8*Math.PI*2+.2;P(g,'cone','accent',[.5,.9,.5],[Math.cos(a)*R*.98,y0+dh+.2,zs+Math.sin(a)*R*.98],undefined,5,1);}
+ const top=y0+dh+.1+R*1.7;P(g,'cylinder','trim',[.5,.14,.5],[0,top-.15,zs],undefined,8,1);P(g,'cone','accent',[.3,1.1,.3],[0,top-.05,zs],undefined,6,0);
+ g.B('accent',[1.2,1.9,.1],[0,y0,zs+R+.02],0);P(g,'cylinder','accent',[1.2,.1,1.2],[0,y0+1.9,zs+R+.02],[Math.PI/2,0,0],8,0);
+ for(let i=0;i<3;i++)g.B('wall2',[2.8+(2-i)*.5,.42-i*.14,.5],[0,0,zs+R*1.25+.25+i*.5],1);
+ if(g.wealth>.4)g.banner(w*.4,d*.3,y0+dh+1.2);return {entry:{x:0,z:Math.min(d*.5-.3,zs+R*1.25+1.75),width:2.2}};};
 const ORIGINAL_HOUSE:Record<CivId,(g:G)=>Out>={...HOUSE},ORIGINAL_CIVIC:Record<CivId,(g:G)=>Out>={...CIVIC};
 export type GrammarSet='original'|'legacy';export const GRAMMAR_SETS:GrammarSet[]=['original','legacy'];let grammarSet:GrammarSet='original';
 export const setGrammarSet=(g:GrammarSet)=>{grammarSet=g;};export const getGrammarSet=()=>grammarSet;
