@@ -91,7 +91,7 @@ export class Engine {
   private createLifecycleWorker(){const host=new SimulationWorkerHost({onPresentation:()=>{if(this.workerHost===host)this.pushHud();},onFault:error=>console.error(error)});return host;}
   private async prepareVillage(snapshot:unknown,worker:boolean,testMode=false,revealMap=false):Promise<PreparedVillage>{
     if(worker){const host=this.createLifecycleWorker();try{await host.initialize(snapshot,{started:true,awaitingStart:false,testMode,revealMap});host.projection.setDisplaySettings(this.game.quality,this.fps);return{game:host.game,host};}catch(error){host.dispose();throw error;}}
-    const game=decodeGame(snapshot);game.testMode=testMode;game.revealMap=testMode&&revealMap;game.state.paused=true;if(testMode)game.updateVision();return{game,host:null};
+    const game=decodeGame(snapshot);game.testMode=testMode;game.revealMap=testMode&&revealMap;game.state.paused=testMode;if(testMode)game.updateVision();return{game,host:null};
   }
   private installVillage(next:PreparedVillage,retainPrevious=false){
     const previous={game:this.game,host:this.workerHost??null},quality=this.game.quality,muted=this.game.muted;
@@ -385,7 +385,7 @@ export class Engine {
       if(saved){this.game=decodeGame(saved);this.profile.personMethods.attach(this.game);this.game.quality=this.view.quality;this.bindNativeCallbacks(this.game);}
       else {this.game.reset();this.game.awaitingStart = true;}
       if(this.game.awaitingStart)this.game.enterIsland();
-      this.game.state.paused = true;
+      this.game.state.paused = false; // the village starts running; pausing is the player's choice
       this.gfx?.hold();this.view.rebuild(this.game);
       this.homeLook();
       this.view.resize();
@@ -396,7 +396,7 @@ export class Engine {
       try {
         this.game.reset();
         this.game.enterIsland();
-        this.game.state.paused = true;
+        this.game.state.paused = false;
         this.gfx?.hold();this.view.rebuild(this.game);
         this.homeLook();
         this.view.resize();
@@ -490,7 +490,7 @@ export class Engine {
     const t=this.beginLifecycle();let applied=false;
     try{await this.pauseLifecycleOwner(t);
       if(t.game.started&&!t.game.awaitingStart){const saved=await this.checkpointService.save(t.game.testMode?'test-lab':'protected',true);if(!this.currentLifecycle(t))return false;if(saved.status!=='committed')throw new Error('Could not protect this village. Export it before starting another world.');}
-      const game=new Game();game.reset(undefined,generation,{...request,difficulty:request?.difficulty??t.game.state.difficulty??'normal'});game.enterIsland();game.state.paused=true;game.testMode=t.game.testMode;if(wildCraft===true)enableWildCraft(game);
+      const game=new Game();game.reset(undefined,generation,{...request,difficulty:request?.difficulty??t.game.state.difficulty??'normal'});game.enterIsland();game.state.paused=!!t.game.testMode;game.testMode=t.game.testMode;if(wildCraft===true)enableWildCraft(game);
       if(!this.currentLifecycle(t))return false;
       // Explicit fresh-world MAIN-mode replacement. Worker world creation is not implemented.
       this.installVillage({game,host:null});applied=true;this.lastLifecycle={operation:'new-world',mode:'main'};this.pushHud();return true;
