@@ -460,12 +460,14 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
  *  raid:    bands and below raid as before. A state-tier polity needs cause to strike a peaceful, known neighbour: it must be in 'conquer'
  *           mode AND hold a 'raid' claim. With no claim the first review grants one (a visible grievance, 12 years) and the strike waits a
  *           review; the strike cites the claim, spending it. Already-hostile targets need no cause. Null (old behaviour) when rulers are off. */
-export type JourneyPermit={allow:boolean;reserve?:number;cadence?:number;why:string[]};
+/** Era gating of trade ventures: the most goods one caravan carries (a band's pack, a chiefdom's bearers, a state's organised caravan). Only a cap; nothing is created. */
+export const ERA_TRADE_CARGO:Record<'band'|'chiefdom'|'state',number>={band:16,chiefdom:24,state:32};
+export type JourneyPermit={allow:boolean;reserve?:number;cadence?:number;cargo?:number;why:string[]};
 export function journeyPermit(g:Game,team:number,kind:'explore'|'trade'|'raid',target?:number):JourneyPermit|null{
  const d=expansionOf(g,team);if(!d)return null;
  const org=ERA_REACH[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'].organised; // bands have no standing provisioning or market habit to speed up
  if(kind==='explore')return {allow:true,reserve:d.mode==='explore'&&org?300:450,why:d.mode==='explore'&&org?d.why:[]};
- if(kind==='trade')return {allow:true,cadence:Math.round((d.mode==='trade'&&org?60:120)*tradeCadenceBias(g,team)),why:d.mode==='trade'&&org?d.why:[]};
+ if(kind==='trade')return {allow:true,cargo:ERA_TRADE_CARGO[st(g).rulers?.societies[String(team)]?.civ.polity.tier??'band'],cadence:Math.round((d.mode==='trade'&&org?60:120)*tradeCadenceBias(g,team)),why:d.mode==='trade'&&org?d.why:[]};
  const council=raidGate(g,team); // society decision layer: a strike leaves only under a raid plan, against the planned target
  if(council&&(!council.allow||(target!==undefined&&council.target!==target)))return {allow:false,why:[council.allow?'the council named another target':council.why]};
  const r=ensureRulers(g),me=r?.societies[String(team)];if(!r||!me||target===undefined||g.isFoe(team,target))return {allow:true,why:['already at war']};
