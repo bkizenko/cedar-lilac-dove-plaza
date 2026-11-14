@@ -5,6 +5,7 @@ import {captureTarget} from './conflictIntent';
 import {releasePrisoner,PRISONER_RULES} from './captivity';
 import {isDependent} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
+import {beginSettlementJourney} from './barter';
 import {supplyDrops,supplyApproach} from './campAnchor';
 import {carryingCapacity} from './haulage';
 import {visitorPrice,visitorTradeCache,visitorTradeIssue,acceptVisitorTrade,declineVisitorVisit} from './visitors';
@@ -43,7 +44,7 @@ export function answerEncounter(g:Game,reaction:'greet'|'withdraw'|'observe'){
 }
 
 export const CONTACT_RULES={version:1,talkMeters:12,exchangeMeters:3,capturePartyMeters:50,villageResponseMeters:150,riskMeters:80,maximumDemandGuards:4,trustingThreshold:.6,questionCooldownSeconds:60,visitorCampMeters:35,minimumBundleValueRatio:.65,maximumBundleValueRatio:1.55,yieldSeconds:30,experiencedCraftingSeconds:60,hungrySeconds:30,tiredFraction:.5,woundedFraction:.5} as const;
-export type ContactAction='attack'|'demand'|'rob'|'interrogate'|'ransom'|'capture'|'question'|'trade'|'send-scout-home'|'ask-visitor-leave'|'release-prisoner'|'approach-trade'|'decline-trade';
+export type ContactAction='attack'|'demand'|'rob'|'interrogate'|'ransom'|'capture'|'question'|'trade'|'send-scout-home'|'ask-visitor-leave'|'release-prisoner'|'approach-trade'|'invite-trade'|'decline-trade';
 export type ContactOutcome={accepted:boolean;reason:string;report?:string};
 export type ContactTrade={id:string;label:string;kind:'bundle'|'visitor';give?:ResKind;buyerId:number;strangerId:number};
 const worth:Record<ResKind,number>={food:1,wood:1.2,stone:2.2,copper:4.5,iron:6.5};
@@ -113,6 +114,22 @@ function approachContactTrade(g:Game,u:Unit,personId?:number):ContactOutcome{
  if(g.state.encounter?.stranger===u.id)g.state.paused=false;
  return {accepted:true,reason:`${personName(p)} is walking closer. Confirm the exchange when they arrive; both bundles remain with their owners.`};
 }
+/** The trader walks to the middle of your village (the finished town hall) and waits there for your offer, exactly like a trader sent by a rival society:
+ *  nobody has to walk out to meet them. Goods stay on their body until a village trade is accepted. */
+export function inviteContactTradeIssue(g:Game,id:number,personId?:number){
+ const u=target(g,id),issue=contactIssue(g,u,personId);if(issue||!u)return issue;
+ if(u.prisoner||g.isFoe(0,u.team))return 'They will not agree to a peaceful exchange';
+ if(!u.carryType||u.carry<=0)return 'They have no carried goods to offer';
+ if(u.trade||u.tributeJourney||u.envoy||u.visit||u.coastalVoyageId!==undefined||hasTaskCommitment(u))return 'These goods belong to an ongoing journey or protected duty';
+ if(!g.state.buildings.some(b=>b.team===0&&b.type==='townhall'&&g.finished(b)))return 'You need a finished town hall to host a trade';
+ return null;
+}
+function inviteContactTrade(g:Game,u:Unit,personId?:number):ContactOutcome{
+ const issue=inviteContactTradeIssue(g,u.id,personId);if(issue)return {accepted:false,reason:issue};
+ const hall=g.state.buildings.find(b=>b.team===0&&b.type==='townhall'&&g.finished(b))!;
+ g.interruptMission(u);beginSettlementJourney(g,u,hall);u.visit={phase:'outbound',wait:0};u.order='move';u.node=null;u.target=null;u.tx=hall.x;u.tz=hall.z;u.job=null;u.jobLock=false;u.stuckT=0;u.workReason='Invited to trade at your village';
+ return {accepted:true,reason:`${g.tribe(u.team).name}'s trader is walking to the middle of your village to trade.`};
+}
 /** Visible local conditions only: no hidden foreign stock or off-screen force. */
 export function contactSafety(g:Game,id:number){const u=target(g,id);if(!u)return 'The person has left this meeting';const relation=g.isFoe(0,u.team)?'Relations are hostile. ':(g.tribe(u.team).trust||0)>=CONTACT_RULES.trustingThreshold?'Relations are trusting. ':'Trust is still limited. ';let hostile=0,armed=0;for(const p of g.state.units){if(p.hp<=0||!g.visibleAt(p.x,p.z)||Math.hypot(p.x-u.x,p.z-u.z)>CONTACT_RULES.riskMeters)continue;if(p.team===0&&armedAdult(g,p))armed++;else if(g.isFoe(0,p.team))hostile++;}return relation+(hostile?`${hostile} hostile ${hostile===1?'person is':'people are'} visible nearby; ${armed} armed villagers nearby.`:armed?`${armed} armed ${armed===1?'villager is':'villagers are'} nearby. No hostile party is currently visible here.`:'No armed villager or hostile party is currently visible nearby.');}
 function returnPerson(g:Game,u:Unit,reason:string){g.interruptMission(u);u.recalled=true;u.stationOnArrival=false;u.order='return';u.target=null;u.node=null;u.job=null;u.jobLock=false;u.huntOnly=false;u.pillage=-1;u.attackDestination=null;u.workReason=reason;}
@@ -127,7 +144,7 @@ function exchangeContact(g:Game,u:Unit,optionId:string|undefined,personId?:numbe
  lifeEvent(g,0,`Trade: ${reason}`);return {accepted:true,reason};
 }
 function visitorLeaveIssue(g:Game,u:Unit|undefined,personId?:number){const issue=contactIssue(g,u,personId);if(issue||!u)return issue;if(u.prisoner)return 'Use Release prisoner to return home for someone in your custody';if(g.isFoe(0,u.team))return 'You cannot send an uncontrolled hostile party home';if((u.type!=='worker'||u.militia)&&!u.caravanArmed)return 'This armed party is not under your control';if(!u.visit&&Math.hypot(u.x-g.campOf(0).x,u.z-g.campOf(0).z)>CONTACT_RULES.visitorCampMeters)return 'They are not visiting your camp; you can send your own explorer home';if(u.trade||u.tributeJourney||u.envoy||u.escortId!==undefined||hasTaskCommitment(u))return 'This person has a protected journey or duty and cannot be dismissed as a visitor';if(!supplyDrops(g,u.team).some(home=>!!supplyApproach(g,u,home)))return 'This person has no reachable home camp; clear a route before asking them to return';return null;}
-export function contactActions(g:Game,id:number,personId?:number){const u=target(g,id);return {attack:{reason:attackContactIssue(g,id,personId),consequences:verbConsequences(g,u,'attack')},demand:{reason:demandContactIssue(g,id)},rob:{reason:robContactIssue(g,id),consequences:verbConsequences(g,u,'rob')},interrogate:{reason:interrogateIssue(g,id),consequences:verbConsequences(g,u,'interrogate'),report:interrogationReport(g,id)},ransom:{reason:ransomIssue(g,id),consequences:verbConsequences(g,u,'ransom')},trader:isTraderUnit(g,u),conversation:CONTACT_TOPICS.map(topic=>({...topic,reason:questionIssue(g,u,personId,topic.id)})),capture:{reason:captureContactIssue(g,id),consequences:verbConsequences(g,u,'capture')},question:{reason:questionIssue(g,u,personId),report:lastContactReport(g,id)},trade:contactTradeOptions(g,id,personId),approach:{reason:approachContactTradeIssue(g,id,personId)},safety:contactSafety(g,id),leave:{reason:visitorLeaveIssue(g,u,personId)},scout:u?speaker(g,u,personId):undefined,prisoner:!!u?.prisoner&&u.prisoner.captorTeam===0&&u.prisoner.phase!=='released'};}
+export function contactActions(g:Game,id:number,personId?:number){const u=target(g,id);return {attack:{reason:attackContactIssue(g,id,personId),consequences:verbConsequences(g,u,'attack')},demand:{reason:demandContactIssue(g,id)},rob:{reason:robContactIssue(g,id),consequences:verbConsequences(g,u,'rob')},interrogate:{reason:interrogateIssue(g,id),consequences:verbConsequences(g,u,'interrogate'),report:interrogationReport(g,id)},ransom:{reason:ransomIssue(g,id),consequences:verbConsequences(g,u,'ransom')},trader:isTraderUnit(g,u),conversation:CONTACT_TOPICS.map(topic=>({...topic,reason:questionIssue(g,u,personId,topic.id)})),capture:{reason:captureContactIssue(g,id),consequences:verbConsequences(g,u,'capture')},question:{reason:questionIssue(g,u,personId),report:lastContactReport(g,id)},trade:contactTradeOptions(g,id,personId),approach:{reason:approachContactTradeIssue(g,id,personId)},invite:{reason:inviteContactTradeIssue(g,id,personId)},safety:contactSafety(g,id),leave:{reason:visitorLeaveIssue(g,u,personId)},scout:u?speaker(g,u,personId):undefined,prisoner:!!u?.prisoner&&u.prisoner.captorTeam===0&&u.prisoner.phase!=='released'};}
 function finishEncounterAction(g:Game,id:number){if(g.state.encounter?.stranger===id){const resume=g.state.encounter.resume;g.state.encounter=undefined;g.state.paused=!resume;}}
 /** Shared UI controller: blocked actions do not interrupt a mission or close
  * the contact; accepted travel commands resume the same physical simulation. */
@@ -143,11 +160,12 @@ export function performContactAction(g:Game,action:ContactAction,id:number,perso
  else if(action==='decline-trade')result=declineVisitorVisit(g,u.id);
  else if(action==='trade')result=exchangeContact(g,u,optionId,personId);
  else if(action==='approach-trade')result=approachContactTrade(g,u,personId);
+ else if(action==='invite-trade')result=inviteContactTrade(g,u,personId);
  else if(action==='release-prisoner'){const accepted=!!u.prisoner&&u.prisoner.captorTeam===0&&releasePrisoner(g,id);result={accepted,reason:accepted?'Released to walk home with their belongings and remaining provisions':'This person is not in your custody'};}
  else if(action==='ask-visitor-leave'){const issue=visitorLeaveIssue(g,u,personId);if(issue)result={accepted:false,reason:issue};else{returnPerson(g,u,'Leaving by request — taking belongings home');result={accepted:true,reason:'The visitor is walking home with the same belongings'};}}
  else {const own=speaker(g,u,personId);if(!own)result={accepted:false,reason:'Your explorer is no longer present at this meeting'};else if(!supplyDrops(g,0).some(home=>!!supplyApproach(g,own,home)))result={accepted:false,reason:'Your explorer has no reachable home cache; clear a route or crossing first'};else{returnPerson(g,own,'Returning home from first contact with existing provisions');own.order='move';result={accepted:true,reason:`${personName(own)} is returning to your camp; the foreign person remains independent`};}}
  if(result.accepted&&(action==='trade'||action==='decline-trade'))finishEncounterAction(g,id);
- if(result.accepted&&['attack','demand','rob','capture','release-prisoner','ask-visitor-leave','send-scout-home'].includes(action))finishEncounterAction(g,id);g.banner(result.reason,5);return result;
+ if(result.accepted&&['attack','demand','rob','capture','release-prisoner','ask-visitor-leave','send-scout-home','invite-trade'].includes(action))finishEncounterAction(g,id);g.banner(result.reason,5);return result;
 }
 
 function attackParty(g:Game,u:Unit,personId?:number){const armed=captureParty(g,u);if(armed.length)return armed;const own=speaker(g,u,personId);return own&&!hasTaskCommitment(own)&&own.escortId===undefined&&own.conflictIntent!=='occupy'?[own]:[];}

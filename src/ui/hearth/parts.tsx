@@ -199,9 +199,11 @@ export function selectionStats(sel:HudSnapshot['selection'],hud:HudSnapshot,coun
 /** A selected foreign person or held prisoner shows its hostile verbs on the card itself, not behind More orders. */
 function SelectedForeignVerbs({engine}:{engine:Engine}){const u=engine.game.state.units.find(p=>p.selected&&p.hp>0&&(p.team!==0||!!(p as {prisoner?:unknown}).prisoner));return u?<TraderVerbs engine={engine} strangerId={u.id}/>:null;}
 export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engine|null;onOffer:(t:number)=>void}){
- const sel=hud.selection,[more,setMore]=useState(sel.kind==='building'&&sel.team===0&&!!sel.completed),[info,setInfo]=useState(false),[tab,setTab]=useState('');
+ const sel=hud.selection,[more,setMore]=useState(sel.kind==='building'&&sel.team===0&&!!sel.completed),[info,setInfo]=useState(sel.kind==='building'),[tab,setTab]=useState('');
  const f=useFold('selection');
- useEffect(()=>{setMore(sel.kind==='building'&&sel.team===0&&!!sel.completed);setInfo(false);setTab('');},[sel.kind,sel.name,sel.buildingId]);
+ useEffect(()=>{setMore(sel.kind==='building'&&sel.team===0&&!!sel.completed);setInfo(sel.kind==='building');setTab('');},[sel.kind,sel.name,sel.buildingId]);
+ /** A clicked building always shows what it does and its orders at once: no Details or More-orders button to find first. */
+ const direct=sel.kind==='building';
  if(sel.kind==='none')return null;
  if(!f.showPanel)return <FoldHandle f={f} icon={<UserRound size={24}/>}/>;
  const hp=sel.maxHp>0?Math.round(100*sel.hp/sel.maxHp):0;
@@ -214,12 +216,12 @@ export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engin
  const mil=person&&(hud.militarySelected>0||hud.militiaSelected>0),cmdOk=own&&(mil||sel.kind==='boat');
  const tabs=[showJobs&&{id:'work',label:'Work',icon:<Hammer size={26}/>},mil&&{id:'fight',label:'Fight',icon:<Swords size={26}/>},cmdOk&&{id:'command',label:sel.kind==='boat'?'Hull':'Command',icon:sel.kind==='boat'?<Anchor size={26}/>:<Flag size={26}/>}].filter(Boolean) as {id:string;label:string;icon:ReactNode}[];
  const ctx=tabs.find(t=>t.id===tab)?.id??(mil?'fight':tabs[0]?.id);
- return <section className={cx('hw-sel',more&&'is-open',f.cls)} data-kind={sel.kind} aria-label={`Selected: ${sel.name}`}>
+ return <section className={cx('hw-sel',(more||direct)&&'is-open',f.cls)} data-kind={sel.kind} aria-label={`Selected: ${sel.name}`}>
   <header className="hw-sel-head">
    <span className="hw-medal">{icon}</span>
    <div className="hw-sel-title"><h2>{sel.name}</h2>
     <div className={cx('hw-bar',hp<35&&'is-low')} role="progressbar" aria-label={`Condition ${hpLabel}`} aria-valuenow={hp} aria-valuemin={0} aria-valuemax={100} title={`Condition ${hpLabel}`}><i style={{width:`${hp}%`}} className={hp<35?'t-bad':''}/></div></div>
-   <IconBtn label="Details" tip={sel.info} active={info} onClick={()=>setInfo(v=>!v)} small><Info size={24}/></IconBtn>
+   {!direct&&<IconBtn label="Details" tip={sel.info} active={info} onClick={()=>setInfo(v=>!v)} small><Info size={24}/></IconBtn>}
    <IconBtn label="Deselect" tip="Esc" onClick={()=>engine?.clearSelection()} small><X size={24}/></IconBtn>
    <FoldMin f={f}/>
   </header>
@@ -237,9 +239,9 @@ export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engin
    {hud.idleWorkers>0&&sel.kind!=='boat'&&<GameTooltip title={`${hud.idleWorkers} idle`} description="Jump to the next idle resident"><button type="button" className="hw-btn-wide" aria-label={`${hud.idleWorkers} idle`} onClick={()=>engine?.focusIdle()}><Users size={26}/>{hud.idleWorkers}</button></GameTooltip>}
    {sel.canRecycle&&<IconBtn label={sel.planned?'Cancel plan':'Recycle'} onClick={()=>engine?.recycle()}><Recycle size={26}/></IconBtn>}
    {person&&<><IconBtn label="Previous person" tip="Shift+," onClick={()=>engine?.cycleVillager(-1)}><ChevronLeft size={26}/></IconBtn><IconBtn label="Next person" tip="," onClick={()=>engine?.cycleVillager(1)}><ChevronRight size={26}/></IconBtn></>}
-   <span className="hw-more"><IconBtn label={more?'Fewer orders':'More orders'} tip="Contact, equipment, storage and everything else" active={more} onClick={()=>setMore(v=>!v)}><ClipboardList size={26}/></IconBtn></span>
+   {!direct&&<span className="hw-more"><IconBtn label={more?'Fewer orders':'More orders'} tip="Contact, equipment, storage and everything else" active={more} onClick={()=>setMore(v=>!v)}><ClipboardList size={26}/></IconBtn></span>}
   </div>
-  {more&&<div className="hw-legacy hw-sel-more"><SelectionDetails hud={hud} engine={engine} selMin={false} onOffer={onOffer} hideJobs hideCommand={cmdOk}/></div>}
+  {(more||direct)&&<div className="hw-legacy hw-sel-more"><SelectionDetails hud={hud} engine={engine} selMin={false} onOffer={onOffer} hideJobs hideCommand={cmdOk}/></div>}
  </section>;
 }
 

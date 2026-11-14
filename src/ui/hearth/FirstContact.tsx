@@ -28,7 +28,7 @@ export function lookOfPerson(engine:Engine,strangerId:number){
 }
 export function FirstContact({engine}:{engine:Engine}){
  const g=engine.game,encounter=g.state.encounter!;
- const [topic,setTopic]=useState<LeaderTopic>('welcome'),[said,setSaid]=useState<string>(''),[note,setNote]=useState(''),[trade,setTrade]=useState(false);
+ const [topic,setTopic]=useState<LeaderTopic>('welcome'),[said,setSaid]=useState<string>(''),[note,setNote]=useState(''),[trade,setTrade]=useState(false),[learn,setLearn]=useState(false),[talk,setTalk]=useState(false),[force,setForce]=useState(false);
  const stranger=g.state.units.find(u=>u.id===encounter.stranger),person=g.state.units.find(u=>u.id===encounter.person),t=g.tribe(encounter.team);
  const hostile=g.isFoe(0,t.id),v=voiceOf(g,stranger,encounter.team);
  const rel=societyRelation(g,0,encounter.team),mood=moodOf(rel);
@@ -55,26 +55,27 @@ export function FirstContact({engine}:{engine:Engine}){
    <p className="fc-eyebrow">{hostile?v.encounter.hostile:v.encounter.first}</p>
    <h2 id="encounter-heading">{t.name}</h2>
    <p className="fc-role"><SocietyFlag game={g} team={encounter.team}/> {stranger?v.roleLine(personName(stranger),stranger.type==='leader'?'leader':'hand'):''}</p>
-   <h3 className="fc-h">{v.encounter.seen}</h3>
+   <button type="button" className="fc-learn" aria-expanded={learn} onClick={()=>setLearn(!learn)}>{learn?'Hide details':'Learn more'}</button>
+   {learn&&<><h3 className="fc-h">{v.encounter.seen}</h3>
    <ul className="fc-know">{know.map(k=><li key={k}>{k}</li>)}</ul>
-   {!!tagList.length&&<><h3 className="fc-h">{v.encounter.marks}</h3><ConsequenceLegend tags={tagList} tagText={v.force.tags}/></>}
+   {!!tagList.length&&<><h3 className="fc-h">{v.encounter.marks}</h3><ConsequenceLegend tags={tagList} tagText={v.force.tags}/></>}</>}
   </aside>
   <div className="fc-main">
    <blockquote className="fc-said" role="log" aria-live="polite" aria-label="Meeting conversation"><p>{line}</p></blockquote>
-   {speak&&<><h3 className="fc-h">{v.groups.speak}</h3><ul className="fc-list" aria-label={v.groups.speak}>
-    {picks.map(([id,label,prompt,icon])=><LedgerRow key={id} say icon={icon} label={prompt} onClick={()=>ask(id)}/>)}
-    {peaceChoice&&<LedgerRow icon={<Handshake size={24}/>} label={peaceChoice.label} onClick={()=>{if(!person||!stranger)return;const r=chooseLeaderDialogue(g,person.id,stranger.id,topic,peaceChoice.id);setSaid(r.reply);setTopic(r.view.topic);engine.pushHud();}}/>}
+   {speak&&<><ul className="fc-list" aria-label={v.groups.speak}>
+    <LedgerRow icon={<MessageCircle size={24}/>} label={v.groups.speak} expanded={talk} onClick={()=>setTalk(!talk)}/>
+    {talk&&picks.map(([id,label,prompt,icon])=><LedgerRow key={id} say icon={icon} label={prompt} onClick={()=>ask(id)}/>)}
+    {talk&&peaceChoice&&<LedgerRow icon={<Handshake size={24}/>} label={peaceChoice.label} onClick={()=>{if(!person||!stranger)return;const r=chooseLeaderDialogue(g,person.id,stranger.id,topic,peaceChoice.id);setSaid(r.reply);setTopic(r.view.topic);engine.pushHud();}}/>}
    </ul></>}
-   {!hostile&&<><h3 className="fc-h">{v.groups.deal}</h3><ul className="fc-list" aria-label={v.groups.deal}>
+   {!hostile&&<><ul className="fc-list" aria-label={v.groups.deal}>
     <LedgerRow icon={<Repeat size={24}/>} say label={v.prompts.trade} line={stranger?.carryType&&stranger.carry>0?v.trader.offers(Math.floor(stranger.carry),stranger.carryType):v.trader.empty} expanded={trade} onClick={()=>{ask('trade');setTrade(!trade);}}/>
     {trade&&actions.trade.options.map(o=><LedgerRow key={o.id} icon={<Repeat size={24}/>} label={o.label} onClick={()=>run('trade',o.id)}/>)}
     {trade&&!actions.trade.options.length&&(actions.approach.reason===null?<LedgerRow icon={<Footprints size={24}/>} label={v.trader.closer} onClick={()=>run('approach-trade')}/>:<li className="fc-quiet">{actions.trade.reason}</li>)}
     {trade&&stranger?.visit?.phase==='waiting'&&stranger.visit.team===undefined&&<LedgerRow icon={<MessageCircle size={24}/>} label={v.trader.decline} onClick={()=>run('decline-trade')}/>}
    </ul>{trade&&stranger&&stranger.team!==0&&<div className="fc-quiet"><TradedTeachingActions engine={engine} teacherId={stranger.id} personId={encounter.person} open={trade}/></div>}</>}
-   <h3 className="fc-h">{v.groups.force}</h3>
-   <TraderVerbs engine={engine} strangerId={encounter.stranger} personId={encounter.person} variant="ledger" noLegend extra={!actions.prisoner&&stranger?<LedgerRow icon={<Sword size={24}/>} label={v.trader.demand} line={v.force.tags.loot+'.'} blocked={!!actions.demand.reason} reason={actions.demand.reason} onClick={()=>run('demand')}/>:null}/>
+   <ul className="fc-list"><LedgerRow icon={<Sword size={24}/>} label={v.groups.force} expanded={force} onClick={()=>setForce(!force)}/></ul>
+   {force&&<TraderVerbs engine={engine} strangerId={encounter.stranger} personId={encounter.person} variant="ledger" noLegend extra={!actions.prisoner&&stranger?<LedgerRow icon={<Sword size={24}/>} label={v.trader.demand} line={v.force.tags.loot+'.'} blocked={!!actions.demand.reason} reason={actions.demand.reason} onClick={()=>run('demand')}/>:null}/>}
    {note&&<p className="fc-note" role="status" aria-live="polite">{note}</p>}
-   <h3 className="fc-h">{v.groups.leave}</h3>
    <ul className="fc-list">
     {!hostile&&<LedgerRow icon={<Handshake size={24}/>} label={v.farewell.part} line={v.farewell.line} onClick={()=>reply('greet')}/>}
     {!actions.prisoner&&stranger&&<LedgerRow icon={<Footprints size={24}/>} label={v.trader.leave} onClick={()=>run('ask-visitor-leave')}/>}

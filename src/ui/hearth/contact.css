@@ -37,3 +37,7 @@
 @media (prefers-reduced-motion:no-preference){:root .encounter-dialog.fc .fc-row{transition:background-color .12s}}
 :root .encounter-dialog.fc .fc-say .fc-txt b{text-transform:none;letter-spacing:.01em;font-size:20px;font-weight:600}
 :root .encounter-dialog.fc .fc-portrait{width:150px;margin-bottom:10px}
+
+/* Left column is the portrait and name only; the long "what you know / what follows" lists sit behind this button. */
+.fc-learn{margin:.6rem 0 .2rem;padding:.4rem .8rem;background:transparent;border:1px solid currentColor;color:inherit;font:inherit;font-size:16px;min-height:44px;cursor:pointer;opacity:.85}
+.fc-learn:hover{opacity:1}

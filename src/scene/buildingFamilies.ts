@@ -149,7 +149,7 @@ const quernShelter:Generator=(ctx,r)=>{
 /** Open-bay craft shelter (medieval workshop fronts, Roman tabernae): back wall,
  * open front, awning, with a trade-specific fixture that shows its function. */
 const workshop:Generator=(ctx,r)=>{
- const parts:Part[]=[],{w,d}=ctx.footprint,trade=ctx.trade??'bench',W=w*range(r,.7,.84),D=d*range(r,.55,.68),h=range(r,2.1,2.6);
+ const parts:Part[]=[],{w,d}=ctx.footprint,trade=ctx.trade??'bench',W=w*range(r,.7,.84),D=d*range(r,.55,.68),h=range(r,3,3.6); // never lower than the people who work in it
  const closed=trade==='smoke',stone=trade==='forge'||trade==='oven'||ctx.material==='stone',wm=stone?'stone':wallMaterial(ctx),z0=-d/2+D/2+.15;
  parts.push(part('box',wm,[W,h,.2],[0,0,z0-D/2+.1],2));
  for(const s of[-1,1])parts.push(part('box',wm,[.18,closed?h:h*.55,D*(closed?1:.55)],[s*(W/2-.09),0,z0-D*(closed?0:.225)],2));
@@ -175,6 +175,19 @@ const workshop:Generator=(ctx,r)=>{
   case 'oven':{parts.push(part('box','stoneDark',[1.6,.6,1.4],[0,0,fz],2),part('sphere','plaster',[1.4,.9,1.2],[0,.6,fz],2),part('box','woodEdge',[.45,.35,.06],[0,.62,fz+.6],1));break;}
   default:{parts.push(part('box','woodMid',[1.5,.1,.6],[-W*.2,.8,fz],1),part('box','woodMid',[1.2,.1,.6],[W*.22,.8,fz],1));for(const x of[-W*.2-.6,-W*.2+.6,W*.22-.45,W*.22+.45])parts.push(beam('woodDark',[x,0,fz],[x,.8,fz],.07,0));parts.push(part('cylinder','woodEdge',[.5,.55,.5],[0,0,z0+D/2+.3],0,undefined,8));}
  }
+
+ // Outside signature: each trade shows what it does from the street (tall stack, dome, hanging cloth, hides, logs, jars).
+ {const avail=d/2-(z0+D/2)-.12,az=z0+D/2+Math.max(.3,Math.min(avail,1.2))*.55,ax=W*.36,ry=h+D*.2;
+  switch(trade){
+   case 'forge':parts.push(part('box','stoneDark',[.8,2.4,.8],[-W*.22,ry,z0-D/2+.5],2),part('box','fire',[.5,.1,.5],[-W*.22,ry+2.4,z0-D/2+.5],0),part('cylinder','woodDark',[.5,.55,.5],[ax,0,az],1,undefined,8),part('box','iron',[.6,.3,.35],[ax,.55,az],1),part('sphere','stoneDark',[.9,.5,.9],[-ax,0,az],1));break;
+   case 'kiln':parts.push(part('cylinder','plaster',[2.1,1.5,2.1],[ax,0,az],2,undefined,10),part('sphere','plaster',[2.1,1.2,2.1],[ax,1.3,az],2),beam('stoneDark',[ax,2.2,az],[ax,3.8,az],.2,1),part('box','stone',[.9,.6,.6],[-ax,0,az],1));break;
+   case 'pottery':for(let i=0;i<4;i++)parts.push(part('cylinder','plaster',[.5,.6,.5],[ax-.7+i*.42,0,az],1,undefined,8));for(let i=0;i<3;i++)parts.push(part('sphere','plaster',[.5,.5,.5],[ax-.5+i*.42,.6,az],1));parts.push(beam('woodDark',[-ax,0,az],[-ax,2.2,az],.08,1),part('box','woodMid',[1.1,.07,.4],[-ax,1.2,az],1),part('cylinder','plaster',[.55,.55,.55],[-ax,1.27,az],0,undefined,8));break;
+   case 'loom':for(const sx of[-1,1])parts.push(beam('woodDark',[ax+sx*.6,0,az],[ax+sx*.6,2.7,az],.09,1));parts.push(part('box','woodDark',[1.4,.1,.1],[ax,2.65,az],1),part('box','cloth',[.5,1.9,.04],[ax-.3,.7,az],0),part('box','clothRed',[.5,1.6,.04],[ax+.3,1,az],0),part('cylinder','woodDark',[.8,.6,.8],[-ax,0,az],1,undefined,8));break;
+   case 'rack':for(const sx of[-1,1]){parts.push(beam('woodDark',[sx*ax-.5,0,az],[sx*ax-.5,2.3,az],.08,1),beam('woodDark',[sx*ax+.5,0,az],[sx*ax+.5,2.3,az],.08,1),part('box','woodDark',[1.2,.08,.08],[sx*ax,2.25,az],1),part('box','woodEdge',[.9,1.5,.03],[sx*ax,.75,az],0));}break;
+   case 'saw':for(let i=0;i<3;i++)parts.push(part('cylinder','woodMid',[.34,2.2,.34],[ax,.2,az-.2+i*.0],1,[0,0,Math.PI/2],8));for(let i=0;i<2;i++)parts.push(part('cylinder','woodLight',[.34,2.2,.34],[ax,.55,az-.1+i*.0],1,[0,0,Math.PI/2],8));for(const sx of[-1,1])parts.push(beam('woodDark',[-ax+sx*.5,0,az],[-ax+sx*.2,2.4,az],.1,1));parts.push(part('box','iron',[1.2,.12,.03],[-ax,1.6,az+.05],0));break;
+   case 'smoke':parts.push(part('box','stone',[.8,2.6,.8],[0,ry,z0],2),part('box','woodEdge',[1,.2,1],[0,ry+2.6,z0],1));break;
+   case 'oven':parts.push(part('sphere','plaster',[2,1.3,1.8],[ax,0,az],2),part('box','stoneDark',[.6,1.3,.6],[ax,1.1,az],1),part('box','woodEdge',[.5,.4,.06],[ax,.4,az+.9],1),part('box','stoneDark',[.7,2,.7],[0,ry,z0-D/2+.5],2));break;
+   default:parts.push(beam('woodDark',[ax,0,az],[ax,2.6,az],.1,1),part('box','woodEdge',[.9,.5,.06],[ax,2.1,az],0),part('box','woodMid',[1.1,.45,.6],[-ax,0,az],1),part('box','woodLight',[1.1,.35,.6],[-ax,.45,az],1));}}
  return {parts,entry:{x:0,z:z0+D/2,width:W*.6}};
 };
 

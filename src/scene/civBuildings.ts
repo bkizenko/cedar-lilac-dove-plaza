@@ -559,6 +559,14 @@ function villageMarks(g:G,h:Heraldry){
   if(h.trim===2){piece(ccx,zf,0,L,.06);piece(ccx,zf,0,L,.06,y+.17);}
   if(h.trim===3)for(let i=0;i<Math.floor(L/.4);i+=2)piece(x0+(x1-x0)*.05+.2+i*.4,zf,0,.24,.26);}
 }
+/** People stand about 1.8 m; no dwelling, hall or store may peak lower than 3 m, so a villager never out-tops the roof. Stretches the vertical axis only, after fitting. */
+const MIN_PEAK=3;
+function liftToPeopleHeight(parts:Part[]):Part[]{
+ let top=0;for(const p of parts)top=Math.max(top,partBounds(p).maxY);
+ if(top<=0||top>=MIN_PEAK)return parts;
+ const k=MIN_PEAK/top;
+ return parts.map(p=>({...p,pos:[p.pos[0],p.pos[1]*k,p.pos[2]] as V,size:p.rot?p.size:[p.size[0],p.size[1]*k,p.size[2]] as V,...(p.ends?{ends:[[p.ends[0][0],p.ends[0][1]*k,p.ends[0][2]],[p.ends[1][0],p.ends[1][1]*k,p.ends[1][2]]] as const}:{})}));
+}
 export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,variantKey=''):CivSpec{
  const look=ctx.eraMode==='fixed'?{era:ctx.built?.era??ctx.era,wealth:ctx.built?.wealth??ctx.wealth}:{era:ctx.era,wealth:ctx.wealth},fp0=ctx.footprint,ext=ctx.extensions??[],c2:CivContext={...ctx,...look,footprint:ext.length?{w:fp0.w*.7,d:fp0.d}:fp0};
  const r=seededRandom(ctx.seed),g=mk(civ,c2,r),sc=jit(r,.06);
@@ -583,7 +591,8 @@ export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,varian
  const own=new Set(Object.keys(materialTable(civ))),parts=ensureTiers(ensureNearSupport(ensureCore(fit.parts),fit.footprint),fit.footprint).map(p=>own.has(p.mat)?p:{...p,mat:matId(civ,'wall2') as Part['mat']}),cloth=matId(civ,'cloth');
  const sh=ext.length?-fp0.w*.15:0,shifted=sh?parts.map(p=>({...p,pos:[p.pos[0]+sh,p.pos[1],p.pos[2]] as V,...(p.ends?{ends:[[p.ends[0][0]+sh,p.ends[0][1],p.ends[0][2]],[p.ends[1][0]+sh,p.ends[1][1],p.ends[1][2]]] as const}:{})})):parts;
  const annexParts:Part[]=[];ext.slice(0,2).forEach((e,i)=>{const vg=mk(civ,{...ctx,era:e.era,wealth:look.wealth,footprint:fp0},seededRandom(ctx.seed+i*7+1)),aw=fp0.w*.26,ad=fp0.d*(.45-i*.1),x=fp0.w*.355,z=-fp0.d*.1+i*fp0.d*.34,h=range(vg.r,2.2,3);vg.B(e.era>=3?'wall':'wall2',[aw,h,ad],[x,0,z],2);roofFor(vg,Math.min(aw,ad)*.8,Math.min(aw,ad)*.8,h,x,z);vg.door(x,z+ad/2+.02,.8,1.7);annexParts.push(...vg.parts.filter(q=>{const b=partBounds(q);return b.minX>=-fp0.w/2&&b.maxX<=fp0.w/2&&b.minZ>=-fp0.d/2&&b.maxZ<=fp0.d/2;}));});
- const outParts=capMidTier(ext.length?ensureTiers(ensureNearSupport([...shifted,...annexParts],fp0),fp0):parts);
+ const outParts0=capMidTier(ext.length?ensureTiers(ensureNearSupport([...shifted,...annexParts],fp0),fp0):parts);
+ const outParts=role==='market'?outParts0:liftToPeopleHeight(outParts0);
  return {...fit,footprint:{...fp0},...(entry?{entry:{...entry,x:entry.x+sh}}:{}),parts:outParts,eraMode:ctx.eraMode??DEFAULT_ERA_MODE,builtEra:look.era,extensionEras:ext.map(e=>e.era),civ,role,materials:muteTable(ctx.look?.palette?paletteTable(civ,ctx.look.palette):materialTable(civ)),banners:outParts.filter(p=>p.mat===cloth&&p.size[2]<.1&&p.size[1]>.6).map(p=>({pos:p.pos,size:p.size})),imperfection:{scale:sc,lean:im.lean,offDoor:g.off,patches:im.patches}};
 }
 

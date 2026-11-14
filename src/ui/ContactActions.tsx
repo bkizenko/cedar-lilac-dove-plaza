@@ -27,7 +27,7 @@ export function ContactActions({engine,strangerId,personId,conversation=true}:{e
   {branch==='trade'&&<div className="space-y-2" aria-label="Trade offers">
    <p className={hint}>{stranger?.carryType&&stranger.carry>0?vo.trader.offers(Math.floor(stranger.carry),stranger.carryType):vo.trader.empty}</p>
    {actions.trade.options.map(offer=><button type="button" key={offer.id} className={button} onClick={()=>run('trade',offer.id)}>{offer.label}</button>)}
-   {!actions.trade.options.length&&(actions.approach.reason===null?<button type="button" className={button} onClick={()=>run('approach-trade')}>Walk closer to exchange</button>:<p className={hint}>{actions.trade.reason}</p>)}
+   {!actions.trade.options.length&&(actions.invite.reason===null?<button type="button" className={button} onClick={()=>run('invite-trade')}>Invite to your village</button>:actions.approach.reason===null?<button type="button" className={button} onClick={()=>run('approach-trade')}>Walk closer to exchange</button>:<p className={hint}>{actions.trade.reason}</p>)}
    {actions.trade.options.some(o=>o.kind==='visitor')?<p className={hint}>Purchases go into village stores.</p>:actions.scout&&stranger?.carryType&&<p className={hint}>{personName(actions.scout)} can carry {carryingCapacity(actions.scout,stranger.carryType)} {stranger.carryType} with their current equipment.</p>}
    <p className={hint}>{actions.safety}</p>
    {stranger?.visit?.phase==='waiting'&&stranger.visit.team===undefined&&<button type="button" className={button} onClick={()=>run('decline-trade')} title="Return the goods and take your answer home; repeated unchanged offers stop.">{vo.trader.decline}</button>}

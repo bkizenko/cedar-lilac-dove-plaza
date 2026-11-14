@@ -390,6 +390,10 @@ export class Engine {
       else {this.game.reset();this.game.awaitingStart = true;}
       if(this.game.awaitingStart)this.game.enterIsland();
       this.game.state.paused = false; // the village starts running; pausing is the player's choice
+      // Music on from the first moment: browsers only allow audio after a gesture, so unlock now and again on the first click/key.
+      try{this.audio.unlock();}catch{/* audio unavailable */}
+      const firstGesture=()=>{try{this.audio.unlock();}catch{/* audio unavailable */}window.removeEventListener('pointerdown',firstGesture);window.removeEventListener('keydown',firstGesture);};
+      window.addEventListener('pointerdown',firstGesture);window.addEventListener('keydown',firstGesture);
       this.gfx?.hold();this.view.rebuild(this.game);
       this.homeLook();
       this.view.resize();
