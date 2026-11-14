@@ -468,6 +468,8 @@ CIVIC.tigrane=g=>{const {w,d,r}=g;let y=0;
  P(g,'cylinder','wall',[W*1.02,D*1.04,vh*2],[0,y+h,zc-D*.52],[Math.PI/2,0,0],14);for(let i=0;i<5;i++)P(g,'cylinder','trim',[W*1.05,.14,vh*2.06],[0,y+h,zc-D*.42+i*D*.21],[Math.PI/2,0,0],14,0);
  g.B('trim',[W+.06,.28,D+.06],[0,y+h*.5,zc],1);g.B('accent',[1.3,1.9,.1],[0,y,zc+D*.5+.03],0);P(g,'cylinder','accent',[1.3,.12,1.7],[0,y+1.5,zc+D*.52+.02],[Math.PI/2,0,0],10,0);
  for(const s of[-1,1]){g.B('wall',[1.1,4,1.1],[s*w*.44,0,d*.36],2);g.B('trim',[1.3,.25,1.3],[s*w*.44,4,d*.36],1);g.banner(s*w*.44,d*.36,6);}
+ // near-only glazed tile band (three tiles) on the front of the top drum, original Tigrane grammar; budget-tight so only three boxes
+ for(let j=0;j<3;j++){const a=Math.PI*(.32+j*.18),tw=w*.94*.56,td=d*.9*.56;g.B(j%2?'accent':'trim',[.4,.34,.2],[Math.cos(a)*tw*.5,y-1.1,-d*.08+Math.sin(a)*td*.5],0,[0,-a,0]);}
  return {entry:{x:0,z:d*.46,width:1.8}};};
 /** Rusvolt: crossed-gable log halls with carved vermilion ridge-tips; the civic hall is a spruce-tier tent: stacked log tiers, each turned 45 degrees under a steep pyramid cap, ringed by horn spikes. */
 HOUSE.rusvolt=g=>{const {w,d,r}=g,W=w*.74*jit(r,.05),D=d*.7,h=range(r,2.1,2.6),rise=range(r,1.9,2.4);
