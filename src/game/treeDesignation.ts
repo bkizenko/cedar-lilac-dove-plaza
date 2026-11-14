@@ -22,3 +22,15 @@ export function projectedTreeInBox(project:(x:number,y:number,z:number)=>{x:numb
  const x=points[0].x,miny=Math.min(...points.map(p=>p.y)),maxy=Math.max(...points.map(p=>p.y));
  return x>=box.minx&&x<=box.maxx&&maxy>=box.miny&&miny<=box.maxy;
 }
+
+/** Drag-select orders for stone and huntable animals: reuses Game.issueGather (the right-click path).
+ * With a worker selection the nearest target gets the order; otherwise idle workers are spread over up to 6 targets nearest first. */
+export function orderGatherTargets(g:Game,stoneIds:number[],animalIds:number[]):number {
+ const targets:Array<Parameters<Game['issueGather']>[0]>=[...g.state.stones.filter(n=>stoneIds.includes(n.id)&&n.amount>0&&g.exploredAt(n.x,n.z)),...g.state.wildlife.filter(c=>animalIds.includes(c.id)&&c.hp>0&&g.visibleAt(c.x,c.z))];
+ if(!targets.length)return 0;
+ const cx=targets.reduce((a,n)=>a+n.x,0)/targets.length,cz=targets.reduce((a,n)=>a+n.z,0)/targets.length;
+ targets.sort((a,b)=>Math.hypot(a.x-cx,a.z-cz)-Math.hypot(b.x-cx,b.z-cz));
+ const hasSel=g.selectedUnits().some(u=>u.type==='worker'||u.militia);let ordered=0;
+ for(const t of targets.slice(0,hasSel?1:6)){const before=g.state.units.filter(u=>u.order==='gather'&&u.node===t).length;g.issueGather(t);if(g.state.units.filter(u=>u.order==='gather'&&u.node===t).length>before||g.state.units.some(u=>u.selected&&u.node===t))ordered++;}
+ return ordered;
+}
