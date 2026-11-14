@@ -4,7 +4,7 @@
  * add-ons, rubble and patching with wear). Era 0-1 builds the poorest local dwelling; later eras add the signature wall,
  * a civic hall, plinths, storeys and trim. Materials are named `${civ}.${slot}` and resolved through `materials`. */
 import type {Heraldry} from './villageIdentity';
-import {beam,capMidTier,chance,fitToFootprint,partBounds,part,pick,range,seededRandom,type BuildingSpec,type Part,type Rng,type LodTier} from './buildingParts';
+import {beam,capMidTier,chance,fitToFootprint,partBounds,part,pick,range,seededRandom,specBounds,type BuildingSpec,type Part,type Rng,type LodTier} from './buildingParts';
 import {ensureCore,ensureNearSupport,ensureTiers} from './buildingFamiliesCivic';
 import {dressDwelling,muteTable} from './buildingDetail';
 import {getHutVariety,hutPlan,varyHut,type HutPlan} from './hutVariety';
@@ -560,7 +560,12 @@ export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,varian
  const look=ctx.eraMode==='fixed'?{era:ctx.built?.era??ctx.era,wealth:ctx.built?.wealth??ctx.wealth}:{era:ctx.era,wealth:ctx.wealth},fp0=ctx.footprint,ext=ctx.extensions??[],c2:CivContext={...ctx,...look,footprint:ext.length?{w:fp0.w*.7,d:fp0.d}:fp0};
  const r=seededRandom(ctx.seed),g=mk(civ,c2,r),sc=jit(r,.06);
  // builders read g.w/g.d, so run them on a view scaled by the instance's size jitter (still fitted back into the footprint below)
- const view:G={...g,w:c2.footprint.w*Math.min(1,sc),d:c2.footprint.d*Math.min(1,sc)};
+ // Early dwellings: shrink the MASS (not the doorway) until it fits the footprint, so the later fit never squeezes a door below adult size.
+ let poorK=1;
+ if((role==='house'||role==='civic')&&c2.era<=1)for(let i=0;i<3;i++){const r0=seededRandom(ctx.seed),g0=mk(civ,c2,r0),s0=jit(r0,.06),v0:G={...g0,w:c2.footprint.w*Math.min(1,s0)*poorK,d:c2.footprint.d*Math.min(1,s0)*poorK};poor(v0);
+  const b=specBounds({parts:v0.parts} as BuildingSpec),s=Math.min(1,(c2.footprint.w/2-.1)/Math.max(1e-6,Math.abs(b.minX),Math.abs(b.maxX)),(c2.footprint.d/2-.1)/Math.max(1e-6,Math.abs(b.minZ),Math.abs(b.maxZ)));
+  if(s>=.995)break;poorK*=s*.985;}
+ const view:G={...g,w:c2.footprint.w*Math.min(1,sc)*poorK,d:c2.footprint.d*Math.min(1,sc)*poorK};
  const out=role==='house'?(c2.era<=1?poor(view):(grammarSet==='legacy'?LEGACY_HOUSE:ORIGINAL_HOUSE)[civ](view)):role==='civic'?(c2.era<=1?poor(view):(grammarSet==='legacy'?LEGACY_CIVIC:ORIGINAL_CIVIC)[civ](view)):BUILD[role](view);
  if(grammarSet==='original'&&role==='civic'&&!view.parts.some(p=>p.mat===matId(civ,'cloth')&&p.size[2]<.1&&p.size[1]>.6))view.banner(view.w*.36,view.d*.46,3.2);
  if(grammarSet==='original'&&(role==='house'||role==='civic')&&c2.era>=3)eraMarks(view,c2.era,c2.wealth);

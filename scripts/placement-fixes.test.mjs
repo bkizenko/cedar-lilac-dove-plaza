@@ -45,7 +45,7 @@ test('heraldry: two villages of the SAME civ and colour build different houses (
   const find=(a,b)=>{for(let x=0;x<8;x++)for(let y=x+1;y<8;y++)if(heraldryDistance(villageHeraldry(9,x),villageHeraldry(9,y))>=2)return[x,y];return null;};
   const [a,b]=find();const A=mk(a),B=mk(b);
   assert.notEqual(A.variantKey,B.variantKey);assert.notDeepEqual(A.parts,B.parts);assert.deepEqual(A.footprint,B.footprint);assert.deepEqual(A.materials,B.materials);
-  const none=variantSpec(carvedVariantFor({worldSeed:9,type:'house',id:11,era:3,footprint:{w:7,d:6},settlementSeed:a,skin}));assert.ok(A.parts.length>none.parts.length,'heraldry adds marks');
+  const none=variantSpec(carvedVariantFor({worldSeed:9,type:'house',id:11,era:3,footprint:{w:7,d:6},settlementSeed:a,skin}));assert.notDeepEqual(A.parts,none.parts,'heraldry changes the marks'); // part COUNT is not a valid proxy: the mid-tier part cap (capMidTier) can trim as many dressing parts as the marks add
   for(const t of A.parts){const q=partBounds(t);assert.ok(q.maxX-q.minX<=A.footprint.w+1e-6&&q.maxZ-q.minZ<=A.footprint.d+1e-6,'marks stay in the footprint');}
 });
 test('hut: every civ at every early age is a readable hut - dark framed door at person scale, a wall, an overhanging roof mass, 2.2 m or more tall',()=>{
