@@ -3,7 +3,7 @@
  *  numbers into oscillators, filtered noise and gain ramps. No downloads, no Math.random. Starts only after the owner
  *  calls attach() from a user gesture (GameAudio.unlock). */
 import {seededRandom,hashSeed} from '../scene/buildingParts';
-import {SCORE_LAYERS,ENV_LAYERS,BED_PARAMS,SFX_SPECS,VoiceBudget,BarClock,ScoreSmoother,barNotes,scoreMix,envMix,envEvents,envRecipe,sfxRecipe,smoothEnv,emitterGain,busGain,midiToHz,
+import {SCORE_LAYERS,ENV_LAYERS,BED_PARAMS,SFX_SPECS,VoiceBudget,BarClock,ScoreSmoother,barNotes,scoreMix,envMix,envEvents,envRecipe,sfxRecipe,smoothEnv,emitterGain,busGain,DuckFollower,sfxDuckLoad,midiToHz,
  DEFAULT_AUDIO_SETTINGS,busOff,type AudioSettings,type ScoreInput,type EnvInput,type EnvLayer,type ScoreLayer,type SfxKind,type Recipe,type Note,type Scale} from '../scene/audioMix';
 
 export type Emitter={kind:SfxKind;x:number;z:number};
@@ -18,6 +18,8 @@ export class ProceduralAudio{
  private smoother=new ScoreSmoother();private clock=new BarClock();private env=Object.fromEntries(ENV_LAYERS.map(l=>[l,0])) as Record<EnvLayer,number>;
  private settings:AudioSettings={...DEFAULT_AUDIO_SETTINGS};private mourning=0;private ceremony=0;private seed=1;private lastPaused=false;private brightness=.5;
  private filterByLayer=new Map<ScoreLayer,BiquadFilterNode>();
+ /** Music ducks under busy effects: followed per frame from the voices started since the last update. */
+ private duckFollow=new DuckFollower();private duckImpulse=0;duck=1;
 
  /** Call once from a user gesture with the shared context and its destination node. */
  attach(ctx:AudioContext,dest:AudioNode,seed=1){
@@ -33,7 +35,7 @@ export class ProceduralAudio{
   if(!this.ctx||!this.buses)return;const t=this.ctx.currentTime,b=this.buses,s=this.settings;
   // master carries mute and master; each bus is its own slider (busGain already multiplies master for sub-buses, so master node stays at 1 unless muted)
   b.master.gain.setTargetAtTime(s.muted?0:1,t,.05);
-  b.music.gain.setTargetAtTime(busGain(s,'music'),t,.1);b.sfx.gain.setTargetAtTime(busGain(s,'sfx'),t,.05);b.amb.gain.setTargetAtTime(busGain(s,'ambience'),t,.2);
+  b.music.gain.setTargetAtTime(busGain(s,'music')*this.duck,t,.1);b.sfx.gain.setTargetAtTime(busGain(s,'sfx'),t,.05);b.amb.gain.setTargetAtTime(busGain(s,'ambience'),t,.2);
  }
  /** Ruler events: mourning darkens the score for ~50 s, a rise or succession rings bells and horn for ~25 s. */
  /** Slow diplomacy events get a short cue on the sfx bus (muted by the same mute key): a claim raised against us rings the bell, a treaty or marriage signed sounds the horn. */
@@ -56,6 +58,8 @@ export class ProceduralAudio{
    this.play(rec,b.amb,t+e.delay,e.gain*(e.kind==='crackle'?.8:1),(this.rng()-.5)*(e.kind==='thunder'?0:1.2));
   }
   if(!busOff(this.settings,'sfx'))this.updateEmitters(dt,w);
+  const duck=this.duckFollow.step(this.duckImpulse,dt);this.duckImpulse=0;
+  if(Math.abs(duck-this.duck)>.004){this.duck=duck;b.music.gain.setTargetAtTime(busGain(this.settings,'music')*duck,t,.12);}
  }
  private updateEmitters(dt:number,w:WorldAudio){
   const L=w.listener;
@@ -66,6 +70,7 @@ export class ProceduralAudio{
   const ctx=this.ctx,b=this.buses;if(!ctx||!b||!this.active||ctx.state!=='running'||busOff(this.settings,'sfx'))return;
   const spec=SFX_SPECS[kind],pos=dx!==undefined&&dz!==undefined,sp=pos?emitterGain(dx!,dz!,spec.spatial,camDist,yaw):{gain:1,pan:0,dist:0};
   const g=sp.gain*spec.gain,v=this.budget.acquire(kind,g,ctx.currentTime);if(!v)return;
+  this.duckImpulse=Math.max(this.duckImpulse,sfxDuckLoad(kind,g));
   const rec=sfxRecipe(kind,this.rng),end=this.play(rec,b.sfx,ctx.currentTime,g,sp.pan);
   globalThis.setTimeout(()=>this.budget.release(v.id),Math.max(50,(end-ctx.currentTime)*1000));
  }

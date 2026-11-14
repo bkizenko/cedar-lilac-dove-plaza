@@ -286,6 +286,7 @@ export class GameAudio {
   /** Per-frame world feed for the procedural mix (the caller throttles the probe). */
   updateWorld(dt: number, world: WorldAudio) {
     this.proc.update(dt, world);
+    this.score.setSfxDuck(this.proc.active && !busOff(this.settings, 'sfx') ? this.proc.duck : 1);
   }
   setVolume(bus: Bus, v: number) {
     if (bus === "master" || bus === "music" || bus === "sfx" || bus === "ambience") {

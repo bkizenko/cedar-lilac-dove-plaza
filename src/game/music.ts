@@ -132,6 +132,9 @@ export class AcousticScore {
   }
   private get silent(){return this.muted||this.userPaused;}
   /** Nature ambience level (0..1 bus gain): the score steps down under it so birds, wind and water stay clear. */
+  /** Effects-busy duck (1 = none), set per frame by GameAudio; steps the recorded score down while chopping, building or fighting is loud. */
+  setSfxDuck(d:number){const v=Math.max(0,Math.min(1,d));if(Math.abs(v-this.sfxDuckMul)<.004)return;this.sfxDuckMul=v;this.applyVolume();}
+  private sfxDuckMul=1;
   setAmbience(gain:number){this.duck=musicDuck(gain);this.applyVolume();}
   /** Player pause/play. Pausing holds the current piece in place; playing resumes it. */
   setUserPaused(v:boolean){
@@ -157,7 +160,7 @@ export class AcousticScore {
   }
   private applyVolume() {
     for (const [s, a] of this.tracks)
-      a.volume = this.silent ? 0 : this.volume * this.levels[s] * this.seasonMul * this.duck;
+      a.volume = this.silent ? 0 : this.volume * this.levels[s] * this.seasonMul * this.duck * this.sfxDuckMul;
   }
   dispose() {
     this.disposed = true;

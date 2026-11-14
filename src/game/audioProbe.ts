@@ -6,6 +6,8 @@ import {toolFor,footstepFor,type SfxKind} from '../scene/audioMix';
 
 const FIRE_TYPES=new Set<string>(['hearth','oven','kiln','townhall','smokehouse']);
 const SEASONS=['Spring','Summer','Autumn','Winter'];
+/** Species that make a heard call. Wolves and deer stay silent (stalking); birds are in the ambience beds. */
+export const ANIMAL_SFX:Partial<Record<string,SfxKind>>={sheep:'sheep',goat:'sheep',cattle:'cow',horse:'horse'};
 type Cam={x:number;z:number;yaw:number;dist:number};
 export function probeWorld(game:Game,cam:Cam,seed:number,paused:boolean,mood:'peace'|'raid'|'pillage',tradeActive:boolean):WorldAudio{
  const s=game.state,hour=game.dayPhase()*24,sn=game.seasonMix().name,season=SEASONS.includes(sn)?sn:'Spring';
@@ -29,6 +31,9 @@ export function probeWorld(game:Game,cam:Cam,seed:number,paused:boolean,mood:'pe
   if(moving){if(d<30)add(wet(u.x,u.z)?'step_water':footstepFor(season==='Winter'?'snow':'grass'),u.x,u.z);continue;}
   const tool=toolFor(u.order,u.job);if(tool&&d<70)add(tool,u.x,u.z);
  }
+ // animals: herd and pen calls, positional and distance-gated (the emitter sampler and voice budget keep them sparse)
+ for(const c of [...(s.livestock??[]),...s.wildlife]){if(c.hp<=0)continue;const kind=ANIMAL_SFX[c.species];if(!kind)continue;
+  const d=Math.hypot(c.x-cam.x,c.z-cam.z);if(d<90&&!(c as {carcass?:unknown}).carcass)add(kind,c.x,c.z);}
  const livestock=((s as unknown as Record<string,unknown>).sheep as unknown[]|undefined)?.length??0;
  return {paused,biome,emitters,listener:cam,
   score:{mood,hour,season,age:s.tribes[0]?.age??0,work:Math.min(1,working/Math.max(1,mine)*1.6),tradeActive,seed},

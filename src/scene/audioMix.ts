@@ -273,3 +273,17 @@ export const BED_PARAMS:Partial<Record<EnvLayer,{filter:'lowpass'|'bandpass'|'hi
  surf:{filter:'lowpass',fc:700,q:.5,level:.5,lfoHz:.09,lfoDepth:.8},fire:{filter:'lowpass',fc:380,q:.6,level:.3,lfoHz:.7,lfoDepth:.3},murmur:{filter:'bandpass',fc:520,q:.8,level:.22,lfoHz:.5,lfoDepth:.4},
  snowHush:{filter:'highpass',fc:3500,q:.4,level:.06,lfoHz:.05,lfoDepth:.2},insects:{filter:'bandpass',fc:5200,q:2,level:.05,lfoHz:.2,lfoDepth:.3},storm:{filter:'lowpass',fc:300,q:.5,level:.35,lfoHz:.07,lfoDepth:.5},
 };
+
+// ---------------------------------------------------------------- music ducking under busy effects (G22)
+/** How far the score steps down while effects are busy: 0 voices = 1 (no duck); a full budget bottoms out at SFX_DUCK_FLOOR.
+ *  Only loud, close, high-priority voices count (footsteps and far sounds never pump the music). */
+export const SFX_DUCK_FLOOR=.62;
+export function sfxDuck(load:number):number{const l=Math.max(0,Math.min(1,Number.isFinite(load)?load:0));return r3(1-(1-SFX_DUCK_FLOOR)*l);}
+/** Duck load of one played voice: priority-weighted and by its audible gain; quiet voices contribute nothing. */
+export function sfxDuckLoad(kind:SfxKind,gain:number):number{const s=SFX_SPECS[kind];return gain<.15||s.priority<4?0:Math.min(1,s.priority/10*gain);}
+/** Attack fast, release slow, so a burst of chopping dips the music once instead of pumping it. Pure and deterministic. */
+export class DuckFollower{
+ level=0;
+ /** Adds the load of voices started since the last step, then decays; returns the music gain multiplier. */
+ step(impulse:number,dt:number):number{const d=Math.max(0,dt);this.level=Math.min(1,Math.max(this.level*Math.exp(-d/1.8),Math.max(0,impulse)*1.5));return sfxDuck(this.level);}
+}

@@ -1,5 +1,6 @@
 import {DETAIL_RULES} from '../game/detailLevel';
 import * as THREE from 'three';
+import {FellLogLayer} from './fellLogLayer';
 import {provinceAt,ecologicalConditionsAt,PROVINCE_KINDS,type EcologicalProvinceGrid,type ProvinceKind} from '../game/ecologicalProvinces';
 import {BiomeVegetation,BiomeDressing,resourceTreeForm,BIOME_VEGETATION_RULES,type ResourceTree,type DressingPoint,type VegetationContext,type VegetationStyle} from './biomeVegetation';
 import type {DressingForm} from './vegetationKit';
@@ -203,7 +204,7 @@ function toBaseForm(f:string):BaseForm{return (f==='broadleaf'||f==='conifer'||f
  * Construct/dispose on WorldView rebuild; sync at normal render cadence. */
 export class BiomeSceneLayer {
  private grid:EcologicalProvinceGrid;private trees:BiomeVegetation|BotanicalForest;private dressing:BiomeDressing;private treeSet:TreeSet;private canopy=new CanopyCover();
- private treeIn=0;private dressingIn=0;private lastQuality='';private lastViewKey='';private lastBands:DrawBands|null=null;
+ private logs:FellLogLayer;private treeIn=0;private dressingIn=0;private lastQuality='';private lastViewKey='';private lastBands:DrawBands|null=null;
  private style:VegetationStyle;
  /** ecological stands (new worlds); null keeps the original species choice */
  stands:StandField|null=null;
@@ -220,7 +221,7 @@ export class BiomeSceneLayer {
     soilAt:(x,z)=>{const geo=peekGeology(game.world as never),q=geo?geo.rockAt(x,z):null;return q?Math.max(0,Math.min(1,q.soil*(1-.7*q.scree))):null;},
     camps:game.world.camps??[],ecology:this.stands??undefined,baseFormAt:(id,x,z)=>toBaseForm(resourceTreeForm(id,profileAt(x,z),seed))});}
   else this.trees=new BiomeVegetation(scene,seed,profileAt,1,style);
-  this.dressing=new BiomeDressing(scene,style,treeSet);
+  this.dressing=new BiomeDressing(scene,style,treeSet);this.logs=new FellLogLayer(scene);
  }
  setTime(t:number){this.trees.setTime(t);this.dressing.setTime(t);}
  setWind(k:number){this.trees.setWind(k);}
@@ -248,11 +249,11 @@ export class BiomeSceneLayer {
      // chunks still being generated: look again next frame instead of waiting a full refresh
      if(r.deferred>0)changedAgain=true;
     }else this.lastFiller=null;}
-   treeReport=this.trees.sync(game.state.trees,context);this.treeIn=changedAgain?.0:BIOME_SCENE_RULES.treeRefreshSeconds;}
+   this.logs.sync(game.state.trees,camera);treeReport=this.trees.sync(game.state.trees,context);this.treeIn=changedAgain?.0:BIOME_SCENE_RULES.treeRefreshSeconds;}
   if(this.dressingIn<=0||changed){let floor:{cover:(x:number,z:number)=>number;stand?:(x:number,z:number)=>{species:string;open:number}}|undefined;if(this.style==='painterly'&&this.treeSet==='botanical'){this.canopy.update(game.state.trees);floor=this.stands?{cover:this.canopy.cover,stand:(x:number,z:number)=>({species:this.stands!.at(x,z).primary,open:openAt(game.state.seed,x,z)})}:this.canopy;}
    const points=biomeDressingCandidates(game,this.grid,camera,quality,this.style,floor);dressingCount=this.dressing.sync(points,context,(x,z)=>dressingGroundAllowed(game,x,z));this.dressingIn=BIOME_SCENE_RULES.dressingRefreshSeconds;}
   return {treeReport,dressingCount};
  }
  pickingSources(){return this.trees.pickingSources();}
- dispose(){this.trees.dispose();this.dressing.dispose();}
+ dispose(){this.trees.dispose();this.dressing.dispose();this.logs.dispose();}
 }
