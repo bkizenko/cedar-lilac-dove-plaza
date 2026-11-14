@@ -29,3 +29,9 @@ test('Hearth Dusk palette meets AA on every panel stop and keeps AAA ink on parc
  for(const g of ['hw-gold','hw-gold-2'])assert.ok(ratio(dusk['hw-gold-ink'],dusk[g])>=4.5,`dusk ink on ${g}`);
  for(const p of ['hw-parch','hw-parch-2'])assert.ok(ratio(dusk['hw-ink'],dusk[p])>=7,`dusk ink on ${p}`);
 });
+// Colour-blind safety: faction mood is never colour alone (shape glyph in Classic, shape dot + strip texture in Hearth).
+test('faction mood carries a shape or texture cue besides colour',()=>{
+ const parts=readFileSync(new URL('../src/ui/council/CouncilParts.tsx',import.meta.url),'utf8');
+ assert.match(parts,/loyaltyGlyph/);assert.match(parts,/\{loyaltyGlyph\(f\.loyalty\)\}/);
+ assert.match(css,/\.hw-dot\.d-bad\{[^}]*clip-path/);assert.match(css,/span\[data-mood=bad\]\{background-image/);assert.match(css,/span\[data-mood=mid\]\{background-image/);
+});
