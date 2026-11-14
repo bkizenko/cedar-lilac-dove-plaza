@@ -35,7 +35,7 @@ export const DRAW_DISTANCE_RULES={
  legacy:{cameraFar:860,treeFar:700},
  levels:{
   low:{cameraFar:860,fogScale:1,treeFar:700,fillerFar:0,fillerDetail:0,fillerMaxTrees:0,fillerMaxBlobs:0,fadeMetres:0,peopleFar:Infinity},
-  medium:{cameraFar:1400,fogScale:.82,treeFar:1100,fillerFar:1100,fillerDetail:260,fillerMaxTrees:450,fillerMaxBlobs:2200,fadeMetres:70,peopleFar:900},
+  medium:{cameraFar:1900,fogScale:.62,treeFar:1500,fillerFar:1500,fillerDetail:260,fillerMaxTrees:450,fillerMaxBlobs:3200,fadeMetres:90,peopleFar:1200},
   high:{cameraFar:2000,fogScale:.6,treeFar:1600,fillerFar:1600,fillerDetail:340,fillerMaxTrees:800,fillerMaxBlobs:3600,fadeMetres:110,peopleFar:1400},
   ultra:{cameraFar:3200,fogScale:.4,treeFar:2600,fillerFar:2600,fillerDetail:440,fillerMaxTrees:1300,fillerMaxBlobs:6500,fadeMetres:160,peopleFar:2400},
  } as Record<DrawDistance,DrawBands>,
