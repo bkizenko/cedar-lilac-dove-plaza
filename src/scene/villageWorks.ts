@@ -50,20 +50,17 @@ export const workshop:Generator=(ctx,r)=>{
       for(let i=0;i<4;i++)parts.push(beam('woodDark',[sx-.7*k+i*.3,h*.55,zb+.3],[sx-.7*k+i*.3,h*.55+.55,zb+.3],.04,0)); // tool rack
       box(parts,'stoneDark',[.6,.4,.5],[-W/2+.5,0,zf+.25],0);
       break;}
-    case 'kiln':{
-      const kx=W*.05,kz=z0-.05,R=Math.min(W,D)*.38*k;
+    case 'kiln':case 'pottery':{
+      // one pottery works for both the shaping shelter and the firing kiln: wheel, drying shelves and pots on the left, the domed kiln with its stoke hole and a chimney through the roof on the right
+      const kx=W*.24,kz=z0-.05,R=Math.min(W,D)*.34*k;
       cyl(parts,'plaster',2*R,.9*k,[kx,.1,kz],2,12);parts.push(part('sphere','plaster',[2*R,1.0*k,2*R],[kx,.9*k,kz],2));
       for(const y of[.35,.75])cyl(parts,'stoneDark',2*R+.08,.06,[kx,y*k+.1,kz],0,12);
       box(parts,'recess',[.5*k,.4*k,.1],[kx,.12,kz+R-.04],1);if(lit)box(parts,'fire',[.34*k,.18*k,.06],[kx,.14,kz+R-.0],0);
-      cyl(parts,'stoneDark',.34*k,.7*k,[kx,1.8*k,kz],1,6);
-      woodpile(parts,W/2-.55,zf-.35,.8,3,.55);
-      for(let i=0;i<3;i++)cyl(parts,'tile',.34,.3,[-W/2+.55+i*.42,0,zf-.4],0,6,undefined,.24);
-      break;}
-    case 'pottery':{
-      cyl(parts,'woodDark',.5,.45,[-W*.22,.1,fz+.2],1,8);cyl(parts,'woodMid',.62,.07,[-W*.22,.55,fz+.2],0,10);cyl(parts,'tile',.26,.2,[-W*.22,.62,fz+.2],0,8,undefined,.14);
-      for(const y of[.55,1.1,1.6]){box(parts,'woodMid',[1.5*k,.06,.4],[W*.15,y,zb+.4],0);for(let i=0;i<4;i++)cyl(parts,'tile',.3,.3,[W*.15-.55+i*.38,y+.06,zb+.4],0,6,undefined,.22);}
-      post(parts,'woodDark',W*.15-.8,zb+.4,1.7,.06,0);post(parts,'woodDark',W*.15+.8,zb+.4,1.7,.06,0);
-      box(parts,'mud',[.7,.5,.6],[W*.38,.1,fz+.3],1);cyl(parts,'tile',.34,.4,[W*.42,0,zf-.35],0,6,undefined,.26);cyl(parts,'tile',.3,.34,[W*.36,0,zf-.3],0,6,undefined,.22);
+      chimney(parts,kx,kz-R*.2,1.7*k,h+rise*.9,.46*k,'stoneDark');
+      woodpile(parts,W/2-.45,zf-.3,.7,3,.5);
+      cyl(parts,'woodDark',.5,.45,[-W*.3,.1,fz+.2],1,8);cyl(parts,'woodMid',.62,.07,[-W*.3,.55,fz+.2],0,10);cyl(parts,'tile',.26,.2,[-W*.3,.62,fz+.2],0,8,undefined,.14);
+      for(const y of[.55,1.1]){box(parts,'woodMid',[1.2*k,.06,.4],[-W*.2,y,zb+.4],0);for(let i=0;i<3;i++)cyl(parts,'tile',.3,.3,[-W*.2-.4+i*.4,y+.06,zb+.4],0,6,undefined,.22);}
+      for(let i=0;i<4;i++)cyl(parts,'tile',.34,.4,[-W*.38+i*.3,0,zf-.35],0,6,undefined,.26); // finished pots in the yard
       break;}
     case 'loom':{
       const lx=-W*.12;
@@ -121,6 +118,14 @@ export const workshop:Generator=(ctx,r)=>{
       ladder(parts,-W/2+.3,zb+.5,zb+.3,h*.9,4);
     }
   }
+  // trade emblem on the ridge so each craft reads from the camera, not only up close: a pot, a pennant, a hide, a saw blade, a hammer
+  {const ey=h+rise+.05,ex=-W*.28;
+   const pole=(hgt:number)=>parts.push(beam('woodDark',[ex,ey-.1,z0],[ex,ey+hgt,z0],.07,1));
+   if(trade==='pottery'||trade==='kiln'){pole(.5);cyl(parts,'tile',.62,.5,[ex,ey+.5,z0],1,8,undefined,.36);cyl(parts,'tile',.4,.1,[ex,ey+1.0,z0],1,8);}
+   else if(trade==='loom'){pole(1.5);box(parts,'clothBlue',[.7,.4,.05],[ex+.4,ey+1.05,z0],1);box(parts,'clothRed',[.55,.3,.05],[ex+.34,ey+.7,z0],1);}
+   else if(trade==='rack'){pole(1.4);box(parts,'woodDark',[.7,.06,.06],[ex,ey+1.4,z0],1);box(parts,'clothRed',[.6,.8,.05],[ex,ey+.6,z0],1);}
+   else if(trade==='saw'){pole(.4);box(parts,'iron',[1.3,.3,.05],[ex,ey+.55,z0],1);for(let i=0;i<5;i++)box(parts,'iron',[.1,.12,.05],[ex-.55+i*.27,ey+.74,z0],0);}
+   else if(trade==='bench'){pole(1.0);box(parts,'woodDark',[.1,.7,.1],[ex,ey+.6,z0],1);box(parts,'iron',[.55,.22,.2],[ex,ey+1.0,z0],1);}}
   // work-yard clutter that every shed shares
   if(chance(r,.6))barrel(parts,-W/2+.3,0,zf+.3,1);
   if(chance(r,.5))bucket(parts,W/2-.4,0,zf+.3);
