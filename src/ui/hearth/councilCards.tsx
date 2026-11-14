@@ -1,4 +1,4 @@
-import type {ReactNode} from 'react';
+import {useState,type ReactNode} from 'react';
 import {Crown,Skull,Unlock,Home,Shield,Users,Swords,TriangleAlert,Scroll,Hourglass,Handshake} from 'lucide-react';
 import type {Engine} from '../../game/engine';
 import type {CouncilModel} from '../../game/rulersView';
@@ -53,10 +53,12 @@ export function HandoverCard({h,mourning}:{h:Handover;mourning?:CouncilModel['mo
 }
 
 /** Fame feed: the house's recent deeds and losses, newest first and larger, older ones fading, so a death or a coup reads as an event. */
-export function FameFeed({log}:{log:string[]}){
- const items=dedupeFeed([...log].reverse());
+export function FameFeed({log,limit=6}:{log:string[];limit?:number}){
+ const items=dedupeFeed([...log].reverse()),[all,setAll]=useState(false);
  if(!items.length)return <p className="hw-empty">Nothing has happened to the house yet.</p>;
- return <ol className="hw-fame" aria-label="Chronicle">{items.map((l,i)=><li key={i} className={cx(i===0&&'is-new',i>4&&'is-old')}>{i===0&&<Scroll size={20}/>}<span>{l.text}{l.count>1&&<b className="hw-count" title={`${l.count} times`}> ×{l.count}</b>}</span></li>)}</ol>;
+ const shown=all?items:items.slice(0,limit),hidden=items.length-shown.length;
+ return <><ol className="hw-fame" aria-label="Chronicle">{shown.map((l,i)=><li key={i} className={cx(i===0&&'is-new',i>4&&'is-old')}>{i===0&&<Scroll size={20}/>}<span>{l.text}{l.count>1&&<b className="hw-count" title={`${l.count} times`}> ×{l.count}</b>}</span></li>)}</ol>
+  {items.length>limit&&<button type="button" className="hw-more" aria-expanded={all} onClick={()=>setAll(v=>!v)}>{all?'Show fewer':`Show ${hidden} earlier`}</button>}</>;
 }
 
 /** Neighbour news: agreements the player is party to, in plain lines under the chronicle. Nothing the player could not know. */

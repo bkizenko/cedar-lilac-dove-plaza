@@ -579,3 +579,5 @@
 
 .hw-elder{margin:0;padding-top:var(--hw-s2,8px);border-top:1px solid var(--hw-line,rgba(255,255,255,.12));font:400 var(--hw-fs-s,14px)/1.4 var(--font-body,inherit);color:var(--hw-text-dim,var(--hw-text))}
 .hw-elder b{color:var(--hw-text)}
+.hw-more{justify-self:start;margin-top:var(--hw-s2);min-height:44px;padding:0 var(--hw-s4);border-radius:10px;border:1px solid var(--hw-line-strong);background:transparent;color:inherit;font:inherit;font-size:var(--hw-fs-s);cursor:pointer}
+.hw-more:hover,.hw-more:focus-visible{background:rgba(255,236,190,.1)}

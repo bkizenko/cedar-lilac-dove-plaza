@@ -199,3 +199,11 @@ test('handover card shows the hall mourning lines in both palettes',async()=>{
  for(const C of [HandoverCard,Hearth]){const html=renderToStaticMarkup(h(C,{h:hv,mourning:m}));assert.ok(html.includes('Old Ardan is mourned; Mira takes the seat as their child.'),html);assert.ok(html.includes('contested'));assert.ok(html.includes('10 min of mourning left'));assert.ok(html.includes('2 agreements carried over, 1 strained, 1 lapsed.'));}
  assert.ok(!renderToStaticMarkup(h(HandoverCard,{h:hv})).includes('mourned'));
 });
+
+test('hearth fame feed folds older lines behind a 44px toggle',async()=>{
+ const {FameFeed:F}=await import('../src/ui/hearth/councilCards.tsx');
+ const log=Array.from({length:9},(_,i)=>`${i}: event number ${i}`);
+ const html=renderToStaticMarkup(h(F,{log}));
+ assert.ok(html.includes('Show 3 earlier'));assert.ok(html.includes('event number 8'));assert.ok(!html.includes('event number 0'));
+ assert.ok(!renderToStaticMarkup(h(F,{log:log.slice(0,4)})).includes('earlier'));
+});
