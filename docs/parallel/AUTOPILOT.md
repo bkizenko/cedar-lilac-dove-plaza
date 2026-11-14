@@ -1589,6 +1589,10 @@ Claude is active: marriage alliances (marryHouses) and expansion drivers (expans
 | 11-14 05:00 | Claude | 46 on main since 03:00 ET (lanes A-D) | all landed by PM 05:1x ET | 2 (Vedara civic lotus-dome hall; stale warfare stand-down test + 6 audit rows) | shipping steadily |
 | 11-14 05:00 | Grok | 0 | 0 | 0 | out; World rows with Claude queue |
 | 11-14 05:00 | Total | 46 | main = integration after landing | 2 | sweep 164 tests 161 pass 0 fail 3 skip; tsc diff nil on civBuildings |
+| 11-14 06:00 | Codex | 0 (idle ~22h) | 0 | 0 | idle; 7+ hourly lines missed; rows stay with Claude lanes; gate rows needing native evidence stay blocked, no agent spawned |
+| 11-14 06:00 | Claude | 26 on main since 05:00 ET (lanes A-D) | 26 | 2 (era-gated scout survey legs; Hearth regency card; Rusvolt log-built civic hall) | shipping steadily; lane D logged hut-door/heraldry and hunt-prey-speed test failures as rows |
+| 11-14 06:00 | Grok | 0 | 0 | 0 | out; World rows with Claude queue |
+| 11-14 06:00 | Total | 26 | main = integration, no agent branch ahead (nothing to land) | 2 | no new code since last sweep (164 tests 161 pass 0 fail 3 skip); tsc not rerun; ~265 not-started rows by text count |
 
 | LANE-B-HANDOVER-MOURNING | Claude B | handover card names who takes the seat, relation, contested, mourning time left and agreements carried/strained/lapsed (councilModel.mourning), Field + Hearth | Claude | Claude B | source-pushed-not-live | council-ui 28/28, tsc nil on touched files, no screenshot (5bba3644) || AUD-SOC-REFUGEE-MIRROR | audit | Societies: the player's own hungry families can walk to a kind neighbour's hall (mirror of hunger refugees); accepted moves real adults only, refused walk home, no spawned people or food | Claude | Claude lane A | open | gap found 11-13 lane D audit (19:5x ET) |
 | AUD-VIS-STORM-DAMAGE-READ | audit | Visuals: after a storm/flood, roofs and fences show real damage tied to the existing repair/maintenance state (loose thatch, fallen rail) and clear when repaired; no new durability rules | Claude | Claude lane C | open | gap found 11-13 lane D audit |
