@@ -155,6 +155,15 @@ export function exposedMaterialByKind(g:Game,team:number){
  let liters=Math.max(0,storedItemUnits(g,team)+cachedProductionUnits(g,team)-itemCapacity(g,team))*INVENTORY_VOLUME_RULES.litersPerStorageUnit;
  for(const kind of ['chaff','straw','grainSheaves','roughGrain','flour','rawMeat'] as const){const n=Math.min(stock[kind]||0,liters/itemPackedLiters(kind));if(n>0)outside[kind]=n;liters=Math.max(0,liters-itemPackedLiters(kind,n));}return outside;
 }
+/** Ground stockpile: every kind of stored goods beyond covered capacity, in packed-volume order (food and harvest first, then the rest). Read only. */
+export function stockpileByKind(g:Game,team:number){
+ const stock=g.tribe(team).items||{},pile:ItemStock={};
+ let liters=Math.max(0,storedItemUnits(g,team)+cachedProductionUnits(g,team)-itemCapacity(g,team))*INVENTORY_VOLUME_RULES.litersPerStorageUnit;
+ if(liters<=0)return pile;
+ const order:ItemKind[]=["chaff","straw","grainSheaves","roughGrain","flour","rawMeat",...(Object.keys(stock) as ItemKind[]).sort()];
+ for(const kind of order){if(pile[kind as ItemKind]!==undefined)continue;const per=itemPackedLiters(kind);if(!(per>0))continue;const n=Math.min(stock[kind]||0,liters/per);if(n>0){pile[kind]=n;liters=Math.max(0,liters-per*n);}}
+ return pile;
+}
 export function exposedHarvestByKind(g:Game,team:number){
  const outside=exposedMaterialByKind(g,team);
  delete outside.chaff;delete outside.straw;return outside;
@@ -164,7 +173,10 @@ export function exposedHarvestUnits(g:Game,team:number){return sum(exposedHarves
 /** Ground sacks at a real store keep the food chain moving when a harvest exceeds covered space. */
 /** Finished food (flour, bread, cooked meat or fish, dairy) never waits for shelf space: when the stores are full the carrier leaves it outside, beside the warehouse or the hall. */
 function producesFood(recipe:ProductionRecipe){const r=PRODUCTION_RECIPES[recipe] as {outputs:Record<string,number>;food?:number;foodOutputs?:Record<string,number>};return !!r.outputs.flour||(r.food||0)>0||Object.values(r.foodOutputs||{}).some(n=>n>0);}
-function canLeaveFlourOutside(g:Game,team:number,recipe:ProductionRecipe,u?:Unit){return producesFood(recipe)&&supplyDrops(g,team).some(drop=>drop.kind!=='camp'&&g.state.buildings.some(b=>b.id===drop.id&&b.team===team&&(b.type==='warehouse'||b.type==='townhall')&&g.finished(b))&&(!u||(()=>{const spot=supplyApproach(g,u,drop);return !!spot&&supplyReached(g,u,drop,spot);})()));}
+/** Any finished batch (not only food) is left on the ground beside the store when the covered space is full, instead of the carrier stalling with it.
+ * The goods are real stock beyond covered capacity (see stockpileByKind) and move under cover again as space frees. Armor and green malt (which ages on a separate clock) keep their own rules. */
+function leavesGoodsOutside(recipe:ProductionRecipe){const r=PRODUCTION_RECIPES[recipe] as {outputs:Record<string,number>};return producesFood(recipe)||(sum(r.outputs)>0&&!r.outputs.paddedArmor&&!r.outputs.greenMalt);}
+function canLeaveFlourOutside(g:Game,team:number,recipe:ProductionRecipe,u?:Unit){return leavesGoodsOutside(recipe)&&supplyDrops(g,team).some(drop=>(drop.kind==='camp'||g.state.buildings.some(b=>b.id===drop.id&&b.team===team&&(b.type==='warehouse'||b.type==='townhall')&&g.finished(b)))&&(!u||(()=>{const spot=supplyApproach(g,u,drop);return !!spot&&supplyReached(g,u,drop,spot);})()));}
 /** Paid food parcels may sit at a real warehouse frontage, separate from its
  * covered slots. The global project bound still limits parcels; exposure ages
  * the same committed input batch until collection. Other crafts get no bypass. */
