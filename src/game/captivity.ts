@@ -124,12 +124,14 @@ function guardLoad(g:Game,id:number){return g.state.units.filter(u=>u.hp>0&&(u a
 /** The assigned guard protects custody only while actually present and eligible. */
 export function presentPrisonerGuard(g:Game,u:PrisonerUnit){const p=u.prisoner;if(!p||p.phase==='released')return undefined;return g.state.units.find(guard=>guard.id===p.guardId&&armedPrisonerGuard(g,guard,p.captorTeam)&&!guard.emergency&&Math.hypot(guard.x-u.x,guard.z-u.z)<=18&&g.workBoard.connected(g,guard.x,guard.z,u.x,u.z));}
 /** Called only after the surrender decision, with nearby actual captors. */
+/** An armed trader or escort that is outnumbered yields without a fight 95 times in 100; the same 5 in 100 always fight (fixed per person, no dice per tick). */
+export function escortYieldsWhenOutnumbered(u:{id:number}):boolean{return (Math.imul(u.id,2654435761)>>>0)%100<95;}
 export function acceptPrisonerSurrender(g:Game,target:Unit,captorTeam=0){
  const u=target as PrisonerUnit;
  // A caravan escort carries a weapon on loan from its own stores: beaten (wounded) and outnumbered it may yield, and the weapon is taken with it.
  const escort=!!u.caravanArmed&&u.militia&&!u.boat&&(u.type==='spearman'||u.type==='archer'||u.type==='swordsman');
  if(u.hp<=0||u.team===captorTeam||u.prisoner||u.enslavedFrom!==undefined||(u.type!=='worker'||u.militia)&&!escort||u.boat||isDependent(g,u))return {accepted:false,reason:'Only a living unarmed adult can accept these surrender terms'};
- if(escort&&u.hp>u.maxHp*PRISONER_RULES.escortSurrenderHealth)return {accepted:false,reason:'An armed escort fights on until it is beaten'};
+ if(escort&&u.hp>u.maxHp*PRISONER_RULES.escortSurrenderHealth&&!escortYieldsWhenOutnumbered(u))return {accepted:false,reason:'This escort will not yield; it fights on until it is beaten'};
  const captors=g.state.units.filter(p=>armedPrisonerGuard(g,p,captorTeam)&&Math.hypot(p.x-u.x,p.z-u.z)<=PRISONER_RULES.surrenderRadiusMeters&&g.workBoard.connected(g,p.x,p.z,u.x,u.z));
  const defenders=g.state.units.filter(p=>armedPrisonerGuard(g,p,u.team)&&!capitulationYielded(g,p)&&Math.hypot(p.x-u.x,p.z-u.z)<=PRISONER_RULES.defenderRadiusMeters);
  if(!captors.length||captors.length<defenders.length*PRISONER_RULES.superiorityRatio)return {accepted:false,reason:'Reach the person with enough local force to obtain surrender'};

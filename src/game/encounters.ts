@@ -2,7 +2,7 @@ import {raiseAttackAlarm} from './defense';
 import {queueStandDown} from './demobilization';
 import type {Unit,ResKind} from './types';
 import {captureTarget} from './conflictIntent';
-import {releasePrisoner,PRISONER_RULES} from './captivity';
+import {releasePrisoner,PRISONER_RULES,escortYieldsWhenOutnumbered} from './captivity';
 import {isDependent} from './settlement';
 import {hasTaskCommitment} from './workCommitments';
 import {beginSettlementJourney} from './barter';
@@ -57,7 +57,7 @@ function armedAdult(g:Game,u:Unit){return u.team===0&&u.hp>0&&!u.prisoner&&!isDe
 function otherCommitment(p:Unit,targetId:number){return hasTaskCommitment(p.contactAttackTargetId===targetId||p.contactDemand?.targetId===targetId?{...p,contactAttackTargetId:undefined,contactDemand:undefined}:p);}
 function captureParty(g:Game,u:Unit){const radius=supplyDrops(g,0).some(home=>Math.hypot(home.x-u.x,home.z-u.z)<=CONTACT_RULES.visitorCampMeters)?CONTACT_RULES.villageResponseMeters:CONTACT_RULES.capturePartyMeters;return g.state.units.filter(p=>armedAdult(g,p)&&!p.boat&&!p.emergency&&!p.envoy&&!p.expedition&&!p.visit&&!p.trade&&!p.recalled&&p.escortId===undefined&&!otherCommitment(p,u.id)&&p.conflictIntent!=='occupy'&&p.conflictIntent!=='capture'&&(!p.carry||p.carryType==='food')&&Math.hypot(p.x-u.x,p.z-u.z)<=radius&&g.workBoard.connected(g,p.x,p.z,u.x,u.z));}
 export function captureContactIssue(g:Game,id:number){
- const u=target(g,id);if(!u)return 'This person is no longer present';if(u.prisoner)return 'This person is already in custody or returning from release';if(u.team===0)return 'Choose someone outside your community';if(isDependent(g,u))return 'Children cannot be captured';if(u.type!=='worker'||u.militia){if(!u.caravanArmed)return 'An armed adult must be defeated or surrender before custody';if(u.hp>u.maxHp*PRISONER_RULES.escortSurrenderHealth)return 'An armed escort fights on until it is beaten';}if(!g.visibleAt(u.x,u.z))return 'Reach and see this person first';
+ const u=target(g,id);if(!u)return 'This person is no longer present';if(u.prisoner)return 'This person is already in custody or returning from release';if(u.team===0)return 'Choose someone outside your community';if(isDependent(g,u))return 'Children cannot be captured';if(u.type!=='worker'||u.militia){if(!u.caravanArmed)return 'An armed adult must be defeated or surrender before custody';if(u.hp>u.maxHp*PRISONER_RULES.escortSurrenderHealth&&!escortYieldsWhenOutnumbered(u))return 'This escort will not yield; it fights on until it is beaten';}if(!g.visibleAt(u.x,u.z))return 'Reach and see this person first';
  const party=captureParty(g,u);if(!party.length)return 'No free armed adult can reach this meeting';
  const defenders=g.state.units.filter(p=>p.team===u.team&&p.hp>0&&!p.prisoner&&!isDependent(g,p)&&(p.militia||!['worker','leader'].includes(p.type))&&g.visibleAt(p.x,p.z)&&Math.hypot(p.x-u.x,p.z-u.z)<=PRISONER_RULES.defenderRadiusMeters);
  if(party.length<defenders.length*PRISONER_RULES.superiorityRatio)return 'Their nearby armed companions prevent surrender; bring more local force';
