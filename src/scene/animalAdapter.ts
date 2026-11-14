@@ -18,7 +18,7 @@ export function readAnimalSet():AnimalSet{
 }
 /** Models face +X; the sim's facing is atan2(vx,vz) (forward = +Z at facing 0). */
 /** Surface ripple rings around fish read as stray circles; off. */
-const RIPPLES_ON=true;
+const RIPPLES_ON=false;
 export const FACING_OFFSET=-Math.PI/2;
 export type AnimalRow={c:{id:number;species:string;x:number;y:number;z:number;facing:number;scale:number;hp:number;fly:number;beh?:{st:string};vx?:number;vz?:number;adultScale?:number;sex?:'female'|'male'};domestic:boolean;
  /** 0 spring .. 3 winter and progress within it */season:number;within:number;shore:boolean};
@@ -83,7 +83,7 @@ export class FishAdapter{
   const L=this.layer;L.beginFrame();let ri=0;
   for(const n of nodes){
    if(!(n.amount>=1)||!visible(n.x,n.z))continue;
-   const dist=Math.hypot(n.x-camera.x,n.z-camera.z);if(dist>150)continue;
+   const dist=Math.hypot(n.x-camera.x,n.z-camera.z);if(dist>45)continue;
    const {fish,ripples}=shoalFor(n,now),tier=tierForDistance(dist),surf=water.waterAt(n.x,n.z);
    for(const f of fish){
     const e=entryFor(f.kind),rig=e.rig('f',1),posed=tier===2?null:e.pose('f',1,{gait:f.leaping?'swim':'swim',phase:f.phase,t:now,seed:n.id,age:1});
