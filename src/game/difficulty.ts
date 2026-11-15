@@ -21,6 +21,8 @@ const profile = (p: {
 }) => p;
 /** All modifiers are explicit. Resource stocks are finite opening endowments;
  * no profile changes pathing, command admission, accuracy or worker obedience. */
+/** Seconds of opening food a rival band is endowed with: spring sowing to the first autumn harvest takes about this long. */
+export const RIVAL_FIRST_HARVEST_SECONDS = 1000;
 export const DIFFICULTIES = {
   "super-easy": profile({
     name: "Super easy",
@@ -182,6 +184,13 @@ export function initializeDifficultyOpening(g: Game) {
       t.food *= p.rivalStock;
       t.wood *= p.rivalStock;
       t.stone *= p.rivalStock;
+    }
+  // Every rival band starts with one handful of seed grain (4 samples): food-poor sites cannot rely on wild forage and
+  // the crop trial otherwise never starts. A finite opening endowment, not a production bonus.
+  for (const t of g.state.tribes)
+    if (isRivalTeam(t.id)) {
+      if (!t.cultivated?.length && !Object.keys(t.cropSamples || {}).length) t.cropSamples = { grain: 4 };
+      t.seeds = Math.max(t.seeds || 0, 12); // a field costs 4 seeds; food-poor sites have no wild seed source to start the first fields
     }
   const own = g.tribe(0);
   own.food *= p.provisions;

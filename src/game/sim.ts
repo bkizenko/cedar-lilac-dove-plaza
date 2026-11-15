@@ -67,7 +67,7 @@ import{campSupportAI,finishCampTrip}from'./finiteCamp';
 import {tickRaidDefense,noteRaidDefenseDamage} from './warPrestige';
 import{createRaidPlan,finishRaidPlan}from'./raidIntent';
 import {bindLocalWaterChanges} from './indexedLocalWater';
-import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening,rivalDifficulty} from './difficulty';
+import {RIVAL_FIRST_HARVEST_SECONDS,difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening,rivalDifficulty} from './difficulty';
 import{primaryCommunityHome}from'./communityCaches';
 import{workRuntime}from'./workRuntime';
 import{rawCerealField,compactGrainWorkplace}from'./cerealRules';
@@ -779,6 +779,7 @@ export class Game {
     this.updateVision(0);
     if(worldgenVersion>=10)initializeSurvival(this);
     initializeDifficultyOpening(this);
+    for(const t of this.state.tribes)if(isRivalTeam(t.id))t.food=Math.max(t.food,Math.ceil(foodDemand(this,t.id)*RIVAL_FIRST_HARVEST_SECONDS)); // enough to reach the first autumn harvest
     if(worldgenVersion>=14)initializeWildPlants(this);
     initializeSheep(this);
     initializeHorses(this);
@@ -5596,7 +5597,7 @@ export class Game {
     developRivalCopper(this,team);
     reviewRivalMethodRecords(this,team);
     const pop = this.popNow(team);
-    if(reserveSeconds(this,team)>450&&tr.wood>50&&!tr.cropTrial)
+    if(reserveSeconds(this,team)>120&&tr.wood>30&&!tr.cropTrial)
       for(const kind of CROPS)if((tr.cropSamples?.[kind]||0)>=4&&!tr.cultivated?.includes(kind)){beginCropTrial(this,kind,team);break;}
     const cap = this.popCap(team);
     const stage =

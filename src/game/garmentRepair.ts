@@ -59,7 +59,7 @@ function restore(g:Game,u:Unit,completed:boolean,restoreWork=true){const p=u.gar
  // Admission and equipment controls keep the source slot empty. Never overwrite
  // another physical garment if external state violates that custody invariant.
  if(target(u,p.sourceSlot))return false;setTarget(u,p.sourceSlot,p.garment);release(g,u,true);u.garmentRepair=undefined;
- if(restoreWork){u.jobLock=p.beforeJobLock;u.foodRole=p.beforeFoodRole;u.order=g.state.autoWorkEnabled===false&&!u.foodRole?'hold':'idle';u.workReason=completed?'Original garment repaired; ready for village work':'Repair cancelled; paid patches used, original garment returned';g.invalidateRoute(u);}return true;
+ if(restoreWork){u.jobLock=p.beforeJobLock;u.foodRole=p.beforeFoodRole;u.order=u.team===0&&g.state.autoWorkEnabled===false&&!u.foodRole?'hold':'idle';u.workReason=completed?'Original garment repaired; ready for village work':'Repair cancelled; paid patches used, original garment returned';g.invalidateRoute(u);}return true;
 }
 export function cancelGarmentRepair(g:Game,unitId:number){const u=g.state.units.find(u=>u.id===unitId&&u.team===0);if(!u?.garmentRepair)return false;const active=u.garmentRepair.phase!=='paused';if(!restore(g,u,false,active))return false;stock(g).metrics.cancelled++;return true;}
 export function garmentRepairRemainingWork(u:Unit){return u.garmentRepair?Math.max(0,GARMENT_REPAIR_RULES.workSeconds-u.garmentRepair.progress):0;}

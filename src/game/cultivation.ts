@@ -158,7 +158,7 @@ export function cropStudyAI(g:Game,u:Unit,dt:number){
      t.cultivationEvidence??={};t.cultivationEvidence[trial.kind]={demonstratedAt:g.state.time,actorIds:[...trial.workActorIds],...(inherited?{inheritedSourceTeam:inherited.sourceTeam}:{})};
     }
     if(u.team===0&&newlyLearned){g.banner(`Learned to cultivate ${trial.kind}. Fields can now grow it.`,5);lifeEvent(g,0,`Cultivation trials established ${trial.kind}.`);}
-    if(inherited)t.inheritedCropTrials=t.inheritedCropTrials!.filter(q=>q!==inherited);else t.cropTrial=undefined;for(const person of participants){person.studyCrop=undefined;person.order=g.state.autoWorkEnabled===false?'hold':'idle';person.workReason='Cultivation trial complete · ready for other work';}g.workBoard.reset();
+    if(inherited)t.inheritedCropTrials=t.inheritedCropTrials!.filter(q=>q!==inherited);else t.cropTrial=undefined;for(const person of participants){person.studyCrop=undefined;person.order=person.team===0&&g.state.autoWorkEnabled===false?'hold':'idle';person.workReason='Cultivation trial complete · ready for other work';}g.workBoard.reset();
   }
   return true;
 }

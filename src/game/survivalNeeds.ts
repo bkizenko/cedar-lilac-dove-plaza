@@ -59,7 +59,7 @@ export function fireWarmingAI(g:Game,u:Unit,dt:number){
     (visit.productionId!==undefined?warmingProduction(g,u)?.id!==visit.productionId:hasTaskCommitment(u))||u.stuckT>=5||!g.finished(visit.fire)||!hearthHeating(g,visit.fire.id)||(u.coldSeconds??0)<=0){
   huddles.delete(u);
   if(u.order==='hold'&&u.workReason===warmingReason){
-   u.order=g.state.autoWorkEnabled===false?'hold':'idle';
+   u.order=u.team===0&&g.state.autoWorkEnabled===false?'hold':'idle';
    u.workReason='Warmed up at the hearth';
   }
   return false;
