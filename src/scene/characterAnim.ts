@@ -47,7 +47,7 @@ export function stepAnimator(st:AnimState,u:UnitLike,ctx:AnimContext):AnimFrame{
  const act=activityFor(u,ctx),dt=Math.max(0,Math.min(1,ctx.time-st.time)),moved=Math.min(3,Math.hypot(u.x-st.x,u.z-st.z));
  // A unit pushing against a wall or a crowd has velocity but goes nowhere: judge walking by metres actually covered, so it does not freeze mid-stride.
  if(dt>1e-3){const inst=moved/dt;st.actual=(st.actual??inst)+(inst-(st.actual??inst))*Math.min(1,dt*4);}
- if(act.moving&&st.actual!==undefined&&st.actual<.12&&(act.order==='move'||act.order==='hold'||act.order==='idle'||act.order==='gather'||act.order==='build'))act.moving=false;
+ if(act.moving&&st.actual!==undefined&&st.actual<.12&&act.order!=='attack'&&act.order!=='attackmove'&&!act.rowing&&!act.hauling)act.moving=false;
  const sel=clipForActivity(act),clip=CLIPS[sel.clip];
  st.dist+=moved;st.x=u.x;st.z=u.z;st.time=ctx.time;st.seen=ctx.time;
  if(sel.clip!==st.clip){st.clip=sel.clip;st.work=0;}

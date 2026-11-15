@@ -1,5 +1,6 @@
 /** Shared helpers and types for the Option H procedural building families
  * (split out so core and extra family files can share them without a cycle). */
+import {doorHeight} from './personScale';
 import {beam,chance,far,fitToFootprint,part,pick,range,seededRandom,type BuildingSpec,type Part,type Rng,type LodTier} from './buildingParts';
 import type {CarvedMaterialId} from './carvedPalette';
 export type BuildMaterial='wattle'|'timber'|'stone'|'mudbrick';
@@ -68,7 +69,8 @@ export function roofCourses(parts:Part[],halfSpan:number,rise:number,length:numb
   parts.push(part('box','woodDark',[.12,.035,length],pos,0,axis==='z'?[0,0,theta]:[0,Math.PI/2,theta]));
  }
 }
-export function door(parts:Part[],x:number,z:number,w=.85,h=1.55,face:'+z'|'-z'|'+x'|'-x'='+z'){
+export function door(parts:Part[],x:number,z:number,w=.85,h0=1.55,face:'+z'|'-z'|'+x'|'-x'='+z'){
+ const h=doorHeight(h0);// walk-in doors clear a standing adult (personScale.ts); hatches and hives stay small
  // A readable doorway at any distance: dark opening, pale-or-wood frame (posts + lintel) standing proud of the wall, and a step.
  const t=.07,along=face==='+z'||face==='-z',f=.12,o=.035,s=face==='+z'||face==='+x'?1:-1;
  const at=(a:number,b:number)=>(along?[x+a,0,z+s*b]:[x+s*b,0,z+a]) as [number,number,number];

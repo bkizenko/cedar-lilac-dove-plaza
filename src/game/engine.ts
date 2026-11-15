@@ -19,6 +19,7 @@ import {weatherWaterLevel} from './hydrology';
 import {seaSurfaceY} from './localWater';
 import {surveyReachFish,waterReachAt} from './waterReach';
 import { compactGrainWorkplace } from './cerealRules';
+import {isWorkplaceTarget,orderWorkAtBuilding} from './workAtBuilding';
 import {beginHousingUpgrade,beginHomeUse,setHousingPaused,housingAdoptionIssue} from './housing';
 import {AutosaveController} from './autosave';
 import {fibreWorkshopPlacementLevel} from '../scene/fibreWorkshop';
@@ -851,6 +852,7 @@ export class Engine {
     const ent = this.view.pickEntity(cx, cy, this.game) || this.game.entityAt(g.x, g.z);
     if (ent && ent.team !== 0 && this.game.visibleAt(ent.x, ent.z)) this.game.issueAttack(ent);
     else if(ent?.kind==="building"&&ent.team===0&&(!this.game.finished(ent)||ent.expansion)){if(queue)this.game.queueConstruction(ent);else this.game.orderConstruction(ent);}
+    else if(ent?.kind==="building"&&this.game.selectedUnits().length&&isWorkplaceTarget(this.game,ent)){orderWorkAtBuilding(this.game,ent,this.game.selectedUnits());this.pushHud();}
     else {
       const node = this.view.pickWildlife(cx,cy,this.game) || this.view.pickResource(cx,cy,this.game) || (this.game.exploredAt(g.x, g.z) ? this.game.resourceAt(g.x, g.z) : null);
       if (node) this.game.issueGather(node);

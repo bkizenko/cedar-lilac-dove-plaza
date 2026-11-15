@@ -4,6 +4,7 @@ import {roofMaterial,roofPitch,type FamilyContext,type Generator} from './buildi
 import {barrel,box,bucket,chimney,crate,cyl,doorway,fenceX,ladder,post,quoins,roofGable,sack,stoneWall,timberFrame,window2,woodpile} from './buildingKit';
 import type {CarvedMaterialId as M} from './carvedPalette';
 import {hallRoof,yurtHall} from './villageHall';
+import {eaveHeight} from './personScale';
 
 const TAU=Math.PI*2;
 /** Roof material in the village palette: straw thatch while poor/early, shingle then tile or slate as wealth and era rise. */
@@ -17,7 +18,7 @@ export function roofFor(ctx:FamilyContext):M{
  * cap, a gabled porch on two posts, a low door, woven bands, staked fence, firewood and a quern by the door. */
 export const roundhouse:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,k=Math.min(w,d)/5.2;
-  const R=Math.min(w,d)/2*range(r,.62,.72),wallH=range(r,1.35,1.7)*k,ov=range(r,.34,.46),pitch=Math.max(.7,roofPitch(ctx,r)+.15),roofH=(R+ov)*Math.tan(pitch);
+  const R=Math.min(w,d)/2*range(r,.62,.72),wallH=eaveHeight(range(r,1.35,1.7)*k),ov=range(r,.34,.46),pitch=Math.max(.7,roofPitch(ctx,r)+.15),roofH=(R+ov)*Math.tan(pitch);
   const cz=-.25*k;
   const wall:M=ctx.material==='wattle'?'mud':ctx.material==='stone'?'stone':'plaster';
   cyl(parts,'stoneDark',2*R+.3,.28,[0,0,cz],1,14); // kerb footing
@@ -54,7 +55,7 @@ export const cottage:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,large=ctx.scale==='large',k=Math.min(w/5.4,d/5.2);
   const prop=ctx.tradition?.proportion??1,L=Math.min(w*.86,w*range(r,large?.7:.6,large?.78:.7)*prop),D=Math.min(d*.66,d*range(r,.46,.56)/prop);
   const arid=ctx.climate==='arid'||ctx.material==='mudbrick',stoneHouse=ctx.material==='stone',two=!arid&&ctx.era>=3&&ctx.wealth>.5&&chance(r,.7);
-  const h1=range(r,1.95,2.2)*Math.min(1.1,k+.1),h2=two?1.7:0,eave=h1+h2,cz=-d/2+D/2+.28*k+(arid?0:0);
+  const h1=eaveHeight(range(r,1.95,2.2)*Math.min(1.1,k+.1)),h2=two?1.7:0,eave=h1+h2,cz=-d/2+D/2+.28*k+(arid?0:0);
   const rm=roofFor(ctx),pitch=roofPitch(ctx,r),wallMat:M=arid?'mud':stoneHouse?'stone':'plaster';
   box(parts,'stoneDark',[L+.05,.17,D+.05],[0,0,cz],1);
   if(stoneHouse){stoneWall(parts,{x:0,z:cz,w:L,d:D,h:h1,y0:.15,faces:['+z','-z','+x','-x'],course:.36});if(two)stoneWall(parts,{x:0,z:cz,w:L,d:D,h:h2,y0:h1+.15,faces:['+z'],course:.36});quoins(parts,0,cz,L,D,.15,h1+h2,'stoneDark',4);}
@@ -106,7 +107,7 @@ export const cottage:Generator=(ctx,r)=>{
 export const longhouse:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,large=ctx.scale==='large',k=Math.min(w,d)/(large?10:8.2);
   if(ctx.form?.hall==='felt'){const y=yurtHall(parts,ctx,r,{w,d,large,k});return {parts,entry:y.entry};}
-  const L=w*range(r,.78,.86),D=d*range(r,large?.5:.42,large?.58:.5),cz=-d/2+D/2+.9*k,wallH=range(r,1.55,1.9)*(large?1.2:1);
+  const L=w*range(r,.78,.86),D=d*range(r,large?.5:.42,large?.58:.5),cz=-d/2+D/2+.9*k,wallH=eaveHeight(range(r,1.55,1.9)*(large?1.2:1));
   const stone=ctx.material==='stone',pitch=roofPitch(ctx,r)+.05,rm=roofFor(ctx),wall:M=stone?'stone':'woodMid';
   box(parts,'stoneDark',[L+.06,.2,D+.06],[0,0,cz],1);
   if(stone)stoneWall(parts,{x:0,z:cz,w:L,d:D,h:wallH,y0:.2,course:.4});else box(parts,wall,[L,wallH,D],[0,.2,cz],2);

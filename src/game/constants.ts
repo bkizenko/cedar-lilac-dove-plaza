@@ -571,7 +571,7 @@ export const BUILD_TIME: Record<BldType, number> = {
   bridge: 40,
   quarry: 12,
   warehouse: 12,
-  barracks: 12,
+  barracks: 18,
   forge: 24,
   watchtower: 16,
   temple: 28,

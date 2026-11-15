@@ -1,3 +1,4 @@
+import {settleAtWorkface} from './workFace';
 import {planFoodWithdrawal,commitFoodWithdrawal,setCarriedFood,receiveCarriedFood,carriedFoodLots} from './tradeFood';
 import {siteSlopeIssue} from './siteSlope';
 import {assessSite,siteRecord,floodSite,pileDwellingClass,slopeClassOf,type SiteAssessment} from './slopeTiers';
@@ -1681,6 +1682,7 @@ export class Game {
     reserveConstructionWorker(this,u,b,"working");
     u.vx = 0;
     u.vz = 0;
+    settleAtWorkface(this,u,b,dt);
     u.stride += dt * 8;
     u.facing = Math.atan2(b.x - u.x, b.z - u.z);
     const need = b.type==='trench'?excavationWorkNeed(this,b):waterWorksLabour(this,b)??towerBuildWorkSeconds(b,BUILD_TIME[b.type] || 16)*plotArea(b)+(b.site?.extraWork||0);

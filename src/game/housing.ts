@@ -68,9 +68,14 @@ export function knowsHousing(u: Unit) {
   return u.hp > 0 && u.housingSkill?.demonstratedAt !== undefined && !u.prisoner;
 }
 export function housingAdoptionIssue(g: Game, team = 0) {
-  return g.state.units.some((u) => u.team === team && knowsHousing(u))
-    ? null
-    : "First upgrade a hut, then physically try the paid prototype to adopt its method";
+  if (g.state.units.some((u) => u.team === team && knowsHousing(u))) return null;
+  // Say which step is actually missing, not one generic refusal.
+  const mine = g.state.buildings.filter((b) => b.team === team && b.hp > 0);
+  const finishedHome = mine.some((b) => b.type === "house" && g.finished(b));
+  if (finishedHome) return "A timber home stands but nobody has used it yet: select a resident and choose Try home on it";
+  if (mine.some((b) => (b.type === "hut" || b.type === "house") && b.renovation)) return "The prototype home is still being built: wait for it to be finished, then use Try home on it";
+  if (!mine.some((b) => b.type === "hut" && g.finished(b))) return "Timber homes grow from a hut: build a finished hut first, then choose Improve home on it";
+  return "Timber homes are not known yet: select a finished hut, choose Improve home, then Try home on the result";
 }
 function teacherHere(_g: Game, u: Unit, _b: Building) {
   return knowsHousing(u);

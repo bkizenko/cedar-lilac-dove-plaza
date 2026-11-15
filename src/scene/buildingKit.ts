@@ -5,6 +5,7 @@
 import {beam,part,type LodTier,type Part} from './buildingParts';
 import type {CarvedMaterialId as M} from './carvedPalette';
 import type {FamilyContext} from './buildingHelpers';
+import {doorHeight} from './personScale';
 
 export type V3=[number,number,number];
 export type Face='+z'|'-z'|'+x'|'-x';
@@ -58,7 +59,7 @@ export function timberFrame(p:Part[],o:{face:Face;cx:number;cz:number;len:number
 }
 /** Door set into a face: recessed leaf, frame, lintel and a stone step. `w` x `h` opening. */
 export function doorway(p:Part[],o:{face?:Face;x:number;z:number;w?:number;h?:number;wall:number;leaf?:M;frame?:M;step?:boolean;double?:boolean}){
-  const face=o.face??'+z',w=o.w??.9,h=o.h??1.7,leaf=o.leaf??'woodDark',frame=o.frame??'woodEdge',zFace=face==='+z'||face==='-z',s=face==='+z'||face==='+x'?1:-1,e=o.wall/2;
+  const face=o.face??'+z',w=o.w??.9,h=doorHeight(o.h??1.7),leaf=o.leaf??'woodDark',frame=o.frame??'woodEdge',zFace=face==='+z'||face==='-z',s=face==='+z'||face==='+x'?1:-1,e=o.wall/2;
   const at=(u:number,y:number,out:number):V3=>zFace?[o.x+u,y,o.z+s*(e+out)]:[o.x+s*(e+out),y,o.z+u];
   const sz=(a:number,b:number,c:number):V3=>zFace?[a,b,c]:[c,b,a];
   p.push(part('box','recess',sz(w,h,.08),at(0,0,.015),1));

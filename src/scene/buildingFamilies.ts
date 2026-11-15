@@ -9,6 +9,7 @@ import {beam,chance,far,fitToFootprint,part,pick,range,seededRandom,type Buildin
 import type {CarvedMaterialId} from './carvedPalette';
 
 import {partBounds,partsAtLod,floatingParts} from './buildingParts';
+import {eaveHeight} from './personScale';
 import {dressDwelling} from './buildingDetail';
 import {door,windowAt,gableRoof,roofPitch,roofMaterial,wallMaterial,maxStoreys,type FamilyContext,type Generator,type FamilyId,type CoreFamilyId} from './buildingHelpers';
 export {roofPitch,roofMaterial,maxStoreys,NEUTRAL_TRADITION} from './buildingHelpers';
@@ -17,7 +18,7 @@ export type {BuildMaterial,Climate,Trade,WallAxis,Tradition,FamilyContext,Family
 /** Prehistoric/Iron Age roundhouse (e.g. Butser/Castell Henllys reconstructions):
  * wattle-and-daub drum, steep conical thatch, porch, sometimes a store lean-to. */
 const roundhouse:Generator=(ctx,r)=>{
- const parts:Part[]=[],R=Math.min(ctx.footprint.w,ctx.footprint.d)/2*range(r,.6,.74),wallH=range(r,1.2,1.75),ov=range(r,.18,.32);
+ const parts:Part[]=[],R=Math.min(ctx.footprint.w,ctx.footprint.d)/2*range(r,.6,.74),wallH=eaveHeight(range(r,1.2,1.75)),ov=range(r,.18,.32);
  const pitch=roofPitch(ctx,r),roofH=(R+ov)*Math.tan(pitch);
  parts.push(part('cylinder',ctx.material==='wattle'?'plaster':wallMaterial(ctx),[2*R,wallH,2*R*.98],[0,0,0],2,undefined,12));
  parts.push(part('cone','thatch',[2*(R+ov),roofH,2*(R+ov)],[0,wallH-.12,0],2,undefined,12));
@@ -37,7 +38,7 @@ const roundhouse:Generator=(ctx,r)=>{
 const cottage:Generator=(ctx,r)=>{
  const parts:Part[]=[],{w,d}=ctx.footprint,large=ctx.scale==='large';
  const prop=ctx.tradition?.proportion??1,L=Math.min(w*.84,w*range(r,large?.66:.58,large?.8:.72)*prop),D=Math.min(d*.7,d*range(r,.46,.6)/prop),bays=Math.max(2,Math.min(4,Math.round(L/range(r,1.5,2.1))));
- const storeys=Math.min(maxStoreys(ctx.material,ctx.era),ctx.era>=3&&ctx.wealth>.62?2:1),wallH=range(r,1.75,2.25),eave=wallH*storeys;
+ const storeys=Math.min(maxStoreys(ctx.material,ctx.era),ctx.era>=3&&ctx.wealth>.62?2:1),wallH=eaveHeight(range(r,1.75,2.25)),eave=wallH*storeys;
  const wm=wallMaterial(ctx),cz=range(r,-.3,.05)*d*.2,pitch=roofPitch(ctx,r);
  if(ctx.material==='stone'||ctx.era>=2)parts.push(part('box','stoneDark',[L+.12,.25,D+.12],[0,0,cz],1));
  parts.push(part('box',wm,[L,eave,D],[0,0,cz],2));
@@ -62,7 +63,7 @@ const cottage:Generator=(ctx,r)=>{
  * steep roof nearly to the ground with hipped ends, side doors. */
 const longhouse:Generator=(ctx,r)=>{
  const parts:Part[]=[],{w,d}=ctx.footprint,large=ctx.scale==='large',L=w*range(r,.78,.88),D=d*range(r,large?.5:.42,large?.62:.52);
- const wallH=range(r,1.1,1.6)*(large?1.25:1),pitch=roofPitch(ctx,r)+.06,hip=range(r,.6,1.1),wm=ctx.material==='stone'?'stone':'woodMid';
+ const wallH=eaveHeight(range(r,1.1,1.6)*(large?1.25:1)),pitch=roofPitch(ctx,r)+.06,hip=range(r,.6,1.1),wm=ctx.material==='stone'?'stone':'woodMid';
  // Bowed walls: the longhouse is wider amidships than at the ends.
  parts.push(part('box',wm,[L,wallH,D],[0,0,0],2),part('box',wm,[L*.62,wallH,D+.24],[0,0,0],1));
  const rise=D/2*Math.tan(pitch),ridge=L-2*hip;
