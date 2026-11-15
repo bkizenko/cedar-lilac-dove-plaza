@@ -1,7 +1,7 @@
 import {FORMATION_PROFILES,eased,type FormationKind} from './formations';
 /** Pure soft-counter table. Every term is a bounded multiplier with a readable reason; no matchup is decisive. */
 export type CombatRole='civilian'|'spear'|'blade'|'archer'|'skirmisher'|'mounted'|'commander'|'warden';
-export const ROLE_OF:Record<string,CombatRole>={worker:'civilian',spearman:'spear',swordsman:'blade',archer:'archer',ranger:'skirmisher',cavalry:'mounted',leader:'commander',warden:'warden'};
+export const ROLE_OF:Record<string,CombatRole>={worker:'civilian',spearman:'spear',swordsman:'blade',archer:'archer',ranger:'skirmisher',hoplite:'spear',pikeman:'spear',cavalry:'mounted',leader:'commander',warden:'warden'};
 export const roleOfType=(type:string):CombatRole=>ROLE_OF[type]||'civilian';
 export type CombatFacts={role:CombatRole;speed:number;armoured:boolean;/** attacks from range this hit */ranged:boolean;formation?:FormationKind;cohesion:number;morale:number;advancing:boolean};
 export const COUNTER_RULES={

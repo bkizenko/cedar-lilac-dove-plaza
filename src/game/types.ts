@@ -7,7 +7,7 @@ import type {ConflictJournal} from './conflictMetrics';
 import type {FarmToolKind,FarmToolWork} from "./farmTools";
 import type {HaulageKind,HaulageWork} from "./haulage";
 export type UnitType =
-  "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
+  "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger" | "hoplite" | "pikeman";
 
 export type BldType =
   | "threshingFloor" | "fibreWorkshop" | "potter" | "kiln" | "smokehouse" | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor" | "snare" | "vineyard" | "press"

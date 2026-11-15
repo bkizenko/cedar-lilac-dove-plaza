@@ -195,7 +195,7 @@ const SMITH=/^(smelt|forge|smith|cast|bloom|temper|sharpen|repair|makeTool|makeW
 /** Role for kit and silhouette. Every branch reads a real field; there is no priest signal in the simulation yet, so `priest` is produced only by explicit preview input. */
 export function roleOf(i:RoleInput):Role{
  if(i.bodyClass==='child')return 'child';if(i.type==='leader'||i.bodyClass==='leader')return 'ruler';
- if(i.type==='spearman'||i.type==='swordsman'||i.type==='warden')return 'soldier';
+ if(i.type==='spearman'||i.type==='swordsman'||i.type==='warden'||i.type==='hoplite'||i.type==='pikeman')return 'soldier';
  if(i.scouting||i.type==='ranger')return 'scout';if(i.trading)return 'merchant';if(i.type==='archer'||i.hunting)return 'hunter';
  if(i.recipe&&SMITH.test(i.recipe))return 'smith';if(i.farming)return 'farmer';if(i.bodyClass==='elder')return 'elder';return 'worker';
 }

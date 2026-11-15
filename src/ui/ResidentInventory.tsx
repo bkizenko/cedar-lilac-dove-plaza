@@ -51,7 +51,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       }
       const ramPacket=game&&siegeRamCarriedMaterials(game,resident);if(ramPacket)carried.push(`Ram materials · ${ramPacket.wood} timber · ${ramPacket.cordage} cordage`);
       const equipped: string[] = [];
-      if (resident.militia || resident.type === 'spearman' || resident.type === 'archer' || resident.type === 'swordsman') {
+      if (resident.militia || resident.type === 'spearman' || resident.type === 'hoplite' || resident.type === 'pikeman' || resident.type === 'archer' || resident.type === 'swordsman') {
         equipped.push(resident.type === 'archer' ? 'Bow' : resident.type === 'swordsman' ? 'Blade' : 'Spear');
       }
       if (resident.farmTool) {
@@ -71,7 +71,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
         const era=itemEraForAge(game.state.age),skin=skinOfTeam(game.state,resident.team)?.id??null;
         if (resident.type === 'archer') icons.push({eq:{kind:'bow',era,skin},label:'Bow'});
         else if (resident.type === 'swordsman') icons.push({eq:{kind:'bladeSword',era,skin},label:'Blade'});
-        else if (resident.militia || resident.type === 'spearman') icons.push({eq:{kind:'spear',era,skin},label:'Spear'});
+        else if (resident.militia || resident.type === 'spearman' || resident.type === 'hoplite' || resident.type === 'pikeman') icons.push({eq:{kind:'spear',era,skin},label:'Spear'});
         if (resident.farmTool) icons.push({eq:{kind:resident.farmTool==='woodenArd'?'ard':'hoe',era:FARM_TOOL_ERA[resident.farmTool]??era,skin,condition:farmToolCondition(resident)},label:resident.farmTool});
         if (resident.basket) icons.push({eq:{kind:'basket',era,skin,condition:resident.basket.condition},label:'Woven basket'});
         if (resident.waterVessel) icons.push({eq:{kind:'waterskin',era,skin},label:'Water vessel'});

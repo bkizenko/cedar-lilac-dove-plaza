@@ -371,7 +371,7 @@ export function unitGeo(type: UnitType): THREE.BufferGeometry {
   parts.push(head);
   parts.push(cyl(0.05, 0.06, 0.42, -0.1, 0, 0.04, 5));
   parts.push(cyl(0.05, 0.06, 0.42, 0.1, 0, 0.04, 5));
-  if (type === "spearman") {
+  if (type === "spearman" || type === "hoplite" || type === "pikeman") {
     const spear = new THREE.CylinderGeometry(0.03, 0.03, 2.1, 5);
     spear.rotateX(Math.PI / 2.4);
     spear.translate(0.22, 0.85, 0.55);

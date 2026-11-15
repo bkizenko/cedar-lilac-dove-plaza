@@ -6484,6 +6484,15 @@ export class Game {
         age: 1,
       });
     }
+    if (hasBar) {
+      for (const heavy of ["hoplite", "pikeman"] as const)
+        trainOptions.push({
+          type: heavy,
+          name: UNITS[heavy].name,
+          cost: { food: UNITS[heavy].food, wood: UNITS[heavy].wood, iron: UNITS[heavy].iron },
+          age: UNITS[heavy].age,
+        });
+    }
     if (hasSt)
       trainOptions.push({
         type: "cavalry",

@@ -244,7 +244,7 @@ function reviewRivalCommanders(g:Game,s:CommandersState){
  if(g.state.time-(s.lastRivalReview??-1e9)<R.rivalReviewSeconds)return;s.lastRivalReview=g.state.time;
  for(const t of g.state.tribes){
   if(t.id===0||t.id===3||!t.alive||activeCommandersOf(g,t.id).length>=1)continue;
-  const soldiers=g.state.units.filter(u=>u.team===t.id&&u.hp>0&&['spearman','archer','swordsman','cavalry','ranger','warden'].includes(u.type)&&own(g,u,t.id));
+  const soldiers=g.state.units.filter(u=>u.team===t.id&&u.hp>0&&['spearman','archer','swordsman','cavalry','ranger','warden','hoplite','pikeman'].includes(u.type)&&own(g,u,t.id));
   if(soldiers.length<R.rivalMinimumSoldiers)continue;
   const lead=soldiers.filter(u=>u.type==='warden'||(u.combatXP||0)>0).sort((a,b)=>(b.combatXP||0)-(a.combatXP||0)||a.id-b.id)[0];if(!lead)continue;
   const r=appointCommander(g,lead.id,'army',{team:t.id,free:true});if(!r.accepted)continue;

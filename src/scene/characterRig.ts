@@ -46,7 +46,7 @@ export const BODY_CLASSES:Record<BodyClass,ClassSpec>={
 export const ELDER_AGE_T=40*1800;
 export function bodyClassFor(u:{type:string;maturesAt?:number;ageT?:number},time:number):BodyClass{
  if(u.maturesAt!==undefined&&u.maturesAt>time)return 'child';if(u.type==='leader')return 'leader';if((u.ageT??0)>=ELDER_AGE_T)return 'elder';
- return u.type==='swordsman'||u.type==='warden'||u.type==='spearman'?'soldier':'adult';
+ return u.type==='swordsman'||u.type==='warden'||u.type==='spearman'||u.type==='hoplite'||u.type==='pikeman'?'soldier':'adult';
 }
 
 // ---- Tiny matrix maths (column-major 4x4, three.js layout). No allocation in the hot path when `out` is given.
@@ -165,7 +165,7 @@ export function rigOutfit(input:RigInput):RigOutfit{
   bones.head.push(R('trim','cylinder',[.27,.04,.27],[0,1.12,.0],1,undefined,8),R('metal','box',[.05,.09,.03],[0,1.15,.14],2),...[-1,0,1].map(i=>R('metal','pyramid',[.045,.1,.045],[i*.085,1.15,.0],2)));
  }
  // sockets
- const itemR:ItemId|undefined=type==='leader'?'standard':type==='spearman'?'spear':type==='swordsman'?'blade':type==='warden'?'axe':undefined,itemL:ItemId|undefined=type==='archer'||type==='ranger'?'bow':gear.shield&&gear.shield.condition>0?'shield':undefined;
+ const itemR:ItemId|undefined=type==='leader'?'standard':type==='spearman'||type==='hoplite'||type==='pikeman'?'spear':type==='swordsman'?'blade':type==='warden'?'axe':undefined,itemL:ItemId|undefined=type==='archer'||type==='ranger'?'bow':gear.shield&&gear.shield.condition>0?'shield':undefined;
  if(itemR)rendered.weapon=itemR==='spear'?'spear':itemR==='blade'?'blade':undefined;if(itemL==='bow')rendered.weapon='bow';if(itemR==='standard')rendered.standard=true;if(itemL==='shield')rendered.shield=gear.shield!.kind;
  const base=g?APPEARANCE_RULES.baseColor[g.item]:'#a88b61',dye=g?APPEARANCE_RULES.dye[g.item]:0,garmentColor=mix(base,dress.body,dye),trimColor=mix(garmentColor,dress.trim,.9);
  const flag=culture.flag,team=input.teamColor,bare=mix(team,skin,.2);

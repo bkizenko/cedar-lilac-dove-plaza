@@ -63,7 +63,7 @@ export function wildlifeFleeSpeed(c: Critter) {
 /** Owned bows shoot; spears/blades work at physical reach. Unarmed residents
  * use loose stones, following the existing game's non-inventoried ammunition rule. */
 export const HUNTING_WEAPONS={stone:{range:5,period:1.1,damage:1,speed:16},bow:{range:8,period:.9,damage:1.5,speed:22},spear:{range:2.6,period:.9,damage:1.5,speed:0},blade:{range:1.8,period:.9,damage:1.5,speed:0}} as const;
-export function huntingWeapon(u:Unit):keyof typeof HUNTING_WEAPONS{return ['archer','ranger'].includes(u.type)?'bow':u.type==='spearman'||u.type==='worker'&&u.militia?'spear':['swordsman','cavalry','warden'].includes(u.type)?'blade':'stone';}
+export function huntingWeapon(u:Unit):keyof typeof HUNTING_WEAPONS{return ['archer','ranger'].includes(u.type)?'bow':u.type==='spearman'||u.type==='hoplite'||u.type==='pikeman'||u.type==='worker'&&u.militia?'spear':['swordsman','cavalry','warden'].includes(u.type)?'blade':'stone';}
 function damagePrey(g:Game,c:HuntableCritter,damage:number,team:number,attackerId?:number){
  if(c.hp<=0)return;c.hp=Math.max(0,c.hp-damage);if(team===0)g.onSfx('hit');
  if(c.beh){const a=attackerId!==undefined?g.state.units.find(u=>u.id===attackerId):undefined;noteAttack(g,c,a?.x??c.x,a?.z??c.z);}

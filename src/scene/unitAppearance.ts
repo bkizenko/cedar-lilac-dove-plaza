@@ -14,7 +14,7 @@ import {hashSeed,part,beam,partTriangles,seededRandom,type LodTier,type Part} fr
 import type {CarvedMaterialId} from './carvedPalette';
 import {dressFor,type Culture,type GarmentId,type Motif,type Season,type Dress} from './cultureGrammar';
 
-export type UnitKind='worker'|'spearman'|'archer'|'swordsman'|'cavalry'|'leader'|'warden'|'ranger';
+export type UnitKind='worker'|'spearman'|'archer'|'swordsman'|'cavalry'|'leader'|'warden'|'ranger'|'hoplite'|'pikeman';
 export type Slot='garment'|'trim'|'leather'|'padding'|'stitch'|'wood'|'metal'|'hair';
 export type UnitPart=Part&{slot:Slot};
 /** Mirrors Unit.garment and the game's ArmorAsset (src/game/armor.ts); nothing else is read. */
@@ -94,7 +94,7 @@ export function insigniaParts(type:UnitKind,rich:number,v:number,cond=1):UnitPar
  const side=v%2?1:-1;
  switch(type){
   case 'worker':return rich>=1?[P('trim','box',[.5,.05,.03],[0,.7,.19],0,[0,0,side*.65])]:[];
-  case 'spearman':case 'archer':case 'ranger':return [P('trim','box',[.17,.04,.2],[-side*.2,.82,0],0),...(rich>=2?[P('trim','box',[.17,.015,.21],[-side*.2,.86,0],0)]:[])];
+  case 'spearman':case 'hoplite':case 'pikeman':case 'archer':case 'ranger':return [P('trim','box',[.17,.04,.2],[-side*.2,.82,0],0),...(rich>=2?[P('trim','box',[.17,.015,.21],[-side*.2,.86,0],0)]:[])];
   case 'swordsman':case 'warden':return [P('trim','box',[.15,.15,.02],[0,.72,.265],0)];
   case 'leader':return [P('trim','box',[.17,.17,.02],[0,.72,.265],0),P('wood','cylinder',[.035,1.7,.035],[-.3,.85,-.1],0,undefined,5),P('garment','box',[.42,.34,.02],[-.3+.21,1.55,-.1],0),P('trim','box',[.42,.05,.022],[-.3+.21,1.7,-.1],0),...(rich>=1?[P('trim','box',[.2,.2,.024],[-.3+.21,1.52,-.1],0,[0,0,Math.PI/4])]:[]),...(rich>=2?[P('trim','sphere',[.07,.07,.07],[-.3,1.72,-.1],0)]:[]),...standardWear(cond,v)];
   default:return [];}
@@ -107,7 +107,7 @@ export function armorParts(motif:Motif|'none',rich:number):UnitPart[]{
  return [...out,...trimBand(motif==='none'?'none':motif,.285,.8,Math.min(1,rich))];
 }
 export function weaponParts(type:UnitKind):{parts:UnitPart[];weapon?:'spear'|'bow'|'blade'}{
- if(type==='spearman')return {weapon:'spear',parts:[{...beam('trunk',[.22,.1,.1],[.3,1.9,.7],.05,2),slot:'wood'},P('metal','pyramid',[.09,.2,.09],[.3,1.9,.7],1,[0,0,0],undefined)]};
+ if(type==='spearman'||type==='hoplite'||type==='pikeman')return {weapon:'spear',parts:[{...beam('trunk',[.22,.1,.1],[.3,1.9,.7],.05,2),slot:'wood'},P('metal','pyramid',[.09,.2,.09],[.3,1.9,.7],1,[0,0,0],undefined)]};
  if(type==='archer')return {weapon:'bow',parts:[{...beam('trunk',[.22,.5,.05],[.22,.8,.2],.04,1),slot:'wood'},{...beam('trunk',[.22,.8,.2],[.22,1.1,.05],.04,1),slot:'wood'},{...beam('woodInlay',[.22,.5,.05],[.22,1.1,.05],.015,0),slot:'trim'}]};
  if(type==='swordsman')return {weapon:'blade',parts:[P('metal','box',[.06,.7,.04],[.25,.55,.1],2,[0,0,-.4]),P('wood','box',[.14,.04,.05],[.25,.5,.1],1,[0,0,-.4]),P('wood','box',[.05,.14,.05],[.23,.42,.1],0,[0,0,-.4])]};
  return {parts:[]};

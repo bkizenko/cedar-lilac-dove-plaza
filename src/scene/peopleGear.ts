@@ -172,7 +172,7 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
  if(bodyClass!=='child'){jewelParts(c,ind.jewel);if(ind.mark)markParts(c,ind.mark);}
  // insignia from the owned garment's cloth, cut to the new trunk: soldier shoulder cloth, a chest patch, a leader's collar badge
  if(g&&type!=='worker'){const F=frameOf(look.body),side=ind.variant%2?1:-1;const ins:RigPart[]=[];
-  if(type==='spearman'||type==='archer'||type==='ranger'){ins.push(Q(pal.trim,'box',[.17,.04,.2],[-side*.2,.835,0],0));if(rich>=2)ins.push(Q(pal.trim,'box',[.17,.015,.21],[-side*.2,.875,0],0));}
+  if(type==='spearman'||type==='hoplite'||type==='pikeman'||type==='archer'||type==='ranger'){ins.push(Q(pal.trim,'box',[.17,.04,.2],[-side*.2,.835,0],0));if(rich>=2)ins.push(Q(pal.trim,'box',[.17,.015,.21],[-side*.2,.875,0],0));}
   else if(type==='swordsman'||type==='warden')ins.push(Q(pal.trim,'box',[.14,.14,.02],[0,.6,frontZ(F,.67)+.02],0));
   else if(type==='leader')ins.push(Q(pal.trim,'box',[.15,.15,.02],[0,.6,frontZ(F,.67)+.02],0));
   if(ins.length){rendered.insignia=type;for(const q of ins)bones.spine.push(q);}}
@@ -197,7 +197,7 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
  // near-tier detail last, so it yields to armour, helmet, cloak and the held-item reserve (RIG_BUDGET.near)
  nearPersonDetail(c,{hairCovered:hairCovered||hasHelm,foot:cold?look.foot.cold:look.foot.warm,heavy:!!(gear.armor||hasHelm||(gear.shield&&gear.shield.condition>0)||type==='leader')});
  // sockets
- const itemR=type==='leader'?'standard':type==='spearman'?'spear':type==='swordsman'?'blade':type==='warden'?'axe':role==='priest'?'staff':undefined,itemL=type==='archer'||type==='ranger'?'bow':gear.shield&&gear.shield.condition>0?'shield':undefined;
+ const itemR=type==='leader'?'standard':type==='spearman'||type==='hoplite'||type==='pikeman'?'spear':type==='swordsman'?'blade':type==='warden'?'axe':role==='priest'?'staff':undefined,itemL=type==='archer'||type==='ranger'?'bow':gear.shield&&gear.shield.condition>0?'shield':undefined;
  if(itemR)rendered.weapon=itemR==='spear'?'spear':itemR==='blade'?'blade':undefined;if(itemL==='bow')rendered.weapon='bow';if(itemR==='standard')rendered.standard=true;if(itemL==='shield'){rendered.shield=gear.shield!.kind;if(gear.shield!.condition<.75)rendered.shieldCondition=gear.shield!.condition;}
  const colors={} as Record<RigSlot,string>;
  const garmentColor=pal.cloth,trimColor=pal.trim;
