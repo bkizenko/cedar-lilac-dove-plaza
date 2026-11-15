@@ -1,4 +1,5 @@
 import {squadsOf,SQUAD_SIZES} from '../../game/squads';
+import {combatRank} from '../../game/warfare';
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {SkillStrip} from './skillsCard';
 import {PeaceActions,ConquestActions,type WarCommand} from './warActions';
@@ -195,6 +196,7 @@ function MilitaryPanel({hud,engine}:{hud:HudSnapshot;engine:Engine}){
    <IconBtn label="Stand down" tip={units.some(u=>duty(u.id))?"Back to ordinary work":"Nobody selected is on guard or patrol"} disabled={!units.some(u=>duty(u.id))} onClick={()=>units.forEach(u=>send({kind:'release-guard',unitId:u.id}))}><X size={24}/></IconBtn>
    {units.some(u=>duty(u.id)==='escort')&&<span className="hw-chip">Escort</span>}</div>}
   </div>
+  {units.length>0&&<span className="hw-chip" title="Fighting practice grows with use and drill: up to +25% damage dealt and 15% less taken">Rank: {combatRank(units.reduce((b,u)=>(u.combatXP||0)>(b.combatXP||0)?u:b,units[0]))} (best) · {Math.round(units.reduce((n,u)=>n+(u.combatXP||0),0)/units.length)} xp avg</span>}
   <SquadRow engine={engine} send={send}/>
   {c?.enabled&&<GroupChips groups={c.groups}/>}
  </div>;

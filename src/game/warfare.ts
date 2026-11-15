@@ -82,6 +82,12 @@ export function weaponWorkAI(g:Game,u:Unit,dt:number){
 }
 /** Skills come from actual fighting; no population or healing is awarded. */
 export function combatPractice(u:Unit){return 1+Math.min(5,Math.floor(Math.sqrt((u.combatXP||0)/6)))*.05;}
+/** Practice level 0..5 from combat XP (use and drill both raise it). */
+export const combatLevel=(u:Pick<Unit,'combatXP'>)=>Math.min(5,Math.floor(Math.sqrt((u.combatXP||0)/6)));
+/** Blows land softer on seasoned fighters: at most 15% less damage taken at level 5. Bounded, never invulnerable. */
+export const combatDefence=(u:Pick<Unit,'combatXP'>)=>1+combatLevel(u)*.03;
+export const COMBAT_RANKS=['Green','Practised','Drilled','Seasoned','Veteran','Hardened'] as const;
+export const combatRank=(u:Pick<Unit,'combatXP'>)=>COMBAT_RANKS[combatLevel(u)];
 /** Ruins contain finite goods. Loading interrupts a raid for a physical return trip. */
 export function raidLootAI(g:Game,u:Unit,dt:number){
   if(u.team===3||u.pillage<0||u.carry>0||!['attack','attackmove','idle'].includes(u.order))return false;

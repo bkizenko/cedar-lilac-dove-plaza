@@ -178,7 +178,7 @@ import {waterWorksPlacementIssue,waterWorksLabour,isWaterWorksType} from "./wate
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {tickDockStaffing,fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
-import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies} from "./warfare";
+import {combatDefence,beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies} from "./warfare";
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
 import {beginExpedition,expeditionAI,routineRest} from "./journeys";
 import {wearTrail,pathPace,fadeTrails} from "./trails";
@@ -5016,6 +5016,7 @@ export class Game {
     if(target.team===0&&attackerTeam!==0)dmg*=difficulty(this).damage;
     if(this.state.wonders?.length)dmg*=wonderDefenceFactor(this.state,target.team,target.x,target.z);
     if(target.kind==='unit')dmg=armorCombatDamage(this,target,dmg);
+    if(target.kind==='unit'&&target.team!==3){dmg/=combatDefence(target);}
     if(target.kind==='unit'&&attackerTeam===0&&isRivalTeam(target.team)&&source?.contactAttackTargetId!==target.id&&dmg>=target.hp&&acceptPrisonerSurrender(this,target,attackerTeam).accepted)return;
     if(attackerTeam===0&&target.team!==3)this.makeHostile(target.team);
     if(target.team===0&&attackerTeam!==3)this.makeHostile(attackerTeam);
