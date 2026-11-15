@@ -18,6 +18,7 @@ import {HAULAGE,beginHaulageWork,resumeHaulageWork} from "./haulage";
 import {FARM_TOOLS,beginFarmToolWork,resumeFarmToolWork} from "./farmTools";
 import {buildingCost} from "./construction";
 import {isRivalTeam} from "./factions";
+import {rivalHousingLead} from './difficulty';
 import {missingAgeBuildings,AGE_FOOD_BUFFER_SECONDS} from './advancement';
 import type { Game } from './sim';
 import type { BldType, ResKind, Unit, Building } from './types';
@@ -100,7 +101,7 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
   if(pending.length>=2||pending.some(b=>b.type===type))return false;
   if(type==='lumber'||type==='quarry'||type==='cornerstone'||missingAgeBuildings(g,team).includes(type))return true;
   // Shelter grows ahead of actual households, not all the way to the next era's population.
-  if(type==='hut'||type==='house')return g.popCap(team)<p.pop+3;
+  if(type==='hut'||type==='house')return g.popCap(team)<p.pop+rivalHousingLead(g,team);
   if(type==='farm'&&(p.fields<p.foodFields||reserveSeconds(g,team)<300&&p.fields<Math.ceil(p.pop/2)))return true;
   if(type==='warehouse'){
     const capacity=g.stockCap(team)+pending.filter(b=>b.type==='warehouse').length*200;

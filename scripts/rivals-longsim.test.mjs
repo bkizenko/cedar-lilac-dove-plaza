@@ -2,8 +2,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {isRivalTeam} from '../src/game/factions.ts';
 import {answerEncounter} from '../src/game/encounters.ts';
-const SECONDS=4800;
-function run(id){const old=Math.random;let n=987654;Math.random=()=>{n=(Math.imul(n,1664525)+1013904223)>>>0;return n/4294967296;};
+const SECONDS=4800,AGE_SECONDS=8000;
+function run(id,SECONDS=4800){const old=Math.random;let n=987654;Math.random=()=>{n=(Math.imul(n,1664525)+1013904223)>>>0;return n/4294967296;};
  try{
   const g=new Game();g.reset(345,14,{size:1040,layout:'pangaea',difficulty:id});g.enterAsBand();g.checkVictory=()=>{};
   const home=g.campOf(0),food=[...g.state.forage].sort((a,b)=>Math.hypot(a.x-home.x,a.z-home.z)-Math.hypot(b.x-home.x,b.z-home.z))[0];
@@ -25,4 +25,10 @@ test(`over ${SECONDS}s a Hard rival out-grows a passive player and an Easy rival
  assert.ok(hard.best>easy.best,'Hard rival out-grows the Easy rival');
  assert.equal(easy.raids,0,'Easy rivals stay peaceful toward a passive neighbour');
  // Raid timing in the unscripted world is seed-chaotic; dispatch, arrival and siege pressure are asserted in scripts/rivals-aggression.test.mjs.
+});
+
+test(`a Hard rival reaches the Bronze Age within ${AGE_SECONDS}s (population gate 50) while the passive player stays at the Stone Age`,{timeout:3600000},()=>{
+ const hard=run('hard',AGE_SECONDS);console.log(JSON.stringify({hard}));
+ assert.ok(Math.max(...hard.ages)>=1,'a Hard rival advanced to Bronze or later');
+ assert.ok(hard.best>=50,'it did so by growing to the Bronze population gate');
 });

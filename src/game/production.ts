@@ -202,7 +202,7 @@ function canLeaveHarvestOutside(g:Game,u:Unit){
  const cargo=u.itemCargo||{};
  const rawMeat=u.rawHuntMeat&&u.carryType==='food'&&u.carryFood==='meat';
  const harvest=(cargo.grainSheaves||0)>0||rawMeat;
- return u.team===0&&harvest&&Object.entries(cargo).every(([kind,n])=>
+ return u.team!==3&&harvest&&Object.entries(cargo).every(([kind,n])=>
    !n||kind==='grainSheaves'||rawMeat&&['rawHide','bone'].includes(kind))&&
    // A warehouse or townhall frontage, or the bare camp itself: a village without a store must still be able to put a harvest down, or every picker stalls holding sheaves and the village starves beside its ripe fields.
    supplyDrops(g,u.team).some(drop=>drop.kind==='camp'||g.state.buildings.some(b=>b.id===drop.id&&b.team===u.team&&(b.type==='warehouse'||b.type==='townhall')&&g.finished(b)));

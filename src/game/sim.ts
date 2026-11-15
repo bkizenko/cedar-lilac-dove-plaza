@@ -67,7 +67,7 @@ import{campSupportAI,finishCampTrip}from'./finiteCamp';
 import {tickRaidDefense,noteRaidDefenseDamage} from './warPrestige';
 import{createRaidPlan,finishRaidPlan}from'./raidIntent';
 import {bindLocalWaterChanges} from './indexedLocalWater';
-import {RIVAL_FIRST_HARVEST_SECONDS,difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening,rivalDifficulty} from './difficulty';
+import {RIVAL_FIRST_HARVEST_SECONDS,difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening,rivalDifficulty,rivalHousingLead} from './difficulty';
 import{primaryCommunityHome}from'./communityCaches';
 import{workRuntime}from'./workRuntime';
 import{rawCerealField,compactGrainWorkplace}from'./cerealRules';
@@ -5645,7 +5645,7 @@ export class Game {
     }
 
     if (
-      cap - pop < 3 &&
+      cap - pop < rivalHousingLead(this,team) &&
       reserve > 450 &&
       tr.wood >= 36 &&
       Math.random() < tr.expand * expansionDrive(this,team) * rivalDifficulty(this,team).growth * (growing ? 1.4 : shrinking ? 0.2 : 0.9)

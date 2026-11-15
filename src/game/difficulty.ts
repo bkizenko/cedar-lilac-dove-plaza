@@ -159,6 +159,10 @@ export function foodUseScale(g: Game, team: number) {
   const p = difficulty(g);
   return team === 0 ? p.food : isRivalTeam(team) ? 1 / p.rivalGrowth : 1;
 }
+/** Rooms of spare housing a rival keeps ahead of its people: 3 at Normal and below, more when its growth multiplier is above 1 (Hard 5, Apocalypse 9). */
+export function rivalHousingLead(g: Game, team: number) {
+  return 3 + Math.round(6 * Math.max(0, rivalDifficulty(g, team).growth - 1));
+}
 export function difficultyGrievance(g: Game, change: number) {
   return change > 0 ? change * difficulty(g).conflictPressure : change;
 }

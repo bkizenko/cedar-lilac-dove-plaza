@@ -48,11 +48,13 @@ test('rival civs adopt a government from the L2a table at their own age and popu
  const {g}=stage('normal');const t=g.tribe(2);t.age=1;
  const h=g.campOf(2);for(let i=0;i<30;i++){const u=g.spawnUnit('worker',h.x+3+i%10,h.z+3,2);u.maturesAt=0;}
  t.food=2000;t.wood=2000;t.stone=2000;g.state.time=1000;
+ if(!g.state.buildings.some(b=>b.team===2&&b.type==='townhall')){const sp=g.findOpenSpot(h.x,h.z,'townhall',2);g.placeBuilding('townhall',sp.x,sp.z,2);for(const b of g.state.buildings)if(b.team===2)b.build=1;}
  assert.equal(governanceOf(g,2).gov,'bandCouncil');
  const before=t.food;reviewRivalGovernment(g,2);
  const gv=governanceOf(g,2);assert.notEqual(gv.gov,'bandCouncil');assert.ok(t.food<before||t.wood<2000,'paid a real cost');
  assert.equal(governanceOf(g,0).gov,'bandCouncil','the player is untouched');
  assert.ok(gv.policies.length>=1);
+ assert.ok(Object.keys(gv.governors).length>=1,'a governor is appointed to the rival hall');
  const again=g.tribe(2).food;reviewRivalGovernment(g,2);assert.equal(g.tribe(2).food,again,'reviews are throttled');
 });
 
@@ -70,4 +72,16 @@ test('an armed Hard rival marches on the passive player and presses a siege fron
  const hard=siege('hard'),easy=siege('easy');console.log(JSON.stringify({hard,easy}));
  assert.ok(hard.departed>=1,'Hard dispatched a raid on the player');assert.ok(hard.contact>=1||hard.fronts>=1,'Hard party reached the player settlement (contact or siege front)');
  assert.equal(easy.departed,0);assert.equal(easy.fronts,0);assert.equal(easy.contact,0);
+});
+test('a strong Hard army that reaches the passive player hall takes it: the siege front resolves to a hold and an occupation registers for the rival',{timeout:900000},()=>{
+ const {g,hall}=stage('hard');arm(g,2);
+ const party=g.state.units.filter(u=>u.team===2&&u.hp>0).slice(0,16);
+ party.forEach((u,i)=>{u.x=hall.x+14+(i%4)*1.5;u.z=hall.z+(Math.floor(i/4))*1.5;u.y=g.height(u.x,u.z);u.order='attackmove';u.tx=hall.x;u.tz=hall.z;u.attackDestination={x:hall.x,z:hall.z};u.pillage=0;u.target=null;});
+ const before=g.state.units.filter(u=>u.team===0&&u.hp>0).length;
+ for(let i=0;i<3*600;i++){if(g.state.encounter)answerEncounter(g,'observe');g.tribe(0).food=Math.max(g.tribe(0).food,4000);g.step(1/3);}
+ const front=(g.state.capitulation?.fronts||[]).find(f=>f.attackerTeam===2&&f.defenderTeam===0&&f.hallId===hall.id);
+ const occ=(g.state.occupations||[]).find(o=>o.hallId===hall.id&&o.controllerTeam===2);
+ console.log(JSON.stringify({front:front&&{phase:front.phase,goal:front.goal},occ:occ&&occ.phase,before,after:g.state.units.filter(u=>u.team===0&&u.hp>0).length,hp:g.state.buildings.find(b=>b.id===hall.id)?.hp}));
+ assert.ok(front,'a capitulation front formed against the player hall');assert.equal(front.goal,'hold','the rival chose to hold the village intact');
+ assert.ok(occ&&['approaching','holding','held'].includes(occ.phase),'an occupation by the rival is registered');
 });
