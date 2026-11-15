@@ -14,12 +14,13 @@ import {firstNeeds,firstNeedsVisible,type FirstNeed,type FirstNeedKind} from './
 import {OVERLAY_KEYS,paintOverlays,type OverlayKey} from './overlayModel';
 import {hasInfluenceGradient,overlaySourcesOf} from './overlayReads';
 import {simulationDaySeconds,SIM_CALENDAR_RULES} from '@/game/calendarPacing';
+import {storageFill} from './storageFill';
 import {MINIMAP_RULES} from '../minimapModel';
 
 /* ====================== top bar: supply meters ====================== */
 const TREND_ICON:Record<Trend,typeof ArrowUp>={up:ArrowUp,down:ArrowDown,flat:Minus};
 const TREND_WORD:Record<Trend,string>={up:'rising',down:'falling',flat:'steady'};
-type Cell={k:keyof typeof RES_ICON;value:string|number;stock:number;days:number|null;fill:number|null;level:SupplyLevel;tip:string;trackTrend:boolean;warn?:boolean};
+type Cell={k:keyof typeof RES_ICON;value:string|number;stock:number;days:number|null;fill:number|null;cap?:number|null;level:SupplyLevel;tip:string;trackTrend:boolean;warn?:boolean};
 /** Days of supply for food and water, stock and trend for materials, people against housing. Sentences live only in tooltips. */
 const WINTER_CHIP:boolean=false; // the "food / to thaw" chip is off
 export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|null;onOpen:(s:'council'|'stores')=>void}){
@@ -28,7 +29,7 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
  const water=Math.floor(game?.tribe(0).survival?.waterLiters||0),food=Math.floor(readyFoodStock(hud));
  const fd=game?foodDays(game):null,wd=game?waterDays(game):null,winter=game?winterOutlook(game):null;
  const cells:Cell[]=[
-  {k:'food',value:food,stock:food,days:fd,fill:supplyFill(fd),level:supplyLevel(fd),trackTrend:true,tip:`Food ready to eat.${fd!==null?` About ${daysText(fd)} days at today's appetite.`:''} Raw supplies are in Village, Stores.`},
+  {k:'food',value:food,stock:food,days:fd,fill:supplyFill(fd),cap:hud.stockCap,level:supplyLevel(fd),trackTrend:true,tip:`Food ready to eat.${fd!==null?` About ${daysText(fd)} days at today's appetite.`:''} Raw supplies are in Village, Stores.`},
   {k:'wood',value:hud.wood,stock:hud.wood,days:null,fill:null,level:'unknown',trackTrend:true,tip:'Logs in stores.'},
   {k:'stone',value:hud.stone,stock:hud.stone,days:null,fill:null,level:'unknown',trackTrend:true,tip:'Stone in stores.'},
   {k:'water',value:water,stock:water,days:wd,fill:supplyFill(wd),level:wd===null?(water<10?'critical':'unknown'):supplyLevel(wd),trackTrend:true,tip:`${water} litres of collected water.${wd!==null?` About ${daysText(wd)} days at today's use.`:''}`},
@@ -46,10 +47,11 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
   <ul className="hw-res hw-supply" aria-label="Village stores">{cells.map(c=>{
    const I=RES_ICON[c.k],trend=c.trackTrend?trackers.current.get(c.k)?.trend()??null:null,T=trend&&trend!=='flat'?TREND_ICON[trend]:null;
    const tip=`${c.tip}${trend?` ${TREND_WORD[trend][0].toUpperCase()+TREND_WORD[trend].slice(1)} over the last day.`:''}`;
-   const label=`${RES_NAME[c.k]} ${c.value}${c.days!==null?`, ${daysText(c.days)} days`:''}${trend?`, ${TREND_WORD[trend]}`:''}`;
+   const sf=c.k==='people'?null:storageFill(c.k==='food'?hud.food:c.stock,c.cap),fillPct=sf?Math.round(sf.fill*100):c.k==='people'?Math.round((c.fill??0)*100):0,hasBar=c.k==='people'?c.fill!==null:!!sf;
+   const label=`${RES_NAME[c.k]} ${c.value}${c.days!==null?`, ${daysText(c.days)} days`:''}${trend?`, ${TREND_WORD[trend]}`:''}${sf?`, storage ${sf.full?'full':sf.percent+'% full'}`:''}`;
    return <li key={c.k}><GameTooltip title={RES_NAME[c.k]} description={tip}><button type="button" className={cx('hw-res-cell hw-supply-cell',`s-${c.level}`,c.warn&&'is-warn',T&&'has-trend')} aria-label={label} onClick={()=>onOpen('stores')}>
     <span className="hw-supply-row"><I size={34}/><b>{c.value}</b>{T&&<i className={cx('hw-trend','tr-'+trend)} aria-hidden="true"><T size={24}/></i>}</span>
-    <span className={cx('hw-meter-s',c.fill===null&&'is-none')} role={c.fill===null?undefined:'meter'} aria-label={c.fill===null?undefined:`${RES_NAME[c.k]} supply`} aria-valuemin={0} aria-valuemax={SUPPLY_RULES.fullDays} aria-valuenow={c.days!==null?Math.round(c.days*10)/10:undefined}><i style={{width:`${Math.round((c.fill??0)*100)}%`}}/></span>
+    <span className={cx('hw-meter-s',!hasBar&&'is-none',sf&&'st-'+sf.tone,sf?.full&&'is-full')} role={hasBar?'meter':undefined} aria-label={hasBar?`${RES_NAME[c.k]} ${c.k==='people'?'housing':'storage'}`:undefined} aria-valuemin={0} aria-valuemax={100} aria-valuenow={hasBar?fillPct:undefined} title={sf?.full?'Full':undefined}><i style={{width:`${fillPct}%`}}/>{sf?.full&&<em className="hw-meter-full">Full</em>}</span>
    </button></GameTooltip></li>;})}</ul>
  </div>;
 }

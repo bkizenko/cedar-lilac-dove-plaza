@@ -117,3 +117,10 @@
 /* no dashed ring around the pinned person; the chip alone marks a critical alert */
 .hw-pin-ring{display:none}
 .hw-pin:not(.is-crit){display:none}
+/* storage fullness meter: green under 60%, amber 60-90%, red from 90%, solid with a Full tag at 100% */
+.hw-meter-s{position:relative}
+.hw-supply-cell .hw-meter-s.st-green i{background:var(--hw-good)}
+.hw-supply-cell .hw-meter-s.st-amber i{background:var(--hw-warn)}
+.hw-supply-cell .hw-meter-s.st-red i{background:var(--hw-bad)}
+.hw-meter-s.is-full{box-shadow:inset 0 0 0 1px var(--hw-bad)}
+.hw-meter-full{position:absolute;inset:0;display:grid;place-items:center;font:700 8px/1 var(--hw-font,inherit);font-style:normal;text-transform:uppercase;letter-spacing:.04em;color:#fff;pointer-events:none}
