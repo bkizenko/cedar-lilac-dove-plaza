@@ -21,12 +21,15 @@ export const FIRST_PERSON_RULES={
 } as const;
 
 export type FirstPersonInput={forward:number;strafe:number;turn:number;run:boolean};
+export type Circle={x:number;z:number;r:number};
 export type SolidRect={x:number;z:number;w:number;d:number};
 /** Everything the movement step reads from the world. height/water are metres; solids are axis-aligned footprints (the sim's own solidBuilding test uses 0.4 of w/d). */
 export type FirstPersonWorld={
  height:(x:number,z:number)=>number;
  water:(x:number,z:number)=>number;
  solids:readonly SolidRect[];
+ /** round obstacles (tree trunks, boulders, ore): the lens can never end up inside one */
+ circles?:readonly Circle[];
  /** half extent of the playable square, metres */
  half:number;
 };
@@ -45,8 +48,9 @@ export function lookDelta(body:{yaw:number;pitch:number},dx:number,dy:number,sen
 }
 
 /** True when a circle at (x,z) overlaps a footprint. Footprints are shrunk to the sim's 0.4 factor, so the witness cannot stand where a resident could not. */
-export function insideSolid(x:number,z:number,solids:readonly SolidRect[],radius:number=FIRST_PERSON_RULES.radius){
+export function insideSolid(x:number,z:number,solids:readonly SolidRect[],radius:number=FIRST_PERSON_RULES.radius,circles:readonly Circle[]=[]){
  for(const s of solids)if(Math.abs(x-s.x)<s.w*.4+radius&&Math.abs(z-s.z)<s.d*.4+radius)return true;
+ for(const c of circles){const dx=x-c.x,dz=z-c.z,rr=c.r+radius;if(dx*dx+dz*dz<rr*rr)return true;}
  return false;
 }
 
@@ -56,10 +60,17 @@ export function canStand(world:FirstPersonWorld,fx:number,fz:number,x:number,z:n
  if(Math.abs(x)>world.half-2||Math.abs(z)>world.half-2)return false;
  const h=world.height(x,z);
  if(!Number.isFinite(h)||h<world.water(x,z)+r.shoreClearance)return false;
- if(insideSolid(x,z,world.solids))return false;
+ if(insideSolid(x,z,world.solids,r.radius,world.circles))return false;
  const run=Math.hypot(x-fx,z-fz);
  if(run>1e-6){const grade=(h-world.height(fx,fz))/run;if(grade>r.maxGrade)return false;}
  return true;
+}
+
+/** Ground under the eye: the highest of the centre and four points a body-radius away, so the lens never dips under a 4 m terrain facet. */
+export function eyeGround(world:Pick<FirstPersonWorld,'height'>,x:number,z:number){
+ const d=FIRST_PERSON_RULES.radius;let h=world.height(x,z);
+ for(const [dx,dz] of [[d,0],[-d,0],[0,d],[0,-d]]){const v=world.height(x+dx,z+dz);if(v>h)h=v;}
+ return h;
 }
 
 /** Slide-collision: try the full step, then each axis alone, else stay. Never teleports; the step is short enough (a frame) that tunnelling needs a footprint thinner than a step. */
@@ -84,7 +95,7 @@ export function stepBody(body:FirstPersonBody,input:FirstPersonInput,dt:number,w
  for(let i=0;i<pieces;i++){
   const s=slideStep(world,x,z,dx/pieces,dz/pieces);moved+=Math.hypot(s.x-x,s.z-z);x=s.x;z=s.z;
  }
- const ground=world.height(x,z),target=Math.max(ground,world.water(x,z)),k=1-Math.exp(-r.eyeSmoothing*t);
+ const ground=eyeGround(world,x,z),target=Math.max(ground,world.water(x,z)),k=1-Math.exp(-r.eyeSmoothing*t);
  const y=body.y+(target-body.y)*k;
  const travelled=body.travelled+moved;
  return{x,z,y,yaw,pitch:body.pitch,bob:bobEnabled?Math.sin(travelled*r.bobStride*Math.PI):0,travelled};
@@ -98,7 +109,7 @@ export function eyePose(body:FirstPersonBody,bobEnabled=false){
 
 /** Nearest open standing point to (x,z): spiral outward until canStand holds, so entering never starts inside a wall or the sea. */
 export function nearestStandable(world:FirstPersonWorld,x:number,z:number,maxRadius=30){
- const ok=(px:number,pz:number)=>Math.abs(px)<=world.half-2&&Math.abs(pz)<=world.half-2&&world.height(px,pz)>=world.water(px,pz)+FIRST_PERSON_RULES.shoreClearance&&!insideSolid(px,pz,world.solids);
+ const ok=(px:number,pz:number)=>Math.abs(px)<=world.half-2&&Math.abs(pz)<=world.half-2&&world.height(px,pz)>=world.water(px,pz)+FIRST_PERSON_RULES.shoreClearance&&!insideSolid(px,pz,world.solids,FIRST_PERSON_RULES.radius,world.circles);
  if(ok(x,z))return{x,z};
  for(let ring=1;ring*1.5<=maxRadius;ring++){
   const rad=ring*1.5,n=Math.max(8,ring*8);
@@ -113,7 +124,7 @@ export function newMode():FirstPersonMode{return{active:false,body:{x:0,z:0,y:0,
 export function enter(mode:FirstPersonMode,world:FirstPersonWorld,at:{x:number;z:number;yaw:number},view:SavedView):FirstPersonMode|null{
  if(mode.active)return null;
  const spot=nearestStandable(world,at.x,at.z);if(!spot)return null;
- const y=Math.max(world.height(spot.x,spot.z),world.water(spot.x,spot.z));
+ const y=Math.max(eyeGround(world,spot.x,spot.z),world.water(spot.x,spot.z));
  return{active:true,bobEnabled:mode.bobEnabled,saved:{...view},body:{x:spot.x,z:spot.z,y,yaw:wrapAngle(at.yaw),pitch:0,bob:0,travelled:0}};
 }
 /** Exit: hand back the saved strategic view; the mode becomes inactive and forgets it. */

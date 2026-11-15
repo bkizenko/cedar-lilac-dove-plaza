@@ -386,6 +386,8 @@ export class WorldView {
   private trailHalo: THREE.InstancedMesh | null = null;
   private trailSyncAt=-1;
   hoveredUnitId:number|null=null;
+  /** First person: the controlled villager is not drawn for its own eye (no clipping into the head); the sim still animates and moves it. */
+  hiddenUnitId:number|null=null;
   previewUnitIds:ReadonlySet<number>|null=null;
   rings!: THREE.InstancedMesh;
   resourceRing!: THREE.Mesh<THREE.RingGeometry,THREE.MeshBasicMaterial>;
@@ -2403,7 +2405,7 @@ export class WorldView {
     const grouped = new Map<UnitType, typeof game.state.units>();
     for (const t of UNIT_TYPES) grouped.set(t, []);
     for (const u of game.state.units) {
-      if (u.hp > 0) grouped.get(u.type)?.push(u);
+      if (u.hp > 0 && u.id !== this.hiddenUnitId) grouped.get(u.type)?.push(u);
     }
     const rigPeople=this.people;
     if(rigPeople){const living:typeof game.state.units=[];for(const list of grouped.values())for(const u of list)living.push(u);rigPeople.begin(game,this.camera.position,this.quality,this.shadowsEnabled,living);

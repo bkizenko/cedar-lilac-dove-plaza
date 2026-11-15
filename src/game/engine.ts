@@ -54,6 +54,7 @@ import { saveGame, loadRaw, hasSave, protectGame, exportGame, saveTestLabGame, l
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
 import { cameraOwnsWheel, wheelZoomFactor } from "./cameraInput";
+import {newPossession,chooseVillager,liveUnit,followOrder,followSent,taskGiven,takeOver,eyeTowardUnit,handBack,isArmed,meleeTarget,heldLabel,crosshairVerb,type Possession} from "./firstPersonActions";
 import {FIRST_PERSON_RULES,FIRST_PERSON_PREF_KEY,parseFirstPersonPrefs,newMode as newFirstPerson,enter as enterFirstPersonMode,exit as exitFirstPersonMode,stepBody as stepFirstPersonBody,eyePose as firstPersonEye,lookDelta as firstPersonLook,forwardOf as firstPersonForward,walkingDrawLevel,type FirstPersonWorld,type FirstPersonMode} from "./firstPerson";
 
 export type VillageSaveResult={saved:boolean;message:string;serialized?:string};
@@ -298,11 +299,15 @@ export class Engine {
   pinch: { d: number; dist: number } | null = null;
   keyboard = new KeyboardCommands(this);
   /** First-person mode (src/game/firstPerson.ts). Presentation only: nothing here is saved, the sim keeps running, orders go through leftClick/rightClick at the crosshair. */
-  firstPerson:FirstPersonMode=newFirstPerson();
+  firstPerson:FirstPersonMode={...newFirstPerson(),bobEnabled:(()=>{try{return parseFirstPersonPrefs(localStorage.getItem(FIRST_PERSON_PREF_KEY)).bob;}catch{return false;}})()};
   /** What the crosshair is on (person, animal or building), refreshed a few times a second while walking. */
   firstPersonLabel="";
+  /** The villager the walker controls (null = bodiless witness). It follows the avatar through ordinary move orders; the village AI resumes on exit. */
+  possession:Possession=newPossession();
+  /** What the controlled villager holds or carries, and what a right-click would do at the crosshair. */
+  firstPersonHeld="";
   private fpLockHeld=false;
-  private fpSolids:{at:number;list:{x:number;z:number;w:number;d:number}[]}={at:-1,list:[]};
+  private fpSolids:{at:number;list:{x:number;z:number;w:number;d:number}[];circles:{x:number;z:number;r:number}[]}={at:-1,list:[],circles:[]};
   private fpHoverAt=0;
   private fpFpsAt=0;
   private fpLevelEased=false;
@@ -1272,22 +1277,66 @@ export class Engine {
   toggleFirstPerson(){if(this.firstPerson.active)this.exitFirstPerson();else this.enterFirstPerson();this.pushHud();}
   get firstPersonActive(){return this.firstPerson.active;}
   setFirstPersonBob(on:boolean){this.firstPerson={...this.firstPerson,bobEnabled:on};try{localStorage.setItem(FIRST_PERSON_PREF_KEY,JSON.stringify({bob:on}));}catch{/* preference only */}this.pushHud();}
+  get firstPersonBobEnabled(){return this.firstPerson.bobEnabled;}
+  /** Keep the controlled villager the one selected, so the ordinary select/order paths act for it. Never throws: no selection, dead unit and worker mode are all quiet no-ops. */
+  private selectControlled(){
+    try{
+      const u=liveUnit(this.possession,this.game.state.units);if(!u)return;
+      if(this.workerHost){this.setWorkerSelection({selectedUnitIds:[u.id]});return;}
+      if(!(this.game.selectedUnits().length===1&&this.game.selectedUnits()[0].id===u.id)){this.game.clearSelect();const real=this.game.state.units.find(x=>x.id===u.id);if(real)real.selected=true;}
+    }catch(error){console.error(error);}
+  }
+  /** Hand the villager back: a bare follow-move is stopped where it stands; a real task is left to finish; the village AI takes over either way. */
+  private releaseControlled(){
+    try{
+      const u=liveUnit(this.possession,this.game.state.units);
+      if(u&&handBack(this.possession,u)==='stop'){void Promise.resolve(this.dispatch({kind:'move',unitIds:[u.id],x:u.x,z:u.z})).catch(()=>{});}
+    }catch(error){console.error(error);}
+    this.possession=newPossession();
+  }
+  /** Left-click while walking: an armed villager swings at a hostile in reach (the existing attack order); anything else selects what the crosshair is on. */
+  private firstPersonPrimary(cx:number,cy:number,shift:boolean){
+    try{
+      const u=liveUnit(this.possession,this.game.state.units);
+      if(u&&isArmed(u)&&!this.workerHost){
+        const foes=this.game.state.units.filter(f=>f.team!==0&&f.hp>0&&this.game.isFoe(0,f.team)&&this.game.visibleAt(f.x,f.z));
+        const foe=meleeTarget(this.firstPerson.body,foes);
+        if(foe){this.selectControlled();this.game.issueAttack(foe);this.possession=taskGiven(this.possession);this.pushHud();return;}
+      }
+    }catch(error){console.error(error);}
+    this.leftClick(cx,cy,shift);
+  }
+  private firstPersonOrder(cx:number,cy:number,shift:boolean){
+    this.selectControlled();
+    const had=liveUnit(this.possession,this.game.state.units)!==null;
+    this.rightClick(cx,cy,shift);
+    if(had)this.possession=taskGiven(this.possession);
+  }
   private firstPersonWorld():FirstPersonWorld{
     const g=this.game,now=performance.now();
-    if(now-this.fpSolids.at>250){this.fpSolids={at:now,list:g.state.buildings.filter(b=>g.solidBuilding(b)).map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}))};}
-    return{height:(x,z)=>g.travelHeight(x,z),water:(x,z)=>g.waterAt(x,z),solids:this.fpSolids.list,half:(g.world?.size??this.view.mapSize)/2};
+    if(now-this.fpSolids.at>250){
+      const bx=this.firstPerson.body.x,bz=this.firstPerson.body.z,near=(o:{x:number;z:number;amount:number})=>o.amount>0&&Math.abs(o.x-bx)<48&&Math.abs(o.z-bz)<48;
+      const st=g.state,circles:{x:number;z:number;r:number}[]=[];
+      for(const o of st.trees||[])if(near(o))circles.push({x:o.x,z:o.z,r:.45});
+      for(const list of [st.stones,st.copper,st.iron])for(const o of list||[])if(near(o))circles.push({x:o.x,z:o.z,r:.9});
+      this.fpSolids={at:now,list:g.state.buildings.filter(b=>g.solidBuilding(b)).map(b=>({x:b.x,z:b.z,w:b.w,d:b.d})),circles};
+    }
+    return{circles:this.fpSolids.circles,height:(x,z)=>g.travelHeight(x,z),water:(x,z)=>g.waterAt(x,z),solids:this.fpSolids.list,half:(g.world?.size??this.view.mapSize)/2};
   }
   enterFirstPerson(){
     if(this.firstPerson.active||!this.game.started||this.game.awaitingStart||this.view.lost)return false;
-    const g=this.game,v=this.view,unit=g.selectedUnits().find(u=>u.team===0&&u.hp>0);
-    const fwd=firstPersonForward(v.yaw),back=unit?1.4:0;
-    const at={x:(unit?.x??v.look.x)-fwd.x*back,z:(unit?.z??v.look.z)-fwd.z*back,yaw:v.yaw};
+    const g=this.game,v=this.view;
+    let unit=null as ReturnType<typeof chooseVillager>;
+    try{unit=chooseVillager(g.state.units,g.selectedUnits().map(u=>u.id),{x:v.look.x,z:v.look.z});}catch(error){console.error(error);}
+    const at={x:unit?.x??v.look.x,z:unit?.z??v.look.z,yaw:v.yaw};
     try{
       const prefs=parseFirstPersonPrefs(localStorage.getItem(FIRST_PERSON_PREF_KEY));
       const next=enterFirstPersonMode({...this.firstPerson,bobEnabled:prefs.bob},this.firstPersonWorld(),at,{lookX:v.look.x,lookY:v.look.y,lookZ:v.look.z,yaw:v.yaw,pitch:v.pitch,dist:v.dist,drawLevel:v.getEffectiveDrawDistance()});
       if(!next){g.banner("No open ground to walk on here",3);return false;}
       this.firstPerson=next;
     }catch(error){console.error(error);return false;}
+    this.possession={...newPossession(),unitId:unit?.id??null};this.fpSolids={at:-1,list:[],circles:[]};
+    this.view.hiddenUnitId=unit?.id??null;this.selectControlled();
     this.keyboard.mode=true;this.moveMode=false;this.drag=null;this.panDrag=null;this.rotDrag=null;
     this.view.dist=14;this.view.hoveredUnitId=null;this.fpLevelEased=false;this.firstPersonLabel="";
     this.requestFirstPersonLock();
@@ -1296,7 +1345,8 @@ export class Engine {
   }
   exitFirstPerson(){
     if(!this.firstPerson.active)return;
-    const r=exitFirstPersonMode(this.firstPerson);this.firstPerson=r.mode;this.fpLockHeld=false;
+    this.releaseControlled();
+    const r=exitFirstPersonMode(this.firstPerson);this.firstPerson=r.mode;this.fpLockHeld=false;this.view.hiddenUnitId=null;this.firstPersonHeld="";
     try{if(document.pointerLockElement===this.canvas)document.exitPointerLock();}catch{/* already free */}
     const s=r.restore,v=this.view;
     v.setEyePose(null);
@@ -1322,8 +1372,8 @@ export class Engine {
     if(document.pointerLockElement!==this.canvas){this.requestFirstPersonLock();}
     const cx=this.canvas.clientWidth/2,cy=this.canvas.clientHeight/2;
     this.pointer.x=cx;this.pointer.y=cy;
-    if(e.button===0)this.leftClick(cx,cy,e.shiftKey);
-    else if(e.button===2)this.rightClick(cx,cy,e.shiftKey);
+    if(e.button===0)this.firstPersonPrimary(cx,cy,e.shiftKey);
+    else if(e.button===2)this.firstPersonOrder(cx,cy,e.shiftKey);
   }
   /** Per frame: integrate the body from held keys, draw from the eye, name what the crosshair is on, and ease draw distance when frames run slow. */
   private updateFirstPerson(dt:number){
@@ -1331,7 +1381,22 @@ export class Engine {
     if(!fp.active){if(this.view.inFirstPerson)this.view.setEyePose(null);return;}
     const k=this.keys,down=(a:string,b?:string)=>k.has(a)||(b?k.has(b):false);
     const input={forward:(down("KeyW","ArrowUp")?1:0)-(down("KeyS","ArrowDown")?1:0),strafe:(down("KeyD","ArrowRight")?1:0)-(down("KeyA","ArrowLeft")?1:0),turn:(k.has("KeyE")?1:0)-(k.has("KeyQ")?1:0),run:k.has("ShiftLeft")||k.has("ShiftRight")};
-    const body=stepFirstPersonBody(fp.body,input,dt,this.firstPersonWorld(),fp.bobEnabled);
+    // The mouse is handed to the meeting dialog; the walker stands still until it closes (a click re-captures the mouse).
+    const meeting=!!this.game.state.encounter;
+    if(meeting&&document.pointerLockElement===this.canvas){this.fpLockHeld=false;try{document.exitPointerLock();}catch{/* already free */}}
+    const unit=liveUnit(this.possession,this.game.state.units);
+    if(this.possession.unitId!==null&&!unit){this.possession=newPossession();this.view.hiddenUnitId=null;this.firstPersonHeld="";this.game.banner("Your villager is gone. You walk on as a witness.",4);}
+    const moving=input.forward!==0||input.strafe!==0;
+    if(meeting)input.forward=input.strafe=input.turn=0;
+    let body=stepFirstPersonBody(fp.body,meeting?{...input,run:false}:input,dt,this.firstPersonWorld(),fp.bobEnabled);
+    if(unit){
+      this.possession=takeOver(this.possession,moving&&!meeting);
+      if(this.possession.working){const e=eyeTowardUnit(body,unit,dt);body={...body,x:e.x,z:e.z};}
+      else{
+        const to=followOrder(this.possession,unit,body,performance.now()/1000);
+        if(to){this.possession=followSent(this.possession,to,performance.now()/1000);try{void Promise.resolve(this.dispatch({kind:'move',unitIds:[unit.id],x:to.x,z:to.z})).catch(()=>{});}catch(error){console.error(error);}}
+      }
+    }
     this.firstPerson={...fp,body};
     this.view.setEyePose(firstPersonEye(body,fp.bobEnabled));
     this.pointer.x=this.canvas.clientWidth/2;this.pointer.y=this.canvas.clientHeight/2;
@@ -1341,7 +1406,15 @@ export class Engine {
       const {x,y}=this.pointer;this.view.updateCamera(0);
       this.view.hoveredUnitId=this.view.hoverPerson(x,y,this.game);
       const animal=this.view.hoveredUnitId===null?this.view.pickWildlife(x,y,this.game):null;
-      this.firstPersonLabel=animal?(animal.hp>0?`Wild ${animal.species}`:`${animal.species} carcass`):(this.view.hoveredUnitId===null?this.hoverBuildingTitle(x,y):this.personLabel(this.view.hoveredUnitId));
+      const what=animal?(animal.hp>0?`Wild ${animal.species}`:`${animal.species} carcass`):(this.view.hoveredUnitId===null?this.hoverBuildingTitle(x,y):this.personLabel(this.view.hoveredUnitId));
+      let verb="";
+      try{
+        const g=this.game,hu=this.view.hoveredUnitId===null?undefined:g.state.units.find(q=>q.id===this.view.hoveredUnitId);
+        const kind=animal?'animal':hu?'unit':what?'building':'ground';
+        verb=crosshairVerb({kind,hostile:!!hu&&hu.team!==0&&g.isFoe(0,hu.team),stranger:!!hu&&hu.team!==0,workplace:kind==='building'},!!unit&&isArmed(unit));
+      }catch{/* label only */}
+      this.firstPersonLabel=[what,verb&&`right-click: ${verb}`].filter(Boolean).join(" · ");
+      this.firstPersonHeld=heldLabel(unit);
     }
     if(now>=this.fpFpsAt){
       this.fpFpsAt=now+2000;
