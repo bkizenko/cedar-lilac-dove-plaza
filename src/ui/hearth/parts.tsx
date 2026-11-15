@@ -171,6 +171,7 @@ function SquadRow({engine,send}:{engine:Engine;send:(c:Parameters<Engine['dispat
   {SQUAD_SIZES.map(n=><IconBtn key={n} label={`Form squads of ${n}`} tip={`Organise free armed adults into squads of ${n}, led by the most experienced fighter`} small onClick={()=>send({kind:'form-squads',size:n})}><span>{n}</span></IconBtn>)}
   {squads.length>0&&<>
    <IconBtn label="Squads patrol" tip="All squads patrol here, taking turns on watch and drill" onClick={()=>{const u=g.selectedUnits()[0];const p=u?{x:u.x,z:u.z}:g.campOf(0);squads.forEach((q,i)=>send({kind:'squad-order',squadId:q.id,order:'patrol',x:p.x,z:p.z,rotate:squads.length>1}));}}><Footprints size={24}/></IconBtn>
+   <IconBtn label="Man the walls" tip="Squad members take wall posts at gates and towers and walk the wall" onClick={()=>send({kind:'man-walls',unitIds:squads.flatMap(q=>q.memberIds).slice(0,128)})}><Shield size={24}/></IconBtn>
    <IconBtn label="Disband squads" tip="Squads end; people keep their weapons" onClick={()=>send({kind:'disband-squads'})}><X size={24}/></IconBtn>
    <span className="hw-chip">{squads.length} {squads.length===1?'squad':'squads'} · {squads.reduce((n,q)=>n+q.memberIds.length,0)} soldiers</span></>}
  </div>;

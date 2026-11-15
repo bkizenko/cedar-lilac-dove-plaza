@@ -5,10 +5,10 @@ import {mulberry32} from './rng';
 /** Guards, patrols and escorts are not gatherers (CAT-106). A person on duty never occupies a gathering slot,
  * and a gatherer never has to give a slot up to a person standing watch beside the same tree, field or shore. */
 export type GuardDutyKind='post'|'patrol'|'escort'|'tower';
-export type GuardDuty={id:number;team:number;unitId:number;kind:GuardDutyKind;x:number;z:number;radius:number;leg:number;escortOf?:number;/** watchtower this person mans (kind 'tower') */buildingId?:number;since:number};
+export type GuardDuty={id:number;team:number;unitId:number;kind:GuardDutyKind;x:number;z:number;radius:number;leg:number;escortOf?:number;/** watchtower this person mans (kind 'tower') */buildingId?:number;/** explicit patrol loop (wall-walk); overrides the seeded loop */route?:{x:number;z:number}[];since:number};
 type DutyState={guardDuties?:GuardDuty[]};
 const st=(g:Game)=>g.state as Game['state']&DutyState;
-export const GUARD_DUTY_RULES={version:1,maximumDuties:96,postRadius:10,patrolRadius:14,leashFactor:2,arriveMeters:2.5,patrolWaypoints:4,towerCrew:3,towerRateGain:.3,towerRangeGainMeters:2,towerManMeters:6} as const;
+export const GUARD_DUTY_RULES={version:1,maximumDuties:96,postRadius:10,patrolRadius:14,leashFactor:2,arriveMeters:2.5,patrolWaypoints:4,towerCrew:3,towerRateGain:.3,towerRangeGainMeters:2,towerManMeters:6,maximumRoute:16} as const;
 const duties=(g:Game)=>st(g).guardDuties??=[];
 const byUnit=new WeakMap<GuardDuty[],{n:number;map:Map<number,GuardDuty>}>();
 export function dutyOf(g:Game,u:Unit):GuardDuty|undefined{
@@ -74,13 +74,15 @@ export function patrolWaypoint(d:Pick<GuardDuty,'id'|'x'|'z'|'radius'>,leg:numbe
  const rand=mulberry32(d.id*2654435761>>>0),a0=rand()*Math.PI*2,n=GUARD_DUTY_RULES.patrolWaypoints,r=d.radius*.7;
  const a=a0+(leg%n)*Math.PI*2/n;return {x:d.x+Math.cos(a)*r,z:d.z+Math.sin(a)*r};
 }
+/** Distance from the post, or from the nearest point of an explicit patrol route. */
+const dutyDistance=(d:GuardDuty,u:Unit)=>d.route?.length?Math.min(...d.route.map(p=>Math.hypot(u.x-p.x,u.z-p.z))):Math.hypot(u.x-d.x,u.z-d.z);
 /** Return false so the normal combat order machinery still drives movement and fighting. */
 export function guardDutyAI(g:Game,u:Unit,dt:number):boolean{
  const d=dutyOf(g,u);if(!d||!doctrineOf(g)?.guardDuty)return false;
  if(u.emergency||u.prisoner)return false;
  const R=GUARD_DUTY_RULES;
  // Engaged inside the leash: let combat finish; beyond it, break off and return.
- if(u.order==='attack'&&u.target&&u.target.hp>0&&Math.hypot(u.x-d.x,u.z-d.z)<=d.radius*R.leashFactor)return false;
+ if(u.order==='attack'&&u.target&&u.target.hp>0&&dutyDistance(d,u)<=d.radius*R.leashFactor)return false;
  u.node=null;u.job=null;
  // Anything hostile inside the post's reach is met, never chased past the leash (checked above).
  if(u.order!=='attack'){
@@ -93,8 +95,8 @@ export function guardDutyAI(g:Game,u:Unit,dt:number):boolean{
  }
  let tx=d.x,tz=d.z;
  if(d.kind==='patrol'){
-  const w=patrolWaypoint(d,d.leg);tx=w.x;tz=w.z;
-  if(Math.hypot(u.x-tx,u.z-tz)<=R.arriveMeters)d.leg=(d.leg+1)%R.patrolWaypoints;
+  const legs=d.route?.length||R.patrolWaypoints,w=d.route?.length?d.route[d.leg%legs]:patrolWaypoint(d,d.leg);tx=w.x;tz=w.z;
+  if(Math.hypot(u.x-tx,u.z-tz)<=R.arriveMeters)d.leg=(d.leg+1)%legs;
   const spot=g.nearestWalk(u,tx,tz);if(spot){tx=spot.x;tz=spot.z;}
   u.stationOnArrival=false;u.order='move';u.workReason='On patrol';
  }else if(Math.hypot(u.x-tx,u.z-tz)>R.arriveMeters){u.stationOnArrival=true;u.order='move';u.workReason=d.kind==='tower'?'Climbing to the watchtower':'Returning to the post';}
@@ -115,7 +117,8 @@ export function validGuardDuties(s:any){
  for(const d of v){
   if(!d||!Number.isInteger(d.id)||d.id<0||d.id>=s.nextId||ids.has(d.id)||!Number.isInteger(d.unitId)||d.unitId<0||d.unitId>=s.nextId||units.has(d.unitId)||!['post','patrol','escort','tower'].includes(d.kind))return false;
   ids.add(d.id);units.add(d.unitId);
-  if(!Number.isInteger(d.team)||d.team<0||d.team>=s.tribes.length||![d.x,d.z,d.since].every(Number.isFinite)||!Number.isFinite(d.radius)||d.radius<=0||d.radius>64||!Number.isInteger(d.leg)||d.leg<0||d.leg>=GUARD_DUTY_RULES.patrolWaypoints)return false;
+  if(!Number.isInteger(d.team)||d.team<0||d.team>=s.tribes.length||![d.x,d.z,d.since].every(Number.isFinite)||!Number.isFinite(d.radius)||d.radius<=0||d.radius>64||!Number.isInteger(d.leg)||d.leg<0||d.leg>=Math.max(GUARD_DUTY_RULES.patrolWaypoints,Array.isArray(d.route)?d.route.length:0))return false;
+  if(d.route!==undefined&&(!Array.isArray(d.route)||d.route.length<2||d.route.length>GUARD_DUTY_RULES.maximumRoute||d.route.some((p:any)=>!p||!Number.isFinite(p.x)||!Number.isFinite(p.z))))return false;
   if(d.kind==='tower'&&(!Number.isInteger(d.buildingId)||d.buildingId<0||d.buildingId>=s.nextId))return false;
   if(d.escortOf!==undefined&&(!Number.isInteger(d.escortOf)||d.escortOf<0||d.escortOf>=s.nextId))return false;
  }
