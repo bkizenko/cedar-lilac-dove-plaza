@@ -31,7 +31,7 @@ export const CLASS_PROFILES:Record<Exclude<SlopeClass,'exempt'>,Profile>={
  civic:{level:3,moderate:7,steep:12,fallK:.6,steepMaxArea:150,stilts:false},
  wonder:{level:2,moderate:5,steep:9,fallK:.5,steepMaxArea:400,stilts:false},
  tower:{level:5,moderate:14,steep:25,fallK:1,steepMaxArea:36,stilts:false,severe:'outcrop'},
- field:{level:5,moderate:12,steep:22,fallK:1.5,steepMaxArea:400,stilts:false},
+ field:{level:5,moderate:14,steep:40,fallK:3,steepMaxArea:400,stilts:false},
  dock:{level:4,moderate:10,steep:18,fallK:.6,steepMaxArea:60,stilts:true},
 };
 /** Fall across the footprint (metres, scaled by the class k and by footprint size beyond a 5.4 m hut): level / moderate / steep ceilings. */
@@ -53,6 +53,16 @@ const CLASS_OF:Partial<Record<BldType,SlopeClass>>={
 export function slopeClassOf(type:BldType|string):SlopeClass{return /^wonder/.test(type)?'wonder':CLASS_OF[type as BldType]??'exempt';}
 /** Fire and kiln work never goes on a post platform. */
 const FIRE=new Set<string>(['kiln','oven','forge','smokehouse','hearth','potter']);
+
+/** Walking cost by slope (render/sim neutral, no save state). Index = walk-cost class of a cell: 1 level, 2 moderate, 3 steep, 4 severe (the steepest tier).
+ *  Class boundaries are the dwelling profile's moderate (15) and steep (25) ceilings, then a further 10 degrees to the steepest class (35+, a face people scramble), because coarse 4 m cells read steeper than a footprint survey. The severe class is not walled off (a cliff
+ *  cell is already blocked by the walk grid) but costs so much that any reasonable detour wins, so people go around steep hills instead of straight up. */
+export const WALK_SLOPE_COST=[0,1,1,1.5,9] as const;
+export function walkSlopeClass(slopeDeg:number):1|2|3|4{const p=CLASS_PROFILES.dwelling;return slopeDeg<p.moderate?1:slopeDeg<p.steep?2:slopeDeg<p.steep+10?3:4;}
+/** Pace multiplier and fatigue per second for a step with signed rise/run (`grade`, uphill positive). Level ground is exactly 1 and 0. */
+export const CLIMB_RULES={uphillSlowdown:1.6,minimumPace:.35,downhillFrom:.45,downhillSlowdown:.5,fatigueFrom:.15,fatiguePerSecond:.006} as const;
+export function climbPace(grade:number){const R=CLIMB_RULES;if(grade>0)return Math.max(R.minimumPace,1/(1+R.uphillSlowdown*Math.pow(grade,1.3)*2));const down=-grade;return down>R.downhillFrom?Math.max(R.minimumPace,1-R.downhillSlowdown*(down-R.downhillFrom)):1;}
+export function climbFatigueRate(grade:number){const R=CLIMB_RULES;return grade>R.fatigueFrom?(grade-R.fatigueFrom)*R.fatiguePerSecond/.35:0;}
 
 export type SiteSurvey={meanSlopeDeg:number;maxStepDeg:number;fall:number;min:number;max:number;samples:number;area:number;extent:number;downhill:{x:number;z:number}};
 export const SURVEY_RULES={sampleStepMetres:1.5,minGrid:2,maxGrid:8} as const;

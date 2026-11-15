@@ -2562,17 +2562,20 @@ export class WorldView {
     this.fieldSnapMarks?.set(edges);
   }
 
-  setLinePreview(points:{x:number;z:number;y:number;ok:boolean}[]){
+  /** `green` (0..1 fertility) tints valid cells from pale dry yellow-green to deep green; red is for `ok:false` only. `w`/`d` size the marker to its tile/cell. */
+  setLinePreview(points:{x:number;z:number;y:number;ok:boolean;w?:number;d?:number;green?:number;reason?:string}[]){
     if(!points.length){if(this.linePreview)this.linePreview.visible=false;return;}
+    const cap=512;
     if(!this.linePreview){
-      this.linePreview=new THREE.InstancedMesh(new THREE.BoxGeometry(3.8,.25,3.8),new THREE.MeshBasicMaterial({transparent:true,opacity:.65,depthWrite:false}),32);
+      this.linePreview=new THREE.InstancedMesh(new THREE.BoxGeometry(1,.25,1),new THREE.MeshBasicMaterial({transparent:true,opacity:.65,depthWrite:false}),cap);
       this.linePreview.frustumCulled=false;this.scene.add(this.linePreview);
     }
-    this.linePreview.visible=true;this.linePreview.count=Math.min(32,points.length);
-    const matrix=new THREE.Matrix4(),color=new THREE.Color();
+    this.linePreview.visible=true;this.linePreview.count=Math.min(cap,points.length);
+    const matrix=new THREE.Matrix4(),color=new THREE.Color(),scale=new THREE.Vector3(),quat=new THREE.Quaternion(),pos=new THREE.Vector3(),dry=new THREE.Color('#d6cf72'),lush=new THREE.Color('#1f9d4f');
     for(let i=0;i<this.linePreview.count;i++){
-      const p=points[i];matrix.makeTranslation(p.x,p.y+.2,p.z);this.linePreview.setMatrixAt(i,matrix);
-      color.set(p.ok?'#75db9a':'#f06958');this.linePreview.setColorAt(i,color);
+      const p=points[i];pos.set(p.x,p.y+.2,p.z);scale.set(p.w!==undefined?Math.max(.5,p.w-.15):3.8,1,p.d!==undefined?Math.max(.5,p.d-.15):3.8);matrix.compose(pos,quat,scale);this.linePreview.setMatrixAt(i,matrix);
+      if(!p.ok)color.set('#f06958');else if(p.green!==undefined)color.copy(dry).lerp(lush,Math.max(0,Math.min(1,p.green)));else color.set('#75db9a');
+      this.linePreview.setColorAt(i,color);
     }
     this.linePreview.instanceMatrix.needsUpdate=true;
     if(this.linePreview.instanceColor)this.linePreview.instanceColor.needsUpdate=true;

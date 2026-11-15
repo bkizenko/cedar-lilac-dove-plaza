@@ -17,7 +17,9 @@ export function fieldStage(field:{fallowYear?:number;crop?:CropLike},time:number
  if(!mine)return phase===0?'bare':phase===3?'stubble':'bare';
  if(phase===0)return planted<=.02?'bare':'sprouting';
  if(phase===1)return planted<=.02?'bare':c!.tended>.55||planted>.85?'growing':'sprouting';
- return c!.ripened&&c!.remaining>0?'ripe':planted>.02?'stubble':'bare';
+ // Autumn: ripe while grain stands; a sown crop that has not ripened yet (late sowing) is still a green growing crop, never bare stubble; stubble only once actually harvested.
+ if(c!.ripened)return c!.remaining>0?'ripe':planted>.02?'stubble':'bare';
+ return planted>.02?'growing':'bare';
 }
 export type BoundaryKind='bank'|'wattle'|'hedge'|'stone';
 /** Boundary by age and local habit (variant 0-3 from the village style) and slope: banks first, then wattle, hedges, drystone. */

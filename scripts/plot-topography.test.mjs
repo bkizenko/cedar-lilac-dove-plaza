@@ -8,6 +8,6 @@ test('expanded field surveys actual wet interior and preserves useful sloping fa
  const plot={x:0,z:0,w:24,d:18},plane={height:(x,z)=>10+x*.2+z*.1,waterAt:()=>.2};
  const survey=surveyFieldTopography(plane,plot);assert.ok(survey.samples>=130);assert.equal(fieldTopographyIssue(plane,plot),null);assert.ok(Math.abs(survey.maxGrade-Math.hypot(.2,.1))<1e-9);
  const alongX=Math.cos(survey.contourAngleRadians),alongZ=Math.sin(survey.contourAngleRadians);assert.ok(Math.abs(alongX*.2+alongZ*.1)<1e-9,'row direction follows the measured contour');
- const pond={height:(x,z)=>Math.abs(x-6)<2&&Math.abs(z-4)<2?0:4,waterAt:()=>1};assert.match(fieldTopographyIssue(pond,plot),/wet/);assert.ok(surveyFieldTopography(pond,plot).wetFraction>0);
+ const pond={height:(x,z)=>Math.abs(x-6)<5&&Math.abs(z-4)<5?0:4,waterAt:()=>1};assert.match(fieldTopographyIssue(pond,plot),/wet/);assert.ok(surveyFieldTopography(pond,plot).wetFraction>0);
 });
 test('a usable hillside bench is not rejected by a cliff outside its marked boundary',()=>{const plot={x:0,z:0,w:8,d:8},ground={height:(x,z)=>5+x*.2+z*.1+(x>4?(x-4)*8:0),waterAt:()=>0};assert.equal(fieldTopographyIssue(ground,plot),null);assert.ok(surveyFieldTopography(ground,plot).maxGrade<.3);assert.match(fieldTopographyIssue(ground,{...plot,w:12}),/steep/);});

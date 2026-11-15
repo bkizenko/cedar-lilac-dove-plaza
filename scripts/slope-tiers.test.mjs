@@ -70,7 +70,7 @@ test('fields: gentle slopes are free, steeper ground gets terraced strips, a hil
   assert.equal(at('farm',3,8.2,8.2).foundation,'none');
   const m=at('farm',9,8.2,8.2);assert.equal(m.tier,'moderate');assert.equal(m.foundation,'strips');assert.equal(m.extraWood,0);assert.ok(m.extraWork>0);
   const s=at('farm',18,8.2,8.2);assert.equal(s.tier,'steep');assert.equal(s.foundation,'strips');assert.ok(s.extraStone>0,'drystone strip walls');
-  assert.ok(!at('farm',30,8.2,8.2).ok);
+  assert.ok(at('farm',30,8.2,8.2).ok,'a 30 degree hillside field is now allowed (terraced)');assert.ok(!at('farm',45,8.2,8.2).ok,'a mountain face is refused');
 });
 test('survey: mean slope, fall, ledge and downhill direction are measured, not guessed',()=>{
   const s=surveySite(tilt(10),0,0,5.4,5.2);assert.ok(Math.abs(s.meanSlopeDeg-10)<.01);assert.ok(Math.abs(s.fall-5.4*Math.tan(10*Math.PI/180))<1e-6);assert.ok(s.downhill.x<-.99);

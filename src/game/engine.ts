@@ -310,7 +310,7 @@ export class Engine {
   /** GW-02 / T9 (Grok): a farm drag wider than one field becomes several fields with headlands. */
   fieldArea:FieldAreaPlan|null=null;
   fieldSnap:SnapResult|null=null;
-  private fertilityKey='';
+  private fertilityKey='';private fertilityCellsKey='';
   /** Toggle the quarter turn for a turnable building (R key or the Rotate button). */
   rotatePlacement(dir:1|-1=1){const t=this.game.state.placing;if(!t||!orientableBuilding(t)||(scalablePlot(t)&&this.plotSize))return false;this.turnCount=(this.turnCount+dir+4)%4;this.quarterTurn=this.turnCount%2===1&&turnableBuilding(t);this.updateGhost(true);this.pushHud();return true;}
   /** True while a gate or any turnable building is being placed: the rotate buttons and R/Q/E keys act. */
@@ -891,13 +891,13 @@ export class Engine {
       const plot=dragPlot(type,dragStart,g);x=plot.x;z=plot.z;this.plotSize={w:plot.w,d:plot.d};
     }
     this.fieldArea=null;
-    if(type==='farm'&&this.plotStart&&plotDragIntent(this.plotPointerStart,this.pointer,this.plotStart,g)&&(Math.abs(g.x-this.plotStart.x)>BUILDINGS.farm.w*3||Math.abs(g.z-this.plotStart.z)>BUILDINGS.farm.d*3)){
+    if(type==='farm'&&this.plotStart&&plotDragIntent(this.plotPointerStart,this.pointer,this.plotStart,g)&&(Math.abs(g.x-this.plotStart.x)>BUILDINGS.farm.w*3||Math.abs(g.z-this.plotStart.z)>BUILDINGS.farm.d*3||this.dragNeedsTrim(dragStart!,g))){
       const plan=planFieldArea(this.game,dragStart!,g,0,{merge:true});
       if(plan.tiles.length>1){
-        this.fieldArea=plan;this.view.setLinePreview(plan.tiles.map(t=>({x:t.x,z:t.z,y:this.game.height(t.x,t.z),ok:!t.issue})));
+        this.fieldArea=plan;this.fertilityCellsKey='';this.view.setLinePreview(plan.tiles.map(t=>({x:t.x,z:t.z,y:this.game.height(t.x,t.z),ok:!t.issue,w:t.w,d:t.d,green:t.fertility??undefined,reason:t.issue??undefined})));
         const fert=fertilityPreview(this.game,{x:(this.plotStart.x+g.x)/2,z:(this.plotStart.z+g.z)/2,w:Math.abs(g.x-this.plotStart.x),d:Math.abs(g.z-this.plotStart.z)});
         const key=`area${plan.valid}/${plan.tiles.length}/${plan.seeds}/${fieldRefusalSummary(plan)}`;
-        if(key!==this.plotPreviewKey){this.plotPreviewKey=key;this.game.banner(`${plan.valid}/${plan.tiles.length} fields · ${plan.seeds} seeds · headlands between${fert.summary?` · ${fertilityText(fert)}`:''}${plan.valid<plan.tiles.length?` · red plots: ${fieldRefusalSummary(plan)}`:''}`,4);}
+        if(key!==this.plotPreviewKey){this.plotPreviewKey=key;this.game.banner(`${plan.valid}/${plan.tiles.length} fields · ${plan.seeds} seeds${plan.trimmed?' · blocked ground trimmed':''}${fert.summary?` · ${fertilityText(fert)}`:''}${plan.valid<plan.tiles.length?` · red plots: ${fieldRefusalSummary(plan)}`:''}`,4);}
       }
     }
     this.fieldSnap=null;
@@ -948,11 +948,22 @@ export class Engine {
       const dims=this.plotSize??(this.placementTurn()?turnedFootprint(type):BUILDINGS[type]),v2=!!this.game.state.terrainModel,sa=slopeClassOf(type)==='exempt'?null:this.game.siteAssessment(type,x,z,dims.w,dims.d,v2),note=sa?(issue&&!sa.ok?`${issue}${sa.shelfHint?` · ${sa.shelfHint}`:''}`:`${sa.label} · ${sa.detail}`):'';
       if(note!==this.slopeNoteKey){this.slopeNoteKey=note;if(sa&&(sa.tier!=='level'||!sa.ok||(v2&&(sa.tags?.length||sa.terrace?.k&&sa.terrace.k!=='none'))))this.game.banner(note,3);}
     }
+    if(type==='farm'&&!this.fieldArea){
+      // fertility gradient: each 2 m cell of the plot is greener the more fertile it is; the whole plot goes red only when it is refused (the banner says why)
+      const size=this.plotSize??{w:BUILDINGS.farm.w,d:BUILDINGS.farm.d},key=`${x.toFixed(1)}|${z.toFixed(1)}|${size.w}|${size.d}|${issue?1:0}|${this.game.state.paused?1:0}`;
+      if(key!==this.fertilityCellsKey){
+       this.fertilityCellsKey=key;const fp=fertilityPreview(this.game,{x,z,w:size.w,d:size.d}),cw=size.w/fp.columns,cd=size.d/fp.rows,pts:{x:number;z:number;y:number;ok:boolean;w:number;d:number;green?:number;reason?:string}[]=[];
+       fp.cells.forEach((c,k)=>{if(!c)return;const px=x+(((k%fp.columns)+.5)/fp.columns-.5)*size.w,pz=z+((Math.floor(k/fp.columns)+.5)/fp.rows-.5)*size.d;pts.push({x:px,z:pz,y:this.game.height(px,pz),ok:!issue,w:cw,d:cd,green:c.greenness,reason:issue??undefined});});
+       this.view.setLinePreview(pts);
+      }
+    }
     this.ghostPos.x = x;
     this.ghostPos.z = z;
     const bridge=type==="bridge"?(this.bridgeSpan??planBridge(this.game,x,z)):null;
     this.view.setGhost(type, x, z, bridge?bridgeHeight(this.game,bridge,x,z):type==='fibreWorkshop'?fibreWorkshopPlacementLevel(this.game,x,z):this.game.height(x, z), !issue, type === "farm" ? soilQuality(this.game,x,z) : undefined,bridge,this.plotSize,type==='gate'?this.gateFacing:undefined,type==='watchtower'?towerBuildConfiguration(this.game,0):undefined,this.placementTurn(),this.placementTurns());
   }
+  /** A dragged field that would be refused whole is planned as an area instead, so only its blocked pieces are trimmed away. */
+  private dragNeedsTrim(a:{x:number;z:number},b:{x:number;z:number}){const plot=dragPlot('farm',a,b);return !!this.game.placementIssue('farm',plot.x,plot.z,0,{w:plot.w,d:plot.d});}
   /** Field drags start from a neighbouring field's edge or corner when pressed close to it. */
   private fieldStart(){return this.plotStart&&this.game.state.placing==='farm'?snapFieldPoint(this.game,this.plotStart,0):null;}
   /** The quarter turn only applies to turnable, unsized placements (same rule as placementIssue). */

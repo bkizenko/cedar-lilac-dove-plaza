@@ -14,7 +14,7 @@ test('no 22 degree refusal: fields climb a ladder of terrace kinds, refused only
   const kinds=[2,6,10,15,22,30,38,45,50].map(d=>field(d).terrace?.k);
   assert.deepEqual(kinds,['none','bund','bund','stone','stone','andean','stair','stair','stair']);
   for(const d of[2,6,10,15,22,30,38,45,50])assert.ok(field(d).ok,`${d} degrees is farmable`);
-  assert.ok(!assessSite(tilt(30),'farm',0,0,8.2,8.2).ok,'the plain tiers still refuse 30 degrees (old behaviour, saves without the switch)');
+  assert.ok(assessSite(tilt(30),'farm',0,0,8.2,8.2).ok,'the plain tiers accept 30 degrees now (loosened placement)');assert.ok(!assessSite(tilt(45),'farm',0,0,8.2,8.2).ok,'but still refuse a mountain face');
   assert.ok(!field(56).ok&&/cliff/.test(field(56).issue),'a cliff face is refused');
   assert.ok(!assessSiteV2((x)=>x<0?10:16,'farm',0,0,8.2,8.2).ok,'a 6 m wall across the plot is a cliff');
   assert.equal(T.terraceKindFor(4.9),null);assert.equal(T.terraceKindFor(60),null);
@@ -109,7 +109,7 @@ test('sim: a hillside field is allowed, costs real goods and time, needs the cap
   for(let i=0;i<10;i++)g.state.units.push({...g.state.units.find(u=>u.team===0&&u.hp>0),id:g.state.nextId++});
   const q=g.siteAssessment('farm',spot.x,spot.z,8.2,8.2);assert.ok(q.terrace&&q.terrace.k==='andean',JSON.stringify(q));const cap=rt.terraceCapability(g,0);assert.ok(cap.stonework&&cap.irrigationKnown,JSON.stringify(cap));
   assert.equal(g.placementIssue('farm',spot.x,spot.z),null,'a 30 degree field is allowed once the people can build it');
-  g.state.terrainModel=undefined;assert.match(g.placementIssue('farm',spot.x,spot.z)||'',/steep/,'old saves: still refused');g.state.terrainModel='v2';
+  g.state.terrainModel=undefined;assert.equal(g.placementIssue('farm',spot.x,spot.z),null,'old saves: a 30 degree field is accepted under the loosened grade limit');g.state.terrainModel='v2';
   const before={wood:g.tribe(0).wood,stone:g.tribe(0).stone,seeds:g.tribe(0).seeds},quote=g.siteAssessment('farm',spot.x,spot.z,8.2,8.2);
   assert.equal(g.placeBuilding('farm',spot.x,spot.z,0),true);const b=g.state.buildings.at(-1);assert.equal(b.type,'farm');assert.ok(b.site?.terrace&&b.site.foundation==='strips'&&b.site.extraWork===quote.extraWork);
   assert.equal(before.stone-g.tribe(0).stone,(BUILDINGS.farm.stone||0)+quote.extraStone,'terrace stone is really spent');assert.equal(before.wood-g.tribe(0).wood,(BUILDINGS.farm.wood||0)+quote.extraWood);

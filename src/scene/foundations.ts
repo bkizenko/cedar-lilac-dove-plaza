@@ -39,6 +39,6 @@ export function foundationProfile(g:Game,b:Building){
  // the ground just outside the door (half a metre out), so an uphill door is not buried and a downhill one gets steps
  const door=wantDoor&&entry?g.height(b.x+co*entry.x*sx+si*(entry.z+(plan?.5:0))*sz,b.z-si*entry.x*sx+co*(entry.z+(plan?.5:0))*sz):undefined;
  const mean=plan&&count?sum/count:undefined;
- const profile={level:foundationLevel(b.site?.foundation,top,bottom,door,mean,b.site?.foundation==='stilts'&&b.site.slope<FOUNDATION_RULES.pileBelowDegrees?FOUNDATION_RULES.pileLiftMetres:0),bottom:bottom-.03};
+ const profile={level:foundationLevel(b.site?.foundation,top,bottom,door,mean,b.site?.foundation==='stilts'&&b.site.slope<FOUNDATION_RULES.pileBelowDegrees?FOUNDATION_RULES.pileLiftMetres:0,!!plan?.raised&&top-bottom>1.5),bottom:bottom-.03};
  const value={plan,contacts,world:g.world,banks:g.world.bankTerrain,height:g.height,terrainRevision,team:b.team,heights:g.world.heights,w:b.w,d:b.d,x:b.x,z:b.z,axisAligned,foundation:b.site?.foundation,profile};cache.set(b,value);return profile;
 }

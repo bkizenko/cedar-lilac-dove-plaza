@@ -37,13 +37,18 @@ export function riverDistance(g:Game,x:number,z:number){
   return distance;
 }
 
+/** Land beside fresh water is more fertile (silt, moisture): up to +0.12 soil within 60 m of a river, fading to nothing. Deterministic; applied on ecology worlds,
+ * where the soil map itself carries no river term (the legacy formula below already has its own 40 m river term). Not stored in saves. */
+export const RIPARIAN_SOIL_RULES={reachMetres:60,maximumBonus:.12} as const;
+export function riparianSoilBonus(distanceMetres:number){const R=RIPARIAN_SOIL_RULES;return Number.isFinite(distanceMetres)?Math.max(0,1-distanceMetres/R.reachMetres)*R.maximumBonus:0;}
+
 /** Site potential, separate from a field's fertility loss through repeated cropping. */
 export function soilQuality(g: Game, x: number, z: number) {
   const h = g.height(x,z);
   const slope = Math.max(Math.abs(g.height(x+3,z)-h), Math.abs(g.height(x-3,z)-h),
     Math.abs(g.height(x,z+3)-h), Math.abs(g.height(x,z-3)-h));
   const distance=riverDistance(g,x,z);
-  if(g.world.ecology)return Math.max(.15,Math.min(1,ecologicalConditionsAt(g.world.ecology,x,z).soil-Math.max(0,slope-1)*.06));
+  if(g.world.ecology)return Math.max(.15,Math.min(1,ecologicalConditionsAt(g.world.ecology,x,z).soil-Math.max(0,slope-1)*.06+riparianSoilBonus(distance)));
   return Math.max(0.25,Math.min(1,0.35+habitatAt(g,x,z).crops*0.3 +
     Math.max(0,1-distance/40)*0.3 - slope*0.08));
 }

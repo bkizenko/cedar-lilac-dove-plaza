@@ -1,3 +1,4 @@
+import {fieldClearingTest} from '../game/fieldClearing';
 import {DETAIL_RULES} from '../game/detailLevel';
 import * as THREE from 'three';
 import {FellLogLayer} from './fellLogLayer';
@@ -237,7 +238,7 @@ export class BiomeSceneLayer {
  sync(game:BiomeSceneGame,camera:{x:number;z:number},quality:VegetationContext['quality'],dt:number,view?:{bands:DrawBands;/** floor (m) on how far trees are drawn: zooming out must never pull the tree edge in front of the visible ground */minFar?:number;inView?:(x:number,z:number,r:number)=>boolean;key?:string;prime?:boolean;detail?:TreeDetail}){
   this.treeIn-=Math.max(0,dt);this.dressingIn-=Math.max(0,dt);const detail=view?.detail,changed=quality!==this.lastQuality,treeChanged=changed||detail!==this.lastDetail||(view?.bands!==undefined&&view.bands!==this.lastBands)||(view?.key!==undefined&&view.key!==this.lastViewKey);this.lastQuality=quality;this.lastDetail=detail;this.lastBands=view?.bands??null;this.lastViewKey=view?.key??'';
   let treeReport:ReturnType<BiomeVegetation['sync']>|undefined,dressingCount:number|undefined,changedAgain=false;
-  const context:VegetationContext={quality,detail:detail&&{nearMetres:detail.nearMetres,cardScale:detail.cardScale},camera,known:(x,z)=>game.exploredAt(x,z),marked:id=>game.chopMarks?.has(id)??false,...game.seasonMix()};
+  const context:VegetationContext={quality,detail:detail&&{nearMetres:detail.nearMetres,cardScale:detail.cardScale},camera,known:(x,z)=>game.exploredAt(x,z),inField:fieldClearingTest(game),marked:id=>game.chopMarks?.has(id)??false,...game.seasonMix()};
   if(this.treeIn<=0||treeChanged){
    const bands=view?.bands;
    if(bands){const tb=detail?treeBudget(bands,detail.step):null,low=detail?1:quality==='low'?.6:1;const floorFar=Math.min(bands.cameraFar*.92,view.minFar??0);context.farMetres=Math.max(floorFar,tb?tb.treeFar:bands.treeFar*low);context.fadeMetres=bands.fadeMetres;context.inView=view.inView;

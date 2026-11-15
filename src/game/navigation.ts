@@ -1,3 +1,4 @@
+import {WALK_SLOPE_COST} from './slopeTiers';
 /** Bounded A*, 1=walkable, eight directions with no corner cutting. */
 export function findPath(
   grid: Uint8Array,
@@ -5,6 +6,8 @@ export function findPath(
   start: number,
   goal: number,
   budget = 24000,
+  /** Optional per-cell walk-cost class (1..4, see WALK_SLOPE_COST), same size as grid. Absent: every cell costs 1 (historic behaviour). */
+  slope?: Uint8Array,
 ): number[] | null {
   if (start < 0 || goal < 0 || start >= grid.length || goal >= grid.length || !grid[goal])
     return null;
@@ -73,7 +76,7 @@ export function findPath(
         const n = id + dz * width + dx;
         if (!grid[n] || closed[n] || (dx && dz && (!grid[id + dx] || !grid[id + dz * width])))
           continue;
-        const g = cost[id] + (dx && dz ? Math.SQRT2 : 1);
+        const g = cost[id] + (dx && dz ? Math.SQRT2 : 1) * (slope ? WALK_SLOPE_COST[slope[n]] || 1 : 1);
         if (g < cost[n]) {
           cost[n] = g;
           from[n] = id;

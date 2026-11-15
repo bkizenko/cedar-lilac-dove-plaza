@@ -210,6 +210,7 @@ import {
   isDependent,
 } from "./settlement";
 import { findPath } from "./navigation";
+import {walkSlopeGrid,stepPace,climbTire} from './walkSlope';
 import {
   AGE_CHOICES,
   AGE_COST,
@@ -4331,6 +4332,10 @@ export class Game {
             direct = false;
             break;
           }
+        // A straight line over a steep face is not a route: ask the slope-weighted search so people go around the hill.
+        if(direct&&fineGround&&distance>8){const sc=walkSlopeGrid(this,WALK),cw=this.world.size/WALK;
+          for(let i=1;i<samples;i++){const px=u.x+((tx-u.x)*i)/samples,pz=u.z+((tz-u.z)*i)/samples,ix=Math.floor((px+this.world.size/2)/cw),iz=Math.floor((pz+this.world.size/2)/cw);
+            if(ix>=0&&iz>=0&&ix<WALK&&iz<WALK&&sc[iz*WALK+ix]>=4){direct=false;break;}}}
       }
       let points = [{ x: tx, z: tz }],
         failed = false, nearestEnd = false;
@@ -4358,7 +4363,8 @@ export class Game {
             }
         }
         // Claude request 3 (Grok): busy goals share one flow field when switched on (setFlowFieldsEnabled); equal-cost paths, null falls back to A*.
-        let path = flowPath(this, grid, WALK, index(u.x, u.z), end, this.navRevision) ?? findPath(grid, WALK, index(u.x, u.z), end), nearest = false;
+        const slopeCost=grid===this.walk?walkSlopeGrid(this,WALK):undefined;
+        let path = flowPath(this, grid, WALK, index(u.x, u.z), end, this.navRevision, slopeCost) ?? findPath(grid, WALK, index(u.x, u.z), end, undefined, slopeCost) ?? (slopeCost?findPath(grid, WALK, index(u.x, u.z), end):null), nearest = false; // the slope-weighted search may exhaust its budget on hilly ground: fall back to the plain search rather than leave people standing
         // Coarse cells can close a real body-sized passage in a dense camp.
         // Spend shared navigation budget once; ordinary route following still
         // collision-checks every actual movement with this actor's radius.
@@ -4384,7 +4390,7 @@ export class Game {
           // Charge added ground searches against this step's shared budget;
           // a pending search is not an unreachable job or a stuck resident.
           if(!longJourney){if(this.navBudget<2)return false;this.navBudget-=2;}
-          path=findPath(grid,WALK,index(u.x,u.z),end,u.tradeNeedsId!==undefined?192000:96000);
+          path=findPath(grid,WALK,index(u.x,u.z),end,u.tradeNeedsId!==undefined?192000:96000,slopeCost);
         }
         // A direct ground move remains a valid order when the requested point
         // is across a barrier. Complete it at the closest connected ground.
@@ -4398,7 +4404,7 @@ export class Game {
             if (this.navBudget < 1) return false;
             this.navBudget--;
             end = fallback;
-            path = findPath(grid,WALK,index(u.x,u.z),end,96000);
+            path = findPath(grid,WALK,index(u.x,u.z),end,96000,slopeCost);
             if (path) nearest = true;
           }
         }
@@ -4435,7 +4441,8 @@ export class Game {
       dz = point.z - u.z,
       d = Math.hypot(dx, dz);
     if (route.points.length===1 && (d < (route.precise ? .12 : .5) || route.nearest && d < ROUTE_PROGRESS_RULES.nearestArrivalMetres)) {this.paths.delete(u.id);clearRouteProgress(u);u.stuckT=0;return true;}
-    const step = Math.min(this.travelSpeed(u)*dt, d);
+    const climb=u.haulage==="canoe"||u.boat?1:stepPace(this,u.x,u.z,point.x,point.z),step = Math.min(this.travelSpeed(u)*dt*climb, d);
+    if(climb<1&&u.haulage!=="canoe"&&!u.boat)climbTire(this,u,u.x,u.z,point.x,point.z,dt);
     let nx = u.x + (dx / d) * step,
       nz = u.z + (dz / d) * step;
     if (!this.canStep(u, nx, nz)) {

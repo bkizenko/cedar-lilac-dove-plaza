@@ -8,7 +8,7 @@ import {hasTaskCommitment} from './workCommitments';
 import {releaseConstructionWorker} from './constructionOwnership';
 import {reserveTreeWorker,releaseTreeWorker} from './workAllocation';
 import {buildingCost} from './construction';
-export const SITE_PREPARATION_RULES={version:1,footprintMarginMetres:.25,maximumLooseStoneStock:32,maximumResources:2048,maximumWorkers:4} as const;
+export const SITE_PREPARATION_RULES={version:1,footprintMarginMetres:.25,maximumLooseStoneStock:240,maximumResources:2048,maximumWorkers:4} as const;
 export type PreparationKind='tree'|'stone'|'forage';
 export type PreparationResource={id:number;kind:PreparationKind;x:number;z:number;maxAmt:number};
 export type SitePreparation={version:1;createdAt:number;paused?:true;completedAt?:number;cancelledAt?:number;resources:PreparationResource[];site:{type:BldType;x:number;z:number;w:number;d:number;towerPlatform?:Building['towerPlatform']};quote:Cost;paid:Cost};

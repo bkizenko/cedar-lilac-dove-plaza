@@ -1,4 +1,4 @@
-export const PLOT_TOPOGRAPHY_RULES={sampleSpacingMeters:2,maximumOrdinaryFieldGrade:.75,maximumPastureGrade:.6,dryClearanceMeters:.3} as const;
+export const PLOT_TOPOGRAPHY_RULES={sampleSpacingMeters:2,maximumOrdinaryFieldGrade:1.2,/** a field may include this fraction of wet ground at its edge (the wet cells are trimmed/ignored); more than that is a water body */maximumWetFraction:.12,maximumPastureGrade:.6,dryClearanceMeters:.1} as const;
 type Ground={height(x:number,z:number):number;waterAt(x:number,z:number):number};
 type Footprint={x:number;z:number;w:number;d:number};
 /** Include every edge and the interior, including enlarged plots. No terrain is
@@ -23,7 +23,7 @@ export function surveyFieldTopography(ground:Ground,plot:Footprint){
 }
 export function fieldTopographyIssue(ground:Ground,plot:Footprint,maximumGrade:number=PLOT_TOPOGRAPHY_RULES.maximumOrdinaryFieldGrade):string|null{
  const survey=surveyFieldTopography(ground,plot);
- if(survey.wetFraction>0)return 'Part of this field is wet; reduce the plot or choose a dry bank';
+ if(survey.wetFraction>PLOT_TOPOGRAPHY_RULES.maximumWetFraction)return 'Part of this field is wet; reduce the plot or choose a dry bank';
  if(survey.maxGrade>maximumGrade)return 'Part of this field is too steep; reduce the plot or choose a gentler slope';
  return null;
 }

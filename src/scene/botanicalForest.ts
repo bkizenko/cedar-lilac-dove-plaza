@@ -13,7 +13,7 @@ import {painterSway,type PainterSway} from './painterVegetationMaterial';
  * adds wood, collision or clicks. Per-tree seeded variation: species and age class by site, height/width, lean (wind, slope), hue, autumn colour, leaf-fall timing. */
 /** Cosmetic filler for one frame (see fillerForest.ts): individual trees (negative ids, `filler: true`, never resources) and merged horizon crowns, with the radii the budget really reached. */
 export type ForestFiller={trees:readonly ForestNode[];blobs:readonly FillerBlob[];detailEff:number;farEff:number};
-export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';/** tree detail step: full/mid radius and leaf-card scale (absent = per-quality radii, all cards) */detail?:{nearMetres:number;cardScale:number};camera:{x:number;z:number};known:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number;
+export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'high';/** tree detail step: full/mid radius and leaf-card scale (absent = per-quality radii, all cards) */detail?:{nearMetres:number;cardScale:number};camera:{x:number;z:number};known:(x:number,z:number)=>boolean;/** felled stumps inside a field are cleared ground: not drawn */inField?:(x:number,z:number)=>boolean;winter:number;autumn:number;snow:number;
  /** draw-distance bands (src/game/drawDistance.ts): sim trees are culled beyond this (graphics Low scales it down as before); absent = the original 700/420 m */
  farMetres?:number;/** screen-door fade span ahead of the cut-offs (0/absent = hard edge) */fadeMetres?:number;/** conservative frustum test (x,z,radius) for far-tier trees; absent = draw all */inView?:(x:number,z:number,r:number)=>boolean;filler?:ForestFiller|null};
 export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean;/** cosmetic filler tree: never a resource, never picked */filler?:true};
@@ -118,6 +118,7 @@ private stumps:Batch|null=null;private recs=new Map<number,Rec>();private info=n
   const tally=new Map<number,number>();
   for(const list of [nodes,ctx.filler?.trees??[]])for(const node of list){
    if(!ctx.known(node.x,node.z))continue;
+   if(node.amount<=0&&!node.planted&&ctx.inField?.(node.x,node.z))continue;
    const dx=node.x-ctx.camera.x,dz=node.z-ctx.camera.z,distance=Math.hypot(dx,dz);if(distance>reach)continue;
    const rec=this.rec(node),sp=BOTANICAL_SPECIES[rec.sp],stump=node.amount<=0&&!node.planted,fall=this.fallProgress(node.id,(node as {felledAt?:number}).felledAt,stump,!!node.filler),growth=node.planted?.18+.6*Math.max(0,1-node.regenT/120):1,s=(rec.size??node.scale)*growth;
    const tier:0|1|2=node.filler?2:distance<=d0?0:distance<=d1?1:2,heroTier:0|1|2=tier===0&&distance<=heroD&&!node.filler?2:tier; // cosmetic filler never uses the pickable individual tiers

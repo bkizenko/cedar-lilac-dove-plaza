@@ -14,8 +14,10 @@ export const FOUNDATION_RULES={segmentMetres:.9,minimumGapMetres:.12,/** the sma
 /** Floor level for a foundation. Dugouts take the ground at the door so the door is at grade. Level, levelled-pad and terrace sites (cut and fill) take the MEAN ground
  *  under the footprint when it is known, so the uphill side is cut into the earth and the downhill side needs at most half the fall of footing, never the full
  *  fall; `doorGround` (carved buildings) stops an uphill door from being buried. Posts and outcrops stand on the highest contact. */
-export function foundationLevel(kind:FoundationKind|undefined,highest:number,lowest:number,doorGround?:number,mean?:number,lift=0){
+export function foundationLevel(kind:FoundationKind|undefined,highest:number,lowest:number,doorGround?:number,mean?:number,lift=0,onOwnLegs=false){
  if(kind==='dugout'&&doorGround!==undefined)return doorGround+.03;
+ // a building the generator itself raises on legs (granary on staddle stones) stands clear above its highest contact: the legs reach down to the lower ground, so nothing hovers and the uphill side is not buried
+ if(onOwnLegs)return highest+.03+(kind==='stilts'?lift:0);
  if((!kind||kind==='none'||kind==='pad'||kind==='terrace')&&mean!==undefined){
   const floor=Math.max(mean,doorGround!==undefined?doorGround-FOUNDATION_RULES.doorBuryMetres:-Infinity);
   return Math.min(highest,floor)+.03;
