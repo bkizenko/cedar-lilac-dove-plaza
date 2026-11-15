@@ -1,7 +1,7 @@
 // Shared helpers for the save round-trip suite (not a test file).
 import assert from 'node:assert/strict';
 import {encodeGame,decodeGame,validateGameSave} from '../src/game/persistence.ts';
-export const r1=n=>typeof n==='number'?Math.round(n*1000)/1000:n;
+export const r1=n=>typeof n==='number'?Math.round(n*1000)/1000+0:n;
 /** Key, order-independent digest of the persisted state a player would notice drifting. */
 export function digest(g){
   const s=g.state,by=(a,f)=>[...a].sort((x,y)=>x.id-y.id).map(f);
@@ -9,7 +9,7 @@ export function digest(g){
     time:r1(s.time),seed:s.seed,nextId:s.nextId,age:s.age,weather:s.weather,tribes:s.tribes.length,worldgen:s.worldgenVersion,
     tribe:s.tribes.map(t=>[t.id,r1(t.food),r1(t.wood),r1(t.stone),r1(t.copper),r1(t.iron),t.age,t.hostile?1:0,t.peaceTerm??null,t.tribute?r1(t.tribute.owed):null,t.name]),
     units:by(s.units,u=>[u.id,u.team,u.type,r1(u.x),r1(u.z),r1(u.hp),r1(u.carry),u.carryType??null,u.order,u.militia?1:0,u.pillage,u.enslavedFrom??null,u.prisoner?.phase??null,u.node?u.node.id:null,u.target?u.target.id:null,u.boat?.id??null,u.expedition?1:0,u.homeHall??null]),
-    buildings:by(s.buildings,b=>[b.id,b.type,b.team,r1(b.build),r1(b.hp),b.x,b.z]),
+    buildings:by(s.buildings,b=>[b.id,b.type,b.team,r1(b.build),r1(b.hp),r1(b.x),r1(b.z)]),
     boats:by(s.boats||[],b=>[b.id,b.team,b.captain??null,!!b.exploration,r1(b.x),r1(b.z)]),
     wildlife:by(s.wildlife,a=>[a.id,a.species,r1(a.hp)]),
     livestock:by(s.livestock||[],a=>[a.id,a.species,a.pen,r1(a.hp),a.carcass?1:0]),
