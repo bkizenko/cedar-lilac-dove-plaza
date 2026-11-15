@@ -23,6 +23,7 @@ import {tickTransit} from './transit';
 import {noteRaidCombat,noteRaidExposed,tickRaidReports} from './raidReports';
 import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './tradedTeaching';
 import {armorRepairAI,pauseArmorRepair,tickArmorRepairs} from './armorRepair';
+import {tickIllness,beginPregnancy,takeMother,pregnancySpeed} from './healthRisk';
 import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRepair';
 import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {buildSkins} from './skinState';
@@ -3348,6 +3349,7 @@ export class Game {
     if (this.state.event === "herd") this.state.event = "none";
     this.state.eventT = 120;
     this.tickCalamity(dt);
+    tickIllness(this,dt);
   }
 
   tickCalamity(dt: number) {
@@ -3714,6 +3716,7 @@ export class Game {
           : richest > 1100
             ? 120 + Math.random() * 40
             : 200 + Math.random() * 55;
+      beginPregnancy(this,0,this.state.birthT);
       for (const tr of this.state.tribes) {
         if (!tr.alive || tr.id === 3) continue;
         const pop = this.popNow(tr.id);
@@ -3745,7 +3748,7 @@ export class Game {
         );
         u.ageT = 0;
         u.maturesAt = this.state.time + 360;
-        u.homeHall=hall.id;u.parents=family.filter(p=>!isDependent(this,p)).slice(0,2).map(p=>p.id);
+        u.homeHall=hall.id;{const mother=takeMother(this,tr.id);u.parents=family.filter(p=>!isDependent(this,p)&&p.id!==mother?.id).slice(0,mother?1:2).map(p=>p.id);if(mother)u.parents.unshift(mother.id);}
         {const heir=family.find(p=>p.originTribe?.gen===0&&u.parents?.includes(p.id));if(heir)u.originTribe={name:heir.originTribe!.name,gen:1};}
         lifeEvent(this,tr.id,personName(u)+" was born",hall.x,hall.z);
         u.stature = 0.6;
@@ -4242,7 +4245,7 @@ export class Game {
   }
 
   travelSpeed(u: Unit) {
-    return siegeRamMovementMultiplier(this,u)*armorMovementMultiplier(this,u)*formationPace(this,u)*repairPacketSpeed(this,u)*(u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
+    return siegeRamMovementMultiplier(this,u)*armorMovementMultiplier(this,u)*formationPace(this,u)*repairPacketSpeed(this,u)*(u.haulage==="canoe"?(this.height(u.x,u.z)<this.waterAt(u.x,u.z)+.3?u.speed*1.65:u.speed*.8):u.speed) * earthworkPace(this,u.x,u.z) * (u.boat?.phase==='aboard'?riverboatLoadSpeed(this,u.boat.id):loadedHaulSpeed(u)) * predisposition(u).speed * pregnancySpeed(this,u) * pathPace(this,u.x,u.z) * (1-(u.fatigue||0)*0.12) * (u.visit || u.order === "trade" || (u.order === "return" && u.tradeTeam !== 0) ? 0.75 : 1) * Math.max(0.75,1-(u.hunger||0)/440) *
         (u.team === 0 && hasTradition(this, "pathfinders") ? (u.order === "explore" ? 1.25 : u.order === "trade" || (u.order === "return" && u.carry > 0) ? 1.15 : 1) : 1) *
         (u.team === 0 &&
         this.state.agePicks[4] === "econ" &&

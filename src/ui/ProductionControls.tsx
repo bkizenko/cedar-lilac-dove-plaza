@@ -9,7 +9,7 @@ import{GameDisclosure}from'./GameDisclosure';import{GameTooltip}from'./GameToolt
 import{fibreReport,FIBRE_RULES}from'../game/fibre';
 import{POTTERY_RULES}from'../game/pottery';
 import{useEffect,useMemo,useRef,useState}from'react';import type{Engine}from'../game/engine';
-import{ITEM_NAMES,PRODUCTION_RECIPES,recipeFoodOutputs,productionStatus,productionSlots,productionWorkSeconds,clothingWarmth,type ProductionRecipe,type ItemKind}from'../game/production';import{ambientTemperature,localAirTemperature}from'../game/survivalNeeds';import{TEXTILE_RULES}from'../game/textiles';import{FOOD_NOURISHMENT,FOOD_NAMES}from'../game/pantry';import type{FoodKind}from'../game/types';import{craftingBenches}from'../game/crafting';import{personName}from'../game/people';import{CraftSiteQueue}from'./CraftSiteQueue';
+import{ITEM_NAMES,PRODUCTION_RECIPES,recipeFoodOutputs,productionStatus,productionSlots,productionWorkSeconds,clothingWarmth,type ProductionRecipe,type ItemKind}from'../game/production';import{ambientTemperature,localAirTemperature}from'../game/survivalNeeds';import{TEXTILE_RULES}from'../game/textiles';import{isPregnant}from'../game/healthRisk';import{FOOD_NOURISHMENT,FOOD_NAMES}from'../game/pantry';import type{FoodKind}from'../game/types';import{craftingBenches}from'../game/crafting';import{personName}from'../game/people';import{CraftSiteQueue}from'./CraftSiteQueue';
 import type{EngineDispatchCommand}from'../game/engineDispatch';
 import{useOwnerReadModels}from'./useOwnerReadModels';
 export function ProductionControls({engine}:{engine:Engine}){
@@ -55,7 +55,8 @@ function ClothingPersonControls({engine,people,run,button}:PersonControlsProps){
  const g=engine.game,status=productionStatus(g),ambient=ambientTemperature(g),workplaceId=g.state.selBld?.type==='tailor'?g.state.selBld.id:undefined,queries=people.map(u=>({kind:'garment-repair-issues' as const,unitId:u.id,...(workplaceId!==undefined?{workplaceId}:{})})),read=useOwnerReadModels(engine,queries);
  return <>{people.map(u=><div key={u.id} className="text-xs">
   <p>{personName(u)} · {u.garment&&u.garment.condition>0?`${ITEM_NAMES[u.garment.item]} ${Math.round(u.garment.condition*100)}% condition${(u.garment.wetness||0)>.05?` · ${Math.round((u.garment.wetness||0)*100)}% wet`:''}`:'No serviceable garment'}</p>
-  <p className="text-parchment-dim">{Math.round(localAirTemperature(g,u.x,u.z,ambient))}°C here{u.garment&&u.garment.condition>0&&` · +${Number(clothingWarmth(u).toFixed(1))}°C from worn clothing`}</p>
+  {(isPregnant(g,u)||u.sickUntil)&&<p className="text-bronze-bright">{isPregnant(g,u)?`Expecting a child · due in ${Math.max(1,Math.ceil(((u.pregnantUntil??0)-g.state.time)/60))} min · moves slower`:'Ill — recovering'}</p>}
+  <p className="text-parchment-dim">{Math.round(localAirTemperature(g,u.x,u.z,ambient))}°C here{!u.garment&&localAirTemperature(g,u.x,u.z,ambient)>TEXTILE_RULES.heatThresholdCelsius&&' · bare skin is fine in this heat'}{u.garment&&u.garment.condition>0&&` · +${Number(clothingWarmth(u).toFixed(1))}°C from worn clothing`}</p>
   {u.garmentRepair?<div className="space-y-1 rounded border border-parchment/15 p-2">
    <p>Repairing {ITEM_NAMES[u.garmentRepair.garment.item]} · {u.garmentRepair.phase==='paused'?'paused':u.garmentRepair.phase==='traveling'?'walking to tailor':'working'}</p>
    <progress aria-label={`${personName(u)} garment repair progress`} max={u.garmentRepair.progress+garmentRepairRemainingWork(u)} value={u.garmentRepair.progress} className="h-1.5 w-full"/>

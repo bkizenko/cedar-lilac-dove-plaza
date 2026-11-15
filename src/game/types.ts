@@ -241,6 +241,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   diplomaticAccount?:import('./diplomaticKnowledge').DiplomaticAccount;
   envoy?: {team:number; kind:"peace"|"trade"|"gift"|"compact"; term?:PeaceTerm; phase:"outbound"|"return"; talk:number; report?: {time:number; offers:TradeDeal[]}};
   sickUntil?: number;
+  /** Expecting until this game time; the birth uses her as parent. Slows travel (healthRisk.ts). */
+  pregnantUntil?: number;
   maturesAt?: number;
   workReason?: string;
   workCheckAt?: number;

@@ -3,6 +3,7 @@ import {Droplets,Flame,Wind,ChevronDown} from 'lucide-react';
 import type {Engine} from '../game/engine';
 import {isDependent} from '../game/settlement';
 import {clothingNeed} from '../game/clothingNeed';
+import {healthRisk} from '../game/healthRisk';
 import {survivalStatus,beginWaterCollection,waterCollectionIssue} from '../game/survivalNeeds';
 
 export function reserveLabel(seconds:number){
@@ -18,7 +19,7 @@ export function NeedsPanel({engine,expanded=false}:{engine:Engine;expanded?:bool
  const [open,setOpen]=useState(false);
  const g=engine.game,status=survivalStatus(g);
  if(!status.enabled)return null;
- const clothing=clothingNeed(g,0);
+ const clothing=clothingNeed(g,0),health=healthRisk(g,0);
  const residue=status.residueFuel,hasResidue=residue.availableWoodEquivalent>0,quantity=(n:number)=>Number(n.toFixed(1)),fuelLabel=`${Math.floor(status.fuel)} logs${hasResidue?' + residues':''}`;
  const blocked=g.state.ended?'The chapter has ended':null;
  const waterIssue=blocked||((expanded||open)?waterCollectionIssue(g):null);
@@ -40,6 +41,8 @@ export function NeedsPanel({engine,expanded=false}:{engine:Engine;expanded?:bool
   </dl>
   <p className="text-parchment-dim" title="Shelter and fuel help recovery">{status.temp}°C · {status.coldResidents?`${status.coldResidents} cold`:'warm'} · {status.sheltered} sheltered</p>
   {clothing.residents>0&&<p className={clothing.without&&clothing.season==='cold'?'text-blood':'text-parchment-dim'} aria-label="Clothing" title={`Made from: ${clothing.chain.join(' → ')}`}>{clothing.summary}{clothing.without>0&&clothing.inStock>0?` · ${clothing.inStock} sewn and waiting`:''}</p>}
+  {health.multiplier>1.15&&<p className="text-blood" aria-label="Illness risk" title="Illness risk rises with crowded homes and animals, thin drinking water and a marshy or low site">Illness risk ×{health.multiplier.toFixed(1)} · {health.factors.join(', ')||'conditions'}</p>}
+  {health.multiplier<=1.15&&health.site.notes.length>0&&<p className="text-parchment-dim" aria-label="Site health">Site: {health.site.notes.join(', ')}</p>}
   {status.warnings.length>0&&<ul className="space-y-1 text-blood" aria-label="Survival warnings">{status.warnings.map(warning=><li key={warning}>{warning}</li>)}</ul>}
   <div className="grid grid-cols-2 gap-2">
    <div><button type="button" className="flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-bronze/40 bg-ink-soft px-2 py-2 disabled:opacity-50" disabled={!!waterIssue} title={waterIssue||'Send a resident to collect and carry water home'} onClick={collectWater}><Droplets className="size-4"/>Collect water</button>{waterIssue&&<p className="mt-1 text-parchment-dim">{waterIssue}</p>}</div>

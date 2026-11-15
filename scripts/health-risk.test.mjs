@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {Game} from '../src/game/sim.ts';
+import {decodeGame,encodeGame} from '../src/game/persistence.ts';
+import {healthRisk,siteHealth,wearGarment,beginPregnancy,takeMother,isPregnant,pregnancySpeed,tickIllness,HEALTH_RULES} from '../src/game/healthRisk.ts';
+function fixture(){const g=new Game();g.reset(123456);g.enterIsland();g.world.heights.fill(4);g.state.buildings=[g.makeBld('townhall',0,38,0)];g.state.weather='clear';g.rebuildWalk();return g;}
+test('crowding beyond housing capacity raises illness risk',()=>{const g=fixture(),base=healthRisk(g,0).multiplier;const cap=g.popCap(0);for(let i=0;i<cap+6;i++)g.spawnUnit('worker',38+i,38,0);const r=healthRisk(g,0);assert.ok(r.crowding>0);assert.ok(r.multiplier>base);assert.ok(r.factors.includes('Crowded homes'));});
+test('marshy low ground is worse than a dry rise',()=>{const g=fixture();const dry=siteHealth(g,0,38).score;g.world.heights.fill(0);const wet=siteHealth(g,0,38);assert.ok(wet.score<=dry);});
+test('garments wear with use and stop at zero',()=>{const u={hp:10,order:'gather',garment:{item:'skinClothes',condition:1}};wearGarment(u,3600);assert.ok(u.garment.condition<.6&&u.garment.condition>.4);wearGarment(u,1e6);assert.equal(u.garment.condition,0);});
+test('pregnancy marks a mother, slows her and is consumed by birth; saves round-trip',()=>{const g=fixture(),u=g.spawnUnit('worker',40,40,0);u.ageT=20*1800;u.maturesAt=undefined;beginPregnancy(g,0,200);const m=g.state.units.find(x=>x.pregnantUntil!==undefined);assert.ok(m&&isPregnant(g,m));assert.equal(pregnancySpeed(g,m),HEALTH_RULES.pregnantSpeed);const g2=decodeGame(encodeGame(g));assert.ok(g2.state.units.some(x=>x.pregnantUntil!==undefined));assert.equal(takeMother(g,0).id,m.id);assert.equal(m.pregnantUntil,undefined);});
+test('illness tick is deterministic and only touches sickUntil',()=>{const run=()=>{const g=fixture();for(let i=0;i<30;i++)g.spawnUnit('worker',38+i,38,0);for(let t=0;t<40;t++){g.state.time=60*(t+1);tickIllness(g,1);}return g.state.units.filter(u=>u.sickUntil).length;};assert.equal(run(),run());});

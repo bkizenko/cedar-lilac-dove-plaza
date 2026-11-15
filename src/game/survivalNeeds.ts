@@ -10,6 +10,7 @@ import {scoutIndependentNeeds} from './scoutProvisions';
 import{waterVesselCapacity,wearWaterVessel}from'./pottery';
 import {coastalIndependentNeeds} from './coastalTrade';
 import {CLOTHING_RULES} from './clothingNeed';
+import {wearGarment} from './healthRisk';
 import {clothingWarmth,PRODUCTION_RECIPES} from './production';
 import {campMoveIndependentNeeds} from './nomadicCamp';
 import {societyMissionIndependentNeeds} from './rivalActivity';
@@ -306,7 +307,7 @@ export function tickSurvival(g:Game,dt:number){
     tickGarmentWetness(u,dt,weather);
     if(u.garmentRepair)tickGarmentWetness({hp:u.hp,spareGarment:u.garmentRepair.garment},dt,weather);
    }
-   if(u.garment)tickGarmentHeat(u,localTemp,dt);
+   if(u.garment){tickGarmentHeat(u,localTemp,dt);wearGarment(u,dt);}
    const effective=localTemp+clothingWarmth(u)+fire*rules.fireWarmthCelsius+shelterWarmth(g,u);
    const exposure=Math.max(0,Math.min(2,(rules.coldThresholdCelsius-effective)/6)),before=u.coldSeconds??0;
    // G7: without a serviceable garment in a cold season, chill lingers (slower recovery) even when not yet in danger.

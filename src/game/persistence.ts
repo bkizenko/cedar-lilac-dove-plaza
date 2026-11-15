@@ -431,6 +431,7 @@ function validateGamePayload(raw: unknown) {
         fail();
     }
     if (u.sickUntil !== undefined && !num(u.sickUntil)) fail();
+    if (u.pregnantUntil !== undefined && !num(u.pregnantUntil)) fail();
     if(u.escortId!==undefined&&(!Number.isSafeInteger(u.escortId)||u.escortId<1||u.escortId===u.id))fail();
     if(u.caravanArmed!==undefined&&(typeof u.caravanArmed!=="boolean"||(u.caravanArmed&&(!u.militia||!["spearman","archer","swordsman"].includes(u.type)))))fail();
     if(u.buildOrder!==undefined&&(!Number.isSafeInteger(u.buildOrder)||u.buildOrder<1||u.team!==0&&!s.buildings.some((b:Building)=>b.id===u.buildOrder&&b.team===u.team&&b.renovation?.actorId===u.id&&u.housingWorkId===b.id)))fail();
