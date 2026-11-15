@@ -151,6 +151,7 @@ import {explicitArmedOrder,raiseAttackAlarm,tickVillageDefense,soundDefenseHorn,
 import {standDownMilitia,demobilizationAI,militiaStoresReached} from './demobilization';
 import {tickSquads} from './squads';
 import {tickFocusMode} from './focusModes';
+import {tickLighting,isLit} from './lighting';
 import {nearStores,armEligible,armFromStock,weaponStockTotal,rememberArmingCall,armingCallStatus,tickArmingCall} from './armingCall';
 import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
@@ -5908,6 +5909,7 @@ export class Game {
   }
 
   nearTorch(x: number, z: number, team: number) {
+    if (team === 0 && isLit(this, x, z, 0)) return true;
     for (const b of this.state.buildings) {
       if (b.hp <= 0 || b.team !== team || !this.finished(b)) continue;
       if (
@@ -6117,6 +6119,7 @@ export class Game {
         tickArmingCall(this);
         tickSquads(this);
         tickFocusMode(this);
+        tickLighting(this,sdt);
         tickRaidReports(this,sdt);
         tickTransit(this,sdt);
         tickCommanders(this,sdt);

@@ -573,6 +573,7 @@ export type GameState = {
   armingCall?:import('./armingCall').ArmingCall;
   squads?:import('./squads').SquadsState;
   focusMode?:'craft'|'war';
+  lighting?:import('./lighting').LightingState;
   raidReports?:import('./raidReports').RaidReports;
   transit?:import('./transit').TransitState;
   terrainInfluence?:import('./terrainInfluenceRuntime').TerrainInfluenceState;

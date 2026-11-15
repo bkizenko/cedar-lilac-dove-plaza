@@ -2,6 +2,7 @@ import type {Game} from './sim';
 import type {Unit} from './types';
 import {doctrineOf} from './combatDoctrine';
 import {mulberry32} from './rng';
+import {LIGHT_RULES} from './lighting';
 /** Guards, patrols and escorts are not gatherers (CAT-106). A person on duty never occupies a gathering slot,
  * and a gatherer never has to give a slot up to a person standing watch beside the same tree, field or shore. */
 export type GuardDutyKind='post'|'patrol'|'escort'|'tower';
@@ -86,7 +87,7 @@ export function guardDutyAI(g:Game,u:Unit,dt:number):boolean{
  u.node=null;u.job=null;
  // Anything hostile inside the post's reach is met, never chased past the leash (checked above).
  if(u.order!=='attack'){
-  const reach=Math.min(d.radius,GUARD_DUTY_RULES.postRadius);let foe:Unit|undefined,best=reach*reach;
+  const reach=Math.min(d.radius,GUARD_DUTY_RULES.postRadius)*(g.isNight()&&!g.nearTorch(u.x,u.z,u.team)?LIGHT_RULES.unlitSightFactor:1);let foe:Unit|undefined,best=reach*reach;
   for(const o of g.state.units){
    if(o.hp<=0||o.team===u.team||o.prisoner||o.shelterId||o.boat?.phase==='aboard'||!g.isFoe(u.team,o.team)||u.team===0&&!g.visibleAt(o.x,o.z))continue;
    const q=(o.x-u.x)**2+(o.z-u.z)**2;if(q<best){best=q;foe=o;}

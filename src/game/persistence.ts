@@ -68,6 +68,7 @@ import {validGuardDuties} from './guardDuty';
 import {validArmingCall} from './armingCall';
 import {validSquads} from './squads';
 import {validFocusMode} from './focusModes';
+import {validLighting} from './lighting';
 import {validRaidReports} from './raidReports';
 import {validTransit} from './transit';
 import {validRouteWear} from './routeWear';
@@ -299,6 +300,7 @@ function validateGamePayload(raw: unknown) {
   if(!validArmingCall(s))fail("validArmingCall");
   if(!validSquads(s))fail("validSquads");
   if(!validFocusMode(s))fail("validFocusMode");
+  if(!validLighting(s))fail("validLighting");
   if(!validRaidReports(s))fail("validRaidReports");
   if(!validTransit(s))fail("validTransit");
   if(!validRouteWear(s))fail("validRouteWear");

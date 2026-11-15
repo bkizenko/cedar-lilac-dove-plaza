@@ -1,3 +1,4 @@
+import {lightingOf,setTorches,lightingStatus} from '../game/lighting';
 import {ExpeditionPanel} from "./ExpeditionPanel";
 import {focusModeOf,setFocusMode,type FocusMode} from '../game/focusModes';
 import {foodGuardLabel} from '@/game/foodGuard';
@@ -195,6 +196,10 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
               <option value="explore">Explore and make contact</option>
               <option value="trade">Develop trade connections</option>
             </select>
+          </label>
+          <label className="block">
+            <input type="checkbox" checked={!!lightingOf(g)?.on} onChange={(e)=>{setTorches(g,e.target.checked);engine.pushHud();}}/>{" "}
+            Night torches on posts and gates <span title="Burns logs, then charcoal from Bronze, then oil when stored">({lightingStatus(g)})</span>
           </label>
           <label>
             Town focus{" "}
