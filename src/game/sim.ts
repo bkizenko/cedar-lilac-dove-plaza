@@ -272,9 +272,9 @@ import type {
   PeaceTerm,
 } from "./types";
 import { eraText } from "./vocab";
+import { walkCells, fowCells } from "./gridScale";
 import { waterSurfaceAt, generateWorld, inBounds, isFertile, sampleHeight, sampleWorldHeight, type WorldData } from "./worldgen";
 
-const WALK = 520;
 // Navigation and physical steps must agree about dry ground. Different margins
 // made usable fords disappear from the work graph while people could cross them.
 const WALK_CLEARANCE = 0.12;
@@ -298,6 +298,21 @@ export class Game {
   }
   world: WorldData;
   walk: Uint8Array;
+  /** Nav grid width in cells (size-derived, see gridScale.ts); read from the allocated grid so fixtures stay consistent. */
+  get walkW() { return Math.round(Math.sqrt(this.walk.length)); }
+  /** Fog/territory grid width in cells (size-derived). */
+  get fowW() { return Math.round(Math.sqrt(this.vision.length)); }
+  /** Resize the size-derived grids for the current world; a no-op for every size up to 2080 (520 / 192 cells). */
+  private sizeGrids() {
+    const f = fowCells(this.world.size), w = walkCells(this.world.size);
+    if (this.vision.length !== f * f) {
+      this.vision = new Uint8Array(f * f);
+      this.visAge = new Float32Array(f * f);
+      this.territory = new Uint8Array(f * f);
+      this.territoryStrength = new Float32Array(f * f);
+    }
+    if (this.walk.length !== w * w) this.walk = new Uint8Array(w * w);
+  }
   vision = new Uint8Array(FOW * FOW);
   visAge = new Float32Array(FOW * FOW);
   territory = new Uint8Array(FOW * FOW);
@@ -342,7 +357,7 @@ export class Game {
 
   constructor() {
     this.world = generateWorld(0xdae1);
-    this.walk = new Uint8Array(WALK * WALK);
+    this.walk = new Uint8Array(walkCells(this.world.size) ** 2);
     this.state = this.blank();
     this.state.slopeModel = "graded"; // new villages use the tiered slope model; saves without the field keep the earlier linear rule
     this.state.terrainModel = "v3"; // terrain nuance + ordinary hillside farming with optional terraces; saves keep the model they were made with (v2 = automatic terraces, none = plain tiers)
@@ -470,6 +485,7 @@ export class Game {
     this.chopMarks.clear();
     const s = (seed ?? nextWorldSeed()) | 0;
     this.world = generateWorld(s,worldgenVersion,request);
+    this.sizeGrids();
     this.configureFlowFields();
     this.state = this.blank();
     this.state.slopeModel = "graded"; // new villages use the tiered slope model; saves without the field keep the earlier linear rule
@@ -1102,6 +1118,8 @@ export class Game {
     bindLocalWaterChanges(this);
     this.navRevision++;
     this.bridges=this.state.buildings.filter(b=>b.type==="bridge"&&this.finished(b)&&b.bridge);
+    const WALK = walkCells(this.world.size);
+    if (this.walk.length !== WALK * WALK) this.walk = new Uint8Array(walkCells(this.world.size) ** 2);
     const cell = ((this.world.size/2) * 2) / WALK;
     const terrainBase=terrainWalkBase(this,()=>{
     for (let iz = 0; iz < WALK; iz++) {
@@ -1161,6 +1179,7 @@ export class Game {
     if (this.travelHeight(x, z) < this.waterAt(x,z) + WALK_CLEARANCE) return false;
     // A deck edge can share a coarse cell with water; physical deck points remain safe.
     if(this.bridges.some(b=>this.finished(b)&&b.bridge&&onBridge(b.bridge,x,z)))return true;
+    const WALK = this.walkW;
     const cell = ((this.world.size/2) * 2) / WALK;
     const ix = Math.max(0, Math.min(WALK - 1, Math.floor((x + (this.world.size/2)) / cell)));
     const iz = Math.max(0, Math.min(WALK - 1, Math.floor((z + (this.world.size/2)) / cell)));
@@ -1799,13 +1818,15 @@ export class Game {
   }
 
   visibleAt(x: number, z: number) {
-    const gx = Math.floor(((x + (this.world.size/2)) / this.world.size) * FOW),
+    const FOW = this.fowW,
+      gx = Math.floor(((x + (this.world.size/2)) / this.world.size) * FOW),
       gz = Math.floor(((z + (this.world.size/2)) / this.world.size) * FOW);
     return gx >= 0 && gz >= 0 && gx < FOW && gz < FOW && this.vision[gz * FOW + gx] === 2;
   }
 
   exploredAt(x: number, z: number) {
-    const gx = Math.floor(((x + (this.world.size/2)) / this.world.size) * FOW),
+    const FOW = this.fowW,
+      gx = Math.floor(((x + (this.world.size/2)) / this.world.size) * FOW),
       gz = Math.floor(((z + (this.world.size/2)) / this.world.size) * FOW);
     return gx >= 0 && gz >= 0 && gx < FOW && gz < FOW && this.vision[gz * FOW + gx] >= 1;
   }
@@ -3033,7 +3054,7 @@ export class Game {
   }
 
   findExploreTarget(u: Unit, goatPen?: Building): { x: number; z: number } | null {
-    const n = FOW;
+    const n = this.fowW;
     const cell = this.world.size / n;
     let best: { x: number; z: number } | null = null;
     let bd = 1e12;
@@ -3822,7 +3843,7 @@ export class Game {
   }
 
   stampVision(x: number, z: number, r: number, level = 2) {
-    const n = FOW;
+    const n = this.fowW;
     const vis = this.vision;
     const cell = this.world.size / n;
     const cx = ((x + (this.world.size/2)) / cell) | 0;
@@ -4260,6 +4281,7 @@ export class Game {
   }
 
   steer(u: Unit, dt: number) {
+    const WALK = this.walkW;
     if (this.state.walkDirty) this.rebuildWalk();
     if(u.hullRecovery)return steerHullRecovery(this,u,dt);
     // Coarse navigation can mark a citizen's cell blocked after construction.

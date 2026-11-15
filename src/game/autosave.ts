@@ -1,6 +1,7 @@
 import type {Game} from './sim';
 import {encodeGame} from './persistence';
 import {SAVE_KEY} from './constants';
+import {saveStorage} from './saveStore';
 import {saveGame,currentSaveGeneration,invalidateAutosaveWrites,readSaveSlots,matchingSaveSlots,commitPreparedAutosave,type SaveStorage} from './save';
 import type {SaveSlots,AutosavePreflight,AutosaveSerialize,AutosaveResult} from './autosaveProtocol';
 export const AUTOSAVE_RULES=Object.freeze({timeoutMilliseconds:8000,maximumMeasurements:240,recoveryInitialCooldownMilliseconds:30000,recoveryBackoffMultiplier:2,recoveryMaximumCooldownMilliseconds:120000,fastRecoveryAttempts:3,recoveryLongCooldownMilliseconds:300000});
@@ -23,7 +24,7 @@ export class AutosaveController {
  private counts={requests:0,workerJobs:0,committed:0,superseded:0,failed:0,fallbacks:0,coalesced:0};
  private now:()=>number;private storage:SaveStorage;private createWorker:()=>Port;private encode:(g:Game)=>unknown;private synchronous:(g:Game)=>boolean;
  private options:Options;
- constructor(options:Options){this.options=options;this.now=options.now??(()=>performance.now());this.storage=options.storage??localStorage;this.createWorker=options.createWorker??(()=>new Worker(new URL('./autosave.worker.ts',import.meta.url),{type:'module'}));this.encode=options.encode??encodeGame;this.synchronous=options.syncSave??saveGame;if(options.listenToStorage!==false&&typeof window!=='undefined')window.addEventListener('storage',this.storageChanged);}
+ constructor(options:Options){this.options=options;this.now=options.now??(()=>performance.now());this.storage=options.storage??saveStorage;this.createWorker=options.createWorker??(()=>new Worker(new URL('./autosave.worker.ts',import.meta.url),{type:'module'}));this.encode=options.encode??encodeGame;this.synchronous=options.syncSave??saveGame;if(options.listenToStorage!==false&&typeof window!=='undefined')window.addEventListener('storage',this.storageChanged);}
  /** Reports actual synchronous tasks, including Worker reply callbacks outside request().
   * Observers are diagnostics only and cannot change save success or recovery. */
  private measureMainThread<T>(r:Request,stage:AutosaveMainThreadStage,fn:()=>T):T {

@@ -103,6 +103,7 @@ import {validSimulationEvents} from './simulationEvents';
 import {syncHaulageProjects,validHaulageProjects} from './haulage';
 import {generateWorld,sampleHeight} from './worldgen';
 import {WORLD_LAYOUTS,WORLD_SIZES} from './worldOptions';
+import {fowCells} from './gridScale';
 import {MAP_PRESETS} from './mapgen/presets';
 import {syncRiverboats} from './boats';
 import {DIFFICULTIES} from './difficulty';
@@ -118,7 +119,7 @@ import { Game } from "./sim";
 import { prehistoricName } from "./people";
 import { FOOD_KINDS } from "./pantry";
 import {CROPS,CROP_TRIAL_RULES,initializeCultivation,validCultivationEvidence} from "./cultivation";
-import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
+import { SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
 import {validTutorial} from "./tutorial";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 
@@ -797,16 +798,16 @@ function validateGamePayload(raw: unknown) {
   }
   if (
     !Array.isArray(d.vision) ||
-    d.vision.length !== FOW * FOW ||
+    d.vision.length !== fowCells(HALF*2) ** 2 ||
     d.vision.some((n: unknown) => n !== 0 && n !== 1 && n !== 2)
   )
-    fail("!Array.isArray(d.vision) || d.vision.length !== FOW * FOW || d.vision.some((n: u…");
+    fail("!Array.isArray(d.vision) || d.vision.length !== fowCells(HALF*2) ** 2 || d.vision.some((n: u…");
   if (
     !Array.isArray(d.visAge) ||
-    d.visAge.length !== FOW * FOW ||
+    d.visAge.length !== fowCells(HALF*2) ** 2 ||
     d.visAge.some((n: unknown) => !num(n))
   )
-    fail("!Array.isArray(d.visAge) || d.visAge.length !== FOW * FOW || d.visAge.some((n: u…");
+    fail("!Array.isArray(d.visAge) || d.visAge.length !== fowCells(HALF*2) ** 2 || d.visAge.some((n: u…");
   if (!Array.isArray(d.looted) || d.looted.some((n: unknown) => !num(n))) fail("!Array.isArray(d.looted) || d.looted.some((n: unknown) => !num(n))");
   numbers(d, ["seaT", "calamityT", "tradeTeam"]);
   if (!s.tribes[d.tradeTeam]) fail("!s.tribes[d.tradeTeam]");

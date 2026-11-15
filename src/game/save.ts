@@ -1,5 +1,6 @@
 import {parseStoredSave,serializeStoredSave,isStoredSaveEnvelope,encodeStoredJson} from './storageCodec';
 import { SAVE_KEY } from "./constants";
+import { saveStorage } from "./saveStore";
 import type { Game } from "./sim";
 import type {SaveSlots} from "./autosaveProtocol";
 import { encodeGame, decodeGame, validateGameSave } from "./persistence";
@@ -8,7 +9,7 @@ export const currentSaveGeneration=()=>autosaveGeneration;
 /** Explicit synchronous checkpoints supersede every older in-flight job. */
 export function invalidateAutosaveWrites(){return ++autosaveGeneration;}
 export type SaveStorage=Pick<Storage,'getItem'|'setItem'>;
-export function readSaveSlots(storage:SaveStorage=localStorage):SaveSlots{return{primary:storage.getItem(SAVE_KEY),backup:storage.getItem(SAVE_KEY+':bak'),protected:storage.getItem(SAVE_KEY+':protected')};}
+export function readSaveSlots(storage:SaveStorage=saveStorage):SaveSlots{return{primary:storage.getItem(SAVE_KEY),backup:storage.getItem(SAVE_KEY+':bak'),protected:storage.getItem(SAVE_KEY+':protected')};}
 export function matchingSaveSlots(a:SaveSlots,b:SaveSlots){return a.primary===b.primary&&a.backup===b.backup&&a.protected===b.protected;}
 function quotaExceeded(error:unknown){return !!error&&typeof error==='object'&&'name'in error&&error.name==='QuotaExceededError';}
 export type SaveCompaction={status:'unchanged'|'compacted'|'superseded'|'failed';changed:boolean};
@@ -30,8 +31,8 @@ export function compactLegacySaveSlots(storage:SaveStorage,expected:SaveSlots,ge
  return{status:'compacted',changed};
 }
 /** A primary setItem is atomic. Optional copies remain best effort; browser
- * localStorage does not provide a multi-key transaction or cross-tab CAS. */
-export function commitPreparedAutosave(expected:SaveSlots,generation:number,serialized:string,previousPrimaryValid:boolean,storage:SaveStorage=localStorage):'committed'|'superseded'|'failed'{
+ * saveStorage does not provide a multi-key transaction or cross-tab CAS. */
+export function commitPreparedAutosave(expected:SaveSlots,generation:number,serialized:string,previousPrimaryValid:boolean,storage:SaveStorage=saveStorage):'committed'|'superseded'|'failed'{
  try{const current=readSaveSlots(storage);if(!matchingSaveSlots(expected,current)||generation!==currentSaveGeneration())return'superseded';storage.setItem(SAVE_KEY,serialized);
   try{if(previousPrimaryValid&&expected.primary)storage.setItem(SAVE_KEY+':bak',expected.primary);}catch{/* primary is durable */}
   try{if(!expected.protected)storage.setItem(SAVE_KEY+':protected',previousPrimaryValid?expected.primary!:serialized);}catch{/* primary is durable */}
@@ -50,12 +51,12 @@ function valid(raw: string | null,reconstruct=true) {
 }
 const TEST_SAVE_KEY = SAVE_KEY + ":test-lab";
 
-export function hasTestLabSave(storage: SaveStorage = localStorage) {
+export function hasTestLabSave(storage: SaveStorage = saveStorage) {
   try { return storage.getItem(TEST_SAVE_KEY) !== null; }
   catch { return false; }
 }
 
-export function saveTestLabGame(g: Game, storage: SaveStorage = localStorage) {
+export function saveTestLabGame(g: Game, storage: SaveStorage = saveStorage) {
   if (!g.testMode || !g.started || g.awaitingStart) return false;
   try {
     const data = serializeStoredSave({...encodeGame(g), testLabRevealMap: g.revealMap});
@@ -64,7 +65,7 @@ export function saveTestLabGame(g: Game, storage: SaveStorage = localStorage) {
   } catch { return false; }
 }
 
-export function loadTestLabGame(storage: SaveStorage = localStorage) {
+export function loadTestLabGame(storage: SaveStorage = saveStorage) {
   const raw = storage.getItem(TEST_SAVE_KEY);
   if (!raw) throw new Error("There is no saved Test Lab run");
   const data = parseStoredSave(raw);
@@ -89,16 +90,16 @@ function saveGameAttempt(g:Game,deliberate:boolean,allowCompaction:boolean):bool
     if(!deliberate&&previous?.state.seed===g.state.seed&&previous.state.time>g.state.time)return true;
     const data=serializeStoredSave({...encodeGame(g),savedAt:Date.now()});
     // Primary is the essential write. Optional copies cannot block it at quota.
-    localStorage.setItem(SAVE_KEY,data);
-    try {if(previous)localStorage.setItem(SAVE_KEY+":bak",old!);} catch {/* primary is durable */}
-    try {if(!localStorage.getItem(SAVE_KEY+":protected"))localStorage.setItem(SAVE_KEY+":protected",previous?old!:data);} catch {/* primary is durable */}
+    saveStorage.setItem(SAVE_KEY,data);
+    try {if(previous)saveStorage.setItem(SAVE_KEY+":bak",old!);} catch {/* primary is durable */}
+    try {if(!saveStorage.getItem(SAVE_KEY+":protected"))saveStorage.setItem(SAVE_KEY+":protected",previous?old!:data);} catch {/* primary is durable */}
     return true;
-  } catch(error) {if(allowCompaction&&expected&&quotaExceeded(error)){const result=compactLegacySaveSlots(localStorage,expected,generation);if(result.changed&&result.status!=='superseded')return saveGameAttempt(g,deliberate,false);}return false;}
+  } catch(error) {if(allowCompaction&&expected&&quotaExceeded(error)){const result=compactLegacySaveSlots(saveStorage,expected,generation);if(result.changed&&result.status!=='superseded')return saveGameAttempt(g,deliberate,false);}return false;}
 }
 export function loadRaw(protectedOnly=false) {
   try {
-    if(protectedOnly)return valid(localStorage.getItem(SAVE_KEY+":protected"));
-    const copies=[SAVE_KEY,SAVE_KEY+":bak",SAVE_KEY+":protected"].map(k=>valid(localStorage.getItem(k))).filter(d=>d!==null);
+    if(protectedOnly)return valid(saveStorage.getItem(SAVE_KEY+":protected"));
+    const copies=[SAVE_KEY,SAVE_KEY+":bak",SAVE_KEY+":protected"].map(k=>valid(saveStorage.getItem(k))).filter(d=>d!==null);
     const active=copies[0];if(!active)return null;
     const same=copies.filter(d=>d.state.seed===active.state.seed);
     return same.reduce((best,d)=>{
@@ -114,7 +115,7 @@ export function hasSave() {
   // Damaged JSON and older/newer schemas must remain held for recovery too.
   return [SAVE_KEY, SAVE_KEY + ":bak", SAVE_KEY + ":protected"].some((k) => {
     try {
-      return localStorage.getItem(k) !== null;
+      return saveStorage.getItem(k) !== null;
     } catch {
       return false;
     }
@@ -127,8 +128,8 @@ function protectGameAttempt(g:Game,allowCompaction:boolean):boolean {
   invalidateAutosaveWrites();
   if (g.testMode || !g.started || g.awaitingStart) return false;
   let expected:SaveSlots|undefined;const generation=currentSaveGeneration();
-  try {expected=readSaveSlots();localStorage.setItem(SAVE_KEY+":protected",serializeStoredSave({...encodeGame(g),savedAt:Date.now()}));return true;}
-  catch(error){if(allowCompaction&&expected&&quotaExceeded(error)){const result=compactLegacySaveSlots(localStorage,expected,generation);if(result.changed&&result.status!=='superseded')return protectGameAttempt(g,false);}return false;}
+  try {expected=readSaveSlots();saveStorage.setItem(SAVE_KEY+":protected",serializeStoredSave({...encodeGame(g),savedAt:Date.now()}));return true;}
+  catch(error){if(allowCompaction&&expected&&quotaExceeded(error)){const result=compactLegacySaveSlots(saveStorage,expected,generation);if(result.changed&&result.status!=='superseded')return protectGameAttempt(g,false);}return false;}
 }
 export function exportGame(g: Game) {
   const blob=new Blob([JSON.stringify(encodeGame(g))],{type:"application/json"});

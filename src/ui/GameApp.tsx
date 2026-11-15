@@ -99,6 +99,8 @@ export function GameApp() {
 
     const bootEngine = async () => {
       try {
+        const { hydrateSaveStorage } = await import("@/game/saveStore");
+        await hydrateSaveStorage(); // large saves live in IndexedDB; load them before any save is read
         const { Engine } = await import("@/game/engine");
         if (cancelled || !canvasRef.current) return;
         engine = new Engine(canvasRef.current, (snap) => {

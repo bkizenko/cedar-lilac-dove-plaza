@@ -2,7 +2,8 @@ import type {Difficulty} from './difficulty';
 import type {MapPreset} from './mapgen/presets';
 export const WORLD_LAYOUTS=['pangaea','continents','archipelago'] as const;
 export type WorldLayout=typeof WORLD_LAYOUTS[number];
-export const WORLD_SIZES=[1040,1560,2080] as const;
+/** 2940 = 8x and 4160 = 16x the 1040 m standard area (2x and 4x the Huge 2080 m world). Nav/fog grids derive from size (gridScale.ts); budgets in docs/BIGGER_MAPS_BUDGETS.md. */
+export const WORLD_SIZES=[1040,1560,2080,2940,4160] as const;
 /** Only new V14 openings carry hint2. Absent in old saves means legacy1;
  * request1 is internal reconstruction metadata and is never serialized. */
 export type WorldOptions={size:typeof WORLD_SIZES[number];layout:WorldLayout;randomLayout?:true;openingSiteVersion?:2;riverProfileVersion?:2;tideVersion?:1|2;landformLabelVersion?:2;rulersVersion?:1|2;preset?:MapPreset;mapgenVersion?:1;geologyVersion?:1;/** forestEcologyVersion 1: ecological tree stands (src/game/forestEcology.ts) in placement and rendering; absent = the original per-tree species choice and salt-and-pepper density */forestEcologyVersion?:1;flowFieldVersion?:1;chunkTerrainVersion?:1;chunkTerrainScale?:number};

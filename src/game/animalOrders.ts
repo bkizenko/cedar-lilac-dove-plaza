@@ -1,4 +1,5 @@
 import {domesticationReady,DOMESTICATION_RULES} from './domestication';
+import {FOW_MAX_CELLS} from './gridScale';
 import type { Game } from './sim';
 import type { Building, Unit } from './types';
 import { hasTaskCommitment } from './workCommitments';
@@ -7,7 +8,6 @@ import { orderExploration } from './explorationOrders';
 import { beginHerdTaming, HERD, penPlacesOccupied, penPlacesReserved } from './husbandry';
 import {surveyPenPasture} from './penPasture';
 import {insidePen} from './penGeometry';
-import {FOW} from './constants';
 import {habitatKindAt} from './ecology';
 import {connectedForUnit} from './waterTravel';
 
@@ -33,7 +33,7 @@ export function goatSearchTarget(g: Game, u: Unit, pen: Building) {
  * visibility and known terrain, never on an unseen animal's coordinates. */
 function goatSurveyTarget(g:Game,u:Unit,pen:Building){
  const q=pen.goatSearch!;if((q.searchedCells?.length||0)>=2048)return null;
- const visited=new Set(q.searchedCells||[]),cell=g.world.size/FOW;
+ const visited=new Set(q.searchedCells||[]),FOW=g.fowW,cell=g.world.size/FOW;
  const stride=Math.max(4,Math.ceil(HERD.searchRadiusMeters*2/(cell*20)));
  const centerX=(pen.x+g.world.size/2)/cell,centerZ=(pen.z+g.world.size/2)/cell;
  const radius=HERD.searchRadiusMeters/cell;
@@ -156,5 +156,5 @@ export function tickGoatSearchOrders(g:Game){for(const pen of g.state.buildings)
 export function validGoatSearchOrder(value:unknown,time:number,nextId:number){
  if(!value||typeof value!=='object'||Array.isArray(value))return false;
  const q=value as Record<string,unknown>;if(Object.keys(q).some(k=>!['requestedAt','nextAttemptAt','state','reason','animal','searchedCells','paidTrials','returningHandlerId','retryAfter','retryTarget'].includes(k)))return false;
- return typeof q.requestedAt==='number'&&Number.isFinite(q.requestedAt)&&q.requestedAt>=0&&q.requestedAt<=time&&typeof q.nextAttemptAt==='number'&&Number.isFinite(q.nextAttemptAt)&&q.nextAttemptAt>=q.requestedAt&&q.nextAttemptAt<=time+GOAT_QUEUE_RULES.retrySeconds+1e-6&&['waiting','searching','capturing','complete','exhausted'].includes(q.state as string)&&(q.reason===undefined||['adult','food','space','paused','route','refused','cooldown'].includes(q.reason as string))&&(q.retryAfter===undefined||typeof q.retryAfter==='number'&&Number.isFinite(q.retryAfter)&&q.retryAfter>=q.requestedAt&&q.retryAfter<=time+DOMESTICATION_RULES.cooldownSeconds+1e-6)&&(q.retryTarget===undefined||!!q.retryTarget&&typeof q.retryTarget==='object'&&!Array.isArray(q.retryTarget)&&Object.keys(q.retryTarget).every(k=>k==='x'||k==='z')&&['x','z'].every(k=>typeof(q.retryTarget as any)[k]==='number'&&Number.isFinite((q.retryTarget as any)[k])&&Math.abs((q.retryTarget as any)[k])<1e4))&&(q.paidTrials===undefined||Number.isSafeInteger(q.paidTrials)&&Number(q.paidTrials)>=0&&Number(q.paidTrials)<=DOMESTICATION_RULES.maximumSearchTrials)&&(q.returningHandlerId===undefined||Number.isSafeInteger(q.returningHandlerId)&&Number(q.returningHandlerId)>0&&Number(q.returningHandlerId)<nextId)&&(q.searchedCells===undefined||Array.isArray(q.searchedCells)&&q.searchedCells.length<=2048&&new Set(q.searchedCells).size===q.searchedCells.length&&q.searchedCells.every(i=>Number.isSafeInteger(i)&&i>=0&&i<FOW*FOW))&&(q.animal===undefined||Number.isSafeInteger(q.animal)&&Number(q.animal)>0&&Number(q.animal)<nextId);
+ return typeof q.requestedAt==='number'&&Number.isFinite(q.requestedAt)&&q.requestedAt>=0&&q.requestedAt<=time&&typeof q.nextAttemptAt==='number'&&Number.isFinite(q.nextAttemptAt)&&q.nextAttemptAt>=q.requestedAt&&q.nextAttemptAt<=time+GOAT_QUEUE_RULES.retrySeconds+1e-6&&['waiting','searching','capturing','complete','exhausted'].includes(q.state as string)&&(q.reason===undefined||['adult','food','space','paused','route','refused','cooldown'].includes(q.reason as string))&&(q.retryAfter===undefined||typeof q.retryAfter==='number'&&Number.isFinite(q.retryAfter)&&q.retryAfter>=q.requestedAt&&q.retryAfter<=time+DOMESTICATION_RULES.cooldownSeconds+1e-6)&&(q.retryTarget===undefined||!!q.retryTarget&&typeof q.retryTarget==='object'&&!Array.isArray(q.retryTarget)&&Object.keys(q.retryTarget).every(k=>k==='x'||k==='z')&&['x','z'].every(k=>typeof(q.retryTarget as any)[k]==='number'&&Number.isFinite((q.retryTarget as any)[k])&&Math.abs((q.retryTarget as any)[k])<1e4))&&(q.paidTrials===undefined||Number.isSafeInteger(q.paidTrials)&&Number(q.paidTrials)>=0&&Number(q.paidTrials)<=DOMESTICATION_RULES.maximumSearchTrials)&&(q.returningHandlerId===undefined||Number.isSafeInteger(q.returningHandlerId)&&Number(q.returningHandlerId)>0&&Number(q.returningHandlerId)<nextId)&&(q.searchedCells===undefined||Array.isArray(q.searchedCells)&&q.searchedCells.length<=2048&&new Set(q.searchedCells).size===q.searchedCells.length&&q.searchedCells.every(i=>Number.isSafeInteger(i)&&i>=0&&i<FOW_MAX_CELLS*FOW_MAX_CELLS))&&(q.animal===undefined||Number.isSafeInteger(q.animal)&&Number(q.animal)>0&&Number(q.animal)<nextId);
 }

@@ -1,4 +1,3 @@
-import {FOW} from './constants.ts';
 import type {Game} from './sim.ts';
 import type {Unit} from './types.ts';
 import {unitSightRadius,buildingSightRadius} from './sightRadii.ts';
@@ -39,7 +38,7 @@ const key=(s:FogSource)=>s.kind==='building'?`building:${s.buildingId}`:'unitId'
  * vision. Observer positions are taken from the end of the step, which is the
  * moment updateVision stamped them. */
 export function attributeReveals(g:Game,before:Uint8Array):FogTick{
- const n=FOW,size=g.world.size,cell=size/n,vis=g.vision,bySource=new Map<string,{source:FogSource;cells:number}>(),unattributed:number[]=[];let revealed=0;
+ const n=g.fowW,size=g.world.size,cell=size/n,vis=g.vision,bySource=new Map<string,{source:FogSource;cells:number}>(),unattributed:number[]=[];let revealed=0;
  const observers:{x:number;z:number;r:number;source:FogSource}[]=[];
  for(const u of g.state.units)if(u.team===0&&u.hp>0)observers.push({x:u.x,z:u.z,r:unitSight(u),source:classifyObserver(u)});
  for(const b of g.state.buildings)if(b.team===0&&b.hp>0&&!b.plannedCost)observers.push({x:b.x,z:b.z,r:buildingSightRadius(b,g.finished(b),g.state.agePicks[2]==='army'),source:{kind:'building',buildingId:b.id,type:b.type}});

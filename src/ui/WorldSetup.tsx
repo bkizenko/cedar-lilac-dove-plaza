@@ -64,8 +64,11 @@ export function WorldSetup({ engine }: { engine: Engine }) {
           <option value={1040}>Standard</option>
           <option value={1560}>Large · 2.25× area</option>
           <option value={2080}>Huge · 4× area</option>
+          <option value={2940}>Vast · 8× area · slower</option>
+          <option value={4160}>Immense · 16× area · slowest</option>
         </select>
       </label>
+      {size>2080&&<p className="hw-save-note" role="note">{size===2940?"Vast worlds take noticeably longer to create and use more memory; expect slower simulation with large villages. Saves are kept in browser database storage.":"Immense worlds take much longer to create, need a recent computer with plenty of memory, and run slower. Saves are kept in browser database storage; use Export village for a file copy."}</p>}
       <SkinPicker value={skin} onChange={setSkin} />
       <label><input type="checkbox" checked={wildCraft} onChange={e=>setWildCraft(e.target.checked)}/> Detailed hunting, hides and preserving · new worlds only</label>
       {engine.game.testMode&&<label>

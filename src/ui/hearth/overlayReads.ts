@@ -1,5 +1,4 @@
 import type {Game} from '@/game/sim';
-import {FOW} from '@/game/constants';
 import {terrainInfluenceModel} from '@/game/terrainInfluenceRuntime';
 import {MINIMAP_RULES} from '../minimapModel';
 import {TERRITORY_CONTESTED,TERRITORY_NONE,type OverlaySources,type ResourceKind,type RGB} from './overlayModel';
@@ -24,7 +23,7 @@ export function overlaySourcesOf(g:Game,hud:{tribes:readonly {id:number;color:st
   color:t=>colors.get(t)??[210,210,210],
  };
  if(active.has('territory'))out.teamAt=(x,z)=>{
-  const gx=Math.floor((x/size+.5)*FOW),gz=Math.floor((z/size+.5)*FOW);
+  const FOW=g.fowW,gx=Math.floor((x/size+.5)*FOW),gz=Math.floor((z/size+.5)*FOW);
   if(gx<0||gz<0||gx>=FOW||gz>=FOW)return TERRITORY_NONE;
   const v=g.territory[gz*FOW+gx];
   return v===255?TERRITORY_NONE:v===254?TERRITORY_CONTESTED:known.has(v)?v:TERRITORY_NONE;

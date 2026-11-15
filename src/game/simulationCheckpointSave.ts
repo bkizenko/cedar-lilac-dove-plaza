@@ -1,4 +1,5 @@
 import {SAVE_KEY} from './constants';
+import {saveStorage} from './saveStore';
 import {parseStoredSave,SAVE_CODEC_RULES} from './storageCodec';
 import {validateGameSave} from './persistence';
 import {commitPreparedAutosave,currentSaveGeneration,invalidateAutosaveWrites,matchingSaveSlots,readSaveSlots,type SaveStorage} from './save';
@@ -11,7 +12,7 @@ export type CheckpointSaveDestination='village'|'protected'|'test-lab'|'export';
  * before awaiting the owner. Later sessions/manual saves/other tabs win. */
 export class SimulationCheckpointSaver{
  private authority:CheckpointAuthority;private storage:SaveStorage;
- constructor(authority:CheckpointAuthority,storage:SaveStorage=localStorage){this.authority=authority;this.storage=storage;}
+ constructor(authority:CheckpointAuthority,storage:SaveStorage=saveStorage){this.authority=authority;this.storage=storage;}
  async save(destination:CheckpointSaveDestination='village',deliberate=true):Promise<CheckpointSaveResult>{
   const no=(status:'superseded'|'failed',reason:string):CheckpointSaveResult=>({status,reason});
   if(!this.authority.allowed())return no('superseded','No active authoritative village');

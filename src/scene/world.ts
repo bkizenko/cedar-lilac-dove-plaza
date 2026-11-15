@@ -2957,6 +2957,20 @@ export class WorldView {
     }
   }
 
+  /** Rebuild the fog and territory textures for a size-derived grid (worlds above 2080 m); same-size worlds never reach this. */
+  private resizeFow(n: number) {
+    this.fowData = new Uint8Array(n * n * 4);
+    this.terrData = new Uint8Array(n * n * 4);
+    this.terrBlur = null;
+    this.fowTex?.dispose();
+    this.terrTex?.dispose();
+    this.fowTex = new THREE.DataTexture(this.fowData, n, n, THREE.RGBAFormat);
+    this.terrTex = new THREE.DataTexture(this.terrData, n, n, THREE.RGBAFormat);
+    for (const t of [this.fowTex, this.terrTex]) { t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter; t.needsUpdate = true; }
+    const m = this.fowMesh?.material as THREE.ShaderMaterial | undefined;
+    if (m?.uniforms) { m.uniforms.uMap.value = this.fowTex; m.uniforms.uTerr.value = this.terrTex; }
+  }
+
   private setupFow() {
     this.fowTex = new THREE.DataTexture(this.fowData, FOW, FOW, THREE.RGBAFormat);
     this.fowTex.magFilter = THREE.LinearFilter;
@@ -3064,6 +3078,7 @@ export class WorldView {
   private syncFow(game: Game) {
     if (!this.fowTex) return;
     const src = game.vision;
+    if (src.length * 4 !== this.fowData.length) this.resizeFow(Math.round(Math.sqrt(src.length))); // bigger worlds use a proportionally finer fog grid
     const cols: [number, number, number][] = [];
     for (let t = 0; t < game.state.tribes.length; t++) {
       const hex = game.tribe(t)?.color || "#c4a060";
@@ -3100,7 +3115,7 @@ export class WorldView {
     }
     // Soften the territory edge: two 3x3 passes over the alpha channel turn grid stair-steps into a smooth contour.
     {
-      const n=FOW,a=this.terrData,t=this.terrBlur&&this.terrBlur.length===n*n?this.terrBlur:(this.terrBlur=new Uint8Array(n*n));
+      const n=Math.round(Math.sqrt(game.vision.length)),a=this.terrData,t=this.terrBlur&&this.terrBlur.length===n*n?this.terrBlur:(this.terrBlur=new Uint8Array(n*n));
       for(let pass=0;pass<2;pass++){
         for(let y=0;y<n;y++){const y0=Math.max(0,y-1),y1=Math.min(n-1,y+1);for(let x=0;x<n;x++){const x0=Math.max(0,x-1),x1=Math.min(n-1,x+1);let sum=0;for(let yy=y0;yy<=y1;yy++){const r=yy*n;for(let xx=x0;xx<=x1;xx++)sum+=a[(r+xx)*4+3];}t[y*n+x]=Math.round(sum/((x1-x0+1)*(y1-y0+1)));}}
         for(let i=0;i<n*n;i++){a[i*4+3]=t[i];if(a[i*4+3]>0&&a[i*4]+a[i*4+1]+a[i*4+2]===0){a[i*4]=196;a[i*4+1]=154;a[i*4+2]=92;}}

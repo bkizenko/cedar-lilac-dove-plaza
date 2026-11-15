@@ -43,6 +43,7 @@ import { calendar } from "./settlement";
 import { cultivationIssue } from "./cultivation";
 import { encodeGame, decodeGame,validateGameSave } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
+import { saveStorage } from "./saveStore";
 import { BUILD_ORDER, BUILDINGS, TILE, SAVE_KEY } from "./constants";
 import { buildingHoverText } from "./buildingHoverText";
 import {slopeClassOf} from "./slopeTiers";
@@ -269,7 +270,7 @@ export class Engine {
   }
   async loadTestSession():Promise<string>{
     if(!this.originalGame||!this.game.testMode)return 'Open the Test Lab first.';const t=this.beginLifecycle();let next:PreparedVillage|undefined;
-    try{const raw=localStorage.getItem(SAVE_KEY+':test-lab');if(!raw)throw new Error('There is no saved Test Lab run');const snapshot=parseStoredSave(raw);validateGameSave(snapshot);const reveal=(snapshot as {testLabRevealMap?:boolean}).testLabRevealMap===true;
+    try{const raw=saveStorage.getItem(SAVE_KEY+':test-lab');if(!raw)throw new Error('There is no saved Test Lab run');const snapshot=parseStoredSave(raw);validateGameSave(snapshot);const reveal=(snapshot as {testLabRevealMap?:boolean}).testLabRevealMap===true;
       await this.pauseLifecycleOwner(t);next=await this.prepareVillage(snapshot,!!t.host,true,reveal);if(!this.currentLifecycle(t)){next.host?.dispose();return 'Test Lab load cancelled: village changed';}
       this.installVillage(next);this.lastLifecycle={operation:'load-lab',mode:next.host?'worker':'main'};this.pushHud();return 'Test Lab run loaded.';
     }catch(error){return error instanceof Error?error.message:'Could not load the Test Lab run.';}finally{this.finishLifecycle(t);}
