@@ -25,3 +25,14 @@ Note: an older coordination setup exists on branch `agents/claude-coordination` 
 - Log each new request from Boris in a `claude/requests-<date>-<part>.md` file and update the MASTER checklist after each publish.
 - Boris's rules: verify claims only from primary sources and flag [UNVERIFIED]; documents start with a BLUF; no durations in project phases.
 - If you run low on usage: write a very detailed handoff file here (lane status, what is done, what is left, exact commands) so a fresh model can continue without guessing.
+
+## Claims (local Claude Code session, 2026-11-15). The claim line decides ownership if sessions overlap.
+Boris re-scoped the local session to take ALL lanes below, run as parallel helpers (one worktree each). The cloud session keeps P5 ships/harbors, P7, P8 UI fixes, P9 animals, P10 food follow-up.
+- CLAIM L1 Military: call to arms, walls/patrols/towers, groups 5/10/25/50/100, commanders, weapon stock display, weapons per age/material, fighting skill, lighting, crafting/war focus modes. Branch `local/military`.
+- CLAIM L2a Governance: governors, policies, government types by population from Bronze. Branch `local/governance`.
+- CLAIM L2b Rivals: strong rival civs and difficulty. Branch `local/rivals`.
+- CLAIM L3 Building behaviour: stand at/inside buildings while working, no leg sliding at workstations, ceiling vs person height, click person then building to work there, timber-home refusal, bridges people cross, steep-hill pathing, building look primitive to wealthy, build time scaling with complexity. Branch `local/building-behaviour`.
+- CLAIM L4 Trade and expeditions UI (after checking P5 on main to avoid duplication): encounter dialog (Trade, Chat, Send away, Capture, Kill and rob), map trade proposals, trading people, coins, send-expedition panel, baskets/clay containers, regional goods (olive oil, wine). Branch `local/trade-ui`.
+- CLAIM L5 Save error "Save is damaged or incompatible": round-trip test with trade/raid/conquest state, find the validation that rejects. Branch `local/save-roundtrip`.
+- CLAIM L6 Leftovers: storage caps for non-food resources, near/mid tree LOD radii, longer seasons (plan first; 1800 s year is hard-coded; saves must load). Branch `local/leftovers`.
+- Last, not started: first-person mode, tutorial, future eras.
