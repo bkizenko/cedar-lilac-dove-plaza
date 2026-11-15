@@ -17,7 +17,7 @@ import {bindSnowCap,carvedSnowUniform} from './roofSnow';
 import {hasBuildingCraftsmanship,buildingCraftsmanship,makeCraftsmanshipAttribute,bindCraftsmanship} from './buildingCraftsmanship';
 import {disposeBuildingSurfaceTextures} from './buildingSurfaces';
 import type {CameraGround} from './cameraClearance';
-import {FixedOrbitCameraCollision} from './fixedOrbitCollision';
+import {TerrainCameraClearance} from './cameraClearance';
 import {survivalFireActive} from '@/game/survivalNeeds';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
@@ -277,7 +277,7 @@ export class WorldView {
   look = new THREE.Vector3(0, 1.2, 0);
   private cameraGround:CameraGround|null=null;
   private cameraGroundRevision:(()=>number)|null=null;
-  private cameraCollision=new FixedOrbitCameraCollision();
+  private cameraClearance=new TerrainCameraClearance();
   yaw = 1.12;
   pitch = 0.38;
   dist = 58;
@@ -840,7 +840,7 @@ export class WorldView {
     if(game.world.landContinuation&&this.terrainSurface)this.landContinuation=new LandContinuation(this.scene,game,this.terrainSurface,this.mats.ground as THREE.MeshStandardMaterial);
     this.horizon??=new HorizonRing(this.scene);this.horizon.build(game,this.drawGovernor.level,this.drawBandsNow);this.horizonGame=game;
     this.cameraGround={size:game.world.size,height:(x,z)=>Math.max(game.height(x,z),game.waterAt(x,z))};
-    this.cameraGroundRevision=()=>game.navigationRevision();this.cameraCollision.invalidate();
+    this.cameraGroundRevision=()=>game.navigationRevision();this.cameraClearance.invalidate();
     this.fieldSurface = new FieldSurface(game.world.heights,game.world.size,this.terrainSurface?.banks,this.terrainSurface?.bankCuts);
     if(game.world.bankTerrain&&this.terrain){this.bankLayer=new BankTerrainLayer(this.terrain,game,geometry=>{if(this.mapStyle==='painterly')smoothTileNormals(geometry,game.world.bankTerrain!.subdivisions,7);if(game.world.ecology){const a=biomeSurfaceAttributes(game.world.ecology,geometry.getAttribute('position') as THREE.BufferAttribute);geometry.setAttribute('biomeCover',new THREE.BufferAttribute(a.cover,4));geometry.setAttribute('biomeMaterial',new THREE.BufferAttribute(a.material,4));geometry.setAttribute('biomeTint',new THREE.BufferAttribute(a.tint,3));}if(this.mapStyle==='painterly'&&this.surfaceGeology){const g=this.surfaceGeology.attributes(geometry.getAttribute('position') as THREE.BufferAttribute,undefined,(x,z)=>game.waterAt(x,z));geometry.setAttribute('geoRock',new THREE.BufferAttribute(g.rock,4));geometry.setAttribute('geoState',new THREE.BufferAttribute(g.state,4));}});this.scene.add(this.bankLayer.mesh);}
     if(game.state.excavations?.length)this.ensureExcavationLayer(game);
@@ -1421,10 +1421,10 @@ export class WorldView {
       this.look.z + Math.cos(this.yaw) * Math.cos(this.pitch) * this.dist,
     );
     if(this.cameraGround){
-      this.cameraCollision??=new FixedOrbitCameraCollision();
-      const collision=this.cameraCollision.resolve(this.cameraGround,{x:this.look.x,z:this.look.z,distance:this.dist,yaw:this.yaw,pitch:this.pitch},this.cameraGroundRevision?.()??0);
-      if(!collision.pose)return;
-      const safe=collision.pose;this.look.set(safe.x,safe.focusY,safe.z);this.dist=safe.distance;this.yaw=safe.yaw;this.pitch=safe.pitch;this.tmpCam.set(safe.eye.x,safe.eye.y,safe.eye.z);
+      // Terrain in the way raises the eye over it; orbit distance is kept.
+      this.cameraClearance??=new TerrainCameraClearance();
+      const r=this.cameraClearance.resolve(this.cameraGround,{x:this.look.x,y:this.look.y,z:this.look.z},{x:this.tmpCam.x,y:this.tmpCam.y,z:this.tmpCam.z},this.cameraGroundRevision?.()??0,dt);
+      this.look.y=r.focusY;this.tmpCam.set(r.x,r.y,r.z);
     }
     this.camera.position.copy(this.tmpCam);
     this.camera.lookAt(this.look.x, this.look.y + 1.2, this.look.z);
