@@ -8,7 +8,7 @@
  *  - `DeathTracker` notices a unit that really died (it leaves the simulation, or sits at hp<=0) and plays the fall from its
  *    last real position, facing and momentum, then leaves a bounded number of bodies that sink away.
  * Nothing here scripts a performance: no unit animates a job it is not doing. */
-import {CLIPS,clipForActivity,phaseFor,samplePose,blendPoses,gaitBlend,gaitStride,unitVariation,gaitFor,sampleDeath,deathClipFor,DEATH_SECONDS,stancePose,type Activity,type ClipId,type DeathClipId,type Pose,type Variation} from './animationClips';
+import {CLIPS,clipForActivity,phaseFor,samplePose,blendPoses,gaitBlend,gaitStride,plantLegs,advanceGait,unitVariation,gaitFor,sampleDeath,deathClipFor,DEATH_SECONDS,stancePose,type Activity,type ClipId,type DeathClipId,type Pose,type Variation} from './animationClips';
 import {TOOL_FOR_CLIP,type ItemId} from './characterRig';
 import type {CarryStyleId} from './carryStyles';
 
@@ -60,14 +60,14 @@ export function stepAnimator(st:AnimState,u:UnitLike,ctx:AnimContext):AnimFrame{
   // walk -> run by the unit's real speed; the blend eases with sim time (dt), the phase advances with metres moved at the blended stride
   const target=gaitBlend(Math.hypot(u.vx,u.vz));
   st.run+=(target-st.run)*Math.min(1,dt*6);if(Math.abs(target-st.run)<1e-4)st.run=target;
-  st.gait+=moved/gaitStride(st.run);const ph=st.gait+st.variation.phaseOffset;phase=ph-Math.floor(ph);
+  st.gait=advanceGait(st.gait,moved,st.actual??0,gaitStride(st.run));const ph=st.gait+st.variation.phaseOffset;phase=ph-Math.floor(ph);
   pose=st.run>.001?blendPoses(samplePose(CLIPS.walk,phase,st.variation,sel.load),samplePose(CLIPS.run,phase,st.variation,sel.load),st.run):samplePose(clip,phase,st.variation,sel.load);
  }else{
   // a loaded person who stands still keeps the carry posture (hand on the strap, head upright under the jar) with both feet together
   const stand=sel.clip==='idle'&&!!ctx.carry,carrying=(sel.clip==='carry'||stand)&&ctx.carry;st.run=0;
   pose=samplePose(stand?CLIPS.carry:clip,stand?.25:phase,st.variation,stand?Math.max(sel.load,ctx.carry!.mass):sel.load,carrying?{id:ctx.carry!.style,mass:ctx.carry!.mass}:undefined);
  }
- pose=stancePose(pose,sel.clip,WEAPON[u.type]);
+ pose=plantLegs(stancePose(pose,sel.clip,WEAPON[u.type]),sel.clip,st.actual??0);
  return {clip:sel.clip,phase,pose,load:sel.load,reason:sel.reason,itemR:TOOL_FOR_CLIP[sel.clip]};
 }
 export {gaitFor};

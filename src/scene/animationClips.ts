@@ -211,6 +211,22 @@ export function samplePose(clip:Clip,phase:number,v:Variation={phaseOffset:0,spe
 export const LEG_LENGTH=.5;
 const legRaise=(r:readonly number[])=>LEG_LENGTH*(1-Math.cos(r[0])*Math.cos(r[2]));
 /** Walk-to-run by real speed (metres/s of actual movement; sim workers cover ~4-6 on open ground, loaded or climbing walkers less). 0 = walk, 1 = run. */
+/** Leg swing follows real horizontal speed: 0 at or below LEG_SPEED.still, full at LEG_SPEED.full, smooth between (no pop, no residual stepping). */
+export const LEG_SPEED={still:.08,full:.45} as const;
+export const legSwingWeight=(speed:number)=>{const t=Math.max(0,Math.min(1,((Number.isFinite(speed)?speed:0)-LEG_SPEED.still)/(LEG_SPEED.full-LEG_SPEED.still)));return t*t*(3-2*t);};
+/** Clips that never travel: stationary work and idle poses. Their legs are planted (zero rotation) when the person is not actually moving. Combat stances, row and the travelling gaits are not here. */
+export const PLANTED_CLIPS:ReadonlySet<ClipId>=new Set<ClipId>(['idle','thresh','winnow','grind','bake','tend','chop','quarry','plant','harvest','craft','build','fish','till','spin','weave','scrape','knead','stir','hang']);
+/** Walk-cycle phase advance: metres moved at this stride, but nothing at all while the real speed is below the still threshold. */
+export const advanceGait=(gait:number,movedMetres:number,speed:number,stride:number)=>speed<=LEG_SPEED.still||!(stride>0)?gait:gait+movedMetres/stride;
+/** Plant a stationary work/idle pose: legs and root motion scaled by legSwingWeight(speed); the hip drop that bent-knee `lock` gave is given back with the legs. Returns the pose itself when it needs no change. */
+export function plantLegs(p:Pose,clip:ClipId,speed:number):Pose{
+ if(!PLANTED_CLIPS.has(clip))return p;const w=legSwingWeight(speed);if(w>=1)return p;
+ const o:Pose={...p,parts:{...p.parts},root:[p.root[0]*w,p.root[1],p.root[2]*w]};
+ const lo=Math.min(legRaise(p.parts.legL),legRaise(p.parts.legR)),lock=CLIPS[clip].lock??0;
+ o.parts.legL=[p.parts.legL[0]*w,p.parts.legL[1]*w,p.parts.legL[2]*w];o.parts.legR=[p.parts.legR[0]*w,p.parts.legR[1]*w,p.parts.legR[2]*w];
+ if(lo>0&&lock>0)o.root[1]+=lo*lock*(1-w);
+ return o;
+}
 export const GAIT_SPEEDS={walkBelow:3.4,runAbove:5.0} as const;
 export const gaitBlend=(speed:number)=>{const t=Math.max(0,Math.min(1,(speed-GAIT_SPEEDS.walkBelow)/(GAIT_SPEEDS.runAbove-GAIT_SPEEDS.walkBelow)));return t*t*(3-2*t);};
 /** Metres per cycle while blending walk to run, so the phase advance (and therefore the feet) stays continuous with speed. */
