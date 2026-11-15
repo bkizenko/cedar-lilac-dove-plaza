@@ -20,16 +20,16 @@ export function lateKnowledgeTopics(g:Game):KnowledgeTopic[]{
    metrics:{bloomAtCache:bloom,steel,charcoal:t.items?.charcoal||0,batches:done},actions:[{id:'late:steel',label:'Carburize bloom into steel',blockedReason:p.reason},...(!sites(g,'forge').length?[{id:'place:forge',label:'Choose a forge site',blockedReason:null}]:[])],limitation:'Needs iron processing adopted first; steel tools and weapons are not yet crafted from it.'});
  }
  if(age>=R.paperMinAge){
-  const cloth=t.items?.cloth||0,paper=t.items?.paper||0,done=batches(g,'pressPaper'),p=proposal(g,'pressPaper','workshop','Finish a crafting shelter to press paper');
+  const cloth=t.items?.cloth||0,paper=t.items?.paper||0,done=batches(g,'pressPaper'),p=proposal(g,'pressPaper','fibreWorkshop','Finish a fibre workshop to press paper');
   out.push({id:'late-paper',title:'Paper from rags',need:'Records on clay and cordage are heavy and slow to copy; light sheets could carry methods.',stage:done?'proven':paper||cloth?'observation':'need',
-   observation:`${cloth} woven cloth home · ${paper} paper held`,experiment:`${R.paperClothPerBatch} cloth + ${R.paperWaterLiters} L water → ${R.paperPerBatch} paper · ${R.paperWorkSeconds}s at a workshop.`,
+   observation:`${cloth} woven cloth home · ${paper} paper held`,experiment:`${R.paperClothPerBatch} cloth + ${R.paperWaterLiters} L water → ${R.paperPerBatch} paper · ${R.paperWorkSeconds}s at a fibre workshop.`,
    result:`${done} paper batches physically delivered`,adoption:'Paper is a held good; it is not yet used for method records.',
-   metrics:{cloth,paper,batches:done},actions:[{id:'late:paper',label:'Press paper from cloth',blockedReason:p.reason},...(!sites(g,'workshop').length?[{id:'place:workshop',label:'Choose a workshop site',blockedReason:null}]:[])],limitation:'Does not yet feed method records or teaching.'});
+   metrics:{cloth,paper,batches:done},actions:[{id:'late:paper',label:'Press paper from cloth',blockedReason:p.reason},...(!sites(g,'fibreWorkshop').length?[{id:'place:fibreWorkshop',label:'Choose a fibre workshop site',blockedReason:null}]:[])],limitation:'Does not yet feed method records or teaching.'});
  }
  return out;
 }
 export function runLateKnowledgeAction(g:Game,id:string):KnowledgeActionResult{
- const [recipe,type,why]:[ProductionRecipe,BldType,string]|[undefined,undefined,undefined]=id==='late:steel'?['carburizeSteel','forge','Finish a forge']:id==='late:paper'?['pressPaper','workshop','Finish a crafting shelter']:[undefined,undefined,undefined];
+ const [recipe,type,why]:[ProductionRecipe,BldType,string]|[undefined,undefined,undefined]=id==='late:steel'?['carburizeSteel','forge','Finish a forge']:id==='late:paper'?['pressPaper','fibreWorkshop','Finish a fibre workshop']:[undefined,undefined,undefined];
  if(!recipe)return{accepted:false,reason:'Unknown late-age action'};
  const p=proposal(g,recipe,type,why);if(!p.site||p.reason)return{accepted:false,reason:p.reason||'No available maker'};
  const accepted=beginProduction(g,recipe,p.site.id);
