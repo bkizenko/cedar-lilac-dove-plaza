@@ -1,3 +1,4 @@
+import {rawMeatSaturated} from './production';
 import {foodGuardHolds} from './foodGuard';
 import {navalIndependentFood} from './navalFleet';
 import {recordDraftTractionWork} from './draftTraction';
@@ -19,7 +20,7 @@ import {expansionCost,plotArea,fieldCrewSlots} from './plots';
 import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
 import {rivalWorkRangeContext,rivalMaterialPriority,rivalMaterialTargets,type RivalMaterialKind,RIVAL_RESOURCE_RANGE} from "./rivalDevelopment";
-import {huntable} from "./hunting";
+import {huntable,huntTargetBlocked} from "./hunting";
 import {farmToolRate,wearFarmTool,draftTractionReady} from "./farmTools";
 import {carryingCapacity} from "./haulage";
 import {beginExpedition} from "./journeys";
@@ -376,7 +377,7 @@ export class WorkBoard {
       if (t.age >= 2)
         for (const n of g.state.iron) if (n.amount > 0) add(n, "iron", 2, 40 - t.iron * 0.25);
       for (const n of g.state.wildlife)
-        if (huntable(g,n,t.id)) add(n, "food", n.hp<=0?2:1, foodUrgency + (n.hp<=0?100:phase===3?35:-10));
+        if (huntable(g,n,t.id)&&!rawMeatSaturated(g,t.id)&&!huntTargetBlocked(g,n.id)) add(n, "food", n.hp<=0?2:1, foodUrgency + (n.hp<=0?100:phase===3?35:-10));
       this.tasks.set(t.id, list);
     }
   }

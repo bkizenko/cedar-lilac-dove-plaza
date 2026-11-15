@@ -125,6 +125,11 @@ export function tickHuntingHazard(g:Game,c:Critter,dt:number,obstacles:WildlifeO
  else moveGroundWildlife(g,c,dt,obstacles);c.facing=Math.atan2(h.lastX-c.x,h.lastZ-c.z);return true;
 }
 
+/** Prey that no resident can reach (standing in flood water or on a bank with no walkable spot within reach) is skipped by every hunter for a while, and the same notice is shown at most once per interval. */
+export const HUNT_BLOCK_RULES={blockSeconds:30,bannerSeconds:60} as const;
+const huntBlocks=new WeakMap<Game,Map<number,number>>(),huntBannerAt=new WeakMap<Game,Map<string,number>>();
+export function huntTargetBlocked(g:Game,id:number){const until=huntBlocks.get(g)?.get(id);return until!==undefined&&until>g.state.time;}
+function markHuntBlocked(g:Game,id:number){let m=huntBlocks.get(g);if(!m)huntBlocks.set(g,m=new Map());for(const[k,v]of m)if(v<=g.state.time)m.delete(k);m.set(id,g.state.time+HUNT_BLOCK_RULES.blockSeconds);}
 function finishTask(g: Game, u: Unit, reason: string) {
   u.node = null; u.gatherT = 0; delete u.huntTrail;
   u.order = u.carry > 0 ? "return" : "idle";
@@ -132,7 +137,7 @@ function finishTask(g: Game, u: Unit, reason: string) {
   // Blocked routes fall straight through to the next reachable food source
   // (forage, fish, field harvest, preserved stock) instead of idling for a rescan.
   u.workCheckAt = 0;
-  if(u.team===0&&/route blocked|cannot reach/i.test(reason))g.banner(reason,4);
+  if(u.team===0&&/route blocked|cannot reach/i.test(reason)){let m=huntBannerAt.get(g);if(!m)huntBannerAt.set(g,m=new Map());if(g.state.time>=(m.get(reason)??-Infinity)+HUNT_BLOCK_RULES.bannerSeconds){m.set(reason,g.state.time);g.banner(reason,4);}}
   g.workBoard.invalidateTasks();
 }
 
@@ -179,7 +184,7 @@ export function workerHuntAI(g: Game, u: Unit, dt: number): boolean {
   if (!inReach()) {
     const spot = g.nearestWalk(u, c.x, c.z);
     if (!g.walkable(spot.x, spot.z) || !g.workBoard.connected(g, u.x, u.z, spot.x, spot.z)) {
-      u.blockedTask = c.id; u.retryWorkAt = g.state.time + 30;
+      u.blockedTask = c.id; u.retryWorkAt = g.state.time + 30; markHuntBlocked(g,c.id);
       finishTask(g, u, "Hunting route blocked — seeking reachable food");
       return true;
     }
@@ -191,7 +196,7 @@ export function workerHuntAI(g: Game, u: Unit, dt: number): boolean {
     u.tx = spot.x; u.tz = spot.z;
     u.workReason = alive ? `Stalking ${c.species}` : "Walking to butcher the hunting catch";
     if (g.steer(u, dt) && !inReach()) {
-      u.blockedTask = c.id; u.retryWorkAt = g.state.time + 30;
+      u.blockedTask = c.id; u.retryWorkAt = g.state.time + 30; markHuntBlocked(g,c.id);
       finishTask(g, u, "Cannot reach the hunting catch — finding another food source");
     }
     return true;
