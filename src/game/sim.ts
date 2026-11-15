@@ -103,6 +103,7 @@ import {coastalIndependentNeeds,tickCoastalTrade,coastalTradeAI,reviewCoastalTra
 import {societiesAreFoes,declareSocietyHostility,agreeSocietyTruce,recordSocietyAttack} from './societyRelations';
 import {societyMissionAI,tickSocietyMissionNeeds,tickRivalActivity,cancelSocietyMission,societyMissionIndependentNeeds,isSocietyPeaceMessengerFor,reviewRivalSocietyActivity,dispatchSocietyPeace,dispatchPairRaid,resumeSocietyMission} from './rivalActivity';
 import {configureTowerPlatform,towerBuildWorkSeconds,towerRangeMeters,towerProjectileHeight,towerProjectileBase} from './towerPlatforms';
+import {unitItemShortfall,spendUnitItems,tickRivalSteel} from './lateAgeRules';
 import {productionAI,pauseProduction,tickProduction,deliverProductionCargo,activateAnimalProcessing,availableThreshingFloor,startFloorCereal} from './production';
 import {orderExploration,queuedExplorationAI} from './explorationOrders';
 import {beginCampRelocation,pauseCampRelocation,resumeCampRelocation,cancelCampRelocation,campMoveStatus,interruptCampRelocation,tickCampRelocation,campRelocationAI,campMoveIndependentNeeds} from './nomadicCamp';
@@ -3934,11 +3935,18 @@ export class Game {
       this.onSfx("invalid");
       return false;
     }
+    const itemShort = unitItemShortfall(this, team, unitType);
+    if (itemShort) {
+      if (team === 0) this.banner(itemShort, 1.6);
+      this.onSfx("invalid");
+      return false;
+    }
     if (bld.queue.length >= 5) {
       if (team === 0) this.banner("The hall queue is full", 1.3);
       return false;
     }
     this.spend(team, cost);
+    spendUnitItems(this, team, unitType);
     bld.queue.push({ unit: unitType, t: 0, max: d.train });
     if (team === 0) this.onSfx("click");
     return true;
@@ -6053,7 +6061,7 @@ export class Game {
         phases?.mark('missions');
         tickSocietyMissionNeeds(this,sdt);
         tickCoastalTrade(this,sdt);
-        tickRegionalPressing(this);tickTinLodes(this);
+        tickRegionalPressing(this);tickTinLodes(this);tickRivalSteel(this);
         tickSnares(this);
         tickVineyards(this);
         tickRivalCoinage(this);
@@ -6510,7 +6518,7 @@ export class Game {
       });
     }
     if (hasBar) {
-      for (const heavy of ["hoplite", "pikeman"] as const)
+      for (const heavy of ["hoplite", "pikeman", "arquebusier"] as const)
         trainOptions.push({
           type: heavy,
           name: UNITS[heavy].name,

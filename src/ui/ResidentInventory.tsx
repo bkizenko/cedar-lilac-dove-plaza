@@ -51,7 +51,7 @@ export function ResidentInventory({ residents, game }: { residents: Unit[]; game
       }
       const ramPacket=game&&siegeRamCarriedMaterials(game,resident);if(ramPacket)carried.push(`Ram materials · ${ramPacket.wood} timber · ${ramPacket.cordage} cordage`);
       const equipped: string[] = [];
-      if (resident.militia || resident.type === 'spearman' || resident.type === 'hoplite' || resident.type === 'pikeman' || resident.type === 'archer' || resident.type === 'swordsman') {
+      if (resident.militia || resident.type === 'spearman' || resident.type === 'hoplite' || resident.type === 'pikeman' || resident.type === 'archer' || resident.type === 'arquebusier' || resident.type === 'swordsman') {
         equipped.push(resident.type === 'archer' ? 'Bow' : resident.type === 'swordsman' ? 'Blade' : 'Spear');
       }
       if (resident.farmTool) {

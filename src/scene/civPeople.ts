@@ -23,7 +23,7 @@ export function cultureForSkin(skin:CivSkin,seed=1):Culture{
   flag:{...base.flag,fields:[pal.cloth.hex,pal.accent.hex] as typeof base.flag.fields,chargeColor:ink},architecture:{...base.architecture,material:g.material,climate:g.climate},key:`${skin.id.startsWith('civ:')?skin.id.slice(4):skin.id}#${seed}#${g.body}#${em.id}`};
 }
 export const cultureForCiv=(civ:CivId,seed=1):Culture=>cultureForSkin(presetSkin(civ),seed);
-const INSIGNIA_PLACEMENT:Record<string,string>={worker:'sash',spearman:'shoulder',hoplite:'shoulder',pikeman:'shoulder',archer:'shoulder',swordsman:'chest',cavalry:'saddle cloth',leader:'chest and banner',warden:'chest',ranger:'shoulder'};
+const INSIGNIA_PLACEMENT:Record<string,string>={worker:'sash',spearman:'shoulder',hoplite:'shoulder',pikeman:'shoulder',archer:'shoulder',arquebusier:'shoulder',swordsman:'chest',cavalry:'saddle cloth',leader:'chest and banner',warden:'chest',ranger:'shoulder'};
 export const insigniaFor=(skin:CivSkin)=>{const pal=skin.palette??CIVS.aureline.materials,em=emblemById(skin.banner.emblem);return {emblem:em,ink:emblemInkFor(pal,em),cloth:pal.cloth.hex,placement:INSIGNIA_PLACEMENT};};
 export const insignia=(civ:CivId)=>insigniaFor(presetSkin(civ));
 const f=(n:number)=>+n.toFixed(3);

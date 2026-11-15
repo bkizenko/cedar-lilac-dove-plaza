@@ -169,6 +169,7 @@ const UNIT_TYPES: UnitType[] = [
   "ranger",
   "hoplite",
   "pikeman",
+  "arquebusier",
 ];
 export const BLD_TYPES: BldType[] = [
   "threshingFloor","fibreWorkshop","potter","kiln","smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor","snare","vineyard","press",

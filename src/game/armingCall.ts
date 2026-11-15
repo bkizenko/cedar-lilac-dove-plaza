@@ -7,6 +7,7 @@ import {militiaStoresReached} from './demobilization';
 import {supplyDrops} from './campAnchor';
 import {interruptCampRelocation} from './nomadicCamp';
 import {BRONZE_RULES} from './bronze';
+import {LATE_AGE_RULES} from './lateAgeRules';
 /** Call to arms that finishes itself: adults who had to walk to the stores are remembered and take their weapon on arrival,
  * so the player presses Arm once instead of once per trip. Stock is only ever moved from the tribe store to a person. */
 export type ArmingCall={team:number;ids:number[];since:number;until:number};
@@ -20,15 +21,15 @@ export function armEligible(g:Game,u:Unit,team:number,needStores=true){
 }
 /** Wider than the strict cache frontage, so a crowd that was sent to the stores does not jam on one spot. */
 export const nearStores=(g:Game,u:Unit)=>militiaStoresReached(g,u)||supplyDrops(g,u.team).some(d=>d.kind==='camp'&&Math.hypot(u.x-d.x,u.z-d.z)<=d.radius+6);
-export const weaponStockTotal=(g:Game,team:number)=>{const t=g.tribe(team);return t?(t.blades||0)+(t.items?.bronzeBlade||0)+(t.bows||0)+(t.spears||0):0;};
+export const weaponStockTotal=(g:Game,team:number)=>{const t=g.tribe(team);return t?(t.blades||0)+(t.items?.bronzeBlade||0)+(t.items?.steelBlade||0)+(t.bows||0)+(t.spears||0):0;};
 /** Take the best available weapon from the tribe store and equip this person. False when the stock is empty. */
 export function armFromStock(g:Game,u:Unit,team=u.team){
  const t=g.tribe(team);if(!t)return false;let kind:UnitType|null=null;
- let bronze=false;
- if((t.items?.bronzeBlade||0)>0){t.items!.bronzeBlade!--;kind='swordsman';bronze=true;}else if((t.blades||0)>0){t.blades--;kind='swordsman';}else if((t.bows||0)>0){t.bows--;kind='archer';}else if((t.spears||0)>0){t.spears--;kind='spearman';}
+ let bronze=false,steel=false;
+ if((t.items?.steelBlade||0)>0&&t.age>=LATE_AGE_RULES.steelMinAge){t.items!.steelBlade!--;kind='swordsman';steel=true;}else if((t.items?.bronzeBlade||0)>0){t.items!.bronzeBlade!--;kind='swordsman';bronze=true;}else if((t.blades||0)>0){t.blades--;kind='swordsman';}else if((t.bows||0)>0){t.bows--;kind='archer';}else if((t.spears||0)>0){t.spears--;kind='spearman';}
  if(!kind)return false;
  interruptCampRelocation(g,u);const d=UNITS[kind];
- u.type=kind;u.militia=true;u.range=d.range;u.dmg=weaponDamage(kind as 'spearman'|'archer'|'swordsman',t.age)*(bronze?BRONZE_RULES.bladeDamage:1);u.rof=d.rof;
+ u.type=kind;u.militia=true;u.range=d.range;u.dmg=weaponDamage(kind as 'spearman'|'archer'|'swordsman',t.age)*(steel?LATE_AGE_RULES.bladeDamage:bronze?BRONZE_RULES.bladeDamage:1);u.rof=d.rof;
  u.order='hold';u.job=null;u.node=null;u.target=null;u.emergency=undefined;u.workReason='Armed civilian — ready to defend or raid';
  return true;
 }
@@ -67,7 +68,7 @@ export function weaponStockReport(g:Game,team=0){
   if(u.militia){if(u.type==='spearman')armed.spearman++;else if(u.type==='archer')armed.archer++;else if(u.type==='swordsman')armed.swordsman++;else armed.other++;}
   else if(armEligible(g,u,team,false))free++;
  }
- const spears=t?.spears||0,bows=t?.bows||0,bronzeBlades=t?.items?.bronzeBlade||0,blades=(t?.blades||0)+bronzeBlades;
- const age=t?.age??0;return {grades:{spear:gradeName('spear',age),bow:gradeName('bow',age),blade:gradeName('blade',age)},spears,bows,blades,bronzeBlades,stored:spears+bows+blades,armed,armedTotal:armed.spearman+armed.archer+armed.swordsman+armed.other,unarmedAdults:free,waiting:armingCallStatus(g,team).waiting};
+ const spears=t?.spears||0,bows=t?.bows||0,bronzeBlades=t?.items?.bronzeBlade||0,steelBlades=t?.items?.steelBlade||0,blades=(t?.blades||0)+bronzeBlades+steelBlades;
+ const age=t?.age??0;return {grades:{spear:gradeName('spear',age),bow:gradeName('bow',age),blade:gradeName('blade',age)},spears,bows,blades,bronzeBlades,steelBlades,stored:spears+bows+blades,armed,armedTotal:armed.spearman+armed.archer+armed.swordsman+armed.other,unarmedAdults:free,waiting:armingCallStatus(g,team).waiting};
 }
-export const weaponStockText=(r:ReturnType<typeof weaponStockReport>)=>`In stores: ${r.spears} ${r.grades.spear} spears · ${r.bows} ${r.grades.bow}s · ${r.blades} ${r.grades.blade} blades${r.bronzeBlades?` (${r.bronzeBlades} bronze-edged)`:''}. Under arms: ${r.armedTotal} (${r.armed.spearman} spear · ${r.armed.archer} bow · ${r.armed.swordsman} blade). Unarmed adults: ${r.unarmedAdults}${r.waiting?` · ${r.waiting} on their way to arm`:''}.`;
+export const weaponStockText=(r:ReturnType<typeof weaponStockReport>)=>`In stores: ${r.spears} ${r.grades.spear} spears · ${r.bows} ${r.grades.bow}s · ${r.blades} ${r.grades.blade} blades${r.bronzeBlades?` (${r.bronzeBlades} bronze-edged)`:''}${r.steelBlades?` (${r.steelBlades} steel-edged)`:''}. Under arms: ${r.armedTotal} (${r.armed.spearman} spear · ${r.armed.archer} bow · ${r.armed.swordsman} blade). Unarmed adults: ${r.unarmedAdults}${r.waiting?` · ${r.waiting} on their way to arm`:''}.`;

@@ -43,7 +43,7 @@ export function gatherSkill(t:string,node:Node):SkillId|null{
 export function gatherSkillStep(g:Game,u:Unit,t:string,node:Node,dt:number){
  if(!skillsEnabled(g))return 1;const s=gatherSkill(t,node);if(!s)return 1;recordPractice(g,u,s,dt);return unitSkillSpeed(g,u,s);
 }
-const RECIPE_SKILL:[RegExp,SkillId][]=[[/^(formClay|dryClay|fireClay)/,'pottery'],[/^(spinYarn|spinWool|weave|felt|washWool|twistCordage)/,'weaving'],[/^(smelt|consolidateIron|carburize|makeCharcoal)/,'smithing'],[/^(fleshHide|extractTannin|drySkin|tanHide|sew)/,'tanning'],[/^(cook|bake|brew|sproutGrain|airDry|manualSmoke|smoke|ferment|strain|grind|thresh|winnow)/,'cooking'],[/^(author|study|press)/,'toolmaking']];
+const RECIPE_SKILL:[RegExp,SkillId][]=[[/^(formClay|dryClay|fireClay)/,'pottery'],[/^(spinYarn|spinWool|weave|felt|washWool|twistCordage)/,'weaving'],[/^(smelt|consolidateIron|carburize|forgeSteel|grindGun|makeCharcoal)/,'smithing'],[/^(fleshHide|extractTannin|drySkin|tanHide|sew)/,'tanning'],[/^(cook|bake|brew|sproutGrain|airDry|manualSmoke|smoke|ferment|strain|grind|thresh|winnow)/,'cooking'],[/^(author|study|press|bind)/,'toolmaking']];
 export function recipeSkill(recipe:string):SkillId|null{if(!Object.hasOwn(PRODUCTION_RECIPES,recipe))return null;for(const[re,s]of RECIPE_SKILL)if(re.test(recipe))return s;return null;}
 export function recipeSkillStep(g:Game,u:Unit,recipe:ProductionRecipe|string,dt:number){
  if(!skillsEnabled(g))return 1;const s=recipeSkill(recipe);if(!s)return 1;recordPractice(g,u,s,dt);return unitSkillSpeed(g,u,s);

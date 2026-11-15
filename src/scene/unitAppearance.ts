@@ -14,7 +14,7 @@ import {hashSeed,part,beam,partTriangles,seededRandom,type LodTier,type Part} fr
 import type {CarvedMaterialId} from './carvedPalette';
 import {dressFor,type Culture,type GarmentId,type Motif,type Season,type Dress} from './cultureGrammar';
 
-export type UnitKind='worker'|'spearman'|'archer'|'swordsman'|'cavalry'|'leader'|'warden'|'ranger'|'hoplite'|'pikeman';
+export type UnitKind='worker'|'spearman'|'archer'|'swordsman'|'cavalry'|'leader'|'warden'|'ranger'|'hoplite'|'pikeman'|'arquebusier';
 export type Slot='garment'|'trim'|'leather'|'padding'|'stitch'|'wood'|'metal'|'hair';
 export type UnitPart=Part&{slot:Slot};
 /** Mirrors Unit.garment and the game's ArmorAsset (src/game/armor.ts); nothing else is read. */
@@ -94,7 +94,7 @@ export function insigniaParts(type:UnitKind,rich:number,v:number,cond=1):UnitPar
  const side=v%2?1:-1;
  switch(type){
   case 'worker':return rich>=1?[P('trim','box',[.5,.05,.03],[0,.7,.19],0,[0,0,side*.65])]:[];
-  case 'spearman':case 'hoplite':case 'pikeman':case 'archer':case 'ranger':return [P('trim','box',[.17,.04,.2],[-side*.2,.82,0],0),...(rich>=2?[P('trim','box',[.17,.015,.21],[-side*.2,.86,0],0)]:[])];
+  case 'spearman':case 'hoplite':case 'pikeman':case 'archer':case 'arquebusier':case 'ranger':return [P('trim','box',[.17,.04,.2],[-side*.2,.82,0],0),...(rich>=2?[P('trim','box',[.17,.015,.21],[-side*.2,.86,0],0)]:[])];
   case 'swordsman':case 'warden':return [P('trim','box',[.15,.15,.02],[0,.72,.265],0)];
   case 'leader':return [P('trim','box',[.17,.17,.02],[0,.72,.265],0),P('wood','cylinder',[.035,1.7,.035],[-.3,.85,-.1],0,undefined,5),P('garment','box',[.42,.34,.02],[-.3+.21,1.55,-.1],0),P('trim','box',[.42,.05,.022],[-.3+.21,1.7,-.1],0),...(rich>=1?[P('trim','box',[.2,.2,.024],[-.3+.21,1.52,-.1],0,[0,0,Math.PI/4])]:[]),...(rich>=2?[P('trim','sphere',[.07,.07,.07],[-.3,1.72,-.1],0)]:[]),...standardWear(cond,v)];
   default:return [];}

@@ -53,3 +53,13 @@ test('paper is pressed from rags and water at a Renaissance fibre workshop', () 
   assert.equal(t.items.paper,R.paperPerBatch);
   assert.ok(ids.fibreWorkshop>=0);
 });
+test('a book is bound from paid paper and a log at the fibre workshop', () => {
+  const {g,t}=setup();
+  t.age=g.state.age=4;t.items={...t.items,paper:R.bookPaper};
+  assert.equal(runKnowledgeAction(g,'late:book').accepted,false,'books wait for Renaissance');
+  t.age=g.state.age=5;const wood0=t.wood;
+  assert.equal(runKnowledgeAction(g,'late:book').accepted,true,g.state.banner);
+  assert.equal(t.items.paper||0,0);assert.equal(t.items.book||0,0,'no book before delivery');
+  const p=g.state.production.projects.at(-1);assert.ok(drive(g,1200,()=>p.phase==='complete'),JSON.stringify({ph:p.phase,r:p.blockedReason}));
+  assert.equal(t.items.book,1);assert.ok(t.wood<=wood0-R.bookWood,'binding boards cost a log');
+});

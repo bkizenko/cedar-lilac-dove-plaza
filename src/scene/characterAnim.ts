@@ -18,7 +18,7 @@ export type UnitLike={id:number;type:string;team:number;x:number;y:number;z:numb
  copperStudy?:{paused?:boolean}|null;husbandryWork?:unknown;weaponWork?:{paused?:boolean}|null;farmToolWork?:unknown;tamingWork?:unknown;haulageWork?:unknown;shelterId?:number};
 export type ProjectLike={phase:string;recipe:string;progress:number;blockedReason?:string};
 export type AnimContext={time:number;project?:ProjectLike;fireLit?:boolean;/** carried amount over capacity, 0..1 */load:number;/** the farm building the unit works, from its real crop record */farm?:{ripened?:boolean;planted?:number;tended?:number}|null;/** how this person carries the load (carryStyles.carryStyleFor); absent = the generic carry posture */carry?:{style:CarryStyleId;mass:number}|null};
-const WEAPON:Record<string,'spear'|'bow'|'blade'|undefined>={spearman:'spear',hoplite:'spear',pikeman:'spear',archer:'bow',ranger:'bow',swordsman:'blade'};
+const WEAPON:Record<string,'spear'|'bow'|'blade'|undefined>={spearman:'spear',hoplite:'spear',pikeman:'spear',archer:'bow',arquebusier:'bow',ranger:'bow',swordsman:'blade'};
 export const weaponOf=(type:string)=>WEAPON[type];
 const isFish=(n:unknown)=>!!n&&typeof n==='object'&&(n as {kind?:string}).kind==='fish';
 const nodeKind=(n:unknown)=>n&&typeof n==='object'?String((n as {kind?:string;type?:string;species?:string}).kind??(n as {type?:string}).type??(n as {species?:string}).species??''):'';

@@ -172,7 +172,7 @@ export function peopleOutfit(input:PeopleInput):RigOutfit{
  if(bodyClass!=='child'){jewelParts(c,ind.jewel);if(ind.mark)markParts(c,ind.mark);}
  // insignia from the owned garment's cloth, cut to the new trunk: soldier shoulder cloth, a chest patch, a leader's collar badge
  if(g&&type!=='worker'){const F=frameOf(look.body),side=ind.variant%2?1:-1;const ins:RigPart[]=[];
-  if(type==='spearman'||type==='hoplite'||type==='pikeman'||type==='archer'||type==='ranger'){ins.push(Q(pal.trim,'box',[.17,.04,.2],[-side*.2,.835,0],0));if(rich>=2)ins.push(Q(pal.trim,'box',[.17,.015,.21],[-side*.2,.875,0],0));}
+  if(type==='spearman'||type==='hoplite'||type==='pikeman'||type==='archer'||type==='arquebusier'||type==='ranger'){ins.push(Q(pal.trim,'box',[.17,.04,.2],[-side*.2,.835,0],0));if(rich>=2)ins.push(Q(pal.trim,'box',[.17,.015,.21],[-side*.2,.875,0],0));}
   else if(type==='swordsman'||type==='warden')ins.push(Q(pal.trim,'box',[.14,.14,.02],[0,.6,frontZ(F,.67)+.02],0));
   else if(type==='leader')ins.push(Q(pal.trim,'box',[.15,.15,.02],[0,.6,frontZ(F,.67)+.02],0));
   if(ins.length){rendered.insignia=type;for(const q of ins)bones.spine.push(q);}}
