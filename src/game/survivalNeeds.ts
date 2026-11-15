@@ -15,6 +15,7 @@ import {clothingWarmth,PRODUCTION_RECIPES} from './production';
 import {campMoveIndependentNeeds} from './nomadicCamp';
 import {societyMissionIndependentNeeds} from './rivalActivity';
 import {prisonerIndependentNeeds} from './captivity';
+import {tickCisterns,cisternTotals} from './cisterns';
 import type {Game} from './sim';
 import type {Building,GameState,Unit} from './types';
 import {hasTaskCommitment} from './workCommitments';
@@ -126,7 +127,7 @@ export function collectedWaterDemand(g:Game,team=0,people=residents(g,team)){
 export function survivalStatus(g:Game,team=0){
  const t=g.tribe(team),stock=t?.survival,enabled=g.state.survivalVersion===1&&!!stock,people=residents(g,team),home=g.campOf(team),homeTemp=localAirTemperature(g,home.x,home.z),temp=Math.round(homeTemp);
  const demand=collectedWaterDemand(g,team,people),fuelDemand=fireDemand(g,team,ambientTemperature(g));
- const residueFuel=residueFuelAvailable(g,team),water=stock?.waterLiters??0,fuel=t?.wood??0,fuelAvailableWoodEquivalent=fuel+residueFuel.availableWoodEquivalent,waterSeconds=demand?water/demand:Infinity,fuelSeconds=fuelDemand?fuelAvailableWoodEquivalent/fuelDemand:Infinity;
+ const residueFuel=residueFuelAvailable(g,team),water=stock?.waterLiters??0,cistern=cisternTotals(g,team),fuel=t?.wood??0,fuelAvailableWoodEquivalent=fuel+residueFuel.availableWoodEquivalent,waterSeconds=demand?(water+cistern.stored)/demand:Infinity,fuelSeconds=fuelDemand?fuelAvailableWoodEquivalent/fuelDemand:Infinity;
  const coldResidents=people.filter(u=>(u.coldSeconds??0)>0).length,waterWorkers=people.filter(u=>u.waterWork&&!u.waterWork.paused).length;
  const warnings:string[]=[];
  if(enabled){
@@ -134,7 +135,7 @@ export function survivalStatus(g:Game,team=0){
   if(fuelDemand>0&&fuelSeconds<180)warnings.push(residueFuel.availableWoodEquivalent>0?'Heating fuel low — gather timber':fuel<=0?'No firewood — gather timber before exposure worsens':'Firewood low — gather timber for warmth');
   if(coldResidents)warnings.push(`${coldResidents} residents recovering from cold exposure — shelter and firewood help`);
  }
- return {enabled,water,waterSeconds,fuel,fuelSeconds,residueFuel,fuelAvailableWoodEquivalent,coldResidents,warnings,waterWorkers,
+ return {enabled,water,cisternLiters:cistern.stored,cisternCapacity:cistern.capacity,waterSeconds,fuel,fuelSeconds,residueFuel,fuelAvailableWoodEquivalent,coldResidents,warnings,waterWorkers,
   fuelWorkers:people.filter(u=>u.order==='gather'&&u.job==='wood').length,temp,waterDemandLitersPerSecond:demand,
   fuelDemandWoodPerSecond:fuelDemand,sheltered:people.filter(u=>sheltered(g,u)).length,metrics:stock};
 }
@@ -150,7 +151,7 @@ function bankClear(g:Game,u:Unit,x:number,z:number){
  return g.walkable(x,z)&&!g.state.buildings.some(b=>g.solidBuilding(b)&&Math.abs(x-b.x)<=b.w*.4+u.r&&Math.abs(z-b.z)<=b.d*.4+u.r);
 }
 function builtWaterWork(g:Game,x:number,z:number,team?:number){
- return g.state.buildings.find(b=>(b.type==='well'||b.type==='cistern')&&(team===undefined||b.team===team)&&g.finished(b)&&Math.hypot(b.x-x,b.z-z)<.6)??null;
+ return g.state.buildings.find(b=>b.type==='well'&&(team===undefined||b.team===team)&&g.finished(b)&&Math.hypot(b.x-x,b.z-z)<.6)??null;
 }
 function sourceWet(g:Game,source:Source){
  if(builtWaterWork(g,source.sourceX,source.sourceZ))return true;
@@ -169,7 +170,7 @@ function sourceFor(g:Game,u:Unit,avoid?:{x:number;z:number}):Source|null{
   const stride=Math.max(1,Math.floor(body.shoreline.length/16));
   for(let i=0;i<body.shoreline.length;i+=stride){const p=body.shoreline[i];sources.push({x:body.x+(p.x-body.x)*.94,z:body.z+(p.z-body.z)*.94});}
  }
- for(const b of g.state.buildings)if((b.type==='well'||b.type==='cistern')&&b.team===u.team&&g.finished(b))sources.push({x:b.x,z:b.z,built:true});
+ for(const b of g.state.buildings)if(b.type==='well'&&b.team===u.team&&g.finished(b))sources.push({x:b.x,z:b.z,built:true});
  const candidates:Source[]=[];
  for(const p of sources){
   if(Math.hypot(p.x-u.x,p.z-u.z)>SURVIVAL_RULES.sourceSearchMeters)continue;
@@ -284,7 +285,9 @@ export function tickSurvival(g:Game,dt:number){
  for(const tr of g.state.tribes){
   const stock=tr.survival;if(!stock)continue;
   const people=residents(g,tr.id);if(!people.length)continue;
-  const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*rules.waterLitersPerPersonSecond*dt,used=Math.min(stock.waterLiters,demand),shortfall=demand>0?1-used/demand:0;
+  const demand=people.filter(u=>!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(g,u)&&!coastalIndependentNeeds(g,u)&&!campMoveIndependentNeeds(g,u)).length*rules.waterLitersPerPersonSecond*dt;
+  tickCisterns(g,tr.id,stock,demand/dt,dt);
+  const used=Math.min(stock.waterLiters,demand),shortfall=demand>0?1-used/demand:0;
   stock.waterLiters=Math.max(0,stock.waterLiters-used);stock.waterConsumedLiters+=used;stock.waterShortageSeconds+=dt*shortfall;
   const home=g.campOf(tr.id),homeTemp=localAirTemperature(g,home.x,home.z,temp);
   const fuelNeeded=fireDemand(g,tr.id,temp)*dt,residueHeat=burnResidueFuel(g,tr.id,fuelNeeded),fuel=Math.min(tr.wood,Math.max(0,fuelNeeded-residueHeat)),fireFraction=fuelNeeded?Math.min(1,(fuel+residueHeat)/fuelNeeded):0;

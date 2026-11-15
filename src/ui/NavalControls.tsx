@@ -15,7 +15,8 @@ export function NavalControlsView({model:m,choice,choose,run,selectHull,busy=fal
  const workIssue=m.issue||work?.issue,designIssue=m.issue||design?.issue;
  return <section className="space-y-2 text-xs" aria-label="Port and fleet controls">
   {!!m.ports.length&&<label className="flex items-center gap-2">Harbour<select className={select} value={m.dock?.id??0} onChange={e=>choose({dockId:Number(e.target.value)||undefined})}>{m.ports.map(p=><option key={p.id} value={p.id}>{p.name} · {p.tier}</option>)}</select></label>}
-  {m.dock&&<p>{m.dock.moored}/{m.dock.moorage} moored{m.dock.blockaded?' · Harbour blockaded':''}</p>}
+  {m.dock&&<p>{m.dock.tier} · {m.dock.moored}/{m.dock.moorage} moored{m.dock.blockaded?' · Harbour blockaded':''}</p>}
+  {m.dock&&<div aria-label="Harbour tiers"><p>Trade boat slots {m.slots.used}/{m.slots.total} (all harbours)</p><ul>{m.tiers.map(t=><li key={t.tier} className={t.reached?'':'text-parchment/60'}>{t.reached?'✓ ':''}{t.name} · {t.moorage} slots · {t.needs}</li>)}</ul></div>}
   <label className="flex items-center gap-2">Builder<select className={select} value={m.builder?.id??0} onChange={e=>choose({builderId:Number(e.target.value)||undefined})}>{!m.builder&&<option value={0}>No available adult</option>}{m.builders.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></label>
   {m.issue&&<p className="text-parchment/60">{m.issue}</p>}
   {m.dock&&<><label className="flex items-center gap-2">Port work<select className={select} value={work?.id} onChange={e=>choose({workId:e.target.value as PortWork})}>{m.works.map(w=><option key={w.id} value={w.id}>{w.name}{m.dock!.works.includes(w.id)?' · built':''}</option>)}</select></label>

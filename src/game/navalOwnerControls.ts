@@ -3,6 +3,9 @@ import {personName} from './people';
 import {boatCrew} from './boats';
 import {PORT_WORK_IDS,PORT_WORK_SPECS,SHIP_DESIGNS,shipDesign} from './navalClasses';
 import {navalView,commissionIssue,resumeVesselCommissionIssue,boardingIssue,designOfBoat} from './navalFleet';
+import {harbourSlots} from './tradeFleet';
+import {seaSlotsInUse} from './tradeParties';
+import {PORT_TIERS} from './navalClasses';
 import {navalState,navalBuilderAvailable,portWorkIssue,resumePortWorkIssue,vesselSupplyQuote} from './navalPorts';
 export type NavalControlContext={dockId?:number;boatId?:number;builderId?:number};
 /** Owner facts and shared authoritative readiness only. Never initializes naval
@@ -17,8 +20,10 @@ export function navalOwnerControls(g:Game,query:NavalControlContext={}){
  const works=PORT_WORK_IDS.map(id=>{const spec=PORT_WORK_SPECS[id];return{id,name:spec.name,wood:spec.wood,stone:spec.stone,cordage:spec.cordage,seconds:spec.workSeconds,issue:dock?portWorkIssue(g,dock.id,id,bid,0):'Choose an owned finished dock'};});
  const designs=Object.values(SHIP_DESIGNS).map(spec=>({id:spec.id,name:spec.name,wood:spec.cost.wood,stone:spec.cost.stone,cordage:spec.cost.cordage,copper:spec.cost.copper,seconds:spec.workSeconds,issue:dock?commissionIssue(g,dock.id,spec.id,bid,0):'Choose an owned finished dock'}));
  const projects=[...(s?.projects||[]).filter(p=>p.team===0).map(p=>({id:p.id,dockId:p.dockId,name:PORT_WORK_SPECS[p.work].name,phase:p.phase,progress:p.progress,seconds:PORT_WORK_SPECS[p.work].workSeconds,resumeAction:'resume-port-work' as const,issue:resumePortWorkIssue(g,p.id,bid,0)})),...(s?.commissions||[]).filter(p=>p.team===0).map(p=>({id:p.id,dockId:p.dockId,name:shipDesign(p.design)!.name,phase:p.phase,progress:p.progress,seconds:shipDesign(p.design)!.workSeconds,resumeAction:'resume-commission' as const,issue:resumeVesselCommissionIssue(g,p.id,bid,0)}))];
+ const tiers=PORT_TIERS.map(t=>({tier:t.tier,name:t.name,moorage:t.moorage,reached:!!dock&&PORT_TIERS.findIndex(x=>x.name===dock.tier)>=t.tier,needs:t.tier===0?'A finished dock':t.tier===1?'Breakwater and quay':t.tier===2?'Breakwater and slipway':'Drydock (with breakwater and slipway)'}));
+ const slots={used:seaSlotsInUse(g),total:harbourSlots(g,0)};
  const supply=boat?vesselSupplyQuote(g,boat.id,{},0):{issue:'Choose an owned hull',food:0,loads:0,missiles:0,wood:0,dockId:undefined};
  const targets=boat?(g.state.boats||[]).filter(b=>b.team!==0&&b.hp>0&&g.visibleAt(b.x,b.z)).map((b,index)=>({id:b.id,name:`Foreign hull · ${index+1}`,issue:boardingIssue(g,boat.id,b.id,0)})):[];
- return{builder:builder?{id:builder.id,name:personName(builder)}:null,builders,ports,dock:dock??null,boats,boat:boat??null,works,designs,projects,supply,targets,events:view.events.slice(-4),issue:builder?navalBuilderAvailable(g,builder,0)?null:'Choose a free, healthy, unlocked adult on land':'No free, healthy, unlocked adult on land'};
+ return{builder:builder?{id:builder.id,name:personName(builder)}:null,builders,ports,dock:dock??null,tiers,slots,boats,boat:boat??null,works,designs,projects,supply,targets,events:view.events.slice(-4),issue:builder?navalBuilderAvailable(g,builder,0)?null:'Choose a free, healthy, unlocked adult on land':'No free, healthy, unlocked adult on land'};
 }
 export type NavalOwnerControlsModel=ReturnType<typeof navalOwnerControls>;

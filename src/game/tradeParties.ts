@@ -61,6 +61,8 @@ export function tradePartyStatus(g:Game,p:TradeParty){
 }
 export type ExpeditionPlan={mode:TradePartyMode;cargoLimit:number;crew:number;ship?:string;shipName?:string;speed:number;slots?:number;slotsFree?:number;route?:{x:number;z:number}[];capacityLeft:number;issue:string|null};
 const weaponStock=(g:Game):{kind:WeaponKind;n:number}|undefined=>{const t=g.tribe(0) as unknown as Record<string,number>;for(const k of ['blades','bows','spears'] as const)if((t[k]||0)>=1)return{kind:k,n:Math.min(Math.floor(t[k]),3)};return undefined;};
+/** Sea expeditions currently holding a boat slot. */
+export const seaSlotsInUse=(g:Game)=>(g.state.tradeParties??[]).filter(p=>p.kind==='expedition'&&p.mode==='sea'&&p.phase!=='done').length;
 const active=(g:Game,mode:TradePartyMode)=>list(g).filter(p=>p.kind==='expedition'&&p.mode===mode&&p.phase!=='done').length;
 /** Everything the UI and the dispatch need to know about one planned trip. The sea route is exact water; no route, no ship. */
 export function planExpedition(g:Game,team:number,mode:TradePartyMode,give:ResKind,amount:number):ExpeditionPlan{

@@ -87,3 +87,14 @@ test('land parties carry more with pack goats; crews are provisioned and armed f
  assert.ok(p.provisions>0&&g.tribe(0).food<=food-p.provisions);assert.ok(p.guards>0&&g.tribe(0).spears===5-p.guards);assert.ok(p.crew>=2);
  for(let t=0;t<p.travel*2+TRADE_PARTY_RULES.tradeSeconds+5&&tradeParties(g).length;t++)tickTradeParties(g,1);assert.equal(g.tribe(0).spears,5,'weapons come home');
 });
+test('bigger harbour tiers add boat slots, trade frequency and better deals',async()=>{
+ const {harbourFrequencyBonus,harbourDealBonus}=await import('../src/game/tradeFleet.ts');
+ const {arrivalChance}=await import('../src/game/tradeParties.ts');const {ensureNaval}=await import('../src/game/navalPorts.ts');
+ const g=fixture();for(const k of ['wood','stone','copper','food'])g.tribe(1)[k]=0;const dock=g.state.buildings.find(b=>b.type==='dock'),base=harbourSlots(g,0),chance0=arrivalChance(g,[1]);
+ const n=ensureNaval(g);let rec=n.ports.find(p=>p.dockId===dock.id);if(!rec){rec={dockId:dock.id,team:0,works:{}};n.ports.push(rec);}
+ rec.works.breakwater={builtAt:0};const harbour=harbourSlots(g,0);assert.ok(harbour>base,'breakwater adds slots');
+ rec.works.slipway={builtAt:0};assert.ok(harbourSlots(g,0)>harbour,'slipway adds more');const yard=harbourSlots(g,0);
+ rec.works.drydock={builtAt:0};assert.ok(harbourSlots(g,0)>yard,'drydock adds more');
+ assert.ok(arrivalChance(g,[1])>chance0,'more slots, more frequent traders');assert.ok(harbourDealBonus(10)>harbourDealBonus(2));assert.ok(harbourFrequencyBonus(10)>harbourFrequencyBonus(2));
+ const plan=planExpedition(g,1,'sea','wood',1);assert.equal(plan.slots,harbourSlots(g,0));assert.equal(plan.slotsFree,harbourSlots(g,0));
+});

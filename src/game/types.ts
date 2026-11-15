@@ -392,6 +392,8 @@ export type Building = {
   raidLoot?: Partial<Record<ResKind,number>>;
   lootTeam?: number;
   storeCare?: number;
+  /** Cistern only: litres of stored fresh water (absent = empty). */
+  cisternLiters?:number;
   goatSearch?:import('./animalOrders').GoatSearchOrder;
   penBedding?:import('./penBedding').PenBedding;
   penWater?:import('./penWater').PenWater;
