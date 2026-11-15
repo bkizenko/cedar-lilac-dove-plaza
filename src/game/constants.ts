@@ -199,7 +199,7 @@ export const BUILDINGS: Record<
     stone: 50,
     pop: 0,
     hp: 420,
-    age: 2,
+    age: 1,
     hint: "Fires on enemies in range.",
   },
   temple: {

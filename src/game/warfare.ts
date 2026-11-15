@@ -7,10 +7,12 @@ import {isDependent} from './settlement';
 import {predisposition} from './people';
 import {noteRaidCarried} from './raidReports';
 export const WEAPONS={
-  spear:{name:'Stone spear',wood:2,stone:1,copper:0,iron:0,age:0,seconds:24},
-  bow:{name:'Hunting bow',wood:3,stone:1,copper:0,iron:0,age:0,seconds:36},
+  spear:{name:'Stone spear',wood:2,stone:1,copper:0,iron:0,age:0,seconds:16},
+  bow:{name:'Hunting bow',wood:3,stone:1,copper:0,iron:0,age:0,seconds:24},
   blade:{name:'Metal blade',wood:4,stone:0,copper:6,iron:0,age:1,seconds:48},
 } as const;
+/** Weapon bench speed: the barracks and forge are the dedicated benches; the town hall and hearth are slow fallbacks. */
+export function weaponBenchFactor(kind:'spear'|'bow'|'blade',type:string):number{return type==='forge'&&kind==='blade'?.5:type==='barracks'?.75:['townhall','hearth'].includes(type)?2:1;}
 export type WeaponKind=keyof typeof WEAPONS;
 /** Paid work can move to a replacement bench without repurchasing its inputs. */
 export function resumeWeaponWork(g:Game,u:Unit,workplaceId?:number){
@@ -24,7 +26,7 @@ export function resumeWeaponWork(g:Game,u:Unit,workplaceId?:number){
    .sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
  if(!b)return false;
  const fraction=job.progress/job.duration;
- job.duration=WEAPONS[job.kind].seconds*(['townhall','hearth'].includes(b.type)?3:b.type==='barracks'?2:1);
+ job.duration=WEAPONS[job.kind].seconds*weaponBenchFactor(job.kind,b.type);
  job.progress=fraction*job.duration;job.workplace=b.id;job.paused=false;
  u.order='hold';u.node=null;u.target=null;u.workReason=`Resuming ${WEAPONS[job.kind].name.toLowerCase()}`;
  g.workBoard.reset();return true;
@@ -44,7 +46,7 @@ export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:numbe
   if(t.wood<spec.wood||t.stone<spec.stone||t.copper<spec.copper)return reject(`Need ${spec.wood} logs${spec.stone?' and '+spec.stone+' stone':''}${spec.copper?' and '+spec.copper+' copper':''}`);
   const workplace=work.filter(b=>!!g.interactionSpot(u,b)).sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   t.wood-=spec.wood;t.stone-=spec.stone;t.copper-=spec.copper;
-  u.weaponWork={kind,progress:0,duration:spec.seconds*(['townhall','hearth'].includes(workplace.type)?3:workplace.type==='barracks'?2:1),workplace:workplace.id};
+  u.weaponWork={kind,progress:0,duration:spec.seconds*weaponBenchFactor(kind,workplace.type),workplace:workplace.id};
   u.order='hold';u.node=null;u.target=null;u.workReason=`Making ${spec.name.toLowerCase()} — walking to the workplace`;
   if(team===0)g.banner(`${spec.name}: materials reserved; one adult leaves other work to craft it`,3);
   return true;
