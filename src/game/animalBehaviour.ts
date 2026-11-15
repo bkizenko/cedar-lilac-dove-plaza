@@ -6,6 +6,7 @@
  * ungulate crepuscular peaks, midday rumination, flight-initiation distance growing with group size ("many eyes"),
  * wolf pursuit predation with limited stamina and low success against healthy prey. */
 import type {Game} from './sim';
+import {huntPressure} from './huntParty';
 import type {Critter,CritterKind} from './types';
 import {WildlifeObstacles,wildlifeSegmentSafe,wildlifeBodyRadius} from './wildlifeMovement';
 import {calendar} from './settlement';
@@ -222,7 +223,7 @@ function stepOne(ctx:Ctx,c:Critter,dt:number){
   case 'rest':case 'sleep':case 'ruminate':case 'groom':{target=d>1.5?T.gaits[0]*.8:0;break;}
   case 'nurse':case 'alert':case 'feed':target=0;break;
   case 'rut':target=d>1?T.gaits[1]*.9:0;break;
-  case 'flee':{b.en=Math.max(0,b.en-dt/T.gallopSeconds);target=b.en>.1?T.gaits[3]:T.gaits[1]*1.05;if(d<2&&t<b.until)b.until=t;break;}
+  case 'flee':{b.en=Math.max(0,b.en-dt/T.gallopSeconds);target=b.en>.1?T.gaits[3]*huntPressure(g,c):T.gaits[1]*1.05;if(d<2&&t<b.until)b.until=t;break;}
   case 'stalk':case 'chase':{const prey=ctx.byId.get(b.tgt??-1);if(!prey||prey.hp<=0){setState(g,c,'walk',6,{x:c.x,z:c.z});break;}
    const pd=Math.hypot(prey.x-c.x,prey.z-c.z);aim=b.st==='chase'?{x:prey.x+prey.vx*.6,z:prey.z+prey.vz*.6}:{x:prey.x,z:prey.z};
    if(b.st==='stalk'){target=T.gaits[0]*1.2;if(pd<ANIMAL_RULES.stalkMetres||prey.beh?.st==='flee'&&pd<ANIMAL_RULES.chaseGiveUp*.8){b.st='chase';b.until=t+ANIMAL_RULES.chaseSeconds;}else if(t>=b.until||pd>40){setState(g,c,'walk',8,{x:c.x,z:c.z});b.tgt=undefined;}}

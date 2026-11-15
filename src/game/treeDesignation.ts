@@ -1,6 +1,7 @@
 import type {Game} from './sim';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent} from './settlement';
+import {herdMembers} from './huntParty';
 /** Explicit tree designations remain usable with automation off. Existing paid,
  * military, carrying and emergency work always keeps its owner. */
 export function assignMarkedTrees(g:Game,ids:number[]):number {
@@ -26,7 +27,7 @@ export function projectedTreeInBox(project:(x:number,y:number,z:number)=>{x:numb
 /** Drag-select orders for stone and huntable animals: reuses Game.issueGather (the right-click path).
  * With a worker selection the nearest target gets the order; otherwise idle workers are spread over up to 6 targets nearest first. */
 export function orderGatherTargets(g:Game,stoneIds:number[],animalIds:number[]):number {
- const targets:Array<Parameters<Game['issueGather']>[0]>=[...g.state.stones.filter(n=>stoneIds.includes(n.id)&&n.amount>0&&g.exploredAt(n.x,n.z)),...g.state.wildlife.filter(c=>animalIds.includes(c.id)&&c.hp>0&&g.visibleAt(c.x,c.z))];
+ const targets:Array<Parameters<Game['issueGather']>[0]>=[...g.state.stones.filter(n=>stoneIds.includes(n.id)&&n.amount>0&&g.exploredAt(n.x,n.z)),...herdMembers(g,animalIds,(x,z)=>g.visibleAt(x,z)).filter(c=>g.visibleAt(c.x,c.z))];
  if(!targets.length)return 0;
  const cx=targets.reduce((a,n)=>a+n.x,0)/targets.length,cz=targets.reduce((a,n)=>a+n.z,0)/targets.length;
  targets.sort((a,b)=>Math.hypot(a.x-cx,a.z-cz)-Math.hypot(b.x-cx,b.z-cz));
