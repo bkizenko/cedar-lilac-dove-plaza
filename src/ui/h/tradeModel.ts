@@ -47,7 +47,7 @@ const held=(side:SideInput)=>{const m=new Map(merge(side.held).map(s=>[s.kind,s.
 
 export function tradeDialogView(input:TradeDialogInput):TradeDialogView{
  const {player,partner,leader,proposal,limits={}}=input,pHeld=held(player),qHeld=held(partner),stance=stanceFor(leader.relation);
- const stanceText={unknown:'You know little of their mind yet.',hostile:'Their people remember recent harm.',wary:'They are guarded with you.',neutral:'They will hear you out.',friendly:'They greet you as a known friend.'}[stance];
+ const stanceText={unknown:'You know little of their mind yet.',hostile:'Their people remember recent harm.',wary:'They are guarded with you.',neutral:'They will hear you out.',friendly:'They greet you as a known friend.'}[stance]; const warLine=limits.atWar?'You are at war with them. They will only hear an offer of peace.':undefined;
  const give=proposal?merge(proposal.give):[],get=proposal?merge(proposal.get):[];
  // Blockers in the simulation's terms, most severe first; exactly one is shown.
  const hard:{sev:number;reason:string;remedy?:string}[]=[],soft:{sev:number;reason:string;remedy?:string}[]=[];
@@ -65,7 +65,7 @@ export function tradeDialogView(input:TradeDialogInput):TradeDialogView{
  const all=[...hard,...soft].sort((a,b)=>b.sev-a.sev||a.reason.localeCompare(b.reason)),top=all[0];
  const counterBlock=hard[0]??((limits.counterAllowed===false)?{sev:0,reason:'They will not haggle over this'}:undefined);
  return {
-  leader:{name:leader.name,society:leader.society,stance,stanceText,relationText:leader.relation===undefined||!Number.isFinite(leader.relation)?'Relation not yet known':`Relation ${Math.round(leader.relation)}`,trustText:leader.trust===undefined||!Number.isFinite(leader.trust)?'':leader.trust>=.75?'A trusted trading partner':leader.trust>=.4?'Trade history is thin':'Past trade went badly'},
+  leader:{name:leader.name,society:leader.society,stance,stanceText:warLine??stanceText,relationText:leader.relation===undefined||!Number.isFinite(leader.relation)?'Relation not yet known':`Relation ${Math.round(leader.relation)}`,trustText:leader.trust===undefined||!Number.isFinite(leader.trust)?'':leader.trust>=.75?'A trusted trading partner':leader.trust>=.4?'Trade history is thin':'Past trade went badly'},
   player:{name:player.name,held:row(player.held),offers:row(player.offers),wants:row(player.wants)},
   partner:{name:partner.name,held:partner.knowledge==='unknown'?{chips:[],more:0}:row(partner.held),
    heldNote:partner.knowledge==='exact'?'Their stores':partner.knowledge==='observed'?'Last seen holding':'Their stores are unknown to you',

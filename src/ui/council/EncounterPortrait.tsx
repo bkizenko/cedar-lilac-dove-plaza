@@ -9,5 +9,5 @@ export function EncounterPortrait({engine,strangerId}:{engine:Engine;strangerId:
  const g=engine.game,u=g.state.units.find(x=>x.id===strangerId);if(!u)return null;
  const team=u.team,id=societyIdentity(g,team),rel=societyRelation(g,0,team);
  const relation=rel.known||rel.trust>0||rel.grievance>0||rel.hostile?(rel.hostile?-60:Math.max(-100,Math.min(100,Math.round((rel.trust-rel.grievance)*100)))):undefined;
- return <div className="encounter-portrait"><LeaderPortrait leaderId={u.id} worldSeed={g.state.seed} era={g.tribe(team).age??0} name={personName(u)} society={g.tribe(team).name} colors={{primary:id.primary,secondary:id.secondary}} relation={relation}/></div>;
+ return <div className="encounter-portrait"><LeaderPortrait leaderId={u.id} worldSeed={g.state.seed} era={g.tribe(team).age??0} name={personName(u)} society={g.tribe(team).name} colors={{primary:id.primary,secondary:id.secondary}} relation={relation} atWar={g.isFoe(0,team)}/></div>;
 }

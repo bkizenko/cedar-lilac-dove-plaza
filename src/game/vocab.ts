@@ -53,6 +53,8 @@ const HAND:Row<string>={band:'Hunter',village:'Kinsman',chiefdom:'Spearman',stat
 export type Ctx={age:number|undefined;culture?:string;seed?:number;speaker?:number};
 export type Voice=ReturnType<typeof buildVoice>;
 const MOODS_TEXT:Record<Mood,string>={unknown:'You know little of their mind yet.',hostile:'Their people remember recent harm.',wary:'They are guarded with you.',neutral:'They will hear you out.',friendly:'They greet you as a known friend.'};
+/** While the two peoples are at war the mood line says so; the UI pairs it with an Offer peace action. */
+const WAR_TEXT='You are at war with them. They will only hear an offer of peace.';
 
 function buildVoice(ctx:Ctx){
  const kind=kindForAge(ctx.age),cs=cultureStyle(ctx.culture),fl=FLAVOUR[cs],folk=FOLK[kind],n=hash(ctx.seed??0,ctx.speaker??0,cs);
@@ -63,7 +65,7 @@ function buildVoice(ctx:Ctx){
   title,
   /** "Shatseudour · Headman" */
   roleLine:(name:string,rank:Rank)=>`${name} · ${title(rank)}, ${fl.kin}`,
-  moodText:(m:Mood)=>MOODS_TEXT[m],
+  moodText:(m:Mood,atWar=false)=>atWar?WAR_TEXT:MOODS_TEXT[m],
   prompts:{
    needs:kind==='band'?'What does your band lack?':kind==='village'?'What does your hearth lack?':kind==='chiefdom'?'What does your clan lack?':'What do your stores lack?',
    trade:kind==='band'||kind==='village'?'Let us swap what we have.':'Let us trade goods.',
@@ -116,7 +118,7 @@ function buildLegacy(ctx:Ctx):Voice{
  const v=buildVoice(ctx),leader=(name:string,society:string,l:boolean)=>l?`You are speaking with ${name} of ${society}. Tell me what brings your people here.`:`I am ${name}, from ${society}. I can speak for my own journey and the goods I brought.`;
  return {...v,
   roleLine:(name:string,rank:Rank)=>`${name} · ${rank==='leader'?'Community leader':'Community representative'}`,
-  moodText:(m:Mood)=>MOODS_TEXT[m],
+  moodText:(m:Mood,atWar=false)=>atWar?WAR_TEXT:MOODS_TEXT[m],
   prompts:{needs:'What do your people need?',trade:'Let us exchange goods.',relations:'Where do we stand?',pact:'Discuss an agreement.'},
   greeting:leader,
   issues:{bringAdult:'Bring an adult from your community.',noOneHere:'There is no independent representative here.',ashore:'Meet ashore to speak.',reach:'Reach and see the representative first.',closer:'Move within speaking distance.'},

@@ -41,7 +41,7 @@ export function FirstContact({engine}:{engine:Engine}){
  const run=(action:ContactAction,offer?:string)=>{const r=performContactAction(g,action,encounter.stranger,encounter.person,offer);setNote(r.report||r.reason);engine.pushHud();if(r.accepted&&!['question','approach-trade'].includes(action))engine.canvas.focus();};
  const line=said||(view?(view.issue||view.reply):'');
  const know:string[]=[];
- know.push(v.moodText(mood));
+ know.push(v.moodText(mood,hostile));
  if(stranger?.carryType&&stranger.carry>0)know.push(v.knowledge.carrying(Math.floor(stranger.carry),stranger.carryType));
  const kin=g.state.units.filter(u=>u.team===0&&u.hp>0&&stranger&&(stranger.parents?.includes(u.id)||u.parents?.includes(stranger.id))).length;
  know.push(v.knowledge.kin(kin));
@@ -67,6 +67,7 @@ export function FirstContact({engine}:{engine:Engine}){
     {talk&&picks.map(([id,label,prompt,icon])=><LedgerRow key={id} say icon={icon} label={prompt} onClick={()=>ask(id)}/>)}
     {talk&&peaceChoice&&<LedgerRow icon={<Handshake size={24}/>} label={peaceChoice.label} onClick={()=>{if(!person||!stranger)return;const r=chooseLeaderDialogue(g,person.id,stranger.id,topic,peaceChoice.id);setSaid(r.reply);setTopic(r.view.topic);engine.pushHud();}}/>}
    </ul></>}
+   {hostile&&t.alive&&<ul className="fc-list" aria-label="Peace"><LedgerRow icon={<Handshake size={24}/>} label="Offer peace" line="Send a messenger with an offer of peace." onClick={()=>{void engine.dispatch({kind:'propose-peace',team:t.id},undefined,{notice:true});}}/></ul>}
    {!hostile&&<><ul className="fc-list" aria-label={v.groups.deal}>
     <LedgerRow icon={<Repeat size={24}/>} say label={v.prompts.trade} line={stranger?.carryType&&stranger.carry>0?v.trader.offers(Math.floor(stranger.carry),stranger.carryType):v.trader.empty} expanded={trade} onClick={()=>{ask('trade');setTrade(!trade);}}/>
     {trade&&actions.trade.options.map(o=><LedgerRow key={o.id} icon={<Repeat size={24}/>} label={o.label} onClick={()=>run('trade',o.id)}/>)}

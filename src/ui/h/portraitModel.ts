@@ -4,7 +4,7 @@
  * what the player's society has actually observed (Societies supplies them);
  * this model never invents stocks or attitudes. */
 export type PortraitInput={leaderId:number;worldSeed:number;era:number;name:string;society:string;
- colors:{primary:string;secondary:string};relation?:number;knownGoods?:readonly string[];climate?:'temperate'|'cold'|'wet'|'arid'};
+ colors:{primary:string;secondary:string};relation?:number;/** at war: the stance line says so instead of the relation mood */atWar?:boolean;knownGoods?:readonly string[];climate?:'temperate'|'cold'|'wet'|'arid'};
 export type PortraitView={name:string;society:string;skin:string;hair:string;hairStyle:'loose'|'braided'|'cropped'|'bound';
  headwear:'none'|'fur hood'|'band'|'woven cap'|'bronze circlet';garment:'hide wrap'|'woven tunic'|'dyed cloak';garmentColor:string;trim:string;
  backdrop:string;stance:'unknown'|'wary'|'neutral'|'friendly'|'hostile';stanceText:string;goodsText:string};
@@ -20,8 +20,9 @@ export function portraitView(p:PortraitInput):PortraitView{
  const garment=era<=0?'hide wrap':era<=2?'woven tunic':'dyed cloak';
  const stance=stanceFor(p.relation);
  const stanceText={unknown:'You know little of their mind yet.',hostile:'Their people remember recent harm.',wary:'They are guarded with you.',neutral:'They will hear you out.',friendly:'They greet you as a known friend.'}[stance];
+ const text=p.atWar?'You are at war with them. They will only hear an offer of peace.':stanceText;
  const goods=(p.knownGoods??[]).slice(0,3);
  return {name:p.name,society:p.society,skin:SKIN[h%SKIN.length],hair:HAIR[(h>>>4)%HAIR.length],hairStyle,headwear,garment,
-  garmentColor:garment==='hide wrap'?'#9c6433':p.colors.primary,trim:p.colors.secondary,backdrop:'#e9c592',stance,stanceText,
+  garmentColor:garment==='hide wrap'?'#9c6433':p.colors.primary,trim:p.colors.secondary,backdrop:'#e9c592',stance,stanceText:text,
   goodsText:goods.length?`Seen with: ${goods.join(', ')}`:'No goods observed yet'};
 }

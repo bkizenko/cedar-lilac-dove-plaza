@@ -6,7 +6,7 @@ const Chips=({row,empty}:{row:ChipRow;empty?:string})=><span className="h-chips"
  {row.chips.length===0&&<span className="h-cap">{empty??'nothing'}</span>}
  {row.chips.map(c=><span key={c.kind} className="h-chip" data-state={c.state} title={c.title} aria-label={c.title}><span className={`h-good h-good-${c.icon}`} aria-hidden="true"/><span>{c.label}</span><span>{c.value}</span></span>)}
  {row.more>0&&<span className="h-cap">+{row.more} more</span>}</span>;
-export function TradeDialog({input,onAccept,onCounter,onDecline}:{input:TradeDialogInput;onAccept:()=>void;onCounter:()=>void;onDecline:()=>void}){
+export function TradeDialog({input,onAccept,onCounter,onDecline,onOfferPeace}:{input:TradeDialogInput;onAccept:()=>void;onCounter:()=>void;onDecline:()=>void;/** shown only while at war */onOfferPeace?:()=>void}){
  const v=tradeDialogView(input);
  return <div className="h-tip" role="dialog" aria-label={`Trade with ${v.leader.society}`}>
   <strong>{v.leader.name} of {v.leader.society}</strong><span>{v.leader.stanceText} <span className="h-cap">{v.leader.relationText}</span></span>
@@ -18,6 +18,7 @@ export function TradeDialog({input,onAccept,onCounter,onDecline}:{input:TradeDia
   <div>
    <button type="button" disabled={!v.accept.enabled} title={v.accept.reason} onClick={onAccept}>Accept</button>
    <button type="button" disabled={!v.counter.enabled} title={v.counter.reason} onClick={onCounter}>Counter</button>
+   {input.limits?.atWar&&onOfferPeace&&<button type="button" onClick={onOfferPeace}>Offer peace</button>}
    <button type="button" onClick={onDecline}>Decline</button>
   </div>
  </div>;

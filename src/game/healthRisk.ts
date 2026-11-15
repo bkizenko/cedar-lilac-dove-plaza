@@ -5,7 +5,8 @@ import type {Game} from './sim';
 import type {Unit} from './types';
 import {isDependent} from './settlement';
 import {survivalStatus} from './survivalNeeds';
-export const HEALTH_RULES={crowdStart:.85,crowdFull:1.3,animalsPerPersonStart:1.5,animalsPerPersonFull:4,waterLowSeconds:300,
+import {livestockCrowding,livestockIllnessMultiplier} from './livestockCrowding';
+export const HEALTH_RULES={crowdStart:.85,crowdFull:1.3,waterLowSeconds:300,
  weights:{crowding:.7,animals:.3,water:.5,housing:.4},siteWeight:.3,checkSeconds:60,baseIllnessPerCheck:.02,illnessSeconds:120,illnessDamage:.2,
  pregnancySeconds:240,pregnantSpeed:.85,garmentLifeSeconds:7200} as const;
 const clamp=(n:number,a=0,b=1)=>Math.max(a,Math.min(b,n)),ramp=(v:number,a:number,b:number)=>clamp((v-a)/(b-a));
@@ -25,8 +26,7 @@ export type HealthRisk={multiplier:number;crowding:number;animals:number;water:n
 export function healthRisk(g:Game,team=0):HealthRisk{
  const R=HEALTH_RULES,people=g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.prisoner&&u.type!=='leader').length,capacity=Math.max(1,g.popCap(team));
  const crowding=ramp(people/capacity,R.crowdStart,R.crowdFull);
- const animals=(g.state.livestock||[]).filter(a=>a.team===team&&a.hp>0).length,animalDensity=animals/Math.max(1,people);
- const animalCrowd=ramp(animalDensity,R.animalsPerPersonStart,R.animalsPerPersonFull);
+ const animalCrowd=(livestockIllnessMultiplier(livestockCrowding(g,team))-1)/.5;// 0 below 80% full of pasture, 1 at 130%
  let water=0;try{const s=survivalStatus(g,team);if(s.enabled)water=1-ramp(s.waterSeconds,0,R.waterLowSeconds);}catch{}
  const hall=g.state.buildings.find(b=>b.team===team&&b.type==='townhall'&&b.hp>0),camp=hall||g.campOf(team);
  const housed=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.type==='worker'&&!u.prisoner&&u.homeHall!==undefined).length;
