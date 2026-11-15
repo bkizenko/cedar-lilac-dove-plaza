@@ -151,6 +151,7 @@ import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,develo
 import {wildCraftAI,tickWildCraft,pauseWildWork,wildBodyMustRemain} from './wildCraft';
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed,advanceHuntingProjectile,tickHuntingHazard} from "./hunting";
 import {reviewRivalToolUpkeep} from './rivalToolUpkeep';
+import {reviewPlayerToolUpkeep} from './playerToolUpkeep';
 import {beginFarmToolWork,farmToolWorkAI,pauseFarmToolWork,FARM_TOOLS,type FarmToolKind} from "./farmTools";
 import {reconcileHaulageProjects,shareLocalTransport,beginHaulageWork,haulageWorkAI,pauseHaulageWork,carryingCapacity,recordHaulDelivery,loadedHaulSpeed,HAULAGE} from "./haulage";
 import {daylightAt,solarTimeLabel,pacedSolarHour} from "./daylight";
@@ -6006,6 +6007,7 @@ export class Game {
         updateConstructionQueues(this);
         reconcileConstructionWorkers(this);
         reconcileFarmToolOwnership(this);
+        reviewPlayerToolUpkeep(this);
         reconcileTreeWorkers(this);
         shareLocalTransport(this);
         fundConstructionPlans(this);
@@ -6084,7 +6086,8 @@ export class Game {
             else if (u.type === "worker" || (u.militia&&u.huntOnly&&["idle","gather","explore","return"].includes(u.order))) {
               if (u.order === "attack" || u.order === "attackmove") this.combatAI(u, sdt);
               else this.workerAI(u, sdt);
-            } else this.combatAI(u, sdt);
+            } else if(u.weaponWork&&u.order==='hold'&&weaponWorkAI(this,u,sdt)){/* armed citizen at the bench */}
+            else this.combatAI(u, sdt);
           } catch (error) {
             this.reportSimulationError(`unit ${u.id}`,error);
           } finally {

@@ -63,7 +63,7 @@ test('save rejects corrupt progress, detached facades and duplicate actor/projec
 });
 test('resume click gives a fresh concrete adult, route or bench reason without charging',()=>{
  const {g,u,replacement,hall}=fixture();assert.equal(beginHaulageWork(g,'sled',0,hall.id,u.id),true);const id=u.haulageWork.projectId;pauseHaulageWork(u,g);
- u.carry=1;replacement.carry=1;assert.equal(resumeHaulageProject(g,id,replacement.id,hall.id),false);assert.match(g.state.haulageProjects[0].blockedReason,/available adult/);
+ u.carry=1;replacement.carry=1;assert.equal(resumeHaulageProject(g,id,replacement.id,hall.id),false);assert.match(g.state.haulageProjects[0].blockedReason,/Nobody can take this project|available adult/);
  u.carry=0;replacement.carry=0;const spot=g.interactionSpot;g.interactionSpot=()=>null;
  assert.equal(resumeHaulageProject(g,id,replacement.id,hall.id),false);assert.match(g.state.haulageProjects[0].blockedReason,/reachable/);g.interactionSpot=spot;
  assert.equal(g.craftWeapon('spear',hall.id),true);const wood=g.tribe(0).wood;

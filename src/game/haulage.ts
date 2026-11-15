@@ -18,6 +18,7 @@ import type { Building, ResKind, Tribe, Unit } from './types';
 import { GATHER } from './constants';
 import { isDependent } from './settlement';
 import { predisposition } from './people';
+import {directedBlocker,freeForDirectedWork,directedRank} from './directedWork';
 
 export const HAULAGE = {
   sled: { name: 'Carrying sled', wood: 8, stone: 1, seconds: 45, capacity: 2, loadedSpeed: .88 },
@@ -140,6 +141,11 @@ function available(g: Game, u: HaulageUnit) {
     ['idle', 'gather', 'hold'].includes(u.order);
 }
 
+/** Player (team 0) orders override workload; everyone else keeps the idle-only rule. */
+function takeable(g: Game, u: HaulageUnit) {
+  return u.team === 0 ? !directedBlocker(g, u) && !u.captive && u.guardPost === undefined : available(g, u);
+}
+
 function workplaces(g: Game, team: number, kind: HaulageKind, id?: number) {
   return g.state.buildings.filter(b => b.team === team && g.finished(b) &&
     (id === undefined || b.id === id) &&
@@ -182,9 +188,9 @@ export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplace
   for(const p of pending)if(resumeHaulageProject(g,p.id,unitId,workplaceId))return true;
   if(pending.length)return kind==='cart'&&queueCartUpgrade(g,team,workplaceId,unitId)||reject(pending[0].blockedReason||'Paid transport work is waiting for an available adult and bench');
   const candidates = (g.state.units as HaulageUnit[]).filter(u => u.team === team &&
-    (unitId === undefined || u.id === unitId) && (!sailRigOrder||unitId!==undefined||!u.jobLock||u.foodRole===true) && available(g, u) && !u.haulageWork && !u.farmToolWork &&
+    (unitId === undefined || u.id === unitId) && (!sailRigOrder||unitId!==undefined||!u.jobLock||u.foodRole===true) && takeable(g, u) && !u.haulageWork && !u.farmToolWork &&
     (kind === 'cart' ? u.haulage === 'sled' : !u.haulage))
-    .sort((a, b) => Number(b.selected) - Number(a.selected));
+    .sort((a, b) => team === 0 ? directedRank(a, sites[0]) - directedRank(b, sites[0]) : Number(b.selected) - Number(a.selected));
   const u = candidates.find(p => nearestWorkplace(g, p, sites));
   if (!u) {
     if (kind !== 'cart') return reject('No adult can start this job. Free a worker and check the route to the workplace.');
@@ -204,6 +210,7 @@ export function beginHaulageWork(g: Game, kind: HaulageKind, team = 0, workplace
   }
   if (t.wood < spec.wood || t.stone < spec.stone) return reject(`Need ${spec.wood} logs and ${spec.stone} stone`);
   const b = nearestWorkplace(g, u, sites)!;
+  if (team === 0 && !freeForDirectedWork(g, u)) return reject('That person cannot leave their current duty');
   u.haulageWork = { kind, progress: 0, duration: spec.seconds * (b.type === 'townhall' ? 2 : 1), workplace: b.id,...(sailRigOrder?{vessel:true,sailRigOrder}:hullOrder?{vessel:true,hullOrder}:{}) };
   const project=registerProject(g,u)!;releaseTreeWorker(g,u);
   if(!reserveProject(g,project,u,b)){const list=projects(g);list.splice(list.indexOf(project),1);workRuntime(g).finish(projectKey(project.id),true);workRuntime(g).forget(projectKey(project.id));u.haulageWork=undefined;return kind==='cart'&&queueCartUpgrade(g,team,workplaceId,unitId)||reject(project.blockedReason||'No free crafting bench');}
@@ -242,19 +249,19 @@ export function resumeHaulageProject(g:Game,id:number,unitId?:number,workplaceId
  if(previous)detachHaulageProject(g,previous,p,'Reassigning suspended transport project');
  const sites=workplaces(g,p.team,p.work.kind,workplaceId).filter(b=>(p.work.hullOrder?.mode!=='service'||!hullServicePhysicalIssue(g,p.work.hullOrder.boatId!,b,p.team))&&(!p.work.sailRigOrder||!sailRigPhysicalIssue(g,p.work.sailRigOrder.boatId,b,p.team)));
  if(!sites.length){p.work.paused=true;p.blockedReason='Complete a compatible workplace before resuming this project';return false;}
- const candidates=g.state.units.filter(u=>u.team===p.team&&(unitId===undefined||u.id===unitId)&&available(g,u)&&!u.haulageWork&&u.stuckT<=8&&
-  (p.work.kind==='cart'?p.inputHaulage==='sled'&&!u.haulage:!u.haulage)).sort((a,b)=>Number(b.selected)-Number(a.selected)||a.id-b.id);
+ const candidates=g.state.units.filter(u=>u.team===p.team&&(unitId===undefined||u.id===unitId)&&takeable(g,u)&&!u.haulageWork&&(p.team===0||u.stuckT<=8)&&
+  (p.work.kind==='cart'?p.inputHaulage==='sled'&&!u.haulage:!u.haulage)).sort((a,b)=>p.team===0?directedRank(a,sites[0])-directedRank(b,sites[0])||a.id-b.id:Number(b.selected)-Number(a.selected)||a.id-b.id);
  let reachable=false,benchReason:string|undefined;
  for(const u of candidates){
   const b=nearestWorkplace(g,u,sites);if(!b)continue;
-  reachable=true;releaseTreeWorker(g,u);if(!reserveProject(g,p,u,b)){benchReason=p.blockedReason;continue;}
+  reachable=true;if(p.team===0&&!available(g,u)){u.stuckT=0;if(!freeForDirectedWork(g,u))continue;}releaseTreeWorker(g,u);if(!reserveProject(g,p,u,b)){benchReason=p.blockedReason;continue;}
   const fraction=p.work.progress/p.work.duration;
   p.work.duration=p.work.sailRigOrder?SAILING_RULES.workSeconds:p.work.hullOrder?(p.work.hullOrder.mode==='service'?BOAT_PRACTICE_RULES.serviceWorkSeconds:BOAT_CLASSES[p.work.hullOrder.class].seconds):p.work.vessel?150:HAULAGE[p.work.kind].seconds*(b.type==='townhall'?2:1);p.work.progress=fraction*p.work.duration;
   p.work.workplace=b.id;p.work.paused=false;p.actorId=u.id;p.lastActorId=u.id;u.haulageWork=p.work;
   u.order='hold';u.node=null;u.target=null;u.trade=null;u.searchJob=undefined;
   u.workReason=`Resuming ${p.work.vessel?'riverboat':HAULAGE[p.work.kind].name.toLowerCase()}`;g.workBoard.reset();return true;
  }
- p.work.paused=true;p.blockedReason=!candidates.length?'Choose an available adult with empty hands and no other project':!reachable?'No reachable completed workplace for this project':benchReason||'No free crafting bench';return false;
+ p.work.paused=true;p.blockedReason=!candidates.length?(p.team===0?'Nobody can take this project right now (carrying goods, away, or already on another paid project); deliver goods first':'Choose an available adult with empty hands and no other project'):!reachable?'No reachable completed workplace for this project':benchReason||'No free crafting bench';return false;
 }
 
 export function haulageWorkAI(g: Game, u: HaulageUnit, dt: number) {

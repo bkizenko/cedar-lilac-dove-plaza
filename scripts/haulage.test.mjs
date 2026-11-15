@@ -140,7 +140,7 @@ test('invalid equipment, corrupted projects, or impossible practice fail validat
 
 test('busy people, full hands, lack of materials, and unreachable workplaces cannot consume resources', () => {
   const {g, u, shop} = fixture();
-  for (const condition of [{carry: 1}, {drill: 0}, {recalled: true}, {guardPost: 1}, {captive: {}}, {militia: true}]) {
+  for (const condition of [{carry: 1}, {recalled: true}, {guardPost: 1}, {captive: {}}, {militia: true}]) {
     const old = {};
     for (const key of Object.keys(condition)) old[key] = u[key];
     Object.assign(u, condition);

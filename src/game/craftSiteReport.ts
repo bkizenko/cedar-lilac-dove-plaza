@@ -63,6 +63,9 @@ export function controlCraftSiteJob(g:Game,b:Building,job:CraftSiteJob,action:'p
  if(job.kind==='production')return action==='unload'?unloadProductionProject(g,job.projectId!):action==='pause'?pauseProductionProject(g,job.projectId!):resumeProduction(g,job.projectId!);
  if(action==='unload')return false;
  if(action==='pause'){if(!u||u.order!=='hold')return false;const work=job.kind==='weapon'?u.weaponWork:job.kind==='tool'?u.farmToolWork:job.kind==='copper'?u.copperStudy:u.haulageWork;if(!work||work.paused||work.workplace!==b.id)return false;g.interruptMission(u);u.order='hold';u.node=null;u.target=null;u.workReason='Paid crafting paused';return true;}
- if(job.kind==='haulage')return job.projectId!==undefined?resumeHaulageProject(g,job.projectId,undefined,b.id):!!u&&resumeHaulageWork(g,u,b.id);
- if(job.kind==='weapon')return !!u&&resumeWeaponWork(g,u,b.id);if(job.kind==='tool')return !!u&&resumeFarmToolWork(g,u,b.id);return beginCopperStudy(g,b.id);
+ const fail=(reason:string)=>{g.banner(reason,4);g.onSfx('invalid');return false;};
+ if(job.kind==='haulage'){const ok=job.projectId!==undefined?resumeHaulageProject(g,job.projectId,undefined,b.id):!!u&&resumeHaulageWork(g,u,b.id);return ok||fail(g.state.haulageProjects?.find(p=>p.id===job.projectId)?.blockedReason||'Could not resume: no capable worker can reach this crafting bench');}
+ if(job.kind==='weapon')return !!u&&resumeWeaponWork(g,u,b.id)||(!u?fail('The maker is gone; start the weapon again'):false);
+ if(job.kind==='tool')return !!u&&resumeFarmToolWork(g,u,b.id)||(!u?fail('The maker is gone; start the tool work again'):false);
+ return beginCopperStudy(g,b.id);
 }

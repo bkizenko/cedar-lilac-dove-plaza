@@ -6,6 +6,7 @@ import type {Unit,ResKind} from './types';
 import {isDependent} from './settlement';
 import {predisposition} from './people';
 import {noteRaidCarried} from './raidReports';
+import {directedBlocker,freeForDirectedWork,directedRank,directedFail} from './directedWork';
 export const WEAPONS={
   spear:{name:'Stone spear',wood:2,stone:1,copper:0,iron:0,age:0,seconds:16},
   bow:{name:'Hunting bow',wood:3,stone:1,copper:0,iron:0,age:0,seconds:24},
@@ -17,14 +18,18 @@ export type WeaponKind=keyof typeof WEAPONS;
 /** Paid work can move to a replacement bench without repurchasing its inputs. */
 export function resumeWeaponWork(g:Game,u:Unit,workplaceId?:number){
  const job=u.weaponWork;
- if(!job||u.hp<=0||u.societyMissionId||u.coastalVoyageId||u.coastalCommissionId||u.prisoner||u.type!=='worker'||u.militia||isDependent(g,u)||u.carry>0||u.stuckT>8||
+ if(!job)return false;
+ const direct=u.team===0;
+ if(direct){const why=directedBlocker(g,u,{militia:true});if(why)return directedFail(g,0,why);}
+ else if(u.hp<=0||u.societyMissionId||u.coastalVoyageId||u.coastalCommissionId||u.prisoner||u.type!=='worker'||u.militia||isDependent(g,u)||u.carry>0||u.stuckT>8||
    u.recalled||u.emergency||u.waterWork||u.buildOrder!==undefined||u.plantingWork||u.tamingWork||u.haulageWork||u.farmToolWork||u.copperStudy||u.studyCrop||
    u.drill!=null||u.expedition||u.envoy||u.scout||u.visit||u.foundingJourney||u.tributeJourney||
    !['idle','gather','hold'].includes(u.order))return false;
  const b=g.state.buildings.filter(b=>b.team===u.team&&g.finished(b)&&(workplaceId===undefined||b.id===workplaceId)&&
    (job.kind==='blade'?b.type==='forge':['townhall','barracks','workshop','hearth'].includes(b.type))&&g.interactionSpot(u,b))
    .sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
- if(!b)return false;
+ if(!b)return direct?directedFail(g,0,'No reachable finished workplace for this weapon'):false;
+ if(direct&&!freeForDirectedWork(g,u,{militia:true}))return false;
  const fraction=job.progress/job.duration;
  job.duration=WEAPONS[job.kind].seconds*weaponBenchFactor(job.kind,b.type);
  job.progress=fraction*job.duration;job.workplace=b.id;job.paused=false;
@@ -41,10 +46,14 @@ export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:numbe
     (kind==='blade'?b.type==='forge':['townhall','barracks','workshop','hearth'].includes(b.type)));
   if(!work.length)return reject(kind==='blade'?'Build a forge for metal blades':'Use a hearth or finish a crafting shelter for weapon making');
   for(const person of g.state.units)if(person.team===team&&person.weaponWork?.kind===kind&&person.weaponWork.paused&&resumeWeaponWork(g,person,workplaceId))return true;
-  const u=g.state.units.find(u=>u.team===team&&u.hp>0&&!u.prisoner&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!u.plantingWork&&!u.tamingWork&&!u.husbandryWork&&!u.recalled&&!u.tributeJourney&&!u.waterWork&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&!u.drill&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.emergency&&!u.foundingJourney&&['idle','gather','hold'].includes(u.order)&&work.some(b=>!!g.interactionSpot(u,b)));
-  if(!u)return reject('An available adult with empty hands and a reachable workplace is needed');
+  const free=(u:Unit)=>u.hp>0&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.plantingWork&&!u.tamingWork&&!u.husbandryWork&&!u.copperStudy&&!u.studyCrop&&!u.drill&&!u.recalled&&!u.coastalCommissionId&&work.some(b=>!!g.interactionSpot(u,b));
+  const u=team===0
+   ?g.state.units.filter(u=>u.team===0&&!directedBlocker(g,u,{militia:true})&&free(u)).sort((a,b)=>Math.min(...work.map(w=>directedRank(a,w)))-Math.min(...work.map(w=>directedRank(b,w))))[0]
+   :g.state.units.find(u=>u.team===team&&u.hp>0&&!u.prisoner&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!u.plantingWork&&!u.tamingWork&&!u.husbandryWork&&!u.recalled&&!u.tributeJourney&&!u.waterWork&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&!u.drill&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.emergency&&!u.foundingJourney&&['idle','gather','hold'].includes(u.order)&&work.some(b=>!!g.interactionSpot(u,b)));
+  if(!u)return reject(team===0?'Nobody who can reach a weapon workplace is free of carried goods or an away mission; deliver goods first or build a crafting shelter nearby':'An available adult with empty hands and a reachable workplace is needed');
   if(t.wood<spec.wood||t.stone<spec.stone||t.copper<spec.copper)return reject(`Need ${spec.wood} logs${spec.stone?' and '+spec.stone+' stone':''}${spec.copper?' and '+spec.copper+' copper':''}`);
   const workplace=work.filter(b=>!!g.interactionSpot(u,b)).sort((a,b)=>(craftingQueue(g,a).length/craftingBenches(a)-craftingQueue(g,b).length/craftingBenches(b))*100+Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
+  if(team===0&&!freeForDirectedWork(g,u,{militia:true}))return reject('That person cannot leave their current duty');
   t.wood-=spec.wood;t.stone-=spec.stone;t.copper-=spec.copper;
   u.weaponWork={kind,progress:0,duration:spec.seconds*weaponBenchFactor(kind,workplace.type),workplace:workplace.id};
   u.order='hold';u.node=null;u.target=null;u.workReason=`Making ${spec.name.toLowerCase()} — walking to the workplace`;
@@ -53,7 +62,7 @@ export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:numbe
 }
 export function weaponWorkAI(g:Game,u:Unit,dt:number){
   const job=u.weaponWork;
-  if(!job||job.paused||u.type!=='worker'||u.order!=='hold')return false;
+  if(!job||job.paused||u.type!=='worker'&&!u.militia||u.order!=='hold')return false;
   const b=g.state.buildings.find(b=>b.id===job.workplace&&b.team===u.team&&g.finished(b));
   const spot=b&&g.interactionSpot(u,b);
   if(!b||!spot||u.stuckT>8){job.paused=true;u.order='idle';u.node=null;u.workReason='Weapon work paused — workplace lost or inaccessible';g.workBoard.reset();return true;}

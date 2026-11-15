@@ -8,6 +8,7 @@ import type { Game } from './sim';
 import type { Building, Unit } from './types';
 import { isDependent } from './settlement';
 import { predisposition } from './people';
+import {directedBlocker,freeForDirectedWork,directedRank,directedFail} from './directedWork';
 
 export const FARM_TOOLS = {
   woodenArd: { name: 'Wooden ard', wood: 10, stone: 2, copper: 0, iron: 0, age: 0, seconds: 60, cultivation: 2.2, harvest: 1 },
@@ -84,14 +85,16 @@ export function beginFarmToolWork(g: Game, kind: FarmToolKind, team = 0, workpla
   const sites = workplaces(g, team, kind, workplaceId);
   if (!sites.length) return reject(kind==='woodenArd'?'Choose a completed crafting shelter for the wooden ard':kind === 'stoneHoe' ? 'Choose a completed hearth, town hall or crafting shelter' : 'Metal toolmaking needs a completed forge');
   const isFarmer = (u: Unit) => !!u.node && 'type' in u.node && u.node.type === 'farm';
+  const direct = team === 0;
   const u = (g.state.units as FarmToolUnit[]).filter(p => p.team === team &&
-    (unitId === undefined || p.id === unitId) && (kind!=='woodenArd'||draftTractionReady(p)) && available(g, p) && !p.farmToolWork && improvement(p, kind))
-    .sort((a, b) => Number(b.selected) - Number(a.selected) || Number(isFarmer(b)) - Number(isFarmer(a)))
+    (unitId === undefined || p.id === unitId) && (kind!=='woodenArd'||draftTractionReady(p)) && (direct ? !directedBlocker(g, p) && !p.captive && p.guardPost === undefined && !p.copperStudy && !p.haulageWork && !p.weaponWork : available(g, p)) && !p.farmToolWork && improvement(p, kind))
+    .sort((a, b) => direct ? directedRank(a, sites[0]) - directedRank(b, sites[0]) || Number(isFarmer(b)) - Number(isFarmer(a)) : Number(b.selected) - Number(a.selected) || Number(isFarmer(b)) - Number(isFarmer(a)))
     .find(p => reachableWorkplace(g, p, sites));
-  if (!u) return reject(kind==='woodenArd'?'Choose a free adult handler with their living trained draft animal, empty hands and a route to the crafting shelter':'Need an available adult with empty hands who can benefit from these tools and reach the workplace');
+  if (!u) return reject(kind==='woodenArd'?'Choose an adult handler with their living trained draft animal and a route to the crafting shelter':team===0?'Nobody reachable can benefit from these tools right now (carrying goods, away, or no route to the workplace); deliver goods or build a closer shelter':'Need an available adult with empty hands who can benefit from these tools and reach the workplace');
   if (t.wood < spec.wood || t.stone < spec.stone || t.copper < spec.copper || t.iron < spec.iron)
     return reject(`Need ${spec.wood} logs${spec.stone ? ` and ${spec.stone} stone` : ''}${spec.copper ? ` and ${spec.copper} copper` : ''}${spec.iron ? ` and ${spec.iron} iron` : ''}`);
   const b = reachableWorkplace(g, u, sites)!;
+  if (direct && !freeForDirectedWork(g, u)) return reject('That person cannot leave their current duty');
   releaseTreeWorker(g,u);
   u.farmToolWork = {kind, progress: 0, duration: spec.seconds * (['townhall','hearth'].includes(b.type) ? 2 : 1), workplace: b.id};
   if(!claimFarmToolOwnership(g,u)){u.farmToolWork=undefined;return reject('This resident already owns other active work');}
@@ -109,9 +112,13 @@ export function pauseFarmToolWork(u: FarmToolUnit,g?:Game) {
 
 export function resumeFarmToolWork(g: Game, u: FarmToolUnit, workplaceId?: number) {
   const job = u.farmToolWork;
-  if (!job || !available(g, u) || u.stuckT > 8) return false;
+  if (!job) return false;
+  const direct = u.team === 0;
+  if (direct) { const why = directedBlocker(g, u) || (u.captive || u.guardPost !== undefined ? 'This person is on guard or captive' : null); if (why) return directedFail(g, 0, why); }
+  else if (!available(g, u) || u.stuckT > 8) return false;
   const b = reachableWorkplace(g, u, workplaces(g, u.team, job.kind, workplaceId));
-  if (!b) return false;
+  if (!b) return direct ? directedFail(g, 0, 'No reachable finished workplace for this tool work') : false;
+  if (direct) { u.stuckT = 0; if (!freeForDirectedWork(g, u)) return false; }
   const fraction = job.progress / job.duration;
   job.duration = (job.mode==='repair'?FARM_TOOL_MAINTENANCE.repair[job.kind].seconds:FARM_TOOLS[job.kind].seconds) * (['townhall','hearth'].includes(b.type) ? 2 : 1);
   job.progress = fraction * job.duration; job.workplace = b.id; job.paused = false;
@@ -186,12 +193,12 @@ export function validFarmToolUnit(v: unknown) {
  return w.repairVersion===undefined&&w.conditionAtStart===undefined&&w.paid===undefined&&(v.farmTool===undefined||v.farmToolCondition===0||FARM_TOOLS[w.kind].cultivation>FARM_TOOLS[v.farmTool as FarmToolKind].cultivation);
 }
 export function farmToolRepairIssue(g:Game,unitId:number,workplaceId?:number,team=0):string|null{
- const u=g.state.units.find(u=>u.id===unitId&&u.team===team);if(!u||!civilian(g,u))return'Choose a living adult farmer';if(!u.farmTool)return'This resident has no farming tool';if(u.farmToolWork)return'Tool work is already paid; resume that project';if(!available(g,u))return'Need empty hands and no other active commitment';if(farmToolCondition(u)>=FARM_TOOL_MAINTENANCE.repairBelowCondition)return'This tool does not need repair yet';
+ const u=g.state.units.find(u=>u.id===unitId&&u.team===team);if(!u||!civilian(g,u))return'Choose a living adult farmer';if(!u.farmTool)return'This resident has no farming tool';if(u.farmToolWork)return'Tool work is already paid; resume that project';{const why=team===0?directedBlocker(g,u):null;if(team===0?why:!available(g,u))return why||'Need empty hands and no other active commitment';}if(farmToolCondition(u)>=FARM_TOOL_MAINTENANCE.repairBelowCondition)return'This tool does not need repair yet';
  const sites=workplaces(g,u.team,u.farmTool,workplaceId);if(!sites.length)return'Choose a compatible completed toolmaking workplace';if(!reachableWorkplace(g,u,sites))return'No reachable repair workplace';const cost=FARM_TOOL_MAINTENANCE.repair[u.farmTool],t=g.tribe(u.team);if(t.wood<cost.wood||t.stone<cost.stone||t.copper<cost.copper||t.iron<cost.iron)return'Not enough materials for this repair';return null;
 }
 export function beginFarmToolRepair(g:Game,unitId:number,workplaceId?:number,team=0){
  const issue=farmToolRepairIssue(g,unitId,workplaceId,team);if(issue){if(team===0)g.banner(issue,4);return false;}const u=g.state.units.find(u=>u.id===unitId)!,kind=u.farmTool!,spec=FARM_TOOL_MAINTENANCE.repair[kind],b=reachableWorkplace(g,u,workplaces(g,u.team,kind,workplaceId))!,t=g.tribe(u.team);
  const job:FarmToolWork={mode:'repair',repairVersion:1,kind,conditionAtStart:farmToolCondition(u),paid:{wood:spec.wood,stone:spec.stone,copper:spec.copper,iron:spec.iron},duration:spec.seconds*(['townhall','hearth'].includes(b.type)?2:1),progress:0,workplace:b.id};
- releaseTreeWorker(g,u);u.farmToolCondition=job.conditionAtStart;u.farmToolWork=job;if(!claimFarmToolOwnership(g,u)){u.farmToolWork=undefined;if(team===0)g.banner('This resident already owns active work',4);return false;}
+ if(team===0&&!freeForDirectedWork(g,u)){if(team===0)g.banner('That person cannot leave their current duty',4);return false;}releaseTreeWorker(g,u);u.farmToolCondition=job.conditionAtStart;u.farmToolWork=job;if(!claimFarmToolOwnership(g,u)){u.farmToolWork=undefined;if(team===0)g.banner('This resident already owns active work',4);return false;}
  t.wood-=spec.wood;t.stone-=spec.stone;t.copper-=spec.copper;t.iron-=spec.iron;u.order='hold';u.node=null;u.target=null;u.trade=null;u.searchJob=undefined;u.workReason='Repair paid — carrying the worn tool to its workplace';g.workBoard.reset();return true;
 }

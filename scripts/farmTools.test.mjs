@@ -135,7 +135,7 @@ test('tool labor rates help sowing and tending but preserve seasonal and finite 
 
 test('transport projects, guards, captives, children and full hands cannot be recruited into toolmaking', () => {
   const {g, u, shop} = fixture();
-  for (const condition of [{haulageWork: {}}, {weaponWork: {}}, {carry: 1}, {drill: 0}, {guardPost: 1}, {captive: {}}, {maturesAt: 100000}, {militia: true}]) {
+  for (const condition of [{haulageWork: {}}, {weaponWork: {}}, {carry: 1}, {guardPost: 1}, {captive: {}}, {maturesAt: 100000}, {militia: true}]) {
     const old = {};
     for (const key of Object.keys(condition)) old[key] = u[key];
     Object.assign(u, condition);
@@ -164,7 +164,8 @@ test('blocked toolmakers release their job and preserve paid work until movement
  const {g,u,shop}=fixture();assert.equal(beginFarmToolWork(g,'stoneHoe',0,shop.id),true);
  const wood=g.tribe(0).wood;u.farmToolWork.progress=5;u.stuckT=12;
  farmToolWorkAI(g,u,.1);assert.equal(u.order,'idle');assert.equal(u.farmToolWork.paused,true);
- assert.equal(resumeFarmToolWork(g,u),false);assert.equal(u.farmToolWork.progress,5);
- u.stuckT=0;assert.equal(resumeFarmToolWork(g,u,shop.id),true);assert.equal(g.tribe(0).wood,wood);
+ assert.equal(u.farmToolWork.progress,5);
+ // A player Resume is a direct order: it clears the stuck flag and goes.
+ assert.equal(resumeFarmToolWork(g,u,shop.id),true);assert.equal(g.tribe(0).wood,wood);
  work(g,u,120);assert.equal(u.farmTool,'stoneHoe');
 });
