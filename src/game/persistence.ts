@@ -193,7 +193,8 @@ const wgAtLeast=(v:unknown,min:number)=>typeof v==="number"&&Number.isInteger(v)
 const MAX_STATE_ARRAY=250000;
 const STRICT_NUMBER_FIELDS=["seed","time","nextId"];
 /** Frozen list of blank() keys present in every v17 save. Add NEW state fields to blank() only; they load with their default. */
-export const REQUIRED_STATE_FIELDS=["seed", "time", "age", "tribes", "units", "buildings", "trees", "stones", "forage", "fish", "copper", "iron", "projectiles", "floaters", "particles", "selBld", "paused", "speed", "growthPolicy", "laborPolicy", "ended", "endReason", "banner", "bannerT", "placing", "placeIssue", "nextId", "walkDirty", "agePicks", "pendingAge", "event", "eventT", "weather", "weatherT", "birthT", "marketT", "deals", "raidT", "wildlife", "routes", "routeOffer", "routeOfferT", "routePopups", "yearOffset", "raidWave", "regions", "richRes", "harvestDay", "yieldT"];
+/** growthPolicy and laborPolicy are absent from the first (late September) saves; decode defaults them. */
+export const REQUIRED_STATE_FIELDS=["seed", "time", "age", "tribes", "units", "buildings", "trees", "stones", "forage", "fish", "copper", "iron", "projectiles", "floaters", "particles", "selBld", "paused", "speed", "ended", "endReason", "banner", "bannerT", "placing", "placeIssue", "nextId", "walkDirty", "agePicks", "pendingAge", "event", "eventT", "weather", "weatherT", "birthT", "marketT", "deals", "raidT", "wildlife", "routes", "routeOffer", "routeOfferT", "routePopups", "yearOffset", "raidWave", "regions", "richRes", "harvestDay", "yieldT"];
 function validateGamePayload(raw: unknown) {
   if (!obj(raw) || raw.version !== SAVE_VERSION || !obj(raw.state)) fail("!obj(raw) || raw.version !== SAVE_VERSION || !obj(raw.state)");
   if(raw.cargoVersion!==undefined&&raw.cargoVersion!==1)fail("raw.cargoVersion!==undefined&&raw.cargoVersion!==1");
@@ -216,7 +217,7 @@ function validateGamePayload(raw: unknown) {
     if (Array.isArray(v) && (!Array.isArray(s[name]) || s[name].length > MAX_STATE_ARRAY)) fail("state."+name+(Array.isArray(s[name])?" has "+s[name].length+" entries (limit "+MAX_STATE_ARRAY+")":" is not a list"));
   }
   if(s.worldOptions!==undefined&&(!obj(s.worldOptions)||!wgAtLeast(s.worldgenVersion,7)||!WORLD_SIZES.includes(s.worldOptions.size)||!WORLD_LAYOUTS.includes(s.worldOptions.layout)))fail("s.worldOptions!==undefined&&(!obj(s.worldOptions)||!wgAtLeast(s.worldgenVersion,…");
-  if(wgAtLeast(s.worldgenVersion,7)&&s.worldOptions===undefined)fail("wgAtLeast(s.worldgenVersion,7)&&s.worldOptions===undefined");
+  // Saves written by the October builds carry worldgenVersion>=7 but no worldOptions (the default request). decodeGame regenerates the default world and refuses it only if the saved trees/stones no longer sit on its terrain.
   if(s.worldOptions?.randomLayout!==undefined&&(!wgAtLeast(s.worldgenVersion,14)||s.worldOptions.randomLayout!==true))fail("s.worldOptions?.randomLayout!==undefined&&(!wgAtLeast(s.worldgenVersion,14)||s.w…");
   if(s.worldOptions?.openingSiteVersion!==undefined&&(!wgAtLeast(s.worldgenVersion,14)||s.worldOptions.openingSiteVersion!==2))fail("s.worldOptions?.openingSiteVersion!==undefined&&(!wgAtLeast(s.worldgenVersion,14…");
   if(s.worldOptions?.preset!==undefined&&(!wgAtLeast(s.worldgenVersion,20)||!(MAP_PRESETS as readonly string[]).includes(s.worldOptions.preset)))fail("s.worldOptions?.preset!==undefined&&(!wgAtLeast(s.worldgenVersion,20)||!(MAP_PRE…");
@@ -861,6 +862,12 @@ export function decodeGame(raw:unknown):Game {
     try{g.reset(s.seed,14,{...restoreOptions,randomLayout:true});}catch{throw original;}
     if(g.world.options?.layout!==s.worldOptions.layout||v14Fit(g.world)>=.25)throw original;
     s.worldOptions={...s.worldOptions,randomLayout:true};
+  }
+  if(wgAtLeast(s.worldgenVersion,7)&&s.worldOptions===undefined){
+    const pts=[...s.trees,...s.stones,...s.forage].filter((n:any)=>Number.isFinite(n.y)),step=Math.max(1,Math.floor(pts.length/64)),sample=pts.filter((_:unknown,i:number)=>i%step===0).slice(0,64);
+    const fit=sample.reduce((sum:number,n:any)=>sum+Math.min(30,Math.abs(sampleHeight(g.world.heights,n.x,n.z,g.world.size)-n.y)),0)/Math.max(1,sample.length);
+    if(sample.length>=8&&fit>=.25)fail("old save without world options: regenerated default terrain does not match its saved trees (mean height error "+fit.toFixed(2)+" m)");
+    if(g.world.options)s.worldOptions={...g.world.options};
   }
   // Early v7 random-layout saves omitted the original selection roll. Select
   // the reconstruction supported by saved natural-node heights, not a new map.

@@ -7,10 +7,15 @@ import {jsonCopy} from './save-roundtrip-helpers.mjs';
 const here=path.dirname(new URL(import.meta.url).pathname);
 const dirs=[path.join(here,'fixtures'),path.join(here,'fixtures','legacy-saves'),process.env.HW_LEGACY_SAVES].filter(d=>d&&fs.existsSync(d));
 const files=dirs.flatMap(d=>fs.readdirSync(d).filter(f=>f.endsWith('.json')).map(f=>path.join(d,f)));
+// October builds (13th-29th) wrote worldgenVersion 10 with no worldOptions. The default request they used is no longer
+// reproducible: the regenerated terrain sits 4-8 m off the saved trees, so these cannot be restored faithfully. They are
+// refused with a specific reason rather than loaded onto the wrong land.
+const UNRECOVERABLE=/save-(0b82d6f8|be93ce5e)-v10/;
 let n=0;
 for(const f of files){
   let data;try{data=JSON.parse(fs.readFileSync(f,'utf8'));}catch{continue;}
   if(!data||typeof data!=='object'||data.version===undefined||!data.state)continue;n++;
+  if(UNRECOVERABLE.test(f)){test(`unrecoverable legacy save ${path.basename(f)} is refused with a specific reason`,()=>{assert.throws(()=>decodeGame(jsonCopy(data)),/does not match its saved trees/);});continue;}
   test(`legacy save ${path.basename(f)} validates, loads, steps and saves again`,()=>{
     validateGameSave(jsonCopy(data));
     const g=decodeGame(jsonCopy(data));
