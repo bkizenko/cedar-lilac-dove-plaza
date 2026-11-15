@@ -15,7 +15,7 @@ import {clothingWarmth,PRODUCTION_RECIPES} from './production';
 import {campMoveIndependentNeeds} from './nomadicCamp';
 import {societyMissionIndependentNeeds} from './rivalActivity';
 import {prisonerIndependentNeeds} from './captivity';
-import {tickCisterns,cisternTotals} from './cisterns';
+import {tickCisterns,cisternTotals,cisternsOf,cisternAt,cisternStored,drawFromCistern} from './cisterns';
 import type {Game} from './sim';
 import type {Building,GameState,Unit} from './types';
 import {hasTaskCommitment} from './workCommitments';
@@ -153,8 +153,11 @@ function bankClear(g:Game,u:Unit,x:number,z:number){
 function builtWaterWork(g:Game,x:number,z:number,team?:number){
  return g.state.buildings.find(b=>b.type==='well'&&(team===undefined||b.team===team)&&g.finished(b)&&Math.hypot(b.x-x,b.z-z)<.6)??null;
 }
-function sourceWet(g:Game,source:Source){
+/** A cistern only serves as a source while it actually holds water; its tank is the water, not the ground around it. */
+const CISTERN_MIN_DRAW=2;
+function sourceWet(g:Game,source:Source,team?:number){
  if(builtWaterWork(g,source.sourceX,source.sourceZ))return true;
+ if(team!==undefined){const c=cisternAt(g,team,source.sourceX,source.sourceZ);if(c)return cisternStored(c)>=CISTERN_MIN_DRAW;}
  return g.height(source.sourceX,source.sourceZ)<=g.waterAt(source.sourceX,source.sourceZ)+.25;
 }
 function sourceFor(g:Game,u:Unit,avoid?:{x:number;z:number}):Source|null{
@@ -171,6 +174,8 @@ function sourceFor(g:Game,u:Unit,avoid?:{x:number;z:number}):Source|null{
   for(let i=0;i<body.shoreline.length;i+=stride){const p=body.shoreline[i];sources.push({x:body.x+(p.x-body.x)*.94,z:body.z+(p.z-body.z)*.94});}
  }
  for(const b of g.state.buildings)if(b.type==='well'&&b.team===u.team&&g.finished(b))sources.push({x:b.x,z:b.z,built:true});
+ // Cisterns are a source too, while they hold water: the nearest bank or tank wins on walking distance.
+ for(const b of cisternsOf(g,u.team))if(cisternStored(b)>=CISTERN_MIN_DRAW)sources.push({x:b.x,z:b.z,built:true});
  const candidates:Source[]=[];
  for(const p of sources){
   if(Math.hypot(p.x-u.x,p.z-u.z)>SURVIVAL_RULES.sourceSearchMeters)continue;
@@ -200,7 +205,7 @@ function proposal(g:Game,team:number,automatic=false):WaterProposal{
   if(paused?.paused){
    // Loaded water always returns through its real delivery executor. Empty
    // paused jobs only resume their old bank while it remains physically valid.
-   if(paused.phase==='returning'||bankClear(g,u,paused.bankX,paused.bankZ)&&sourceWet(g,paused))return {u,source:null,reason:null};
+   if(paused.phase==='returning'||bankClear(g,u,paused.bankX,paused.bankZ)&&sourceWet(g,paused,team))return {u,source:null,reason:null};
    const source=sourceFor(g,u,{x:paused.bankX,z:paused.bankZ});if(source)return {u,source,reason:null};continue;
   }
   const source=sourceFor(g,u);if(source)return {u,source,reason:null};
@@ -261,12 +266,12 @@ export function waterCollectionAI(g:Game,u:Unit,dt:number){
   if(alternate){Object.assign(w,alternate);w.phase='outbound';w.paused=false;u.stuckT=0;g.invalidateRoute(u);u.workReason='Water bank obstructed — approaching another freshwater bank';}
   else {w.paused=true;u.order='idle';g.invalidateRoute(u);g.workBoard.reset();u.workReason='No known clear freshwater bank — collection paused; explore or clear an approach';}
  };
- if(!bankClear(g,u,w.bankX,w.bankZ)||(u.stuckT??0)>30||!sourceWet(g,w)){replan();return true;}
+ if(!bankClear(g,u,w.bankX,w.bankZ)||(u.stuckT??0)>30||!sourceWet(g,w,u.team)){replan();return true;}
  u.tx=w.bankX;u.tz=w.bankZ;
  if(Math.hypot(u.x-w.bankX,u.z-w.bankZ)>1.5){const arrived=g.steer(u,dt);if(arrived&&Math.hypot(u.x-w.bankX,u.z-w.bankZ)>1.5)replan();else u.workReason='Walking to a freshwater bank';return true;}
  const capacity=waterVesselCapacity(u,SURVIVAL_RULES.waterTripLiters),required=SURVIVAL_RULES.collectSeconds*capacity/SURVIVAL_RULES.waterTripLiters;
  w.phase='collecting';w.progressSeconds=Math.min(required,w.progressSeconds+dt);u.workReason=`Filling water vessels · ${Math.min(100,Math.floor(w.progressSeconds/required*100))}%`;
- if(w.progressSeconds>=required){w.liters=capacity;w.phase='returning';g.invalidateRoute(u);}
+ if(w.progressSeconds>=required){const tank=cisternAt(g,u.team,w.sourceX,w.sourceZ);w.liters=tank?drawFromCistern(tank,capacity):capacity;if(w.liters<=0){replan();return true;}w.phase='returning';g.invalidateRoute(u);}
  return true;
 }
 const autoCheck=new WeakMap<Game,number>();

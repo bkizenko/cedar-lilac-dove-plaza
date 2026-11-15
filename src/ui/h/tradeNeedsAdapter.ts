@@ -43,3 +43,7 @@ export function tradeNeedsView(a:AdapterInput):NeedsTradeView{
  const risk=o.risk<.2?'Safe road':o.risk<.4?'Some risk on the road':o.risk<.6?'Risky road':'Dangerous road';
  return {...v,counter:{enabled:false,reason:'They do not haggle'},fairness:{fairGet:o.fairGet,paysRatio:Math.round(paysRatio*100)/100,ratioText},journey:{riskText:risk,escorts:o.escortsWanted},actions:{accept:v.accept.enabled,decline:v.decline.enabled,counter:false}};
 }
+/** Callback for TradeDialog's `onOfferPeace`: sends the existing 'propose-peace' command for that partner society. Pass it only while the dialog's input says atWar. */
+export function peaceOfferHandler(engine:{dispatch:(command:{kind:'propose-peace';team:number},...rest:any[])=>unknown},team:number):()=>void{
+ return()=>{void engine.dispatch({kind:'propose-peace',team},undefined,{notice:true});};
+}

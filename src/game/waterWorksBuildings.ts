@@ -25,13 +25,13 @@ export function feasibleAqueductTo(g:Game,target:{x:number;z:number},team=0){
 /** Water-works building types (Grok World). Placement uses the terrain queries
  * in waterWorks.ts; labour is the catalog time plus the measured dig or cut.
  * Watermill power is the live river current (`currentPowerKw` at the wheel). */
-export const WATER_WORKS_TYPES=['well','cistern','watermill','windmill','aqueduct','canal'] as const;
+export const WATER_WORKS_TYPES=['well','cistern','greatCistern','watermill','windmill','aqueduct','canal'] as const;
 export type WaterWorksType=typeof WATER_WORKS_TYPES[number];
 export function isWaterWorksType(t:string):t is WaterWorksType{return (WATER_WORKS_TYPES as readonly string[]).includes(t);}
 
 export function waterWorksPlacementIssue(g:Game,type:BldType,x:number,z:number,team=0):string|null{
  if(type==='well')return wellSite(g,x,z,team).issues[0]??null;
- if(type==='cistern'){
+ if(type==='cistern'||type==='greatCistern'){
   if(team===0&&!g.exploredAt(x,z))return 'Explore the site first';
   if(g.height(x,z)<=g.waterAt(x,z))return 'A cistern needs dry ground';
   cisternCatchment(g,x,z);

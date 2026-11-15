@@ -46,7 +46,7 @@ const CLASS_OF:Partial<Record<BldType,SlopeClass>>={
  dryrack:'light',
  fibreWorkshop:'shelter',potter:'shelter',tailor:'shelter',tanner:'shelter',butcher:'shelter',grindingStone:'shelter',hearth:'shelter',smokehouse:'shelter',
  kiln:'workshop',oven:'workshop',forge:'workshop',workshop:'workshop',barracks:'workshop',stables:'workshop',windmill:'workshop',
- warehouse:'storage',threshingFloor:'storage',well:'storage',cistern:'storage',
+ warehouse:'storage',threshingFloor:'storage',well:'storage',cistern:'storage',greatCistern:'storage',
  townhall:'civic',temple:'civic',market:'civic',university:'civic',keep:'civic',
  watchtower:'tower',farm:'field',dock:'dock',
 };

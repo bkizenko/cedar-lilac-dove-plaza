@@ -74,3 +74,8 @@ test('every engine GoodKind has a visual; goats are led, not loaded',()=>{
  const c=caravanSpec({carrier:'cart',seed:3,cargo:[{kind:'goat',amount:2},{kind:'spears',amount:8}],capacity:160});assert.deepEqual(c.cargo.led,{goat:2});assert.ok(!c.cargo.kinds.includes('goat')&&c.cargo.kinds.includes('spears'));
  const only=caravanSpec({carrier:'packAnimal',seed:3,cargo:[{kind:'goat',amount:1}]});assert.equal(only.cargo.fill,0,'a led goat does not fill the pack');assert.equal(only.loadPartIndices.length,0);
 });
+test('peaceOfferHandler dispatches propose-peace for the partner team with a notice',async()=>{
+ const {peaceOfferHandler}=await import('../src/ui/h/tradeNeedsAdapter.ts');const calls=[];
+ peaceOfferHandler({dispatch:(...a)=>{calls.push(a);return Promise.resolve();}},3)();
+ assert.deepEqual(calls,[[{kind:'propose-peace',team:3},undefined,{notice:true}]]);
+});

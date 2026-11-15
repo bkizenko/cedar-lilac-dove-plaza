@@ -17,10 +17,17 @@ export const CISTERN_RULES=Object.freeze({
  jarSeconds:600,surplusFactor:1.5,
 });
 const RAIN=new Set(['rain','storm','flood']);
-export const isCistern=(b:Building)=>b.type==='cistern';
-export function cisternsOf(g:Game,team:number){return g.state.buildings.filter(b=>b.type==='cistern'&&b.team===team&&b.hp>0&&g.finished(b));}
-export const cisternStored=(b:Building)=>Math.max(0,Math.min(CISTERN_RULES.capacityLiters,b.cisternLiters??0));
-export function cisternTotals(g:Game,team:number){const cs=cisternsOf(g,team);return{count:cs.length,stored:cs.reduce((n,b)=>n+cisternStored(b),0),capacity:cs.length*CISTERN_RULES.capacityLiters};}
+/** Second tier: a larger lined tank. Same catchment rules; more room, built from three times the stone. */
+export const GREAT_CISTERN_LITERS=24000;
+export const isCistern=(b:Pick<Building,'type'>)=>b.type==='cistern'||b.type==='greatCistern';
+export const cisternCapacity=(b:Pick<Building,'type'>)=>b.type==='greatCistern'?GREAT_CISTERN_LITERS:CISTERN_RULES.capacityLiters;
+export function cisternsOf(g:Game,team:number){return g.state.buildings.filter(b=>isCistern(b)&&b.team===team&&b.hp>0&&g.finished(b));}
+export const cisternStored=(b:Building)=>Math.max(0,Math.min(cisternCapacity(b),b.cisternLiters??0));
+export function cisternTotals(g:Game,team:number){const cs=cisternsOf(g,team);return{count:cs.length,stored:cs.reduce((n,b)=>n+cisternStored(b),0),capacity:cs.reduce((n,b)=>n+cisternCapacity(b),0)};}
+/** A water carrier fills its vessels at a cistern: takes up to `litres` from that one tank and returns what it got. */
+export function drawFromCistern(b:Building,litres:number){const take=Math.max(0,Math.min(litres,cisternStored(b)));b.cisternLiters=cisternStored(b)-take;return take;}
+/** The finished cistern of this society standing at a carrier's source point, if any. */
+export function cisternAt(g:Game,team:number,x:number,z:number){return cisternsOf(g,team).find(b=>Math.hypot(b.x-x,b.z-z)<.6)??null;}
 const catchCache=new WeakMap<Game,Map<string,number>>();
 /** Seasonal runoff litres for this cistern's site (computed once, then remembered). */
 export function cisternSeasonalLiters(g:Game,b:Building){
@@ -39,18 +46,18 @@ export function drawFromCisterns(g:Game,team:number,litres:number){
 }
 /** Pour carried water into cisterns (emptiest first). Returns what was stored. */
 export function pourIntoCisterns(g:Game,team:number,litres:number){
- let left=litres;for(const b of cisternsOf(g,team).sort((a,c)=>cisternStored(a)-cisternStored(c))){if(left<=0)break;const put=Math.min(left,CISTERN_RULES.capacityLiters-cisternStored(b));b.cisternLiters=cisternStored(b)+put;left-=put;}
+ let left=litres;for(const b of cisternsOf(g,team).sort((a,c)=>cisternStored(a)-cisternStored(c))){if(left<=0)break;const put=Math.min(left,cisternCapacity(b)-cisternStored(b));b.cisternLiters=cisternStored(b)+put;left-=put;}
  return litres-left;
 }
 /** One second-step: rain in, evaporation out, then balance the household jars against the cisterns. */
 export function tickCisterns(g:Game,team:number,stock:{waterLiters:number},demandPerSecond:number,dt:number){
  const cs=cisternsOf(g,team);if(!cs.length)return;const R=CISTERN_RULES,raining=RAIN.has(g.state.weather),evap=R.evaporationPerSecond*(g.state.weather==='drought'?R.droughtEvaporationFactor:1);
- for(const b of cs){const s=cisternStored(b);b.cisternLiters=Math.max(0,Math.min(R.capacityLiters,s+(raining?cisternInflow(g,b)*dt:-s*evap*dt)));}
+ for(const b of cs){const s=cisternStored(b);b.cisternLiters=Math.max(0,Math.min(cisternCapacity(b),s+(raining?cisternInflow(g,b)*dt:-s*evap*dt)));}
  const target=Math.max(1,demandPerSecond*R.jarSeconds);
  if(stock.waterLiters<target)stock.waterLiters+=drawFromCisterns(g,team,target-stock.waterLiters);
  else if(stock.waterLiters>target*R.surplusFactor)stock.waterLiters-=pourIntoCisterns(g,team,stock.waterLiters-target*R.surplusFactor);
 }
 export function validCisternState(s:{buildings:Building[]}):boolean{
- for(const b of s.buildings)if(b.cisternLiters!==undefined&&(b.type!=='cistern'||typeof b.cisternLiters!=='number'||!Number.isFinite(b.cisternLiters)||b.cisternLiters<0||b.cisternLiters>CISTERN_RULES.capacityLiters+1e-6))return false;
+ for(const b of s.buildings)if(b.cisternLiters!==undefined&&(!isCistern(b)||typeof b.cisternLiters!=='number'||!Number.isFinite(b.cisternLiters)||b.cisternLiters<0||b.cisternLiters>cisternCapacity(b)+1e-6))return false;
  return true;
 }

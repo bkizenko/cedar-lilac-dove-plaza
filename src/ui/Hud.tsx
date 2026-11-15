@@ -52,7 +52,7 @@ import {PaidProjects} from './PaidProjects';
 import {NeedsPanel} from './NeedsPanel';
 import {HusbandryControls} from './HusbandryControls';
 import {BoatControls} from './BoatControls';
-import {cisternStored,cisternInflow,CISTERN_RULES} from '../game/cisterns';
+import {cisternStored,cisternInflow,cisternCapacity} from '../game/cisterns';
 import {CopperStudyControl} from './CopperStudyControl';
 import {AgeReadiness} from './AgeReadiness';
 import {WorldMinimap} from './WorldMinimap';
@@ -877,7 +877,7 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
                 {sel.completed&&sel.type==="quarry"&&(["copper","iron"] as const).map(kind=><button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffQuarry(engine.game,sel.buildingId,kind);engine.pushHud();}}}>Mine exposed {kind}</button>)}
                 {sel.completed&&sel.type==='pen'&&engine&&<HusbandryControls engine={engine} pen={sel.buildingId!}/>}
                 {sel.completed&&sel.type==='dock'&&engine&&<BoatControls engine={engine} dock={sel.buildingId}/>}
-                {sel.completed&&sel.type==='cistern'&&engine&&(()=>{const b=engine.game.state.buildings.find(x=>x.id===sel.buildingId);if(!b)return null;const stored=cisternStored(b),inflow=cisternInflow(engine.game,b);return <p className="text-xs" aria-label="Cistern storage">Stored fresh water {Math.round(stored)} / {CISTERN_RULES.capacityLiters} L ({Math.round(stored/CISTERN_RULES.capacityLiters*100)}%){inflow>0?` · rain filling ${inflow.toFixed(1)} L/s`:stored<=0?' · empty; waits for rain or carried water':''}</p>;})()}
+                {sel.completed&&(sel.type==='cistern'||sel.type==='greatCistern')&&engine&&(()=>{const b=engine.game.state.buildings.find(x=>x.id===sel.buildingId);if(!b)return null;const stored=cisternStored(b),inflow=cisternInflow(engine.game,b);return <p className="text-xs" aria-label="Cistern storage">Stored fresh water {Math.round(stored)} / {cisternCapacity(b)} L ({Math.round(stored/cisternCapacity(b)*100)}%){inflow>0?` · rain filling ${inflow.toFixed(1)} L/s`:stored<=0?' · empty; waits for rain or carried water':''}</p>;})()}
                 {sel.completed&&sel.type==="townhall"&&engine&&<button type="button"
                   className="min-h-10 rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40"
                   disabled={!engine.game.state.units.some(u=>u.team===0&&u.hp>0&&u.militia&&!u.prisoner)}

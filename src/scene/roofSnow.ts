@@ -2,6 +2,9 @@ import * as THREE from 'three';
 /** Shared 0..1 snow cover. Upward faces of every material bound with bindSnowCap whiten with it; season state only, no goods. */
 export const carvedSnowUniform={value:0};
 export const SNOW_CAP_RULES={colour:[.94,.96,.99],coverage:.92,flatFrom:.5,flatTo:.82} as const;
+const smooth=(a:number,b:number,x:number)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
+/** CPU mirror of the fragment mix factor: how far a face with world-up component `upFace` turns white at snow cover `snow`. Zero snow is exactly zero for every face. */
+export function snowMix(upFace:number,snow:number){const R=SNOW_CAP_RULES;return smooth(R.flatFrom,R.flatTo,upFace)*Math.max(0,snow)*R.coverage;}
 /** Patch a compiled shader so faces pointing up take snow (roofs, ledges, caps); walls stay bare. Works with and without instancing. */
 export function patchSnowShader(shader:{uniforms:Record<string,{value:unknown}>;vertexShader:string;fragmentShader:string}){
  const R=SNOW_CAP_RULES;

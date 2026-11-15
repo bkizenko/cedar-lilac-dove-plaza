@@ -193,6 +193,7 @@ export const BLD_TYPES: BldType[] = [
   "grove",
   "well",
   "cistern",
+  "greatCistern",
   "watermill",
   "windmill",
   "aqueduct",

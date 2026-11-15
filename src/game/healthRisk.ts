@@ -8,7 +8,7 @@ import {survivalStatus} from './survivalNeeds';
 import {livestockCrowding,livestockIllnessMultiplier} from './livestockCrowding';
 export const HEALTH_RULES={crowdStart:.85,crowdFull:1.3,waterLowSeconds:300,
  weights:{crowding:.7,animals:.3,water:.5,housing:.4},siteWeight:.3,checkSeconds:60,baseIllnessPerCheck:.02,illnessSeconds:120,illnessDamage:.2,
- pregnancySeconds:240,pregnantSpeed:.85,lateTermSeconds:90,lateTermSpeed:.75,lateTermLoadFactor:.7,lateTermWorkRate:.8,garmentLifeSeconds:7200} as const;
+ pregnancySeconds:240,pregnantSpeed:.85,lateTermSeconds:90,lateTermSpeed:.75,lateTermLoadFactor:.7,lateTermWorkRate:.8,pregnantGatherRate:.9,lateTermGatherRate:.75,garmentLifeSeconds:7200} as const;
 const clamp=(n:number,a=0,b=1)=>Math.max(a,Math.min(b,n)),ramp=(v:number,a:number,b:number)=>clamp((v-a)/(b-a));
 export type SiteHealth={score:number;marsh:number;water:'none'|'near'|'adjacent';raised:number;notes:string[]};
 /** Vitruvius: avoid marshy ground, prefer a dry rise with fresh water close but not underfoot. Sampled around the camp. */
@@ -56,6 +56,8 @@ export const isPregnant=(g:Game,u:Unit)=>(u.pregnantUntil??0)>g.state.time;
 /** Last stretch before birth: slower on foot, much slower when hauling a load, and slower at the bench. */
 export const isLateTerm=(g:Game,u:Unit)=>isPregnant(g,u)&&(u.pregnantUntil??0)-g.state.time<=HEALTH_RULES.lateTermSeconds;
 export function pregnancySpeed(g:Game,u:Unit){if(!isPregnant(g,u))return 1;if(!isLateTerm(g,u))return HEALTH_RULES.pregnantSpeed;const loaded=(u.carry||0)>0||Object.values(u.itemCargo||{}).some(n=>(n||0)>0);return HEALTH_RULES.lateTermSpeed*(loaded?HEALTH_RULES.lateTermLoadFactor:1);}
+/** Gathering (foraging, felling, quarrying, fishing) slows with pregnancy: a little at first, more in the last stretch. */
+export function pregnancyGatherRate(g:Game,u:Unit){return !isPregnant(g,u)?1:isLateTerm(g,u)?HEALTH_RULES.lateTermGatherRate:HEALTH_RULES.pregnantGatherRate;}
 let pregnancyNow=0;
 /** Sim clock for craftingEffort, which has no Game handle; refreshed every tick by tickIllness. */
 export function pregnancyWorkRate(u:Pick<Unit,'pregnantUntil'>){const left=(u.pregnantUntil??0)-pregnancyNow;return left>0&&left<=HEALTH_RULES.lateTermSeconds?HEALTH_RULES.lateTermWorkRate:1;}

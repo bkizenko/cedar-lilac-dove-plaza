@@ -36,3 +36,27 @@ test('surplus carried water is stored; saves round-trip and bad litres are rejec
  const bad=JSON.parse(JSON.stringify(enc));(bad.state??bad).buildings.find(b=>b.type==='cistern').cisternLiters=CISTERN_RULES.capacityLiters*2;assert.throws(()=>validateGameSave(bad));
  const old=JSON.parse(JSON.stringify(enc));delete (old.state??old).buildings.find(b=>b.type==='cistern').cisternLiters;validateGameSave(old);
 });
+test('second tier: great cistern holds more, costs more stone, saves and validates by its own capacity',async()=>{
+ const {BUILDINGS}=await import('../src/game/constants.ts');const {cisternCapacity,GREAT_CISTERN_LITERS}=await import('../src/game/cisterns.ts');
+ assert.equal(cisternCapacity({type:'greatCistern'}),GREAT_CISTERN_LITERS);assert.equal(cisternCapacity({type:'cistern'}),CISTERN_RULES.capacityLiters);
+ assert.ok(GREAT_CISTERN_LITERS>CISTERN_RULES.capacityLiters);assert.ok(BUILDINGS.greatCistern.stone>BUILDINGS.cistern.stone);
+ const {g}=fixture();const home=g.campOf(0);const big=g.makeBld('greatCistern',home.x-9,home.z+9,0);big.build=1;g.state.buildings.push(big);
+ big.cisternLiters=20000;assert.equal(cisternStored(big),20000,'not clamped to the small tank');
+ assert.equal(cisternTotals(g,0).capacity,CISTERN_RULES.capacityLiters+GREAT_CISTERN_LITERS);
+ const enc=JSON.parse(JSON.stringify(encodeGame(g)));validateGameSave(enc);const g2=decodeGame(enc);assert.equal(cisternStored(g2.state.buildings.find(b=>b.type==='greatCistern')),20000);
+ const bad=JSON.parse(JSON.stringify(enc));(bad.state??bad).buildings.find(b=>b.type==='greatCistern').cisternLiters=GREAT_CISTERN_LITERS*2;assert.throws(()=>validateGameSave(bad));
+});
+test('a water carrier draws from a cistern with water and not from an empty one',async()=>{
+ const {beginWaterCollection,waterCollectionAI}=await import('../src/game/survivalNeeds.ts');
+ const {g,c}=fixture();const stock=g.tribe(0).survival;stock.waterLiters=0;
+ const u=g.state.units.find(x=>x.team===0&&x.type==='worker'&&x.hp>0);
+ // empty cistern is never chosen as a source
+ c.cisternLiters=0;u.x=c.x;u.z=c.z+4;let r=beginWaterCollection(g,0);
+ if(r.accepted){const w=g.state.units.find(x=>x.id===r.actorId).waterWork;assert.ok(Math.hypot(w.sourceX-c.x,w.sourceZ-c.z)>.6,'empty cistern not a source');g.state.units.find(x=>x.id===r.actorId).waterWork=undefined;}
+ c.cisternLiters=5000;const a=g.state.units.find(x=>x.team===0&&x.type==='worker'&&x.hp>0);a.x=c.x;a.z=c.z+4;a.order='idle';a.carry=0;
+ r=beginWaterCollection(g,0);assert.equal(r.accepted,true,r.reason);const v=g.state.units.find(x=>x.id===r.actorId);
+ assert.ok(Math.hypot(v.waterWork.sourceX-c.x,v.waterWork.sourceZ-c.z)<.6,'nearest source is the cistern');
+ v.x=v.waterWork.bankX;v.z=v.waterWork.bankZ;let guard=0;while(v.waterWork.phase!=='returning'&&guard++<60)waterCollectionAI(g,v,1);
+ assert.equal(v.waterWork.phase,'returning');assert.ok(v.waterWork.liters>0);assert.equal(cisternStored(c),5000-v.waterWork.liters,'tank went down by what was carried');
+ c.cisternLiters=3;assert.equal(drawFromCisterns(g,0,1),1);
+});

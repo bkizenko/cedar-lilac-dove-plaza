@@ -24,7 +24,7 @@ import {tickTransit} from './transit';
 import {noteRaidCombat,noteRaidExposed,tickRaidReports} from './raidReports';
 import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './tradedTeaching';
 import {armorRepairAI,pauseArmorRepair,tickArmorRepairs} from './armorRepair';
-import {tickIllness,beginPregnancy,takeMother,pregnancySpeed} from './healthRisk';
+import {tickIllness,beginPregnancy,takeMother,pregnancySpeed,pregnancyGatherRate} from './healthRisk';
 import {garmentRepairAI,pauseGarmentRepair,tickGarmentRepairs} from './garmentRepair';
 import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {buildSkins} from './skinState';
@@ -4747,7 +4747,7 @@ export class Game {
       const urgency = t === "food" && reserveSeconds(this, u.team) < 240 ? 1.25 : 1;
       const dockFishing = "type" in node && node.type === "dock" ? 0.8 : 1; // fishers on a dock work about a quarter faster
       const shoreFishing = "kind" in node && node.kind === "fish" ? 1.35 : 1; // a dock is worth building: fishing from the bank is slower
-      const period = g.period * this.campBonus(u, t) * winterForage * winterFishing * shoreFishing * dockFishing * subsistenceLaborMultiplier(this,t,u.x,u.z) / (GATHER_WORK_RATE * urgency * gatherSkillStep(this,u,t,node as never,dt));
+      const period = g.period * this.campBonus(u, t) * winterForage * winterFishing * shoreFishing * dockFishing * subsistenceLaborMultiplier(this,t,u.x,u.z) / (GATHER_WORK_RATE * urgency * pregnancyGatherRate(this,u) * gatherSkillStep(this,u,t,node as never,dt));
       u.gatherT += dt;
       commandUsefulWork(this,u,dt);
       u.stride += dt * 9;
