@@ -327,7 +327,7 @@ export function penStep(g:Game,a:Critter&{born?:number;sex?:string},pen:{x:numbe
 /** Validator for saved behaviour records (optional field). */
 export function validAnimalBeh(b:unknown,time:number,half:number):boolean{
  if(b===undefined)return true;if(!b||typeof b!=='object'||Array.isArray(b))return false;const o=b as Record<string,unknown>,num=(v:unknown,lo=-1e9,hi=1e9)=>typeof v==='number'&&Number.isFinite(v)&&v>=lo&&v<=hi;
- return o.v===1&&BEH_STATES.includes(o.st as BehState)&&num(o.until,0,time+4000)&&num(o.gx,-half,half)&&num(o.gz,-half,half)&&num(o.hd,-1e3,1e3)&&num(o.sp,0,12)&&num(o.n,0,1e9)&&Number.isSafeInteger(o.grp)&&num(o.en,0,1)&&num(o.thirst,0,1)&&num(o.hunger,0,1)&&num(o.hab,0,1)&&num(o.acc,0,60)&&num(o.alarmUntil,0,time+100)&&num(o.ax,-1e5,1e5)&&num(o.az,-1e5,1e5)&&num(o.h0x,-half,half)&&num(o.h0z,-half,half)&&num(o.blk,0,1e6)&&
+ return o.v===1&&BEH_STATES.includes(o.st as BehState)&&num(o.until,0,time+4000)&&num(o.gx,-half,half)&&num(o.gz,-half,half)&&num(o.hd,-1e7,1e7)&&num(o.sp,0,12)&&num(o.n,0,1e9)&&Number.isSafeInteger(o.grp)&&num(o.en,0,1)&&num(o.thirst,0,1)&&num(o.hunger,0,1)&&num(o.hab,0,1)&&num(o.acc,0,60)&&num(o.alarmUntil,0,time+100)&&num(o.ax,-1e5,1e5)&&num(o.az,-1e5,1e5)&&num(o.h0x,-half,half)&&num(o.h0z,-half,half)&&num(o.blk,0,1e6)&&
   (o.lead===undefined||o.lead===1)&&(o.dam===undefined||Number.isSafeInteger(o.dam))&&(o.tgt===undefined||Number.isSafeInteger(o.tgt))&&(o.adult===undefined||num(o.adult,.1,5))&&(o.alt===undefined||num(o.alt,0,60))&&(o.wx===undefined||num(o.wx,-half,half))&&(o.wz===undefined||num(o.wz,-half,half))&&(o.sentId===undefined||Number.isSafeInteger(o.sentId))&&(o.sentUntil===undefined||num(o.sentUntil,0,time+200));
 }
 export const animalBodyRadius=wildlifeBodyRadius;
