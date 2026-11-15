@@ -144,6 +144,7 @@ import {hasTradeReservation,releaseTradeReservation,reconcileTradeReservations} 
 import {fieldProductionSummary} from "./productionReport";
 import {explicitArmedOrder,raiseAttackAlarm,tickVillageDefense,soundDefenseHorn,resetDefenseMobilization} from "./defense";
 import {standDownMilitia,demobilizationAI,militiaStoresReached} from './demobilization';
+import {nearStores,armEligible,armFromStock,weaponStockTotal,rememberArmingCall,armingCallStatus,tickArmingCall} from './armingCall';
 import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
 import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directedConstruction,assignPlacedConstruction} from "./construction";
@@ -1464,58 +1465,29 @@ export class Game {
     if (!t) return 0;
     let n = 0;
     const selected = team===0 ? this.selectedUnits() : [];
-    const workers = (selected.length ? selected : this.state.units).filter(
-      u => u.team===team && u.hp>0 && !u.prisoner && u.type==="worker" && !u.militia && !u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId && !isDependent(this,u) &&
-        u.carry===0 && !u.expedition && !u.envoy && !u.visit && !u.scout && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.waterWork &&
-        militiaStoresReached(this,u),
-    );
-    for (const u of workers) {
-      let kind: UnitType | null = null;
-      if ((t.blades || 0) > 0) {
-        t.blades--;
-        kind = "swordsman";
-      } else if ((t.bows || 0) > 0) {
-        t.bows--;
-        kind = "archer";
-      } else if ((t.spears || 0) > 0) {
-        t.spears--;
-        kind = "spearman";
-      }
-      if (!kind) break;
-      interruptCampRelocation(this,u);
-      const d = UNITS[kind];
-      u.type = kind;
-      u.militia = true;
-      u.range = d.range;
-      u.dmg = d.dmg * AGE_STAT[t.age];
-      u.rof = d.rof;
-      // Equipping a weapon never heals wounds or creates a new resident.
-      u.order = "hold";
-      u.job = null; u.node=null; u.target=null; u.emergency=undefined;
-      u.workReason="Armed civilian — ready to defend or raid";
-      n++;
-    }
-    if (team===0 && !n) {
-      // Weapons are issued at a store. Instead of failing silently, walk the empty-handed adults there; press again on arrival.
-      const have=(t.blades||0)+(t.bows||0)+(t.spears||0);
-      const far=have>0?(selected.length ? selected : this.state.units).filter(
-        u => u.team===team && u.hp>0 && !u.prisoner && u.type==="worker" && !u.militia && !u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId && !isDependent(this,u) &&
-          u.carry===0 && !u.expedition && !u.envoy && !u.visit && !u.scout && !u.weaponWork && !u.haulageWork && !u.farmToolWork && !u.waterWork && !u.boat,
-      ).slice(0,have):[];
+    const pool = selected.length ? selected : this.state.units;
+    const workers = pool.filter(u => armEligible(this,u,team));
+    for (const u of workers) { if (!armFromStock(this,u,team)) break; n++; }
+    // Adults who are not at the stores yet walk there and arm themselves on arrival (no second press needed).
+    const left = weaponStockTotal(this,team);
+    if (left > 0) {
+      const far = pool.filter(u => armEligible(this,u,team,false) && !nearStores(this,u)).slice(0,left);
       if (far.length) {
         const stores=this.state.buildings.filter(b=>b.team===team&&this.finished(b)&&['townhall','warehouse','barracks'].includes(b.type));
         const camp=this.campOf(team);
-        const spot=stores.length?stores.reduce((a,b)=>Math.hypot(far[0].x-b.x,far[0].z-b.z)<Math.hypot(far[0].x-a.x,far[0].z-a.z)?b:a):camp;
         far.forEach((u,i)=>{
           this.interruptMission(u);
+          const spot=stores.length?stores.reduce((a,b)=>Math.hypot(u.x-b.x,u.z-b.z)<Math.hypot(u.x-a.x,u.z-a.z)?b:a):camp;
           const a=i*2.4,r=4+1.4*Math.floor(i/6);
           u.tx=spot.x+Math.cos(a)*r;u.tz=spot.z+Math.sin(a)*r;u.pillage=-1;u.stationOnArrival=true;
           u.workReason="Walking to the stores to take up arms";u.order="move";u.attackDestination=null;u.target=null;u.node=null;
         });
+        rememberArmingCall(this,team,far.map(u=>u.id));
         this.state.walkDirty=true;
-        this.banner(far.length+" adults are walking to the stores. Press Arm again when they arrive.",4);
-      } else this.banner("Bring empty-handed adults to your camp, hall, store or barracks; craft weapons first",3);
+        if (team===0) this.banner((n?n+" villagers take up arms; ":"")+far.length+" more are walking to the stores and will arm on arrival.",4);
+      }
     }
+    if (team===0 && !n && !armingCallStatus(this,team).waiting) this.banner(left>0?"No free adults are available to arm":"Craft weapons first; the stores are empty",3);
     if (team === 0 && n) this.banner(n + " villagers take up arms", 1.8);
     return n;
   }
@@ -6115,6 +6087,7 @@ export class Game {
         this.separate(sdt);
         tickFormations(this,sdt);
         tickGuardDuties(this);
+        tickArmingCall(this);
         tickRaidReports(this,sdt);
         tickTransit(this,sdt);
         tickCommanders(this,sdt);
