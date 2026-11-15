@@ -572,6 +572,7 @@ export type GameState = {
   guardDuties?:import('./guardDuty').GuardDuty[];
   armingCall?:import('./armingCall').ArmingCall;
   squads?:import('./squads').SquadsState;
+  focusMode?:'craft'|'war';
   raidReports?:import('./raidReports').RaidReports;
   transit?:import('./transit').TransitState;
   terrainInfluence?:import('./terrainInfluenceRuntime').TerrainInfluenceState;

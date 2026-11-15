@@ -1,4 +1,5 @@
 import {ExpeditionPanel} from "./ExpeditionPanel";
+import {focusModeOf,setFocusMode,type FocusMode} from '../game/focusModes';
 import {foodGuardLabel} from '@/game/foodGuard';
 import {SocietyIdentityEditor} from './SocietyIdentityEditor';
 import {SocietyFlag} from './SocietyFlag';
@@ -193,6 +194,14 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
               <option value="hunt">Find and hunt herds</option>
               <option value="explore">Explore and make contact</option>
               <option value="trade">Develop trade connections</option>
+            </select>
+          </label>
+          <label>
+            Town focus{" "}
+            <select value={focusModeOf(g)} onChange={(e)=>{setFocusMode(g,e.target.value as FocusMode);engine.pushHud();}} title="Biases only free adults; your direct orders always win">
+              <option value="none">Normal</option>
+              <option value="craft">Crafting: finish and make equipment</option>
+              <option value="war">War footing: arms, drill, watch</option>
             </select>
           </label>
           {foodGuardLabel(g)&&<p role="status"><strong>Food guard active</strong>{foodGuardLabel(g)!.slice('Food guard active'.length)}</p>}

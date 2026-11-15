@@ -147,6 +147,7 @@ import {fieldProductionSummary} from "./productionReport";
 import {explicitArmedOrder,raiseAttackAlarm,tickVillageDefense,soundDefenseHorn,resetDefenseMobilization} from "./defense";
 import {standDownMilitia,demobilizationAI,militiaStoresReached} from './demobilization';
 import {tickSquads} from './squads';
+import {tickFocusMode} from './focusModes';
 import {nearStores,armEligible,armFromStock,weaponStockTotal,rememberArmingCall,armingCallStatus,tickArmingCall} from './armingCall';
 import {massRaidAI} from './massRaid';
 import {applyLaborPriority} from "./labor";
@@ -6109,6 +6110,7 @@ export class Game {
         tickGuardDuties(this);
         tickArmingCall(this);
         tickSquads(this);
+        tickFocusMode(this);
         tickRaidReports(this,sdt);
         tickTransit(this,sdt);
         tickCommanders(this,sdt);

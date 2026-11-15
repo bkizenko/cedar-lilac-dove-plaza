@@ -36,7 +36,7 @@ export function resumeWeaponWork(g:Game,u:Unit,workplaceId?:number){
  u.order='hold';u.node=null;u.target=null;u.workReason=`Resuming ${WEAPONS[job.kind].name.toLowerCase()}`;
  g.workBoard.reset();return true;
 }
-export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:number){
+export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:number,only?:(u:Unit)=>boolean){
   const spec=WEAPONS[kind],t=g.tribe(team);
   if(!spec||!t)return false;
   const reject=(reason:string)=>{if(team===0){g.banner(reason,3);g.onSfx('invalid');}return false;};
@@ -48,7 +48,7 @@ export function beginWeaponWork(g:Game,kind:WeaponKind,team=0,workplaceId?:numbe
   for(const person of g.state.units)if(person.team===team&&person.weaponWork?.kind===kind&&person.weaponWork.paused&&resumeWeaponWork(g,person,workplaceId))return true;
   const free=(u:Unit)=>u.hp>0&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.plantingWork&&!u.tamingWork&&!u.husbandryWork&&!u.copperStudy&&!u.studyCrop&&!u.drill&&!u.recalled&&!u.coastalCommissionId&&work.some(b=>!!g.interactionSpot(u,b));
   const u=team===0
-   ?g.state.units.filter(u=>u.team===0&&!directedBlocker(g,u,{militia:true})&&free(u)).sort((a,b)=>Math.min(...work.map(w=>directedRank(a,w)))-Math.min(...work.map(w=>directedRank(b,w))))[0]
+   ?g.state.units.filter(u=>u.team===0&&(!only||only(u))&&!directedBlocker(g,u,{militia:true})&&free(u)).sort((a,b)=>Math.min(...work.map(w=>directedRank(a,w)))-Math.min(...work.map(w=>directedRank(b,w))))[0]
    :g.state.units.find(u=>u.team===team&&u.hp>0&&!u.prisoner&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&u.type==='worker'&&!isDependent(g,u)&&u.carry===0&&!u.plantingWork&&!u.tamingWork&&!u.husbandryWork&&!u.recalled&&!u.tributeJourney&&!u.waterWork&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.copperStudy&&!u.studyCrop&&!u.drill&&!u.expedition&&!u.envoy&&!u.scout&&!u.visit&&!u.emergency&&!u.foundingJourney&&['idle','gather','hold'].includes(u.order)&&work.some(b=>!!g.interactionSpot(u,b)));
   if(!u)return reject(team===0?'Nobody who can reach a weapon workplace is free of carried goods or an away mission; deliver goods first or build a crafting shelter nearby':'An available adult with empty hands and a reachable workplace is needed');
   if(t.wood<spec.wood||t.stone<spec.stone||t.copper<spec.copper)return reject(`Need ${spec.wood} logs${spec.stone?' and '+spec.stone+' stone':''}${spec.copper?' and '+spec.copper+' copper':''}`);
