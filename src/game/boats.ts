@@ -65,12 +65,12 @@ export function launchRiverboat(g:Game,b:Building,hullClass?:NewBoatClass){
  const spec=BOAT_CLASSES[hullClass??'riverboat'];const boat:Riverboat={id:g.id(),team:b.team,dock:b.id,...p,y:g.waterAt(p.x,p.z)+.16,facing:0,hp:spec.maxHp,capacity:spec.seats,...(hullClass?{hullClass}:{})};
  (g.state.boats??=[]).push(boat);if(hullClass)recordHullBuilt(g,b.team,hullClass);return true;
 }
-export function boardRiverboat(g:Game,id:number,people=g.selectedUnits(),team=0,preserveMission=false){
+export function boardRiverboat(g:Game,id:number,people=g.selectedUnits(),team=0,preserveMission=false,reach=24){
  const b=g.state.boats?.find(b=>b.id===id&&b.team===team&&b.hp>0);if(!b)return 0;if(boatServiceProject(g,id)||sailRigProject(g,id)){if(team===0)g.banner('Finish or abandon this boat’s paid dock service before boarding',4);return 0;}
  let n=0;
  for(const u of people){
   if(boatCrew(g,id).length>=b.capacity)break;
-  if(u.hp<=0||u.team!==b.team||u.boat||u.haulage||Math.hypot(u.x-b.x,u.z-b.z)>24)continue;
+  if(u.hp<=0||u.team!==b.team||u.boat||u.haulage||Math.hypot(u.x-b.x,u.z-b.z)>reach)continue;
   if(!preserveMission)g.interruptMission(u);u.boat={id,phase:'boarding'};crewCache.delete(g);u.haulage='canoe';u.order='hold';u.node=null;u.target=null;g.invalidateRoute(u);n++;
  }
  if(!n)g.banner('Select nearby residents without carts, sleds or personal canoes to board',4);

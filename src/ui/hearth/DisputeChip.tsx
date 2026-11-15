@@ -10,7 +10,8 @@ export function DisputeChip({engine,onOpen}:{engine:Engine;onOpen:(tab:'neighbou
  const council=useOwnerReadModels(engine,[QC])(QC).model?.council,[,bump]=useState(0);
  const chip=disputeChip(attentionInbox(council),dismissed);if(!chip)return null;
  return <div className="hw-dispute" data-tone={chip.tone} data-dispute-chip="1" role="status">
-  <button type="button" className="hw-dispute-main" title={chip.text} onClick={()=>onOpen(chip.tab)}><span aria-hidden="true" className="hw-dispute-glyph">{chip.glyph}</span><span className="hw-dispute-word">{chip.tone==='danger'?'Urgent':'Watch'} · {chip.label}</span></button>
+  <button type="button" className="hw-dispute-main" title={chip.text} onClick={()=>onOpen(chip.tab)}><span aria-hidden="true" className="hw-dispute-glyph">{chip.glyph}</span><span className="hw-dispute-word">{chip.war?'At odds · at war':`${chip.tone==='danger'?'Urgent':'Watch'} · ${chip.label}`}</span></button>
+  {chip.war&&chip.team!==undefined&&<button type="button" className="hw-dispute-act" title="Send a messenger offering peace" onClick={()=>void engine.dispatch({kind:'propose-peace',team:chip.team!},undefined,{notice:true})}>Offer peace</button>}
   <button type="button" className="hw-dispute-x" aria-label="Hide these disputes" onClick={()=>{chip.keys.forEach(k=>dismissed.add(k));bump(n=>n+1);}}>×</button>
  </div>;
 }

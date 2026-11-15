@@ -14,7 +14,7 @@ export function attentionInbox(c:CouncilModel|undefined):InboxItem[]{
   for(const w of n.wards??[]){
    if(w.endsIn<=1)out.push({key:`ward-${n.team}-${w.name}`,team:n.team,tone:'note',glyph:'⌂',label:w.heldByUs?'Ward to return':'Kin due home',text:`${w.name} (${w.kind}) ${w.heldByUs?'leaves our hall for':'comes home from'} ${n.name} in ${yrs(w.endsIn)}.`});
   }
-  if(n.hostile)out.push({key:`war-${n.team}`,team:n.team,tone:'danger',glyph:'⚔',label:'At odds',text:`${n.name} stand against us${n.means.length?`: ${n.means[0]}`:''}.`});
+  if(n.hostile)out.push({key:`war-${n.team}`,team:n.team,tone:'danger',glyph:'⚔',label:'At odds',text:`${n.name} are at war with us${n.means.length?` (${n.means[0]})`:''}. Offer peace, or defend your village.`});
  }
  for(const r of c.refugees??[])out.push({key:`refugees-${r.team}`,team:r.team,tone:'warn',glyph:'☗',label:'Hungry families at the hall',text:`${r.count} ${r.count===1?'person':'people'} from ${r.name} ask to be taken in. They leave in ${yrs(r.yearsLeft)}.`,actions:[{label:'Take them in',command:'take-in-refugees'},{label:'Turn away',command:'turn-away-refugees'}]});
  const h=c.handover;

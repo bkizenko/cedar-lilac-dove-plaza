@@ -1017,14 +1017,6 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
                 <JobBtn active={false} label="Auto work" title="Enable village-wide Auto work and release the selected workers’ job locks" onClick={() => engine?.assignJob("auto")}>
                   <Play className="size-3.5 text-parchment" />
                 </JobBtn>
-                <JobBtn
-                  active={false}
-                  label="Rest"
-                  title="Recover fatigue, then automatically resume village work"
-                  onClick={() => engine?.assignJob("rest")}
-                >
-                  <Hand className="size-3.5 text-parchment-dim" />
-                </JobBtn>
               </div>
             ) : null}
             {hud.militiaSelected>0 && hud.workerSelected===0 && <button type="button"

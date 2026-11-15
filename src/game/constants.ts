@@ -290,8 +290,8 @@ export const BUILDINGS: Record<
   },
   well: {name:"Well",w:3,d:3,food:0,wood:8,stone:6,pop:0,hp:180,age:0,hint:"A hand-dug well to the fresh water table. Labour follows the measured bore; sites too near the sea or deeper than 12 m are refused."},
   cistern: {name:"Cistern",w:5,d:5,food:0,wood:6,stone:24,pop:0,hp:220,age:0,hint:"A stone catchment tank. Capacity follows the upslope runoff that actually drains to the site."},
-  watermill: {name:"Watermill",w:6.2,d:5.8,food:0,wood:40,stone:16,pop:0,hp:280,age:0,hint:"A mill house on a dry bank with the wheel in the current. Power is the live river flow at the wheel, not a fixed rating."},
-  windmill: {name:"Windmill",w:5.2,d:5.2,food:0,wood:36,stone:8,pop:0,hp:260,age:0,hint:"A mill on an exposed rise with a clear horizon all round. Clear trees around the sails."},
+  watermill: {name:"Watermill",w:6.2,d:5.8,food:0,wood:40,stone:16,pop:0,hp:280,age:3,hint:"A mill house on a dry bank with the wheel in the current. Power is the live river flow at the wheel, not a fixed rating."},
+  windmill: {name:"Windmill",w:5.2,d:5.2,food:0,wood:36,stone:8,pop:0,hp:260,age:4,hint:"A mill on an exposed rise with a clear horizon all round. Clear trees around the sails."},
   aqueduct: {name:"Aqueduct",w:4,d:4,food:0,wood:12,stone:48,pop:0,hp:360,age:0,hint:"A gravity channel from fresh water to a lower delivery point. Cuts and arcade height follow the real ground; labour includes the measured cut."},
   canal: {name:"Canal",w:4,d:4,food:0,wood:8,stone:4,pop:0,hp:240,age:0,hint:"A channel joining two waters. Commission a line; point placement is refused. Labour follows the measured dig."},
 };

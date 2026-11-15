@@ -27,12 +27,13 @@ test('top bar: a starved pantry reads critical (red), a full house reads amber, 
 });
 const A=(kind,severity,count,at)=>({kind,severity,count,tip:`${count} ${kind}`,at});
 const noFirst=html=>html.replace(/<div class="hw-chiprow hw-firstneeds".*?<\/div>/s,'');
-test('priority stack: one sticky critical card with one button, the rest as icon chips, no title, no key-tip banner',()=>{
+test('priority stack: one sticky critical card with one button, raiders ping once as a timed card, the rest as icon chips, no key-tip banner',()=>{
  const g=world(),alerts=[A('starving','critical',3),A('raiders','critical',2),A('full','warning',1),A('freezing','critical',1)];
  const html=noFirst(renderToStaticMarkup(h(PriorityStack,{hud:hud(g,{banner:'C selects a gatherer · ] finds resources · R gives an order',idleWorkers:4}),engine:engine(g),alerts,onOpen(){},hidden:false})));
  assert.equal((html.match(/hw-crit/g)||[]).length,1,'exactly one critical card');assert.match(html,/Raiders near/);assert.match(html,/>Horn</);
- assert.equal((html.match(/hw-note-act/g)||[]).length,1,'one button');
- assert.equal((html.match(/hw-chip-btn/g)||[]).length,4,'starving, freezing, full and idle become chips');
+ assert.ok(!/hw-crit[^>]*>(?:(?!<\/article>).)*Raiders near/s.test(html),'raiders are not the sticky critical card');
+ assert.equal((html.match(/hw-note-act/g)||[]).length,2,'starving Find plus the one-time raider Horn');
+ assert.equal((html.match(/hw-chip-btn/g)||[]).length,3,'freezing, full and idle become chips');
  assert.ok(!text(html).includes('Needs attention'),'no title above the chips (the group keeps an aria-label)');assert.ok(!/finds resources/.test(html),'key tips never show in the stack');
 });
 test('priority stack: non-raid critical gets Find; real news is a timed ghost card; nothing wrong renders an empty stack',()=>{

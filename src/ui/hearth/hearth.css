@@ -651,3 +651,11 @@ span[data-mood=bad]{background-image:repeating-linear-gradient(135deg,rgba(0,0,0
 .hw-neigh>button:first-child{display:flex;align-items:center;gap:var(--hw-s2);flex:1;min-width:0;background:transparent;border:0;color:inherit;cursor:pointer;text-align:left;min-height:36px;padding:0}
 .hw-neigh .hw-neigh-peace{flex:none;font-size:var(--hw-fs-s);padding:2px 8px;border-radius:var(--hw-r-s);border:1px solid rgba(255,236,190,.35);background:rgba(255,236,190,.08);color:inherit;cursor:pointer}
 .hw-raid-terms{display:grid;gap:var(--hw-s2);padding:var(--hw-s2)}
+
+.hw-dispute-act{border-left:1px solid currentColor!important;font-weight:650}
+.hw-warpop-back{position:absolute;inset:0;z-index:40;display:grid;place-items:center;background:rgba(10,6,4,.55);pointer-events:auto}
+.hw-warpop{width:min(30rem,calc(100vw - 32px));display:grid;gap:var(--hw-s3);padding:var(--hw-s4);border-radius:var(--hw-r-l);background:var(--hw-panel);border:2px solid rgba(248,113,113,.7);box-shadow:0 24px 60px rgba(0,0,0,.6);color:var(--hw-text)}
+.hw-warpop h2{font-size:calc(var(--hw-fs-l) * 1.4);font-weight:800;display:flex;align-items:center;gap:var(--hw-s2)}
+.hw-warpop p{font-size:var(--hw-fs);line-height:1.45}
+.hw-warpop .hw-row{display:flex;flex-wrap:wrap;gap:var(--hw-s2)}
+.hw-warpop button{min-height:var(--hw-hit,44px)}

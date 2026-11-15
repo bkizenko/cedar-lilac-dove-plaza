@@ -8,6 +8,8 @@ import{vesselLoad}from'../game/carriedLoad';
 import type {Engine} from '../game/engine';
 import {beginRiverboat,boardRiverboat,boatCrew,riverboatRowers,landRiverboat,boatConstructionIssue,beginBoatService,abandonBoatService,hullServicePhysicalIssue,boatServiceQuote} from '../game/boats';
 
+/** Residents walk to a moored hull, so boarding reaches well past the dock apron. */
+const BOARD_REACH=160;
 export function BoatControls({engine,dock}:{engine:Engine;dock?:number}) {
   const [kind,setKind]=useState<BoatClass>('riverboat');
   const g=engine.game, selected=g.selectedUnits();
@@ -27,7 +29,7 @@ export function BoatControls({engine,dock}:{engine:Engine;dock?:number}) {
       {dock!==undefined&&<><label>Hull type<select value={kind} onChange={e=>setKind(e.target.value as BoatClass)}>{Object.entries(BOAT_CLASSES).map(([id,s])=><option key={id} value={id}>{s.name} · {s.seats} seats</option>)}</select></label><button type="button" disabled={!!hullIssue} onClick={()=>run(()=>beginRiverboat(g,dock,0,undefined,kind==='riverboat'?undefined:kind))}><strong>Build {BOAT_CLASSES[kind].name.toLowerCase()} · {BOAT_CLASSES[kind].seats} seats</strong><span>{BOAT_CLASSES[kind].wood} logs · {BOAT_CLASSES[kind].stone} stone{BOAT_CLASSES[kind].cordage?` · ${BOAT_CLASSES[kind].cordage} cordage`:''} · {BOAT_CLASSES[kind].seconds}s work</span></button>{hullIssue&&<small>{hullIssue}</small>}</>}
       {boats.map(b=>{
         const crew=boatCrew(g,b.id), free=b.capacity-crew.length,load=vesselLoad(b,crew.filter(u=>u.boat?.phase==='aboard'));
-        const people=(selected.length?selected:g.state.units).filter(u=>u.team===0&&u.hp>0&&!u.boat&&!u.haulage&&Math.hypot(u.x-b.x,u.z-b.z)<=24);
+        const people=(selected.length?selected:g.state.units).filter(u=>u.team===0&&u.hp>0&&!u.boat&&!u.haulage&&!u.prisoner&&Math.hypot(u.x-b.x,u.z-b.z)<=BOARD_REACH).sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z));
         const quote=boatServiceQuote(b),serviceMaterials=quote&&g.tribe(0).wood>=quote.wood&&(g.tribe(0).items?.cordage??0)>=quote.cordage,focused=g.selectedBoat===b.id,service=boatServiceProject(g,b.id),serviceDock=g.state.buildings.find(d=>d.type==='dock'&&d.team===b.team&&g.finished(d)&&!hullServicePhysicalIssue(g,b.id,d,b.team));
         return <section className="boat-card" key={b.id}>
           <div className="boat-status"><strong>{b.hullClass?`${boatClass(b).name} · `:""}{crew.length}/{b.capacity} seats</strong><span>{crew.some(u=>u.boat?.phase==='boarding')?'Boarding':b.exploration?'Exploring':b.captain?'Ready to row':'Moored'}</span></div>
@@ -35,10 +37,10 @@ export function BoatControls({engine,dock}:{engine:Engine;dock?:number}) {
           {b.hullClass&&<span>Hull {b.hp.toFixed(1)}/{boatClass(b).maxHp} · Paid service needs this boat moored at a real dock</span>}
           {b.hullClass&&b.hp<boatClass(b).maxHp-1e-8&&!service&&<button type="button" disabled={!serviceDock||!serviceMaterials} title={!serviceDock?'Needs a dock to work from':!serviceMaterials?'Not enough logs or cordage in store':undefined} onClick={()=>run(()=>serviceDock&&beginBoatService(g,b.id,serviceDock.id))}>Service this hull<span>{quote?.wood} logs · {quote?.cordage} cordage · 60 work seconds</span></button>}
           {service&&<><span>{service.work.paused?'Paused paid service':'Hull reserved for dock service'} · {Math.floor(service.work.progress/service.work.duration*100)}%</span>{service.work.paused&&<button type="button" disabled={!serviceDock} title={!serviceDock?'Needs a dock to work from':undefined} onClick={()=>run(()=>serviceDock&&beginBoatService(g,b.id,serviceDock.id))}>Resume paid service</button>}<button type="button" onClick={()=>run(()=>abandonBoatService(g,b.id))}>Abandon service · no refund</button></>}
-          {!b.captain&&<p>Bring residents close, then board.</p>}
+          {!b.captain&&<p>Select residents, or just press Board: the nearest free adults walk to the hull and take the helm.</p>}
           <SailRigControls engine={engine} boat={b}/>
           <div className="boat-actions">
-            <button type="button" disabled={!free||!people.length} title={!free?'No free seats':!people.length?'No one is free to board':undefined} onClick={()=>run(()=>boardRiverboat(g,b.id,people.slice(0,free)))}>
+            <button type="button" disabled={!free||!people.length} title={!free?'No free seats':!people.length?'No one is free to board':undefined} onClick={()=>run(()=>boardRiverboat(g,b.id,people.slice(0,free),0,false,BOARD_REACH))}>
               Board {Math.min(free,people.length)||''}
             </button>
             {!focused&&<button type="button" onClick={()=>run(()=>{g.selectBoat(b.id);engine.view.look.x=b.x;engine.view.look.z=b.z;})}>Select boat</button>}

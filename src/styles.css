@@ -484,7 +484,9 @@ canvas:focus-visible {
 .compact-actions button{display:flex;align-items:center;justify-content:center;gap:3px;min-height:30px;height:30px;min-width:30px;padding:5px;border-color:#c5a66655;border-radius:5px;}
 .compact-actions svg{width:15px;height:15px;}.compact-actions button span{font-size:10px;}
 .compact-actions button[aria-pressed=true]{border-color:var(--color-bronze);color:var(--color-bronze-bright);}
-.hud-status-drawer{position:absolute;top:80px;left:0;width:320px;max-height:65vh;overflow:auto;padding:10px;font-size:12px;}
+.hud-status-drawer{position:absolute;top:80px;left:0;width:320px;max-height:calc(100dvh - 100px);overflow-y:auto;overscroll-behavior:contain;padding:10px;font-size:12px;}
+/* one scroller only: a nested max-height scroller inside the drawer swallowed the trackpad wheel before the bottom was reachable */
+.hud-status-drawer .max-h-\[65vh\]{max-height:none;overflow:visible}
 .hud-status-drawer>header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:14px;}
 .hud-status-drawer>nav{display:flex;gap:3px;margin-bottom:8px;}
 .hud-status-drawer>nav button{padding:5px 8px;border-radius:4px;}.hud-status-drawer>nav button[aria-pressed=true]{background:var(--color-ink-soft);color:var(--color-bronze-bright);}

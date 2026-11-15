@@ -123,7 +123,7 @@ export function councilTermsTab(offers:number,captives:number){
  const count=offers+captives;return count?{id:'terms',label:offers?'Terms':'Captives',icon:<Swords size={20}/>,badge:count}:null;
 }
 export function CouncilWithoutHouse({onClose,terms,captives}:{onClose:()=>void;terms:ReactNode;captives:ReactNode}){
- return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><p className="hw-empty">No ruling house yet.</p>{terms}{captives}</Screen>;
+ return <Screen title="Council" icon={<Crown size={32}/>} onClose={onClose}><p className="hw-empty">No ruling house yet. This village was saved before houses existed, so no ruler or family was ever founded. Start a new village to play with a ruling house; terms and captives still show below.</p>{terms}{captives}</Screen>;
 }
 export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()=>void;initial?:string}){
  const QC={kind:'rulers-council'} as const,QS={kind:'society-decisions'} as const,QB={kind:'combat-doctrine'} as const,QV={kind:'society-civic'} as const,QO={kind:'capitulation-offers'} as const,QP={kind:'captives'} as const,QE={kind:'elder-counsel'} as const;

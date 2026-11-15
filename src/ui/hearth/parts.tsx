@@ -143,7 +143,7 @@ const JOBS:{id:string;label:string;icon:ReactNode;need?:(h:HudSnapshot)=>boolean
  {id:'food',label:'Food',icon:<Wheat size={28}/>},{id:'wood',label:'Logs',icon:<RES_ICON.wood size={28}/>},{id:'stone',label:'Stone',icon:<RES_ICON.stone size={28}/>},
  {id:'copper',label:'Copper',icon:<RES_ICON.copper size={28}/>,need:h=>h.age>=1||h.copper>0},{id:'iron',label:'Iron',icon:<RES_ICON.iron size={28}/>,need:h=>h.age>=2},
  {id:'hunt',label:'Hunt',icon:<Footprints size={28}/>},{id:'drill',label:'Drill',icon:<Sword size={28}/>,need:h=>h.age>=1},
- {id:'rest',label:'Rest',icon:<Hand size={28}/>},{id:'auto',label:'Auto',icon:<Play size={28}/>},
+ {id:'auto',label:'Auto',icon:<Play size={28}/>},
 ];
 const JOB_TIP:Record<string,string>={food:'Gather berries and fish',wood:'Cut logs',stone:'Quarry stone',copper:'Gather discovered copper',iron:'Gather iron',hunt:'Hunt deer, boar and goats',drill:'Practise at a barracks: better fighting, less work',rest:'Recover, then resume work',auto:'Release the job lock; follow village priorities'};
 function MatchupChip({engine,hud}:{engine:Engine;hud:HudSnapshot}){
@@ -204,7 +204,7 @@ export function SelectionCard({hud,engine,onOffer}:{hud:HudSnapshot;engine:Engin
  const f=useFold('selection');
  useEffect(()=>{setMore(sel.kind==='building'&&sel.team===0&&!!sel.completed);setInfo(sel.kind==='building');setTab('');},[sel.kind,sel.name,sel.buildingId]);
  /** A clicked building always shows what it does and its orders at once: no Details or More-orders button to find first. */
- const direct=sel.kind==='building';
+ const direct=sel.kind!=='none';
  if(sel.kind==='none')return null;
  if(!f.showPanel)return <FoldHandle f={f} icon={<UserRound size={24}/>}/>;
  const hp=sel.maxHp>0?Math.round(100*sel.hp/sel.maxHp):0;

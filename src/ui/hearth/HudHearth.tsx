@@ -20,6 +20,7 @@ import {PreviouslyCard} from './PreviouslyCard';
 import {OldSaveNoteCard} from './OldSaveNoteCard';
 import {AlertPins,useGlanceAlerts} from './glance';
 import {DisputeChip} from './DisputeChip';
+import {WarPopup} from './WarPopup';
 import {HelpScreen} from './helpScreen';
 import {RoadsCard} from './roadsCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
@@ -70,6 +71,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {!founding&&!screen&&engine&&<OldSaveNoteCard engine={engine}/>}
   {!founding&&!screen&&engine&&<PreviouslyCard engine={engine}/>}
   {!founding&&!screen&&engine&&<DisputeChip engine={engine} onOpen={tab=>setScreen({k:'council',tab})}/>}
+  {!founding&&!screen&&engine&&<WarPopup engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})}/>}
   {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})} onOpenHelp={()=>setScreen({k:'help'})}/>}
   <header className="hw-top"><ResourceBar hud={hud} engine={engine} onOpen={k=>setScreen(k==='council'?{k:'council'}:{k:'village',tab:'stores'})}/><TimeCard hud={hud} engine={engine} onAges={()=>setScreen({k:'ages'})} onMenu={()=>setScreen({k:'menu'})}/></header>
   {!founding&&showTestLab&&<Foldable id="testlab" icon={<FlaskConical size={24}/>} className="hw-testlab-fold"><button type="button" className="hw-testlab" aria-label="Test lab" title="Open the Test lab" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),(o:unknown)=>{if(o)setTest(true);})}><FlaskConical size={24}/><span>Test lab</span></button></Foldable>}

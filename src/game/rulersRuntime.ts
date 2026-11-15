@@ -29,7 +29,12 @@ export const rulersEnabled=(g:Game)=>{const v=st(g).worldOptions?.rulersVersion;
 export function livingPeople(g:Game,team:number){let n=0;for(const u of st(g).units)if(u.team===team&&u.hp>0)n++;return n;}
 export function ensureRulers(g:Game):RulersState|null{
  if(!rulersEnabled(g))return null;const s=st(g);
- if(!s.rulers)s.rulers=initRulers(s.seed,s.tribes.map((_,i)=>String(i)));
+ const ids=s.tribes.map((_,i)=>String(i));
+ if(!s.rulers)s.rulers=initRulers(s.seed,ids);
+ else if(ids.some(id=>!s.rulers!.societies[id])){ // a loaded save whose society table lags the tribe list: found the missing houses from the same seed rather than hide the Council
+  const fresh=initRulers(s.seed,ids).societies;
+  s.rulers={...s.rulers,societies:{...fresh,...s.rulers.societies}};
+ }
  return s.rulers;
 }
 /** Bad weather accumulates into a slow climate-stress memory (0..1): droughts and floods wear a land down, good seasons restore it. */

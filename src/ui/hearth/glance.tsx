@@ -84,6 +84,9 @@ export function useGlanceAlerts(engine:Engine|null):Alert[]{
  return useMemo(()=>game?detectAlerts(game,workload):[],[game,game?.state,fast,workload]);
 }
 /** Go to the place an alert is about, or sound the horn for raiders. */
+/** The raider alert, held for a short grace so a raider stepping in and out of sight is one ping, not a string of them. */
+const RAID_PING_GRACE=45;
+export function raiderPing(alerts:readonly Alert[]){return alerts.find(a=>a.kind==='raiders')??null;}
 export function alertAction(a:Alert,engine:Engine|null){
  if(!engine)return;
  if(a.kind==='raiders'&&!a.at){engine.game.soundDefenseHorn();engine.pushHud();return;}
@@ -114,9 +117,16 @@ function InfoCard({n,fading}:{n:InfoNote;fading:boolean}){
  * and timed info cards for news. `extra` carries the older raid-result and ruler toasts.
  */
 export function PriorityStack({hud,engine,alerts,onOpen,hidden,extra}:{hud:HudSnapshot;engine:Engine|null;alerts:readonly Alert[];onOpen:(k:'ages')=>void;hidden:boolean;extra?:ReactNode}){
- const {critical,chips}=rankAlerts(alerts);
+ const heldRaid=useRef<{at:number;alert:Alert|null}>({at:-1e9,alert:null});
+ const nowS=performance.now()/1000,liveRaid=raiderPing(alerts);
+ if(liveRaid)heldRaid.current={at:nowS,alert:liveRaid};
+ const raiderAlert=liveRaid??(nowS-heldRaid.current.at<RAID_PING_GRACE?heldRaid.current.alert:null);
+ const {critical,chips}=rankAlerts(alerts.filter(a=>a.kind!=='raiders'));
  const [gone,setGone]=useState<string[]>([]);
+ useEffect(()=>{if(!raiderAlert&&gone.includes('raiders'))setGone(g=>g.filter(x=>x!=='raiders'));},[raiderAlert,gone]);
  const info:InfoNote[]=[];
+ /** Raiders ping once as a timed card with a Horn button, not a sticky emergency that sits on screen the whole fight. */
+ if(raiderAlert)info.push({id:'raiders',sticky:false,ttl:INFO_RULES.resultTtlSeconds/2,tone:'bad',icon:<Swords size={26}/>,title:`Raiders near · ${raiderAlert.count}`,action:{label:'Horn',onClick:()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}},dismiss:()=>setGone(g=>[...g,'raiders'])});
  if(hud.canAge&&hud.nextAge)info.push({id:'age',sticky:false,tone:'good',icon:<BookOpen size={26}/>,title:`${hud.nextAge} ready`,action:{label:'Open',onClick:()=>onOpen('ages')}});
  if(hud.routeOffer&&!hud.pendingAge){const o=hud.routeOffer,G=RES_ICON[o.give as keyof typeof RES_ICON],T=RES_ICON[o.get as keyof typeof RES_ICON];
   info.push({id:'route',sticky:true,icon:<Package size={26}/>,title:o.rival,chips:<><span className="hw-chip" title={`Give ${o.giveAmt}`}><G size={24}/>{o.giveAmt}</span><ChevronRight size={24}/><span className="hw-chip" title={`Get ${o.getAmt}`}><T size={24}/>{o.getAmt}</span></>,action:{label:'Accept',onClick:()=>engine?.acceptRoute()},dismiss:()=>engine?.declineRoute()});}

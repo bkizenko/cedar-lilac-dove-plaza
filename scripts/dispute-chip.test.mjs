@@ -2,7 +2,7 @@ import {registerHooks} from 'node:module';import {readFileSync} from 'node:fs';i
 registerHooks({resolve(specifier,context,next){if(specifier.startsWith('@/')){const url=new URL('../src/'+specifier.slice(2),import.meta.url).href;let last;for(const ext of ['','.ts','.tsx']){try{return next(url+ext,context)}catch(e){last=e}}throw last}return next(specifier,context)},load(url,context,next){if(/\.tsx?$/.test(url)){const source=readFileSync(new URL(url),'utf8');return{format:'module',shortCircuit:true,source:tsxCompiler.transpileModule(source,{compilerOptions:{module:tsxCompiler.ModuleKind.ESNext,target:tsxCompiler.ScriptTarget.ES2022,jsx:tsxCompiler.JsxEmit.ReactJSX}}).outputText}}return next(url,context)}});
 import test from 'node:test';import assert from 'node:assert/strict';
 const {disputeChip}=await import('../src/ui/council/disputeChip.ts');
-const war={key:'war-2',team:2,tone:'danger',glyph:'⚔',label:'At odds',text:'Ridge Clan stand against us.'};
+const war={key:'war-2',team:2,tone:'danger',glyph:'⚔',label:'At odds',text:'Ridge Clan are at war with us.'};
 const unrest={key:'unrest',tone:'warn',glyph:'!',label:'Unrest',text:'Grumbling: the hall is restless.'};
 const ward={key:'ward-1-Ana',team:1,tone:'note',glyph:'⌂',label:'Kin due home',text:'x'};
 test('no chip without a dispute; wards and notes never raise one',()=>{assert.equal(disputeChip([]),null);assert.equal(disputeChip([ward]),null);});
