@@ -1,3 +1,4 @@
+import {weaponDamage} from './weaponGrades';
 import {hasTaskCommitment} from './workCommitments';
 import type {Game} from './sim';
 import type {Unit} from './types';
@@ -15,7 +16,7 @@ export function equipCaravan(g:Game,u:Unit){
   if(!choice)return false;
   if(choice==='spearman')t.spears--;else if(choice==='archer')t.bows--;else t.blades!--;
   const d=UNITS[choice];u.type=choice;u.militia=true;u.caravanArmed=true;
-  u.range=d.range;u.dmg=d.dmg*AGE_STAT[t.age];u.rof=d.rof;return true;
+  u.range=d.range;u.dmg=weaponDamage(choice,t.age);u.rof=d.rof;return true;
 }
 /** Finish a loan only after both resident and goods physically return. Death loses it. */
 export function recoverCaravanEquipment(g:Game,u:Unit){

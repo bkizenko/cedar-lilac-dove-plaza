@@ -1,3 +1,4 @@
+import {weaponDamage} from './weaponGrades';
 import {journeyPermit,spendRaidClaim} from './rulersRuntime';
 import {raidGate,militaryBonus} from './societyRuntime';
 import {planRivalPairRaid,dispatchPairRaid,isSocietyPeaceMessengerFor} from './rivalActivity';
@@ -33,7 +34,7 @@ export function prepareRivalDefense(g:Game,team:number,reserve:number){
  if(u&&(t.spears>0||t.bows>0||(t.blades||0)>0)){
   const kind=t.spears>0?'spearman':t.bows>0?'archer':'swordsman';
   if(kind==='spearman')t.spears--;else if(kind==='archer')t.bows--;else t.blades!--;
-  const d=UNITS[kind];u.militia=true;u.range=d.range;u.dmg=d.dmg*AGE_STAT[t.age];u.rof=d.rof;
+  const d=UNITS[kind];u.militia=true;u.range=d.range;u.dmg=weaponDamage(kind,t.age);u.rof=d.rof;
   u.workReason='Equipped resident — working and ready to defend';return true;
  }
  if(t.spears+t.bows+(t.blades||0)>=rivalMilitaryTarget(g,team)-armedCount)return false;

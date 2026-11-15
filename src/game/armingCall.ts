@@ -1,3 +1,4 @@
+import {weaponDamage,gradeName} from './weaponGrades';
 import type {Game} from './sim';
 import type {Unit,UnitType} from './types';
 import {UNITS,AGE_STAT} from './constants';
@@ -25,7 +26,7 @@ export function armFromStock(g:Game,u:Unit,team=u.team){
  if((t.blades||0)>0){t.blades--;kind='swordsman';}else if((t.bows||0)>0){t.bows--;kind='archer';}else if((t.spears||0)>0){t.spears--;kind='spearman';}
  if(!kind)return false;
  interruptCampRelocation(g,u);const d=UNITS[kind];
- u.type=kind;u.militia=true;u.range=d.range;u.dmg=d.dmg*AGE_STAT[t.age];u.rof=d.rof;
+ u.type=kind;u.militia=true;u.range=d.range;u.dmg=weaponDamage(kind as 'spearman'|'archer'|'swordsman',t.age);u.rof=d.rof;
  u.order='hold';u.job=null;u.node=null;u.target=null;u.emergency=undefined;u.workReason='Armed civilian — ready to defend or raid';
  return true;
 }
@@ -65,6 +66,6 @@ export function weaponStockReport(g:Game,team=0){
   else if(armEligible(g,u,team,false))free++;
  }
  const spears=t?.spears||0,bows=t?.bows||0,blades=t?.blades||0;
- return {spears,bows,blades,stored:spears+bows+blades,armed,armedTotal:armed.spearman+armed.archer+armed.swordsman+armed.other,unarmedAdults:free,waiting:armingCallStatus(g,team).waiting};
+ const age=t?.age??0;return {grades:{spear:gradeName('spear',age),bow:gradeName('bow',age),blade:gradeName('blade',age)},spears,bows,blades,stored:spears+bows+blades,armed,armedTotal:armed.spearman+armed.archer+armed.swordsman+armed.other,unarmedAdults:free,waiting:armingCallStatus(g,team).waiting};
 }
-export const weaponStockText=(r:ReturnType<typeof weaponStockReport>)=>`In stores: ${r.spears} spears · ${r.bows} bows · ${r.blades} blades. Under arms: ${r.armedTotal} (${r.armed.spearman} spear · ${r.armed.archer} bow · ${r.armed.swordsman} blade). Unarmed adults: ${r.unarmedAdults}${r.waiting?` · ${r.waiting} on their way to arm`:''}.`;
+export const weaponStockText=(r:ReturnType<typeof weaponStockReport>)=>`In stores: ${r.spears} ${r.grades.spear} spears · ${r.bows} ${r.grades.bow}s · ${r.blades} ${r.grades.blade} blades. Under arms: ${r.armedTotal} (${r.armed.spearman} spear · ${r.armed.archer} bow · ${r.armed.swordsman} blade). Unarmed adults: ${r.unarmedAdults}${r.waiting?` · ${r.waiting} on their way to arm`:''}.`;

@@ -24,5 +24,5 @@ test('old saves without a call load and an empty store arms nobody',()=>{
 test('weapon stock report counts stores, armed people and free adults',()=>{
  const g=fixture(),a=resident(g,4,30),b=resident(g,40,30);resident(g,-40,30).maturesAt=999;g.callToArms();
  const r=weaponStockReport(g,0);assert.equal(r.stored+r.armedTotal,3,'stock plus armed equals what existed');assert.equal(r.armedTotal,r.armed.spearman+r.armed.archer+r.armed.swordsman);
- assert.match(weaponStockText(r),/In stores: \d+ spears/);assert.equal(a.militia,true);
+ assert.match(weaponStockText(r),/In stores: \d+ [\w-]+ spears/);assert.equal(a.militia,true);
 });
