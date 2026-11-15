@@ -18,6 +18,7 @@ export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'hig
  farMetres?:number;/** screen-door fade span ahead of the cut-offs (0/absent = hard edge) */fadeMetres?:number;/** conservative frustum test (x,z,radius) for far-tier trees; absent = draw all */inView?:(x:number,z:number,r:number)=>boolean;filler?:ForestFiller|null};
 export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean;/** cosmetic filler tree: never a resource, never picked */filler?:true};
 export type ForestOptions={seed:number;/** ecological stands (src/game/forestEcology.ts): species, age class and size come from the stand instead of a per-tree hash; absent = the original per-tree choice */ecology?:StandField;siteAt:(x:number,z:number)=>TreeSite;baseFormAt:(id:number,x:number,z:number)=>{base:BaseForm;kind:string};/** unit wind vector the trees lean along */wind?:[number,number];nearMetres:Record<'low'|'med'|'high',number>;farMetres:number;lowFarMetres:number;stumpHeightScale:number};
+const BARE_FAR=new THREE.Color('#5c5148');
 export const FOREST_LOD={fullFraction:.4,midFraction:1.15} as const;
 type Rec={sp:number;v:number;/** stand-derived size scale (ecology on); absent = the node's own scale */size?:number;sx:number;sy:number;lean:[number,number];yaw:number;hue:[number,number,number];autumn:number;timing:number};
 type Batch={mesh:THREE.InstancedMesh;state:THREE.InstancedBufferAttribute;ids:number[];capacity:number;n:number;name:string};
@@ -150,23 +151,23 @@ private stumps:Batch|null=null;private recs=new Map<number,Rec>();private info=n
     if(tier===0)fullTrees++;else midTrees++;if(heroTier===2)heroTrees++;if(density>.05||sp.evergreen)leafy++;
    }else{
     const g=this.geometryInfo(rec.sp),fl=node.filler===true;
+    const bareFar=dec&&density<=.05,bk=bareFar?.62:1;if(bareFar)this.color.set(BARE_FAR).lerp(this.snowColor,snow*.5);
     if(distance>detailEff-fadeM){
      // beyond the individual-detail radius: one cheap crown (no trunk), pickable like the far crown it replaces. Inside the last `fade` metres both are drawn (complementary dither = cross-fade).
-     if(density<=.05&&dec){if(distance>detailEff)continue;}else{
+     {
      const style=sp.group==='conifer'&&sp.arch!=='umbrella'&&sp.arch!=='decurrent'||sp.group==='stunted'&&sp.id==='juniper'?1:0;
      this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);
      this.pos.set(g.crownCenter[0]*s*rec.sx,g.crownCenter[1]*s*rec.sy,g.crownCenter[2]*s*rec.sx).applyQuaternion(this.quat);this.pos.x+=node.x;this.pos.y+=node.y;this.pos.z+=node.z;
-     this.scale.set(g.crownHalf[0]*s*rec.sx*.96,g.crownHalf[1]*s*rec.sy*.96,g.crownHalf[2]*s*rec.sx*.96);this.matrix.compose(this.pos,this.quat,this.scale);
+     this.scale.set(g.crownHalf[0]*s*rec.sx*.96*bk,g.crownHalf[1]*s*rec.sy*.96*bk,g.crownHalf[2]*s*rec.sx*.96*bk);this.matrix.compose(this.pos,this.quat,this.scale);
      const c=CHEAP_TMP.copy(this.color);if(snow>0)c.lerp(this.snowColor,snow*.55);this.fill.addBlob(style===1,this.matrix,c);
      if(!fl)this.cheapIds[style].push(node.id);fillerCounts.cheap++;if(distance>detailEff)continue;}
     }
     if(!fl&&farTrunks>=this.farTrunk.instanceMatrix.count){const old=this.farTrunk,mesh=new THREE.InstancedMesh(old.geometry,old.material,old.instanceMatrix.count*2);mesh.name=old.name;mesh.frustumCulled=false;mesh.instanceMatrix.array.set(old.instanceMatrix.array);this.scene.remove(old);old.dispose();this.scene.add(mesh);this.farTrunk=mesh;}
     this.pos.set(node.x,node.y,node.z);this.euler.set(rec.lean[1],rec.yaw,-rec.lean[0]);this.quat.setFromEuler(this.euler);
     const tr=Math.max(.12,sp.r0*.7)*s*rec.sx;this.scale.set(tr,Math.max(.6,g.crownCenter[1])*s*rec.sy,tr);this.matrix.compose(this.pos,this.quat,this.scale);if(fl)this.fill.addTrunk(this.matrix);else{this.farTrunk.setMatrixAt(farTrunks++,this.matrix);this.farTrunkIds.push(node.id);}
-    if(density<=.05&&dec)continue;
     const style=sp.group==='conifer'&&sp.arch!=='umbrella'&&sp.arch!=='decurrent'||sp.group==='stunted'&&sp.id==='juniper'?1:0,i=fl?0:farCounts[style]++;if(!fl)this.growFar(style,i+1);const mesh=this.far[style];
     this.pos.set(g.crownCenter[0]*s*rec.sx,g.crownCenter[1]*s*rec.sy,g.crownCenter[2]*s*rec.sx).applyQuaternion(this.quat);this.pos.x+=node.x;this.pos.y+=node.y;this.pos.z+=node.z;
-    this.scale.set(g.crownHalf[0]*s*rec.sx*.96,g.crownHalf[1]*s*rec.sy,g.crownHalf[2]*s*rec.sx*.96);this.matrix.compose(this.pos,this.quat,this.scale);
+    this.scale.set(g.crownHalf[0]*s*rec.sx*.96*bk,g.crownHalf[1]*s*rec.sy*bk,g.crownHalf[2]*s*rec.sx*.96*bk);this.matrix.compose(this.pos,this.quat,this.scale);
     const c=this.color;if(snow>0)c.lerp(this.snowColor,snow*.55);
     if(fl){this.fill.addCrown(style===1,this.matrix,c);fillerCounts.far++;}else{mesh.setMatrixAt(i,this.matrix);mesh.setColorAt(i,c);this.farIds[style].push(node.id);}
    }
