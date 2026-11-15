@@ -4,6 +4,9 @@ import {raidGate,militaryBonus} from './societyRuntime';
 import {planRivalPairRaid,dispatchPairRaid,isSocietyPeaceMessengerFor} from './rivalActivity';
 import {AGE_STAT,UNITS} from './constants';
 import {beginWeaponWork} from './warfare';
+import {BRONZE_RULES} from './bronze';
+import {planFoodWithdrawal,commitFoodWithdrawal} from './tradeFood';
+import {beginProduction,productionIssue} from './production';
 import type {Game} from './sim';
 import {rivalDifficulty} from './difficulty';
 import type {Building,Unit} from './types';
@@ -25,6 +28,26 @@ export const OPERATION_RULES={militaryReadinessHealthRatio:.6,minFoodSeconds:180
 export type RaidMetrics={reward:number;grievance:number;travelCost:number;defenseCost:number;structureCost:number;nightBonus:number;observedDefenders:number;power:number;guards:number};
 export type RivalRaidPlan={target:Building;fighters:Unit[];utility:number;reason:string;metrics:RaidMetrics};
 function freeWorker(g:Game,u:Unit){return u.hp>=u.maxHp*OPERATION_RULES.militaryReadinessHealthRatio&&u.type==='worker'&&!u.militia&&adult(g,u)&&!hasTaskCommitment(u)&&u.carry===0&&!u.jobLock&&!u.buildOrder&&!u.trade&&!u.tributeJourney&&!u.expedition&&!u.scout&&!u.visit&&!u.foundingJourney&&!u.envoy&&!u.emergency&&!u.recalled&&u.drill==null&&['idle','gather'].includes(u.order);}
+/** Heavy spear infantry at the rival's age: a hoplite (Iron) or pikeman (Classical) is an existing adult kitted from real iron, food and timber at a finished barracks. */
+export function heavyEquip(g:Game,team:number,u:Unit,stores:Building[]):boolean{
+ const t=g.tribe(team);if(t.age<2||!stores.some(b=>b.type==='barracks'))return false;
+ const kind=t.age>=3?'pikeman':'hoplite',d=UNITS[kind];
+ if(t.iron<d.iron+4||t.wood<d.wood+20)return false;
+ const lots=planFoodWithdrawal(g,team,d.food);if(!lots)return false;
+ if(!commitFoodWithdrawal(g,team,lots))return false;
+ t.iron-=d.iron;t.wood-=d.wood;u.type=kind;u.militia=true;u.range=d.range;u.dmg=weaponDamage('spearman',t.age)*(d.dmg/UNITS.spearman.dmg);u.rof=d.rof;
+ u.workReason=`Trained as a ${d.name.toLowerCase()} from real iron — ready to defend`;return true;
+}
+/** A rival that holds tin and copper and has a finished forge casts bronze, then bronze blades, through the ordinary paid production path. */
+export function rivalCastBronze(g:Game,team:number):boolean{
+ const t=g.tribe(team);if(t.age<BRONZE_RULES.minimumAge)return false;
+ const forge=g.state.buildings.find(b=>b.team===team&&b.type==='forge'&&b.hp>0&&g.finished(b));if(!forge)return false;
+ if(g.state.production?.projects.some(p=>p.team===team&&['castBronze','castBronzeBlades'].includes(p.recipe)&&!['complete','lost'].includes(p.phase)))return false;
+ const recipe=(t.items?.bronze||0)>=BRONZE_RULES.bladeBronze?'castBronzeBlades':(t.items?.tin||0)>=BRONZE_RULES.alloyTin&&t.copper>=BRONZE_RULES.alloyCopper?'castBronze':null;if(!recipe)return false;
+ const maker=g.state.units.find(u=>freeWorker(g,u)&&u.team===team&&distance(u,forge)<24);if(!maker)return false;
+ if(productionIssue(g,recipe,forge.id,maker.id))return false;
+ return beginProduction(g,recipe,forge.id,maker.id);
+}
 /** Make finite weapons, then equip existing adults; never spawn a soldier. */
 export function prepareRivalDefense(g:Game,team:number,reserve:number){
  const t=g.tribe(team);
@@ -33,6 +56,12 @@ export function prepareRivalDefense(g:Game,team:number,reserve:number){
  if(armedCount>=rivalMilitaryTarget(g,team))return false;
  const stores=g.state.buildings.filter(b=>b.team===team&&g.finished(b)&&['townhall','warehouse','barracks'].includes(b.type));
  const u=g.state.units.find(u=>u.team===team&&freeWorker(g,u)&&stores.some(b=>distance(b,u)<20));
+ if(u&&heavyEquip(g,team,u,stores))return true;
+ if(u&&(t.items?.bronzeBlade||0)>0){
+  t.items!.bronzeBlade!--;const d=UNITS.swordsman;u.militia=true;u.range=d.range;u.dmg=weaponDamage('swordsman',t.age)*BRONZE_RULES.bladeDamage;u.rof=d.rof;
+  u.workReason='Equipped resident with a bronze-edged blade — working and ready to defend';return true;
+ }
+ if(rivalCastBronze(g,team))return true;
  if(u&&(t.spears>0||t.bows>0||(t.blades||0)>0)){
   const kind=t.spears>0?'spearman':t.bows>0?'archer':'swordsman';
   if(kind==='spearman')t.spears--;else if(kind==='archer')t.bows--;else t.blades!--;
