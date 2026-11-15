@@ -1,3 +1,4 @@
+import {FirstPersonOverlay} from './FirstPersonOverlay';
 import {useEffect,useState} from 'react';
 import {Landmark,Pause,TriangleAlert,Handshake} from 'lucide-react';
 import {UpdateReady} from './UpdateReady';
@@ -75,6 +76,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})} onOpenHelp={()=>setScreen({k:'help'})}/>}
   <header className="hw-top"><ResourceBar hud={hud} engine={engine} onOpen={k=>setScreen(k==='council'?{k:'council'}:{k:'village',tab:'stores'})}/><TimeCard hud={hud} engine={engine} onAges={()=>setScreen({k:'ages'})} onMenu={()=>setScreen({k:'menu'})}/></header>
   {!founding&&showTestLab&&<Foldable id="testlab" icon={<FlaskConical size={24}/>} className="hw-testlab-fold"><button type="button" className="hw-testlab" aria-label="Test lab" title="Open the Test lab" disabled={!engine||lifecycle.busy} onClick={()=>void lifecycle.run(()=>engine!.startTestSession(),(o:unknown)=>{if(o)setTest(true);})}><FlaskConical size={24}/><span>Test lab</span></button></Foldable>}
+  {engine?.firstPerson.active&&<FirstPersonOverlay engine={engine}/>}
   {!founding&&<Rail hud={hud} engine={engine} workOpen={screen?.k==='village'&&screen.tab==='work'} onWork={()=>setScreen({k:'village',tab:'work'})}/>}
   <NotesStack hud={hud} engine={engine} onOpen={open} hidden={false} alerts={alerts}/>
   {!founding&&!screen&&<RoadsCard engine={engine}/>}

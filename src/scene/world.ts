@@ -1402,7 +1402,24 @@ export class WorldView {
     ad.frame(rows,this.camera.position,game.state.time,performance.now()/1000);
   }
 
+  /** First-person eye pose (src/game/firstPerson.ts). While set, updateCamera draws from the eye instead of the orbit; look/yaw/pitch/dist are left for the exit to restore. */
+  private eyePose:{x:number;y:number;z:number;yaw:number;pitch:number}|null=null;
+  get inFirstPerson(){return this.eyePose!==null;}
+  /** Put the camera at the eye (or back on the orbit with null). Near plane drops for eye level; far and fog stay on the draw-distance bands. */
+  setEyePose(p:{x:number;y:number;z:number;yaw:number;pitch:number}|null){
+    const wasFp=this.eyePose!==null;this.eyePose=p;
+    if(!!p!==wasFp){
+      this.camera.near=p?.12:.5;this.camera.fov=p?62:38;this.camera.updateProjectionMatrix();
+    }
+  }
   updateCamera(dt: number) {
+    if(this.eyePose){
+      const e=this.eyePose;
+      this.camera.position.set(e.x,e.y,e.z);
+      this.camera.rotation.order='YXZ';this.camera.rotation.set(e.pitch,e.yaw,0);
+      this.camera.updateMatrixWorld();
+      return;
+    }
     const panSp = 22 * (this.dist / 38);
     if (this.pan.x || this.pan.z) {
       const fx = -Math.sin(this.yaw);

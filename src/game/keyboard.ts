@@ -22,6 +22,11 @@ export class KeyboardCommands {
       g = e.game,
       code = event.code;
     if (code === "Escape") {
+      if (e.firstPersonActive) {
+        e.exitFirstPerson();
+        e.pushHud();
+        return;
+      }
       this.help = false;
       this.ledger = false;
       if(e.isWorkerSession)e.cancelPresentationInteraction();
@@ -118,6 +123,10 @@ export class KeyboardCommands {
     )
       event.preventDefault();
     if (event.repeat) return;
+    if (code === "KeyY") {
+      e.toggleFirstPerson();
+      return;
+    }
     if (code === "KeyN") e.toggleLogging();
     if (code === "KeyK") this.mode = !this.mode;
     if (code === "KeyH") {event.preventDefault();this.help = !this.help;}

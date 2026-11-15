@@ -3,7 +3,7 @@ import {combatRank} from '../../game/warfare';
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {SkillStrip} from './skillsCard';
 import {PeaceActions,ConquestActions,type WarCommand} from './warActions';
-import {Minimize2,Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound} from 'lucide-react';
+import {Minimize2,Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound,Eye} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import {MusicChip} from './MusicControls';
 import {FoldHandle,FoldMin,useFold} from './fold';
@@ -75,6 +75,7 @@ export function Rail({hud,engine,workOpen,onWork}:{hud:HudSnapshot;engine:Engine
   <IconBtn label="Mark trees" tip="Drag over trees to mark them for felling (N)" active={!!engine?.loggingMode} onClick={()=>engine?.toggleLogging()}><Axe size={26}/></IconBtn>
   <IconBtn label="Recall" tip="Call everyone home (V)" onClick={()=>{engine?.game.soundRecall();engine?.pushHud();}}><Home size={26}/></IconBtn>
   <IconBtn label="Defense horn" tip="Call nearby adults to arms" onClick={()=>{engine?.game.soundDefenseHorn();engine?.pushHud();}}><Shield size={26}/></IconBtn>
+  <IconBtn label="Walk" tip="Walk the village at eye level (Y). Esc returns." active={!!engine?.firstPerson.active} onClick={()=>engine?.toggleFirstPerson()}><Eye size={26}/></IconBtn>
   <IconBtn label="Explore" tip="Scout unknown ground until stopped (X)" onClick={()=>engine?.explore()}><Compass size={26}/></IconBtn>
  </nav>;
 }

@@ -54,6 +54,7 @@ import { saveGame, loadRaw, hasSave, protectGame, exportGame, saveTestLabGame, l
 import type { BldType, HudSnapshot } from "./types";
 import { WorldView } from "@/scene/world";
 import { cameraOwnsWheel, wheelZoomFactor } from "./cameraInput";
+import {FIRST_PERSON_RULES,FIRST_PERSON_PREF_KEY,parseFirstPersonPrefs,newMode as newFirstPerson,enter as enterFirstPersonMode,exit as exitFirstPersonMode,stepBody as stepFirstPersonBody,eyePose as firstPersonEye,lookDelta as firstPersonLook,forwardOf as firstPersonForward,walkingDrawLevel,type FirstPersonWorld,type FirstPersonMode} from "./firstPerson";
 
 export type VillageSaveResult={saved:boolean;message:string;serialized?:string};
 export type VillageImportResult={applied:boolean;saved:boolean;message:string};
@@ -296,6 +297,15 @@ export class Engine {
   rotDrag: { x: number; y: number; sx: number; sy: number } | null = null;
   pinch: { d: number; dist: number } | null = null;
   keyboard = new KeyboardCommands(this);
+  /** First-person mode (src/game/firstPerson.ts). Presentation only: nothing here is saved, the sim keeps running, orders go through leftClick/rightClick at the crosshair. */
+  firstPerson:FirstPersonMode=newFirstPerson();
+  /** What the crosshair is on (person, animal or building), refreshed a few times a second while walking. */
+  firstPersonLabel="";
+  private fpLockHeld=false;
+  private fpSolids:{at:number;list:{x:number;z:number;w:number;d:number}[]}={at:-1,list:[]};
+  private fpHoverAt=0;
+  private fpFpsAt=0;
+  private fpLevelEased=false;
   private simAccumulator = 0;
   moveMode = false;
   loggingMode = false;
@@ -527,6 +537,7 @@ export class Engine {
     c.addEventListener("pointerleave",this.onPointerLeave);
     c.addEventListener("pointerup", this.onPointerUp);
     c.addEventListener("pointercancel", this.onPointerUp);
+    document.addEventListener("pointerlockchange", this.onLockChange);
     window.addEventListener("wheel", this.onWheel, { passive: false });
     c.addEventListener("contextmenu", (e) => e.preventDefault());
     document.addEventListener("visibilitychange", this.onVis);
@@ -571,6 +582,7 @@ export class Engine {
     // Only the bare canvas (or empty page) owns the wheel: any other element, known HUD class or not, scrolls itself.
     if (!cameraOwnsWheel(e.target, this.canvas)) return;
     e.preventDefault();
+    if(this.firstPerson.active)return;
     this.view.dist *= wheelZoomFactor(e);
   };
 
@@ -580,6 +592,7 @@ export class Engine {
   }
 
   private onPointerDown = (e: PointerEvent) => {
+    if(this.firstPerson.active){this.firstPersonPointerDown(e);return;}
     this.keyboard.mode = false;
     this.canvas.focus();
     this.canvas.setPointerCapture(e.pointerId);
@@ -607,6 +620,10 @@ export class Engine {
   };
 
   private onPointerMove = (e: PointerEvent) => {
+    if(this.firstPerson.active){
+      if(document.pointerLockElement===this.canvas||e.buttons&3)this.firstPersonLook(e.movementX,e.movementY);
+      return;
+    }
     const p = this.canvasXY(e);
     this.pointer.x = p.x;
     this.pointer.y = p.y;
@@ -646,6 +663,7 @@ export class Engine {
   };
 
   private onPointerUp = (e: PointerEvent) => {
+    if(this.firstPerson.active){try{this.canvas.releasePointerCapture(e.pointerId);}catch{/* already released */}return;}
     try {
       this.canvas.releasePointerCapture(e.pointerId);
     } catch {
@@ -1250,6 +1268,89 @@ export class Engine {
     this.view.look.y = this.game.height(nx, nz) + 0.4;
   }
 
+  /** Walk mode toggle (key Y, Rail button). Enters as the first selected villager, else at the view centre, facing the way the strategic camera looked. */
+  toggleFirstPerson(){if(this.firstPerson.active)this.exitFirstPerson();else this.enterFirstPerson();this.pushHud();}
+  get firstPersonActive(){return this.firstPerson.active;}
+  setFirstPersonBob(on:boolean){this.firstPerson={...this.firstPerson,bobEnabled:on};try{localStorage.setItem(FIRST_PERSON_PREF_KEY,JSON.stringify({bob:on}));}catch{/* preference only */}this.pushHud();}
+  private firstPersonWorld():FirstPersonWorld{
+    const g=this.game,now=performance.now();
+    if(now-this.fpSolids.at>250){this.fpSolids={at:now,list:g.state.buildings.filter(b=>g.solidBuilding(b)).map(b=>({x:b.x,z:b.z,w:b.w,d:b.d}))};}
+    return{height:(x,z)=>g.travelHeight(x,z),water:(x,z)=>g.waterAt(x,z),solids:this.fpSolids.list,half:(g.world?.size??this.view.mapSize)/2};
+  }
+  enterFirstPerson(){
+    if(this.firstPerson.active||!this.game.started||this.game.awaitingStart||this.view.lost)return false;
+    const g=this.game,v=this.view,unit=g.selectedUnits().find(u=>u.team===0&&u.hp>0);
+    const fwd=firstPersonForward(v.yaw),back=unit?1.4:0;
+    const at={x:(unit?.x??v.look.x)-fwd.x*back,z:(unit?.z??v.look.z)-fwd.z*back,yaw:v.yaw};
+    try{
+      const prefs=parseFirstPersonPrefs(localStorage.getItem(FIRST_PERSON_PREF_KEY));
+      const next=enterFirstPersonMode({...this.firstPerson,bobEnabled:prefs.bob},this.firstPersonWorld(),at,{lookX:v.look.x,lookY:v.look.y,lookZ:v.look.z,yaw:v.yaw,pitch:v.pitch,dist:v.dist,drawLevel:v.getEffectiveDrawDistance()});
+      if(!next){g.banner("No open ground to walk on here",3);return false;}
+      this.firstPerson=next;
+    }catch(error){console.error(error);return false;}
+    this.keyboard.mode=true;this.moveMode=false;this.drag=null;this.panDrag=null;this.rotDrag=null;
+    this.view.dist=14;this.view.hoveredUnitId=null;this.fpLevelEased=false;this.firstPersonLabel="";
+    this.requestFirstPersonLock();
+    g.banner("Walking · WASD move · mouse look · Shift run · click select · right-click order · Y or Esc return",5);
+    return true;
+  }
+  exitFirstPerson(){
+    if(!this.firstPerson.active)return;
+    const r=exitFirstPersonMode(this.firstPerson);this.firstPerson=r.mode;this.fpLockHeld=false;
+    try{if(document.pointerLockElement===this.canvas)document.exitPointerLock();}catch{/* already free */}
+    const s=r.restore,v=this.view;
+    v.setEyePose(null);
+    if(s){v.look.set(s.lookX,s.lookY,s.lookZ);v.yaw=s.yaw;v.pitch=s.pitch;v.dist=s.dist;if(s.drawLevel&&this.fpLevelEased)v.setEffectiveDrawDistance(s.drawLevel);}
+    this.fpLevelEased=false;this.keyboard.mode=false;this.view.hoveredUnitId=null;this.firstPersonLabel="";this.canvas.title="";
+    this.keys.clear();
+  }
+  private requestFirstPersonLock(){
+    try{const r=this.canvas.requestPointerLock?.() as unknown;if(r&&typeof (r as Promise<void>).catch==="function")(r as Promise<void>).catch(()=>{this.fpLockHeld=false;});}catch{/* drag-look fallback */}
+  }
+  private onLockChange=()=>{
+    if(document.pointerLockElement===this.canvas){this.fpLockHeld=true;return;}
+    // Escape (or the browser) released the mouse: that is the way out.
+    if(this.firstPerson.active&&this.fpLockHeld){this.fpLockHeld=false;this.exitFirstPerson();this.pushHud();}
+  };
+  private firstPersonLook(dx:number,dy:number){
+    if(!Number.isFinite(dx)||!Number.isFinite(dy))return;
+    const b=this.firstPerson.body,l=firstPersonLook(b,dx,dy);
+    this.firstPerson={...this.firstPerson,body:{...b,yaw:l.yaw,pitch:l.pitch}};
+  }
+  private firstPersonPointerDown(e:PointerEvent){
+    this.canvas.focus();
+    if(document.pointerLockElement!==this.canvas){this.requestFirstPersonLock();}
+    const cx=this.canvas.clientWidth/2,cy=this.canvas.clientHeight/2;
+    this.pointer.x=cx;this.pointer.y=cy;
+    if(e.button===0)this.leftClick(cx,cy,e.shiftKey);
+    else if(e.button===2)this.rightClick(cx,cy,e.shiftKey);
+  }
+  /** Per frame: integrate the body from held keys, draw from the eye, name what the crosshair is on, and ease draw distance when frames run slow. */
+  private updateFirstPerson(dt:number){
+    const fp=this.firstPerson;
+    if(!fp.active){if(this.view.inFirstPerson)this.view.setEyePose(null);return;}
+    const k=this.keys,down=(a:string,b?:string)=>k.has(a)||(b?k.has(b):false);
+    const input={forward:(down("KeyW","ArrowUp")?1:0)-(down("KeyS","ArrowDown")?1:0),strafe:(down("KeyD","ArrowRight")?1:0)-(down("KeyA","ArrowLeft")?1:0),turn:(k.has("KeyE")?1:0)-(k.has("KeyQ")?1:0),run:k.has("ShiftLeft")||k.has("ShiftRight")};
+    const body=stepFirstPersonBody(fp.body,input,dt,this.firstPersonWorld(),fp.bobEnabled);
+    this.firstPerson={...fp,body};
+    this.view.setEyePose(firstPersonEye(body,fp.bobEnabled));
+    this.pointer.x=this.canvas.clientWidth/2;this.pointer.y=this.canvas.clientHeight/2;
+    const now=performance.now();
+    if(now>=this.fpHoverAt&&!this.game.state.placing){
+      this.fpHoverAt=now+160;
+      const {x,y}=this.pointer;this.view.updateCamera(0);
+      this.view.hoveredUnitId=this.view.hoverPerson(x,y,this.game);
+      const animal=this.view.hoveredUnitId===null?this.view.pickWildlife(x,y,this.game):null;
+      this.firstPersonLabel=animal?(animal.hp>0?`Wild ${animal.species}`:`${animal.species} carcass`):(this.view.hoveredUnitId===null?this.hoverBuildingTitle(x,y):this.personLabel(this.view.hoveredUnitId));
+    }
+    if(now>=this.fpFpsAt){
+      this.fpFpsAt=now+2000;
+      const chosen=this.view.getDrawDistance(),want=walkingDrawLevel(chosen,this.fps);
+      if(want!==this.view.getEffectiveDrawDistance()&&(want!==chosen||this.fpLevelEased)){this.view.setEffectiveDrawDistance(want);this.fpLevelEased=want!==chosen||this.fpLevelEased;}
+    }
+  }
+  private personLabel(id:number){const u=this.game.state.units.find(x=>x.id===id);return u?`${u.name||u.type}`:"";}
+
   private frame = (t: number) => {
     if (this.disposed) return;
     try {
@@ -1272,8 +1373,11 @@ export class Engine {
       if (this.keys.has("KeyS") || this.keys.has("ArrowDown")) this.view.pan.z -= 1;
       if (this.keys.has("KeyA") || this.keys.has("ArrowLeft")) this.view.pan.x -= 1;
       if (this.keys.has("KeyD") || this.keys.has("ArrowRight")) this.view.pan.x += 1;
+      if(this.firstPerson.active){this.view.pan.x=0;this.view.pan.z=0;}
+      else{
       if (this.keys.has("KeyQ")) this.view.yaw += 0.9 * dt;
       if (this.keys.has("KeyE")) this.view.yaw -= 0.9 * dt;
+      }
 
       if (this.view.lost) {
         this.hudAcc += dt;
@@ -1304,8 +1408,11 @@ export class Engine {
         this.game.seasonMix().name,
       );
       this.updateProceduralAudio(dt);
+      if(!this.firstPerson.active){
       if (this.keys.has("PageUp")) this.view.dist *= Math.exp(-dt);
       if (this.keys.has("PageDown")) this.view.dist *= Math.exp(dt);
+      }
+      this.updateFirstPerson(dt);
       this.view.updateCamera(dt);
       if (this.keyboard.mode) this.keyboard.center();
       this.updateGhost();
@@ -1388,6 +1495,8 @@ export class Engine {
     this.canvas.removeEventListener("pointerleave",this.onPointerLeave);
     this.canvas.removeEventListener("pointerup", this.onPointerUp);
     this.canvas.removeEventListener("pointercancel", this.onPointerUp);
+    document.removeEventListener("pointerlockchange", this.onLockChange);
+    if(this.firstPerson.active)this.exitFirstPerson();
     window.removeEventListener("wheel", this.onWheel);
     this.view.dispose();
     this.audio.dispose();

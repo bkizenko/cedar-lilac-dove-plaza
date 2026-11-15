@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react';
-import {Compass,Users,Hammer,Clock,Flag,Keyboard,Sparkles} from 'lucide-react';
+import {Compass,Users,Hammer,Clock,Flag,Keyboard,Sparkles,Eye} from 'lucide-react';
 /** One-time Help: the keys the old tip banners used to scroll past, grouped by what you are doing. Reachable any time from Menu. */
 export const HELP_SEEN_KEY='hearthwild.ui.helpSeen';
 export const helpSeen=():boolean=>{try{return globalThis.localStorage?.getItem(HELP_SEEN_KEY)==='1';}catch{return true;}};
@@ -10,6 +10,8 @@ export const HELP_GROUPS:{id:string;title:string;icon:ReactNode;rows:Row[]}[]=[
   {keys:['C'],does:'Pick a gatherer'},{keys:[']'],does:'Find resources'},{keys:['R'],does:'Give an order'},{keys:['1'],does:'Plan a hut'},{keys:['Enter'],does:'Place it'}]},
  {id:'view',title:'Look around',icon:<Compass size={30}/>,rows:[
   {keys:['W','A','S','D'],does:'Pan'},{keys:['Q','E'],does:'Rotate'},{keys:['PgUp','PgDn'],does:'Zoom'},{keys:['F'],does:'Home'},{keys:['K'],does:'Centre on target'}]},
+ {id:'walk',title:'Walk at eye level',icon:<Eye size={30}/>,rows:[
+  {keys:['Y'],does:'Walk or return to the map'},{keys:['W','A','S','D'],does:'Move, strafe'},{keys:['Mouse'],does:'Look'},{keys:['Q','E'],does:'Turn'},{keys:['Shift'],does:'Run'},{keys:['Click'],does:'Select what you face'},{keys:['Right-click','R'],does:'Order'},{keys:['Esc'],does:'Return to the map'}]},
  {id:'people',title:'People and orders',icon:<Users size={30}/>,rows:[
   {keys:['C','Shift+C'],does:'Next, previous person'},{keys:['J'],does:'Workers'},{keys:['V'],does:'Army'},{keys:['I'],does:'Idle worker'},
   {keys:['R'],does:'Contextual order'},{keys:['Z'],does:'Attack-move'},{keys:['.'],does:'Stop'},{keys:[';'],does:'Hold'},{keys:['Ctrl+1-9'],does:'Store group'},{keys:['Alt+1-9'],does:'Recall group'}]},
