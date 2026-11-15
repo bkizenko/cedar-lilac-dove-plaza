@@ -620,6 +620,8 @@ export type GameState = {
   simulationEvents?:import('./simulationEvents').SimulationEventLog;
   finiteRaiderCampVersion?:1;
   survivalVersion?:1;
+  /** Seconds in one game year (seasons are a quarter). Absent = Classic 1800. Fixed at world creation; see calendarPacing.ts. */
+  yearLength?:number;
   haulageProjects?:import('./haulage').HaulageProject[];
   cartUpgradeRequests?:import('./haulage').CartUpgradeRequest[];
   contacts?:number[];
@@ -743,6 +745,8 @@ export type HudSelection = {
 };
 
 export type HudSnapshot = {
+  /** seconds per game year; absent = Classic 1800 (calendarPacing.ts yearSecondsOf) */
+  yearLength?:number;
   villageSkills?:import('./skillRuntime').VillageSkillCard;
   foodLots?: Partial<Record<FoodKind,number>>;
   cornerstoneCount?: number;

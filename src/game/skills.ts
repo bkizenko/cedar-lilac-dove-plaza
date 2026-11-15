@@ -4,6 +4,7 @@
  * Effects reach the sim only as time multipliers (`skillSpeed`), never as extra goods, so stock stays conserved.
  * Storage per person is one compact record; see SkillRecord. Absent record = no practice yet = multiplier exactly 1.
  */
+import {LIFE_YEAR_SECONDS} from './calendarPacing';
 export const SKILL_IDS=['farming','herding','hunting','fishing','foraging','woodcutting','mining','building','hauling','pottery','weaving','smithing','tanning','toolmaking','cooking','healing','sailing','trading','leading','fighting'] as const;
 export type SkillId=typeof SKILL_IDS[number];
 export type SkillSpec={label:string;/** work-seconds to reach 63% of the ceiling */tau:number;/** 0 shallow .. 1 deep: deep skills are forgotten more slowly and keep a higher floor */depth:number;/** largest speed gain at full performance */bonus:number;/** 0 cognitive .. 1 bodily: how much age and injury bite */physical:number;job?:string};
@@ -53,7 +54,7 @@ export function ageFactor(years:number,physical:number){const body=lerpTable([[8
 export const wisdom=(years:number)=>clamp((years-35)/35,0,1);
 export const teacherQuality=(mastery:number,years:number)=>clamp(mastery*(.7+.6*wisdom(years)),0,1.2);
 /** Age in years for skills. Births in-game start ageT at 0 and mature after 0.2 y, so they carry a 14 y offset. */
-export const skillAgeYears=(u:{ageT:number;parents?:unknown[]})=>u.ageT/1800+(u.parents?14:0);
+export const skillAgeYears=(u:{ageT:number;parents?:unknown[]})=>u.ageT/LIFE_YEAR_SECONDS+(u.parents?14:0);
 export function newRecord(genome:number,parents?:number[]):SkillRecord{const r:SkillRecord={v:1,g:genome,x:{}};if(parents?.length)r.p=parents.slice(0,2);return r;}
 export function entryMastery(rec:SkillRecord,skill:SkillId,e?:SkillEntry){e??=rec.x[skill];return e?masteryOf(skill,e[0],skillAptitude(rec,skill)):0;}
 export const peakMastery=(rec:SkillRecord,skill:SkillId)=>{const e=rec.x[skill];return e?masteryOf(skill,e[2],skillAptitude(rec,skill)):0;};

@@ -2,7 +2,7 @@ import {rawMeatSaturated} from './production';
 import {foodGuardHolds} from './foodGuard';
 import {navalIndependentFood} from './navalFleet';
 import {recordDraftTractionWork} from './draftTraction';
-import {SIM_CALENDAR_RULES} from './calendarPacing';
+import {SIM_CALENDAR_RULES,yearSecondsOf,yearScaleOf} from './calendarPacing';
 import{hasConstructionWork}from'./constructionTargets';
 import{housingFundingIssue,knowsHousing,housingOwnerCanContinue}from'./housing';
 import{rawCerealField,collectCerealSheaves,CEREAL_RULES}from'./cerealRules';
@@ -37,17 +37,20 @@ import type { Building, Unit, ResKind, ResourceNode, Critter } from "./types";
 import { LUMBER_R, QUARRY_R, DOCK_R, GATHER_WORK_RATE } from "./constants";
 import { irrigationYield } from "./irrigation";
 
+/** The DEFAULT (Classic) year only. A live game's year is `yearSeconds(g)`; do not use this constant for a running world. */
 export const YEAR_SECONDS = SIM_CALENDAR_RULES.yearSeconds;
+export const yearSeconds = (g: Game) => yearSecondsOf(g.state);
 export const FOOD_PER_PERSON_SECOND = 0.036;
 export function calendar(g: Game) {
-  const year = Math.floor(g.state.time / YEAR_SECONDS);
-  const phase = Math.floor((g.state.time % YEAR_SECONDS) / (YEAR_SECONDS / 4));
+  const Y = yearSecondsOf(g.state);
+  const year = Math.floor(g.state.time / Y);
+  const phase = Math.floor((g.state.time % Y) / (Y / 4));
   return {
     year,
     phase,
-    month: ["March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February"][Math.floor((g.state.time % YEAR_SECONDS) / (YEAR_SECONDS / 12))],
+    month: ["March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February"][Math.floor((g.state.time % Y) / (Y / 12))],
     name: ["Spring", "Summer", "Autumn", "Winter"][phase],
-    remaining: YEAR_SECONDS / 4 - (g.state.time % (YEAR_SECONDS / 4)),
+    remaining: Y / 4 - (g.state.time % (Y / 4)),
   };
 }
 export function isDependent(g: Game, u: Unit) {
@@ -87,9 +90,11 @@ export function farmHarvestEstimate(g:Game,b:Building,planted=1,tended=1,water=b
   const fields=b.team===0&&g.state.agePicks[3]==="econ"?1.2:1;
   const land=fieldTerrain(g,b),kind=b.crop?.kind||b.cropType||"grain";
   const yieldFactor=kind==="tubers"?land.tubers:land.grain*(kind==="pulses"?.85:1);
-  return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*water*yieldFactor*irrigationYield(g,b)*terraceYieldFor(g,b,kind));
+  // the yield is per game year, so a longer year yields proportionally more (per-second food production is unchanged)
+  return Math.floor(plotArea(b)*planted*(160+100*tended)*(b.fertility??1)*fields*water*yieldFactor*irrigationYield(g,b)*terraceYieldFor(g,b,kind)*yearScaleOf(g.state));
 }
-export const CROP_GROW_SECONDS = Math.round(YEAR_SECONDS * 0.45);
+/** Crops ripen a fixed fraction (45%) of the game year after sowing. */
+export const cropGrowSeconds = (g: Game) => Math.round(yearSecondsOf(g.state) * 0.45);
 export function crop(g: Game, b: Building) {
   const { year, phase } = calendar(g);
   if (!b.crop || b.crop.year !== year) {
@@ -110,7 +115,7 @@ export function crop(g: Game, b: Building) {
     b.crop = { year, planted: 0, tended: 0, remaining: 0, ripened: false, water:1,kind:b.cropType||"grain" };
   }
   // a fixed growing time: sown late in spring it is ready late in autumn, sown in high summer it may not make it before winter
-  if (phase === 2 && !b.crop.ripened && (b.crop.sownAt === undefined || g.state.time - b.crop.sownAt >= CROP_GROW_SECONDS)) {
+  if (phase === 2 && !b.crop.ripened && (b.crop.sownAt === undefined || g.state.time - b.crop.sownAt >= cropGrowSeconds(g))) {
     b.crop.remaining = farmHarvestEstimate(g,b,b.crop.planted,b.crop.tended,b.crop.water??1);
     b.crop.ripened = true;
   }

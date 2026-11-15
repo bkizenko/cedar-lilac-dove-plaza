@@ -1,6 +1,7 @@
 import type {Game} from './sim';
 import type {CropKind} from './types';
-import {calendar,crop,reserveSeconds,YEAR_SECONDS} from './settlement';
+import {calendar,crop,reserveSeconds} from './settlement';
+import {yearSecondsOf} from './calendarPacing';
 import {fieldTerrain} from './fieldTerrain';
 import {habitatAt,soilQuality} from './ecology';
 import {isRivalTeam} from './factions';
@@ -26,7 +27,7 @@ export function manageRivalFields(g:Game,team:number){
  times.set(team,g.state.time+60);
  const fields=g.state.buildings.filter(b=>b.team===team&&b.type==='farm'&&g.finished(b));
  const known=g.tribe(team).cultivated||[],reserve=reserveSeconds(g,team),year=calendar(g).year;
- const spare=reserve>=YEAR_SECONDS?Math.max(0,Math.min(Math.floor(fields.length/5),fields.length-rivalDevelopmentPlan(g,team).foodFields)):0;
+ const spare=reserve>=yearSecondsOf(g.state)?Math.max(0,Math.min(Math.floor(fields.length/5),fields.length-rivalDevelopmentPlan(g,team).foodFields)):0;
  let resting=fields.filter(b=>b.fallowYear===year).length,changed=0;
  for(const b of fields.sort((a,b)=>(a.fertility??1)-(b.fertility??1))){
   const c=crop(g,b);if(c.planted>0)continue;

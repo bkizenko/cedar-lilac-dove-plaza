@@ -6,10 +6,10 @@ export const FIELD_STAGES=['bare','sprouting','growing','ripe','stubble','fallow
 export type FieldStage=typeof FIELD_STAGES[number];
 export const STAGE_INDEX:Record<FieldStage,number>={bare:0,sprouting:1,growing:2,ripe:3,stubble:4,fallow:5};
 type CropLike={year?:number;planted:number;tended:number;ripened:boolean;remaining:number};
-export function calendarPhase(time:number){const Y=SIM_CALENDAR_RULES.yearSeconds;return{year:Math.floor(time/Y),phase:Math.floor((time%Y)/(Y/4))};}
+export function calendarPhase(time:number,Y:number=SIM_CALENDAR_RULES.yearSeconds){return{year:Math.floor(time/Y),phase:Math.floor((time%Y)/(Y/4))};}
 /** Visible stage of a field. Phase 0 spring sowing, 1 summer tending, 2 autumn harvest, 3 winter. */
-export function fieldStage(field:{fallowYear?:number;crop?:CropLike},time:number):FieldStage{
- const {year,phase}=calendarPhase(time),c=field.crop;
+export function fieldStage(field:{fallowYear?:number;crop?:CropLike},time:number,yearSeconds:number=SIM_CALENDAR_RULES.yearSeconds):FieldStage{
+ const {year,phase}=calendarPhase(time,yearSeconds),c=field.crop;
  if(field.fallowYear===year)return'fallow';
  const mine=!!c&&(c.year===undefined||c.year===year);
  const planted=mine?c!.planted:0;

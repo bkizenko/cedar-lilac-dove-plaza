@@ -10,6 +10,7 @@ import {AGE_COST} from "./constants";
 import { hasTradition } from "./discovery";
 import type { Game } from "./sim";
 import type { Building, Unit, FoodKind, Tribe } from "./types";
+import {yearScaleOf,yearSecondsOf,seasonSecondsOf} from './calendarPacing';
 import { calendar, foodDemand, reserveSeconds, isDependent, FOOD_PER_PERSON_SECOND } from "./settlement";
 import { predisposition } from "./people";
 import { habitatAt } from "./ecology";
@@ -18,13 +19,13 @@ import { habitatAt } from "./ecology";
  * merely today's smaller appetites. No future harvest is credited in advance. */
 export function growthFoodNeed(g:Game,team:number) {
   const {phase,remaining}=calendar(g);
-  const untilHarvest=phase===0?remaining+450:phase===1?remaining:phase===2?remaining+1350:remaining+900;
+  const S=seasonSecondsOf(g.state),untilHarvest=phase===0?remaining+S:phase===1?remaining:phase===2?remaining+3*S:remaining+2*S;
   const horizon=Math.max(600,untilHarvest+180);
   const people=g.state.units.filter(u=>u.team===team&&u.hp>0&&!u.expedition);
   let food=16;
   for(let at=0;at<horizon;at+=30){
     const dt=Math.min(30,horizon-at),time=g.state.time+at+dt/2;
-    const winter=Math.floor((time%1800)/450)===3;
+    const winter=Math.floor((time%yearSecondsOf(g.state))/S)===3;
     const mouths=people.reduce((n,u)=>n+(u.maturesAt!==undefined&&time<u.maturesAt?0.5:1)*predisposition(u).appetite*(winter?habitatAt(g,u.x,u.z).winterFood:1),0);
     food+=(mouths+(at<360?.5:1))*FOOD_PER_PERSON_SECOND*dt;
   }
@@ -77,9 +78,9 @@ export function receiveFood(g:Game,team:number,amount:number,kind:FoodKind="prov
   const t=g.tribe(team),lots=foodInventory(t);lots[kind]+=amount;t.food+=amount;t.foodLots=lots;
 }
 function lossRates(g:Game,team:number,food:number,phase:number,includeOverflow:boolean) {
-  const stores=storehouses(g,team),indoor=Math.min(1,stores.length*200/Math.max(1,food));
-  const prepared=Math.min(indoor,stores.reduce((n,b)=>n+(b.storeCare||0)*200,0)/Math.max(1,food));
-  const home=g.campOf(team),time=phase===calendar(g).phase?g.state.time:Math.floor(g.state.time/1800)*1800+phase*450+225;
+  const stores=storehouses(g,team),scale=yearScaleOf(g.state),indoor=Math.min(1,stores.length*200*scale/Math.max(1,food));
+  const prepared=Math.min(indoor,stores.reduce((n,b)=>n+(b.storeCare||0)*200*scale,0)/Math.max(1,food));
+  const home=g.campOf(team),Y=yearSecondsOf(g.state),time=phase===calendar(g).phase?g.state.time:Math.floor(g.state.time/Y)*Y+(phase+.5)*(Y/4);
   const {temperature,humidity}=climateAt(g,home.x,home.z,time);
   const climate=Math.max(.12,Math.min(2.8,Math.pow(2,(temperature-12)/12)*(.65+humidity*.7)));
   const protectedRate=(1-indoor)+(indoor-prepared)*.25+prepared*.05;
@@ -164,7 +165,7 @@ export function preserveFood(g: Game, u: Unit, b: Building, dt: number) {
 }
 export function winterOutlook(g: Game, team = 0) {
   const phase = calendar(g).phase;
-  const seconds = phase === 3 ? calendar(g).remaining : 450;
+  const seconds = phase === 3 ? calendar(g).remaining : seasonSecondsOf(g.state);
   const demand = foodDemand(g, team, 3);
   // Estimate a no-income winter using current people, weather and maintained stores.
   const survives = (starting: number) => {

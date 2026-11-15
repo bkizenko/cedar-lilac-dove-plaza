@@ -10,6 +10,7 @@ import type { Game } from "./sim";
 import { predisposition } from "./people";
 import type { Unit, ResKind, TradeDeal } from "./types";
 import { isDependent, foodDemand, calendar } from "./settlement";
+import {seasonSecondsOf} from './calendarPacing';
 
 const settlementLandmarks=new WeakMap<object,Building>();
 /** Last witnessed site, not a pointer to the current global hall object. */
@@ -106,7 +107,7 @@ function protectedReserve(g:Game,team:number,kind:ResKind){
   if(kind==="stone")return g.tribe(team).age>=1?12:4;
   if(kind!=="food")return 0;
   const {phase,remaining}=calendar(g),winterFood=foodDemand(g,team,3);
-  return phase===2?winterFood*450+foodDemand(g,team)*remaining:phase===3?winterFood*Math.max(120,remaining):foodDemand(g,team)*240;
+  return phase===2?winterFood*seasonSecondsOf(g.state)+foodDemand(g,team)*remaining:phase===3?winterFood*Math.max(120,remaining):foodDemand(g,team)*240;
 }
 /** Trade willingness uses forecast needs; the UI receives a reason, never an inventory total. */
 export function shipmentIssue(g: Game, team: number, deal: TradeDeal): string | null {

@@ -69,3 +69,37 @@ Needs a per-site look [UNVERIFIED]: animal breeding/ageing seasons (animalBehavi
 - Scaling: with yearLength 3600, phase boundaries at multiples of 900, crops ripen at `0.45*3600` after sowing, winter food forecast scales, day length unchanged.
 - Guard test: grep `src` for bare `1800` or `% 450` in calendar contexts against an allow-list (life year, 1800 s windows listed above).
 - Run: game.test, normal-pace, daylight-food, wild-plants-integration, fish-stock-conservation, farming-related and calendar tests only (heavy files via hw-lock).
+
+## 7. Decisions and Implementation (year-length lane)
+
+**BLUF:** Implemented. `state.yearLength` (optional, absent = 1800) is chosen at world creation from four presets (Classic 1800, Long 3600, Extended 7200, Grand 14400) via a selector in the new-world dialog. One module, `src/game/calendarPacing.ts`, is the source of truth (`yearSecondsOf(state)`, `seasonSecondsOf(state)`, `yearScaleOf(state)`, `LIFE_YEAR_SECONDS`, `simulationDaySeconds`). Rule used for every site: things quoted **per year or per season** scale with the year; things quoted **per second** stay unchanged; people age on the constant 1800 s life year; day length is constant. Tests: `scripts/year-length.test.mjs` (including a guard that fails on any new `YEAR_SECONDS` / `% 1800` use in `src`). Not run: long seasonal playthroughs, so economic balance at 7200 and 14400 is [UNVERIFIED].
+
+Answers to section 5: (1) life year stays 1800 s; (2) presets 1800/3600/7200/14400, fixed per world, no opt-in for existing saves, no in-game slider; (3) day length constant (56.25 s, so a longer year holds more days: 32, 64, 128, 256).
+
+State and persistence: `GameState.yearLength?` and `WorldRequest.yearLength?`. `Game.reset` writes it only when it is a valid non-default value (integer, 600..14400, divisible by 12). `decodeGame` runs `normalizeYearLength`, so absent, Classic or damaged values all become absent (1800) and never fail a save. No SAVE_VERSION or SAVE_KEY change. `HudSnapshot.yearLength` carries it to the UI.
+
+Per-site choices:
+
+| Site | Choice |
+|---|---|
+| settlement.ts `calendar()`, season/month/remaining | by `yearSecondsOf(g.state)` |
+| settlement.ts crop growth | `cropGrowSeconds(g)` = 0.45 x year (replaces import-time `CROP_GROW_SECONDS`) |
+| settlement.ts `farmHarvestEstimate` | x `yearScaleOf`: yield is per year, so per-second food production is unchanged |
+| soil fertility change, fallow year | per year event, unchanged (happens once per game year) |
+| sim.ts `seasonMix`, winter-before-first-year guard, `yearClimate` year index, temperature `sn.*` curve | by year seconds (curve follows `seasonMix`) |
+| sim.ts `DAY_RATE`, clock, `waystations` `VISIBLE_DAY_SECONDS` | constant: `86400 / simulationDaySeconds` |
+| daylight.ts (`daylightAt`, `daylightPacingAt`, `pacedSolarHour`, `workdayAt`) | gain a `yearSeconds` argument defaulting to 1800; sim and journeys pass the game's value |
+| yearClimate.ts `seasonalTemperature` | `yearSeconds` argument, ecology passes it |
+| ecology.ts wild plants | seasonal phase by year; annual growth quota x scale, so per-second regrowth and decay are unchanged; validator uses the state's year |
+| fibre.ts | annual regrowth x scale (rate per second unchanged); validators use the state's year |
+| fishing.ts | winter productivity test by season length; recovery rates per second unchanged |
+| sim.ts winter forage loss `/450` | `/ seasonSecondsOf` (a season-long decline) |
+| pantry.ts `growthFoodNeed`, `lossRates` time-of-season, `winterOutlook`, barter.ts winter reserve | by season length |
+| food storage: `stockCap`, pantry indoor fraction, rival warehouse plans, storage report, ledger text | x `yearScaleOf`: a longer winter needs proportionally more stored food, so a storehouse protects proportionally more (otherwise spoilage rises 4x at 7200) |
+| rivalDevelopment, rivalFarming, seasonReports, farmingProgress, discovery (winter test) | by year / season length |
+| animals (husbandry, packPasture, validators) | maturity, gestation and lactation x scale so herds keep the same generations per game year; validation bounds use the largest preset |
+| UI: Hud, TimeCard, village history, ledger, prestige readout, glance cue and winter outlook, world.ts animal season fraction, contour fields | all read the game's year length |
+| Ageing: sim.ts spawn age and lifespan, persistence legacy defaults, skills `skillAgeYears`, governance adult test, characterRig `ELDER_AGE_T`, ledger age | `LIFE_YEAR_SECONDS` (constant 1800) |
+| Left alone on purpose | `RULERS_YEAR_SECONDS` 90 and `RUIN_RULES.yearSeconds` 90 (own clocks); tick windows of 1800 s (director, trade intel, taught offers, maintenance grace, thirst); `reserve > 450` food-reserve thresholds (seconds of food); item and process lifetimes in `production`, `curds`, `dairy`, `brewing`, `foodPreservation` (minute-scale process timers, per second); crop water recharge rates in `sim.ts` (per second); skill tau 1800; animal behaviour rut (follows calendar phase); pregnancy and childhood (health lane) |
+
+Known balance risks (need a playthrough, not verified): drought and crop-water rates are per second, so a longer growing season sees more drought exposure; rival viability at 7200 and 14400; wood and fuel demand over a longer winter. `farmCalibration` stays a Classic-year reference table.

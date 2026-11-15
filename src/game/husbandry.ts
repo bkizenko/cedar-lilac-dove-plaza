@@ -2,7 +2,8 @@ import {penStep} from './animalBehaviour';
 import {domesticationReady,beginDomesticationTrial,practiceDomestication,finishDomesticationTrial,noteDomesticationArrival,reconcileDomestication,DOMESTICATION_RULES} from './domestication';
 import {withdrawExpeditionFood} from './expeditionProvisions';
 import{penBeddingWorkAI,penNeedsBedding,usePenBedding,reconcilePenBedding,returnPenBeddingLoad}from'./penBedding';
-import {herdRules,isDraftSpecies} from './animalSpecies';
+import {herdRules,isDraftSpecies,herdMaturity,herdGestation} from './animalSpecies';
+import {yearScaleOf} from './calendarPacing';
 import {packAnimalFrom,PACK_HARNESS_RULES} from './packAnimalState';
 import {SHEEP_RULES,growFleece,newFleece} from './sheep';
 import{penWaterWorkAI,penNeedsWater,reconcilePenWater,drinkPenWater,releaseHusbandryKeeper,PEN_WATER_RULES}from'./penWater';
@@ -86,7 +87,7 @@ export function assignHusbandry(g:Game,penId:number,action:'care'|'slaughter'|'p
  const pen=penAt(g,penId);if(!pen)return false;
  const paused=g.state.units.find(u=>u.husbandryWork?.pen===penId&&u.husbandryWork.action===action&&(!species||g.state.livestock?.some(a=>a.id===u.husbandryWork!.animal&&a.species===species))&&u.husbandryWork.paused&&available(g,u,'husbandryWork'));if(paused){paused.husbandryWork!.paused=false;paused.order='hold';return true;}
  if(action==='care'){const r=penPastureReport(g,pen);if(r.keepers>=r.keepersNeeded){g.banner('This herd already has enough keepers assigned',3);return false;}}
- const animal=action==='care'?undefined:penAnimals(g,penId).filter(a=>(action!=='pack'||['goat','horse','cattle','donkey','ox'].includes(a.species)&&(!species||a.species===species))&&(action!=='shear'||a.species==='sheep'&&(a.fleece?.units||0)>=1)&&insidePen(pen,a.x,a.z)&&g.state.time-a.born>=herdRules(a.species).maturity&&
+ const animal=action==='care'?undefined:penAnimals(g,penId).filter(a=>(action!=='pack'||['goat','horse','cattle','donkey','ox'].includes(a.species)&&(!species||a.species===species))&&(action!=='shear'||a.species==='sheep'&&(a.fleece?.units||0)>=1)&&insidePen(pen,a.x,a.z)&&g.state.time-a.born>=herdMaturity(a.species,g.state)&&
   !g.state.units.some(u=>u.hp>0&&u.husbandryWork?.animal===a.id)).sort((a,b)=>Number(a.sex==='female')-Number(b.sex==='female'))[0];
  if(action!=='care'&&!animal){g.banner(action==='shear'?'No unreserved adult sheep with fleece in this pen':'No unreserved eligible adult in this pen',4);return false;}
  const stable=isDraftSpecies(animal?.species)&&!animal?.packHarness&&action==='pack'?g.state.buildings.filter(b=>b.team===pen.team&&b.type==='stables'&&g.finished(b)&&g.workBoard.connected(g,pen.x,pen.z,b.x,b.z)).sort((a,b)=>Math.hypot(a.x-pen.x,a.z-pen.z)-Math.hypot(b.x-pen.x,b.z-pen.z))[0]:undefined;
@@ -141,7 +142,7 @@ export function husbandryAI(g:Game,u:Unit,dt:number) {
     g.banner(u.workReason,5);return true;
    }
    finishDomesticationTrial(g,u,'success');
-   a={...wild,adultScale:wild.scale,team:u.team,pen:pen.id,sex:wild.id%2?'female':'male',born:g.state.time-rules.maturity,tamedAt:g.state.time,hunger:5,milk:0,pregnancy:0};
+   a={...wild,adultScale:wild.scale,team:u.team,pen:pen.id,sex:wild.id%2?'female':'male',born:g.state.time-herdMaturity(wild.species,g.state),tamedAt:g.state.time,hunger:5,milk:0,pregnancy:0};
    (g.state.livestock??=[]).push(a);
    // Existing hunters may still hold a reference to the former wild object.
    // Retire it without a carcass so capture cannot also create a second meal.
@@ -277,7 +278,7 @@ export function tickHusbandry(g:Game,dt:number) {
    const hydrated=drinkPenWater(g,pen,a,dt);
    a.hunger=Math.max(0,Math.min(100,a.hunger+dt*(fed?-.3:.055*(1-fedFraction))));
    if(a.hunger>80)a.hp=Math.max(0,a.hp-dt*.08);else if(fed&&hydrated&&p.care>.2)a.hp=Math.min(a.maxHp,a.hp+dt*.015);
-   const adult=g.state.time-a.born>=herdRules(a.species).maturity;
+   const adult=g.state.time-a.born>=herdMaturity(a.species,g.state);
    if(a.hp<=0){a.carcass={meat:CARCASS_MEAT[a.species]/2,diedAt:g.state.time};occupied-=herdRules(a.species).places;continue;}
    if(!handlers.has(a.id)&&arrived&&g.state.animalBehaviourVersion===1)penStep(g,a,pen,dt,(x,z)=>insidePen(pen,x,z,.15),herd,false);
    else if(!handlers.has(a.id)&&arrived){
@@ -287,10 +288,10 @@ export function tickHusbandry(g:Game,dt:number) {
    }
    growFleece(a,dt,arrived&&adult&&fed&&hydrated&&p.care>.2&&a.hunger<30);
    if(arrived&&a.sex==='female'&&adult&&a.hunger<30&&fed&&hydrated&&p.care>.2){
-    const male=herd.some(m=>m.species===a.species&&m.sex==='male'&&insidePen(pen,m.x,m.z)&&g.state.time-m.born>=herdRules(m.species).maturity);
-    if(male&&occupied+reserved+herdRules(a.species).places<=r.eligibleCapacity)a.pregnancy=Math.min(herdRules(a.species).gestation,a.pregnancy+dt);
-    if(a.pregnancy>=herdRules(a.species).gestation&&occupied+reserved+herdRules(a.species).places<=r.eligibleCapacity&&livestock.length<PEN_RULES.maximumAnimalsTotal){
-     a.pregnancy=0;a.lactatingUntil=g.state.time+HERD.lactation;
+    const male=herd.some(m=>m.species===a.species&&m.sex==='male'&&insidePen(pen,m.x,m.z)&&g.state.time-m.born>=herdMaturity(m.species,g.state));
+    if(male&&occupied+reserved+herdRules(a.species).places<=r.eligibleCapacity)a.pregnancy=Math.min(herdGestation(a.species,g.state),a.pregnancy+dt);
+    if(a.pregnancy>=herdGestation(a.species,g.state)&&occupied+reserved+herdRules(a.species).places<=r.eligibleCapacity&&livestock.length<PEN_RULES.maximumAnimalsTotal){
+     a.pregnancy=0;a.lactatingUntil=g.state.time+HERD.lactation*yearScaleOf(g.state);
      // Birth inherits biology, not the dam's paid equipment, consumption or task state.
      const id=g.id();livestock.push({id,species:a.species,team:a.team,pen:pen.id,
       x:a.x,y:a.y,z:a.z,facing:a.facing,vx:0,vz:0,wanderT:0,fly:0,
@@ -302,7 +303,7 @@ export function tickHusbandry(g:Game,dt:number) {
     }
     if(herdRules(a.species).milkPerSecond>0&&(a.lactatingUntil||0)>g.state.time)a.milk=Math.min(herdRules(a.species).milkCapacity,a.milk+dt*herdRules(a.species).milkPerSecond);
    }
-   a.scale=(a.adultScale??1)*(.6+.4*Math.min(1,(g.state.time-a.born)/herdRules(a.species).maturity));
+   a.scale=(a.adultScale??1)*(.6+.4*Math.min(1,(g.state.time-a.born)/herdMaturity(a.species,g.state)));
   }
   p.condition=r.biomassCapacity?Math.max(0,Math.min(1,biomass/r.biomassCapacity)):0;
  }

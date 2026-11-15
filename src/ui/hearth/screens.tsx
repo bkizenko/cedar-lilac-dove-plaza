@@ -9,7 +9,7 @@ import {GraphicsSettingsPanel} from '@/ui/GraphicsSettingsPanel';
 import {DETAIL_LEVELS,DETAIL_LABELS,type DetailLevel} from '@/game/detailLevel';
 import type {HudSnapshot} from '@/game/types';
 import {AGES,BUILDINGS,BUILD_ORDER} from '@/game/constants';
-import {YEAR_SECONDS} from '@/game/settlement';
+import {yearSecondsOf} from '@/game/calendarPacing';
 import {DIFFICULTIES,difficultyEffects} from '@/game/difficulty';
 import {foodExperienceReport} from '@/game/foodExperience';
 import {STAGES} from '@/game/breakaways';
@@ -173,9 +173,9 @@ export function VillageScreen({hud,engine,onClose,initial,onKnowledge,onOffer}:{
    {tab==='work'&&<><WorkloadPanel engine={engine}/><HearthWildPanel engine={engine}/></>}
    {tab==='food'&&<FarmingProgress engine={engine} onKnowledge={onKnowledge}/>}
    {tab==='craft'&&<>{hud.villageSkills&&<VillageSkillsCard card={hud.villageSkills}/>}<CraftingAndBuildings engine={engine}/></>}
-   {tab==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/><PrestigeReadout view={hud.prestigeBreakdown} rivals={hud.prestigeRivals}/></>}
+   {tab==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/><PrestigeReadout view={hud.prestigeBreakdown} rivals={hud.prestigeRivals} yearSeconds={yearSecondsOf(hud)}/></>}
    {tab==='trade'&&<><NeedsTradeControls engine={engine} inboxOnly/><TradeBlock hud={hud} engine={engine} onOffer={onOffer}/></>}
-   {tab==='history'&&(history.length===0?<p className="hw-empty">Nothing recorded yet.</p>:<ol className="hw-chron">{history.map((e,i)=><li key={i}><b>Y{Math.floor(e.time/YEAR_SECONDS)+1}</b> {e.text.replace(/^\[Contact \d+\] /,'')}</li>)}</ol>)}
+   {tab==='history'&&(history.length===0?<p className="hw-empty">Nothing recorded yet.</p>:<ol className="hw-chron">{history.map((e,i)=><li key={i}><b>Y{Math.floor(e.time/yearSecondsOf(engine.game.state))+1}</b> {e.text.replace(/^\[Contact \d+\] /,'')}</li>)}</ol>)}
   </div>
  </Screen>;
 }

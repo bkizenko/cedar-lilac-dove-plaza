@@ -1,6 +1,6 @@
 import type { Game } from "./sim";
 import { habitatAt, habitatKindAt, HABITATS } from "./ecology";
-import { reserveSeconds } from "./settlement";
+import { reserveSeconds, calendar } from "./settlement";
 import { knownSettlement } from "./barter";
 
 /** One-time historical moments, independent of the current era and resource balances. */
@@ -35,7 +35,7 @@ export const DISCOVERIES = [
       Math.hypot(b.x - g.campOf(0).x, b.z - g.campOf(0).z) >= 64) },
   { id: "winter", name: "Ready for the lean season", points: 8,
     hint: "Reach winter with eight minutes of food reserves and a storehouse at least 60% prepared.",
-    met: (g: Game) => Math.floor(g.state.time / 450) % 4 === 3 && reserveSeconds(g) >= 480 &&
+    met: (g: Game) => calendar(g).phase === 3 && reserveSeconds(g) >= 480 &&
       g.state.buildings.some(b => b.team === 0 && b.type === "warehouse" && g.finished(b) && (b.storeCare || 0) >= 0.6) },
 ] as const;
 function visits(g: Game, kind: keyof typeof HABITATS) {

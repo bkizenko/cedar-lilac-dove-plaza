@@ -1,9 +1,10 @@
+import {DEFAULT_YEAR_SECONDS} from "./calendarPacing";
 /** Local solar time for a temperate island at 45° north.
  * March begins the game year. Calendar compression does not change saved timers.
  * The sunrise horizon includes the usual 0.833° refraction/solar-disc allowance.
  */
-export function daylightAt(time: number, latitude = 45) {
-  const year = ((time % 1800) + 1800) % 1800 / 1800;
+export function daylightAt(time: number, latitude = 45, yearSeconds = DEFAULT_YEAR_SECONDS) {
+  const year = ((time % yearSeconds) + yearSeconds) % yearSeconds / yearSeconds;
   const dayOfYear = 60 + year * 365;
   const rad = Math.PI / 180;
   const declination = 23.44 * rad * Math.sin(2 * Math.PI * (dayOfYear - 80) / 365);
@@ -22,8 +23,8 @@ export function solarTimeLabel(hour: number) {
 /** Clock pacing allocates more real play time to seasonal daylight without
  * changing the displayed 24-hour day or astronomical sunrise/sunset hours. */
 export const DAYLIGHT_PACING_RULES={minimumDayFraction:.88,maximumDayFraction:.94,clockCycleSlowdown:24,astronomicalWinterHours:8,astronomicalSummerHours:16,startHour:6.7} as const;
-export function daylightPacingAt(time:number){
- const real=daylightAt(time),rules=DAYLIGHT_PACING_RULES;
+export function daylightPacingAt(time:number,yearSeconds=DEFAULT_YEAR_SECONDS){
+ const real=daylightAt(time,45,yearSeconds),rules=DAYLIGHT_PACING_RULES;
  const season=Math.max(0,Math.min(1,(real.hours-rules.astronomicalWinterHours)/(rules.astronomicalSummerHours-rules.astronomicalWinterHours)));
  const dayFraction=rules.minimumDayFraction+(rules.maximumDayFraction-rules.minimumDayFraction)*season;
  return{dayFraction,nightFraction:1-dayFraction};
@@ -31,8 +32,8 @@ export function daylightPacingAt(time:number){
 /** The clock cycle is deliberately much longer; simulation, work and consumption
  * seconds remain unchanged. Local clock minutes advance faster in darkness. seasonTime is explicit for
  * fixed-season diagnostics; ordinary gameplay uses the current season. */
-export function pacedSolarHour(time:number,dayRate:number,seasonTime=time){
- const sun=daylightAt(seasonTime),budget=daylightPacingAt(seasonTime),first=daylightAt(0),initial=daylightPacingAt(0);
+export function pacedSolarHour(time:number,dayRate:number,seasonTime=time,yearSeconds=DEFAULT_YEAR_SECONDS){
+ const sun=daylightAt(seasonTime,45,yearSeconds),budget=daylightPacingAt(seasonTime,yearSeconds),first=daylightAt(0,45,yearSeconds),initial=daylightPacingAt(0,yearSeconds);
  const offset=(DAYLIGHT_PACING_RULES.startHour-first.sunrise)/first.hours*initial.dayFraction;
  const phase=((time*dayRate/86400/DAYLIGHT_PACING_RULES.clockCycleSlowdown+offset)%1+1)%1;
  const hour=phase<budget.dayFraction?sun.sunrise+phase/budget.dayFraction*sun.hours:
@@ -42,8 +43,8 @@ export function pacedSolarHour(time:number,dayRate:number,seasonTime=time){
 
 /** Productive hours include lamplit shoulders around real seasonal daylight.
  * This is game pacing, not a claim about historical working hours. */
-export function workdayAt(time: number, hour: number) {
-  const sun=daylightAt(time);
+export function workdayAt(time: number, hour: number, yearSeconds = DEFAULT_YEAR_SECONDS) {
+  const sun=daylightAt(time,45,yearSeconds);
   const hours=16+2*Math.max(0,Math.min(1,(sun.hours-8)/8));
   const start=Math.max(4,Math.min(5,sun.sunrise));
   const end=start+hours;

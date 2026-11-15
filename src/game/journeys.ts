@@ -2,6 +2,7 @@ import {quotePackJourneyCare,commitPackJourneyCare,returnPackJourneyCare,packJou
 import {planExpeditionProvisions,commitExpeditionProvisions,expeditionProvisionCapacity,expeditionHome,expeditionAtOwnCache,expeditionProvisionNourishment,consumeExpeditionProvisions,returnExpeditionProvisions,addExpeditionForage,expeditionForageRoom,expeditionForageFood} from './expeditionProvisions';
 import {rivalFoodConstructionActive} from './rivalFoodProcessing';
 import {workdayAt} from "./daylight";
+import {yearSecondsOf} from "./calendarPacing";
 import {applyForagePressure,harvestWildPlant,wildPlantsEnabled} from "./ecology";
 import type { Game } from "./sim";
 import type { Unit } from "./types";
@@ -48,7 +49,7 @@ export function expeditionAI(g: Game, u: Unit, dt: number) {
   }
   const returnNeed = Math.max(2, (distance / Math.max(1, u.speed)) * FOOD_PER_PERSON_SECOND * 1.4);
   if (expeditionProvisionNourishment(u) <= returnNeed || packJourneyReturnBudgetLow(g,u,distance/Math.max(1,u.speed)) || threat || u.stuckT > 8) e.returning = true;
-  const offShift = !workdayAt(g.state.time,g.dayPhase()*24).working;
+  const offShift = !workdayAt(g.state.time,g.dayPhase()*24,yearSecondsOf(g.state)).working;
   if (offShift && !g.state.nightWork && !threat && !e.returning && expeditionProvisionNourishment(u)>2 && distance > 18) {
     u.fatigue = Math.max(0, (u.fatigue || 0) - dt / 15);
     u.workReason = "Night camp — resting with journey provisions";
@@ -86,7 +87,7 @@ export function routineRest(g: Game, u: Unit, dt: number) {
   const adult=!u.maturesAt||u.maturesAt<=g.state.time;
   const night=g.clockState().period === "Night";
   const fatigue=u.fatigue||0;
-  const offShift=!workdayAt(g.state.time,g.dayPhase()*24).working;
+  const offShift=!workdayAt(g.state.time,g.dayPhase()*24,yearSecondsOf(g.state)).working;
   const urgentFood=adult&&offShift&&!g.state.nightWork&&
     ((u.job==="food"&&u.order==="gather")||(u.order==="idle"&&!u.jobLock)||rivalFoodConstructionActive(g,u))&&reserveSeconds(g,u.team)<240;
   if(fatigue<=.12)u.resting=undefined;

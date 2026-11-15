@@ -1,5 +1,5 @@
 import type { Engine } from '../game/engine';
-import { YEAR_SECONDS } from '../game/settlement';
+import { yearSecondsOf } from '../game/calendarPacing';
 
 export function VillageHistory({ engine, close }: { engine: Engine; close: () => void }) {
   const events = (engine.game.state.lifeHistory ?? []).filter(event => event.team === 0).reverse();
@@ -10,7 +10,7 @@ export function VillageHistory({ engine, close }: { engine: Engine; close: () =>
     </div>
     {events.length === 0 ? <p>No events recorded yet.</p> :
       <ol>{events.map((event, index) => <li key={index}>
-        <span>Year {Math.floor(event.time / YEAR_SECONDS) + 1}</span>
+        <span>Year {Math.floor(event.time / yearSecondsOf(engine.game.state)) + 1}</span>
         {event.text.replace(/^\[Contact \d+\] /, '')}
       </li>)}</ol>}
   </section>;

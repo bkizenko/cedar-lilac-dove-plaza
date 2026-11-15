@@ -2,6 +2,7 @@
  * Nothing here creates goods: effects are time multipliers on existing work, damage, legitimacy and tax-burden inputs that the
  * economy, combat and unrest code already read. Government types unlock from the Bronze Age by population (the Stone Age has only the band council).
  * The tables and `governmentFor`/`governanceEffects` take plain numbers so rival civs can reuse them. State per society lives in `state.governance`. */
+import {LIFE_YEAR_SECONDS} from './calendarPacing';
 import type {Game} from './sim';
 import type {Cost} from './types';
 import {AGES} from './constants';
@@ -92,7 +93,7 @@ export function sanitizeGovernance(v:unknown):GovernanceState|undefined{
 export const governanceOf=(g:Game,team:number):TeamGovernance=>st(g).governance?.[String(team)]??defaultTeamGovernance();
 function ensure(g:Game,team:number):TeamGovernance{const s=st(g);s.governance??={};return s.governance[String(team)]??=defaultTeamGovernance();}
 const popOf=(g:Game,team:number)=>g.popNow(team);
-const unitAdult=(u:{ageT:number;parents?:unknown[]})=>u.ageT/1800+(u.parents?14:0)>=GOVERNANCE_RULES.governorAdultYears;
+const unitAdult=(u:{ageT:number;parents?:unknown[]})=>u.ageT/LIFE_YEAR_SECONDS+(u.parents?14:0)>=GOVERNANCE_RULES.governorAdultYears;
 /** Governor quality 0..1 from 'leading' mastery when the skill model is on, else a modest baseline. */
 export function governorQuality(g:Game,unitId:number):number{
  const u=g.state.units.find(x=>x.id===unitId);if(!u||u.hp<=0)return 0;

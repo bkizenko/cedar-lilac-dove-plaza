@@ -30,7 +30,7 @@ import {advanceRulers,expansionDrive} from './rulersRuntime';
 import {buildSkins} from './skinState';
 import {reviewSociety} from './societyRuntime';
 import {noteArrivals,noteDepartures} from './societyCivicRuntime';
-import {SIM_CALENDAR_RULES} from './calendarPacing';
+import {simulationDaySeconds,yearScaleOf,yearSecondsOf,seasonSecondsOf,LIFE_YEAR_SECONDS,normalizeYearLength} from "./calendarPacing";
 import {newBuildingFabric,supportsEraUpgrade,reservedBuildingFootprint,rectanglesOverlap} from './buildingFabric';
 import {reconcileWeaponCargo} from './weaponCargo';
 import {reconcileFarmToolCargo,farmToolBodyMustRemain} from './farmToolCargo';
@@ -279,8 +279,8 @@ import { waterSurfaceAt, generateWorld, inBounds, isFertile, sampleHeight, sampl
 // Navigation and physical steps must agree about dry ground. Different margins
 // made usable fords disappear from the work graph while people could cross them.
 const WALK_CLEARANCE = 0.12;
-const YEAR_DAYS = SIM_CALENDAR_RULES.daysPerYear;
-const DAY_RATE = (86400 * YEAR_DAYS) / SIM_CALENDAR_RULES.yearSeconds;
+// Day length is constant for every year length (a longer year holds more days), so the clock rate is independent of state.yearLength.
+const DAY_RATE = 86400 / simulationDaySeconds;
 
 const EMPTY_BUCKET: number[] = [];
 export class Game {
@@ -496,6 +496,7 @@ export class Game {
     enableTerrainInfluence(this);
     enableCommanders(this);
     this.state.difficulty=preset;
+    {const yl=normalizeYearLength(request.yearLength);if(yl!==undefined)this.state.yearLength=yl;} // Classic 1800 s is the absent default; saves without the field keep it
     this.state.buildingMaintenanceVersion=1;
     if(request?.skillsVersion!==0)enableSkillModel(this); // new games track per-person skills; saves without the field keep the old behaviour
     this.workBoard.reset();
@@ -968,7 +969,7 @@ export class Game {
       stride: Math.random() * Math.PI * 2,
       trade: null,
       tradeTeam: 0,
-      ageT: (18 + Math.random() * 24) * 1800,
+      ageT: (18 + Math.random() * 24) * LIFE_YEAR_SECONDS,
       jobLock: false,
       huntOnly: false,
       stuckT: 0,
@@ -3682,7 +3683,7 @@ export class Game {
           // Exposed berries decline through winter; buried tubers and dry seed
           // plants remain usable longer. Nothing regrows until spring.
           const winterLoss=n.cropCandidate==="tubers"?.15:n.cropCandidate?.4:1;
-          n.amount = Math.max(0, n.amount - dt * (n.maxAmt || 12) / 450 * winterLoss);
+          n.amount = Math.max(0, n.amount - dt * (n.maxAmt || 12) / seasonSecondsOf(this.state) * winterLoss);
           if (n.amount === 0) n.regenT = 100;
         }
         if (n.amount > 0) continue;
@@ -3813,7 +3814,7 @@ export class Game {
       if (!tr) continue;
       const pop = counts[u.team];
       // Everyone needs food; a grace period avoids deaths from a momentary empty store.
-      // A game year is 1800 seconds: one calendar month is 150 seconds.
+      // A Classic game year is 1800 seconds (one month 150 s); longer years scale via state.yearLength. Ageing uses LIFE_YEAR_SECONDS.
       if(!navalIndependentFood(this,u)&&!scoutIndependentNeeds(u)&&!prisonerIndependentNeeds(u)&&!societyMissionIndependentNeeds(this,u)&&!coastalIndependentNeeds(this,u)&&!campMoveIndependentNeeds(this,u)){
       const deficit = u.expedition ? Number(u.expedition.food < 0.01) : mealDeficits.get(tr.id)??0;
       const hungry = deficit > 0.001, previousHunger = u.hunger || 0;
@@ -3830,7 +3831,7 @@ export class Game {
         u.hp = Math.min(u.maxHp, u.hp + u.maxHp * 0.25);
         u.sickUntil = undefined;
       }
-      const span = (58 + (u.id % 20)) * 1800;
+      const span = (58 + (u.id % 20)) * LIFE_YEAR_SECONDS;
       if (u.ageT > span && pop > 4 && Math.random() < 0.00003 * dt) {
         u.hp = 0;
         this.addBurst(u.x, u.y + 1, u.z, "#888", 8);
@@ -5644,7 +5645,7 @@ export class Game {
     const growing = fortune > 2.1;
     const shrinking = fortune < 0.95;
     const reserve = reserveSeconds(this, team);
-    const plannedStorage=this.stockCap(team)+this.state.buildings.filter(b=>b.team===team&&b.type==="warehouse"&&b.hp>0&&!this.finished(b)).length*200;
+    const plannedStorage=this.stockCap(team)+this.state.buildings.filter(b=>b.team===team&&b.type==="warehouse"&&b.hp>0&&!this.finished(b)).length*200*yearScaleOf(this.state);
     const needsStorage=plannedStorage<rivalStorageTarget(this,team);
 
     // A shortage changes actual labor before optional investment or travel.
@@ -5851,7 +5852,7 @@ export class Game {
   seasonMix(): SeasonMix {
     const start = 6 * 3600 + 42 * 60;
     const t = start + this.state.time * DAY_RATE;
-    const yearFrac = (this.state.time % 1800) / 1800;
+    const yearSeconds = yearSecondsOf(this.state),yearFrac = (this.state.time % yearSeconds) / yearSeconds;
     const w = (center: number) => {
       let d = Math.abs(yearFrac - center);
       if (d > 0.5) d = 1 - d;
@@ -5864,7 +5865,7 @@ export class Game {
     let spring = w(0.125);
     let summer = w(0.375);
     let autumn = w(0.625);
-    let winter = this.state.time < 450 ? 0 : w(0.875);
+    let winter = this.state.time < yearSeconds / 4 ? 0 : w(0.875);
     const s = spring + summer + autumn + winter || 1;
     spring /= s;
     summer /= s;
@@ -5914,7 +5915,7 @@ export class Game {
       drought: 4,
     };
     const base = sn.spring * 12 + sn.summer * 21 + sn.autumn * 10 + sn.winter * 0;
-    const yc = yearClimate(this.state.seed, Math.floor(this.state.time / 1800));
+    const yc = yearClimate(this.state.seed, Math.floor(this.state.time / yearSecondsOf(this.state)));
     let temp = Math.round(base + yc.offset + yc.amplitude * 10.5 * (sn.summer - sn.winter) + (temps[this.state.weather] ?? 0));
     if (h < 6 || h > 21) temp -= 3;
     temp=Math.round(difficultyTemperature(this,temp));
@@ -5939,10 +5940,10 @@ export class Game {
   }
 
   dayPhase() {
-    return pacedSolarHour(this.state.time,DAY_RATE)/24;
+    return pacedSolarHour(this.state.time,DAY_RATE,this.state.time,yearSecondsOf(this.state))/24;
   }
 
-  daylight() {return daylightAt(this.state.time);}
+  daylight() {return daylightAt(this.state.time,45,yearSecondsOf(this.state));}
 
   isNight() {
     const hour = this.dayPhase() * 24,sun=this.daylight();
@@ -5977,7 +5978,7 @@ export class Game {
       else if (b.type === "townhall") cap += 80;
       else if (b.type === "hut" || b.type === "house") cap += 18;
     }
-    return cap;
+    return cap * yearScaleOf(this.state); // a longer year needs proportionally more stored food, so storage protects proportionally more
   }
 
   prestigeBreakdown(viewer=0,subject=0){return gamePrestigeView(this,viewer,subject);}
@@ -6705,6 +6706,7 @@ export class Game {
       prestigeBreakdown: prestigeView,
       prestigeRivals: gamePrestigeRivals(this),
       stockCap: this.stockCap(0),
+      yearLength: this.state.yearLength,
       resourceCaps: resourceCaps(this,0),
       port: this.hasBld(0, "dock"),
       night: this.isNight(),

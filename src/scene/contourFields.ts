@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {yearSecondsOf} from '../game/calendarPacing';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {surveyFieldTopography} from '../game/plotTopography';
 import {terraceFrame,terraceHeightAt,fieldDownhill,type TerraceFrame} from '../game/terraceFarming';
@@ -15,7 +16,7 @@ export const CROP_ART_RULES={maxPlantInstances:8192,maximumPlantsPerField:512,ed
  rows:{grain:{rowMetres:.95,plantMetres:.82},pulses:{rowMetres:1.3,plantMetres:1.15},tubers:{rowMetres:1.45,plantMetres:1.3}}} as const;
 /** `site.terrace` (terrain model v2): the field stands on level terrace strips, so crops sit on the treads, not on the hillside between them. */
 export type RenderField={site?:{foundation?:string;terrace?:{k:string;n:number}};id:number;type:string;x:number;z:number;w:number;d:number;hp:number;team:number;build:number;plannedCost?:unknown;cropType?:FieldCrop;fallowYear?:number;fertility?:number;crop?:{kind?:FieldCrop;year?:number;water?:number;planted:number;tended:number;ripened:boolean;remaining:number}};
-type FieldGround={world:{heights:Float32Array};state:{time:number;buildings:RenderField[];terrainModel?:string};height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;navigationRevision?:()=>number};
+type FieldGround={world:{heights:Float32Array};state:{time:number;yearLength?:number;buildings:RenderField[];terrainModel?:string};height:(x:number,z:number)=>number;waterAt:(x:number,z:number)=>number;exploredAt:(x:number,z:number)=>boolean;navigationRevision?:()=>number};
 /** Terrain model v3: a field that is not stone-terraced is ordinary farmland on a slope: earth bank or hedge at the lower edge, no stone lip, no wall. */
 export function ordinaryHillside(ground:{state:{terrainModel?:string}},field:RenderField){const t=field.site?.terrace;return ground.state.terrainModel==='v3'&&(!t||t.k==='none'||t.k==='bund');}
 export function fieldCropKind(field:RenderField):FieldCrop{return field.crop?.kind??field.cropType??'grain';}
@@ -146,14 +147,14 @@ export class ContourFields {
  rows(ground:FieldGround,field:RenderField){const plan=this.orientation(ground,field),angle=plan.angle,nx=-Math.sin(angle),nz=Math.cos(angle);return {nx,nz,offset:-plan.origin.x*nx-plan.origin.z*nz,spacing:CROP_ART_RULES.rows[fieldCropKind(field)].rowMetres};}
  /** Per-plot shader inputs: merged edges, stage, water state (0 unknown, 1 dry, 2 irrigated), slope, tilled-soil colour, weeds. */
  look(ground:FieldGround,field:RenderField,water=0):FieldLookData{
-  const info=this.hood(ground).map.get(field.id),m=info?.mask??0,stage=fieldStage(field as never,ground.state.time),plan=this.orientation(ground,field),
+  const info=this.hood(ground).map.get(field.id),m=info?.mask??0,stage=fieldStage(field as never,ground.state.time,yearSecondsOf(ground.state)),plan=this.orientation(ground,field),
    moisture=field.crop?.water??1,soil=fieldSoilColour(field.fertility??1,moisture,field.id);
   return{edges:[m&EDGE.W?1:0,m&EDGE.E?1:0,m&EDGE.N?1:0,m&EDGE.S?1:0],look:[STAGE_INDEX[stage],water,fieldSeed(field.id),ordinaryHillside(ground,field)?Math.min(.2,plan.grade):Math.min(1.2,plan.grade)],soil:[soil[0],soil[1],soil[2],fieldWeeds(stage,field.crop?.tended??0)],stage};
  }
 /** `opts.quality` picks the draw-distance tiers (full detail, low-poly boundaries and thinned crops, then soil texture only) for the painterly style. */
  sync(ground:FieldGround,camera:{x:number;z:number;y?:number},styleOf?:FieldStyleOf,opts:{quality?:'low'|'med'|'high'}={}){
   if(this.style==='painterly')return this.syncPainter(ground,camera,styleOf,opts.quality??'med');
-  const counts={grain:0,pulses:0,tubers:0};let total=0;const year=Math.floor(ground.state.time/1800);
+  const counts={grain:0,pulses:0,tubers:0};let total=0;const year=Math.floor(ground.state.time/yearSecondsOf(ground.state));
   const visible=ground.state.buildings.filter(b=>b.type==='farm'&&b.hp>0&&b.build>=1&&!b.plannedCost&&(b.team===0||ground.exploredAt(b.x,b.z))&&Math.hypot(b.x-camera.x,b.z-camera.z)<CROP_ART_RULES.maxDistanceMetres).sort((a,b)=>Math.hypot(a.x-camera.x,a.z-camera.z)-Math.hypot(b.x-camera.x,b.z-camera.z));
   for(const field of visible){
    // Classic look keeps its old rule (a resting field draws nothing).
@@ -183,14 +184,14 @@ export class ContourFields {
   this.crossings={at:now,pts};return pts;
  }
  private syncPainter(ground:FieldGround,camera:{x:number;z:number;y?:number},styleOf:FieldStyleOf|undefined,quality:'low'|'med'|'high'){
-  const time=ground.state.time,season=calendarPhase(time).phase,counts={grain:0,pulses:0,tubers:0};let total=0,weedN=0,boundN=0;
+  const time=ground.state.time,season=calendarPhase(time,yearSecondsOf(ground.state)).phase,counts={grain:0,pulses:0,tubers:0};let total=0,weedN=0,boundN=0;
   const hood=this.hood(ground),trails=this.trailPoints(ground),used=new Map<string,number>(),sig:number[]=[];
   const dist=(b:RenderField)=>Math.hypot(b.x-camera.x,b.z-camera.z,camera.y===undefined?0:Math.max(0,camera.y-ground.height(b.x,b.z)));
   const visible=ground.state.buildings.filter(b=>b.type==='farm'&&b.hp>0&&b.build>=1&&!b.plannedCost&&(b.team===0||ground.exploredAt(b.x,b.z))).map(b=>({b,d:dist(b)})).sort((a,b)=>a.d-b.d);
   const cropArr=(kind:FieldCrop)=>this.meshes.get(kind)!;
   for(const {b:field,d} of visible){
    const tier=this.tierOf(field,d,quality);if(tier>=2)continue;
-   const stage=fieldStage(field as never,time),kind=fieldCropKind(field),plan=this.orientation(ground,field),mask=hood.map.get(field.id)?.mask??0,revision=ground.navigationRevision?.()??0;
+   const stage=fieldStage(field as never,time,yearSecondsOf(ground.state)),kind=fieldCropKind(field),plan=this.orientation(ground,field),mask=hood.map.get(field.id)?.mask??0,revision=ground.navigationRevision?.()??0;
    // ---- crops (bare tilth and fallow draw none; the soil shader carries those)
    if(stage!=='fallow'&&stage!=='bare'){
     const planted=field.crop?.planted??0,growth=stage==='sprouting'?.06+.2*planted:stage==='stubble'?.05:stage==='ripe'?1:fieldCropGrowth(field);

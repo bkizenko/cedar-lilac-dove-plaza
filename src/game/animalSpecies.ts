@@ -20,3 +20,10 @@ export const isBovine=(species:string|undefined):boolean=>species==='cattle'||sp
 export const isEquine=(species:string|undefined):boolean=>species==='horse'||species==='donkey';
 /** Species with an actual trained draft/pack role. */
 export function isDraftSpecies(species:string|undefined):species is 'horse'|'cattle'|'donkey'|'ox'{return isEquine(species)||isBovine(species);}
+
+/** Breeding clocks are quoted against the Classic 1800 s year and stretch with state.yearLength, so a herd still produces the same number of generations per game year. */
+import {yearScaleOf,YEAR_LENGTH_MAX,DEFAULT_YEAR_SECONDS} from './calendarPacing';
+export const herdMaturity=(species:string|undefined,state:{yearLength?:number})=>herdRules(species).maturity*yearScaleOf(state);
+export const herdGestation=(species:string|undefined,state:{yearLength?:number})=>herdRules(species).gestation*yearScaleOf(state);
+/** Validation bound valid for every allowed year length. */
+export const herdGestationMax=(species:string|undefined)=>herdRules(species).gestation*YEAR_LENGTH_MAX/DEFAULT_YEAR_SECONDS;

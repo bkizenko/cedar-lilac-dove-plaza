@@ -1,6 +1,6 @@
 import type {Game} from './sim';
 import type {Building,GameState,Livestock,Unit} from './types';
-import {herdRules} from './animalSpecies';
+import {herdRules,herdMaturity} from './animalSpecies';
 import {insidePen,penInterior,PEN_RULES} from './penGeometry';
 import {surveyPenPasture} from './penPasture';
 import {penPlacesOccupied,penPlacesReserved} from './husbandry';
@@ -81,7 +81,7 @@ export function packPastureAI(g:Game,u:Unit,dt:number){
   if(g.state.wildlife.some(c=>c.id===a.id)||g.state.livestock?.some(c=>c.id===a.id))return wait('The animal identity is already held elsewhere; pasture return waits');
   const species=a.species??'goat',rules=herdRules(species);
   const animal:Livestock={...a,id:a.id,species,x:body.x,y:g.height(body.x,body.z),z:body.z,facing:u.facing,vx:0,vz:0,wanderT:0,fly:0,
-   team:u.team,pen:pen.id,sex:a.sex??(a.id%2?'female':'male'),born:a.born??Math.max(-rules.maturity,g.state.time-rules.maturity),tamedAt:a.tamedAt??g.state.time,
+   team:u.team,pen:pen.id,sex:a.sex??(a.id%2?'female':'male'),born:a.born??Math.max(-herdMaturity(species,g.state),g.state.time-herdMaturity(species,g.state)),tamedAt:a.tamedAt??g.state.time,
    hunger:a.hunger??0,milk:a.milk??0,pregnancy:a.pregnancy??0,packHarness:a.packHarness??{version:1},grazing:{x:body.x,z:body.z}};
   (g.state.livestock??=[]).push(animal);delete u.packAnimal;delete u.haulage;
   jobs.finish(jobId(u));jobs.forget(jobId(u));delete u.packPastureOrder;u.order='idle';u.node=null;u.target=null;u.workReason='The same working animal is home in pasture with its existing harness';g.workBoard.reset();return true;

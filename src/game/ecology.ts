@@ -4,6 +4,7 @@ import {landformLabelsEnabled,landformHabitatAt} from './landformLabels';
 import type {ResourceNode} from "./types";
 import type { Game } from "./sim";
 import {seasonalTemperature} from './yearClimate';
+import {yearSecondsOf,yearScaleOf} from './calendarPacing';
 export const HABITATS = {
   plains: { name: "Grassland", crops: 1.2, forage: 1, timber: 0.85, winterFood: 1.08, advice: "Open fertile ground favors fields. Store the autumn harvest; timber is slower to collect." },
   forest: { name: "Woodland", crops: 0.8, forage: 1.2, timber: 1.2, winterFood: 1, advice: "Woodland supports gathering and timber. Smaller harvests make a mixed food supply valuable." },
@@ -68,7 +69,7 @@ export function droughtWaterPotential(g:Game,x:number,z:number){
 /** Local weather drives real spoilage, not merely the calendar label. */
 export function climateAt(g:Game,x:number,z:number,time=g.state.time,weather=g.state.weather) {
   const habitat=habitatAt(g,x,z);
-  let temperature=seasonalTemperature(g.state.seed,time)-Math.max(0,g.height(x,z)-4)*.18;
+  let temperature=seasonalTemperature(g.state.seed,time,yearSecondsOf(g.state))-Math.max(0,g.height(x,z)-4)*.18;
   let humidity=habitat===HABITATS.forest?.76:habitat===HABITATS.hills?.47:.6;
   if(g.world.ecology){const e=ecologicalConditionsAt(g.world.ecology,x,z);temperature+=e.temperatureOffsetCelsius;humidity=e.moisture;}
   if(weather==="rain"||weather==="storm"||weather==="flood")humidity+=.2;
@@ -83,6 +84,7 @@ export function applyForagePressure(node:ResourceNode,amount=1){
   node.pressure=Math.min(1,(node.pressure||0)+.3*Math.max(0,amount)/Math.max(1,node.maxAmt||8));
 }
 
+/** yearSeconds is the DEFAULT (Classic) year; live games use yearSecondsOf(state). */
 export const WILD_PLANT_RULES=Object.freeze({version:1,yearSeconds:1800,maximumIntegrationStepSeconds:30,pressureRecoverySeconds:7200,
  pressureYieldReduction:.7,ripeDecayPerSecond:.00012,winterBerryDecayPerSecond:.009,senescentGreensDecayPerSecond:.012,
  drySeedDecayPerSecond:.0012,buriedRootDecayPerSecond:.00025});
@@ -116,7 +118,7 @@ export function initializeWildPlants(g:Game){
  if(wildPlantsEnabled(g))return;
  (g.state as SeasonalGame).wildPlantVersion=1;
  for(const n of g.state.forage){const species=wildPlantSpecies(g,n),initial=wildPlantCapacity(g,n,species)*WILD_PLANT_PROFILES[species].initialStandingFraction;
-  n.amount=initial;n.regenT=0;(n as SeasonalNode).wildPlant={version:1,species,year:Math.floor(g.state.time/WILD_PLANT_RULES.yearSeconds),initialFood:initial,producedThisYear:0,grownTotal:0,harvestedTotal:0,lostTotal:0,lastTimeSeconds:g.state.time};
+  n.amount=initial;n.regenT=0;(n as SeasonalNode).wildPlant={version:1,species,year:Math.floor(g.state.time/yearSecondsOf(g.state)),initialFood:initial,producedThisYear:0,grownTotal:0,harvestedTotal:0,lostTotal:0,lastTimeSeconds:g.state.time};
  }
 }
 function wildPlantWeatherYield(g:Game,n:ResourceNode){return g.state.weather==='drought'?.35+.6*droughtWaterPotential(g,n.x,n.z):g.state.weather==='frost'?.55:g.state.weather==='flood'?.7:g.state.weather==='storm'?.85:1;}
@@ -134,17 +136,17 @@ export function tickWildPlant(g:Game,node:ResourceNode,dt:number):boolean{
  if(node.kind!=='forage'||!wildPlantsEnabled(g))return false;
  const n=node as SeasonalNode,w=n.wildPlant;if(!w||dt<=0)return true;
  const now=g.state.time,elapsed=Math.min(Math.max(0,dt),Math.max(0,now-w.lastTimeSeconds));if(elapsed<=0)return true;
- const r=WILD_PLANT_RULES,p=WILD_PLANT_PROFILES[w.species],capacity=wildPlantCapacity(g,n,w.species);
+ const r=WILD_PLANT_RULES,Y=yearSecondsOf(g.state),scale=yearScaleOf(g.state),p=WILD_PLANT_PROFILES[w.species],capacity=wildPlantCapacity(g,n,w.species);
  if(n.pressure&&!g.state.units.some(u=>u.hp>0&&u.order==='gather'&&u.node===n))n.pressure=Math.max(0,n.pressure-elapsed/r.pressureRecoverySeconds);
  let cursor=now-elapsed;
- while(cursor<now-1e-8){const year=Math.floor(cursor/r.yearSeconds),end=Math.min(now,cursor+r.maximumIntegrationStepSeconds,(year+1)*r.yearSeconds),seconds=end-cursor;
+ while(cursor<now-1e-8){const year=Math.floor(cursor/Y),end=Math.min(now,cursor+r.maximumIntegrationStepSeconds,(year+1)*Y),seconds=end-cursor;
   if(w.year!==year){w.year=year;w.producedThisYear=0;}
-  const startPhase=(cursor-year*r.yearSeconds)/r.yearSeconds,endPhase=(end-year*r.yearSeconds)/r.yearSeconds;
-  const growth=Math.max(0,smooth(p.releaseStart,p.releaseEnd,endPhase)-smooth(p.releaseStart,p.releaseEnd,startPhase))*capacity*wildPlantWeatherYield(g,n)*(1-(n.pressure||0)*r.pressureYieldReduction);
+  const startPhase=(cursor-year*Y)/Y,endPhase=(end-year*Y)/Y;
+  const growth=Math.max(0,smooth(p.releaseStart,p.releaseEnd,endPhase)-smooth(p.releaseStart,p.releaseEnd,startPhase))*capacity*scale/* annual quota scales with the year, so per-second regrowth is unchanged */*wildPlantWeatherYield(g,n)*(1-(n.pressure||0)*r.pressureYieldReduction);
   const before=Math.max(0,n.amount),available=before+growth,standing=Math.min(capacity,available*Math.exp(-wildPlantDecay(w.species,(startPhase+endPhase)*.5)*seconds));
   w.grownTotal+=growth;w.producedThisYear+=growth;w.lostTotal+=Math.max(0,available-standing);n.amount=standing;cursor=end;
  }
- const currentYear=Math.floor(now/r.yearSeconds);if(w.year!==currentYear){w.year=currentYear;w.producedThisYear=0;}
+ const currentYear=Math.floor(now/Y);if(w.year!==currentYear){w.year=currentYear;w.producedThisYear=0;}
  w.lastTimeSeconds=now;n.regenT=0;return true;
 }
 /** The amount returned is the exact amount removed from the standing crop.
@@ -155,7 +157,7 @@ export function harvestWildPlant(g:Game,node:ResourceNode,requested:number):numb
  const taken=Math.min(Math.max(0,n.amount),requested);n.amount=Math.max(0,n.amount-taken);w.harvestedTotal+=taken;applyForagePressure(n,taken);return taken;
 }
 export function wildPlantVisual(g:Game,node:ResourceNode){
- const w=(node as SeasonalNode).wildPlant,species=w?.species??wildPlantSpecies(g,node),p=WILD_PLANT_PROFILES[species],capacity=wildPlantCapacity(g,node,species),phase=((g.state.time%WILD_PLANT_RULES.yearSeconds)+WILD_PLANT_RULES.yearSeconds)%WILD_PLANT_RULES.yearSeconds/WILD_PLANT_RULES.yearSeconds;
+ const w=(node as SeasonalNode).wildPlant,species=w?.species??wildPlantSpecies(g,node),p=WILD_PLANT_PROFILES[species],capacity=wildPlantCapacity(g,node,species),YS=yearSecondsOf(g.state),phase=((g.state.time%YS)+YS)%YS/YS;
  const enabled=wildPlantsEnabled(g)&&!!w,growth=enabled?smooth(p.leafStart,p.leafFull,phase)*(1-smooth(p.leafFall,p.leafGone,phase)):1,food=Math.max(0,node.amount),fraction=Math.max(0,Math.min(1,food/Math.max(.001,capacity)));
  const stage=!enabled?'legacy':phase>=p.leafGone?'dormant':food>1e-8?'ripe':phase<p.releaseStart?'growing':phase<p.releaseEnd?'ripening':'spent';
  return{enabled,species,name:p.name,stage,growth,leafScale:enabled?.18+.82*growth:food>0?1:0,fruitScale:food>1e-8?Math.cbrt(fraction):0,leafColor:phase>p.leafFall&&enabled?'#81724f':p.leafColor,ripeColor:p.ripeColor,harvestableFood:food,annualPotentialFood:capacity,producedThisYear:w?.producedThisYear??null,grownTotal:w?.grownTotal??null,harvestedTotal:w?.harvestedTotal??null,lostTotal:w?.lostTotal??null};
@@ -166,7 +168,7 @@ export function validWildPlantState(state:Game['state']):boolean{
  for(const node of state.forage){const w=(node as SeasonalNode).wildPlant;if(w===undefined){if(marker===1)return false;continue;}
   if(marker!==1||!w||w.version!==1||!WILD_PLANT_SPECIES.includes(w.species)||!Number.isInteger(w.year)||w.year<0)return false;
   for(const key of['initialFood','producedThisYear','grownTotal','harvestedTotal','lostTotal','lastTimeSeconds'] as const)if(!finite(w[key]))return false;
-  if(!finite(node.amount)||!finite(node.maxAmt)||w.lastTimeSeconds>state.time+1e-6||w.year!==Math.floor(w.lastTimeSeconds/WILD_PLANT_RULES.yearSeconds)||w.producedThisYear>w.grownTotal+1e-6)return false;
+  if(!finite(node.amount)||!finite(node.maxAmt)||w.lastTimeSeconds>state.time+1e-6||w.year!==Math.floor(w.lastTimeSeconds/yearSecondsOf(state))||w.producedThisYear>w.grownTotal+1e-6)return false;
   if(Math.abs(w.initialFood+w.grownTotal-w.harvestedTotal-w.lostTotal-node.amount)>1e-4*Math.max(1,w.initialFood+w.grownTotal))return false;
  }
  return true;

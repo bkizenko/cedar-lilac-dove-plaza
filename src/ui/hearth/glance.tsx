@@ -13,7 +13,7 @@ import {detectAlerts,foodDays,waterDays,workloadOf,winterOutlook} from './glance
 import {firstNeeds,firstNeedsVisible,type FirstNeed,type FirstNeedKind} from './firstNeeds';
 import {OVERLAY_KEYS,paintOverlays,type OverlayKey} from './overlayModel';
 import {hasInfluenceGradient,overlaySourcesOf} from './overlayReads';
-import {simulationDaySeconds,SIM_CALENDAR_RULES} from '@/game/calendarPacing';
+import {simulationDaySeconds,yearSecondsOf} from '@/game/calendarPacing';
 import {storageFill} from './storageFill';
 import {MINIMAP_RULES} from '../minimapModel';
 
@@ -58,14 +58,14 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
 
 /** Season turn cue: fires once when the calendar phase changes in the running game, never on load or at the first render. */
 function useSeasonCue(engine:Engine|null){
- const game=engine?.game,phase=game?seasonPhaseOf(game.state.time,SIM_CALENDAR_RULES.yearSeconds):null;
+ const game=engine?.game,phase=game?seasonPhaseOf(game.state.time,yearSecondsOf(game.state)):null;
  const last=useRef<{game:unknown;phase:number|null}>({game,phase});
  const [cue,setCue]=useState<{id:string;title:string}>();
  useEffect(()=>{
   const prev=last.current;last.current={game,phase};
   if(!game||phase===null||prev.game!==game||prev.phase===null||prev.phase===phase)return;
   const fd=foodDays(game);
-  setCue({id:`season:${Math.floor(game.state.time/SIM_CALENDAR_RULES.yearSeconds)}:${phase}`,title:seasonCueTitle(phase,fd)});
+  setCue({id:`season:${Math.floor(game.state.time/yearSecondsOf(game.state))}:${phase}`,title:seasonCueTitle(phase,fd)});
  },[game,phase]);
  return cue;
 }

@@ -1,4 +1,4 @@
-import {herdRules} from './animalSpecies';
+import {herdRules,herdGestationMax} from './animalSpecies';
 import type {Critter,Livestock,Unit} from './types';
 
 export const PACK_ANIMAL_RULES={followMeters:2.1,hungerPerSecond:.055,feedPerSecond:.012,waterPerSecond:.004,
@@ -41,7 +41,7 @@ export function validPackAnimal(a:unknown,now=Infinity):a is PackAnimal {
  const finite=(x:unknown)=>typeof x==='number'&&Number.isFinite(x);
  if(!Number.isSafeInteger(p.id)||p.id<1||!finite(p.hp)||!finite(p.maxHp)||p.hp<=0||p.hp>p.maxHp||p.maxHp>1000||!finite(p.scale)||p.scale<.1||p.scale>5)return false;
  if(p.species!==undefined&&!['goat','horse','cattle','donkey','ox'].includes(p.species)||p.sex!==undefined&&!['female','male'].includes(p.sex))return false;
- if(p.milk!==undefined&&(!finite(p.milk)||p.milk<0||p.milk>herdRules(p.species).milkCapacity)||p.pregnancy!==undefined&&(!finite(p.pregnancy)||p.pregnancy<0||p.pregnancy>herdRules(p.species).gestation)||p.lactatingUntil!==undefined&&(!finite(p.lactatingUntil)||p.lactatingUntil<0||p.lactatingUntil>1e12)||p.adultScale!==undefined&&(!finite(p.adultScale)||p.adultScale<.3||p.adultScale>3))return false;
+ if(p.milk!==undefined&&(!finite(p.milk)||p.milk<0||p.milk>herdRules(p.species).milkCapacity)||p.pregnancy!==undefined&&(!finite(p.pregnancy)||p.pregnancy<0||p.pregnancy>herdGestationMax(p.species))||p.lactatingUntil!==undefined&&(!finite(p.lactatingUntil)||p.lactatingUntil<0||p.lactatingUntil>1e12)||p.adultScale!==undefined&&(!finite(p.adultScale)||p.adultScale<.3||p.adultScale>3))return false;
  for(const key of ['born','tamedAt'] as const)if(p[key]!==undefined&&!finite(p[key]))return false;
  for(const key of ['hunger','thirstSeconds','foodConsumed','waterConsumedLiters'] as const)if(p[key]!==undefined&&(!finite(p[key])||p[key]!<0||p[key]!>(key==='hunger'?100:1e12)))return false;
  return true;

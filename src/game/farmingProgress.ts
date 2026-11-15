@@ -1,6 +1,7 @@
 import type {Game} from './sim';
 import {CROPS,cropTrialWorkplace,cropTrialWorkplaceIssue} from './cultivation';
-import {calendar,YEAR_SECONDS} from './settlement';
+import {calendar} from './settlement';
+import {yearSecondsOf} from './calendarPacing';
 export type FarmingProgress={stage:string;detail:string;completed?:number;required?:number;action:'knowledge'|'field'};
 /** Read-only summary: never initializes crops, advances work or promises an arrival time. */
 export function farmingProgress(g:Game):FarmingProgress {
@@ -19,7 +20,7 @@ export function farmingProgress(g:Game):FarmingProgress {
  const cal=calendar(g),current=finished.filter(b=>b.crop?.year===cal.year),planted=current.filter(b=>(b.crop?.planted||0)>0),workers=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.order==='gather'&&u.node&&finished.includes(u.node as typeof finished[number])).length;
  if(cal.phase===0){const progress=finished.reduce((sum,b)=>sum+(b.crop?.year===cal.year?b.crop.planted:0),0)/finished.length;
   return {stage:`Spring sowing · ${Math.round(progress*100)}%`,detail:`${workers} farmers assigned · ${finished.length} fields. ${workers?'Assigned farmers must reach and sow each plot.':'Assign residents to fields, or enable Auto work.'}${paused}`,completed:progress,required:1,action:'knowledge'};}
- if(!planted.length){const until=YEAR_SECONDS-g.state.time%YEAR_SECONDS;return {stage:'Waiting for spring sowing',detail:`${Math.ceil(until)} simulation seconds until spring. ${finished.length} fields ready; no crop was sown this year.${paused}`,action:'knowledge'};}
+ if(!planted.length){const Y=yearSecondsOf(g.state),until=Y-g.state.time%Y;return {stage:'Waiting for spring sowing',detail:`${Math.ceil(until)} simulation seconds until spring. ${finished.length} fields ready; no crop was sown this year.${paused}`,action:'knowledge'};}
  const remaining=current.reduce((sum,b)=>sum+(b.crop?.remaining||0),0);
  return {stage:cal.phase===1?'Crops growing':cal.phase===2?'Autumn harvest':'Winter field rest',detail:`${planted.length}/${finished.length} fields sown · ${workers} farmers assigned${cal.phase===2?` · ${Math.floor(remaining)} harvest units still in fields`:''}.${paused}`,action:'knowledge'};
 }

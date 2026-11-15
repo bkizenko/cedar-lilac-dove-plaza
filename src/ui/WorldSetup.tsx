@@ -6,10 +6,12 @@ import type { WorldRequest, WorldOptions } from "../game/worldOptions";
 import type { SkinRequest } from "../game/skinState";
 import { SkinPicker } from "./SkinPicker";
 import { PRESETS, type MapPreset } from "../game/mapgen/presets";
+import { YEAR_LENGTH_PRESETS, DEFAULT_YEAR_SECONDS } from "../game/calendarPacing";
 export function WorldSetup({ engine }: { engine: Engine }) {
   const [mapType, setMapType] = useState<MapPreset | "random">("random");
   const [size, setSize] = useState<WorldOptions["size"]>(1560);
   const [preset, setPreset] = useState<Difficulty>(engine.game.state.difficulty ?? "normal");
+  const [yearLength, setYearLength] = useState<number>(DEFAULT_YEAR_SECONDS);
   const [skin, setSkin] = useState<SkinRequest>({ mode: "random" });
   const lifecycle=useLifecycleAction(engine),busy=lifecycle.busy;
   const [wildCraft,setWildCraft] = useState(true);
@@ -69,6 +71,20 @@ export function WorldSetup({ engine }: { engine: Engine }) {
         </select>
       </label>
       {size>2080&&<p className="hw-save-note" role="note">{size===2940?"Vast worlds take noticeably longer to create and use more memory; expect slower simulation with large villages. Saves are kept in browser database storage.":"Immense worlds take much longer to create, need a recent computer with plenty of memory, and run slower. Saves are kept in browser database storage; use Export village for a file copy."}</p>}
+      <label>
+        Year length
+        <select
+          aria-label="Year length"
+          value={yearLength}
+          onChange={(e) => setYearLength(Number(e.target.value))}
+        >
+          {YEAR_LENGTH_PRESETS.map((p) => (
+            <option key={p.seconds} value={p.seconds}>
+              {p.name} · {p.hint}
+            </option>
+          ))}
+        </select>
+      </label>
       <SkinPicker value={skin} onChange={setSkin} />
       <label><input type="checkbox" checked={wildCraft} onChange={e=>setWildCraft(e.target.checked)}/> Detailed hunting, hides and preserving · new worlds only</label>
       {engine.game.testMode&&<label>
@@ -82,7 +98,7 @@ export function WorldSetup({ engine }: { engine: Engine }) {
         disabled={busy}
         onClick={() => void lifecycle.run(async()=>{
           await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
-          return await engine.configureNewWorld({preset:mapType,size,difficulty:preset,skin,...(sharedRoutes?{flowFieldVersion:1 as const}:{}),...(seaTides?{tideVersion:2 as const}:{})},previewRiverbanks,wildCraft);
+          return await engine.configureNewWorld({preset:mapType,size,difficulty:preset,skin,...(yearLength!==DEFAULT_YEAR_SECONDS?{yearLength}:{}),...(sharedRoutes?{flowFieldVersion:1 as const}:{}),...(seaTides?{tideVersion:2 as const}:{})},previewRiverbanks,wildCraft);
         })}
       >
         {busy ? "Generating…" : "New world"}

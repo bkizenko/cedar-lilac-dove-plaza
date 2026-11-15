@@ -124,7 +124,7 @@ import {
 import type { Engine } from "@/game/engine";
 import type { HudSnapshot, ResKind, TradeDeal } from "@/game/types";
 import { AGES, BUILDINGS, BUILD_ORDER, UNITS } from "@/game/constants";
-import { YEAR_SECONDS } from "@/game/settlement";
+import { yearSecondsOf } from "@/game/calendarPacing";
 
 export const BLD_ICON: Record<string, ReactNode> = {
   hearth: <Flame className="size-4" />, butcher: <Scissors className="size-4" />,
@@ -346,7 +346,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
               <div className="mt-1 text-xs text-parchment-dim tabular">
                 {hud.clock}{" "}
                 <span className="text-parchment-dim/70">
-                  (Year {Math.floor(hud.time / YEAR_SECONDS) + 1})
+                  (Year {Math.floor(hud.time / yearSecondsOf(hud)) + 1})
                 </span>
                 {speed > 1 ? <span className="ml-1 text-bronze-bright">{speed}×</span> : null}
               </div>

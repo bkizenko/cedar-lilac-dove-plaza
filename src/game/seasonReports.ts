@@ -1,5 +1,5 @@
 import type { Game } from './sim';
-import { YEAR_SECONDS } from './settlement';
+import { DEFAULT_YEAR_SECONDS, seasonSecondsOf } from './calendarPacing';
 import {readyFoodStock} from './pantry';
 
 export const SEASON_NAMES = ['Spring', 'Summer', 'Autumn', 'Winter'];
@@ -80,11 +80,11 @@ export function currentSeasonReport(g: Game) {
 }
 
 export function updateSeasonReports(g: Game) {
- const season = Math.floor(g.state.time / (YEAR_SECONDS / 4));
+ const season = Math.floor(g.state.time / seasonSecondsOf(g.state));
  const report = g.state.seasonReports;
  if (!report) {
   g.state.seasonReports = {
-   active: sample(g, season, 0, g.state.time % (YEAR_SECONDS / 4) > 1),
+   active: sample(g, season, 0, g.state.time % seasonSecondsOf(g.state) > 1),
    history: [], weaponsMade: 0,
   };
   return;
@@ -108,9 +108,9 @@ export function recordSeasonWeapon(g: Game, team: number) {
  g.state.seasonReports!.weaponsMade++;
 }
 
-export function validSeasonReports(report: SeasonReports | undefined, time: number) {
+export function validSeasonReports(report: SeasonReports | undefined, time: number, yearSeconds: number = DEFAULT_YEAR_SECONDS) {
  if (report === undefined) return true;
- const current = Math.floor(time / (YEAR_SECONDS / 4));
+ const current = Math.floor(time / (yearSeconds / 4));
  const validSample = (row: SeasonSample) => !!row && Number.isSafeInteger(row.season) &&
   row.season >= 0 && row.season <= current && typeof row.partial === 'boolean' &&
   (row.readyFood===undefined||!!row.readyFood&&typeof row.readyFood.partial==='boolean'&&[row.readyFood.produced,row.readyFood.nourishmentProduced,row.readyFood.received,row.readyFood.nourishmentReceived,row.readyFood.stock,row.readyFood.nourishment].every(n=>Number.isFinite(n)&&n>=0))&&

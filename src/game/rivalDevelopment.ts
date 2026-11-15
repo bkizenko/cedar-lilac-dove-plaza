@@ -23,12 +23,13 @@ import {missingAgeBuildings,AGE_FOOD_BUFFER_SECONDS} from './advancement';
 import type { Game } from './sim';
 import type { BldType, ResKind, Unit, Building } from './types';
 import { AGE_COST, BUILDINGS, GATHER, LUMBER_R, QUARRY_R } from './constants';
-import { isDependent, reserveSeconds, foodDemand, farmHarvestEstimate, YEAR_SECONDS } from './settlement';
+import { isDependent, reserveSeconds, foodDemand, farmHarvestEstimate } from './settlement';
+import { yearScaleOf, seasonSecondsOf } from './calendarPacing';
 
 export const RIVAL_RESOURCE_RANGE=320;
 /** Keep a full harvest cycle plus losses; half-year storage silently capped growth. */
 export function rivalStorageTarget(g:Game,team:number){
-  return Math.ceil([0,1,2,3].reduce((sum,phase)=>sum+foodDemand(g,team,phase)*YEAR_SECONDS/4,0)*1.3+100);
+  return Math.ceil([0,1,2,3].reduce((sum,phase)=>sum+foodDemand(g,team,phase)*seasonSecondsOf(g.state),0)*1.3+100);
 }
 
 /** Local familiarity plus actual scouting records; never inspect unknown distant nodes. */
@@ -86,7 +87,7 @@ export function rivalDevelopmentPlan(g:Game,team:number){
   const averageYield=standing.length?standing.reduce((sum,b)=>sum+farmHarvestEstimate(g,b,1,1,1)*(rawCerealField(b)?1-CEREAL_RULES.seedFraction:1),0)/standing.length:180;
   // Fund fields for all seasons and storage losses, using this biome's actual
   // output rather than assuming every farm produces the same 200 food.
-  const annualNeed=[0,1,2,3].reduce((sum,phase)=>sum+foodDemand(g,team,phase)*YEAR_SECONDS/4,0)*1.3;
+  const annualNeed=[0,1,2,3].reduce((sum,phase)=>sum+foodDemand(g,team,phase)*seasonSecondsOf(g.state),0)*1.3;
   const foodFields=Math.max(3,Math.ceil(annualNeed/Math.max(70,averageYield)));
   return {next,fields,stores,pop,foodFields,saving:!!next&&pop>=5&&fields>=2&&stores>=1&&reserveSeconds(g,team)>240};
 }
@@ -104,7 +105,7 @@ export function rivalCanInvest(g:Game,team:number,type:BldType){
   if(type==='hut'||type==='house')return g.popCap(team)<p.pop+rivalHousingLead(g,team);
   if(type==='farm'&&(p.fields<p.foodFields||reserveSeconds(g,team)<300&&p.fields<Math.ceil(p.pop/2)))return true;
   if(type==='warehouse'){
-    const capacity=g.stockCap(team)+pending.filter(b=>b.type==='warehouse').length*200;
+    const capacity=g.stockCap(team)+pending.filter(b=>b.type==='warehouse').length*200*yearScaleOf(g.state);
     const essential=Math.max(p.next?.food||0,foodDemand(g,team)*AGE_FOOD_BUFFER_SECONDS)+40;
     if(p.stores<2||capacity<essential)return true;
     // Annual storage is a useful target, not an emergency that may consume

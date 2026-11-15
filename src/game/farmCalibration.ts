@@ -5,7 +5,7 @@ import{BUILDINGS,GATHER_WORK_RATE}from'./constants';
 import{CEREAL_RULES}from'./cerealRules';
 import{PRODUCTION_RECIPES}from'./production';
 import{FOOD_NOURISHMENT}from'./pantry';
-import{YEAR_SECONDS,FOOD_PER_PERSON_SECOND}from'./settlement';
+import{YEAR_SECONDS,FOOD_PER_PERSON_SECOND}from'./settlement'; // calibration is a Classic-year reference table by design
 const positive=(name:string,n:number)=>{if(!Number.isFinite(n)||n<=0)throw new RangeError(`${name} must be finite and positive`);return n;};
 const fraction=(name:string,n:number,allowZero=true)=>{if(!Number.isFinite(n)||n<0||n>1||!allowZero&&n===0)throw new RangeError(`${name} must be a valid fraction`);return n;};
 

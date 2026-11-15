@@ -1,3 +1,4 @@
+import {simulationDaySeconds} from './calendarPacing';
 import type {Game} from './sim';
 import type {Unit} from './types';
 import {ROUTE_RULES,corridorLine,corridorOwner,corridorWear,routeCorridors,routesEnabled,routineTraveller,type Corridor} from './routeWear';
@@ -179,8 +180,8 @@ function work(g:Game,dt:number){
 const present=new WeakMap<Game,Map<string,number>>();
 const dwell=new WeakMap<Game,Map<string,number>>();
 const sleptAt=new WeakMap<Game,Map<string,number>>();
-/** One displayed 24-hour cycle in simulation seconds (1800 s year / 32 days x the 24x clock slowdown). */
-const VISIBLE_DAY_SECONDS=1800/32*24;
+/** One displayed 24-hour cycle in simulation seconds (day length x the 24x clock slowdown); independent of year length. */
+const VISIBLE_DAY_SECONDS=simulationDaySeconds*24;
 function use(g:Game,dt:number){
  const s=state(g),R=WAYSTATION_RULES;if(!s.stations.some(t=>t.stage>=1))return;
  let seen=present.get(g);if(!seen)present.set(g,seen=new Map());

@@ -18,7 +18,7 @@ import {validArmorRepairs,tickArmorRepairs} from './armorRepair';
 import {validGarmentRepairs} from './garmentRepair';
 import {validFoodExperience} from './foodExperience';
 import {validPackPastureOrders} from './packPasture';
-import {herdRules,isDraftSpecies} from './animalSpecies';
+import {herdRules,isDraftSpecies,herdGestationMax} from './animalSpecies';
 import {validPackAnimal,validPackHarness} from './packAnimalState';
 import {validWeaponCargoState,reconcileWeaponCargo} from './weaponCargo';
 import {restoreCargoRecoveryCommitments} from './stolenCargo';
@@ -107,6 +107,7 @@ import {fowCells} from './gridScale';
 import {MAP_PRESETS} from './mapgen/presets';
 import {syncRiverboats} from './boats';
 import {DIFFICULTIES} from './difficulty';
+import {normalizeYearLength,yearSecondsOf,LIFE_YEAR_SECONDS} from './calendarPacing';
 import {expandablePlot,validPlot} from './plots';
 import {discountTownhallPlans} from "./construction";
 import {weatherWaterLevel} from "./hydrology";
@@ -324,7 +325,7 @@ function validateGamePayload(raw: unknown) {
   if(!validConflictJournal(s.conflictJournal))fail("validConflictJournal");
   if(!validHaulageProjects(s))fail("validHaulageProjects");
   if(!validSimulationEvents(s.simulationEvents))fail("validSimulationEvents");
-  if(!validSeasonReports(s.seasonReports,s.time))fail("validSeasonReports");
+  if(!validSeasonReports(s.seasonReports,s.time,yearSecondsOf(s)))fail("validSeasonReports");
   if(!validTradePartyState(s))fail("validTradePartyState");
   if(!validSurvivalState(s))fail("validSurvivalState");
   const validTeam=(team:number)=>Number.isInteger(team)&&team>=0&&!!s.tribes[team];
@@ -741,7 +742,7 @@ function validateGamePayload(raw: unknown) {
       if(!validPackHarness(a.packHarness,s.time)||['foodConsumed','waterConsumedLiters'].some(k=>a[k]!==undefined&&(!num(a[k])||a[k]<0||a[k]>1e12)))fail("!validPackHarness(a.packHarness,s.time)||['foodConsumed','waterConsumedLiters'].…");
       const led=a.ledBy!==undefined;
       if(led&&(!Number.isSafeInteger(a.ledBy)||a.hp<=0||!s.units.some((u:any)=>u.id===a.ledBy&&u.hp>0&&!u.prisoner)||s.units.some((u:any)=>u.hp>0&&(u.tamingWork?.animal===a.id||u.husbandryWork?.animal===a.id))))fail("led&&(!Number.isSafeInteger(a.ledBy)||a.hp<=0||!s.units.some((u:any)=>u.id===a.l…");
-      if(!s.tribes.some((t:any)=>t.id===a.team)||!Number.isSafeInteger(a.pen)||a.pen<=0||!pen&&!led||!['goat','sheep','horse','cattle','donkey','ox'].includes(a.species)||!validFleece(a,s.time)||a.species==='sheep'&&s.sheepVersion!==1||!['female','male'].includes(a.sex)||a.born< -herdRules(a.species).maturity||a.born>s.time||a.tamedAt<0||a.tamedAt>s.time||a.hp<0||a.hp>a.maxHp||a.maxHp<=0||a.maxHp>1000||a.scale<.3||a.scale>3||a.hunger<0||a.hunger>100||a.milk<0||a.milk>herdRules(a.species).milkCapacity||a.pregnancy<0||a.pregnancy>herdRules(a.species).gestation||!carcassStateValid(a.carcass,a.species,a.hp,s.time))fail("!s.tribes.some((t:any)=>t.id===a.team)||!Number.isSafeInteger(a.pen)||a.pen<=0||…");
+      if(!s.tribes.some((t:any)=>t.id===a.team)||!Number.isSafeInteger(a.pen)||a.pen<=0||!pen&&!led||!['goat','sheep','horse','cattle','donkey','ox'].includes(a.species)||!validFleece(a,s.time)||a.species==='sheep'&&s.sheepVersion!==1||!['female','male'].includes(a.sex)||a.born< -herdRules(a.species).maturity||a.born>s.time||a.tamedAt<0||a.tamedAt>s.time||a.hp<0||a.hp>a.maxHp||a.maxHp<=0||a.maxHp>1000||a.scale<.3||a.scale>3||a.hunger<0||a.hunger>100||a.milk<0||a.milk>herdRules(a.species).milkCapacity||a.pregnancy<0||a.pregnancy>herdGestationMax(a.species)||!carcassStateValid(a.carcass,a.species,a.hp,s.time))fail("!s.tribes.some((t:any)=>t.id===a.team)||!Number.isSafeInteger(a.pen)||a.pen<=0||…");
       if(!validAnimalBeh(a.beh,s.time,Math.max(1000,HALF+40))||a.beh!==undefined&&s.animalBehaviourVersion!==1)fail("!validAnimalBeh(a.beh,s.time,Math.max(1000,HALF+40))||a.beh!==undefined&&s.anima…");
       if(a.lactatingUntil!==undefined&&(!num(a.lactatingUntil)||a.lactatingUntil<0||a.lactatingUntil>s.time+901))fail("a.lactatingUntil!==undefined&&(!num(a.lactatingUntil)||a.lactatingUntil<0||a.lac…");
       if(a.hp>0&&pen){perPen.set(a.pen,(perPen.get(a.pen)||0)+herdRules(a.species).places);if((perPen.get(a.pen)||0)>penHousingCapacity(pen))fail("(perPen.get(a.pen)||0)>penHousingCapacity(pen)");}
@@ -839,9 +840,9 @@ function validateGamePayload(raw: unknown) {
   if (d.demographicVersion === undefined) {
     for (const u of s.units) {
       if (u.maturesAt !== undefined && u.maturesAt > s.time) {
-        u.ageT = 8 * 1800;
-        u.maturesAt = s.time + 8 * 1800;
-      } else u.ageT = (18 + (u.id % 25)) * 1800;
+        u.ageT = 8 * LIFE_YEAR_SECONDS;
+        u.maturesAt = s.time + 8 * LIFE_YEAR_SECONDS;
+      } else u.ageT = (18 + (u.id % 25)) * LIFE_YEAR_SECONDS;
     }
   } else if (d.demographicVersion !== 1) fail("d.demographicVersion !== 1");
   for(const b of s.boats||[]){
@@ -901,6 +902,7 @@ export function decodeGame(raw:unknown):Game {
   }
   g.state = {
     ...s,
+    yearLength: normalizeYearLength(s.yearLength), // absent/Classic stays absent; a damaged or out-of-range value repairs to Classic 1800
     growthPolicy: s.growthPolicy ?? "welcome",
     governance: sanitizeGovernance(s.governance),
     selBld: null,
@@ -911,6 +913,7 @@ export function decodeGame(raw:unknown):Game {
     particles: [],
     floaters: [],
   } as GameState;
+  if(g.state.yearLength===undefined)delete g.state.yearLength;
   ensureSkins(g.state); // old saves and damaged skin records are re-derived from the seed; a valid record is kept exactly
   if(s.worldOptions?.flowFieldVersion===1)g.world.options={...(g.world.options??s.worldOptions),flowFieldVersion:1};
   g.configureFlowFields();

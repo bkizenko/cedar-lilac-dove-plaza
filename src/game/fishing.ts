@@ -9,9 +9,10 @@ import type {Building,Unit,ResourceNode} from './types';
 import {DOCK_R,GATHER,GATHER_WORK_RATE} from './constants';
 import {reserveSeconds} from "./settlement";
 import {mulberry32} from './rng';
+import {yearSecondsOf,seasonSecondsOf} from './calendarPacing';
 /** Seconds, fish units, and dimensionless habitat pressure. These keep catch
  * finite: recovery changes wild stock, never the village inventory. */
-export const FISHERY_RULES=Object.freeze({replenishmentSpeed:2,defaultCapacityFish:8,habitatCell:12,yearSeconds:1800,seasonSeconds:450,winterProductivity:.4,droughtProductivity:.35,floodProductivity:1.2,pressureRecoverySeconds:1200,fullStockRecoverySeconds:900,maximumPressurePenalty:.8,emptyRestBaseSeconds:60,emptyRestPressureSeconds:180});
+export const FISHERY_RULES=Object.freeze({replenishmentSpeed:2,defaultCapacityFish:8,habitatCell:12,/* yearSeconds/seasonSeconds are the DEFAULT (Classic) calendar; live games use yearSecondsOf/seasonSecondsOf(state) */yearSeconds:1800,seasonSeconds:450,winterProductivity:.4,droughtProductivity:.35,floodProductivity:1.2,pressureRecoverySeconds:1200,fullStockRecoverySeconds:900,maximumPressurePenalty:.8,emptyRestBaseSeconds:60,emptyRestPressureSeconds:180});
 /** One saved habitat cell identity for dock and reach surveys. Water
  * connectivity is still checked by the caller; a cell alone is not an ocean. */
 export const fishHabitatCell=(x:number,z:number)=>`${Math.floor(x/FISHERY_RULES.habitatCell)}:${Math.floor(z/FISHERY_RULES.habitatCell)}`;
@@ -25,7 +26,7 @@ export function consumeFishStock(n:ResourceNode,requested:number){
  if(n.amount===0)n.regenT=FISHERY_RULES.emptyRestBaseSeconds+(n.pressure||0)*FISHERY_RULES.emptyRestPressureSeconds;
  return taken;
 }
-function fishRecoveryRate(g:Game){return (Math.floor((g.state.time%FISHERY_RULES.yearSeconds)/FISHERY_RULES.seasonSeconds)===3?FISHERY_RULES.winterProductivity:1)*(g.state.weather==='drought'?FISHERY_RULES.droughtProductivity:g.state.weather==='flood'?FISHERY_RULES.floodProductivity:1);}
+function fishRecoveryRate(g:Game){return (Math.floor((g.state.time%yearSecondsOf(g.state))/seasonSecondsOf(g.state))===3?FISHERY_RULES.winterProductivity:1)*(g.state.weather==='drought'?FISHERY_RULES.droughtProductivity:g.state.weather==='flood'?FISHERY_RULES.floodProductivity:1);}
 /** Conservative resting estimate at current season/weather; continued catches
  * or changing weather can change it. Includes the actual remaining rest timer. */
 export function fishRecoveryEstimateSeconds(g:Game,n:ResourceNode){

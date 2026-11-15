@@ -33,6 +33,7 @@ import { TradeProposal } from "./TradeProposal";
 import { knownSettlement } from "@/game/barter";
 import { useEffect, useRef } from "react";
 import type { Engine } from "@/game/engine";
+import { yearSecondsOf, yearScaleOf, LIFE_YEAR_SECONDS } from "@/game/calendarPacing";
 import {
   calendar,
   reserveSeconds,
@@ -58,7 +59,7 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
     s = g.state,
     t = g.tribe(0);
   if (!t) return null;
-  const workday=workdayAt(s.time,g.dayPhase()*24);
+  const workday=workdayAt(s.time,g.dayPhase()*24,yearSecondsOf(s));
   const home = g.campOf(0);
   const habitat = habitatAt(g, home.x, home.z);
   const climate=climateAt(g,home.x,home.z),foods=foodInventory(t);
@@ -105,7 +106,7 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
           </li>)}</ul>
           {residence.unassigned>0&&<p>{residence.unassigned} without a completed hall assigned</p>}
         </section>}
-        {open&&<PrestigeReadout view={hud?.prestigeBreakdown} rivals={hud?.prestigeRivals}/>}
+        {open&&<PrestigeReadout view={hud?.prestigeBreakdown} rivals={hud?.prestigeRivals} yearSeconds={yearSecondsOf(s)}/>}
         <section>
           <h3>Food security</h3>
           {militia.length>0&&<div role="status">
@@ -143,7 +144,7 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
             <button className="min-h-11" onClick={()=>{seekCropSamples(g);engine.pushHud();}}>Find and gather crop seeds</button>
           )}
           <p>{Math.round(reserveSeconds(g) / 60)}m of food · {(foodSpoilage(g) * 60).toFixed(1)}/m spoils</p>
-          {t.food>g.stockCap(0)&&<button onClick={()=>{close();engine.setPlacing("warehouse");}}>Plan a storehouse · protects 200 more food</button>}
+          {t.food>g.stockCap(0)&&<button onClick={()=>{close();engine.setPlacing("warehouse");}}>Plan a storehouse · protects {Math.round(200*yearScaleOf(s))} more food</button>}
           {farms.length>0&&<details><summary>Field output & seasonal work</summary>
             {farms.map((b,i)=><p key={b.id}>Field {i+1}: {fieldProductionSummary(g,b)}.</p>)}
             <p>Estimates exclude walking, rest and later weather changes. Tools reduce work time; they do not create extra harvest. Food enters stores only when carried home.</p>
@@ -250,7 +251,7 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
           {DISCOVERIES.map(d => {
             const entry = s.discoveries?.find(h => h.id === d.id);
             return <li key={d.id}><strong>{d.name}</strong>{" "}
-              {entry ? `Recorded in the ${AGES[entry.age]} Age, year ${Math.floor(entry.time / 1800) + 1}.` : d.hint}
+              {entry ? `Recorded in the ${AGES[entry.age]} Age, year ${Math.floor(entry.time / yearSecondsOf(s)) + 1}.` : d.hint}
             </li>;
           })}
         </ul>
@@ -326,7 +327,7 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
         {people.map((u) => (
           <li key={u.id}>
             <strong>{personName(u)}</strong> · {isDependent(g, u) ? "young" : u.type === "worker" ? "villager" : "defender"}
-            · age {Math.floor(u.ageT / 1800)}{u.sickUntil ? " · recovering from fever" : ""}:{" "}
+            · age {Math.floor(u.ageT / LIFE_YEAR_SECONDS)}{u.sickUntil ? " · recovering from fever" : ""}:{" "}
             {u.emergency
               ? u.workReason
               : u.order === "hold"
@@ -437,7 +438,7 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
           {u.expedition && ` · ${u.expedition.food.toFixed(1)} journey food`}
           {` · fatigue ${Math.round((u.fatigue||0)*100)}%, pace ${Math.round(traits.speed*100)}%, strength ${Math.round(traits.strength*100)}%, appetite ${Math.round(traits.appetite*100)}%`}</p>;})}
         <h3>Life in the village</h3>
-        {(s.lifeHistory || []).filter(e=>e.team===0).slice(-12).reverse().map((e,i)=><p key={i}>Year {Math.floor(e.time/1800)+1} · {e.text.replace(/^\[Contact \d+\] /,'')}</p>)}
+        {(s.lifeHistory || []).filter(e=>e.team===0).slice(-12).reverse().map((e,i)=><p key={i}>Year {Math.floor(e.time/yearSecondsOf(s))+1} · {e.text.replace(/^\[Contact \d+\] /,'')}</p>)}
       </section>
       <section>
         <h3>Farming tools</h3>

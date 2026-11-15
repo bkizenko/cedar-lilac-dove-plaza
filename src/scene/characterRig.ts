@@ -14,6 +14,7 @@
  *
  * A LEGACY SET stays switchable: the old merged unit meshes (meshes.ts unitGeo + wornGarments/wornArmor) are untouched
  * and selected by `peopleSet:'legacy'` in the world adapter. Nothing there was deleted. */
+import {LIFE_YEAR_SECONDS} from '../game/calendarPacing';
 import {hashSeed,part,partTriangles,seededRandom,type LodTier,type Part} from './buildingParts';
 import {shapeTriangles} from './carvedMesh';
 import {rotatePoint} from './buildingParts';
@@ -43,7 +44,7 @@ export const BODY_CLASSES:Record<BodyClass,ClassSpec>={
  adult:{scale:1,head:1,width:1,stoop:0,hairGrey:false},child:{scale:.64,head:1.34,width:.88,stoop:0,hairGrey:false},elder:{scale:.97,head:1,width:.94,stoop:13,hairGrey:true},
  leader:{scale:1,head:1.06,width:1.14,stoop:0,hairGrey:false},soldier:{scale:1,head:1,width:1.1,stoop:0,hairGrey:false}};
 /** Real age fields: a child has Unit.maturesAt in the future; an elder has Unit.ageT past this (the simulation does not age people yet). */
-export const ELDER_AGE_T=40*1800;
+export const ELDER_AGE_T=40*LIFE_YEAR_SECONDS;
 export function bodyClassFor(u:{type:string;maturesAt?:number;ageT?:number},time:number):BodyClass{
  if(u.maturesAt!==undefined&&u.maturesAt>time)return 'child';if(u.type==='leader')return 'leader';if((u.ageT??0)>=ELDER_AGE_T)return 'elder';
  return u.type==='swordsman'||u.type==='warden'||u.type==='spearman'||u.type==='hoplite'||u.type==='pikeman'?'soldier':'adult';

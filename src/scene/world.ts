@@ -23,7 +23,7 @@ import {survivalFireActive} from '@/game/survivalNeeds';
 import {buildingCharacter,workingHearths} from './buildingCharacter';
 import {wildlifeInstanceAnimals,growWildlifeMesh} from './wildlifeInstances';
 import {AnimalAdapter,FishAdapter,readAnimalSet,type AnimalRow} from './animalAdapter';
-import {YEAR_SECONDS} from '@/game/settlement';
+import {seasonSecondsOf} from '@/game/calendarPacing';
 import {FibreWorkLayer} from './fibreWorkLayer';
 import {BasketLayer} from './basketLayer';
 import {PenFenceLayer} from './penFenceLayer';
@@ -1396,7 +1396,7 @@ export class WorldView {
   private drawAnimalRig(game:Game){
     const ad=this.animals;if(!ad)return;
     this.hideLegacyAnimals();
-    const cal=calendar(game),within=Math.max(0,Math.min(1,1-cal.remaining/(YEAR_SECONDS/4))),rows:AnimalRow[]=[];
+    const cal=calendar(game),within=Math.max(0,Math.min(1,1-cal.remaining/seasonSecondsOf(game.state))),rows:AnimalRow[]=[];
     const shore=(c:{x:number;z:number;facing:number})=>{const x=c.x+Math.sin(c.facing)*1.6,z=c.z+Math.cos(c.facing)*1.6;return game.waterAt(x,z)>game.height(x,z)-.02;};
     for(const list of this.wildlifeOwners.values())for(const c of list)rows.push({c,domestic:false,season:cal.phase,within,shore:c.hp>0&&c.species!=='bird'&&shore(c)});
     for(const a of game.state.livestock||[]){

@@ -4,7 +4,7 @@
  */
 import type {Game} from '@/game/sim';
 import {reserveSeconds} from '@/game/settlement';
-import {simulationDaySeconds,SIM_CALENDAR_RULES} from '@/game/calendarPacing';
+import {simulationDaySeconds,yearSecondsOf} from '@/game/calendarPacing';
 import {SURVIVAL_RULES,collectedWaterDemand} from '@/game/survivalNeeds';
 import {exposedHarvestUnits} from '@/game/production';
 import {foodAlerts} from '@/game/foodGuard';
@@ -75,7 +75,7 @@ export type WinterOutlook={phase:'autumn'|'winter';thawDays:number;winterStartDa
  */
 export function winterOutlook(g:Game):WinterOutlook|null{
  const fd=foodDays(g);if(fd===null)return null;
- const year=SIM_CALENDAR_RULES.yearSeconds,t=g.state.time%year,q=year/4,phase=Math.floor(t/q);
+ const year=yearSecondsOf(g.state),t=g.state.time%year,q=year/4,phase=Math.floor(t/q);
  if(phase<2)return null;
  const thawDays=(year-t)/simulationDaySeconds,winterStartDays=Math.max(0,(3*q-t)/simulationDaySeconds);
  const need=phase===3?thawDays:thawDays;

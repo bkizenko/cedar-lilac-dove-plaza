@@ -9,7 +9,7 @@ import {MusicChip} from './MusicControls';
 import {FoldHandle,FoldMin,useFold} from './fold';
 import type {HudSnapshot} from '@/game/types';
 import {BUILDINGS} from '@/game/constants';
-import {YEAR_SECONDS} from '@/game/settlement';
+import {yearSecondsOf} from '@/game/calendarPacing';
 import {SURVIVAL_RULES} from '@/game/survivalNeeds';
 import {exposedHarvestUnits} from '@/game/production';
 import {foodAlerts} from '@/game/foodGuard';
@@ -43,7 +43,7 @@ export function TimeCard({hud,engine,onAges,onMenu}:{hud:HudSnapshot;engine:Engi
  return <div className="hw-top-right">
   {f.showPanel&&<div className={cx('hw-time',f.cls)} role="group" aria-label="Time">
    <span className="hw-time-icon">{hud.night?<Moon size={28}/>:<Sun size={28}/>}{hud.paused&&<Pause size={24} className="hw-time-pause"/>}</span>
-   <div className="hw-time-text"><b>{hud.clock}</b><span>{hud.season} · Y{Math.floor(hud.time/YEAR_SECONDS)+1}{temp?` · ${temp}`:''}</span></div>
+   <div className="hw-time-text"><b>{hud.clock}</b><span>{hud.season} · Y{Math.floor(hud.time/yearSecondsOf(hud))+1}{temp?` · ${temp}`:''}</span></div>
    <GameTooltip title={hud.ages[hud.age]+' Age'} description={hud.canAge&&hud.nextAge?`Ready for ${hud.nextAge}`:undefined}><button type="button" className={cx('hw-era',hud.canAge&&'is-ready')} aria-label={`${hud.ages[hud.age]} Age. Open ages`} onClick={onAges}><BookOpen size={20}/><span>{hud.ages[hud.age]}</span></button></GameTooltip>
   </div>}
   {/* The bar always exists: the clock and speed buttons fold into a "Clock" handle, the sound chip folds on its own, and Menu never hides. */}

@@ -36,4 +36,4 @@ export function annotateKnowledge(g:Game,topics:KnowledgeTopic[]):KnowledgeTopic
  });
 }
 
-export function knowledgeDateLabel(at:number){const year=Math.floor(at/SIM_CALENDAR_RULES.yearSeconds)+1,season=Math.floor((at%SIM_CALENDAR_RULES.yearSeconds)/(SIM_CALENDAR_RULES.yearSeconds/4));return `Year ${year} · ${['Spring','Summer','Autumn','Winter'][season]}`;}
+export function knowledgeDateLabel(at:number,Y:number=SIM_CALENDAR_RULES.yearSeconds){const year=Math.floor(at/Y)+1,season=Math.floor((at%Y)/(Y/4));return `Year ${year} · ${['Spring','Summer','Autumn','Winter'][season]}`;}
