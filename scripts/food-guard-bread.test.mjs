@@ -36,13 +36,16 @@ test('held workers skip non-food board work while the guard is active',()=>{
   setReserve(g,100);
   g.workBoard.reset();
   for(const u of people){u.workCheckAt=0;g.workBoard.assign(g,u);}
-  for(const u of people)if(foodGuardHolds(g,u))assert.notEqual(u.job,'wood');
+  const held=people.filter(u=>foodGuardHolds(g,u));assert.ok(held.length>=2,'guard holds a crew');
+  for(const u of held){assert.notEqual(u.job,'wood');assert.equal(u.job,'food',`held worker has a food job, got ${u.job} / ${u.order} / ${u.workReason}`);}
 });
 
 test('Secure food reserves people never chop logs',()=>{
   const {g,people}=fixture(3);g.state.laborPolicy='food';setReserve(g,5000);
   g.state.trees=[{id:g.id(),kind:'tree',x:4,z:40,y:4,amount:50,maxAmount:50}];
+  g.state.forage=[{id:g.id(),kind:'forage',x:-4,z:40,y:4,amount:50,maxAmount:50}];
   g.workBoard.reset();for(const u of people){u.workCheckAt=0;g.workBoard.assign(g,u);assert.notEqual(u.job,'wood');}
+  assert.ok(people.some(u=>u.job==='food'),'someone is given food work');
 });
 
 test('cereal sheaves and rough grain fold into clean grain; old saves still load',()=>{

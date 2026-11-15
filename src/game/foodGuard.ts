@@ -1,6 +1,8 @@
 import type {Game} from './sim';
 import type {Unit} from './types';
 import {isDependent,reserveSeconds} from './settlement';
+import {releaseTreeWorker} from './workAllocation';
+import {releaseConstructionWorker} from './constructionOwnership';
 
 /** Starvation guard. Runtime-only: it is recomputed from live state every few
  * game seconds, so nothing here is saved or needs persistence validation. */
@@ -45,3 +47,23 @@ export const foodGuardLabel=(g:Game)=>foodGuardActive(g)?`Food guard active · r
 /** Distinct reasons food workers are blocked, so the alert strip can show them. */
 export const foodBlockedReasons=(g:Game)=>[...new Set(cache(g).blocked)];
 export function foodAlerts(g:Game){const out:string[]=[];const l=foodGuardActive(g)?'Food guard active':null;if(l)out.push(l);const b=foodBlockedReasons(g);if(b.length)out.push(b[0]+(b.length>1?` (+${b.length-1} more)`:''));return out;}
+
+/** Auto-assigned (board) timber, stone, ore and building work. Player-directed work is never touched:
+ * explicit job locks, ordered builds (buildOrder), paid production projects, carried goods and journeys all stay. */
+const autoNonFood=(u:Unit)=>u.buildOrder===undefined&&u.productionProjectId===undefined&&!u.jobLock&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&
+  (u.order==='gather'&&!!u.job&&u.job!=='food'&&!(u.node&&'species' in u.node)||u.order==='build'&&u.job!=='food');
+const pulls=new WeakMap<Game,{state:Game['state'];next:number}>();
+/** While the guard is on, move held people off auto-assigned non-food work so the board re-offers them food work. Returns how many were moved. */
+export function foodGuardPullHands(g:Game){
+  const p=pulls.get(g);if(p&&p.state===g.state&&g.state.time<p.next)return 0;
+  pulls.set(g,{state:g.state,next:g.state.time+FOOD_GUARD_RULES.recomputeSeconds});
+  const c=cache(g);if(!c.active)return 0;
+  let n=0;
+  for(const u of g.state.units){
+    if(!c.held.has(u.id)||!civilian(g,u)||!autoNonFood(u))continue;
+    if(u.order==='build')releaseConstructionWorker(g,u);else releaseTreeWorker(g,u);
+    u.node=null;u.job=null;u.order='idle';u.gatherT=0;u.workCheckAt=0;u.workReason='Food guard: reserves are low, moving to food work';n++;
+  }
+  if(n){g.workBoard.invalidateTasks();}
+  return n;
+}

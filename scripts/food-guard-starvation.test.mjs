@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';
 import {reserveSeconds,foodDemand} from '../src/game/settlement.ts';
-import {foodGuardActive} from '../src/game/foodGuard.ts';
+import {foodGuardActive,foodGuardPullHands} from '../src/game/foodGuard.ts';const await_import={foodGuardPullHands,foodGuardActive};
 
 function fixture(count=6){
   const g=new Game();g.reset(42,10);g.enterIsland();g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];g.world.ecology=undefined;
@@ -27,4 +27,25 @@ test('starving village with a blocked hunt and idle hands gets food workers with
   while(steps++<400){g.step(.3);const t=g.tribe(0);if(t.food<1){t.food=200*Math.max(.055,foodDemand(g,0));t.foodLots={provisions:t.food};}
     foodWorkers=people.filter(u=>u.hp>0&&foodJob(u)).length;if(foodWorkers>=2)break;}
   assert.ok(foodWorkers>=2,`only ${foodWorkers} food workers after ${steps} steps; reasons ${JSON.stringify(people.map(u=>[u.order,u.job,u.workReason]))}`);
+});
+
+test('guard pulls auto-assigned wood and build crews to food but leaves player-directed work alone',()=>{
+  const {g,people}=fixture(6);
+  g.state.forage=[{id:g.id(),kind:'forage',x:-6,z:42,y:4,amount:200,maxAmount:200},{id:g.id(),kind:'forage',x:6,z:42,y:4,amount:200,maxAmount:200}];
+  g.state.trees=[{id:g.id(),kind:'tree',x:10,z:44,y:4,amount:500,maxAmount:500},{id:g.id(),kind:'tree',x:12,z:44,y:4,amount:500,maxAmount:500}];
+  const [locked,builder,...auto]=people;
+  Object.assign(locked,{jobLock:true,job:'wood'});
+  setReserve(g,5000);
+  for(const u of auto){u.order='gather';u.job='wood';u.node=g.state.trees[0];}
+  Object.assign(locked,{order:'gather',node:g.state.trees[1]});
+  builder.buildOrder=987654;builder.order='build';
+  setReserve(g,100);
+  const {foodGuardPullHands,foodGuardActive}=await_import;
+  assert.equal(foodGuardActive(g),true);
+  const moved=foodGuardPullHands(g);
+  assert.ok(moved>=1,`moved ${moved}`);
+  assert.equal(builder.buildOrder,987654,'ordered build untouched');assert.equal(builder.order,'build');
+  for(let i=0;i<30;i++){g.step(.3);const t=g.tribe(0);if(t.food<1){t.food=100*Math.max(.055,foodDemand(g,0));t.foodLots={provisions:t.food};}}
+  assert.equal(locked.job,'wood');assert.equal(locked.jobLock,true);
+  assert.ok(auto.some(u=>u.job==='food'||foodJob(u)),'a pulled worker picked up food work');
 });

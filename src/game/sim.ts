@@ -66,7 +66,7 @@ import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficu
 import{primaryCommunityHome}from'./communityCaches';
 import{workRuntime}from'./workRuntime';
 import{rawCerealField,compactGrainWorkplace}from'./cerealRules';
-import{isCerealPickup,reviewAutomaticFoodProcessing}from'./cerealProcessing';
+import{isCerealPickup,reviewAutomaticFoodProcessing}from'./cerealProcessing';import{foodGuardPullHands}from'./foodGuard';
 import {reviewRivalFoodProcessing,rivalFoodConstructionActive} from './rivalFoodProcessing';
 import{recordWaterStep,reconcileWaterCargoEvidence}from'./boatPractice';
 import{boatClass}from'./boatClasses';
@@ -5975,6 +5975,7 @@ export class Game {
         tickWildCraft(this,sdt);
         tickBuildingMaintenance(this,sdt);
         for(const team of this.state.tribes)reviewAutomaticFoodProcessing(this,team.id);
+        foodGuardPullHands(this);
         tickTradedTeaching(this);
         tickProductionLessons(this);
         tickObservedMethods(this);
