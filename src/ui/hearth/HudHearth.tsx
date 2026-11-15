@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import {Landmark,Pause,TriangleAlert,Handshake} from 'lucide-react';
+import {UpdateReady} from './UpdateReady';
 import type {Engine} from '@/game/engine';
 import type {HudSnapshot} from '@/game/types';
 import {knownSettlement} from '@/game/barter';
@@ -65,6 +66,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
  return <div className="hw" data-hw="hearth">
   <UiThemeBoot/>
   {!founding&&!screen&&<AlertPins engine={engine} alerts={alerts}/>}
+  {engine&&<UpdateReady engine={engine}/>}
   {!founding&&!screen&&engine&&<OldSaveNoteCard engine={engine}/>}
   {!founding&&!screen&&engine&&<PreviouslyCard engine={engine}/>}
   {!founding&&!screen&&engine&&<DisputeChip engine={engine} onOpen={tab=>setScreen({k:'council',tab})}/>}
