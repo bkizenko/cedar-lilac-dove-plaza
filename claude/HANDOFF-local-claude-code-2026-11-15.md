@@ -36,3 +36,9 @@ Boris re-scoped the local session to take ALL lanes below, run as parallel helpe
 - CLAIM L5 Save error "Save is damaged or incompatible": round-trip test with trade/raid/conquest state, find the validation that rejects. Branch `local/save-roundtrip`.
 - CLAIM L6 Leftovers: storage caps for non-food resources, near/mid tree LOD radii, longer seasons (plan first; 1800 s year is hard-coded; saves must load). Branch `local/leftovers`.
 - Last, not started: first-person mode, tutorial, future eras.
+
+## Claims (cloud session, 2026-11-15, after Boris asked to keep going)
+- CLAIM P11 Animals leftovers: donkey and ox domestication, group capture, snares, livestock crowding into health, actionable "people will hear you out" notification.
+- CLAIM P12 Cisterns (finite stored fresh water, drought) and bigger harbour building tiers with boat slots.
+- CLAIM P13 Clothing: simplified chain and tailor hints, hide-use rules, starting clothes, pregnancy effect on work.
+- CLAIM P14 Smoke test: a headless seeded run of the real sim that exercises the new systems and fails on exceptions or NaN (scripts/smoke-sim.test.mjs); reports crashes to the session, fixes only trivial ones.
