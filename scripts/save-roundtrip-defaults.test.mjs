@@ -19,7 +19,7 @@ const REQUIRED={
 // Fields whose presence is coupled to a version flag or a sibling field in the same save. Removing only one of the pair
 // is an inconsistent save (the flag says the data exists), which is genuine corruption, not a missing default.
 const COUPLED_STATE=['slopeModel','finiteRaiderCampVersion','worldgenVersion','worldOptions','animalBehaviourVersion','wildPlantVersion','sheepVersion'];
-const COUPLED={tribes:['cultivated','survival'],wildlife:['fleece']};
+const COUPLED={tribes:['cultivated','survival'],wildlife:['fleece'],units:['farmTool']};
 function richSave(){
   const g=new Game();g.reset(31,21,{size:1040,layout:'pangaea',rulersVersion:2});g.enterIsland();g.state.paused=false;g.state.conflict='dangerous';g.state.raidT=30;
   const c=g.campOf(0);for(let i=0;i<4;i++){const u=g.spawnUnit('spearman',c.x+3+i,c.z+8,0);u.militia=true;}g.callToArms();
