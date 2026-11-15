@@ -3870,9 +3870,12 @@ export class Game {
       return false;
     }
     if (unitType !== "worker" && reserveSeconds(this, team) < 420) {
-      if (team === 0) this.banner("Arming needs a food surplus. The village eats first.", 2);
-      this.onSfx("invalid");
-      return false;
+      // The player's order always goes through; only rival societies are held back by their food reserve.
+      if (team === 0) this.banner("Food reserve is low. Arming goes ahead, but the village still has to eat.", 2);
+      else {
+        this.onSfx("invalid");
+        return false;
+      }
     }
     if (unitType === "worker") {
       if (team === 0) this.banner("People join through birth and migration. Welcome settlers in Village (L).", 3);
