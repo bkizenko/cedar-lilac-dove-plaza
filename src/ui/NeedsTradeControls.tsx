@@ -32,6 +32,11 @@ export function NeedsTradeSheet({model,inboxOnly,busy,run}:{model:PlayerTradeMod
    <button type="button" className={button} disabled={busy} title="Strike 1 copper into 6 coins at a market or town hall" onClick={()=>run({kind:'mint-coins',copper:1})}>Strike coins from 1 copper</button>
    <button type="button" className={button} disabled={busy||(model.goods.find(g=>g.kind==='coins')?.held||0)<6} title="Melt 6 coins back into 1 copper" onClick={()=>run({kind:'melt-coins',coins:6})}>Melt 6 coins</button>
   </div>}
+  {!inboxOnly&&<div className="flex flex-wrap items-center gap-2 border-t border-bronze/20 pt-2" aria-label="Regional goods">
+   {(['oliveOil','wine'] as const).map(k=><span key={k} className="flex flex-wrap items-center gap-1"><span className="text-parchment-dim">{Math.floor(model.goods.find(g=>g.kind===k)?.held||0)} {PLAYER_TRADE_NAMES[k].toLowerCase()}</span>
+    <button type="button" className={button} disabled={busy} title="Press 6 food of fruit and one pottery vessel (or a timber cask) into 2 jars where the climate allows" onClick={()=>run({kind:'press-regional',good:k,batches:1})}>Press</button>
+    <button type="button" className={button} disabled={busy||(model.goods.find(g=>g.kind===k)?.held||0)<1} title="Share one jar at table as food" onClick={()=>run({kind:'consume-regional',good:k,jars:1})}>Use a jar</button></span>)}
+  </div>}
   {offers.map(offer=>{
    const incoming=offer.to===0,pay=incoming?offer.get:offer.give,take=incoming?offer.give:offer.get;
    return <div key={offer.id} className="space-y-1 border-t border-bronze/20 pt-2">

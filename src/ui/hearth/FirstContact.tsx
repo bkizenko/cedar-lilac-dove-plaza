@@ -7,6 +7,7 @@ import {leaderDialogue,chooseLeaderDialogue,voiceOf,type LeaderTopic} from '@/ga
 import {personName} from '@/game/people';
 import {societyRelation} from '@/game/societyRelations';
 import {SocietyFlag} from '../SocietyFlag';
+import {CaptiveSaleActions} from '../CaptiveSaleActions';
 import {TradedTeachingActions} from '../ContactActions';
 import {TraderVerbs,ConsequenceLegend} from '../TraderVerbs';
 import {ContactPortrait,portraitSpec} from './ContactPortrait';
@@ -73,7 +74,7 @@ export function FirstContact({engine}:{engine:Engine}){
     {trade&&actions.trade.options.map(o=><LedgerRow key={o.id} icon={<Repeat size={24}/>} label={o.label} onClick={()=>run('trade',o.id)}/>)}
     {trade&&!actions.trade.options.length&&(actions.invite.reason===null?<LedgerRow icon={<Footprints size={24}/>} label="Invite them to your village" line="They walk to your hall; trade there." onClick={()=>run('invite-trade')}/>:actions.approach.reason===null?<LedgerRow icon={<Footprints size={24}/>} label={v.trader.closer} onClick={()=>run('approach-trade')}/>:<li className="fc-quiet">{actions.trade.reason}</li>)}
     {trade&&stranger?.visit?.phase==='waiting'&&stranger.visit.team===undefined&&<LedgerRow icon={<MessageCircle size={24}/>} label={v.trader.decline} onClick={()=>run('decline-trade')}/>}
-   </ul>{trade&&stranger&&stranger.team!==0&&<div className="fc-quiet"><TradedTeachingActions engine={engine} teacherId={stranger.id} personId={encounter.person} open={trade}/></div>}</>}
+   </ul>{trade&&stranger&&stranger.team!==0&&<div className="fc-quiet"><TradedTeachingActions engine={engine} teacherId={stranger.id} personId={encounter.person} open={trade}/></div>}{trade&&stranger&&stranger.team!==0&&<div className="fc-quiet"><CaptiveSaleActions engine={engine} buyerId={stranger.id}/></div>}</>}
    <ul className="fc-list"><LedgerRow icon={<Sword size={24}/>} label={v.groups.force} expanded={force} onClick={()=>setForce(!force)}/></ul>
    {force&&<TraderVerbs engine={engine} strangerId={encounter.stranger} personId={encounter.person} variant="ledger" noLegend extra={!actions.prisoner&&stranger?<LedgerRow icon={<Sword size={24}/>} label={v.trader.demand} line={v.force.tags.loot+'.'} blocked={!!actions.demand.reason} reason={actions.demand.reason} onClick={()=>run('demand')}/>:null}/>}
    {note&&<p className="fc-note" role="status" aria-live="polite">{note}</p>}

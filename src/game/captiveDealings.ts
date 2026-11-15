@@ -199,3 +199,33 @@ function validKnowledge(k:unknown){
  if(c.home!==undefined&&(!c.home||!Number.isFinite(c.home.x)||!Number.isFinite(c.home.z)||Math.abs(c.home.x)>1e5||Math.abs(c.home.z)>1e5))return false;
  return true;
 }
+
+/** Trade in people: a held captive may be handed to a peaceful trader of another society for goods the trader actually
+ * carries. The person is moved (team changes), never copied; goods move from the trader's load to the seller's stores.
+ * Limits: custody reached, no ransom pending, not a child, buyer within talking distance, at peace, and able to pay.
+ * Consequences: the captive's origin society resents the sale; the buyer's trust in the seller rises slightly. */
+export const PEOPLE_TRADE_RULES={version:1,personWorth:12,talkMeters:12,originTrustLoss:.15,originTensionGain:.15,buyerTrustGain:.05} as const;
+const PEOPLE_WORTH:Record<string,number>={food:1,wood:1.2,stone:2.2,copper:4.5,iron:6.5};
+export function peoplePrice(carryType:string){return Math.max(1,Math.ceil(PEOPLE_TRADE_RULES.personWorth/(PEOPLE_WORTH[carryType]||1)));}
+export function sellCaptive(g:Game,prisonerId:number,buyerId:number,actorTeam=0):{accepted:boolean;reason:string}{
+ const no=(reason:string)=>({accepted:false,reason});
+ const u=held(g,prisonerId);if(!u||u.prisoner!.captorTeam!==actorTeam||u.team!==actorTeam)return no('Choose a person you hold');
+ if(u.prisoner!.phase!=='custody')return no('They must reach custody first');if(isDependent(g,u))return no('Children are never sold');
+ if(st(g).captiveDealings?.ransoms.some(r=>r.prisonerId===prisonerId&&OPEN_RANSOM.includes(r.phase)))return no('A ransom is under way');
+ const b=g.state.units.find(x=>x.id===buyerId&&x.hp>0);if(!b||b.team===actorTeam||!isRivalTeam(b.team)||!g.tribe(b.team)?.alive)return no('Choose a trader from another society');
+ if(g.isFoe(actorTeam,b.team))return no('They will not deal while you are at odds');if(b.type!=='worker'||b.prisoner||isDependent(g,b))return no('Choose an adult trader');
+ if(dist(b,u)>PEOPLE_TRADE_RULES.talkMeters)return no('Bring the person within 12 metres of the trader');
+ if(!(b.carry>0)||!b.carryType||b.carryFoodLots)return no('This trader carries nothing they can pay with');
+ const price=peoplePrice(b.carryType);if(b.carry<price)return no(`They can pay only ${Math.floor(b.carry)} of the ${price} ${b.carryType} asked`);
+ const origin=u.prisoner!.originTeam,kind=b.carryType as 'food'|'wood'|'stone'|'copper'|'iron',t=g.tribe(actorTeam);
+ b.carry-=price;if(b.carry<1e-9){b.carry=0;b.carryType=null;b.carryFood=undefined;}
+ if(kind==='food')receiveFood(g,actorTeam,price,'provisions');else t[kind]+=price;
+ endCustodyGuard(g,u);const s=root(g);
+ s.custodySince=s.custodySince.filter(c=>c.prisonerId!==u.id);s.interrogations=s.interrogations.filter(i=>i.prisonerId!==u.id);if(s.revolt)s.revolt=s.revolt.filter(r=>r.prisonerId!==u.id);
+ u.prisoner=undefined;u.enslavedFrom=undefined;invalidatePrisonerGuardQueries(g);
+ u.team=b.team;u.order='return';u.recalled=true;u.selected=false;u.node=null;u.target=null;u.workReason='Sold to another society';
+ if(isRivalTeam(origin)&&origin!==b.team&&g.tribe(origin)?.alive){const o=g.tribe(origin);o.trust=Math.max(0,(o.trust||0)-PEOPLE_TRADE_RULES.originTrustLoss);o.tension=Math.min(1,(o.tension||0)+PEOPLE_TRADE_RULES.originTensionGain);}
+ const bt=g.tribe(b.team);bt.trust=Math.min(1,(bt.trust||0)+PEOPLE_TRADE_RULES.buyerTrustGain);
+ recordConflict(g,'prisoner_release',actorTeam,1,{actorId:u.id});g.workBoard.reset();
+ return{accepted:true,reason:`Handed over for ${price} ${kind}; their home society will remember it`};
+}

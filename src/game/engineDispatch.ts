@@ -115,7 +115,7 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
   switch(command.kind){
    case 'send-expedition':return applySendExpedition(g,command);
    case 'husbandry-order':return applyHusbandryCommand(g,command);
-   case 'propose-needs-trade':case 'answer-needs-trade':case 'mint-coins':case 'melt-coins':return applyPlayerTradeCommand(g,command);
+   case 'propose-needs-trade':case 'answer-needs-trade':case 'mint-coins':case 'melt-coins':case 'press-regional':case 'consume-regional':case 'sell-captive':return applyPlayerTradeCommand(g,command);
    case 'wild-begin':case 'wild-collect':return applyWildCommand(g,command,selection.selectedUnitIds);
    case 'wild-work-control':{const p=g.state.wildCraft?.projects.find(p=>p.id===command.projectId&&p.team===0),u=p&&g.state.units.find(u=>u.id===p.actorId&&u.team===0&&u.hp>0&&u.wildWorkId===p.id);if(!p||!u)return no('Original owned wild work unavailable');if(!!p.paused===command.paused)return no('Work is already in that state');const accepted=command.paused?pauseWildWork(g,u):resumeWildWork(g,u.id);return{accepted,reason:accepted?'Original paid work updated; contents retained at their actual place':'Original worker or paid workplace is unavailable'};}
 
@@ -286,6 +286,9 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'propose-needs-trade':{team:id,give:playerTradeGood,get:playerTradeGood,amount:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=36},
   'answer-needs-trade':{offerId:id,accept:bool},
   'send-expedition':{unitIds:v=>Array.isArray(v)&&v.length>=1&&v.length<=12&&v.every(x=>integer(x)),x:v=>typeof v==='number'&&Number.isFinite(v),z:v=>typeof v==='number'&&Number.isFinite(v)},
+  'sell-captive':{prisonerId:id,buyerId:id},
+  'press-regional':{good:v=>v==='oliveOil'||v==='wine',batches:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=6},
+  'consume-regional':{good:v=>v==='oliveOil'||v==='wine',jars:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=12},
   'mint-coins':{copper:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=24},
   'melt-coins':{coins:v=>Number.isSafeInteger(v)&&Number(v)>=6&&Number(v)<=144},
   'husbandry-order':{penId:id,action:v=>typeof v==='string'&&(HUSBANDRY_ACTIONS as readonly string[]).includes(v),species:v=>v===undefined||['goat','sheep','horse','cattle','donkey','ox'].includes(v as string),unitId:optionalId,group:v=>v===undefined||typeof v==='boolean'},

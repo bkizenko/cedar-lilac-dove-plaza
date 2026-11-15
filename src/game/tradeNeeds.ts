@@ -25,7 +25,7 @@ import {villagePersonality} from './villagePersonality';
  * Receipts record load / payment / delivery / loss. Declined offers cool down and change.
  */
 export type GoodCategory='resource'|'weapon'|'armor'|'tool'|'artifact'|'clothing'|'animal'|'currency';
-export type GoodKind=ResKind|'spears'|'bows'|'blades'|'paddedArmor'|'cordage'|'basket'|'pottery'|'cloth'|'leather'|'skinClothes'|'hideCoat'|'woolCloth'|'woolCoat'|'coins'|'goat';
+export type GoodKind=ResKind|'spears'|'bows'|'blades'|'paddedArmor'|'cordage'|'basket'|'pottery'|'cloth'|'leather'|'skinClothes'|'hideCoat'|'woolCloth'|'woolCoat'|'coins'|'oliveOil'|'wine'|'goat';
 type Good={cat:GoodCategory;worth:number;lot:number;maxLot:number;perCarrier:number};
 export const TRADE_GOODS:Record<GoodKind,Good>={
  food:{cat:'resource',worth:TRADE_PRICING.worth.food,lot:8,maxLot:36,perCarrier:0},wood:{cat:'resource',worth:TRADE_PRICING.worth.wood,lot:8,maxLot:36,perCarrier:0},stone:{cat:'resource',worth:TRADE_PRICING.worth.stone,lot:8,maxLot:36,perCarrier:0},
@@ -33,17 +33,17 @@ export const TRADE_GOODS:Record<GoodKind,Good>={
  spears:{cat:'weapon',worth:3,lot:2,maxLot:8,perCarrier:8},bows:{cat:'weapon',worth:4,lot:2,maxLot:6,perCarrier:6},blades:{cat:'weapon',worth:7,lot:1,maxLot:4,perCarrier:4},
  paddedArmor:{cat:'armor',worth:5,lot:1,maxLot:4,perCarrier:4},cordage:{cat:'tool',worth:1.5,lot:4,maxLot:16,perCarrier:16},basket:{cat:'tool',worth:1.5,lot:2,maxLot:8,perCarrier:8},
  pottery:{cat:'artifact',worth:2.5,lot:2,maxLot:8,perCarrier:8},cloth:{cat:'artifact',worth:3,lot:2,maxLot:8,perCarrier:8},
- leather:{cat:'tool',worth:3,lot:2,maxLot:8,perCarrier:8},skinClothes:{cat:'clothing',worth:4,lot:1,maxLot:6,perCarrier:6},hideCoat:{cat:'clothing',worth:6,lot:1,maxLot:4,perCarrier:4},woolCloth:{cat:'artifact',worth:4,lot:2,maxLot:8,perCarrier:8},woolCoat:{cat:'clothing',worth:7,lot:1,maxLot:4,perCarrier:4},coins:{cat:'currency',worth:TRADE_PRICING.worth.copper/6,lot:8,maxLot:36,perCarrier:36},goat:{cat:'animal',worth:14,lot:1,maxLot:2,perCarrier:1},
+ leather:{cat:'tool',worth:3,lot:2,maxLot:8,perCarrier:8},skinClothes:{cat:'clothing',worth:4,lot:1,maxLot:6,perCarrier:6},hideCoat:{cat:'clothing',worth:6,lot:1,maxLot:4,perCarrier:4},woolCloth:{cat:'artifact',worth:4,lot:2,maxLot:8,perCarrier:8},woolCoat:{cat:'clothing',worth:7,lot:1,maxLot:4,perCarrier:4},coins:{cat:'currency',worth:TRADE_PRICING.worth.copper/6,lot:8,maxLot:36,perCarrier:36},oliveOil:{cat:'artifact',worth:3,lot:2,maxLot:12,perCarrier:12},wine:{cat:'artifact',worth:3.5,lot:2,maxLot:12,perCarrier:12},goat:{cat:'animal',worth:14,lot:1,maxLot:2,perCarrier:1},
 };
 export const TRADE_KINDS=Object.keys(TRADE_GOODS) as GoodKind[];
 /** Bulk goods with an existing body holder: the carrier's own itemCargo (the same holder production uses). */
-export const TRADE_BULK_ITEMS:GoodKind[]=['cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat','coins'];
+export const TRADE_BULK_ITEMS:GoodKind[]=['cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat','coins','oliveOil','wine'];
 /** Goods that currently have a physical holder for the whole journey (carried resource loads, dropped as
  * parcels on death) and bulk items carried in the body's itemCargo (dropped as item parcels on death).
  * Armor assets, weapons, farm tools and animals stay in saves/observations but are not offered until
  * Codex-owned holder adapters exist (board request; review trade-cargo-5d9051c P1). */
 export const TRADE_SELECTABLE_KINDS=TRADE_KINDS.filter(k=>TRADE_GOODS[k].cat==='resource'||TRADE_BULK_ITEMS.includes(k));
-const WEAPONS=['spears','bows','blades'],ITEMS=['coins','paddedArmor','cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat'];
+const WEAPONS=['spears','bows','blades'],ITEMS=['coins','oliveOil','wine','paddedArmor','cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat'];
 export const TRADE_NEEDS_RULES={version:1,reviewSeconds:240,firstReviewSeconds:60,maximumMarketsCounted:3,marketFrequencyGain:.6,baseSpread:.3,spreadPerMarket:.07,minimumSpread:.04,answerDelayBase:15,answerDelayPerMeter:.04,playerAnswerSeconds:600,cooldownSeconds:600,maximumCooldownSeconds:3600,declineScale:.6,loadingSeconds:240,journeySeconds:900,hallMeters:26,maximumOffers:96,maximumObservations:64,maximumCooldowns:128,maximumReceipts:256,minimumHomeAdults:3,maximumCarriers:3,maximumEscorts:3,penHallMeters:40} as const;
 
 export type TradeOfferPhase='proposed'|'loading'|'outbound'|'returning'|'aborting'|'complete'|'declined'|'failed';
@@ -118,7 +118,9 @@ export function escortsForRisk(risk:number){return risk<.4?0:risk<.6?1:risk<.8?2
 
 // ---- Proposal.
 const free=(g:Game,u:Unit,team:number)=>u.team===team&&u.hp>=u.maxHp*.6&&!u.prisoner&&!isDependent(g,u)&&u.carry===0&&!Object.values(u.itemCargo||{}).some(n=>(n||0)>0)&&!hasTaskCommitment(u)&&!u.societyMissionId&&!u.coastalVoyageId&&!u.coastalCommissionId&&!u.jobLock&&!u.buildOrder&&!u.tamingWork&&!u.husbandryWork&&!u.tributeJourney&&!u.visit&&!u.scout&&!u.expedition&&!u.envoy&&!u.emergency&&!u.recalled&&!u.foundingJourney&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.studyCrop&&u.drill==null&&u.tradeNeedsId===undefined&&['idle','gather','hold'].includes(u.order);
-function capacity(u:Unit,k:GoodKind){const good=TRADE_GOODS[k];return good.cat==='resource'?Math.floor(carryingCapacity(u,k as ResKind)):Math.floor(good.perCarrier*(u.haulage==='pack'?packCapacityMultiplier(u):1));}
+export function capacity(u:Unit,k:GoodKind){const good=TRADE_GOODS[k];return good.cat==='resource'?Math.floor(carryingCapacity(u,k as ResKind)):Math.floor(good.perCarrier*(u.haulage==='pack'?packCapacityMultiplier(u):1)*(u.basket&&u.basket.condition>0&&k!=='basket'&&k!=='goat'?TRADE_BASKET_BONUS:1));}
+/** An owned, serviceable basket lets a carrier bring half as much again of any bulk good (not baskets themselves or animals). */
+export const TRADE_BASKET_BONUS=1.5;
 function cooling(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return g.state.tradeNeeds?.cooldowns.find(c=>c.team===from&&c.partner===to&&c.give===give&&c.get===get&&c.until>g.state.time);}
 function declineRow(g:Game,from:number,to:number,give:GoodKind,get:GoodKind){return g.state.tradeNeeds?.cooldowns.find(c=>c.team===from&&c.partner===to&&c.give===give&&c.get===get);}
 export type TradeProposal={ok:true;offer:TradeOffer}|{ok:false;reason:string};
