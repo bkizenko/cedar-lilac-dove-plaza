@@ -20,7 +20,7 @@ import {hasTaskCommitment} from './workCommitments';
 import {isDependent} from './settlement';
 import {supplyApproach,supplyReached} from './campAnchor';
 export const SURVIVAL_RULES={version:1,waterLitersPerPersonSecond:.008,startingWaterSeconds:600,
- waterWarningSeconds:180,autoCollectBelowSeconds:240,waterTripLiters:24,collectSeconds:12,
+ waterWarningSeconds:180,autoCollectBelowSeconds:600,waterTripLiters:24,collectSeconds:12,
  sourceSearchMeters:900,thirstGraceSeconds:180,thirstFatalExposureSeconds:1800,
  coldThresholdCelsius:6,fireWarmthCelsius:9,shelterWarmthCelsius:5,fireRadiusMeters:48,hearthSearchMeters:240,maximumHearthCandidates:4,
  woodPerPersonColdSecond:.003,coldGraceSeconds:180,coldFatalExposureSeconds:2400,
@@ -321,6 +321,6 @@ export function tickSurvival(g:Game,dt:number){
  // overrides a direct order or takes an actor from paid/reserved work.
  if(review){
   autoCheck.set(g,g.state.time+5);
-  for(const tr of g.state.tribes){const status=survivalStatus(g,tr.id);if(status.enabled&&status.waterSeconds<rules.autoCollectBelowSeconds&&!status.waterWorkers)beginWaterCollection(g,tr.id,true);}
+  for(const tr of g.state.tribes){const status=survivalStatus(g,tr.id);if(status.enabled&&status.waterSeconds<rules.autoCollectBelowSeconds&&status.waterWorkers<Math.max(1,Math.ceil(residents(g,tr.id).length/25)))beginWaterCollection(g,tr.id,true);}
  }
 }
