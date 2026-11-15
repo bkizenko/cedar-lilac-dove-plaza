@@ -1,3 +1,4 @@
+import {rivalDifficulty} from './difficulty';
 import{handedOver,handoverReturn}from'./communityHandoverValidation';
 import {tickStructureKnowledge,knownStructures,rememberedStructure} from './structureKnowledge';
 import {knownSettlementSite,localSettlementHall,beginSettlementJourney,settlementJourneySite} from './barter';
@@ -80,7 +81,7 @@ export function assessRivalPairRaid(g:Game,team:number,reserve:number,partner?:n
   const spot=g.interactionSpot(fighters[0],target);if(!spot||!fighters.every(u=>g.workBoard.connected(g,u.x,u.z,spot.x,spot.z)))continue;
   counts.reachableTargets++;
   const fact=facts.find(p=>p.site.id===target.id&&p.site.team===target.team)!,resistance=fact.defensePower;
-  const relation=societyRelation(g,team,target.team),grievance=relation.grievance*(target.type==='cornerstone'?6:3),reward=(values[target.type]??1)*(.6+t.aggro*.7+(reserve<450?.3:0));
+  const relation=societyRelation(g,team,target.team),grievance=relation.grievance*(target.type==='cornerstone'?6:3),reward=(values[target.type]??1)*(.6+t.aggro*.7+(reserve<450?.3:0))*rivalDifficulty(g,team).aggression;
   const metrics={reward,grievance,travelCost:distance(home,target)*OPERATION_RULES.travelCostPerMeter,defenseCost:resistance/Math.max(1,power)*OPERATION_RULES.defenseWeight,structureCost:Math.min(2,target.hp/500),nightBonus:g.isNight()?OPERATION_RULES.nightBonus:0,observedDefenders:fact.defenders,power,guards};
   const utility=reward+grievance-metrics.travelCost-metrics.defenseCost-metrics.structureCost+metrics.nightBonus;
   if(utility>OPERATION_RULES.minUtility&&(!best||utility>best.utility))best={target,fighters,metrics,utility,reason:grievance>1?'Known local grievance':'Known exposed supplies'};

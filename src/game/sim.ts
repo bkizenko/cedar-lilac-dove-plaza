@@ -63,7 +63,7 @@ import{campSupportAI,finishCampTrip}from'./finiteCamp';
 import {tickRaidDefense,noteRaidDefenseDamage} from './warPrestige';
 import{createRaidPlan,finishRaidPlan}from'./raidIntent';
 import {bindLocalWaterChanges} from './indexedLocalWater';
-import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening} from './difficulty';
+import {difficultyId,difficultyTemperature,difficultyGrievance,initializeDifficultyOpening,rivalDifficulty} from './difficulty';
 import{primaryCommunityHome}from'./communityCaches';
 import{workRuntime}from'./workRuntime';
 import{rawCerealField,compactGrainWorkplace}from'./cerealRules';
@@ -3694,9 +3694,13 @@ export class Game {
       beginPregnancy(this,0,this.state.birthT);
       for (const tr of this.state.tribes) {
         if (!tr.alive || tr.id === 3) continue;
+        // Difficulty cadence for rivals: >1 grants extra birth rounds, <1 skips some.
+        const rg = rivalDifficulty(this, tr.id).growth;
+        const rounds = rg === 1 ? 1 : rg > 1 ? Math.floor(rg) + (Math.random() < rg - Math.floor(rg) ? 1 : 0) : Math.random() < rg ? 1 : 0;
+        for (let round = 0; round < rounds; round++) {
         const pop = this.popNow(tr.id);
         const cap = this.popCap(tr.id);
-        if (pop + this.queued(tr.id) >= cap) continue;
+        if (pop + this.queued(tr.id) >= cap) break;
         if (reserveSeconds(this, tr.id) < 480) continue;
         // Families need enough reserves for children growing into adult food
         // demand before another harvest. A brief summer surplus must not cause
@@ -3730,6 +3734,7 @@ export class Game {
         u.workReason = "Growing up — supported by the village";
         u.order = "idle";
         if (tr.id === 0) this.addFloater(u.x, u.y + 2.2, u.z, "Born", "#c9e8a0");
+        }
       }
     }
 
@@ -4210,6 +4215,7 @@ export class Game {
     if (sn.spring > 0.4 && job === "food") m *= 0.88;
     if (this.isNight() && !this.nearTorch(u.x, u.z, u.team)) m *= 1.55;
     const tr = this.tribe(u.team);
+    m *= rivalDifficulty(this, u.team).work;
     if (tr && tr.spec === job) m *= 0.74;
     const reg = this.regionAt(u.x, u.z);
     if (reg && reg.owner === u.team && reg.res === job) m *= 0.78;

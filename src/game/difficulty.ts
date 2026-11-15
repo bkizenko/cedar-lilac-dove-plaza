@@ -12,6 +12,11 @@ const profile = (p: {
   provisions: number;
   decisionInterval: number;
   conflictPressure: number;
+  /** Rival-only: gather work period (lower = faster), birth cadence, raid/army drive, opening stock. */
+  rivalWork: number;
+  rivalGrowth: number;
+  rivalAggression: number;
+  rivalStock: number;
   description: string;
 }) => p;
 /** All modifiers are explicit. Resource stocks are finite opening endowments;
@@ -29,6 +34,10 @@ export const DIFFICULTIES = {
     provisions: 1.6,
     decisionInterval: 2,
     conflictPressure: 0.45,
+    rivalWork: 1.3,
+    rivalGrowth: 0.6,
+    rivalAggression: 0.5,
+    rivalStock: 0.6,
     description: "Larger opening reserves, milder seasons and more forgiving neighbors.",
   }),
   easy: profile({
@@ -43,6 +52,10 @@ export const DIFFICULTIES = {
     provisions: 1.3,
     decisionInterval: 1.4,
     conflictPressure: 0.7,
+    rivalWork: 1.15,
+    rivalGrowth: 0.8,
+    rivalAggression: 0.75,
+    rivalStock: 0.8,
     description: "More opening supplies, milder seasons and lighter attacks.",
   }),
   normal: profile({
@@ -57,6 +70,10 @@ export const DIFFICULTIES = {
     provisions: 1,
     decisionInterval: 1,
     conflictPressure: 1,
+    rivalWork: 1,
+    rivalGrowth: 1,
+    rivalAggression: 1,
+    rivalStock: 1,
     description: "Standard supplies, seasons, food needs and rival pressure.",
   }),
   hard: profile({
@@ -71,6 +88,10 @@ export const DIFFICULTIES = {
     provisions: 0.85,
     decisionInterval: 0.85,
     conflictPressure: 1.25,
+    rivalWork: 0.85,
+    rivalGrowth: 1.3,
+    rivalAggression: 1.4,
+    rivalStock: 1.25,
     description: "Tighter opening reserves, harsher seasons and quicker rivals.",
   }),
   survival: profile({
@@ -85,6 +106,10 @@ export const DIFFICULTIES = {
     provisions: 0.7,
     decisionInterval: 0.7,
     conflictPressure: 1.5,
+    rivalWork: 0.72,
+    rivalGrowth: 1.6,
+    rivalAggression: 1.9,
+    rivalStock: 1.5,
     description: "Sparse reserves, severe seasons and little tolerance for intrusion.",
   }),
   apocalypse: profile({
@@ -99,6 +124,10 @@ export const DIFFICULTIES = {
     provisions: 0.5,
     decisionInterval: 0.55,
     conflictPressure: 1.8,
+    rivalWork: 0.6,
+    rivalGrowth: 2,
+    rivalAggression: 2.6,
+    rivalStock: 2,
     description: "Extreme seasonal pressure, lean openings and punishing attacks.",
   }),
 } as const;
@@ -115,6 +144,13 @@ export function difficulty(g: Game) {
 export function difficultyTemperature(g: Game, celsius: number) {
   const scale = difficulty(g).climate;
   return scale === 1 ? celsius : 12 + (celsius - 12) * scale;
+}
+/** Rival-only multipliers; the player and neutral teams always get 1. */
+export function rivalDifficulty(g: Game, team: number) {
+  const p = difficulty(g);
+  return isRivalTeam(team)
+    ? { work: p.rivalWork, growth: p.rivalGrowth, aggression: p.rivalAggression }
+    : { work: 1, growth: 1, aggression: 1 };
 }
 export function difficultyGrievance(g: Game, change: number) {
   return change > 0 ? change * difficulty(g).conflictPressure : change;
@@ -136,6 +172,12 @@ export function initializeDifficultyOpening(g: Game) {
       n.amount *= p.abundance;
       n.maxAmt *= p.abundance;
     }
+  for (const t of g.state.tribes)
+    if (isRivalTeam(t.id)) {
+      t.food *= p.rivalStock;
+      t.wood *= p.rivalStock;
+      t.stone *= p.rivalStock;
+    }
   const own = g.tribe(0);
   own.food *= p.provisions;
   if (own.foodLots)
@@ -145,5 +187,5 @@ export function initializeDifficultyOpening(g: Game) {
 }
 export function difficultyEffects(id: Difficulty) {
   const p = DIFFICULTIES[id];
-  return `Shared world: new-world natural node capacities ×${p.abundance}; temperature departures from 12°C ×${p.climate}. Player: new-world starting food/water ×${p.provisions}; food use ×${p.food}; edible spoilage ×${p.spoil}; incoming enemy damage ×${p.damage}; raid timing/arrival pressure ×${p.raid}, party-size factor ×${p.band}. Rivals: strategic review interval ×${p.decisionInterval}; witnessed player-border grievance gain ×${p.conflictPressure}. Command reliability is unchanged.`;
+  return `Shared world: new-world natural node capacities ×${p.abundance}; temperature departures from 12°C ×${p.climate}. Player: new-world starting food/water ×${p.provisions}; food use ×${p.food}; edible spoilage ×${p.spoil}; incoming enemy damage ×${p.damage}; raid timing/arrival pressure ×${p.raid}, party-size factor ×${p.band}. Rivals: strategic review interval ×${p.decisionInterval}; witnessed player-border grievance gain ×${p.conflictPressure}. Rival handicaps/bonuses (open): gathering time ×${p.rivalWork}, birth rate ×${p.rivalGrowth}, army size and raid drive ×${p.rivalAggression}, new-world stock ×${p.rivalStock}. Command reliability is unchanged.`;
 }

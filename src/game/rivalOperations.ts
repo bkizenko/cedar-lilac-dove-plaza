@@ -4,6 +4,7 @@ import {planRivalPairRaid,dispatchPairRaid,isSocietyPeaceMessengerFor} from './r
 import {AGE_STAT,UNITS} from './constants';
 import {beginWeaponWork} from './warfare';
 import type {Game} from './sim';
+import {rivalDifficulty} from './difficulty';
 import type {Building,Unit} from './types';
 import {rivalKnows} from './rivalDevelopment';
 import {hasTaskCommitment} from './workCommitments';
@@ -15,7 +16,7 @@ const strength=(u:Unit)=>Math.max(.2,u.dmg/10)*Math.min(1,u.hp/Math.max(1,u.maxH
 export function rivalMilitaryTarget(g:Game,team:number){
  const t=g.tribe(team),pop=g.state.units.filter(u=>u.team===team&&u.hp>0&&adult(g,u)).length;
  // Equipment and training still cost real goods and take an existing adult out of work.
- return Math.min(Math.max(0,pop-4),Math.max(3+t.age*2,Math.ceil(pop*(.12+.14*t.aggro+.06*t.tension)))+militaryBonus(g,team));
+ return Math.min(Math.max(0,pop-4),Math.ceil(Math.max(3+t.age*2,Math.ceil(pop*(.12+.14*t.aggro+.06*t.tension)))*rivalDifficulty(g,team).aggression)+militaryBonus(g,team));
 }
 export const OPERATION_RULES={militaryReadinessHealthRatio:.6,minFoodSeconds:180,guardFraction:.06,raidFraction:.3,localDefenseRadius:55,maxTargets:8,minUtility:1,travelCostPerMeter:.01,defenseWeight:7,nightBonus:.4};
 export type RaidMetrics={reward:number;grievance:number;travelCost:number;defenseCost:number;structureCost:number;nightBonus:number;observedDefenders:number;power:number;guards:number};
@@ -65,7 +66,7 @@ export function dispatchRivalOperation(g:Game,team:number,reserve:number){
  const result=dispatchPairRaid(g,team,reserve,plan.target.team);if(!result.accepted)return false;
  if(permit)spendRaidClaim(g,team,plan.target.team);
  // Relations change only when the actual force reaches hostile territory/contact.
- t.lastRaid=360+Math.random()*180;t.recoveryUntil=g.state.time+t.lastRaid;
+ t.lastRaid=(360+Math.random()*180)/rivalDifficulty(g,team).aggression;t.recoveryUntil=g.state.time+t.lastRaid;
  // Dispatch is not contact with the player. The force may raid another
  // society, turn back, or never reach the village; movement alone emits no alarm.
  return true;
