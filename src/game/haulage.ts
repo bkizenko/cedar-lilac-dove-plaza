@@ -25,7 +25,7 @@ export const HAULAGE = {
   pack: { name: 'Pack goat', wood: 0, stone: 0, seconds: 60, capacity: 2, loadedSpeed: 1 },
   cart: { name: 'Wheeled handcart', wood: 24, stone: 4, seconds: 90, capacity: 3, loadedSpeed: .94 },
 } as const;
-export const WHEEL_PRACTICE = 60;
+export const WHEEL_PRACTICE = 5;
 export type HaulageKind = keyof typeof HAULAGE;
 export type HaulageWork = {
   kind: HaulageKind; progress: number; duration: number; workplace: number; paused?: boolean; vessel?:boolean; hullOrder?:HullOrder; sailRigOrder?:SailRigOrder; projectId?:number;

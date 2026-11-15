@@ -88,12 +88,12 @@ test('wheels require practiced sled deliveries and sheltered crafting, not age o
   const {g, u, shop} = fixture();
   g.tribe(0).age = 5;
   assert.equal(beginHaulageWork(g, 'cart', 0, shop.id), false);
-  u.haulage = 'sled'; u.carryType = 'wood'; u.carry = 14;
+  u.haulage = 'sled'; u.carryType = 'wood'; u.carry = 3;
   recordHaulDelivery(g, u); u.carry = 0;
-  assert.equal(g.tribe(0).haulagePractice, 14);
-  assert.match(haulageRequirement(g, 'cart'), /14 delivered/);
+  assert.equal(g.tribe(0).haulagePractice, 3);
+  assert.match(haulageRequirement(g, 'cart'), /3 delivered/);
   assert.equal(beginHaulageWork(g, 'cart', 0, shop.id), false);
-  for(let i=0;i<4;i++){u.carry = 14; recordHaulDelivery(g, u); u.carry = 0;}
+  for(let i=0;i<1;i++){u.carry = 3; recordHaulDelivery(g, u); u.carry = 0;}
   assert.equal(g.tribe(0).haulagePractice, WHEEL_PRACTICE);
   g.tribe(0).age = 0;
   assert.equal(beginHaulageWork(g, 'cart', 0, shop.id), true);
