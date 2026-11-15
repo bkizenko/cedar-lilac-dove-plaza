@@ -23,6 +23,15 @@ export function foundDynasty(seed:number,house:string):Dynasty{
 }
 /** Mortality per year: infancy risk, flat adult risk, rising after OLD. Pure of (rng, age). */
 export function yearlyDeathChance(age:number):number{return age<2?.12:age<ADULT?.01:age<OLD?.012+(age-ADULT)*.0004:.04+(age-OLD)*.012;}
+/** Deterministic cause label from age, sex and a hash only, so it never consumes the dynasty RNG stream. */
+export function causeOfDeath(p:{id:string;age:number;sex:'f'|'m'},seed:number,year:number):string{
+ const h=hash32('cause',seed,year,p.id);
+ if(p.age<2)return['infant fever','weakness from birth','stomach sickness'][h%3];
+ if(p.age<ADULT)return['fever','a fall','drowning','sickness in the village'][h%4];
+ if(p.age>=OLD)return['old age','old age','old age','a winter chill','a failing heart'][h%5];
+ if(p.sex==='f'&&p.age<=42&&h%3===0)return'childbirth';
+ return['fever','an accident while working','a wound that festered','a lung sickness','famine and hardship'][h%5];
+}
 export function childrenOf(d:Dynasty,id:string):Person[]{return Object.values(d.people).filter(p=>p.parent===id&&p.alive);}
 
 /** Advance the dynasty one year. Returns a new Dynasty (input is not mutated). Event strings go to log. */
@@ -32,7 +41,7 @@ export function stepYear(d0:Dynasty,seed:number,tier:'band'|'chiefdom'|'state',l
  for(const id of Object.keys(d.people)){
   const p=d.people[id];if(!p.alive)continue;
   const np={...p,age:p.age+1};
-  if(r()<yearlyDeathChance(np.age)){np.alive=false;d.log.push(`${year}: ${np.name} died aged ${np.age}`);}
+  if(r()<yearlyDeathChance(np.age)){np.alive=false;d.log.push(`${year}: ${np.name} died aged ${np.age} (${causeOfDeath(np,seed,year)})`);}
   d.people[id]=np;
  }
  if(f.marriageExchange){ // court arranges a match for unmarried adult rulers/heirs (outside spouse, same polity)
