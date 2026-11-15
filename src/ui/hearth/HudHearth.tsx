@@ -24,6 +24,7 @@ import {DisputeChip} from './DisputeChip';
 import {WarPopup} from './WarPopup';
 import {HelpScreen} from './helpScreen';
 import {RoadsCard} from './roadsCard';
+import {TutorialCard} from './TutorialCard';
 import {ResourceBar,TimeCard,Rail,Dock,BuildTray,PlacementCard,SelectionCard,NotesStack,MinimapCard,IconBtn,cx,type DockKey} from './parts';
 import {MinimapReopen,useMinimapCollapsed} from './minimapToggle';
 import {useHudHotkeys,Foldable} from './fold';
@@ -70,6 +71,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {!founding&&!screen&&<AlertPins engine={engine} alerts={alerts}/>}
   {engine&&<UpdateReady engine={engine}/>}
   {!founding&&!screen&&engine&&<OldSaveNoteCard engine={engine}/>}
+  {!founding&&!screen&&engine&&<TutorialCard engine={engine} season={hud.season}/>}
   {!founding&&!screen&&engine&&<PreviouslyCard engine={engine}/>}
   {!founding&&!screen&&engine&&<DisputeChip engine={engine} onOpen={tab=>setScreen({k:'council',tab})}/>}
   {!founding&&!screen&&engine&&<WarPopup engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})}/>}

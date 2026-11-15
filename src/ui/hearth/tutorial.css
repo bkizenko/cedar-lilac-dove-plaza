@@ -1,0 +1,22 @@
+/* Tutorial hint card: bottom-left, small, clear of the centre dock; never modal. */
+.hw-tut{pointer-events:auto;position:absolute;left:var(--hw-s3,12px);bottom:calc(var(--hw-dock-h,88px) + var(--hw-s3,12px));z-index:6;width:min(300px,calc(100% - 24px));max-height:34dvh;overflow-y:auto;padding:10px 12px;border-radius:12px;background:rgba(40,28,16,.94);border:1px solid var(--hw-line-strong);color:var(--hw-text);box-shadow:0 8px 24px rgba(0,0,0,.4);font-size:var(--hw-fs-s)}
+.hw-tut header{display:flex;align-items:center;gap:6px}
+.hw-tut-n{flex:1;opacity:.75}
+.hw-tut h3{margin:6px 0 4px;font-size:var(--hw-fs-m)}
+.hw-tut p{margin:0 0 8px;line-height:1.4}
+.hw-tut footer{display:flex;gap:8px;justify-content:space-between}
+.hw-tut button,.hw-tut-chip{min-height:44px;display:inline-flex;align-items:center;gap:4px;padding:0 10px;border-radius:8px;border:1px solid var(--hw-line);background:rgba(255,236,190,.1);color:inherit;cursor:pointer}
+.hw-tut .hw-tut-x{min-width:44px;justify-content:center}
+.hw-tut .hw-tut-next{background:rgba(205,160,90,.3);font-weight:700}
+.hw-tut-chip{pointer-events:auto;position:absolute;left:var(--hw-s3,12px);bottom:calc(var(--hw-dock-h,88px) + var(--hw-s3,12px));z-index:6;background:rgba(40,28,16,.9)}
+/* Highlight the button the current step points at (CSS only; set from TutorialCard through <html data-hw-tut>). */
+@keyframes hw-tut-pulse{0%,100%{box-shadow:0 0 0 2px rgba(240,200,110,.9)}50%{box-shadow:0 0 0 6px rgba(240,200,110,.25)}}
+html[data-hw-tut=build] .hw-dock-btn[aria-label="Build"],
+html[data-hw-tut=village] .hw-dock-btn[aria-label="Village"],
+html[data-hw-tut=council] .hw-dock-btn[aria-label="Council"],
+html[data-hw-tut=map] .hw-dock-btn[aria-label="Map"],
+html[data-hw-tut=auto] .hw-rail button[aria-label^="Auto work"],
+html[data-hw-tut=work] .hw-rail button[aria-label^="Workload"],
+html[data-hw-tut=recall] .hw-rail button[aria-label="Recall"],
+html[data-hw-tut=recall] .hw-rail button[aria-label="Defense horn"]{animation:hw-tut-pulse 1.6s ease-in-out infinite;border-radius:10px}
+@media (prefers-reduced-motion:reduce){html[data-hw-tut] *{animation:none!important}}

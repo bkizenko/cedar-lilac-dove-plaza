@@ -117,6 +117,7 @@ import { prehistoricName } from "./people";
 import { FOOD_KINDS } from "./pantry";
 import {CROPS,CROP_TRIAL_RULES,initializeCultivation,validCultivationEvidence} from "./cultivation";
 import { FOW, SAVE_VERSION, BUILDINGS, UNITS } from "./constants";
+import {validTutorial} from "./tutorial";
 import type { GameState, Unit, Building, ResourceNode, Critter } from "./types";
 
 type Entity = Unit | Building | ResourceNode | Critter;
@@ -202,6 +203,8 @@ function validateGamePayload(raw: unknown) {
     s = d.state;
   // Fields that every v17 save has always carried: absent = genuinely damaged. Any blank() field NOT listed in
   // REQUIRED_STATE_FIELDS (added later) is a new field: an older save gets the blank default instead of being rejected.
+  // Optional tutorial state: a malformed record is dropped (tutorial off), never a reason to refuse the save.
+  if(s.tutorial!==undefined&&!validTutorial(s.tutorial))delete s.tutorial;
   for (const [name, v] of Object.entries(Game.prototype.blank(0))) {
     if (!(name in s)||s[name]===undefined) {
       if (REQUIRED_STATE_FIELDS.includes(name)) fail("missing state field "+name);

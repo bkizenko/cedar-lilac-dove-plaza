@@ -1,5 +1,6 @@
 import {useLifecycleAction} from './useLifecycleAction';
 import {WorldSetup} from './WorldSetup';
+import {startTutorial} from '@/game/tutorial';
 // Retain the welcome layout for later; iteration opens straight onto the map.
 const SHOW_WELCOME=false;
 import {EncounterDialog} from "./EncounterDialog";
@@ -181,6 +182,13 @@ export function GameApp() {
             className="mt-8 min-h-12 rounded-lg border border-bronze bg-ink-soft px-8 py-3 font-display text-lg tracking-[0.18em] text-bronze-bright hover:bg-bronze/20"
           >
             Begin your settlement
+          </button>
+          <button
+            type="button"
+            onClick={() => { const e = engineRef.current; if (e) { startTutorial(e.game.state); e.enterIsland(); } }}
+            className="mt-3 rounded-lg border border-bronze px-6 py-2 text-parchment hover:bg-bronze/20"
+          >
+            Tutorial: guided first year
           </button>
           {engineRef.current?.hasSavedGame() && (
             <button

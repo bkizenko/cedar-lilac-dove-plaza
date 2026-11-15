@@ -537,6 +537,8 @@ export type Particle = {
 };
 
 export type GameState = {
+  /** Tutorial mode (src/game/tutorial.ts); absent = off. */
+  tutorial?:import('./tutorial').TutorialState;
   looseDraftCarts?:import('./draftCart').LooseDraftCart[];
   draftCartLedger?:import('./draftCart').DraftCartLedger;
   penBedding?:import('./penBedding').PenBeddingLedger;
