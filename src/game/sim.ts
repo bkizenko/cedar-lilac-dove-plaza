@@ -176,7 +176,7 @@ import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks}
 import {waterWorksPlacementIssue,waterWorksLabour,isWaterWorksType} from "./waterWorksBuildings";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
-import {fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
+import {tickDockStaffing,fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
 import {beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies} from "./warfare";
 import {tickCommunities,foundingJourneyAI,lifeEvent} from "./communities";
 import {beginExpedition,expeditionAI,routineRest} from "./journeys";
@@ -6118,7 +6118,7 @@ export class Game {
         fadeTrails(this,sdt);
         tickRouteWear(this,sdt);tickWaystations(this,sdt);tickWonders(this,sdt);
         tickVisitors(this,sdt);
-        tickTradeParties(this,sdt);
+        tickTradeParties(this,sdt);tickDockStaffing(this);
         phases?.mark('economy');
         this.tickRoutes(sdt);
         tickTradeFocus(this);

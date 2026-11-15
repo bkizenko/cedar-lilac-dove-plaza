@@ -3,6 +3,7 @@ import {onGuardDuty} from './guardDuty';
 import {subsistenceLaborMultiplier} from './subsistenceBalance';
 import {connectedForUnit} from "./waterTravel";
 import {carryingCapacity} from "./haulage";
+import {portTier} from './navalPorts';
 import type {Game} from './sim';
 import type {Building,Unit,ResourceNode} from './types';
 import {DOCK_R,GATHER,GATHER_WORK_RATE} from './constants';
@@ -110,7 +111,7 @@ function fishingIssue(g:Game,b:Building){
 export function fishingReport(g:Game,b:Building){
   const grounds=fishingGrounds(g,b,true),capacity=grounds.reduce((n,p)=>n+(p.maxAmt||8),0),health=capacity?grounds.reduce((n,p)=>n+(1-(p.pressure||0))*(p.maxAmt||8),0)/capacity:0,workers=g.state.units.filter(u=>u.hp>0&&u.node===b&&u.order==='gather').length;
   const issue=fishingIssue(g,b);
-  return `${workers}/2 fishers · ${issue||`${Math.floor(grounds.reduce((n,p)=>n+p.amount,0))} fish in known nearby grounds`} · ${capacity?`water health ${Math.round(health*100)}% · `:''}up to ${Math.floor(60*GATHER_WORK_RATE/(GATHER.food.period*GATHER.food.campBonus*subsistenceLaborMultiplier(g,'food',b.x,b.z)))} fish per fisher/min before hauling; winter slows fishing`;
+  return `${workers}/${dockFisherLimit(g,b)} fishers · ${issue||`${Math.floor(grounds.reduce((n,p)=>n+p.amount,0))} fish in known nearby grounds`} · ${capacity?`water health ${Math.round(health*100)}% · `:''}up to ${Math.floor(60*GATHER_WORK_RATE/(GATHER.food.period*GATHER.food.campBonus*subsistenceLaborMultiplier(g,'food',b.x,b.z)))} fish per fisher/min before hauling; winter slows fishing`;
 }
 const bankApproaches=new WeakMap<Unit,{
   world:Game['world']; node:ResourceNode; revision:number; water:number; spot:WaterPoint;
@@ -136,10 +137,13 @@ export function fishingBank(g:Game,u:Unit,n:ResourceNode){
   if(gathering&&best)bankApproaches.set(u,{world:g.world,node:n,revision,water,spot:best});
   return best;
 }
+/** A dock lands more than a bank angler: 2 fish per catch, 3 once the harbour has works. Fish stock is still finite. */
+export const dockCatch=(g:Game,b:Building)=>portTier(g,b)>=1?3:2;
+export const dockFisherLimit=(g:Game,b:Building)=>Math.min(4,2+portTier(g,b));
 export function catchDockFish(g:Game,u:Unit,b:Building){
   const ground=fishingGrounds(g,b)[0];
   if(!ground){u.node=null;u.order=u.carry>0?'return':'idle';u.workReason=fishingIssue(g,b)||'Finding other food work';g.workBoard.reset();return;}
-  const taken=consumeFishStock(ground,Math.min(1,Math.max(0,carryingCapacity(u,"food")-u.carry)));
+  const taken=consumeFishStock(ground,Math.min(dockCatch(g,b),Math.max(0,carryingCapacity(u,"food")-u.carry)));
   if(taken<=0){u.order='return';return;}
   u.carry+=taken;u.carryType='food';u.carryFood='fish';u.workReason='Fishing from the dock — carrying the catch home';
   if(u.team===0)g.onSfx('fish');
@@ -156,19 +160,25 @@ export function renewFish(g:Game,n:ResourceNode,dt:number){
   n.amount=Math.min(capacity,n.amount+capacity*dt/FISHERY_RULES.fullStockRecoverySeconds*rate*FISHERY_RULES.replenishmentSpeed*(1-FISHERY_RULES.maximumPressurePenalty*(n.pressure||0)));
 }
 
-export function staffDock(g:Game,id:number){
+const dockSlot=new WeakMap<Game,number>();
+/** Idle adults take up an unstaffed dock on their own, so the dock is used without a click. Quiet: no banners. */
+export function tickDockStaffing(g:Game){
+  const slot=Math.floor(g.state.time/15);if(dockSlot.get(g)===slot)return;dockSlot.set(g,slot);
+  for(const b of g.state.buildings)if(b.team===0&&b.type==='dock'&&b.hp>0&&g.finished(b))staffDock(g,b.id,true);
+}
+export function staffDock(g:Game,id:number,quiet=false){
   const b=g.state.buildings.find(b=>b.id===id&&b.team===0&&b.type==='dock'&&g.finished(b));
   if(!b)return 0;
   g.updateVision(0);
   waterCache.get(g)?.grounds.delete(b.id);
   fishingGrounds(g,b);
-  const issue=fishingIssue(g,b);if(issue){g.banner(issue,4);return 0;}
+  const issue=fishingIssue(g,b);if(issue){if(!quiet)g.banner(issue,4);return 0;}
   const existing=g.state.units.filter(u=>u.hp>0&&u.node===b&&u.order==='gather'&&!onGuardDuty(g,u)).length;
-  const candidates=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&(!u.maturesAt||u.maturesAt<=g.state.time)&&u.carry===0&&!u.recalled&&!u.envoy&&!u.expedition&&!u.scout&&!u.visit&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.foundingJourney&&u.node!==b&&['idle','hold','gather'].includes(u.order))
+  const candidates=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&(!u.maturesAt||u.maturesAt<=g.state.time)&&u.carry===0&&!u.recalled&&!u.envoy&&!u.expedition&&!u.scout&&!u.visit&&!u.studyCrop&&!u.weaponWork&&!u.haulageWork&&!u.farmToolWork&&!u.foundingJourney&&u.node!==b&&(quiet?u.order==='idle':['idle','hold','gather'].includes(u.order)))
     .sort((a,c)=>Math.hypot(a.x-b.x,a.z-b.z)-Math.hypot(c.x-b.x,c.z-b.z));
   let sent=0;
-  for(const u of candidates){if(existing+sent>=2)break;if(!g.interactionSpot(u,b))continue;
+  for(const u of candidates){if(existing+sent>=dockFisherLimit(g,b))break;if(!g.interactionSpot(u,b))continue;
     g.interruptMission(u);u.order='gather';u.node=b;u.job='food';u.jobLock=true;u.huntOnly=false;u.target=null;u.gatherT=0;u.workReason='Assigned to fish at this dock';sent++;
   }
-  g.workBoard.reset();g.banner(`${existing+sent}/2 fishers assigned${existing+sent<2?' — need available adults with a clear bank route':''}`,4);return sent;
+  if(sent)g.workBoard.reset();if(!quiet)g.banner(`${existing+sent}/${dockFisherLimit(g,b)} fishers assigned${existing+sent<dockFisherLimit(g,b)?' — need available adults with a clear bank route':''}`,4);return sent;
 }

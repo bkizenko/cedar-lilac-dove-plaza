@@ -27,7 +27,7 @@ test('missing water and unexplored shore are not diagnosed as depletion; repeate
 test('fishing conserves the catch and brings eight fish home promptly when reserves are scarce',()=>{
  const {g,left}=fixture(),grounds=fishingGrounds(g,left),u=g.spawnUnit('worker',0,0,0);g.tribe(0).food=0;u.order='gather';u.node=left;u.carry=0;
  const total=()=>grounds.reduce((sum,n)=>sum+n.amount,0),before=total();
- for(let i=0;i<8;i++)catchDockFish(g,u,left);
+ for(let i=0;i<4;i++)catchDockFish(g,u,left);
  assert.equal(u.carry,8);assert.equal(u.order,'return');assert.equal(u.carryFood,'fish');assert.equal(before-total(),8);assert.equal(g.tribe(0).food,0);
 });
 
