@@ -260,7 +260,7 @@ function flyStep(ctx:Ctx,c:Critter,dt:number){
  if(L&&!perched){const mem=ctx.groups.get(b.grp)!,o=slot(mem.indexOf(c),T.spacing*1.4);aimX=L.x+o.x;aimZ=L.z+o.z;const e=Math.hypot(aimX-c.x,aimZ-c.z);speed=clamp(L.beh!.sp*.9+e*.6,T.gaits[1],T.gaits[3]);if(L.beh!.st==='perch')tgtAlt=.25;}
  else if(!perched&&d<4&&t>b.until-3)b.until=t;
  if(perched){const lowGround=g.height(c.x,c.z);alt=Math.max(.2,alt-dt*1.2);b.sp=Math.max(0,b.sp-T.gaits[3]*dt);b.alt=alt;c.y=lowGround+alt;c.vx=0;c.vz=0;return;}
- const want=Math.atan2(aimX-c.x,aimZ-c.z),dh=wrap(want-b.hd),lim=T.turn*dt;b.hd+=clamp(dh,-lim,lim);
+ const want=Math.atan2(aimX-c.x,aimZ-c.z),dh=wrap(want-b.hd),lim=T.turn*dt;b.hd=wrap(b.hd+clamp(dh,-lim,lim));
  const tspeed=speed*(Math.abs(dh)>1?.7:1);b.sp+=clamp(tspeed-b.sp,-ANIMAL_RULES.decel*dt,ANIMAL_RULES.accel*dt);
  const nx=c.x+Math.sin(b.hd)*b.sp*dt,nz=c.z+Math.cos(b.hd)*b.sp*dt;
  const half=(g.world.size||1040)/2-6;c.x=clamp(nx,-half,half);c.z=clamp(nz,-half,half);alt+=clamp(tgtAlt-alt,-1.5*dt,1.5*dt);b.alt=alt;c.y=g.height(c.x,c.z)+alt;
@@ -275,7 +275,7 @@ function locomote(ctx:Ctx,c:Critter,dt:number,aim:{x:number;z:number},target:num
  if(target>0){const L=Math.max(1.4,b.sp*.9+.6);if(!okAt(want,L)){let found=false;const side=c.id%2?1:-1;for(const o of[.4,.8,1.25,1.8,2.4,3]){for(const s of[side,-side]){if(okAt(want+o*s,L)){want+=o*s;found=true;break;}}if(found)break;}
    if(!found){target=0;b.blk++;if(b.blk>=4){b.blk=0;b.until=ctx.t;}}else b.blk=0;}}
  const err=wrap(want-b.hd),ang=T.turn*(1-.55*clamp(b.sp/T.gaits[3],0,1)),lim=(b.sp<.2?ANIMAL_RULES.pivot:ang)*dt;
- if(target>0||Math.abs(err)>.35&&b.sp>.05)b.hd+=clamp(err,-lim,lim);
+ if(target>0||Math.abs(err)>.35&&b.sp>.05)b.hd=wrap(b.hd+clamp(err,-lim,lim));
  const align=Math.cos(wrap(want-b.hd));if(Math.abs(wrap(want-b.hd))>.5)target*=Math.max(.15,align);
  b.sp+=clamp(target-b.sp,-ANIMAL_RULES.decel*dt,ANIMAL_RULES.accel*dt*(fleeing?2.2:1));if(b.sp<.02)b.sp=0;
  const dist=b.sp*dt;if(dist>1e-6){const x=c.x+Math.sin(b.hd)*dist,z=c.z+Math.cos(b.hd)*dist;
@@ -291,7 +291,7 @@ export function tickAnimals(g:Game,animals:Critter[],dt:number,ob:WildlifeObstac
  const players=g.state.units.filter(u=>u.team===0&&u.hp>0),camp=g.campOf(0);
  const due:{c:Critter;lag:number}[]=[];
  for(const c of animals){
-  const b=(c.beh??=newBeh(g,c));b.acc+=dt;
+  const b=(c.beh??=newBeh(g,c));b.acc+=dt;if(b.hd>Math.PI||b.hd<-Math.PI)b.hd=wrap(b.hd);// keep saved headings inside the validator range (old saves and spawn facings may start outside it)
   const dd=lodDistance(camp,c,players),iv=dd<ANIMAL_RULES.lodNear?ANIMAL_RULES.intervalNear:dd<ANIMAL_RULES.lodMid?ANIMAL_RULES.intervalMid:ANIMAL_RULES.intervalFar;
   if(b.acc>=iv)due.push({c,lag:b.acc-iv});
  }
@@ -318,7 +318,7 @@ export function penStep(g:Game,a:Critter&{born?:number;sex?:string},pen:{x:numbe
  let target=0;const d=Math.hypot(b.gx-a.x,b.gz-a.z);
  if(b.st==='walk'&&d>.8)target=T.gaits[0]*.8;else if(b.st==='walk'){setState(g,a,'graze',10+animalRand(g.state.seed,a.id,b.n++)*20);}
  const want=d>.05?Math.atan2(b.gx-a.x,b.gz-a.z):b.hd,err=wrap(want-b.hd),lim=(b.sp<.2?ANIMAL_RULES.pivot:T.turn*.6)*step;
- if(target>0)b.hd+=clamp(err,-lim,lim);
+ if(target>0)b.hd=wrap(b.hd+clamp(err,-lim,lim));
  const al=target>0?Math.max(.15,Math.cos(wrap(want-b.hd))):0;b.sp+=clamp(target*al-b.sp,-ANIMAL_RULES.decel*step,ANIMAL_RULES.accel*step);if(b.sp<.02)b.sp=0;
  if(b.sp>0){const x=a.x+Math.sin(b.hd)*b.sp*step,z=a.z+Math.cos(b.hd)*b.sp*step;if(inside(x,z)&&g.walkable(x,z)){a.x=x;a.z=z;a.y=g.height(x,z);}else{b.sp=0;setState(g,a,'graze',6+animalRand(g.state.seed,a.id,b.n++)*6);}}
  a.vx=Math.sin(b.hd)*b.sp;a.vz=Math.cos(b.hd)*b.sp;const fe=wrap(b.hd-a.facing);if(b.sp>.05)a.facing+=clamp(fe,-5*step,5*step);

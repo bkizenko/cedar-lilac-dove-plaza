@@ -198,7 +198,8 @@ function canLeaveHarvestOutside(g:Game,u:Unit){
  const harvest=(cargo.grainSheaves||0)>0||rawMeat;
  return u.team===0&&harvest&&Object.entries(cargo).every(([kind,n])=>
    !n||kind==='grainSheaves'||rawMeat&&['rawHide','bone'].includes(kind))&&
-   g.state.buildings.some(b=>b.team===u.team&&b.type==='warehouse'&&g.finished(b));
+   // A warehouse or townhall frontage, or the bare camp itself: a village without a store must still be able to put a harvest down, or every picker stalls holding sheaves and the village starves beside its ripe fields.
+   supplyDrops(g,u.team).some(drop=>drop.kind==='camp'||g.state.buildings.some(b=>b.id===drop.id&&b.team===u.team&&(b.type==='warehouse'||b.type==='townhall')&&g.finished(b)));
 }
 /** Finite gathered raw materials can be laid beside the actual reached cache.
  * This does not create covered capacity or admit manufactured cargo. */
