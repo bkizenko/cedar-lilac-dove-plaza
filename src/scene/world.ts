@@ -1787,7 +1787,11 @@ export class WorldView {
       if(this.terrainSurface)this.terrainSurface.setAtmosphere(sunDir,painter.cloudShadow,game.state.time,painter.sun,painter.haze);
       this.biomeScene?.setSun(sunDir,night?0:Math.min(1,painter.sunIntensity/2.2)*(1-.6*(painter.cloudCover>.8?1:0)),this.renderer.shadowMap.enabled);
       const g=this.gradePass?.uniforms;
-      if(g){g.uSat.value=painter.saturation;g.uContrast.value=painter.contrast;g.uWarm.value=painter.warmth;g.uHaze.value=painter.haze;}
+      if(g){g.uSat.value=painter.saturation;g.uContrast.value=painter.contrast;g.uWarm.value=painter.warmth;g.uHaze.value=painter.haze;
+        // season colour grade: golden autumn, fresh spring, warm summer, desaturated blue winter
+        g.uSat.value+=sn.spring*.05+sn.summer*.06+sn.autumn*.1-sn.winter*.2;g.uWarm.value+=sn.summer*.15+sn.autumn*.3-sn.winter*.3;
+        g.uShadowTint.value.set('#e8f0ff').lerp(_c.set('#cfe0ff'),sn.winter).lerp(_c.set('#f0e4ff'),sn.autumn*.5);
+        g.uHighTint.value.set('#fff0dc').lerp(_c.set('#e9f1ff'),sn.winter).lerp(_c.set('#ffe2b8'),sn.autumn*.6);}
     }
   }
 

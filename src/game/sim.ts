@@ -149,6 +149,7 @@ import {buildingCost,planStatus,fundConstructionPlans,orderConstruction,directed
 import {ageInfrastructureIssue,ageReserveIssue,ageFoodReserve} from './advancement';
 import {rivalKnows,rivalCanInvest,rivalDevelopmentPlan,rivalStorageTarget,developRivalResources,developRivalInstitutions,developRivalEquipment,developRivalCoast,rebalanceRivalLabor} from "./rivalDevelopment";
 import {wildCraftAI,tickWildCraft,pauseWildWork,wildBodyMustRemain} from './wildCraft';
+import {yearClimate} from "./yearClimate";
 import {workerHuntAI,huntable,updateCarcass,wildlifeFleeSpeed,advanceHuntingProjectile,tickHuntingHazard} from "./hunting";
 import {reviewRivalToolUpkeep} from './rivalToolUpkeep';
 import {reviewPlayerToolUpkeep} from './playerToolUpkeep';
@@ -5872,7 +5873,8 @@ export class Game {
       drought: 4,
     };
     const base = sn.spring * 12 + sn.summer * 21 + sn.autumn * 10 + sn.winter * 0;
-    let temp = Math.round(base + (temps[this.state.weather] ?? 0));
+    const yc = yearClimate(this.state.seed, Math.floor(this.state.time / 1800));
+    let temp = Math.round(base + yc.offset + yc.amplitude * 10.5 * (sn.summer - sn.winter) + (temps[this.state.weather] ?? 0));
     if (h < 6 || h > 21) temp -= 3;
     temp=Math.round(difficultyTemperature(this,temp));
     let weather = names[this.state.weather] || "Clear";

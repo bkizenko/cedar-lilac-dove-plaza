@@ -3,6 +3,7 @@ import {provinceAt,ecologicalConditionsAt} from './ecologicalProvinces';
 import {landformLabelsEnabled,landformHabitatAt} from './landformLabels';
 import type {ResourceNode} from "./types";
 import type { Game } from "./sim";
+import {seasonalTemperature} from './yearClimate';
 export const HABITATS = {
   plains: { name: "Grassland", crops: 1.2, forage: 1, timber: 0.85, winterFood: 1.08, advice: "Open fertile ground favors fields. Store the autumn harvest; timber is slower to collect." },
   forest: { name: "Woodland", crops: 0.8, forage: 1.2, timber: 1.2, winterFood: 1, advice: "Woodland supports gathering and timber. Smaller harvests make a mixed food supply valuable." },
@@ -66,8 +67,8 @@ export function droughtWaterPotential(g:Game,x:number,z:number){
 
 /** Local weather drives real spoilage, not merely the calendar label. */
 export function climateAt(g:Game,x:number,z:number,time=g.state.time,weather=g.state.weather) {
-  const habitat=habitatAt(g,x,z),phase=(time%1800)/1800;
-  let temperature=11+15*Math.sin((phase-.07)*Math.PI*2)-Math.max(0,g.height(x,z)-4)*.18;
+  const habitat=habitatAt(g,x,z);
+  let temperature=seasonalTemperature(g.state.seed,time)-Math.max(0,g.height(x,z)-4)*.18;
   let humidity=habitat===HABITATS.forest?.76:habitat===HABITATS.hills?.47:.6;
   if(g.world.ecology){const e=ecologicalConditionsAt(g.world.ecology,x,z);temperature+=e.temperatureOffsetCelsius;humidity=e.moisture;}
   if(weather==="rain"||weather==="storm"||weather==="flood")humidity+=.2;
