@@ -101,7 +101,7 @@ export function tickCapitulation(g:Game){
  for(const f of fronts){
   if(!OPEN.includes(f.phase))continue;
   const m=measureFront(g,f),dt=Math.max(0,g.state.time-f.lastMeasuredAt);f.lastMeasuredAt=g.state.time;
-  if(!m.hall||m.hall.hp<=0||m.hall.team!==f.defenderTeam){f.phase='expired';f.resolvedAt=g.state.time;f.reason=!m.hall||m.hall.hp<=0?'The community hall was destroyed':'The community changed hands';continue;}
+  if(!m.hall||m.hall.hp<=0||m.hall.team!==f.defenderTeam){f.phase='expired';f.resolvedAt=g.state.time;f.yieldedIds=[];f.reason=!m.hall||m.hall.hp<=0?'The community hall was destroyed':'The community changed hands';continue;}
   f.casualties=m.dead;f.captured=m.captured;f.lostArmed=Math.max(0,f.armedAtOpen-m.armedNow);f.buildingLoss=Math.max(m.lostBuildings/Math.max(1,f.buildingIds.length),m.hallLoss);f.ratio=m.ratio;
   if(!m.attackers.length){
    f.absentSeconds+=dt;
@@ -230,7 +230,7 @@ export function validCapitulationState(state:unknown){
   if(f.capitulatedAt!==undefined&&!fin(f.capitulatedAt)||f.expiresAt!==undefined&&!fin(f.expiresAt)||f.resolvedAt!==undefined&&!fin(f.resolvedAt))return false;
   if(f.outcome!==undefined&&!['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(f.outcome))return false;
   if(f.phase==='capitulated'&&(f.expiresAt===undefined||f.capitulatedAt===undefined))return false;
-  if(f.yieldedIds.length&&!['capitulated','accepted'].includes(f.phase))return false;
+  if(f.yieldedIds.length&&!['capitulated','accepted','expired'].includes(f.phase))return false; // 'expired': a hall lost to annexation/destruction used to leave its yielded list behind; harmless, so older live saves still load
   if(OPEN.includes(f.phase)){const k=f.hallId+':'+f.attackerTeam;if(open.has(k))return false;open.add(k);}
  }
  return true;
