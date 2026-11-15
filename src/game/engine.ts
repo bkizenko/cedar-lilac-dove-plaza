@@ -302,6 +302,7 @@ export class Engine {
   private nextHoverAt=0;
   /** Hover card for a building under the cursor (era, condition, repair) via the plain `title`; empty when none. */
   private hoverBuildingTitle(x:number,y:number){const hit=this.view.pickEntity(x,y,this.game);const b=hit?.kind==='building'?this.game.state.buildings.find(v=>v.id===hit.id):undefined;return b&&b.hp>0?buildingHoverText(b as never,BUILDINGS[b.type]?.name):"";}
+  private updateDragPreview(){const d=this.drag;if(!d||Math.hypot(d.x-d.sx,d.y-d.sy)<=8){this.view.previewUnitIds=null;return;}const x0=Math.min(d.sx,d.x),x1=Math.max(d.sx,d.x),y0=Math.min(d.sy,d.y),y1=Math.max(d.sy,d.y),ids=new Set<number>();for(const u of this.game.state.units){if(u.team!==0||u.hp<=0||u.shelterId)continue;const q=this.view.project(u.x,u.y+.6,u.z);if(!q.behind&&q.x>=x0&&q.x<=x1&&q.y>=y0&&q.y<=y1)ids.add(u.id);}this.view.previewUnitIds=ids;}
   private onPointerLeave=()=>{this.view.hoveredUnitId=null;this.canvas.title="";};
   gateFacing:GateFacing="north";
   /** GW-08 / T8 (Grok): quarter-turn for the current placement; preview and commit both read it. */
@@ -609,6 +610,7 @@ export class Engine {
     this.pointer.x = p.x;
     this.pointer.y = p.y;
     const now=performance.now();
+    if(!this.drag&&this.view.previewUnitIds)this.view.previewUnitIds=null;
     if(this.game.state.placing||this.loggingMode||this.drag||this.panDrag||this.rotDrag)this.view.hoveredUnitId=null;
     else if(now>=this.nextHoverAt){this.nextHoverAt=now+80;this.view.hoveredUnitId=this.view.hoverPerson(p.x,p.y,this.game);const animal=this.view.hoveredUnitId===null?this.view.pickWildlife(p.x,p.y,this.game):null;this.canvas.title=animal?(animal.hp>0?`Wild ${animal.species} · right-click with hunters to hunt`:`${animal.species} carcass · ${Math.ceil(animal.carcass?.meat||0)} raw meat remains`):(this.view.hoveredUnitId===null?this.hoverBuildingTitle(p.x,p.y):"");}
     if (this.panDrag) {
@@ -637,6 +639,7 @@ export class Engine {
     if (this.drag) {
       this.drag.x = p.x;
       this.drag.y = p.y;
+      this.updateDragPreview();
     }
     this.updateGhost();
   };
@@ -667,6 +670,7 @@ export class Engine {
       this.pushHud();
       return;
     }
+    this.view.previewUnitIds=null;
     if (this.drag && e.button === 0) {
       this.drag.x=p.x;this.drag.y=p.y;
       const dx = this.drag.x - this.drag.sx;

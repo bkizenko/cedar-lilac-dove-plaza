@@ -30,7 +30,7 @@ import {WaterVesselLayer} from './waterVesselLayer';
 import {WornGarmentLayer} from './wornGarments';
 import {WornArmorLayer} from './wornArmor';
 import {PeopleAdapter} from './peopleAdapter';
-import {unitFeedbackVisible,pointerNearPerson} from '../game/unitFeedback';
+import {unitFeedbackVisible,pointerNearPerson,MAX_SELECTION_RINGS} from '../game/unitFeedback';
 import {admitVisibleUnits} from './unitRenderAdmission';
 import {ensureInstanceCapacity} from './instanceCapacity';
 import {ExcavationLayer} from './excavationLayer';
@@ -384,6 +384,7 @@ export class WorldView {
   private trailHalo: THREE.InstancedMesh | null = null;
   private trailSyncAt=-1;
   hoveredUnitId:number|null=null;
+  previewUnitIds:ReadonlySet<number>|null=null;
   rings!: THREE.InstancedMesh;
   resourceRing!: THREE.Mesh<THREE.RingGeometry,THREE.MeshBasicMaterial>;
   workRings!: THREE.InstancedMesh;
@@ -674,7 +675,7 @@ export class WorldView {
      this.trailHalo=new THREE.InstancedMesh(new THREE.CircleGeometry(0.5,16),haloMaterial,4096);this.trailHalo.count=0;this.trailHalo.frustumCulled=false;this.trailHalo.raycast=()=>{};this.trailHalo.renderOrder=-1;this.trailHalo.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(4096*3).fill(1),3);this.scene.add(this.trailHalo);
     }
     this.rings = new THREE.InstancedMesh(
-      new THREE.RingGeometry(0.7, 0.88, 20),
+      new THREE.RingGeometry(0.78, 0.88, 32),
       new THREE.MeshBasicMaterial({
         color: "#e8c878",
         side: THREE.DoubleSide,
@@ -2391,7 +2392,7 @@ export class WorldView {
       }
     }
     let feedback=0,toolCount=0;
-    for(const u of game.state.units)if(u.hp>0&&!u.shelterId&&(u.team===0||game.visibleAt(u.x,u.z))){if(unitFeedbackVisible(u,this.hoveredUnitId,this.unitRingsEnabled))feedback++;if(u.type==='worker'&&!u.militia&&(u as FarmToolUnit).farmTool&&(u as FarmToolUnit).farmTool!=='woodenArd')toolCount++;}
+    for(const u of game.state.units)if(u.hp>0&&!u.shelterId&&(u.team===0||game.visibleAt(u.x,u.z))){if(feedback<MAX_SELECTION_RINGS&&unitFeedbackVisible(u,this.hoveredUnitId,true,this.previewUnitIds))feedback++;if(u.type==='worker'&&!u.militia&&(u as FarmToolUnit).farmTool&&(u as FarmToolUnit).farmTool!=='woodenArd')toolCount++;}
     const selectedBoat=game.state.boats?.find(b=>b.id===game.selectedBoat&&b.hp>0&&b.team===0);
     this.rings=ensureInstanceCapacity(this.scene,this.rings,feedback+(game.state.selBld&&game.state.selBld.hp>0?1:0)+(selectedBoat?1:0));
     if(this.farmToolMesh)this.farmToolMesh=ensureInstanceCapacity(this.scene,this.farmToolMesh,toolCount);
@@ -2455,11 +2456,13 @@ export class WorldView {
         _c.set(st.unit);
         _c.offsetHSL(((u.tint || 0) - 0.5) * 0.12, 0.04, ((u.stature || 1) - 1) * 0.12);
         if (mesh.instanceColor) mesh.setColorAt(i, _c);
-        if (unitFeedbackVisible(u,this.hoveredUnitId,this.unitRingsEnabled) && ri < instCap(this.rings)) {
+        if (ri < MAX_SELECTION_RINGS && unitFeedbackVisible(u,this.hoveredUnitId,true,this.previewUnitIds) && ri < instCap(this.rings)) {
+          const bright=u.id===this.hoveredUnitId||!!this.previewUnitIds?.has(u.id),pulse=1+.05*Math.sin(game.state.time*5+u.id);
+          _c.set(bright?'#fff6d0':'#e8c878');this.rings.setColorAt(ri,_c);
           _p.set(u.x, u.y + 0.05, u.z);
           _e.set(-Math.PI / 2, 0, 0);
           _q.setFromEuler(_e);
-          _s.set(u.r * 1.6, u.r * 1.6, 1);
+          _s.set(u.r * 1.6*pulse, u.r * 1.6*pulse, 1);
           _m.compose(_p, _q, _s);
           this.rings.setMatrixAt(ri, _m);
           ri++;
