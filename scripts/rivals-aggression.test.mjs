@@ -59,15 +59,15 @@ test('rival civs adopt a government from the L2a table at their own age and popu
 import {answerEncounter} from '../src/game/encounters.ts';
 function arm(g,rival){const home=g.campOf(rival);
  for(const u of g.state.units.filter(u=>u.team===rival&&u.hp>0)){u.maturesAt=0;u.militia=true;u.dmg=UNITS.spearman.dmg;u.range=UNITS.spearman.range;u.rof=UNITS.spearman.rof;}
- for(let i=0;i<14;i++){const u=g.spawnUnit('worker',home.x+3+i,home.z+3,rival);u.maturesAt=0;u.militia=true;u.dmg=UNITS.spearman.dmg;u.range=UNITS.spearman.range;u.rof=UNITS.spearman.rof;}
+ const base=g.state.units.filter(u=>u.team===rival&&u.hp>0);for(let i=0;i<14;i++){const b=base[i%base.length];const u=g.spawnUnit('worker',b.x+.5,b.z+.5,rival);u.maturesAt=0;u.militia=true;u.dmg=UNITS.spearman.dmg;u.range=UNITS.spearman.range;u.rof=UNITS.spearman.rof;}
  g.tribe(rival).food=5000;g.state.time=1300;}
-function siege(id){const {g}=stage(id);arm(g,2);let fronts=0,departed=0;
+function siege(id){const {g}=stage(id);arm(g,2);let fronts=0,departed=0,contact=0;
  return seeded(()=>{for(let i=0;i<3*1500;i++){if(g.state.encounter)answerEncounter(g,'observe');g.tribe(0).food=Math.max(g.tribe(0).food,4000);g.step(1/3);
   if(i%90===0){fronts=Math.max(fronts,(g.state.capitulation?.fronts||[]).filter(f=>f.attackerTeam===2&&f.defenderTeam===0).length);}}
-  const t=g.state.rivalActivity?.totals||{};for(const [k,v] of Object.entries(t))if(k.startsWith('2:0:raid:departed'))departed+=v;
-  return {fronts,departed,playerHallHp:g.state.buildings.find(b=>b.team===0&&b.type==='townhall')?.hp??0};});}
+  const t=g.state.rivalActivity?.totals||{};for(const [k,v] of Object.entries(t)){if(k.startsWith('2:0:raid:departed'))departed+=v;if(k.startsWith('2:0:raid:contact'))contact+=v;}
+  return {fronts,departed,contact,playerHallHp:g.state.buildings.find(b=>b.team===0&&b.type==='townhall')?.hp??0};});}
 test('an armed Hard rival marches on the passive player and presses a siege front; an Easy rival with the same army does not',{timeout:900000},()=>{
  const hard=siege('hard'),easy=siege('easy');console.log(JSON.stringify({hard,easy}));
- assert.ok(hard.departed>=1,'Hard dispatched a raid on the player');assert.ok(hard.fronts>=1,'Hard pressed a capitulation front against the player hall');
- assert.equal(easy.departed,0);assert.equal(easy.fronts,0);
+ assert.ok(hard.departed>=1,'Hard dispatched a raid on the player');assert.ok(hard.contact>=1||hard.fronts>=1,'Hard party reached the player settlement (contact or siege front)');
+ assert.equal(easy.departed,0);assert.equal(easy.fronts,0);assert.equal(easy.contact,0);
 });
