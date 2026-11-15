@@ -10,6 +10,8 @@ export const FOOD_PACKED_LITERS:Record<FoodKind,number>={provisions:2,berries:3,
 const quantity=(n:number|undefined)=>Number.isFinite(n)&&Number(n)>0?Number(n):0;
 export const itemPackedLiters=(kind:ItemKind,count=1)=>ITEM_PACKED_LITERS[kind]*quantity(count);
 export const packedItemLiters=(stock:ItemStock)=>Object.entries(stock).reduce((total,[kind,count])=>total+itemPackedLiters(kind as ItemKind,count),0);
-export const packedItemStorageUnits=(stock:ItemStock)=>packedItemLiters(stock)/INVENTORY_VOLUME_RULES.litersPerStorageUnit;
+/** Straw and chaff are low-value bulk stacked in open by-product storage (bounded by BYPRODUCT_RULES), so they never count against the food/grain/material cap. */
+export const BYPRODUCT_KINDS=['straw','chaff'] as const;
+export const packedItemStorageUnits=(stock:ItemStock)=>(packedItemLiters(stock)-BYPRODUCT_KINDS.reduce((t,k)=>t+itemPackedLiters(k,stock[k]||0),0))/INVENTORY_VOLUME_RULES.litersPerStorageUnit;
 export const packedFoodLiters=(stock:Partial<Record<FoodKind,number>>)=>Object.entries(stock).reduce((total,[kind,count])=>total+FOOD_PACKED_LITERS[kind as FoodKind]*quantity(count),0);
 export const seedReserveLiters=(count:number)=>quantity(count)*INVENTORY_VOLUME_RULES.seedReserveLitersPerUnit;

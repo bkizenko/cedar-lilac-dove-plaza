@@ -2,7 +2,7 @@ import {productionFuelAvailable} from './mealFuel';
 import {millIssue} from './millPower';
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
-import{beginProduction,unloadProductionProject,resumeProduction,startFloorCereal,productionIssue,grainBatchIssue,productionSlots,occupiedProductionSlots,productionFoodOutput,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
+import{capByproductStock,beginProduction,unloadProductionProject,resumeProduction,startFloorCereal,productionIssue,grainBatchIssue,productionSlots,occupiedProductionSlots,productionFoodOutput,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
 import{foodInventory,FOOD_NOURISHMENT,receiveFood}from'./pantry';
 import{calendar,farmAvailable,isDependent,reserveSeconds,foodDemand}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
@@ -342,6 +342,7 @@ export function simplifyCerealStock(g:Game,team:number){
  t.seeds=(t.seeds||0)+seed;
  const m=g.state.cerealProcessing;if(m)m.cleanedGrain+=clean;
  receiveFood(g,team,clean-seed,'grain','production');
+ capByproductStock(g,team);
  return true;
 }
 
