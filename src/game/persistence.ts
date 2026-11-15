@@ -54,6 +54,8 @@ import {validScoutProvisions} from './scoutProvisions';
 import {validProductionPractice} from './productionPractice';
 import {validSkillModel} from './skillRuntime';
 import {sanitizeGovernance} from './governance';
+import {validSnareState} from './snares';
+import {validVineState} from './vineyards';
 import {validObservedMethods} from './observedKnowledge';
 import {validCapturedKnowledgeState} from './capturedKnowledge';
 import {penHousingCapacity,penFeedCapacity} from './penGeometry';
@@ -753,6 +755,8 @@ function validateGamePayload(raw: unknown) {
     if (!["deer", "boar", "goat", "sheep", "horse", "cattle", "donkey", "ox", "bird", "wolf"].includes(c.species)||!validFleece(c,s.time)||c.species==='sheep'&&s.sheepVersion!==1||!carcassStateValid(c.carcass,c.species,c.hp,s.time)) fail("![deer, boar, goat, sheep, horse, cattle, donkey, ox, bird, w…");
   }
   if(!validCisternState(s))fail("validCisternState");
+  for(const b of s.buildings)if(!validSnareState(b.snare,s.time,b.type))fail("!validSnareState(b.snare,s.time,b.type)");
+  for(const b of s.buildings)if(!validVineState(b.vine,b.type))fail("!validVineState(b.vine,b.type,year)");
   for(const b of s.buildings)if(b.goatSearch!==undefined&&(b.type!=='pen'||b.team!==0||!validGoatSearchOrder(b.goatSearch,s.time,s.nextId)))fail("b.goatSearch!==undefined&&(b.type!=='pen'||b.team!==0||!validGoatSearchOrder(b.g…");
   for(const b of s.buildings)if(b.pasture!==undefined){const p=b.pasture;if(p&&['initialFeed','feedDelivered','feedConsumed'].every(k=>p[k]!==undefined)&&Math.abs(p.initialFeed+p.feedDelivered-p.feedConsumed-p.feed)>1e-7*Math.max(1,p.initialFeed+p.feedDelivered))fail("p&&['initialFeed','feedDelivered','feedConsumed'].every(k=>p[k]!==undefined)&&Ma…");for(const k of ['initialFeed','feedDelivered','feedConsumed','grazedFood'])if(p?.[k]!==undefined&&(!num(p[k])||p[k]<0||p[k]>1e12))fail("p?.[k]!==undefined&&(!num(p[k])||p[k]<0||p[k]>1e12)");if(b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p.feed)||p.feed<0||p.feed>penFeedCapacity(b)+1e-6||!num(p.care)||p.care<0||p.care>1)fail("b.type!=='pen'||!obj(p)||!num(p.condition)||p.condition<0||p.condition>1||!num(p…");}
   for(const u of s.units){

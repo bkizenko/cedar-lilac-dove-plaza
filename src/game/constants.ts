@@ -81,6 +81,9 @@ export const BUILDINGS: Record<
   oven: {name:"Stone bread oven",w:4,d:4,food:0,wood:8,stone:8,pop:0,hp:240,age:0,hint:"Bake delivered flour with real water and fuel. Two staffed batches, 24 work seconds each instead of 45 at a hearth."},
   hearth: {name:"Cooking hearth",w:3,d:3,food:0,wood:4,stone:4,pop:0,hp:180,age:0,hint:"Cook raw meat and fish with firewood. When lit, nearby villagers can warm up."},
   butcher: {name:"Butcher and skin yard",w:4,d:4,food:0,wood:6,stone:2,pop:0,hp:180,age:0,hint:"Clean actual animal hides and extract tannin from delivered bark-bearing logs and collected water."},
+  vineyard: {name:"Vineyard",w:8,d:8,food:0,wood:24,stone:2,pop:0,hp:120,age:1,hint:"Rows of vines where the climate suits wine. Vines take a year to establish, ripen each autumn, and a picker must carry the grapes to the stores before winter. Press them into wine."},
+  press: {name:"Wine and oil press",w:5,d:4,food:0,wood:30,stone:8,pop:0,hp:220,age:1,hint:"A beam press and vats. Pressing fruit in stores yields one extra jar per batch. Needs a climate for vines or olives to be worthwhile."},
+  snare: {name:"Snare",w:3,d:3,food:0,wood:3,stone:0,pop:0,hp:40,age:0,hint:"Cheap wild trap: catches birds and small or medium game near it over time, no chase. Send a worker to check it; the catch is limited by the animals about and spoils if left."},
   dryrack: {name:"Food and skin drying rack",w:4,d:3,food:0,wood:4,stone:0,pop:0,hp:180,age:0,hint:"Two loaded batch slots: skins need tending; meat and fish need loading, drying weather, then physical pickup. Rain rewets food and freezing pauses drying."},
   tanner: {name:"Tanning yard",w:4,d:4,food:0,wood:8,stone:2,pop:0,hp:180,age:0,hint:"Tan cleaned hides using actual bark tannin, collected water and worker time."},
   tailor: {name:"Skin sewing shelter",w:4,d:4,food:0,wood:8,stone:0,pop:0,hp:180,age:0,hint:"Sew simple clothes straight from 2 raw hides or 4 plant fibre (heavy for cold, light for heat), or from dried skins and leather. Finished clothes must be delivered and worn."},
@@ -472,7 +475,7 @@ export const BUILD_ORDER: BldType[] = [
   "keep",
   "stables",
   "university",
-  "hearth", "threshingFloor", "grindingStone", "oven", "smokehouse","butcher","dryrack","tanner","tailor","potter","kiln","fibreWorkshop",
+  "hearth", "threshingFloor", "grindingStone", "oven", "smokehouse","butcher","dryrack","tanner","tailor","potter","kiln","fibreWorkshop","snare","vineyard","press",
   "cairn","grove",
   "well","cistern","greatCistern","watermill","windmill","aqueduct","canal",
 ];
@@ -558,7 +561,7 @@ export const AGE_CHOICES: {
 
 export const BUILD_TIME: Record<BldType, number> = {
   fibreWorkshop:14,potter:14,kiln:20,
-  threshingFloor:14,smokehouse:18,grindingStone:12,oven:18,hearth:10,butcher:12,dryrack:10,tanner:14,tailor:12,
+  threshingFloor:14,smokehouse:18,grindingStone:12,oven:18,hearth:10,butcher:12,dryrack:10,snare:3,vineyard:16,press:14,tanner:14,tailor:12,
   palisade:12, gate:18, stonewall:24, trench:18, moat:30,
   townhall: 0,
   cornerstone: 12,

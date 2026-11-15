@@ -128,7 +128,7 @@ import { YEAR_SECONDS } from "@/game/settlement";
 
 export const BLD_ICON: Record<string, ReactNode> = {
   hearth: <Flame className="size-4" />, butcher: <Scissors className="size-4" />,
-  dryrack: <Layers className="size-4" />, tanner: <Layers className="size-4" />, tailor: <Scissors className="size-4" />,
+  dryrack: <Layers className="size-4" />, snare: <Layers className="size-4" />, vineyard: <Layers className="size-4" />, press: <Layers className="size-4" />, tanner: <Layers className="size-4" />, tailor: <Scissors className="size-4" />,
   potter: <CookingPot className="size-4" />, kiln: <Flame className="size-4" />, fibreWorkshop: <Package className="size-4" />,
   hut: <Home className="size-4" />, house: <Home className="size-4" />,
   cornerstone: <Compass className="size-4" />,
@@ -591,7 +591,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         ) : (
           <div><div className="build-tabs" role="tablist" aria-label="Building categories">{["Village","Food","Industry","Defense"].map(tab=><button key={tab} role="tab" aria-selected={buildTab===tab} onClick={()=>setBuildTab(tab)}>{tab}</button>)}</div><div className="hud-build-row">
             {hud.buildOptions.map((b, i) => {
-              const category=["farm","pen","dock","grove","hearth","butcher","threshingFloor","grindingStone","oven","smokehouse"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables","dryrack","tanner","tailor","potter","kiln","fibreWorkshop"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
+              const category=["farm","pen","dock","grove","snare","vineyard","hearth","butcher","threshingFloor","grindingStone","oven","smokehouse"].includes(b.type)?"Food":["lumber","quarry","workshop","forge","stables","dryrack","tanner","tailor","potter","kiln","fibreWorkshop"].includes(b.type)?"Industry":["barracks","palisade","gate","stonewall","trench","moat","watchtower","keep"].includes(b.type)?"Defense":"Village";
               if(category!==buildTab)return null;
               const active = hud.placing === b.type;
               const homeIssue=b.type==='house'&&engine?housingAdoptionIssue(engine.game):null;

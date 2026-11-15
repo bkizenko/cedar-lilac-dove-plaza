@@ -10,7 +10,7 @@ export type UnitType =
   "worker" | "spearman" | "archer" | "swordsman" | "cavalry" | "leader" | "warden" | "ranger";
 
 export type BldType =
-  | "threshingFloor" | "fibreWorkshop" | "potter" | "kiln" | "smokehouse" | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor"
+  | "threshingFloor" | "fibreWorkshop" | "potter" | "kiln" | "smokehouse" | "grindingStone" | "oven" | "hearth" | "butcher" | "dryrack" | "tanner" | "tailor" | "snare" | "vineyard" | "press"
   | "townhall"
   | "cornerstone"
   | "hut"
@@ -352,6 +352,10 @@ export type Building = {
   housingReceipt?:import('./housingTypes').HousingReceipt;
   maintenance?:import('./buildingMaintenance').BuildingCare;
   repair?:import('./buildingMaintenance').BuildingRepair;
+  /** Snare structures only: held catches and the last roll window (absent on every other building and on old saves). */
+  snare?:import('./snares').SnareState;
+  /** Vineyards only: establishment and ripening record (absent elsewhere and on old saves). */
+  vine?:import('./vineyards').VineState;
   excavationDepth?:number;
   excavationVolume?:number;
   excavationWorkSeconds?:number;

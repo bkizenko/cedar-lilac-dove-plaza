@@ -169,7 +169,7 @@ const UNIT_TYPES: UnitType[] = [
   "ranger",
 ];
 export const BLD_TYPES: BldType[] = [
-  "threshingFloor","fibreWorkshop","potter","kiln","smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor",
+  "threshingFloor","fibreWorkshop","potter","kiln","smokehouse","grindingStone","oven","hearth","butcher","dryrack","tanner","tailor","snare","vineyard","press",
   "palisade", "gate", "stonewall", "trench", "moat",
   "townhall",
   "cornerstone",
@@ -202,7 +202,7 @@ export const BLD_TYPES: BldType[] = [
 
 /** Types whose shipped look is terrain-laid or modular; Option H never replaces them. */
 /** Types still drawn by the current (non-carved) path: field/pen crop and fence layers, the lumber yard's stacks, terrain-carving earthworks and the pitched bridge. Everything else is carved. */
-const CARVED_KEEP_CURRENT=new Set<string>(['farm','pen','trench','moat','bridge','lumber']);
+const CARVED_KEEP_CURRENT=new Set<string>(['farm','pen','trench','moat','bridge','lumber','snare','vineyard']);
 const _m = new THREE.Matrix4();
 const _p = new THREE.Vector3();
 const _q = new THREE.Quaternion();

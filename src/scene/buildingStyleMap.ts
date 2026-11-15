@@ -69,7 +69,7 @@ export function familyForType(type:string,era:number,climate:Climate,waterSide?:
   case 'potter':return {family:'workshop',trade:'pottery'};
   case 'fibreWorkshop':return {family:'workshop',trade:'loom'};
   case 'tailor':return {family:'workshop',trade:'bench'};
-  case 'tanner':case 'butcher':case 'dryrack':return {family:'workshop',trade:'rack'};
+  case 'tanner':case 'butcher':case 'dryrack':case 'snare':case 'press':return {family:'workshop',trade:'rack'};
   case 'lumber':return {family:'workshop',trade:'saw'};
   case 'smokehouse':return {family:'workshop',trade:'smoke'};
   case 'oven':return {family:'workshop',trade:'oven'};
@@ -79,7 +79,7 @@ export function familyForType(type:string,era:number,climate:Climate,waterSide?:
   case 'temple':return {family:'church'};
   case 'market':return {family:'marketStalls'};
   case 'hearth':return {family:'hearth'};
-  case 'farm':return {family:'fieldPlot'};
+  case 'farm':case 'vineyard':return {family:'fieldPlot'};
   case 'pen':return {family:'pen'};
   case 'dock':return {family:'pier'};
   case 'bridge':return {family:'bridge'};
@@ -103,7 +103,7 @@ export function familyForType(type:string,era:number,climate:Climate,waterSide?:
   default:return null;
  }
 }
-export const CARVED_TYPES=['hut','house','townhall','barracks','warehouse','grindingStone','workshop','forge','kiln','potter','fibreWorkshop','tailor','tanner','butcher','dryrack','lumber','smokehouse','oven','palisade','gate','watchtower','temple','market','hearth','farm','pen','dock','bridge','keep','stables','university','quarry','cairn','grove','cornerstone','threshingFloor','stonewall','trench','moat','well','cistern','greatCistern','watermill','windmill','aqueduct','canal'] as const;
+export const CARVED_TYPES=['hut','house','townhall','barracks','warehouse','grindingStone','workshop','forge','kiln','potter','fibreWorkshop','tailor','tanner','butcher','dryrack','lumber','smokehouse','oven','palisade','gate','watchtower','temple','market','hearth','farm','pen','dock','bridge','keep','stables','university','quarry','cairn','grove','cornerstone','threshingFloor','snare','vineyard','press','stonewall','trench','moat','well','cistern','greatCistern','watermill','windmill','aqueduct','canal'] as const;
 
 export function climateFor(habitat:Habitat='plains'):Climate{
  return habitat==='hills'||habitat==='tundra'?'cold':habitat==='forest'||habitat==='wetland'?'wet':habitat==='desert'?'arid':'temperate';

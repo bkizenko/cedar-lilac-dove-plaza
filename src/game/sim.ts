@@ -53,6 +53,8 @@ import {enableCommanders,tickCommanders} from './commanders';
 import {tickNaval,navalIndependentFood} from './navalFleet';
 import {pauseNavalWork,navalWorkerCommitted} from './navalPorts';
 import {reviewRivalGovernment} from './rivalGovernment';
+import {tickSnares,collectSnare,snareReady,snareMeat} from './snares';
+import {tickVineyards,pickVineyard,vineyardGrapes,vineyardIssue} from './vineyards';
 import {governanceJobMul,governanceDmgMul,advanceGovernance} from './governance';
 import {enableSkillModel,advanceSkillDay,gatherSkillStep,personSkillCard,villageSkillCard} from './skillRuntime';
 import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
@@ -1093,7 +1095,7 @@ export class Game {
   }
 
   solidBuilding(b: Building) {
-    return b.hp > 0 && !pendingSitePreparation(b) && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["threshingFloor", "trench", "moat", "farm", "pen", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone"].includes(b.type);
+    return b.hp > 0 && !pendingSitePreparation(b) && !b.plannedCost && !(b.type === "gate" && b.gateOpen) && !["threshingFloor", "trench", "moat", "farm", "pen", "quarry", "dock", "bridge", "lumber", "grove", "cairn", "cornerstone", "snare", "vineyard"].includes(b.type);
   }
 
   rebuildWalk() {
@@ -1289,7 +1291,7 @@ export class Game {
     if(quarterTurn&&(size||!turnableBuilding(type)))return "That building can't be turned"; // GW-08 (Grok): quarter turn = swapped footprint
     const d = size??(quarterTurn?turnedFootprint(type):BUILDINGS[type]);
     if(this.state.buildings.some(b=>b.id!==ignoreId&&b.hp>0&&b.renovation?.mode==='extend'&&rectanglesOverlap({x,z,w:d.w,d:d.d},reservedBuildingFootprint(b),.5)))return 'A paid building wing reserves that full footprint';
-    const prep=_team===0&&ignoreId===undefined&&!['bridge','quarry','trench','moat'].includes(type)?sitePreparationSurvey(this,{x,z,w:d.w,d:d.d} as Building):undefined;
+    const prep=_team===0&&ignoreId===undefined&&!['bridge','quarry','trench','moat','snare','vineyard'].includes(type)?sitePreparationSurvey(this,{x,z,w:d.w,d:d.d} as Building):undefined;
     if(prep?.issue)return prep.issue;
     if(prep&&plotSurveyPoints({x,z,w:d.w,d:d.d}).some(p=>!this.exploredAt(p.x,p.z)))return 'Explore the whole site first';
     const excavation=type==='trench'?excavationIssue(this,{id:ignoreId??-1,team:_team,x,z,w:d.w,d:d.d}):excavationConstructionIssue(this,type,x,z,d.w,d.d);
@@ -1360,6 +1362,9 @@ export class Game {
         if (t.amount > 0 && Math.hypot(t.x - x, t.z - z) < 14) n++;
       }
       if (n < 4) return "A lumber camp needs a stand of pines";
+    }
+    if (type === "vineyard") {
+      const issue=vineyardIssue(this,_team);if(issue)return issue;
     }
     if (type === "pen") {
       const issue=fieldTopographyIssue(this,{x,z,w:d.w,d:d.d},PLOT_TOPOGRAPHY_RULES.maximumPastureGrade);
@@ -4052,7 +4057,7 @@ export class Game {
     if (!node) return null;
     if ("species" in node) return node.species === "bird" ? null : "food";
     if (node.kind === "building")
-      return node.type==="quarry"?"stone":node.type === "farm" || node.type === "dock" || node.type === "warehouse" ? "food" : null;
+      return node.type==="quarry"?"stone":node.type === "farm" || node.type === "dock" || node.type === "warehouse" || node.type === "snare" || node.type === "vineyard" ? "food" : null;
     if (node.kind === "tree") return "wood";
     if (node.kind === "stone") return "stone";
     if (node.kind === "copper") return "copper";
@@ -4080,6 +4085,8 @@ export class Game {
         if (this.finished(b) && b.team === u.team && b.type === "farm" && farmAvailable(this, b))
           consider(b, b.x, b.z, -40);
         if (this.finished(b) && b.team === u.team && b.type === "dock" && fishingGrounds(this,b).length) consider(b, b.x, b.z, -20);
+        if (b.team === u.team && snareReady(this,b) && snareMeat(this,b)>0) consider(b, b.x, b.z, -60);
+        if (b.team === u.team && vineyardGrapes(this,b)>0) consider(b, b.x, b.z, -50);
       }
       for (const n of this.state.forage) if (n.amount > 0) consider(n, n.x, n.z);
       for (const c of this.state.wildlife) {
@@ -4707,7 +4714,7 @@ export class Game {
         return;
       }
       if((u.itemCargo?.grainSheaves||0)>0&&!("type" in node&&rawCerealField(node as Building))){u.order="return";return;}
-      const foodKind="species" in node?"meat":"type" in node?(node.type==="farm"?node.crop?.kind||node.cropType||"grain":"fish"):node.kind==="fish"?"fish":node.cropCandidate||"berries";
+      const foodKind="species" in node?"meat":"type" in node?(node.type==="farm"?node.crop?.kind||node.cropType||"grain":node.type==="snare"?"meat":node.type==="vineyard"?"berries":"fish"):node.kind==="fish"?"fish":node.cropCandidate||"berries";
       if(u.carry>0&&u.carryType==="food"&&u.carryFood&&foodKind!==u.carryFood){u.order="return";return;}
       if (u.team === 0 && "species" in node && !this.visibleAt(node.x, node.z)) {
         u.order = "idle"; u.node = null; u.workReason = "Lost sight of the herd — explore to find it again"; return;
@@ -4756,6 +4763,8 @@ export class Game {
       if (u.gatherT >= period) {
         u.gatherT -= period;
         if("type" in node&&node.type==="dock"){catchDockFish(this,u,node);return;}
+        if("type" in node&&node.type==="snare"){collectSnare(this,u,node as Building);return;}
+        if("type" in node&&node.type==="vineyard"){pickVineyard(this,u,node as Building);return;}
         if("type" in node&&node.type==="quarry"){digStone(this,u,node);return;}
         if("kind" in node&&node.kind==="tree"&&t==="wood"){
           // a standing tree gives no wood: it must be knocked over first, then cut up and carried back
@@ -6021,6 +6030,8 @@ export class Game {
         tickSocietyMissionNeeds(this,sdt);
         tickCoastalTrade(this,sdt);
         tickRegionalPressing(this);tickTinLodes(this);
+        tickSnares(this);
+        tickVineyards(this);
         reviewCoastalTrade(this);
         tickCampRelocation(this,sdt);
         tickRivalActivity(this);

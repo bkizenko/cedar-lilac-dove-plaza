@@ -19,6 +19,7 @@ import {societyRelation} from './societyRelations';
 import {dominantTraits} from './rulerGenome';
 import {heir,yearlyDeathChance} from './dynasty';
 import {hash32,makeRng} from './rulerCore';
+import {governanceOf,govDef,policyDef} from './governance';
 import {mourningOf} from './societyRuntime';
 import {orphanCare} from './orphans';
 import {pendingRefugees,REFUGEE_RULES} from './refugees';
@@ -32,7 +33,7 @@ export type CouncilModel={
  glory:{stream:string;value:number}[];gloryScore:number;
  expansion?:{mode:string;drive:number;why:string[]};
  parties?:PartyLine[];
- neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;peace?:{canOffer:boolean;sent:boolean;incoming?:{term:string;label:string;expiresIn:number}};conquest?:ReturnType<typeof conquestAssessment>;identity?:import('./societyIdentity').SocietyIdentity;voice?:DiplomaticVoice;court?:RivalCourt;wards?:WardLine[];casus?:CasusLine[];memory?:MemoryLine[];report?:{ageSec:number;via:string;stale:boolean}}[];
+ neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;peace?:{canOffer:boolean;sent:boolean;incoming?:{term:string;label:string;expiresIn:number}};conquest?:ReturnType<typeof conquestAssessment>;identity?:import('./societyIdentity').SocietyIdentity;voice?:DiplomaticVoice;court?:RivalCourt;wards?:WardLine[];casus?:CasusLine[];memory?:MemoryLine[];report?:{ageSec:number;via:string;stale:boolean};government?:{name:string;policies:string[]}}[];
  log:string[];
  /** Agreements the player is party to (marriages, pacts, fosterage), newest first; optional so old callers and empty models stay valid. */
  news?:{time:number;kind:string;with:number;text:string}[];
@@ -103,7 +104,7 @@ export function councilModel(g:Game,team=0):CouncilModel{
  const exp=expansionOf(g,team),ocs=orphanCare(d);
  const neighbours=g.state.tribes.map((t,i)=>i).filter(i=>i!==team&&i!==3&&societyRelation(g,team,i).known).map(i=>{
   const o=r.societies[String(i)],ties=tiesBetween(g,team,i),im=implications(ties),rel=societyRelation(g,team,i),known=knownDiplomaticRelation(g,i);
-  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:known.hostile===true,atPeace:!(known.hostile===true)&&(known.compactUntil||0)>g.state.time,peace:peaceView(g,i,known.hostile===true),conquest:known.hostile===true?conquestAssessment(g,i):undefined,report:(k=>k.report?{ageSec:Math.max(0,Math.round(g.state.time-k.report.observedAt)),via:k.report.via,stale:k.stale}:undefined)(knownDiplomaticRelation(g,i)),identity:societyIdentity(g,i),voice:diplomaticVoice(o?.dynasty.people[o.dynasty.rulerId]?.ruler?.traits??o?.civ.ruler.traits,g.tribe(i).name),court:rivalCourt(r,i),wards:wardLines(r,team,i),casus:casusLines(r,team,i),memory:neighbourMemory(g,team,i),
+  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:known.hostile===true,atPeace:!(known.hostile===true)&&(known.compactUntil||0)>g.state.time,peace:peaceView(g,i,known.hostile===true),conquest:known.hostile===true?conquestAssessment(g,i):undefined,report:(k=>k.report?{ageSec:Math.max(0,Math.round(g.state.time-k.report.observedAt)),via:k.report.via,stale:k.stale}:undefined)(knownDiplomaticRelation(g,i)),identity:societyIdentity(g,i),government:(gv=>({name:govDef(gv.gov)?.label??'Band council',policies:gv.policies.map(p=>policyDef(p)?.label??p)}))(governanceOf(g,i)),voice:diplomaticVoice(o?.dynasty.people[o.dynasty.rulerId]?.ruler?.traits??o?.civ.ruler.traits,g.tribe(i).name),court:rivalCourt(r,i),wards:wardLines(r,team,i),casus:casusLines(r,team,i),memory:neighbourMemory(g,team,i),
    canMarry:!!o&&familyFeatures(o.civ.polity.tier,livingPeople(g,i)).marriageExchange&&f.marriageExchange,
    means:[im.willJoinDefensiveWar&&'would join a defensive war',im.willDemandSeatInSuccession&&'may claim a seat in the line',im.vendettaRisk&&'a vendetta is brewing',im.cbAvailable&&`grounds for a ${im.cbAvailable} claim`].filter(Boolean) as string[]};
  });
