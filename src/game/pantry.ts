@@ -37,7 +37,7 @@ export function storehouses(g: Game, team: number) {
   return g.state.buildings.filter(b => b.team === team && b.type === "warehouse" && g.finished(b));
 }
 /** Game-balance nourishment knob; physical food counts and recorded eaten units remain separate. */
-export const FOOD_NOURISHMENT:Partial<Record<FoodKind,number>>={bread:1.2,freshCurd:CURD_RULES.curdNourishment,whey:CURD_RULES.wheyNourishment,smallBeer:.6,beer:.9};
+export const FOOD_NOURISHMENT:Partial<Record<FoodKind,number>>={bread:1.3,freshCurd:CURD_RULES.curdNourishment,whey:CURD_RULES.wheyNourishment,smallBeer:.6,beer:.9};
 
 export const FOOD_NAMES:Record<FoodKind,string>={provisions:'provisions',berries:'berries',fish:'fresh fish',meat:'cooked meat',grain:'grain',pulses:'pulses',tubers:'tubers',milk:'milk',bread:'bread',driedMeat:'dried meat',driedFish:'dried fish',smokedMeat:'smoked meat',smokedFish:'smoked fish',cookedFish:'cooked fish',porridge:'porridge',fermentedMilk:'fermented milk',freshCurd:'fresh cultured curd',whey:'acid whey',smallBeer:'small beer',beer:'malt beer',driedBerries:'dried berries',jam:'berry jam',tallow:'rendered tallow'};
 /** The existing food total remains the save/trade facade; lots refine its contents. */
