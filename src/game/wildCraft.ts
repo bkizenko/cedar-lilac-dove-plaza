@@ -1,3 +1,4 @@
+import {settleAtWorkface} from './workFace';
 import {bindWildCraftLoad} from './carriedLoad';
 import {hasTaskCommitment} from './workCommitments';
 import {isDependent,reserveSeconds} from './settlement';
@@ -254,7 +255,7 @@ export function wildCraftAI(g:Game,u:Unit,dt:number):boolean{
   p.packet={x:u.x,z:u.z};p.phase='work';return true;
  }
  if(p.phase==='work'){
-  if(b&&!g.buildingWorkReached(u,b)){p.phase='go';return true;}u.stride+=dt*6;p.progress=Math.min(r.workSeconds,p.progress+dt*workRate(u));u.workReason=`${r.icon} ${r.name} · ${Math.min(100,Math.floor(p.progress/Math.max(1,r.workSeconds)*100))}%`;
+  if(b&&!g.buildingWorkReached(u,b)){p.phase='go';return true;}if(b)settleAtWorkface(g,u,b,dt);u.stride+=dt*6;p.progress=Math.min(r.workSeconds,p.progress+dt*workRate(u));u.workReason=`${r.icon} ${r.name} · ${Math.min(100,Math.floor(p.progress/Math.max(1,r.workSeconds)*100))}%`;
   if(p.progress<r.workSeconds)return true;
   if(p.exposure){p.phase='dry';p.actorId=0;delete u.wildWorkId;delete u.wildWorkPaused;claimWild(g,p);u.order='idle';u.workReason=`${r.icon} Loaded the rack`;g.workBoard.invalidateTasks();return false;}
   return finishWork(g,u,p);

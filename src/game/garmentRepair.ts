@@ -1,3 +1,4 @@
+import {settleAtWorkface} from './workFace';
 import type {Game} from './sim';
 import type {GameState,Unit,Building} from './types';
 import {GARMENT_KINDS,type Garment,type GarmentKind} from './textiles';
@@ -73,7 +74,7 @@ export function garmentRepairAI(g:Game,u:Unit,dt:number){const p=u.garmentRepair
  if(!b||!claim(g,u)){pauseGarmentRepair(g,u);u.workReason='Paid repair paused; original garment and patches retained';return true;}
  const spot=g.interactionSpot(u,b);if(!spot){pauseGarmentRepair(g,u);u.workReason='Repair route blocked; original garment retained';return true;}u.tx=spot.x;u.tz=spot.z;u.order='hold';
  if(!g.buildingWorkReached(u,b)){u.workReason='Carrying the original garment to the sewing shelter';g.steer(u,dt);return true;}
- p.phase='working';u.workReason=`Repairing ${p.garment.item} · ${Math.floor(p.progress/GARMENT_REPAIR_RULES.workSeconds*100)}%`;const before=p.progress;p.progress=Math.min(GARMENT_REPAIR_RULES.workSeconds,p.progress+craftingEffort(u,dt,b));stock(g).metrics.workSeconds+=p.progress-before;
+ p.phase='working';settleAtWorkface(g,u,b,dt);u.workReason=`Repairing ${p.garment.item} · ${Math.floor(p.progress/GARMENT_REPAIR_RULES.workSeconds*100)}%`;const before=p.progress;p.progress=Math.min(GARMENT_REPAIR_RULES.workSeconds,p.progress+craftingEffort(u,dt,b));stock(g).metrics.workSeconds+=p.progress-before;
  if(p.progress>=GARMENT_REPAIR_RULES.workSeconds){const restored=GARMENT_REPAIR_RULES.targetCondition-p.initialCondition;p.garment.condition=GARMENT_REPAIR_RULES.targetCondition;if(restore(g,u,true)){stock(g).metrics.completed++;stock(g).metrics.conditionRestored+=restored;}}
  return true;
 }

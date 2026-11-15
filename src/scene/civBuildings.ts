@@ -3,6 +3,7 @@
  * shared form with a tint. Each instance is individually imperfect (seeded size, lean, uneven heights, off-centre doors,
  * add-ons, rubble and patching with wear). Era 0-1 builds the poorest local dwelling; later eras add the signature wall,
  * a civic hall, plinths, storeys and trim. Materials are named `${civ}.${slot}` and resolved through `materials`. */
+import {doorHeight} from './personScale';
 import type {Heraldry} from './villageIdentity';
 import {beam,capMidTier,chance,fitToFootprint,partBounds,part,pick,range,seededRandom,specBounds,type BuildingSpec,type Part,type Rng,type LodTier} from './buildingParts';
 import {ensureCore,ensureNearSupport,ensureTiers} from './buildingFamiliesCivic';
@@ -53,7 +54,7 @@ const mk=(civ:CivId,ctx:CivContext,r:Rng):G=>{const parts:Part[]=[],m=(s:Slot)=>
   Pr:(shape,s,size,pos,lod=1,rot,sides)=>void parts.push(part(shape,m(s),size,pos,lod,rot,sides)),
   post:(s,x,z,h,t=.16,lod=2)=>void parts.push(beam(m(s),[x,0,z],[x,h,z],t,lod)),
   banner:(x,z,h)=>{if(grammarSet==='original')return void bannerFor(parts,civ,m,x,z,h,ctx.mourning,ctx.look?.banner,ctx.wear);parts.push(beam(m('trim'),[x,0,z],[x,h,z],.08,1),part('box',m('cloth'),[.7,.95,.03],[x+.38,h-1.05,z],1));},
-  door:(x,z,wd=.9,h=1.8)=>void parts.push(part('box',m('accent'),[wd,h,.08],[x,0,z],0))};return g;};
+  door:(x,z,wd=.9,h=1.8)=>void parts.push(part('box',m('accent'),[wd,doorHeight(h),.08],[x,0,z],0))};return g;};
 const jit=(r:Rng,a:number)=>1+(r()-.5)*2*a;
 /** Poorest local dwelling per civ (era 0-1). Every one must read as a HUT at a glance: a wall, a clearly separate roof mass that overhangs it,
  * and a dark framed doorway 0.95 m wide x 1.65 m tall (a person is ~1.7 m) on the +Z (entry) face. */

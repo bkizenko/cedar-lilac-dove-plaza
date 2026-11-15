@@ -1,3 +1,4 @@
+import {settleAtWorkface} from './workFace';
 import {herdRules,isDraftSpecies} from './animalSpecies';
 import {packCapacityMultiplier} from './packAnimalState';
 import{claimFarmToolOwnership,releaseFarmToolOwnership}from'./farmToolOwnership';
@@ -148,6 +149,7 @@ export function farmToolWorkAI(g: Game, u: FarmToolUnit, dt: number) {
     u.workReason = `Walking to ${job.mode==='repair'?'repair':'make'} ${FARM_TOOLS[job.kind].name.toLowerCase()}`;
     return true;
   }
+  settleAtWorkface(g,u,b,dt);
   job.progress = Math.min(job.duration, job.progress + toolmakingEffort(u,dt,b,job.duration-job.progress,predisposition(u).strength));
   u.stride += Math.max(0, dt) * 5; u.facing = Math.atan2(b.x - u.x, b.z - u.z);
   u.workReason = `${job.mode==='repair'?'Repairing':'Making'} ${FARM_TOOLS[job.kind].name.toLowerCase()} · ${Math.floor(100 * job.progress / job.duration)}%`;

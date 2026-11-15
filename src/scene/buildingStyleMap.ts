@@ -6,6 +6,7 @@
  * Geometry is shared per variant (family x era bucket x material x climate x
  * variant index) so instancing stays possible: a village of 60 houses draws a
  * handful of distinct cottages, not 60 unique meshes. */
+import {withWealthTiers} from './wealthTiers';
 import {withNearDetail} from './nearDetail';
 import {dressWorks} from './worksDetail';
 import {capMidTier,hashSeed,type BuildingSpec} from './buildingParts';
@@ -164,7 +165,7 @@ export function carvedVariantFor(input:CarvedBuildingInput):CarvedVariantKey|nul
 /** The spec for a resolved variant: the skin's civ grammar, or the Village family (repainted from the skin when one is worn). */
 export function variantSpec(v:CarvedVariantKey):BuildingSpec{
  if(v.civ){const c=v.civ.ctx;const sp=withNearDetail(generateCivBuilding(v.civ.grammar,v.civ.role,c,v.key) as BuildingSpec);return {...sp,parts:capMidTier(sp.parts),tex:{era:c.built?.era??c.era,wear:c.wear}};}
- const spec=generateFamily(v.family,v.ctx,v.key);const sp=withNearDetail(dressWorks(v.tint?{...spec,materials:v.tint}:spec,v.ctx.trade,.75-v.ctx.wealth*.6,v.ctx.wealth));return {...sp,parts:capMidTier(sp.parts),tex:{era:v.ctx.era,wear:Math.max(0,Math.min(1,.75-v.ctx.wealth*.6))}};
+ const spec=generateFamily(v.family,v.ctx,v.key);const sp=withNearDetail(withWealthTiers(dressWorks(v.tint?{...spec,materials:v.tint}:spec,v.ctx.trade,.75-v.ctx.wealth*.6,v.ctx.wealth),v.ctx.wealth));return {...sp,parts:capMidTier(sp.parts),tex:{era:v.ctx.era,wear:Math.max(0,Math.min(1,.75-v.ctx.wealth*.6))}};
 }
 export function carvedBuildingSpec(input:CarvedBuildingInput):BuildingSpec|null{
  const v=carvedVariantFor(input);return v?variantSpec(v):null;

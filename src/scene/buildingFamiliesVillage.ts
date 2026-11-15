@@ -2,6 +2,7 @@
  * generator (buildingFamilies.ts LEGACY_FAMILIES); `setBuildingGrammar('legacy')` selects the originals everywhere.
  * Every generator aims inside its footprint (fitToFootprint is the last guarantee), keeps near/mid/far triangle caps and keeps
  * moving parts (water wheel, sails) as rotor-tagged parts that the layer turns from the live simulation. */
+import {eaveHeight} from './personScale';
 import {beam,far,part,rotor,type Part} from './buildingParts';
 import {roofMaterial,roofPitch,type FamilyContext,type FamilyId,type Generator} from './buildingHelpers';
 import {barrel,box,bucket,chimney,crate,cyl,doorway,millstoneUpright,post,radialBox,radialBoxZ,roofGable,sack,stoneWall,timberFrame,window2,woodpile,type V3} from './buildingKit';
@@ -22,11 +23,11 @@ const TAU=Math.PI*2;
  * millrace over the top of the wheel. Wheel side is +X; the caller turns the whole building so +X faces the river. */
 const millHouse:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,k=Math.min(w/6.2,d/5.8);
-  const L=3.55*k,D=3.45*k,cx=-w/2+.12*k+L/2,cz=.2*k,h1=1.5*k,h2=1.3*k,eave=h1+h2;
+  const L=3.55*k,D=3.45*k,cx=-w/2+.12*k+L/2,cz=.2*k,h1=eaveHeight(1.5*k),h2=1.3*k,eave=h1+h2;
   const R=1.55*k,cy=R-.3*k,ww=.8*k,wx=cx+L/2+.45*k+ww/2,east=cx+L/2;
   const rm=roofFor(ctx),pitch=Math.max(.5,roofPitch(ctx,r)),upper=ctx.material==='stone'&&ctx.era>=3?'stone':'plaster';
   // --- house: stone mill floor (millstones live here), timber-framed grain loft with a slight jetty
-  stoneWall(parts,{x:cx,z:cz,w:L,d:D,h:h1,mat:'stone',faces:['+z','-z','-x'],course:.42});
+  stoneWall(parts,{x:cx,z:cz,w:L,d:D,h:h1,mat:'stone',faces:['+z','-z','-x'],course:.56});
   box(parts,'stoneDark',[L+.05,.17,D+.05],[cx,0,cz],1);
   box(parts,'woodDark',[L+.2,.14,D+.2],[cx,h1,cz],1); // jetty plate
   box(parts,upper,[L+.1,h2,D+.1],[cx,h1+.14,cz],2);

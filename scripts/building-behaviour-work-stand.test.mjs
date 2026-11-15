@@ -41,3 +41,19 @@ test('a person who really walks still plays the walk clip',()=>{
  const u={id:8,type:'worker',team:0,x:0,y:0,z:0,vx:1.4,vz:0,facing:0,hp:10,order:'move',carry:0};const st=newAnimState(u,0);let clip='';
  for(let i=1;i<=30;i++){u.x+=.14;clip=stepAnimator(st,u,{time:i*.1,load:0}).clip;}assert.ok(['walk','run'].includes(clip),clip);
 });
+test('inside while working: a finished workshop takes the worker to a station within its footprint; a site or open hearth does not',()=>{
+ const {g,shop}=setup();assert.ok(g.finished(shop));assert.ok(Math.min(shop.w,shop.d)>=3.6,'workshop has a room');
+ const u=g.spawnUnit('worker',shop.x+shop.w*.4+2.0,shop.z,0);u.y=g.travelHeight(u.x,u.z);
+ let done=false;for(let i=0;i<400&&!done;i++)done=settleAtWorkface(g,u,shop,.05);
+ assert.equal(done,true);assert.ok(Math.abs(u.x-shop.x)<shop.w*.4&&Math.abs(u.z-shop.z)<shop.d*.4,'inside the footprint at '+(u.x-shop.x).toFixed(2));
+ // and can leave again
+ u.order='move';u.tx=shop.x+shop.w*.4+8;u.tz=shop.z;u.carry=0;
+ for(let i=0;i<600&&Math.hypot(u.x-u.tx,u.z-u.tz)>1.5;i++){g.state.time+=.1;g.navBudget=6;g.steer(u,.1);}
+ assert.ok(Math.hypot(u.x-u.tx,u.z-u.tz)<=1.5,'walked out to '+u.x.toFixed(1)+','+u.z.toFixed(1));
+});
+test('an unfinished site is worked from outside',()=>{
+ const {g,shop}=setup();shop.build=.3;shop.hp=Math.floor(shop.maxHp*.3);
+ const u=g.spawnUnit('worker',shop.x+shop.w*.4+2.0,shop.z,0);u.y=g.travelHeight(u.x,u.z);
+ for(let i=0;i<400;i++)settleAtWorkface(g,u,shop,.05);
+ assert.ok(Math.abs(u.x-shop.x)>=shop.w*.4,'stayed outside the walls');
+});

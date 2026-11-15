@@ -1,4 +1,5 @@
 /** Village grammar: workplaces and utilities (craft sheds by trade, hearth, threshing floor, well, cistern). See buildingFamiliesVillage.ts. */
+import {eaveHeight} from './personScale';
 import {beam,chance,part,range,type Part} from './buildingParts';
 import {roofPitch,type Generator} from './buildingHelpers';
 import {barrel,box,bucket,chimney,crate,cyl,doorway,ladder,post,roofGable,sack,stoneWall,woodpile} from './buildingKit';
@@ -15,7 +16,7 @@ const TAU=Math.PI*2;
 export const workshop:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,trade=ctx.trade??'bench',k=Math.min(w,d)/4.8;
   const closed=trade==='smoke',stoneShed=trade==='forge'||trade==='oven'||trade==='kiln'||ctx.material==='stone';
-  const W=w*range(r,.8,.9),D=d*range(r,.56,.66),h=range(r,2.05,2.4)*Math.min(1.2,k+.15),z0=-d/2+.18+D/2;
+  const W=w*range(r,.8,.9),D=d*range(r,.56,.66),h=eaveHeight(range(r,2.05,2.4)*Math.min(1.2,k+.15)),z0=-d/2+.18+D/2;
   const wall:M=stoneShed?'stone':'woodMid',rm=trade==='forge'||trade==='oven'?(ctx.era>=2?'shingle':'thatch'):roofFor(ctx),zb=z0-D/2,zf=z0+D/2;
   // footing, back wall, side walls (full for smokehouse, half-open elsewhere)
   box(parts,'stone',[W+.14,.22,D+.14],[0,0,z0],1);box(parts,'woodLight',[W-.1,.04,D-.1],[0,.22,z0],0);

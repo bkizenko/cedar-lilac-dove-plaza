@@ -2,6 +2,7 @@
  * Same rules as villageDefence.ts: pure parts, metres, entrance +Z, nothing outside the footprint (the field, pen and quarry ARE their footprint, so they
  * are built of many thin functional pieces, never one slab). The society's skin chooses the boundary construction (SkinForms.wall) for fields and pens
  * and the stone/timber character of the bridge and dock; everything else follows era, climate, wealth and the settlement's tradition. */
+import {eaveHeight} from './personScale';
 import {beam,chance,far,part,pick,range,type Part,type Rng} from './buildingParts';
 import {roofMaterial,wallMaterial,type FamilyContext,type Generator,type WallStyle} from './buildingHelpers';
 import {barrel,box,bucket,crate,cyl,doorway,roofGable,sack,woodpile,type V3} from './buildingKit';
@@ -105,7 +106,7 @@ export const pier:Generator=(ctx,r)=>{
    parts.push(beam('woodLight',[bx-.2,.45,bz+.1],[bx-.8,.35,bz+.5],.04,0),beam('iron',[xo-dw/2+.1,deckY+.1,bz+.35],[bx+.4,.35,bz+.5],.015,0));}
   // shore: net hut, drying rack, steps
   parts.push(part('box','stoneDark',[dw*.9,.28,.45],[xo,0,z0-.7],1),part('box','stone',[dw*.9,.5,.45],[xo,0,z0-.25],1));
-  if(ctx.era>=1){const hx=-w/2+1.35,hz=-d/2+1.15,hw=1.9,hd=1.5,h=1.55;
+  if(ctx.era>=1){const hx=-w/2+1.35,hz=-d/2+1.15,hw=1.9,hd=1.5,h=eaveHeight(1.55);
     parts.push(part('box',wallMaterial(ctx),[hw,h,hd],[hx,0,hz],2));roofGable(parts,ctx,{span:hd,len:hw,eave:h,pitch:.75,cx:hx,cz:hz,axis:'x',over:.16,mat:roofMaterial(ctx)});
     doorway(parts,{x:hx,z:hz+hd/2,wall:0,w:.75,h:1.3,double:false});
     for(let i=0;i<3;i++)parts.push(part('box','woodMid',[.14,.14,.22],[hx-hw/2+.35+i*.6,h*.6,hz-hd/2-.1],0));

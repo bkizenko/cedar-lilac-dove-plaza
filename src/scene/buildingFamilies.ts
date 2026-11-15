@@ -102,7 +102,7 @@ const granary:Generator=(ctx,r)=>{
 /** Later storehouse (medieval tithe barn/warehouse): masonry ground floor,
  * timber upper, wide cart door and hoist beam. */
 const storehouse:Generator=(ctx,r)=>{
- const parts:Part[]=[],{w,d}=ctx.footprint,L=w*range(r,.7,.84),D=d*range(r,.55,.7),h1=range(r,2,2.6),h2=chance(r,.5+ctx.wealth*.3)?range(r,1.4,1.9):0;
+ const parts:Part[]=[],{w,d}=ctx.footprint,L=w*range(r,.7,.84),D=d*range(r,.55,.7),h1=eaveHeight(range(r,2,2.6)),h2=chance(r,.5+ctx.wealth*.3)?range(r,1.4,1.9):0;
  parts.push(part('box','stone',[L,h1,D],[0,0,0],2));if(h2)parts.push(part('box','woodMid',[L,h2,D],[0,h1,0],2),part('box','woodDark',[L+.1,.14,D+.1],[0,h1,0],1));
  const eave=h1+h2;gableRoof(parts,ctx,L,D,eave,roofPitch(ctx,r),0,0,'z',.22);
  const dw=range(r,1.6,2.2);door(parts,0,D/2+.03,dw,Math.min(2.1,h1-.15));
