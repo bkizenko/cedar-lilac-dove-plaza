@@ -107,8 +107,8 @@ export const PRODUCTION_RECIPES={
  grindGrainDouble:recipe({name:'Grind a double batch',workplace:'grindingStone',inputs:{},grain:8,wood:0,water:0,workSeconds:36,outputs:{flour:8},food:0}),
  grindGrainBulk:recipe({name:'Grind a four-load batch',workplace:'grindingStone',inputs:{},grain:16,wood:0,water:0,workSeconds:48,outputs:{flour:16},food:0}),
  // Grok T4: powered mills; the miller's work runs at millWorkRate (real kW / reference), see millPower.ts
- grindGrainWatermill:recipe({name:'Mill grain at the watermill',workplace:'watermill',inputs:{},grain:16,wood:0,water:0,workSeconds:96,outputs:{flour:16},food:0}),
- grindGrainWindmill:recipe({name:'Mill grain at the windmill',workplace:'windmill',inputs:{},grain:16,wood:0,water:0,workSeconds:96,outputs:{flour:16},food:0}),
+ grindGrainWatermill:recipe({name:'Mill grain at the watermill',workplace:'watermill',inputs:{},grain:16,wood:0,water:0,workSeconds:24,outputs:{flour:16},food:0}),
+ grindGrainWindmill:recipe({name:'Mill grain at the windmill',workplace:'windmill',inputs:{},grain:16,wood:0,water:0,workSeconds:16,outputs:{flour:16},food:0}),
  cookPorridge:recipe({name:'Cook grain porridge',workplace:'hearth',inputs:{},grain:4,wood:1,water:2,workSeconds:18,outputs:{},food:4,foodKind:'porridge'}),
  bakeBread:recipe({name:'Bake hearth bread',workplace:'hearth',inputs:{flour:4},wood:1,water:0.5,workSeconds:45,outputs:{},food:4,foodKind:'bread'}),
  bakeBreadOven:recipe({name:'Bake oven bread',workplace:'oven',inputs:{flour:4},wood:1,water:0.5,workSeconds:24,outputs:{},food:4,foodKind:'bread'}),
