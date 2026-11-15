@@ -53,6 +53,7 @@ import{validFibreState}from'./fibre';
 import {validScoutProvisions} from './scoutProvisions';
 import {validProductionPractice} from './productionPractice';
 import {validSkillModel} from './skillRuntime';
+import {sanitizeGovernance} from './governance';
 import {validObservedMethods} from './observedKnowledge';
 import {validCapturedKnowledgeState} from './capturedKnowledge';
 import {penHousingCapacity,penFeedCapacity} from './penGeometry';
@@ -803,6 +804,7 @@ export function decodeGame(raw:unknown):Game {
   g.state = {
     ...s,
     growthPolicy: s.growthPolicy ?? "welcome",
+    governance: sanitizeGovernance(s.governance),
     selBld: null,
     placing: null,
     pendingAge: false,

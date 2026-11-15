@@ -643,6 +643,8 @@ export type GameState = {
   traditions?: {age: number; kind: "pathfinders" | "winter-stores" | "woodcraft"}[];
   discoveries?: { id: string; age: number; time: number }[];
   growthPolicy?: "stable" | "welcome" | "eager";
+  /** Governments, policies and governors per society (governance.ts). Absent = band council with no effects. */
+  governance?: import("./governance").GovernanceState;
   /** 'graded' = tiered slope model (slopeTiers.ts); absent = the earlier single linear tolerance, so old saves behave as before. */
   slopeModel?: "graded";
   /** 'v2' = terrain nuance + terraces assigned automatically by slope (slopeNuance.ts, terraceFarming.ts); 'v3' = the same nuance, but hillside farming is ordinary (contour furrows, lower-edge bank) and terraces are an optional upgrade (hillFarming.ts).

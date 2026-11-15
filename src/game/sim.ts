@@ -50,6 +50,7 @@ import {enableTerrainInfluence} from './terrainInfluenceRuntime';
 import {enableCommanders,tickCommanders} from './commanders';
 import {tickNaval,navalIndependentFood} from './navalFleet';
 import {pauseNavalWork,navalWorkerCommitted} from './navalPorts';
+import {governanceJobMul,governanceDmgMul,advanceGovernance} from './governance';
 import {enableSkillModel,advanceSkillDay,gatherSkillStep,personSkillCard,villageSkillCard} from './skillRuntime';
 import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
 import {gamePrestigeView,gamePrestigeRivals,tickPrestigeEvidence} from './prestigeGame';
@@ -1033,7 +1034,7 @@ export class Game {
   }
 
   dmgMul(team: number, x?: number, z?: number) {
-    let m = this.hasBld(team, "forge") ? 1.12 : 1;
+    let m = (this.hasBld(team, "forge") ? 1.12 : 1) * governanceDmgMul(this, team);
     if (team === 0) {
       for (const p of this.state.agePicks) if (p === "army") m *= 1.08;
     }
@@ -4163,7 +4164,7 @@ export class Game {
   }
 
   campBonus(u: Unit, job: ResKind) {
-    let m = this.gatherMul(u.team);
+    let m = this.gatherMul(u.team) * governanceJobMul(this, u, job);
     const habitat = habitatAt(this, u.x, u.z);
     if (job === "wood") {
       m /= habitat.timber;
@@ -5979,6 +5980,7 @@ export class Game {
       try {
         this.state.time += sdt;
         advanceRulers(this); // Claude rulers lane: no-op unless worldOptions.rulersVersion===1
+        advanceGovernance(this, sdt);
         advanceSkillDay(this); // per-person skills: one batch per sim day, no-op without state.skillModel
         reconcileSiegeRams(this);
         updateSeasonReports(this);

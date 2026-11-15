@@ -20,6 +20,7 @@ import {sendRefugees} from './refugees';
 import {rivalBloodPrice} from './bloodPrice';
 import {tributeLapse} from './tributeLapse';
 import {orphanCare,orphanLine} from './orphans';
+import {governanceUnrest} from './governance';
 
 /** Compressed clock: one dynastic year per this many sim seconds (an 80-year life is about two hours of play). */
 export const RULERS_YEAR_SECONDS=90;
@@ -458,8 +459,8 @@ export function unrestOf(g:Game,team:number):{value:number;stage:UnrestStage;why
  const others=g.state.tribes.map((_,i)=>i).filter(i=>i!==team&&i!==3&&!!g.tribe(i));
  const wars=others.filter(i=>societyRelation(g,team,i).hostile).length;
  const against=claimsOf(g,team).filter(c=>Number(c.target)===team).reduce((t,c)=>t+c.strength,0);
- const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.max(0,Math.min(100,30+100*Math.max(0,...lg)+wonderEffect(g.state,team,'concord')-cbDebtOf(g,team)-(regencyOf(me.dynasty)?REGENCY_LEGIT_PENALTY:0))); // source weights sum to ~1; the strongest pillar carries the house
- const v=unrest({legitimacy:legit,warWeariness:Math.min(100,Math.max(wars*35,wearinessOf(g,team))+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:20,faithDivergence:0,coalitionLoss:breakawayLoss(g,team),rulerPopularity:60},me.civ.polity);
+ const hunger=c01(1-reserveSeconds(g,team)/600),lg=Object.values(me.civ.polity.legitimacy),legit=Math.max(0,Math.min(100,30+100*Math.max(0,...lg)+wonderEffect(g.state,team,'concord')+governanceUnrest(g,team).legitimacy-cbDebtOf(g,team)-(regencyOf(me.dynasty)?REGENCY_LEGIT_PENALTY:0))); // source weights sum to ~1; the strongest pillar carries the house
+ const v=unrest({legitimacy:legit,warWeariness:Math.min(100,Math.max(wars*35,wearinessOf(g,team))+Math.min(30,against/3)),foodShortage:hunger*100,taxBurden:Math.max(0,Math.min(100,20+governanceUnrest(g,team).tax)),faithDivergence:0,coalitionLoss:breakawayLoss(g,team),rulerPopularity:60},me.civ.polity);
  const why:string[]=[];if(wars)why.push('at war');if(wearinessOf(g,team)>=50)why.push('the war has worn the people down');if(against>0)why.push('claims press on the house');if(cbDebtOf(g,team)>0)why.push('the house spent its standing on a cause');if(hunger>.5)why.push('food is short');
  return {value:v,stage:stageOf(v),why};
 }
