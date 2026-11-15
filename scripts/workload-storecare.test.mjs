@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {measureVillageWorkload} from '../src/game/villageWorkload.ts';import {preservationAvailable,preserveFood} from '../src/game/pantry.ts';
 const g=new Game();g.reset(345,2);g.enterIsland();g.world.heights.fill(4);g.vision.fill(2);g.state.weather='clear';g.state.units=[];g.state.buildings=[];const store=g.makeBld('warehouse',0,0,0);g.state.buildings=[store];for(let i=0;i<5;i++)g.spawnUnit('worker',2,0,0);g.rebuildWalk();

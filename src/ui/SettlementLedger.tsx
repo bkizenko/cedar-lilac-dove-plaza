@@ -1,3 +1,4 @@
+import {foodGuardLabel} from '@/game/foodGuard';
 import {SocietyIdentityEditor} from './SocietyIdentityEditor';
 import {SocietyFlag} from './SocietyFlag';
 import {communityResidency} from '@/game/communities';
@@ -193,6 +194,7 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
               <option value="trade">Develop trade connections</option>
             </select>
           </label>
+          {foodGuardLabel(g)&&<p role="status"><strong>Food guard active</strong>{foodGuardLabel(g)!.slice('Food guard active'.length)}</p>}
           <p>
             Changing priority reassigns village workers, including paused crafters and recalled residents.
             Carriers deliver first; returning explorers join on arrival. Active crafting, study, delegations,

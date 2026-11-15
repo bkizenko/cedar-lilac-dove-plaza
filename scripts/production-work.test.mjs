@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import {CEREAL_RULES} from '../src/game/cerealRules.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';

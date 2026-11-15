@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
 import {decodeGame} from '../src/game/persistence.ts';import {measureVillageWorkload,WORKLOAD_RULES} from '../src/game/villageWorkload.ts';import {foodDemand} from '../src/game/settlement.ts';import {readyFoodStock} from '../src/game/pantry.ts';
 function fixture(){const g=decodeGame(JSON.parse(readFileSync(new URL('fixtures/housing-unreachable-initial-v2.json',import.meta.url),'utf8')));g.state.buildings=g.state.buildings.filter(b=>b.team!==0||!['farm','hearth','threshingFloor'].includes(b.type));g.state.time=900;const t=g.tribe(0);t.food=0;t.foodLots={};t.items={};for(const u of g.state.units.filter(u=>u.team===0)){u.order='hold';u.jobLock=false;u.job=null;u.node=null;u.carry=0;u.carryType=null;u.itemCargo=undefined;}return {g,t,u:g.state.units.find(u=>u.team===0)};}

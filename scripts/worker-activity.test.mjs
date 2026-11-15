@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import test,{after} from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';

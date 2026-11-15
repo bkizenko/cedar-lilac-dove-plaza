@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import {consumeAndSpoilFood} from '../src/game/pantry.ts';
 import{measureVillageWorkload}from'../src/game/villageWorkload.ts';
 import{equipBasket}from'../src/game/fibre.ts';import{cachedProductionUnits}from'../src/game/productionOwnership.ts';

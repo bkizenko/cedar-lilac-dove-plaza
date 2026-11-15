@@ -2,8 +2,8 @@ import {productionFuelAvailable} from './mealFuel';
 import {millIssue} from './millPower';
 import type{Game}from'./sim';import type{Unit,Building}from'./types';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,cerealWeatherIssue,isCerealRecipe,rawCerealField,storedCerealKinds}from'./cerealRules';
-import{beginProduction,resumeProduction,startFloorCereal,productionIssue,grainBatchIssue,productionSlots,occupiedProductionSlots,productionFoodOutput,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
-import{foodInventory,FOOD_NOURISHMENT}from'./pantry';
+import{beginProduction,unloadProductionProject,resumeProduction,startFloorCereal,productionIssue,grainBatchIssue,productionSlots,occupiedProductionSlots,productionFoodOutput,exposedHarvestUnits,PRODUCTION_RECIPES,type ProductionRecipe}from'./production';
+import{foodInventory,FOOD_NOURISHMENT,receiveFood}from'./pantry';
 import{calendar,farmAvailable,isDependent,reserveSeconds,foodDemand}from'./settlement';import{hasTaskCommitment}from'./workCommitments';
 import{isRivalTeam}from'./factions';import{rivalKnows}from'./rivalDevelopment';
 import{supplyDrops,supplyApproach,supplyReached}from'./campAnchor';import{buildingCost}from'./construction';
@@ -137,6 +137,7 @@ export const grindingRecipes: ProductionRecipe[] = ['grindGrainWatermill','grind
 
 /** Dispatch one existing paid recipe after a delivery or during the normal review. */
 export function reviewAutomaticFoodProcessing(g: Game, team: number, eventActorId?: number) {
+ if(team===0){simplifyCerealStock(g,0);autoUnloadCarriers(g,0);servePendingGrainRequests(g);}
  // Ready meals take the next free hands and kitchen slots before restoring
  // slower upstream work. Existing paid batches retain every input and actor.
  if(team===0&&urgentReadyMealInputs(g)){
@@ -289,6 +290,7 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
   if(x.workplace===y.workplace&&['grindingStone','oven'].includes(x.workplace))return (x.workSeconds+x.exposureSeconds)/(x.food||x.outputs.flour||1)-(y.workSeconds+y.exposureSeconds)/(y.food||y.outputs.flour||1);
   return x.workSeconds+x.exposureSeconds-y.workSeconds-y.exposureSeconds;
  });
+ {const slots=recipes.map((r,i)=>stationRank(r)<10?i:-1).filter(i=>i>=0),ordered=slots.map(i=>recipes[i]).sort((a,b)=>stationRank(a)-stationRank(b));slots.forEach((i,k)=>{recipes[i]=ordered[k];});}
  const options = recipes.filter(canPay).flatMap(recipe => sites
   .filter(site => site.type === PRODUCTION_RECIPES[recipe].workplace&&!grainBatchIssue(g,0,recipe,site)&&!millIssue(g,site)&&occupiedProductionSlots(g,site)<productionSlots(site))
   .map(site => ({recipe, site})));
@@ -309,4 +311,90 @@ function reviewPlayerMeals(g: Game, eventActorId?: number, urgentFollowup=false)
   drops.some(drop => !!supplyApproach(g, u, drop)) &&
   options.some(({site}) => !!g.interactionSpot(u, site)));
  return !!carrier && sendForInputs(g,carrier,mealPickupReason);
+}
+
+
+/** Lower is better: windmill > watermill > grinding stone > hand grind; oven > hearth.
+ * Larger batches at the same station keep their existing order (stable sort). */
+const STATION_RANK:Partial<Record<string,number>>={windmill:0,watermill:1,grindingStone:2,oven:2,hearth:5};
+export function stationRank(recipe:ProductionRecipe){
+ const w=PRODUCTION_RECIPES[recipe]?.workplace;
+ if(!breadRecipes.includes(recipe)&&!grindingRecipes.includes(recipe))return 10;
+ return STATION_RANK[w]??8;
+}
+
+/** Threshing and winnowing are part of the grain chain, not separate stocks.
+ * Sheaves and rough grain (including those in old saves) convert to clean grain,
+ * straw, chaff and seed grain using the recipe ratios. The legacy item fields
+ * stay valid but drain to zero, so old saves keep loading. */
+export function simplifyCerealStock(g:Game,team:number){
+ // Tests of the retired separate threshing chain set this flag.
+ if((globalThis as any).__legacyCereal)return false;
+ const t=g.tribe(team);if(!t?.items)return false;
+ const sheaves=t.items.grainSheaves||0,rough=t.items.roughGrain||0;
+ if(sheaves<=1e-9&&rough<=1e-9)return false;
+ const R=CEREAL_RULES;
+ const roughFromSheaves=sheaves*R.roughBatch/R.rawBatch,totalRough=rough+roughFromSheaves;
+ const clean=totalRough*R.cleanGrainPerBatch/R.roughBatch,seed=clean*R.seedFraction;
+ t.items.grainSheaves=0;t.items.roughGrain=0;
+ t.items.straw=(t.items.straw||0)+sheaves*R.strawPerBatch/R.rawBatch;
+ t.items.chaff=(t.items.chaff||0)+totalRough*R.chaffPerBatch/R.roughBatch;
+ t.seeds=(t.seeds||0)+seed;
+ const m=g.state.cerealProcessing;if(m)m.cleanedGrain+=clean;
+ receiveFood(g,team,clean-seed,'grain','production');
+ return true;
+}
+
+/** Carriers holding paid inputs or finished goods unload at the cache on their
+ * own; the player never has to press "Unload batch at cache". */
+export function autoUnloadCarriers(g:Game,team:number){
+ let any=false;
+ for(const p of g.state.production?.projects||[]){
+  if(p.team!==team||p.actorId===null||p.pauseCause==='manual')continue;
+  const paused=p.phase==='paused';
+  const phase=paused?p.resumePhase:p.phase;
+  if(!paused||!['carrying','unloading','returning'].includes(phase))continue;
+  const ok=unloadProductionProject(g,p.id);
+  // Keep the batch eligible for automatic resumption after it is parked.
+  p.pauseCause='interrupted';
+  any=any||ok;
+ }
+ return any;
+}
+
+/** Non-persisted queue of clicked recipes waiting on earlier chain steps. */
+const pending=new WeakMap<Game,{state:Game['state'];list:{recipe:ProductionRecipe;site:number}[]}>();
+export const isGrainChainRecipe=(r:string)=>breadRecipes.includes(r as ProductionRecipe)||grindingRecipes.includes(r as ProductionRecipe);
+export function pendingGrainRequests(g:Game){const c=pending.get(g);return c&&c.state===g.state?c.list:[];}
+function bestGrind(g:Game,grain:number){
+ const sites=g.state.buildings.filter(b=>b.team===0&&b.hp>0&&g.finished(b)&&!b.plannedCost);
+ return grindingRecipes.slice().sort((a,b)=>stationRank(a)-stationRank(b)).flatMap(recipe=>sites.filter(b=>b.type===PRODUCTION_RECIPES[recipe].workplace&&!millIssue(g,b)&&occupiedProductionSlots(g,b)<productionSlots(b)).map(site=>({recipe,site})))
+  .find(o=>grain+1e-9>=PRODUCTION_RECIPES[o.recipe].grain);
+}
+/** Always-clickable recipe request: start it if it can run, otherwise run the
+ * earlier step that is possible now and keep the request queued for the rest. */
+export function requestGrainRecipe(g:Game,recipe:ProductionRecipe,siteId:number){
+ simplifyCerealStock(g,0);
+ if(!productionIssue(g,recipe,siteId))return beginProduction(g,recipe,siteId)?'started':'blocked';
+ let c=pending.get(g);if(!c||c.state!==g.state){c={state:g.state,list:[]};pending.set(g,c);}
+ if(!c.list.some(r=>r.recipe===recipe&&r.site===siteId))c.list.push({recipe,site:siteId});
+ const spec=PRODUCTION_RECIPES[recipe];
+ if(breadRecipes.includes(recipe)&&(g.tribe(0).items?.flour||0)<(spec.inputs.flour||0)){
+  const o=bestGrind(g,foodInventory(g.tribe(0)).grain);
+  if(o&&!productionIssue(g,o.recipe,o.site.id)&&beginProduction(g,o.recipe,o.site.id)){g.banner('Queued: grinding first, then baking',4);return 'queued';}
+ }
+ g.banner('Queued: waiting for earlier steps (harvested grain, then flour); it starts automatically',5);
+ return 'queued';
+}
+function servePendingGrainRequests(g:Game){
+ const c=pending.get(g);if(!c||c.state!==g.state||!c.list.length)return;
+ for(const r of c.list.slice()){
+  const b=g.state.buildings.find(b=>b.id===r.site&&b.hp>0&&g.finished(b));
+  if(!b){c.list.splice(c.list.indexOf(r),1);continue;}
+  if(!productionIssue(g,r.recipe,r.site)){if(beginProduction(g,r.recipe,r.site))c.list.splice(c.list.indexOf(r),1);continue;}
+  if(breadRecipes.includes(r.recipe)){
+   const o=bestGrind(g,foodInventory(g.tribe(0)).grain);
+   if(o&&(g.tribe(0).items?.flour||0)<(PRODUCTION_RECIPES[r.recipe].inputs.flour||0)&&!(g.state.production?.projects||[]).some(p=>p.team===0&&grindingRecipes.includes(p.recipe)&&!['complete','lost'].includes(p.phase))&&!productionIssue(g,o.recipe,o.site.id))beginProduction(g,o.recipe,o.site.id);
+  }
+ }
 }

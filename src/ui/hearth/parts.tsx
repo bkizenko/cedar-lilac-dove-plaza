@@ -10,6 +10,7 @@ import {BUILDINGS} from '@/game/constants';
 import {YEAR_SECONDS} from '@/game/settlement';
 import {SURVIVAL_RULES} from '@/game/survivalNeeds';
 import {exposedHarvestUnits} from '@/game/production';
+import {foodAlerts} from '@/game/foodGuard';
 import {harvestBacklogAlert} from '@/game/cerealProcessing';
 import {measureVillageWorkload} from '@/game/villageWorkload';
 import {readyFoodStock} from '../FoodStoreReadout';
@@ -268,6 +269,7 @@ export function useAlerts(engine:Engine|null){
   freezing>0&&{k:'freezing',icon:<Snowflake size={20}/>,n:freezing,tip:`${freezing} freezing`},
   full>0&&{k:'full',icon:<Package size={20}/>,n:full,tip:`${full} blocked by full material stores`},
   exposed>=8&&{k:'exposed',icon:<Droplets size={20}/>,n:Math.floor(exposed),tip:`${Math.floor(exposed)} harvest units exposed to spoilage`},
+  ...foodAlerts(game).map((tip,i)=>({k:'foodguard'+i,icon:<Wheat size={20}/>,n:'!',tip})),
   harvest?{k:'harvest',icon:<Wheat size={20}/>,n:'!',tip:harvest}:false,
   workload!==null&&workload>100&&{k:'work',icon:<ClipboardList size={20}/>,n:`${Math.ceil(workload)}%`,tip:`Work backlog · ${Math.ceil(workload)}% of capacity`},
  ].filter(Boolean) as {k:string;icon:ReactNode;n:string|number;tip:string}[];

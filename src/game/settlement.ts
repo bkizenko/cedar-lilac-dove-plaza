@@ -1,3 +1,4 @@
+import {foodGuardHolds} from './foodGuard';
 import {navalIndependentFood} from './navalFleet';
 import {recordDraftTractionWork} from './draftTraction';
 import {SIM_CALENDAR_RULES} from './calendarPacing';
@@ -460,6 +461,10 @@ export class WorkBoard {
       if (task.kind === "food" && !preparingField && !harvestingField && !preserving && g.tribe(u.team).food >= foodTarget())
         continue;
       if(u.team===0&&g.state.laborPolicy==="food"&&reserve()<240&&task.kind!=="food"&&!u.jobLock)continue;
+      // Secure-food people never chop logs unless given an explicit timber job.
+      if(u.team===0&&g.state.laborPolicy==="food"&&task.kind==="wood"&&!(u.jobLock&&u.job==="wood"))continue;
+      // Starvation guard: the held share of free hands does food work only.
+      if(u.team===0&&task.kind!=="food"&&!(u.jobLock&&u.job===task.kind)&&foodGuardHolds(g,u))continue;
       if (u.jobLock && u.job && task.kind !== u.job) continue;
       if(materialTargets&&!u.jobLock&&['wood','stone','copper','iron'].includes(task.kind)&&materialStocks[task.kind as RivalMaterialKind]>=materialTargets[task.kind as RivalMaterialKind])continue;
       if (u.huntOnly && reserve()>=90 && !("species" in task.node)) continue;

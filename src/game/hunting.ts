@@ -129,6 +129,10 @@ function finishTask(g: Game, u: Unit, reason: string) {
   u.node = null; u.gatherT = 0; delete u.huntTrail;
   u.order = u.carry > 0 ? "return" : "idle";
   u.workReason = reason;
+  // Blocked routes fall straight through to the next reachable food source
+  // (forage, fish, field harvest, preserved stock) instead of idling for a rescan.
+  u.workCheckAt = 0;
+  if(u.team===0&&/route blocked|cannot reach/i.test(reason))g.banner(reason,4);
   g.workBoard.invalidateTasks();
 }
 

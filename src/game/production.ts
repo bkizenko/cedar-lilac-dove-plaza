@@ -26,6 +26,7 @@ import{inheritedCacheCapacity}from'./communityCaches';
 import{validHandoverProvenance}from'./communityHandoverValidation';
 import{carryingCapacity}from'./haulage';
 import{reviewAutomaticFoodProcessing}from'./cerealProcessing';
+import{foodGuardHolds}from'./foodGuard';
 import{CEREAL_RULES,CEREAL_STORAGE_RULES,storedCerealKinds,compactGrainWorkplace,mixStoredCerealAge,cerealBatchScale,cerealLedger,cerealSeedCapacityIssue,cerealWeatherIssue,isCerealRecipe,finishCerealBatch,recordCerealDelivery,recordCerealCargoLoss}from'./cerealRules';
 import{TEXTILE_RULES,GARMENT_KINDS,textileRecipeIssue,type GarmentKind}from'./textiles';
 import{basketOrigin,recordBasketDelivery,recordFibreDelivery}from'./fibre';
@@ -138,7 +139,8 @@ export function storedItemUnits(g:Game,team:number){return (g.state.methodRecord
 function items(g:Game,team:number){return g.tribe(team).items??={};}
 function atCache(g:Game,u:Unit){return supplyDrops(g,u.team).some(drop=>{const p=supplyApproach(g,u,drop);return p&&supplyReached(g,u,drop,p);});}
 function free(g:Game,u:Unit,project?:number){return u.hp>0&&u.type==='worker'&&!u.militia&&!u.prisoner&&!['occupy','capture'].includes(u.conflictIntent||'')&&!isDependent(g,u)&&!u.emergency&&!u.expedition&&!u.visit&&!u.trade&&!u.escortId&&!u.envoy&&!u.recalled&&!u.foundingJourney&&!u.tributeJourney&&!u.buildOrder&&u.drill==null&&u.carry===0&&!sum(u.itemCargo||{})&&(!hasTaskCommitment(u.methodRecordCargoId!==undefined&&project!==undefined&&g.state.production?.projects.some(p=>p.id===project&&p.methodRecordAssetId===u.methodRecordCargoId)?{...u,methodRecordCargoId:undefined}:u,'productionProjectId'))&&(!u.productionProjectId||u.productionProjectId===project)&&!['attack','attackmove'].includes(u.order)&&(u.productionProjectId===project||!['move','explore','return'].includes(u.order))&&productionActorAvailable(g,u,project);}
-function actor(g:Game,b:Building,project?:ProductionProject,unitId?:number,deliveredHere=false,reachable?:(u:Unit)=>boolean){return g.state.units.find(u=>(unitId===undefined||u.id===unitId)&&u.team===b.team&&free(g,u,project?.id)&&(['working','ready','collecting'].includes(project?.resumePhase||'')||project?.phase==='stored'||(deliveredHere?g.buildingWorkReached(u,b):atCache(g,u)))&&(!reachable||reachable(u))&&!!g.interactionSpot(u,b));}
+function recipeIsFood(recipe:ProductionRecipe){const r=PRODUCTION_RECIPES[recipe];return !!r&&(r.food>0||r.grain>0||!!r.outputs.flour||Object.keys(r.foodOutputs||{}).length>0||isCerealRecipe(recipe));}
+function actor(g:Game,b:Building,project?:ProductionProject,unitId?:number,deliveredHere=false,reachable?:(u:Unit)=>boolean){return g.state.units.find(u=>(unitId===undefined||u.id===unitId)&&u.team===b.team&&free(g,u,project?.id)&&!(project&&u.team===0&&!recipeIsFood(project.recipe)&&foodGuardHolds(g,u))&&(['working','ready','collecting'].includes(project?.resumePhase||'')||project?.phase==='stored'||(deliveredHere?g.buildingWorkReached(u,b):atCache(g,u)))&&(!reachable||reachable(u))&&!!g.interactionSpot(u,b));}
 const live=(p:ProductionProject)=>!['complete','lost'].includes(p.phase);
 export function productionSlots(b:Pick<Building,'type'|'w'|'d'>){
  const base=['threshingFloor','fibreWorkshop','potter','kiln','dryrack','oven','smokehouse'].includes(b.type)?2:['hearth','butcher','tanner','tailor','grindingStone','watermill','windmill','forge'].includes(b.type)?1:0;

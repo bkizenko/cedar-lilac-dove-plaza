@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { Engine } from '../game/engine';
 import { SURVIVAL_RULES } from '../game/survivalNeeds';
 import { exposedHarvestUnits } from '../game/production';
+import { foodAlerts } from '../game/foodGuard';
 import { harvestBacklogAlert } from '../game/cerealProcessing';
 import { measureVillageWorkload } from '../game/villageWorkload';
 
@@ -28,6 +29,7 @@ export function VillageAlerts({ engine }: { engine: Engine }) {
     freezing > 0 && `${freezing} freezing`,
     fullCache>0 && `${fullCache} blocked by full material stores`,
     exposed>=8 && `${Math.floor(exposed)} harvest units exposed to spoilage`,
+    ...foodAlerts(game),
     harvest,
     workload !== null && workload > 100 && `Work backlog · ${Math.ceil(workload)}% of capacity`,
   ].filter(Boolean);

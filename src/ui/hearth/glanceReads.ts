@@ -7,6 +7,7 @@ import {reserveSeconds} from '@/game/settlement';
 import {simulationDaySeconds,SIM_CALENDAR_RULES} from '@/game/calendarPacing';
 import {SURVIVAL_RULES,collectedWaterDemand} from '@/game/survivalNeeds';
 import {exposedHarvestUnits} from '@/game/production';
+import {foodAlerts} from '@/game/foodGuard';
 import {harvestBacklogAlert} from '@/game/cerealProcessing';
 import {measureVillageWorkload} from '@/game/villageWorkload';
 import type {Unit} from '@/game/types';
@@ -59,6 +60,7 @@ export function detectAlerts(g:Game,workloadPercent:number|null=null):Alert[]{
  if(full)out.push({kind:'full',severity:'warning',count:full,tip:`${full} blocked by full material stores`,at:firstFull?at(firstFull):undefined});
  const harvest=harvestBacklogAlert(g),exposed=harvest?0:exposedHarvestUnits(g,0);
  if(exposed>=8)out.push({kind:'exposed',severity:'warning',count:Math.floor(exposed),tip:`${Math.floor(exposed)} harvest units exposed to spoilage`});
+ for(const tip of foodAlerts(g))out.push({kind:'harvest',severity:'warning',count:1,tip});
  if(harvest)out.push({kind:'harvest',severity:'warning',count:1,tip:harvest});
  if(workloadPercent!==null&&workloadPercent>100)out.push({kind:'backlog',severity:'warning',count:Math.ceil(workloadPercent),tip:`Work backlog, ${Math.ceil(workloadPercent)}% of capacity`});
  const wild=wildAlert(g);if(wild)out.push({kind:'wild',severity:'warning',count:wild.count,tip:wild.tip,at:{x:wild.x,y:g.height(wild.x,wild.z),z:wild.z}});

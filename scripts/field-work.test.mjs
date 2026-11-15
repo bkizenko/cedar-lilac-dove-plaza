@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {fieldWorkStep,staffField} from '../src/game/fieldWork.ts';
 import {BUILDINGS} from '../src/game/constants.ts';import {CEREAL_RULES} from '../src/game/cerealRules.ts';import {encodeGame,decodeGame} from '../src/game/persistence.ts';

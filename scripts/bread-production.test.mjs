@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import {foodDemand,reserveSeconds} from '../src/game/settlement.ts';
 import test from 'node:test';import assert from 'node:assert/strict';import {Game} from '../src/game/sim.ts';import {BUILDINGS} from '../src/game/constants.ts';import {beginProduction,productionIssue,productionSlots,PRODUCTION_RECIPES,resumeProduction,pauseProductionProject,tickProduction} from '../src/game/production.ts';import {foodInventory,consumeAndSpoilFood,FOOD_NOURISHMENT,EMERGENCY_RATIONS} from '../src/game/pantry.ts';import {encodeGame,decodeGame} from '../src/game/persistence.ts';import {craftingBenches,craftingEffort,craftingWorkplaceRate} from '../src/game/crafting.ts';
 function ground(g){g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];g.world.waterHeights=undefined;for(const u of g.state.units)u.y=4;for(const b of g.state.buildings)b.y=4;g.rebuildWalk();g.vision.fill(2);}

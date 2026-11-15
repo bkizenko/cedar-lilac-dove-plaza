@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {decodeGame,encodeGame} from '../src/game/persistence.ts';
 test('36 residents process an overflowing harvest through repeated meal deliveries after food focus and save reload',()=>{

@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import test from 'node:test';import assert from 'node:assert/strict';
 import {Game} from '../src/game/sim.ts';import {planExpansion,grainExpansionPracticeIssue} from '../src/game/plotExpansion.ts';
 import {beginProduction,occupiedProductionSlots,productionIssue,productionSlots} from '../src/game/production.ts';

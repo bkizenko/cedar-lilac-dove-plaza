@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import test from 'node:test';import assert from 'node:assert/strict';
 import {activityFor,newAnimState,stepAnimator,DeathTracker,CORPSE_RULES,weaponOf} from '../src/scene/characterAnim.ts';
 import {CLIPS,clipForActivity,DEATH_CLIPS,DEATH_SECONDS,sampleDeath,deathClipFor,samplePose,stancePose,PARTS,NEUTRAL_POSE} from '../src/scene/animationClips.ts';

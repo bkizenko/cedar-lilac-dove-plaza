@@ -1,3 +1,4 @@
+globalThis.__legacyCereal=true;
 import {GATHER_WORK_RATE} from '../src/game/constants.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
