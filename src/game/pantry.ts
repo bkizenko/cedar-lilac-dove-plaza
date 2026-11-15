@@ -5,7 +5,7 @@ import {DAIRY_RULES} from './dairy';
 import{FOOD_KINDS}from'./foodKinds';
 export{FOOD_KINDS}from'./foodKinds';
 import {recordSimulationEvent} from './simulationEvents';
-import {difficulty} from './difficulty';
+import {difficulty, foodUseScale} from './difficulty';
 import {AGE_COST} from "./constants";
 import { hasTradition } from "./discovery";
 import type { Game } from "./sim";
@@ -28,7 +28,7 @@ export function growthFoodNeed(g:Game,team:number) {
     const mouths=people.reduce((n,u)=>n+(u.maturesAt!==undefined&&time<u.maturesAt?0.5:1)*predisposition(u).appetite*(winter?habitatAt(g,u.x,u.z).winterFood:1),0);
     food+=(mouths+(at<360?.5:1))*FOOD_PER_PERSON_SECOND*dt;
   }
-  return Math.ceil(food*1.12*(team===0?difficulty(g).food:1)+20);
+  return Math.ceil(food*1.12*foodUseScale(g,team)+20);
 }
 import { climateAt } from "./ecology";
 import { wonderEffect } from "./wonderEffects";

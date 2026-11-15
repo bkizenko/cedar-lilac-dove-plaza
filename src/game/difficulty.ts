@@ -152,6 +152,11 @@ export function rivalDifficulty(g: Game, team: number) {
     ? { work: p.rivalWork, growth: p.rivalGrowth, aggression: p.rivalAggression }
     : { work: 1, growth: 1, aggression: 1 };
 }
+/** Food-use scale: the player's difficulty factor; rivals eat 1 / rivalGrowth (a transparent Hard+ economy edge, a handicap below Normal). */
+export function foodUseScale(g: Game, team: number) {
+  const p = difficulty(g);
+  return team === 0 ? p.food : isRivalTeam(team) ? 1 / p.rivalGrowth : 1;
+}
 export function difficultyGrievance(g: Game, change: number) {
   return change > 0 ? change * difficulty(g).conflictPressure : change;
 }
@@ -187,5 +192,5 @@ export function initializeDifficultyOpening(g: Game) {
 }
 export function difficultyEffects(id: Difficulty) {
   const p = DIFFICULTIES[id];
-  return `Shared world: new-world natural node capacities ×${p.abundance}; temperature departures from 12°C ×${p.climate}. Player: new-world starting food/water ×${p.provisions}; food use ×${p.food}; edible spoilage ×${p.spoil}; incoming enemy damage ×${p.damage}; raid timing/arrival pressure ×${p.raid}, party-size factor ×${p.band}. Rivals: strategic review interval ×${p.decisionInterval}; witnessed player-border grievance gain ×${p.conflictPressure}. Rival handicaps/bonuses (open): gathering time ×${p.rivalWork}, birth rate ×${p.rivalGrowth}, army size and raid drive ×${p.rivalAggression}, new-world stock ×${p.rivalStock}. Rival aggression 1.3 or more (Hard and up): rivals also learn of neighbouring structures within 400 m × aggression, may strike a visibly weaker neighbour without a grievance (halls included), reach farther, scout toward neighbours, and attract migrants. Command reliability is unchanged.`;
+  return `Shared world: new-world natural node capacities ×${p.abundance}; temperature departures from 12°C ×${p.climate}. Player: new-world starting food/water ×${p.provisions}; food use ×${p.food}; rival food use ×${(1 / p.rivalGrowth).toFixed(2)}; edible spoilage ×${p.spoil}; incoming enemy damage ×${p.damage}; raid timing/arrival pressure ×${p.raid}, party-size factor ×${p.band}. Rivals: strategic review interval ×${p.decisionInterval}; witnessed player-border grievance gain ×${p.conflictPressure}. Rival handicaps/bonuses (open): gathering time ×${p.rivalWork}, birth rate ×${p.rivalGrowth}, army size and raid drive ×${p.rivalAggression}, new-world stock ×${p.rivalStock}. Rival aggression 1.3 or more (Hard and up): rivals also learn of neighbouring structures within 400 m × aggression, may strike a visibly weaker neighbour without a grievance (halls included), reach farther, scout toward neighbours, and attract migrants. Command reliability is unchanged.`;
 }

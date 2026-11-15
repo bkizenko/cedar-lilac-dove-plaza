@@ -15,7 +15,7 @@ import {societyMissionIndependentNeeds} from './rivalActivity';
 import {prisonerIndependentNeeds} from './captivity';
 import {reserveTreeWorker} from './workAllocation';
 import {rivalOperationIntent} from './rivalOperations';
-import {difficulty} from './difficulty';
+import {difficulty, foodUseScale} from './difficulty';
 import {expansionCost,plotArea,fieldCrewSlots} from './plots';
 import {connectedForUnit} from "./waterTravel";
 import {constructionDemand} from "./construction";
@@ -73,7 +73,7 @@ function foodDemandUncached(g: Game, team: number, phase: number) {
       (phase === 3 ? habitatAt(g, u.x, u.z).winterFood : 1);
   }
   const weather = g.state.weather === "drought" ? 1.4 : g.state.weather === "frost" ? 1.15 : 1;
-  return mouths * FOOD_PER_PERSON_SECOND * weather * (team===0?difficulty(g).food:1);
+  return mouths * FOOD_PER_PERSON_SECOND * weather * foodUseScale(g,team);
 }
 /** Storage protects food; it never caps the player's gathering orders. */
 export function foodWorkTarget(g:Game,team=0){

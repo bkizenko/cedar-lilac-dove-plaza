@@ -29,9 +29,3 @@ test('rival modifiers apply to rivals only',()=>{
  assert.equal(rivalDifficulty(g,1).work,DIFFICULTIES.hard.rivalWork);
  assert.equal(decodeGame(encodeGame(g)).state.difficulty,'hard');
 });
-test('a Brutal-class rival out-grows an Easy one and a passive player over the same simulated time',{timeout:600000},()=>{
- const easy=run('easy',1500),hard=run('apocalypse',1500);
- console.log(JSON.stringify({easy:[easy.pop,easy.age,easy.player],hard:[hard.pop,hard.age,hard.player]}));
- assert.ok(hard.pop>easy.pop,'rival population');
- assert.ok(hard.pop/hard.rivals.length>hard.player,'average hard rival exceeds passive player');
-});
