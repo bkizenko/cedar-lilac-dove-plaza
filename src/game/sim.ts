@@ -1889,8 +1889,8 @@ export class Game {
     }
   }
 
-  slotOffsets(units: Unit[], x: number, z: number) {
-    const formed = assignFormation(this, units, x, z);
+  slotOffsets(units: Unit[], x: number, z: number, raiding = false) {
+    const formed = assignFormation(this, units, x, z, raiding);
     if (formed) return formed;
     const line =
       units.length >= 4 && units.every((u) => u.type !== "worker" && u.type !== "leader");
@@ -2068,10 +2068,11 @@ export class Game {
     tz: number,
     target: Unit | Building | null,
     order: "attack" | "attackmove",
+    raiding = false,
   ) {
     const mil = this.commandedMilitary();
     if (!mil.length) return false;
-    const slots = this.slotOffsets(mil, tx, tz);
+    const slots = this.slotOffsets(mil, tx, tz, raiding);
     mil.forEach((u, i) => {
       this.interruptMission(u);
       const { ox, oz } = slots[i];
@@ -2119,13 +2120,27 @@ export class Game {
     return best;
   }
 
+  /** A raid on a village is not over while its people still stand: the nearest visible, reachable living person of the raided society. */
+  raidFoeNear(u: Unit, radius = 45): Unit | null {
+    if (u.pillage < 0 || u.pillage === 3 && u.team === 3) return null;
+    let best: Unit | null = null, bd = radius * radius;
+    for (const o of this.state.units) {
+      if (o.hp <= 0 || o.team !== u.pillage || o.shelterId || o.prisoner || !this.isFoe(u.team, o.team)) continue;
+      if (u.team === 0 && !this.visibleAt(o.x, o.z)) continue;
+      if (!missionMayTargetCivilian(this, u, o)) continue;
+      const d = (o.x - u.x) ** 2 + (o.z - u.z) ** 2;
+      if (d < bd) { bd = d; best = o; }
+    }
+    return best;
+  }
+
   issuePillage(target: Building) {
     if (target.team === 0 || (target.hp<=0 && !(target.lootTeam===0&&target.raidLoot&&Object.values(target.raidLoot).some(n=>(n||0)>0))) || !this.exploredAt(target.x, target.z)) {
       this.banner("Explore a rival settlement before ordering a raid", 1.8);
       return;
     }
     const mil = this.commandedMilitary();
-    if (!this.marchMilitary(target.x, target.z, target, "attackmove")) {
+    if (!this.marchMilitary(target.x, target.z, target, "attackmove", true)) {
       this.banner("Select adults to raid", 1.8);
       this.onSfx("invalid");
       return;
@@ -3728,6 +3743,7 @@ export class Game {
         u.ageT = 0;
         u.maturesAt = this.state.time + 360;
         u.homeHall=hall.id;u.parents=family.filter(p=>!isDependent(this,p)).slice(0,2).map(p=>p.id);
+        {const heir=family.find(p=>p.originTribe?.gen===0&&u.parents?.includes(p.id));if(heir)u.originTribe={name:heir.originTribe!.name,gen:1};}
         lifeEvent(this,tr.id,personName(u)+" was born",hall.x,hall.z);
         u.stature = 0.6;
         u.workReason = "Growing up — supported by the village";
@@ -5223,6 +5239,8 @@ export class Game {
             u.order = u.target ? "attack" : "attackmove";
             return;
           }
+          const foe = this.raidFoeNear(u);
+          if (foe) { u.target = foe; u.tx = foe.x; u.tz = foe.z; u.order = "attack"; return; }
           u.pillage = -1;
         }
         if (u.attackDestination) {

@@ -80,7 +80,8 @@ export function raidLootAI(g:Game,u:Unit,dt:number){
     .sort((a,b)=>Math.hypot(a.x-u.x,a.z-u.z)-Math.hypot(b.x-u.x,b.z-u.z))[0];
   if(!ruin)return false;
   // An engaged defender must be dealt with before anyone stops to load supplies.
-  if(g.state.units.some(e=>e.hp>0&&g.isFoe(u.team,e.team)&&Math.hypot(e.x-u.x,e.z-u.z)<7))return false;
+  // Raiders do not leave halfway: nobody loads loot and walks home while anyone of the raided people still stands nearby.
+  if(g.state.units.some(e=>e.hp>0&&g.isFoe(u.team,e.team)&&Math.hypot(e.x-u.x,e.z-u.z)<7)||u.team===0&&g.raidFoeNear(u,60))return false;
   if(g.attackDistance(u,ruin)>u.r+1.8){const spot=g.nearestWalk(u,ruin.x,ruin.z);if(!spot)return false;u.tx=spot.x;u.tz=spot.z;g.steer(u,dt);u.workReason='Collecting supplies from the ruined store';return true;}
   const kind=(['food','wood','stone','copper','iron'] as ResKind[]).find(k=>(ruin.raidLoot![k]||0)>0);
   if(!kind)return false;

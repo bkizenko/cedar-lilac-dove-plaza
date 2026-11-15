@@ -29,11 +29,23 @@ const dist=(a:{x:number;z:number},b:{x:number;z:number})=>Math.hypot(a.x-b.x,a.z
 const PRIORITY:Record<string,number>={blade:0,warden:0,spear:1,mounted:2,skirmisher:3,archer:4,civilian:5,commander:6};
 const isCommander=(u:Unit)=>u.type==='leader'||u.type==='warden';
 /** Called by issueMove/issueAttack/marchMilitary through slotOffsets. Returns world offsets aligned with `units`, or undefined to keep legacy spacing. */
-export function assignFormation(g:Game,units:Unit[],x:number,z:number):Slot[]|undefined{
+/** Only trained, organised groups form up: most members are soldiers or drilled militia. Raiding parties never do, and neither does a group caught by an enemy at night. */
+export function mayFormUp(g:Game,units:readonly Unit[],raiding=false,cx?:number,cz?:number){
+ if(raiding||!units.length||units.some(u=>u.pillage>=0||u.massRaidTarget!==undefined))return false;
+ const trained=units.filter(u=>u.type!=='worker'||(u.combatXP||0)>=10).length;
+ if(trained*4<units.length*3)return false;
+ if(g.clockState().period==='Night'){
+  const x=cx??units.reduce((n,u)=>n+u.x,0)/units.length,z=cz??units.reduce((n,u)=>n+u.z,0)/units.length,team=units[0].team;
+  if(g.state.units.some(e=>e.hp>0&&e.team!==team&&g.isFoe(team,e.team)&&Math.hypot(e.x-x,e.z-z)<50))return false;
+ }
+ return true;
+}
+export function assignFormation(g:Game,units:Unit[],x:number,z:number,raiding=false):Slot[]|undefined{
  const s=st(g),d=s.combatDoctrine;
  if(!d?.formations||units.length<FORMATION_RULES.minimumMembers||units.length>FORMATION_RULES.maximumMembers)return undefined;
  const team=units[0].team;if(units.some(u=>u.team!==team||u.hp<=0))return undefined;
  let cx=0,cz=0;for(const u of units){cx+=u.x;cz+=u.z;}cx/=units.length;cz/=units.length;
+ if(!mayFormUp(g,units,raiding,cx,cz))return undefined;
  const facing=Math.atan2(x-cx,z-cz),kind=d.preferred;
  // Front rank first: heavy foot, spears, riders, then shooters and the commander at the back.
  const order=units.map((u,i)=>({u,i})).sort((a,b)=>(isCommander(a.u)?6:PRIORITY[roleOfType(a.u.type)]??5)-(isCommander(b.u)?6:PRIORITY[roleOfType(b.u.type)]??5)||a.u.id-b.u.id);

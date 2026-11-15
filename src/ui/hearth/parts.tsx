@@ -1,5 +1,6 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {SkillStrip} from './skillsCard';
+import {PeaceActions,ConquestActions,type WarCommand} from './warActions';
 import {Minimize2,Landmark,Anchor,Flag,X,Pause,Play,FastForward,Sun,Moon,Menu as MenuIcon,Hammer,Repeat,BookOpen,Crown,Home,Users,Heart,Swords,Package,Droplets,Snowflake,ClipboardList,Compass,Hand,Sword,Skull,Flame,Shield,Check,Info,Wheat,Axe,Recycle,ChevronLeft,ChevronRight,Map as MapIcon,Bell,TriangleAlert,Footprints,Clock,Wrench,LayoutGrid,UserRound} from 'lucide-react';
 import type {Engine} from '@/game/engine';
 import {MusicChip} from './MusicControls';
@@ -272,19 +273,27 @@ export function useAlerts(engine:Engine|null){
  ].filter(Boolean) as {k:string;icon:ReactNode;n:string|number;tip:string}[];
 }
 const LOOT=['food','wood','stone','copper','iron'] as const;
+function RaidTerms({engine,team}:{engine:Engine;team:number}){
+ const Q={kind:'rulers-council'} as const,read=useOwnerReadModels(engine,[Q]),n=read(Q).model?.council.neighbours.find(x=>x.team===team);
+ if(!n?.conquest&&!n?.peace?.incoming)return null;
+ const send=(c:WarCommand)=>void engine.dispatch(c as never,undefined,{notice:true});
+ return <div className="hw-raid-terms"><ConquestActions c={n.conquest as never} send={send} compact/><PeaceActions team={team} peace={n.peace as never} send={send}/></div>;
+}
 function RaidNote({engine}:{engine:Engine}){
  const Q={kind:'combat-doctrine'} as const,read=useOwnerReadModels(engine,[Q]),r=read(Q).model?.combat.raid;
  const [gone,setGone]=useState<number>(-1);
- if(!r||r.phase==='fighting'||gone===r.id)return null;
- const total=LOOT.reduce((t,k)=>t+(r.carried[k]||0),0),title=r.outcome==='sacked'?(r.ours==='attacker'?'Camp sacked':'Village sacked'):r.outcome==='repelled'?(r.ours==='defender'?'Raid repelled':'Raid failed'):r.outcome==='destroyed'?(r.ours==='attacker'?'Raiders lost':'Raiders destroyed'):'Raid ended';
- const tone=(r.outcome==='sacked'&&r.ours==='defender')||(r.outcome==='destroyed'&&r.ours==='attacker')||(r.outcome==='repelled'&&r.ours==='attacker')?'bad':'good';
+ if(!r)return null;
+ if(r.phase==='fighting')return r.ours==='attacker'?<RaidTerms engine={engine} team={r.otherTeam}/>:null;
+ if(gone===r.id)return null;
+ const total=LOOT.reduce((t,k)=>t+(r.carried[k]||0),0),title=r.outcome==='sacked'?(r.ours==='attacker'?'Camp sacked':'Village sacked'):r.outcome==='repelled'?(r.ours==='defender'?'Raid repelled':'Raid failed'):r.outcome==='destroyed'?(r.ours==='attacker'?'Raiders lost':'Raiders destroyed'):r.outcome==='overrun'?(r.ours==='defender'?'Village overrun':'Raid won'):'Raid ended';
+ const tone=((r.outcome==='sacked'||r.outcome==='overrun')&&r.ours==='defender')||(r.outcome==='destroyed'&&r.ours==='attacker')||(r.outcome==='repelled'&&r.ours==='attacker')?'bad':'good';
  const lootText=LOOT.filter(k=>r.carried[k]).map(k=>`${r.carried[k]} ${RES_NAME[k==='wood'?'wood':k]}`).join(' · ');
- return <NoteCard n={{id:'raid'+r.id,tone,icon:<Swords size={24}/>,title:title,dismiss:()=>setGone(r.id),chips:<>
+ return <><NoteCard n={{id:'raid'+r.id,tone,icon:<Swords size={24}/>,title:title,dismiss:()=>setGone(r.id),chips:<>
   <span className="hw-chip" title="Our losses"><Skull size={18}/>{r.lostOurs}</span>
   <span className="hw-chip" title="Their losses"><Swords size={18}/>{r.lostTheirs}</span>
   {r.civiliansLost>0&&<span className="hw-chip t-bad" title="Civilians lost"><Users size={18}/>{r.civiliansLost}</span>}
   {r.burned>0&&<span className="hw-chip t-bad" title="Buildings burned"><Flame size={18}/>{r.burned}</span>}
-  <span className="hw-chip" title={lootText||'Nothing carried off'}><Package size={18}/>{total}</span></>}}/>;
+  <span className="hw-chip" title={lootText||'Nothing carried off'}><Package size={18}/>{total}</span></>}}/><RaidTerms engine={engine} team={r.otherTeam}/></>;
 }
 /** Priority stack (glance.tsx): one sticky critical card, icon-chip warnings, timed info. The raid result and ruler toasts ride along. */
 export function NotesStack({hud,engine,onOpen,hidden,alerts}:{hud:HudSnapshot;engine:Engine|null;onOpen:(k:DockKey)=>void;hidden:boolean;alerts?:readonly Alert[]}){
@@ -302,6 +311,7 @@ export function MinimapCard({hud,engine,onNeighbours,phone,onClose,onCollapse}:{
   {phone&&<IconBtn label="Close map" onClick={onClose!} small className="hw-map-x"><X size={22}/></IconBtn>}
   <div className="hw-map-frame">{!phone&&onCollapse&&<MinimapCollapseButton onClick={onCollapse}/>}<WorldMinimap hud={hud} engine={engine}/><OverlayCanvas hud={hud} engine={engine}/></div>
   <OverlayToggles engine={engine}/>
-  {known.length>0&&<button type="button" className="hw-map-neigh" aria-label="Neighbours" onClick={onNeighbours}>{known.map(t=>{const w=!t.alive?'Fallen':t.hostile?'War':t.ally?'Pact':(t.tension||0)>.52?'Tense':'Peace';return <span key={t.id} className="hw-neigh" title={`${t.name}: ${w}`}><i style={{background:t.alive?t.color:'#6b6256'}}/><b>{t.name}</b><em className={cx(t.hostile&&'t-bad',t.ally&&'t-good')}>{w}</em></span>;})}</button>}
+  {known.length>0&&<div className="hw-map-neigh" role="group" aria-label="Neighbours">{known.map(t=>{const w=!t.alive?'Fallen':t.hostile?'War':t.ally?'Pact':(t.tension||0)>.52?'Tense':'Peace';return <span key={t.id} className="hw-neigh" title={`${t.name}: ${w}${t.relationStale?' (last report)':''}`}><button type="button" aria-label={`${t.name}: ${w}. Open neighbours`} onClick={onNeighbours}><i style={{background:t.alive?t.color:'#6b6256'}}/><b>{t.name}</b><em className={cx(t.hostile&&'t-bad',t.ally&&'t-good')}>{w}</em></button>
+   {t.hostile&&t.alive&&engine&&<button type="button" className="hw-neigh-peace" title="Send a messenger offering peace" onClick={()=>void engine.dispatch({kind:'propose-peace',team:t.id},undefined,{notice:true})}>Offer peace</button>}</span>;})}</div>}
  </section>;
 }

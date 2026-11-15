@@ -535,6 +535,7 @@ function validateGamePayload(raw: unknown) {
     if(u.returnAfterCombat!==undefined&&typeof u.returnAfterCombat!=="boolean")fail();
     if(u.massRaidTarget!==undefined&&(!Number.isSafeInteger(u.massRaidTarget)||u.massRaidTarget<1))fail();
     if(u.enslavedFrom!==undefined&&(!rivalTeam(u.enslavedFrom)||u.team!==0))fail();
+    if(u.originTribe!==undefined&&(!obj(u.originTribe)||typeof u.originTribe.name!=="string"||u.originTribe.name.length<1||u.originTribe.name.length>48||(u.originTribe.gen!==0&&u.originTribe.gen!==1)||u.originTribe.rebel!==undefined&&typeof u.originTribe.rebel!=="boolean"))fail();
     if(u.repatriating!==undefined&&(u.repatriating!==true||!rivalTeam(u.team)&&!handedOver(s,u,'residentIds')&&!(u.prisoner?.phase==='released'&&u.prisoner.rejoinedTeam===u.team&&u.prisoner.rejoinedHandoverId!==undefined)||u.enslavedFrom!==undefined))fail();
     if(u.captivityUnrest!==undefined&&(!num(u.captivityUnrest)||u.captivityUnrest<0||u.captivityUnrest>100||u.enslavedFrom===undefined))fail();
     if(u.goatSearchPen!==undefined&&(!Number.isSafeInteger(u.goatSearchPen)||u.goatSearchPen<=0||u.goatSearchPen>=s.nextId))fail();

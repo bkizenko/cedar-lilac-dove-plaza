@@ -83,7 +83,7 @@ export function raiseAttackAlarm(g:Game,victim:Unit|Building,attackerTeam:number
     if(!u.emergency&&explicitArmedOrder(g,u))continue;
     if(u.type==='worker'||u.militia){
       mobilize(g,u);u.emergency!.until=g.state.time+10;
-      if(isDependent(g,u)||u.hp<u.maxHp*DEFENSE_RULES.healthyFraction){
+      if(isDependent(g,u)||u.hp<u.maxHp*DEFENSE_RULES.healthyFraction&&!engagedFighter(u,attackers)){
         u.order='move';u.workReason='Alarm — seeking shelter';continue;
       }
     }
@@ -95,7 +95,12 @@ export function raiseAttackAlarm(g:Game,victim:Unit|Building,attackerTeam:number
 
 /** A new armed movement/combat command remains authoritative while healthy.
  * Manual horn calls can replace it; periodic automatic alarms cannot. */
-export function explicitArmedOrder(g:Game,u:Unit){return u.hp>0&&!isDependent(g,u)&&u.hp>=u.maxHp*DEFENSE_RULES.healthyFraction&&(u.militia||!['worker','leader'].includes(u.type))&&(((u.order==='move'||u.order==='hold')&&u.stationOnArrival)||(u.order==='attack'&&!!u.target)||u.order==='attackmove');}
+/** Someone ordered to attack or raid a foreign place keeps fighting there even when wounded: the village alarm's
+ * "seek shelter" is for people defending home, not for a party that marched out on the player's command. */
+export function onOffensiveOrder(u:Unit){return u.hp>0&&u.team===0&&u.pillage>=0&&(u.order==='attack'||u.order==='attackmove')&&(u.militia||!['worker','leader'].includes(u.type));}
+/** An armed adult with a foe in melee-ish reach keeps fighting however hurt; only the player's order withdraws them. */
+export function engagedFighter(u:Unit,foes:readonly Unit[]){return (u.militia||!['worker','leader'].includes(u.type))&&foes.some(e=>e.hp>0&&Math.hypot(e.x-u.x,e.z-u.z)<20);}
+export function explicitArmedOrder(g:Game,u:Unit){return onOffensiveOrder(u)||u.hp>0&&!isDependent(g,u)&&u.hp>=u.maxHp*DEFENSE_RULES.healthyFraction&&(u.militia||!['worker','leader'].includes(u.type))&&(((u.order==='move'||u.order==='hold')&&u.stationOnArrival)||(u.order==='attack'&&!!u.target)||u.order==='attackmove');}
 function villageAlarmTarget(g:Game,u:Unit,e:Unit){return !!u.emergency?.defending&&u.target===e&&villageCenters(g,u.team).some(c=>Math.hypot(u.x-c.x,u.z-c.z)<=DEFENSE_RULES.localMobilizationMetres&&Math.hypot(e.x-c.x,e.z-c.z)<DEFENSE_RULES.intrusionMetres);}
 
 /** Automatic response is local; commanded expeditions are not recalled across the map. */
@@ -167,7 +172,7 @@ export function emergencyResponse(g: Game, u: Unit, dt: number): boolean {
     return false;
   }
   if(armForLocalDefense(g,u,foes,dt))return true;
-  if (!isDependent(g,u) && u.hp>=u.maxHp*DEFENSE_RULES.healthyFraction && (u.emergency.autoArmed || u.militia || u.emergency.defending)) {
+  if (!isDependent(g,u) && (u.hp>=u.maxHp*DEFENSE_RULES.healthyFraction||engagedFighter(u,foes)) && (u.emergency.autoArmed || u.militia || u.emergency.defending)) {
     u.workReason = u.militia ? "Militia defending the settlement" : "Defending the tribe with work tools";
     const foe = foes.sort(
       (a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z),

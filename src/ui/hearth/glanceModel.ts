@@ -87,11 +87,13 @@ export function pinSet(alerts:readonly Alert[],max=MAX_PINS){
  return alerts.filter(a=>a.at).sort((a,b)=>ALERT_RANK[b.kind]-ALERT_RANK[a.kind]).slice(0,max);
 }
 /** Timed info cards: shown for `ttl` seconds after they first appear, unless dismissed. Sticky cards stay until their condition clears. */
-export const INFO_RULES=Object.freeze({ttlSeconds:8,fadeSeconds:1});
-export function infoVisible(firstSeenSeconds:number,nowSeconds:number,sticky:boolean){
+export const INFO_RULES=Object.freeze({ttlSeconds:8,fadeSeconds:1,resultTtlSeconds:40});
+/** Raid and conflict result banners (what a fight cost, a surrender offer) need reading time; ordinary news does not. */
+export const isConflictResultBanner=(text:string)=>/\b(sacked|drove off|overran|broke off|raiders were destroyed|surrender|annexed|pillaged|puppet)\b/i.test(text);
+export function infoVisible(firstSeenSeconds:number,nowSeconds:number,sticky:boolean,ttl:number=INFO_RULES.ttlSeconds){
  if(sticky)return {show:true,fading:false};
  const age=nowSeconds-firstSeenSeconds;
- return {show:age<INFO_RULES.ttlSeconds,fading:age>=INFO_RULES.ttlSeconds-INFO_RULES.fadeSeconds};
+ return {show:age<ttl,fading:age>=ttl-INFO_RULES.fadeSeconds};
 }
 
 /** Alert budget: during a war or raid several news cards can arrive together. Sticky cards (critical, offers) always show; timed ones are merged by

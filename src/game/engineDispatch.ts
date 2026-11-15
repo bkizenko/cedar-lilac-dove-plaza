@@ -5,14 +5,15 @@ import {applyWildCommand,type WildBeginCommand,type WildCollectCommand} from './
 import {beginMethodRecordPickup} from './methodRecordPickup';
 import {beginMethodRecordTrade,cancelMethodRecordTrade} from './methodRecordTrade';
 import {beginDraftCartOrder,recoverDraftCart,setDraftCartPaused,cancelDraftCartOrder} from './draftCart';
-import {freePeople} from './peace';
+import {freePeople,rejectPeace} from './peace';
+import {acceptConquest,type ConquestChoice,type ConquestPeople} from './conquest';
 import {repatriateCaptive,releasePrisoner,assignPrisonerGuard} from './captivity';
 import {sendCaptiveEscort} from './caravans';
 import {armorRepairIssue,beginArmorRepair,pauseArmorRepair,resumeArmorRepair,cancelArmorRepair} from './armorRepair';
 import {beginCopperStudy,copperStudyIssue} from './materialStudy';
 import {orderGatherTargets} from './treeDesignation';
 import {beginTradedTeaching,cancelTradedTeaching,TRADED_TEACHING_RULES} from './tradedTeaching';
-import type {ResKind} from './types';
+import type {ResKind,PeaceTerm} from './types';
 import {beginGarmentRepair,garmentRepairIssue,pauseGarmentRepair,resumeGarmentRepair,cancelGarmentRepair,type GarmentSlot} from './garmentRepair';
 import {beginEraUpgrade,setHousingPaused} from './housing';
 import type {ExtensionSide} from './extensionFootprints';
@@ -85,6 +86,7 @@ export type EngineDispatchCommand=
  |{kind:'answer-proposal';proposalId:number;accept:boolean}|{kind:'found-wonder';family:string;x?:number;z?:number;look?:WonderLook}|{kind:'pay-blood-price';team:number}|{kind:'marry-houses';team:number}|{kind:'foster-houses';team:number}|{kind:'exchange-hostages';team:number}|{kind:'take-in-refugees';team:number}|{kind:'turn-away-refugees';team:number}
  |{kind:'set-formation';formation:FormationKind}|{kind:'guard-duty';unitId:number;duty:GuardDutyKind}|{kind:'release-guard';unitId:number}
  |{kind:'accept-capitulation';frontId:number;outcome:CapitulationOutcome}|{kind:'refuse-capitulation';frontId:number}
+ |{kind:'accept-conquest';frontId:number;choice:ConquestChoice;people:ConquestPeople}|{kind:'propose-peace';team:number;term?:PeaceTerm}|{kind:'accept-peace';team:number}|{kind:'decline-peace';team:number}
  |{kind:'commander-order';action:'appoint'|'replace'|'assign'|'release'|'promote';unitId?:number;commanderId?:number;commandKind?:'army'|'fleet';ids?:number[];promotionId?:string;replacesId?:number}
  |{kind:'naval-order';action:'port-work'|'resume-port-work'|'resume-commission'|'commission'|'board'|'attack'|'resupply';dockId?:number;work?:PortWork;design?:string;builderId?:number;projectId?:number;boatId?:number;targetBoatId?:number;food?:number;missileLoads?:number}
  |{kind:'free-captives';team:number}|{kind:'repatriate-captive';unitId:number}|{kind:'escort-captive';unitId:number}
@@ -216,6 +218,10 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
    }
    case 'release-guard':{const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0);if(!u)return no('Original owned person unavailable');return releaseGuardDuty(g,u.id)?{accepted:true,reason:'Back to ordinary work'}:no('That person is not on duty');}
    case 'accept-capitulation':return acceptCapitulation(g,command.frontId,command.outcome,0);
+   case 'accept-conquest':return acceptConquest(g,command.frontId,command.choice,command.people);
+   case 'propose-peace':{const term=command.term??'whitePeace';return g.proposePeace(command.team,term)?{accepted:true,reason:'A messenger carries your offer of peace'}:no('Peace can only be offered to a known tribe you are at war with');}
+   case 'accept-peace':{const o=g.tribe(command.team)?.peaceOffer;if(!o||o.expires<=g.state.time)return no('There is no peace offer from them now');return g.resolvePeaceTerm(command.team,o.term)?{accepted:true,reason:'Peace accepted'}:no('They cannot agree to these terms right now');}
+   case 'decline-peace':{if(!g.tribe(command.team)?.peaceOffer)return no('There is no peace offer from them now');rejectPeace(g,command.team);return{accepted:true,reason:'Peace offer declined'};}
    case 'refuse-capitulation':{const ok=refuseCapitulation(g,command.frontId,0);return ok?{accepted:true,reason:'Terms refused; they will resist harder'}:no('No offer to refuse here');}
    case 'commander-order':{
     const c=command;
@@ -297,7 +303,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'production-control':{projectId:id,action,unitId:optionalId},'dairy-clean':{projectId:id,unitId:optionalId},'dairy-discard':{projectId:id},
   'answer-proposal':{proposalId:id,accept:bool},'found-wonder':{family:v=>(WONDER_FAMILIES as readonly string[]).includes(v as string),x:v=>v===undefined||typeof v==='number'&&Number.isFinite(v),z:v=>v===undefined||typeof v==='number'&&Number.isFinite(v),look:v=>validLook(v)},
   'set-formation':{formation:v=>validFormationKind(v)},'guard-duty':{unitId:id,duty:v=>v==='post'||v==='patrol'},'release-guard':{unitId:id},
-  'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'boat-stop':{boatId:id},'free-captives':{team:v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0},'repatriate-captive':{unitId:id},'escort-captive':{unitId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'pay-blood-price':{team:id},'take-in-refugees':{team:id},'turn-away-refugees':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},'naval-order':{action:v=>['port-work','resume-port-work','resume-commission','commission','board','attack','resupply'].includes(v as string),dockId:optionalId,work:v=>v===undefined||PORT_WORK_IDS.includes(v as PortWork),design:v=>v===undefined||DESIGN_IDS.includes(v as string),builderId:optionalId,projectId:optionalId,boatId:optionalId,targetBoatId:optionalId,food:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1000,missileLoads:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=100},'commander-order':{action:v=>['appoint','replace','assign','release','promote'].includes(v as string),unitId:optionalId,commanderId:optionalId,commandKind:v=>v===undefined||v==='army'||v==='fleet',ids:v=>v===undefined||Array.isArray(v)&&v.length<=32&&v.every(id)&&new Set(v).size===v.length,promotionId:v=>v===undefined||typeof v==='string'&&v.length<=32,replacesId:optionalId},
+  'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'accept-conquest':{frontId:id,choice:v=>['annex','puppet','pillage'].includes(v as string),people:v=>['integrate','execute','spare'].includes(v as string)},'propose-peace':{team:id,term:v=>v===undefined||['whitePeace','tribute','forcedLabor','puppet','annexation'].includes(v as string)},'accept-peace':{team:id},'decline-peace':{team:id},'boat-stop':{boatId:id},'free-captives':{team:v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0},'repatriate-captive':{unitId:id},'escort-captive':{unitId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'pay-blood-price':{team:id},'take-in-refugees':{team:id},'turn-away-refugees':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},'naval-order':{action:v=>['port-work','resume-port-work','resume-commission','commission','board','attack','resupply'].includes(v as string),dockId:optionalId,work:v=>v===undefined||PORT_WORK_IDS.includes(v as PortWork),design:v=>v===undefined||DESIGN_IDS.includes(v as string),builderId:optionalId,projectId:optionalId,boatId:optionalId,targetBoatId:optionalId,food:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1000,missileLoads:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=100},'commander-order':{action:v=>['appoint','replace','assign','release','promote'].includes(v as string),unitId:optionalId,commanderId:optionalId,commandKind:v=>v===undefined||v==='army'||v==='fleet',ids:v=>v===undefined||Array.isArray(v)&&v.length<=32&&v.every(id)&&new Set(v).size===v.length,promotionId:v=>v===undefined||typeof v==='string'&&v.length<=32,replacesId:optionalId},
   'site-preparation-pause':{buildingId:id,paused:bool},'paused-plan':{buildingId:id,paused:bool},
   'queue-construction':{buildingId:id},'order-construction':{buildingId:id},
   'gather-targets':{stoneIds:v=>Array.isArray(v)&&v.length<=512&&v.every(integer),animalIds:v=>Array.isArray(v)&&v.length<=512&&v.every(integer)},

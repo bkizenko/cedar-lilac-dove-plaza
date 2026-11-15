@@ -18,6 +18,10 @@ function calculate(u: Unit) {
 }
 
 export function personName(u:Unit) {
+  const base=baseName(u);
+  return u.originTribe?`${base} (${u.originTribe.name})`:base;
+}
+function baseName(u:Unit) {
   if(u.name)return u.name;
   const given=["Aren","Bela","Cora","Dara","Eren","Fara","Galen","Hana","Iven","Jora","Kelan","Lina","Maren","Nara","Orin","Pera","Rian","Sela","Taren","Vela"];
   return given[u.id%given.length];

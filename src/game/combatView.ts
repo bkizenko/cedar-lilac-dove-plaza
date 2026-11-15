@@ -7,7 +7,7 @@ import {transitStatus,routeAbandoned} from './transit';
 import {societyRelation} from './societyRelations';
 import type {GuardDutyKind} from './guardDuty';
 
-export type RaidCard={id:number;attacker:string;defender:string;ours:'attacker'|'defender';outcome:string;phase:RaidRecord['phase'];lostOurs:number;lostTheirs:number;civiliansLost:number;burned:number;carried:Loot;leftBehind:Loot;text:string};
+export type RaidCard={id:number;otherTeam:number;attacker:string;defender:string;ours:'attacker'|'defender';outcome:string;phase:RaidRecord['phase'];lostOurs:number;lostTheirs:number;civiliansLost:number;burned:number;carried:Loot;leftBehind:Loot;text:string};
 export type CombatModel={
  enabled:boolean;preferred:FormationKind;
  formations:{kind:FormationKind;name:string;offense:number;pace:number;melee:number;ranged:number}[];
@@ -31,7 +31,7 @@ export function combatModel(g:Game):CombatModel{
   formations:FORMATION_KINDS.map(k=>({kind:k,name:FORMATION_PROFILES[k].name,offense:FORMATION_PROFILES[k].offense,pace:FORMATION_PROFILES[k].pace,melee:FORMATION_PROFILES[k].takenMelee,ranged:FORMATION_PROFILES[k].takenRanged})),
   groups:(s.formations??[]).filter(f=>f.team===0).map(f=>({id:f.id,kind:f.kind,members:f.memberIds.length,cohesion:Math.round(f.cohesion*100),morale:Math.round(f.morale*100),casualties:f.casualties,commander:f.commanderId!==undefined})),
   duties:(s.guardDuties??[]).filter(x=>x.team===0).map(x=>({unitId:x.unitId,kind:x.kind})),
-  ...(rec?{raid:{id:rec.id,attacker:g.tribe(rec.attacker)?.name??'?',defender:g.tribe(rec.defender)?.name??'?',ours:rec.attacker===0?'attacker' as const:'defender' as const,outcome:rec.outcome??'standoff',phase:rec.phase,
+  ...(rec?{raid:{id:rec.id,otherTeam:rec.attacker===0?rec.defender:rec.attacker,attacker:g.tribe(rec.attacker)?.name??'?',defender:g.tribe(rec.defender)?.name??'?',ours:rec.attacker===0?'attacker' as const:'defender' as const,outcome:rec.outcome??'standoff',phase:rec.phase,
    lostOurs:rec.attacker===0?rec.attackerLost:rec.defenderLost,lostTheirs:rec.attacker===0?rec.defenderLost:rec.attackerLost,civiliansLost:rec.defenderCivilianLost,burned:rec.buildingsLost,carried:rec.carried,leftBehind:rec.leftBehind??{},text:raidReportText(g,rec)}}:{}),
   routes,flags:{counters:d.counters,formations:d.formations,guardDuty:d.guardDuty,raidReports:d.raidReports,transit:d.transit}};
 }

@@ -94,7 +94,7 @@ test('a raid report counts actual casualties, loot carried off, retreat and resi
  const store=g.state.buildings[2];g.applyCombatDamage(0,store,store.hp+1,raiders[0].id);
  assert.ok(store.raidLoot?.food>0);const exposed=store.raidLoot.food;
  weaver.x=64;weaver.z=45;sentry.x=64;sentry.z=45;raiders[0].x=store.x;raiders[0].z=store.z;raiders[0].carry=0;raiders[0].order='attack';raiders[0].pillage=1;
- assert.equal(raidLootAI(g,raiders[0],.1),true);const carried=raiders[0].carry;assert.ok(carried>0);
+ weaver.shelterId=store.id;/* raiders load loot only once no raided person stands in reach */assert.equal(raidLootAI(g,raiders[0],.1),true);weaver.shelterId=undefined;const carried=raiders[0].carry;assert.ok(carried>0);
  const rec=g.state.raidReports.active[0];
  assert.equal(rec.defenderLost,2);assert.equal(rec.defenderCivilianLost,1);assert.equal(rec.attackerLost,1);assert.equal(rec.buildingsLost,1);assert.equal(rec.kind,'raid');
  assert.equal(rec.carried.food,carried);assert.equal(rec.exposed.food,exposed);

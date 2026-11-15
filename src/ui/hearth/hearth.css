@@ -648,3 +648,6 @@ span[data-mood=bad]{background-image:repeating-linear-gradient(135deg,rgba(0,0,0
  .hw-bottom{left:var(--hw-panel-left)}
  .hw-sel{max-height:max(160px,min(66dvh,620px,calc(100dvh - var(--hw-top-h) - var(--hw-bottom-reserve) - 2*var(--hw-edge))))}
 }
+.hw-neigh>button:first-child{display:flex;align-items:center;gap:var(--hw-s2);flex:1;min-width:0;background:transparent;border:0;color:inherit;cursor:pointer;text-align:left;min-height:36px;padding:0}
+.hw-neigh .hw-neigh-peace{flex:none;font-size:var(--hw-fs-s);padding:2px 8px;border-radius:var(--hw-r-s);border:1px solid rgba(255,236,190,.35);background:rgba(255,236,190,.08);color:inherit;cursor:pointer}
+.hw-raid-terms{display:grid;gap:var(--hw-s2);padding:var(--hw-s2)}

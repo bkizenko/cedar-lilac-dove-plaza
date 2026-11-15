@@ -1,5 +1,8 @@
 import {regencyOf} from './dynasty';
 import {knownDiplomaticRelation} from './diplomaticKnowledge';
+import {knownSettlement} from './barter';
+import {PEACE_TERMS} from './peace';
+import {conquestAssessment} from './conquest';
 import {societyIdentity} from './societyIdentity';
 import {diplomaticVoice,type DiplomaticVoice} from './diplomaticVoice';
 /** Plain-JSON council view of a society's ruling house for the UI. Pure read of game state; safe to post across the worker. */
@@ -29,7 +32,7 @@ export type CouncilModel={
  glory:{stream:string;value:number}[];gloryScore:number;
  expansion?:{mode:string;drive:number;why:string[]};
  parties?:PartyLine[];
- neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;identity?:import('./societyIdentity').SocietyIdentity;voice?:DiplomaticVoice;court?:RivalCourt;wards?:WardLine[];casus?:CasusLine[];memory?:MemoryLine[];report?:{ageSec:number;via:string;stale:boolean}}[];
+ neighbours:{team:number;name:string;bond:string;trust:number;canMarry:boolean;means:string[];grievance?:number;hostile?:boolean;atPeace?:boolean;peace?:{canOffer:boolean;sent:boolean;incoming?:{term:string;label:string;expiresIn:number}};conquest?:ReturnType<typeof conquestAssessment>;identity?:import('./societyIdentity').SocietyIdentity;voice?:DiplomaticVoice;court?:RivalCourt;wards?:WardLine[];casus?:CasusLine[];memory?:MemoryLine[];report?:{ageSec:number;via:string;stale:boolean}}[];
  log:string[];
  /** Agreements the player is party to (marriages, pacts, fosterage), newest first; optional so old callers and empty models stay valid. */
  news?:{time:number;kind:string;with:number;text:string}[];
@@ -84,6 +87,12 @@ export function neighbourMemory(g:Game,team:number,other:number):MemoryLine[]{
  }
  return out.sort((a,b)=>b.year-a.year||b.weight-a.weight).slice(0,8);
 }
+/** One source of truth for 'are we at war with them': the dated diplomatic account the player holds, exactly as the minimap reads it. */
+function peaceView(g:Game,team:number,hostile:boolean){
+ if(!hostile||team===0)return undefined;
+ const t=g.tribe(team),o=t?.peaceOffer,sent=g.state.units.some(u=>u.hp>0&&u.envoy?.kind==='peace'&&u.envoy.team===team);
+ return{canOffer:!!t&&knownSettlement(g,team)&&!sent,sent,...(o&&o.expires>g.state.time?{incoming:{term:o.term,label:PEACE_TERMS[o.term],expiresIn:Math.ceil(o.expires-g.state.time)}}:{})};
+}
 export function councilModel(g:Game,team=0):CouncilModel{
  const empty:CouncilModel={enabled:false,stage:'household',showSuccession:false,showFactions:false,factions:[],coalitionLoss:0,glory:[],gloryScore:0,neighbours:[],log:[]};
  if(!rulersEnabled(g))return empty;ensureRulers(g);const r=rulersOf(g.state);const me=r?.societies[String(team)];if(!r||!me)return empty;
@@ -93,8 +102,8 @@ export function councilModel(g:Game,team=0):CouncilModel{
  const role=(id:string)=>id===d.rulerId?'ruler':d.people[id]?.spouse===d.rulerId?'consort':d.people[id]?.parent===d.rulerId?'child':'kin';
  const exp=expansionOf(g,team),ocs=orphanCare(d);
  const neighbours=g.state.tribes.map((t,i)=>i).filter(i=>i!==team&&i!==3&&societyRelation(g,team,i).known).map(i=>{
-  const o=r.societies[String(i)],ties=tiesBetween(g,team,i),im=implications(ties),rel=societyRelation(g,team,i);
-  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:rel.hostile,atPeace:rel.peaceUntil>g.state.time,report:(k=>k.report?{ageSec:Math.max(0,Math.round(g.state.time-k.report.observedAt)),via:k.report.via,stale:k.stale}:undefined)(knownDiplomaticRelation(g,i)),identity:societyIdentity(g,i),voice:diplomaticVoice(o?.dynasty.people[o.dynasty.rulerId]?.ruler?.traits??o?.civ.ruler.traits,g.tribe(i).name),court:rivalCourt(r,i),wards:wardLines(r,team,i),casus:casusLines(r,team,i),memory:neighbourMemory(g,team,i),
+  const o=r.societies[String(i)],ties=tiesBetween(g,team,i),im=implications(ties),rel=societyRelation(g,team,i),known=knownDiplomaticRelation(g,i);
+  return {team:i,name:g.tribe(i).name,bond:relationWord(ties),trust:Math.round(rel.trust*100),grievance:Math.round(rel.grievance*100),hostile:known.hostile===true,atPeace:!(known.hostile===true)&&(known.compactUntil||0)>g.state.time,peace:peaceView(g,i,known.hostile===true),conquest:known.hostile===true?conquestAssessment(g,i):undefined,report:(k=>k.report?{ageSec:Math.max(0,Math.round(g.state.time-k.report.observedAt)),via:k.report.via,stale:k.stale}:undefined)(knownDiplomaticRelation(g,i)),identity:societyIdentity(g,i),voice:diplomaticVoice(o?.dynasty.people[o.dynasty.rulerId]?.ruler?.traits??o?.civ.ruler.traits,g.tribe(i).name),court:rivalCourt(r,i),wards:wardLines(r,team,i),casus:casusLines(r,team,i),memory:neighbourMemory(g,team,i),
    canMarry:!!o&&familyFeatures(o.civ.polity.tier,livingPeople(g,i)).marriageExchange&&f.marriageExchange,
    means:[im.willJoinDefensiveWar&&'would join a defensive war',im.willDemandSeatInSuccession&&'may claim a seat in the line',im.vendettaRisk&&'a vendetta is brewing',im.cbAvailable&&`grounds for a ${im.cbAvailable} claim`].filter(Boolean) as string[]};
  });

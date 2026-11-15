@@ -5,7 +5,7 @@ import {doctrineOf} from './combatDoctrine';
  * resident's current task; nothing is estimated or created here. */
 export type LootKind='food'|'wood'|'stone'|'copper'|'iron';
 export type Loot=Partial<Record<LootKind,number>>;
-export type RaidOutcome='sacked'|'destroyed'|'repelled'|'standoff';
+export type RaidOutcome='sacked'|'destroyed'|'repelled'|'overrun'|'standoff';
 export type RaidRecord={
  id:number;attacker:number;defender:number;kind:'raid'|'clash';startedAt:number;lastActivityAt:number;x:number;z:number;
  attackerIds:number[];defenderIds:number[];attackerLost:number;defenderLost:number;defenderCivilianLost:number;buildingsLost:number;
@@ -55,13 +55,22 @@ export function noteRaidCarried(g:Game,u:Unit,defender:number,kind:LootKind,amou
 }
 const living=(g:Game,ids:number[])=>{const by=new Map(g.state.units.map(u=>[u.id,u]));return ids.map(i=>by.get(i)).filter((u):u is Unit=>!!u&&u.hp>0);};
 const civilianReady=(u:Unit)=>u.type==='worker'&&!u.militia&&!u.emergency&&!u.shelterId&&!u.recalled&&!u.demobilizing;
+/** 'Repelled' means the defenders actually won: raiders died or left without the defenders paying a heavier price. Heavy defender losses with few or no raider losses is an overrun, whether or not the raiders then walked away. */
+export function classifyRaid(rec:Pick<RaidRecord,'buildingsLost'|'carried'|'exposed'|'attackerIds'|'attackerLost'|'defenderLost'|'retreated'>,survivors:number):RaidOutcome{
+ if(rec.buildingsLost>0||total(rec.carried)>0||total(rec.exposed)>0)return 'sacked';
+ if(rec.attackerIds.length>0&&survivors===0)return 'destroyed';
+ const left=rec.retreated||0;
+ if(rec.defenderLost>0&&rec.defenderLost>=Math.max(2,rec.attackerLost*2))return 'overrun';
+ if(rec.attackerLost>0||left>0&&rec.defenderLost===0)return 'repelled';
+ return rec.defenderLost>0?'overrun':'standoff';
+}
 function settle(g:Game,rec:RaidRecord){
  const attackers=living(g,rec.attackerIds);
  rec.attackerSurvivors=attackers.length;
  rec.retreated=attackers.filter(u=>Math.hypot(u.x-rec.x,u.z-rec.z)>RAID_REPORT_RULES.retreatMeters||u.order==='return'||u.seaRaid?.phase==='retreat').length;
  const left:Loot={};for(const b of g.state.buildings)if(b.hp<=0&&b.team===rec.defender&&b.lootTeam===rec.attacker&&b.raidLoot&&Math.hypot(b.x-rec.x,b.z-rec.z)<80)addLoot(left,b.raidLoot);
  rec.leftBehind=left;
- rec.outcome=rec.buildingsLost>0||total(rec.carried)>0||total(rec.exposed)>0?'sacked':rec.attackerIds.length>0&&attackers.length===0?'destroyed':rec.retreated>0||rec.attackerLost>0?'repelled':'standoff';
+ rec.outcome=classifyRaid(rec,attackers.length);
  rec.phase='settling';rec.closedAt=g.state.time;
 }
 function civilianStatus(g:Game,rec:RaidRecord){
@@ -73,7 +82,7 @@ function civilianStatus(g:Game,rec:RaidRecord){
 export function raidReportText(g:Game,rec:RaidRecord){
  const A=g.state.tribes[rec.attacker]?.name||`Society ${rec.attacker}`,D=g.state.tribes[rec.defender]?.name||`Society ${rec.defender}`;
  const loot=(l:Loot)=>KINDS.filter(k=>(l[k]||0)>0).map(k=>`${Math.round(l[k]!)} ${k}`).join(', ');
- const head=rec.outcome==='sacked'?`${A} sacked ${D}`:rec.outcome==='destroyed'?`${A}'s raiders were destroyed by ${D}`:rec.outcome==='repelled'?`${D} drove off ${A}`:`${A} and ${D} broke off`;
+ const head=rec.outcome==='sacked'?`${A} sacked ${D}`:rec.outcome==='destroyed'?`${A}'s raiders were destroyed by ${D}`:rec.outcome==='repelled'?`${D} drove off ${A}`:rec.outcome==='overrun'?`${A} overran ${D}`:`${A} and ${D} broke off`;
  const parts=[`${rec.defenderLost} defender${rec.defenderLost===1?'':'s'} lost${rec.defenderCivilianLost?` (${rec.defenderCivilianLost} civilian)`:''}`,`${rec.attackerLost} attacker${rec.attackerLost===1?'':'s'} lost`];
  if(rec.buildingsLost)parts.push(`${rec.buildingsLost} building${rec.buildingsLost===1?'':'s'} burned`);
  parts.push(total(rec.carried)>0?`${loot(rec.carried)} carried off`:'nothing carried off');
@@ -89,7 +98,7 @@ export function tickRaidReports(g:Game,dt:number){
  const acc=(clocks.get(g)||0)+dt;if(acc<RAID_REPORT_RULES.tickSeconds){clocks.set(g,acc);return;}clocks.set(g,0);
  const now=g.state.time,R=RAID_REPORT_RULES;
  for(const rec of r.active){
-  if(rec.phase==='fighting'&&now-rec.lastActivityAt>=R.quietSeconds){settle(g,rec);if(rec.attacker===0||rec.defender===0)g.banner(raidReportText(g,rec),9);}
+  if(rec.phase==='fighting'&&now-rec.lastActivityAt>=R.quietSeconds){settle(g,rec);if(rec.attacker===0||rec.defender===0)g.banner(raidReportText(g,rec),40);}
   if(rec.phase==='settling'){
    const alive=civilianStatus(g,rec),done=rec.resumed!==undefined&&(alive===0||rec.resumed+(rec.stillArmed||0)>=alive&&!rec.sheltering&&!rec.stillArmed);
    if(done||now-(rec.closedAt||now)>=R.settleSeconds){rec.phase='closed';rec.finishedAt=now;}
@@ -109,7 +118,7 @@ export function validRaidReports(s:any){
   if(![rec.startedAt,rec.lastActivityAt,rec.x,rec.z].every(Number.isFinite)||![rec.attackerLost,rec.defenderLost,rec.defenderCivilianLost,rec.buildingsLost].every(n=>Number.isInteger(n)&&n>=0))return false;
   for(const list of [rec.attackerIds,rec.defenderIds])if(!Array.isArray(list)||list.length>RAID_REPORT_RULES.maximumIds||list.some((i:any)=>!Number.isInteger(i)||i<0))return false;
   if(!loot(rec.exposed)||!loot(rec.carried)||rec.leftBehind!==undefined&&!loot(rec.leftBehind))return false;
-  if(rec.outcome!==undefined&&!['sacked','destroyed','repelled','standoff'].includes(rec.outcome))return false;
+  if(rec.outcome!==undefined&&!['sacked','destroyed','repelled','overrun','standoff'].includes(rec.outcome))return false;
   for(const k of ['closedAt','finishedAt','attackerSurvivors','retreated','resumed','stillArmed','sheltering'])if(rec[k]!==undefined&&!(Number.isFinite(rec[k])&&rec[k]>=0))return false;
  }
  for(const rec of v.done)if(rec.phase!=='closed')return false;

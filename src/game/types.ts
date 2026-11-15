@@ -232,6 +232,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
   returnAfterCombat?: boolean;
   massRaidTarget?: number;
   enslavedFrom?: number;
+  /** A person from a conquered society: the tribe's name shows after theirs for one more generation (gen 0 = the captured, 1 = their children). `rebel` marks people spared after conquest who may rise later. */
+  originTribe?: { name: string; gen: 0 | 1; rebel?: boolean };
   repatriating?: boolean;
   captivityUnrest?: number;
   tributeJourney?: {phase:"pickup"|"deliver"|"return"; amount:number};

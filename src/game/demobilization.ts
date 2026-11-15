@@ -48,6 +48,11 @@ export function queueStandDown(g:Game,u:Unit,preserveWork=false){
 }
 /** Runs after emergency defense: retain weapons until immediate danger passes. */
 export function demobilizationAI(g:Game,u:Unit,dt:number){
+ if(u.returnAfterCombat&&!u.emergency&&u.pillage>=0&&!g.nextPillage(u)){
+  // The raiders stay until the raided people are beaten or the player orders them away; any new order clears `pillage`.
+  const foe=g.raidFoeNear(u);
+  if(foe){u.target=foe;u.tx=foe.x;u.tz=foe.z;u.order='attack';u.workReason='Raiding — fighting on until the village is beaten or you call us back';return false;}
+ }
  if(u.returnAfterCombat&&!u.emergency&&(u.pillage<0||!g.nextPillage(u)))queueStandDown(g,u);
  if(!u.demobilizing)return false;
  if(!u.militia){u.demobilizing=undefined;u.stationOnArrival=false;return false;}
