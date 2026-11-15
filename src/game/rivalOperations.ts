@@ -32,10 +32,11 @@ function freeWorker(g:Game,u:Unit){return u.hp>=u.maxHp*OPERATION_RULES.military
 export function heavyEquip(g:Game,team:number,u:Unit,stores:Building[]):boolean{
  const t=g.tribe(team);if(t.age<2||!stores.some(b=>b.type==='barracks'))return false;
  const kind=t.age>=3?'pikeman':'hoplite',d=UNITS[kind];
- if(t.iron<d.iron+4||t.wood<d.wood+20)return false;
+ const need=d.iron??0;
+ if(t.iron<need+4||t.wood<d.wood+20)return false;
  const lots=planFoodWithdrawal(g,team,d.food);if(!lots)return false;
  if(!commitFoodWithdrawal(g,team,lots))return false;
- t.iron-=d.iron;t.wood-=d.wood;u.type=kind;u.militia=true;u.range=d.range;u.dmg=weaponDamage('spearman',t.age)*(d.dmg/UNITS.spearman.dmg);u.rof=d.rof;
+ t.iron-=need;t.wood-=d.wood;u.type=kind;u.militia=true;u.range=d.range;u.dmg=weaponDamage('spearman',t.age)*(d.dmg/UNITS.spearman.dmg);u.rof=d.rof;
  u.workReason=`Trained as a ${d.name.toLowerCase()} from real iron — ready to defend`;return true;
 }
 /** A rival that holds tin and copper and has a finished forge casts bronze, then bronze blades, through the ordinary paid production path. */
