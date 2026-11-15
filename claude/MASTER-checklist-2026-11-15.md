@@ -18,3 +18,12 @@ Bread/water/nourishment rebalance; selection circles; HUD overlap; storage bar; 
 Save error "Save is damaged or incompatible" (not reproduced, needs his save); longer seasons (year length 1800 s is hard-coded in many places; changing it risks saves); trade encounter dialog and map trade proposals, trading people, coins; expedition panel; baskets and clay containers; storage caps; near and mid tree LOD radii.
 
 ## Last (Boris said later): first-person mode, tutorial mode, future eras.
+
+## Update from local session, release 2026-11-15T07-28-28-000Z (built from main 8813738c; live on 8086)
+LIVE (code + tests; UI panels typechecked but NOT yet seen rendered, [UNVERIFIED] visually):
+- Military: one-press call to arms; weapon stock line (townhall/barracks/warehouse); watchtower crews; squads 5/10/25/50/100; fighting rank and defence; weapon grades per age/material; town focus modes (Normal/Crafting/War); wall-walk patrols and "Man the walls"; night torches (logs, charcoal, oil).
+- Governance: 11 government types (band council to parliamentary republic), 13 policies, governors, council card. AI adoption not wired yet (aiGovernmentFor exported).
+- Leftovers: storage caps for logs/stone/copper/iron (cap meter in supply bar); wider near/mid tree radii.
+- Trade UI: coins (mint/melt), send-expedition panel. Regional goods, captive sale and basket bonus are on main after this build (commit 755e0baf) and ship at the next publish.
+IN PROGRESS: rivals (deeper dominance, conquest tests), building behaviour (heights, work face, steep hills, look tiers), save round-trip (report pending).
+OPEN: longer seasons (plan in claude/PLAN-longer-seasons-2026-11-15.md; needs Boris's 3 decisions), trade map destination picker, willing migrants, vineyard/press buildings. Last: first-person, tutorial, future eras (plan: claude/PLAN-future-2026-11-15.md).

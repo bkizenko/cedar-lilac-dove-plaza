@@ -42,3 +42,9 @@ Boris re-scoped the local session to take ALL lanes below, run as parallel helpe
 - CLAIM P12 Cisterns (finite stored fresh water, drought) and bigger harbour building tiers with boat slots.
 - CLAIM P13 Clothing: simplified chain and tailor hints, hide-use rules, starting clothes, pregnancy effect on work.
 - CLAIM P14 Smoke test: a headless seeded run of the real sim that exercises the new systems and fails on exceptions or NaN (scripts/smoke-sim.test.mjs); reports crashes to the session, fixes only trivial ones.
+
+## Publish gotchas (local session, verified 2026-11-15)
+- The 8086 server serves `.play/current` in the Codex folder `.../work/hearthwild.nosync/.play`, not in the hearthwild-render clone. It hot-switches when `current` is repointed.
+- On macOS `mv -f next current` moves `next` INTO the old release because `current` is a symlink to a directory. Use `ln -sfn <abs release> next-tmp && mv -fh next-tmp current`.
+- A fresh `npm ci` here lacks the darwin rolldown binding: `npm i --no-save --ignore-scripts @rolldown/binding-darwin-arm64@<rolldown version>`.
+- Node 22 is at /opt/homebrew/opt/node@22/bin (default node is v21 and cannot run the test loader). Global lock for heavy runs: /Users/boriskizenko/Projects/hw-lock.sh <cmd>.
