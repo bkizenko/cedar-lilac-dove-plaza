@@ -16,6 +16,7 @@ import {supplyDrops,supplyApproach,supplyReached} from './campAnchor';
 import {penHousingCapacity} from './penGeometry';
 import type {ItemKind} from './production';
 import {villagePersonality} from './villagePersonality';
+import {holdsTinLode} from './bronze';
 
 /**
  * TRADE-NEEDS / G15. Societies propose trades from what they actually lack and actually hold.
@@ -25,7 +26,7 @@ import {villagePersonality} from './villagePersonality';
  * Receipts record load / payment / delivery / loss. Declined offers cool down and change.
  */
 export type GoodCategory='resource'|'weapon'|'armor'|'tool'|'artifact'|'clothing'|'animal'|'currency';
-export type GoodKind=ResKind|'spears'|'bows'|'blades'|'paddedArmor'|'cordage'|'basket'|'pottery'|'cloth'|'leather'|'skinClothes'|'hideCoat'|'woolCloth'|'woolCoat'|'coins'|'oliveOil'|'wine'|'goat';
+export type GoodKind=ResKind|'spears'|'bows'|'blades'|'paddedArmor'|'cordage'|'basket'|'pottery'|'cloth'|'leather'|'skinClothes'|'hideCoat'|'woolCloth'|'woolCoat'|'coins'|'oliveOil'|'wine'|'goat'|'tinOre'|'tin'|'bronze';
 type Good={cat:GoodCategory;worth:number;lot:number;maxLot:number;perCarrier:number};
 export const TRADE_GOODS:Record<GoodKind,Good>={
  food:{cat:'resource',worth:TRADE_PRICING.worth.food,lot:8,maxLot:36,perCarrier:0},wood:{cat:'resource',worth:TRADE_PRICING.worth.wood,lot:8,maxLot:36,perCarrier:0},stone:{cat:'resource',worth:TRADE_PRICING.worth.stone,lot:8,maxLot:36,perCarrier:0},
@@ -34,16 +35,17 @@ export const TRADE_GOODS:Record<GoodKind,Good>={
  paddedArmor:{cat:'armor',worth:5,lot:1,maxLot:4,perCarrier:4},cordage:{cat:'tool',worth:1.5,lot:4,maxLot:16,perCarrier:16},basket:{cat:'tool',worth:1.5,lot:2,maxLot:8,perCarrier:8},
  pottery:{cat:'artifact',worth:2.5,lot:2,maxLot:8,perCarrier:8},cloth:{cat:'artifact',worth:3,lot:2,maxLot:8,perCarrier:8},
  leather:{cat:'tool',worth:3,lot:2,maxLot:8,perCarrier:8},skinClothes:{cat:'clothing',worth:4,lot:1,maxLot:6,perCarrier:6},hideCoat:{cat:'clothing',worth:6,lot:1,maxLot:4,perCarrier:4},woolCloth:{cat:'artifact',worth:4,lot:2,maxLot:8,perCarrier:8},woolCoat:{cat:'clothing',worth:7,lot:1,maxLot:4,perCarrier:4},coins:{cat:'currency',worth:TRADE_PRICING.worth.copper/6,lot:8,maxLot:36,perCarrier:36},oliveOil:{cat:'artifact',worth:3,lot:2,maxLot:12,perCarrier:12},wine:{cat:'artifact',worth:3.5,lot:2,maxLot:12,perCarrier:12},goat:{cat:'animal',worth:14,lot:1,maxLot:2,perCarrier:1},
+ tinOre:{cat:'artifact',worth:3.2,lot:2,maxLot:12,perCarrier:12},tin:{cat:'artifact',worth:8,lot:1,maxLot:8,perCarrier:8},bronze:{cat:'artifact',worth:7,lot:1,maxLot:8,perCarrier:8},
 };
 export const TRADE_KINDS=Object.keys(TRADE_GOODS) as GoodKind[];
 /** Bulk goods with an existing body holder: the carrier's own itemCargo (the same holder production uses). */
-export const TRADE_BULK_ITEMS:GoodKind[]=['cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat','coins','oliveOil','wine'];
+export const TRADE_BULK_ITEMS:GoodKind[]=['cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat','coins','oliveOil','wine','tinOre','tin','bronze'];
 /** Goods that currently have a physical holder for the whole journey (carried resource loads, dropped as
  * parcels on death) and bulk items carried in the body's itemCargo (dropped as item parcels on death).
  * Armor assets, weapons, farm tools and animals stay in saves/observations but are not offered until
  * Codex-owned holder adapters exist (board request; review trade-cargo-5d9051c P1). */
 export const TRADE_SELECTABLE_KINDS=TRADE_KINDS.filter(k=>TRADE_GOODS[k].cat==='resource'||TRADE_BULK_ITEMS.includes(k));
-const WEAPONS=['spears','bows','blades'],ITEMS=['coins','oliveOil','wine','paddedArmor','cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat'];
+const WEAPONS=['spears','bows','blades'],ITEMS=['coins','oliveOil','wine','tinOre','tin','bronze','paddedArmor','cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat'];
 export const TRADE_NEEDS_RULES={version:1,reviewSeconds:240,firstReviewSeconds:60,maximumMarketsCounted:3,marketFrequencyGain:.6,baseSpread:.3,spreadPerMarket:.07,minimumSpread:.04,answerDelayBase:15,answerDelayPerMeter:.04,playerAnswerSeconds:600,cooldownSeconds:600,maximumCooldownSeconds:3600,declineScale:.6,loadingSeconds:240,journeySeconds:900,hallMeters:26,maximumOffers:96,maximumObservations:64,maximumCooldowns:128,maximumReceipts:256,minimumHomeAdults:3,maximumCarriers:3,maximumEscorts:3,penHallMeters:40} as const;
 
 export type TradeOfferPhase='proposed'|'loading'|'outbound'|'returning'|'aborting'|'complete'|'declined'|'failed';
@@ -78,8 +80,8 @@ function pop(g:Game,team:number){return g.state.units.filter(u=>u.team===team&&u
 export function tradeReserve(g:Game,team:number,k:GoodKind):number{
  if(TRADE_GOODS[k].cat==='resource')return team===0?0:rivalTradeReserve(g,team,k as ResKind);
  const a=adults(g,team);if(k==='spears'||k==='bows')return Math.max(1,Math.floor(a/4));if(k==='blades')return Math.max(0,Math.floor(a/6));if(k==='paddedArmor')return Math.max(0,Math.floor(a/6));
- if(k==='goat')return 2;if(k==='coins')return 0;return Math.ceil(pop(g,team)/6)+1;}
-const usable=(g:Game,team:number,k:GoodKind)=>k==='copper'?g.tribe(team).age>=1:k==='iron'||k==='blades'?g.tribe(team).age>=2:true;
+ if(k==='goat')return 2;if(k==='coins')return 0;if(k==='tinOre'||k==='tin'||k==='bronze')return team!==0&&holdsTinLode(g,team)&&k==='tinOre'?6:0;return Math.ceil(pop(g,team)/6)+1;}
+const usable=(g:Game,team:number,k:GoodKind)=>k==='tinOre'||k==='tin'||k==='bronze'?g.tribe(team).age>=1:k==='copper'?g.tribe(team).age>=1:k==='iron'||k==='blades'?g.tribe(team).age>=2:true;
 export function tradeNeed(g:Game,team:number,k:GoodKind){if(!usable(g,team,k))return 0;if(k==='goat'&&!penRoom(g,team))return 0;return Math.max(0,tradeReserve(g,team,k)-tradeStock(g,team,k));}
 export function tradeSurplus(g:Game,team:number,k:GoodKind){return Math.max(0,tradeStock(g,team,k)-tradeReserve(g,team,k));}
 function penRoom(g:Game,team:number,hall?:{x:number;z:number},exclude:number[]=[]){

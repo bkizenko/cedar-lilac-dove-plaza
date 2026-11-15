@@ -29,7 +29,7 @@ export const STOLEN_CARGO_REASONS=['parcel-cap','mark-cap','no-owner-adult','too
  'pursuit-time','pursuit-distance','pursuit-hurt','pursuit-ended','claimant-lost'] as const;
 export type StolenCargoReason=typeof STOLEN_CARGO_REASONS[number];
 /** Bulk trade goods carried in a trade carrier's itemCargo also become parcels on that carrier's death. */
-export const PARCEL_ITEMS:ItemKind[]=['cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat','copperOre','copperMetal','ironOre','ironBloom','ironMetal','coins','oliveOil','wine'];
+export const PARCEL_ITEMS:ItemKind[]=['cordage','basket','pottery','cloth','leather','skinClothes','hideCoat','woolCloth','woolCoat','copperOre','copperMetal','ironOre','ironBloom','ironMetal','coins','oliveOil','wine','tinOre','tin','bronze'];
 export type ParcelKind=ResKind|ItemKind;
 const isItem=(k:ParcelKind):k is ItemKind=>(PARCEL_ITEMS as string[]).includes(k);
 const heldItems=(u:Unit)=>PARCEL_ITEMS.filter(k=>(u.itemCargo?.[k]||0)>0);
