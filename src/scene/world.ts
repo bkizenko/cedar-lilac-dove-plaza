@@ -1414,7 +1414,7 @@ export class WorldView {
       this.look.z = THREE.MathUtils.clamp(this.look.z, -(this.mapSize/2) + 10, (this.mapSize/2) - 10);
     }
     this.pitch = THREE.MathUtils.clamp(this.pitch, 0.2, 1.36);
-    this.dist = THREE.MathUtils.clamp(this.dist, 14, 230);
+    this.dist = THREE.MathUtils.clamp(this.dist, 14, 520);
     this.tmpCam.set(
       this.look.x + Math.sin(this.yaw) * Math.cos(this.pitch) * this.dist,
       this.look.y + 1.2 + Math.sin(this.pitch) * this.dist,
