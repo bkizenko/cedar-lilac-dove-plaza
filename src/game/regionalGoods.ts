@@ -3,6 +3,7 @@ import {climateAt} from './ecology';
 import {receiveFood} from './pantry';
 import {isDependent} from './settlement';
 import {pressHouseFor,PRESS_BONUS_JARS} from './vineyards';
+import {liquidCapacityIssue,takeLiquidVessel,containerIssue} from './containers';
 import {planFoodWithdrawal,commitFoodWithdrawal} from './tradeFood';
 const reviewed=new WeakMap<object,number>();
 /** Regional goods: olive oil and wine. Region comes from the measured climate at the society's camp; inputs are real stores.
@@ -26,15 +27,15 @@ export function pressingIssue(g:Game,team:number,kind:RegionalGood):string|null{
  if(!g.state.buildings.some(b=>b.team===team&&(b.type==='warehouse'||b.type==='townhall'||b.type==='press')&&b.hp>0&&g.finished(b)))return 'Finish a storehouse or press house to press and store jars';
  const s=regionalSuitability(g,team,kind);if(!s.ok)return s.reason;
  if((t.food||0)<REGIONAL_RULES.batchFoodIn)return `Need ${REGIONAL_RULES.batchFoodIn} food of fruit in stores`;
- if((t.items?.pottery||0)<1&&(t.wood||0)<REGIONAL_RULES.caskWood)return `Need a pottery vessel or ${REGIONAL_RULES.caskWood} timber for a cask`;
- return null;
+ if(containerIssue(g,team))return `Need an amphora, a pottery vessel or ${REGIONAL_RULES.caskWood} timber for a cask`;
+ return liquidCapacityIssue(g,team,REGIONAL_RULES.batchJars);
 }
 export function pressRegional(g:Game,team:number,kind:RegionalGood,batches=1):{accepted:boolean;reason:string}{
  if(!['oliveOil','wine'].includes(kind)||!Number.isSafeInteger(batches)||batches<1||batches>6)return{accepted:false,reason:'Choose oil or wine and 1-6 batches'};
  const t=g.tribe(team);let done=0;const jarsPerBatch=REGIONAL_RULES.batchJars+(pressHouseFor(g,team)?PRESS_BONUS_JARS:0);
  for(;done<batches;done++){const issue=pressingIssue(g,team,kind);if(issue){if(!done)return{accepted:false,reason:issue};break;}
   const lots=planFoodWithdrawal(g,team,REGIONAL_RULES.batchFoodIn);if(!lots||!commitFoodWithdrawal(g,team,lots))break;
-  const items=t.items??={};if((items.pottery||0)>=1){items.pottery!--;const lot=t.potteryOrigins?.find(o=>o.count>0);if(lot)lot.count--;}else t.wood-=REGIONAL_RULES.caskWood;
+  if(!takeLiquidVessel(g,team))break;const items=t.items??={};
   items[kind]=(items[kind]||0)+jarsPerBatch;}
  return done?{accepted:true,reason:`${done*jarsPerBatch} jars of ${REGIONAL_RULES[kind].label} pressed from ${done*REGIONAL_RULES.batchFoodIn} food`}:{accepted:false,reason:'Could not pay for a batch'};
 }
@@ -43,7 +44,15 @@ export function consumeRegional(g:Game,team:number,kind:RegionalGood,jars:number
  if(!t||!['oliveOil','wine'].includes(kind)||!Number.isSafeInteger(jars)||jars<1||jars>12)return{accepted:false,reason:'Choose 1-12 jars'};
  if(held<jars)return{accepted:false,reason:`Only ${held} jars in stores`};
  t.items![kind]=held-jars;const food=jars*REGIONAL_RULES[kind].foodEachJar;receiveFood(g,team,food,'provisions');
- return{accepted:true,reason:`${jars} jars of ${REGIONAL_RULES[kind].label} shared at table, worth ${food.toFixed(1)} food`};
+ const healed=shareHealing(g,team,jars);
+ return{accepted:true,reason:`${jars} jars of ${REGIONAL_RULES[kind].label} shared at table, worth ${food.toFixed(1)} food${healed>0?`; ${healed.toFixed(0)} health restored to the wounded`:''}`};
+}
+/** A small, bounded mending effect on top of the food energy: each jar restores up to fractionPerJar of max health to wounded
+ * living residents, at most maxFractionPerCall per person per call. Returns total health restored; never over-heals. */
+export const REGIONAL_HEALING={fractionPerJar:.03,maxFractionPerCall:.12,maxPeoplePerJar:3} as const;
+export function shareHealing(g:Game,team:number,jars:number):number{
+ const wounded=g.state.units.filter(u=>u.team===team&&u.hp>0&&u.hp<u.maxHp&&!(u as {prisoner?:unknown}).prisoner).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp||a.id-b.id).slice(0,jars*REGIONAL_HEALING.maxPeoplePerJar);
+ let total=0;for(const u of wounded){const add=Math.min(u.maxHp-u.hp,u.maxHp*Math.min(REGIONAL_HEALING.maxFractionPerCall,REGIONAL_HEALING.fractionPerJar*jars));u.hp+=add;total+=add;}return total;
 }
 /** Rivals press what their region grows from surplus food; the player decides by command. */
 export function tickRegionalPressing(g:Game){

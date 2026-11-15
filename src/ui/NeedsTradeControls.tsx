@@ -37,6 +37,10 @@ export function NeedsTradeSheet({model,inboxOnly,busy,run}:{model:PlayerTradeMod
     <button type="button" className={button} disabled={busy} title="Press 6 food of fruit and one pottery vessel (or a timber cask) into 2 jars where the climate allows" onClick={()=>run({kind:'press-regional',good:k,batches:1})}>Press</button>
     <button type="button" className={button} disabled={busy||(model.goods.find(g=>g.kind===k)?.held||0)<1} title="Share one jar at table as food" onClick={()=>run({kind:'consume-regional',good:k,jars:1})}>Use a jar</button></span>)}
   </div>}
+  {!inboxOnly&&<div className="flex flex-wrap items-center gap-2 border-t border-bronze/20 pt-2" aria-label="Clay containers">
+   <button type="button" className={button} disabled={busy} title="Make an amphora from 2 fired pottery vessels: more room for jars, more carried per trader" onClick={()=>run({kind:'craft-container',container:'amphora',count:1})}>Make amphora</button>
+   <button type="button" className={button} disabled={busy} title="Make a grain storage jar from 1 fired pottery vessel" onClick={()=>run({kind:'craft-container',container:'storageJar',count:1})}>Make storage jar</button>
+  </div>}
   {offers.map(offer=>{
    const incoming=offer.to===0,pay=incoming?offer.get:offer.give,take=incoming?offer.give:offer.get;
    return <div key={offer.id} className="space-y-1 border-t border-bronze/20 pt-2">

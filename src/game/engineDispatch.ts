@@ -119,7 +119,7 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
    case 'face-building':return faceBuilding(g,0,command.buildingId);
    case 'send-expedition':return applySendExpedition(g,command);
    case 'husbandry-order':return applyHusbandryCommand(g,command);
-   case 'propose-needs-trade':case 'answer-needs-trade':case 'mint-coins':case 'melt-coins':case 'press-regional':case 'consume-regional':case 'sell-captive':return applyPlayerTradeCommand(g,command);
+   case 'propose-needs-trade':case 'answer-needs-trade':case 'mint-coins':case 'melt-coins':case 'press-regional':case 'consume-regional':case 'sell-captive':case 'craft-container':case 'transfer-migrants':return applyPlayerTradeCommand(g,command);
    case 'wild-begin':case 'wild-collect':return applyWildCommand(g,command,selection.selectedUnitIds);
    case 'wild-work-control':{const p=g.state.wildCraft?.projects.find(p=>p.id===command.projectId&&p.team===0),u=p&&g.state.units.find(u=>u.id===p.actorId&&u.team===0&&u.hp>0&&u.wildWorkId===p.id);if(!p||!u)return no('Original owned wild work unavailable');if(!!p.paused===command.paused)return no('Work is already in that state');const accepted=command.paused?pauseWildWork(g,u):resumeWildWork(g,u.id);return{accepted,reason:accepted?'Original paid work updated; contents retained at their actual place':'Original worker or paid workplace is unavailable'};}
 
@@ -293,6 +293,8 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'send-expedition':{unitIds:v=>Array.isArray(v)&&v.length>=1&&v.length<=12&&v.every(x=>integer(x)),x:v=>typeof v==='number'&&Number.isFinite(v),z:v=>typeof v==='number'&&Number.isFinite(v)},
   'sell-captive':{prisonerId:id,buyerId:id},
   'face-building':{buildingId:id},
+  'craft-container':{container:v=>v==='amphora'||v==='storageJar',count:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=6},
+  'transfer-migrants':{direction:v=>v==='send'||v==='receive',unitIds:v=>Array.isArray(v)&&v.length>=1&&v.length<=3&&v.every(x=>integer(x)),counterpartId:id,payKind:v=>typeof v==='string'&&['food','wood','stone','copper','iron','coins'].includes(v)},
   'press-regional':{good:v=>v==='oliveOil'||v==='wine',batches:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=6},
   'consume-regional':{good:v=>v==='oliveOil'||v==='wine',jars:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=12},
   'mint-coins':{copper:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=24},

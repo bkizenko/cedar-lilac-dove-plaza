@@ -14,9 +14,25 @@ export function destinationFrom(g:Game,bearingDegrees:number,meters:number){
  const home=g.campOf(0),r=Math.max(SEND_EXPEDITION_RULES.minimumMeters,Math.min(SEND_EXPEDITION_RULES.maximumMeters,meters)),a=bearingDegrees*Math.PI/180,lim=g.world.size/2-8;
  return{x:Math.max(-lim,Math.min(lim,home.x+Math.sin(a)*r)),z:Math.max(-lim,Math.min(lim,home.z-Math.cos(a)*r))};
 }
+export type DestinationReport={ok:boolean;issue:string|null;bearing:number;meters:number;terrain:'land'|'water';explored:boolean};
+/** Bearing (degrees clockwise from north) and distance from camp for a world point, with validation: water, too far, too near.
+ * Unexplored ground is allowed (that is what expeditions are for) and only reported. */
+export function describeDestination(g:Game,x:number,z:number):DestinationReport{
+ const home=g.campOf(0),dx=x-home.x,dz=z-home.z,meters=Math.hypot(dx,dz),bearing=((Math.atan2(dx,-dz)*180/Math.PI)+360)%360;
+ const finite=Number.isFinite(x)&&Number.isFinite(z),lim=g.world.size/2;
+ const water=finite&&Math.abs(x)<=lim&&Math.abs(z)<=lim&&g.height(x,z)<g.waterAt(x,z)-.05;
+ const explored=finite&&Math.abs(x)<=lim&&Math.abs(z)<=lim&&g.exploredAt(x,z);
+ let issue:string|null=null;
+ if(!finite||Math.abs(x)>lim||Math.abs(z)>lim)issue='That point is off the map';
+ else if(water)issue='That is open water; walkers cannot go there, pick land';
+ else if(meters>SEND_EXPEDITION_RULES.maximumMeters)issue=`Too far: at most ${SEND_EXPEDITION_RULES.maximumMeters} m from camp (this is ${Math.round(meters)} m)`;
+ else if(meters<SEND_EXPEDITION_RULES.minimumMeters)issue=`Too close: at least ${SEND_EXPEDITION_RULES.minimumMeters} m from camp`;
+ return{ok:!issue,issue,bearing:Math.round(bearing*10)/10,meters:Math.round(meters),terrain:water?'water':'land',explored:!!explored};
+}
 export function applySendExpedition(g:Game,c:SendExpeditionCommand):{accepted:boolean;reason:string}{
  const no=(reason:string)=>({accepted:false,reason});
  if(!Number.isFinite(c.x)||!Number.isFinite(c.z)||Math.abs(c.x)>g.world.size||Math.abs(c.z)>g.world.size)return no('Choose a destination on the map');
+ const where=describeDestination(g,c.x,c.z);if(!where.ok)return no(where.issue||'Choose a destination on the map');
  const ids=[...new Set(c.unitIds)];if(!ids.length)return no('Choose who goes');if(ids.length>SEND_EXPEDITION_RULES.maximumParty)return no(`A party is at most ${SEND_EXPEDITION_RULES.maximumParty} people`);
  let sent=0,queued=0,reason='';
  for(const id of ids){const u=g.state.units.find(u=>u.id===id&&u.team===0&&u.hp>0);if(!u){reason='Someone in the party is no longer with you';continue;}

@@ -1,4 +1,5 @@
 import {planFoodWithdrawal,commitFoodWithdrawal,receiveFoodLots,setCarriedFood,carriedFoodLots,validFoodLots,type CarriedFoodLots} from './tradeFood';
+import {containerCarryBonus} from './containers';
 import {packCapacityMultiplier} from './packAnimalState';
 import type {Game} from './sim';
 import type {GameState,Livestock,ResKind,Unit} from './types';
@@ -69,6 +70,15 @@ function row(g:Game,team:number){const s=root(g);let r=s.teams.find(t=>t.team===
 function note(g:Game,team:number,reason:string){const r=row(g,team);r.reasons[reason]=(r.reasons[reason]||0)+1;}
 function receipt(g:Game,o:TradeOffer,stage:TradeReceiptStage,team:number,kind:GoodKind,amount:number,unitId?:number,fairAmount?:number){const s=root(g);s.receipts.push({id:g.id(),offerId:o.id,time:g.state.time,stage,team,kind,amount,unitId,fairAmount});if(s.receipts.length>TRADE_NEEDS_RULES.maximumReceipts)s.receipts.splice(0,s.receipts.length-TRADE_NEEDS_RULES.maximumReceipts);}
 
+/** Coin-aware trade: a rival with a market or town hall in the Bronze Age keeps a purse of coins (one per three adults, at least 12 per
+ * market, at most 72). It wants coins until the purse is full and offers coins only above it. The stated rate is the good's worth
+ * divided by a coin's worth (a coin is one sixth of a copper), so coins buy goods at the same prices as copper. */
+export function coinPurse(g:Game,team:number){const t=g.tribe(team);if(!t||team===0||t.age<1)return 0;
+ const markets=g.state.buildings.filter(b=>b.team===team&&(b.type==='market'||b.type==='townhall')&&b.hp>0&&g.finished(b)).length;if(!markets)return 0;
+ return Math.min(72,Math.max(12*Math.min(markets,3),Math.ceil(adults(g,team)/3)*6));}
+/** Coins a buyer pays for `amount` of a good at the stated rate (rounded up), or the goods a stated number of coins buys (rounded down). */
+export const coinPrice=(kind:GoodKind,amount:number)=>Math.ceil(amount*TRADE_GOODS[kind].worth/TRADE_GOODS.coins.worth-1e-9);
+export const coinsBuy=(kind:GoodKind,coins:number)=>Math.floor(coins*TRADE_GOODS.coins.worth/TRADE_GOODS[kind].worth+1e-9);
 // ---- Stocks: every kind reads real state held by the society.
 export function tradeStock(g:Game,team:number,k:GoodKind):number{const t=g.tribe(team);if(!t)return 0;
  if(k==='goat')return(g.state.livestock||[]).filter(a=>a.team===team&&a.hp>0&&a.species==='goat'&&!a.pregnancy&&a.sex!==undefined).length;
@@ -80,7 +90,7 @@ function pop(g:Game,team:number){return g.state.units.filter(u=>u.team===team&&u
 export function tradeReserve(g:Game,team:number,k:GoodKind):number{
  if(TRADE_GOODS[k].cat==='resource')return team===0?0:rivalTradeReserve(g,team,k as ResKind);
  const a=adults(g,team);if(k==='spears'||k==='bows')return Math.max(1,Math.floor(a/4));if(k==='blades')return Math.max(0,Math.floor(a/6));if(k==='paddedArmor')return Math.max(0,Math.floor(a/6));
- if(k==='goat')return 2;if(k==='coins')return 0;if(k==='tinOre'||k==='tin'||k==='bronze')return team!==0&&holdsTinLode(g,team)&&k==='tinOre'?6:0;return Math.ceil(pop(g,team)/6)+1;}
+ if(k==='goat')return 2;if(k==='coins')return coinPurse(g,team);if(k==='tinOre'||k==='tin'||k==='bronze')return team!==0&&holdsTinLode(g,team)&&k==='tinOre'?6:0;return Math.ceil(pop(g,team)/6)+1;}
 const usable=(g:Game,team:number,k:GoodKind)=>k==='tinOre'||k==='tin'||k==='bronze'?g.tribe(team).age>=1:k==='copper'?g.tribe(team).age>=1:k==='iron'||k==='blades'?g.tribe(team).age>=2:true;
 export function tradeNeed(g:Game,team:number,k:GoodKind){if(!usable(g,team,k))return 0;if(k==='goat'&&!penRoom(g,team))return 0;return Math.max(0,tradeReserve(g,team,k)-tradeStock(g,team,k));}
 export function tradeSurplus(g:Game,team:number,k:GoodKind){return Math.max(0,tradeStock(g,team,k)-tradeReserve(g,team,k));}
@@ -239,7 +249,7 @@ function allocateSide(g:Game,ids:number[],side:TradeSide):TradeLine[]|null{
  const lines:TradeLine[]=[],animals=side.animals?[...side.animals]:undefined;
  const food=side.foodLots?{...side.foodLots}:undefined;let left=side.amount;
  if(food&&(side.kind!=='food'||!validFoodLots(food,left)))return null;
- for(const id of ids){const u=unitOf(g,id);if(!u)return null;const take=Math.min(left,capacity(u,side.kind));if(take<=0)continue;
+ for(const id of ids){const u=unitOf(g,id);if(!u)return null;const take=Math.min(left,Math.floor(capacity(u,side.kind)*containerCarryBonus(g,u.team,side.kind)));if(take<=0)continue;
   let foodLots:CarriedFoodLots|undefined;
   if(food){foodLots={};let need=take;for(const kind of FOOD_KINDS){const n=Math.min(food[kind]||0,need);if(n>0){foodLots[kind]=n;food[kind]!-=n;need-=n;}if(need<=1e-9)break;}if(need>1e-7)return null;}
   lines.push({unitId:id,kind:side.kind,amount:take,animals:animals?animals.splice(0,take):undefined,...(foodLots?{foodLots}:{})});left-=take;

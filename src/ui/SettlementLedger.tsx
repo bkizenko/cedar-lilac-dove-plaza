@@ -1,5 +1,6 @@
 import {lightingOf,setTorches,lightingStatus} from '../game/lighting';
 import {ExpeditionPanel} from "./ExpeditionPanel";
+import {MigrantTradePanel} from "./MigrantTradePanel";
 import {focusModeOf,setFocusMode,type FocusMode} from '../game/focusModes';
 import {foodGuardLabel} from '@/game/foodGuard';
 import {SocietyIdentityEditor} from './SocietyIdentityEditor';
@@ -273,6 +274,7 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
       </section>
       <h3>Campaign orders</h3>
       <ExpeditionPanel engine={engine}/>
+      <MigrantTradePanel engine={engine}/>
       <p>Raiding is an explicit campaign; home food and construction workers keep their priorities.</p>
       <button onClick={()=>{g.raidRival();engine.pushHud();}}>Raid and pillage with selected adults</button>
       <button onClick={()=>{g.soundRecall();engine.pushHud();}}>Sound recall horn · return everyone home</button>

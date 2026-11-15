@@ -98,6 +98,7 @@ import {reserveConstructionWorker,releaseConstructionWorker,completeConstruction
 import {excavationHeightAt,configureExcavation,excavationIssue,excavationConstructionIssue,beginExcavationConstructionQuery,excavationWorkNeed,commitExcavation} from './excavation';
 import {tickRegionalPressing} from './regionalGoods';
 import {tickTinLodes} from './bronze';
+import {tickRivalCoinage} from './coinage';
 import {coastalIndependentNeeds,tickCoastalTrade,coastalTradeAI,reviewCoastalTrade,pauseCoastalTrade} from './coastalTrade';
 import {societiesAreFoes,declareSocietyHostility,agreeSocietyTruce,recordSocietyAttack} from './societyRelations';
 import {societyMissionAI,tickSocietyMissionNeeds,tickRivalActivity,cancelSocietyMission,societyMissionIndependentNeeds,isSocietyPeaceMessengerFor,reviewRivalSocietyActivity,dispatchSocietyPeace,dispatchPairRaid,resumeSocietyMission} from './rivalActivity';
@@ -6054,6 +6055,7 @@ export class Game {
         tickRegionalPressing(this);tickTinLodes(this);
         tickSnares(this);
         tickVineyards(this);
+        tickRivalCoinage(this);
         reviewCoastalTrade(this);
         tickCampRelocation(this,sdt);
         tickRivalActivity(this);

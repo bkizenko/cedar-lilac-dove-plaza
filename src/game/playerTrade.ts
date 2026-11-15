@@ -1,9 +1,11 @@
 import type {Game} from './sim';
 import {sellCaptive} from './captiveDealings';
 import {mintCoins,meltCoins} from './coinage';
+import {craftContainer,type ContainerKind} from './containers';
+import {transferMigrants,type MigrantPayKind} from './migrantTrade';
 import {pressRegional,consumeRegional} from './regionalGoods';
 import {TRADE_GOODS,TRADE_SELECTABLE_KINDS,TRADE_NEEDS_RULES,proposePlayerTrade,answerTradeOffer,tradeStock,type GoodKind,type TradeOffer,type TradeOfferPhase} from './tradeNeeds';
-export type PlayerTradeCommand={kind:'propose-needs-trade';team:number;give:GoodKind;get:GoodKind;amount:number}|{kind:'answer-needs-trade';offerId:number;accept:boolean}|{kind:'mint-coins';copper:number}|{kind:'melt-coins';coins:number}|{kind:'sell-captive';prisonerId:number;buyerId:number}|{kind:'press-regional';good:'oliveOil'|'wine';batches:number}|{kind:'consume-regional';good:'oliveOil'|'wine';jars:number};
+export type PlayerTradeCommand={kind:'propose-needs-trade';team:number;give:GoodKind;get:GoodKind;amount:number}|{kind:'answer-needs-trade';offerId:number;accept:boolean}|{kind:'mint-coins';copper:number}|{kind:'melt-coins';coins:number}|{kind:'sell-captive';prisonerId:number;buyerId:number}|{kind:'press-regional';good:'oliveOil'|'wine';batches:number}|{kind:'consume-regional';good:'oliveOil'|'wine';jars:number}|{kind:'craft-container';container:ContainerKind;count:number}|{kind:'transfer-migrants';direction:'send'|'receive';unitIds:number[];counterpartId:number;payKind:MigrantPayKind};
 export const PLAYER_TRADE_RULES={maximumOffers:12,maximumPartners:64} as const;
 export const PLAYER_TRADE_NAMES:Record<GoodKind,string>={food:'Food',wood:'Timber',stone:'Stone',copper:'Copper',iron:'Iron',spears:'Spears',bows:'Bows',blades:'Blades',paddedArmor:'Padded armour',cordage:'Cordage',basket:'Baskets',pottery:'Pottery',cloth:'Cloth',leather:'Leather',skinClothes:'Skin clothing',hideCoat:'Hide coats',woolCloth:'Wool cloth',woolCoat:'Wool coats',goat:'Goats',coins:'Coins',oliveOil:'Olive oil',wine:'Wine',tinOre:'Tin ore',tin:'Tin',bronze:'Bronze'};
 export const playerTradeGood=(v:unknown):v is GoodKind=>typeof v==='string'&&TRADE_SELECTABLE_KINDS.includes(v as GoodKind);
@@ -47,6 +49,8 @@ export function applyPlayerTradeCommand(g:Game,c:PlayerTradeCommand){
  if(c.kind==='sell-captive')return sellCaptive(g,c.prisonerId,c.buyerId,0);
  if(c.kind==='press-regional')return pressRegional(g,0,c.good,c.batches);
  if(c.kind==='consume-regional')return consumeRegional(g,0,c.good,c.jars);
+ if(c.kind==='craft-container')return craftContainer(g,0,c.container,c.count);
+ if(c.kind==='transfer-migrants')return transferMigrants(g,c,0);
  if(c.kind==='mint-coins')return mintCoins(g,0,c.copper);
  if(c.kind==='melt-coins')return meltCoins(g,0,c.coins);
  if(c.kind==='propose-needs-trade'){

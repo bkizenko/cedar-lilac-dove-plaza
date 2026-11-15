@@ -553,6 +553,7 @@ export type GameState = {
   armorMaintenance?:import('./armorRepair').ArmorMaintenance;
   garmentMaintenance?:import('./garmentRepair').GarmentMaintenance;
   captiveDealings?:import('./captiveDealings').CaptiveDealingsState;
+  migrantTrades?:import('./migrantTrade').MigrantLedger;
   droppedWeaponCargo?:import('./weaponCargo').DroppedWeaponCargo[];
   armor?:import('./armor').ArmorState;
   siegeRams?:import('./siegeRam').SiegeRamState;
