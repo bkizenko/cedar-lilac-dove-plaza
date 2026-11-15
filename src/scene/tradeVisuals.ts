@@ -1,5 +1,5 @@
 import type {Game} from '../game/sim';
-import {tradeParties,tradePartyPosition} from '../game/tradeParties';
+import {tradeParties,tradePartyPosition,tradePartyHeading} from '../game/tradeParties';
 import type {TradeParty} from '../game/tradeParties';
 import {stockpileByKind} from '../game/production';
 import type {ItemKind} from '../game/production';
@@ -11,10 +11,10 @@ export const PILE_RULES={maxPartyInstances:24,maxPileInstances:256,boxesPerKindM
 const SACK=new Set<string>(['chaff','straw','grainSheaves','roughGrain','flour','plantFibre','rawWool','cleanWool','yarn','woolYarn','cloth','woolCloth','felt','greenMalt','tannin','rawHide','cleanHide','driedSkin','leather']);
 const LOG=new Set<string>(['bone','charcoal','cordage','copperOre','ironOre']);
 export const pileShapeOf=(kind:string):PileShape=>SACK.has(kind)?'sack':LOG.has(kind)?'log':'crate';
-export type PartyPlacement={id:number;mode:'land'|'sea';x:number;z:number;yaw:number;walking:boolean};
+export type PartyPlacement={id:number;mode:'land'|'sea';ship?:string;x:number;z:number;yaw:number;walking:boolean};
 /** Facing follows the travel direction: outbound toward the destination, returning toward the origin; trading parties keep their last heading. */
 export function partyYaw(p:TradeParty){
- const sign=p.phase==='returning'?-1:1,dx=(p.x1-p.x0)*sign,dz=(p.z1-p.z0)*sign;
+ const {dx,dz}=tradePartyHeading(p);
  return dx===0&&dz===0?0:Math.atan2(dx,dz);
 }
 /** Fills `out` (reused; its length is the live count) with one placement per running party. Allocation-free after warm-up. */
@@ -23,7 +23,7 @@ export function collectPartyPlacements(g:Game,out:PartyPlacement[]){
  for(const p of tradeParties(g)){
   if(p.phase==='done'||n>=PILE_RULES.maxPartyInstances)continue;
   const pos=tradePartyPosition(p);let o=out[n];if(!o){o={id:0,mode:'land',x:0,z:0,yaw:0,walking:false};out[n]=o;}
-  o.id=p.id;o.mode=p.mode;o.x=pos.x;o.z=pos.z;o.yaw=partyYaw(p);o.walking=p.phase==='outbound'||p.phase==='returning';n++;
+  o.id=p.id;o.mode=p.mode;o.ship=p.ship;o.x=pos.x;o.z=pos.z;o.yaw=partyYaw(p);o.walking=p.phase==='outbound'||p.phase==='returning';n++;
  }
  out.length=n;return out;
 }

@@ -5,6 +5,7 @@ import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {endowSettlementSites} from './helpers/endowed-settlement-sites.mjs';
 function fixture(){const g=new Game();g.reset(123456,3);g.enterIsland();g.state.units=[];g.state.buildings=[];
  for(const [team,z] of [[0,-60],[1,60]]){g.state.buildings.push(g.makeBld('townhall',0,z,team));g.spawnUnit('worker',4,z,team);}
+ for(let i=0;i<8;i++)g.spawnUnit('worker',6+i,-58,0);
  for(const b of g.state.buildings)b.build=1;
  Object.assign(g.tribe(0),{wood:100,food:100,stone:30});Object.assign(g.tribe(1),{food:100,wood:5,stone:90,trust:.5,hostile:false});
  endowSettlementSites(g,0,1);return g;}

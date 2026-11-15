@@ -597,6 +597,8 @@ export type GameState = {
   conflictJournal?:ConflictJournal;
   seasonReports?:import('./seasonReports').SeasonReports;
   tradeParties?:import('./tradeParties').TradeParty[];
+  /** Per-partner trade volume left and when it was last spent; refills slowly (tradeFleet.ts). */
+  tradeCapacity?:Record<number,{left:number;at:number}>;
   tradeArrivalSlot?:number;
   tradeRep?:Record<number,number>;
   tradeFoes?:number[];
