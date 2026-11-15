@@ -40,19 +40,18 @@ test('a Hard rival with a real army plans and dispatches a raid on a weaker neig
  assert.equal(out.hard.reason,'PLAN');
  assert.notEqual(out.easy.reason,'PLAN');
 });
-import {answerEncounter} from '../src/game/encounters.ts';
-function armed(g,rival){const home=g.campOf(rival);
- for(const u of g.state.units.filter(u=>u.team===rival&&u.hp>0)){u.maturesAt=0;u.militia=true;u.dmg=UNITS.spearman.dmg;u.range=UNITS.spearman.range;u.rof=UNITS.spearman.rof;}
- for(let i=0;i<10;i++){const u=g.spawnUnit('worker',home.x+3+i,home.z+3,rival);u.maturesAt=0;u.militia=true;u.dmg=UNITS.spearman.dmg;u.range=UNITS.spearman.range;u.rof=UNITS.spearman.rof;}
- g.tribe(rival).food=5000;g.state.time=1300;}
-test('EXPLORE: a dispatched Hard raid reaches and pressures a passive player settlement',{timeout:900000},()=>{
- const {g}=stage('hard');armed(g,2);
- const before={units:g.state.units.filter(u=>u.team===0&&u.hp>0).length,blds:g.state.buildings.filter(b=>b.team===0&&b.hp>0).length};
- const r=dispatchPairRaid(g,2,reserveSeconds(g,2),0);
- let log=[];
- for(let i=0;i<3*900;i++){if(g.state.encounter)answerEncounter(g,'observe');g.state.tribes[0].food=Math.max(g.state.tribes[0].food,4000);g.step(1/3);
-  if(i%(60*3)===0){const hall=g.state.buildings.find(b=>b.team===0&&b.type==='townhall');log.push([Math.round(g.state.time),g.state.units.filter(u=>u.team===0&&u.hp>0).length,hall?Math.round(hall.hp):-1,g.state.units.filter(u=>u.team===2&&u.hp>0&&u.militia).length,(g.state.capitulation?.fronts||[]).map(f=>f.phase+':'+(f.goal||'')).join('|'),(g.state.occupations||[]).map(o=>o.phase).join('|'),g.tribe(0).food|0,'mission',(g.state.rivalMissions||[]).map(m=>m.phase).join(','),'min',Math.round(Math.min(...g.state.units.filter(u=>u.team===2&&u.societyMissionId).map(u=>Math.hypot(u.x-(hall?.x??0),u.z-(hall?.z??0))))),g.state.units.filter(u=>u.team===2&&u.societyMissionId).map(u=>u.order).slice(0,3).join(',')].join(' '));}}
- console.log(JSON.stringify(r),JSON.stringify(before));console.log(log.join('\n'));
-});
 import {DIFFICULTIES} from '../src/game/difficulty.ts';
 function DIFF(id){return DIFFICULTIES[id].rivalAggression;}
+import {governanceOf} from '../src/game/governance.ts';
+import {reviewRivalGovernment} from '../src/game/rivalGovernment.ts';
+test('rival civs adopt a government from the L2a table at their own age and population, paying real stock',()=>{
+ const {g}=stage('normal');const t=g.tribe(2);t.age=1;
+ const h=g.campOf(2);for(let i=0;i<30;i++){const u=g.spawnUnit('worker',h.x+3+i%10,h.z+3,2);u.maturesAt=0;}
+ t.food=2000;t.wood=2000;t.stone=2000;g.state.time=1000;
+ assert.equal(governanceOf(g,2).gov,'bandCouncil');
+ const before=t.food;reviewRivalGovernment(g,2);
+ const gv=governanceOf(g,2);assert.notEqual(gv.gov,'bandCouncil');assert.ok(t.food<before||t.wood<2000,'paid a real cost');
+ assert.equal(governanceOf(g,0).gov,'bandCouncil','the player is untouched');
+ assert.ok(gv.policies.length>=1);
+ const again=g.tribe(2).food;reviewRivalGovernment(g,2);assert.equal(g.tribe(2).food,again,'reviews are throttled');
+});

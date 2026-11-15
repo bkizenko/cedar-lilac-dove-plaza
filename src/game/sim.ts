@@ -52,6 +52,7 @@ import {enableTerrainInfluence} from './terrainInfluenceRuntime';
 import {enableCommanders,tickCommanders} from './commanders';
 import {tickNaval,navalIndependentFood} from './navalFleet';
 import {pauseNavalWork,navalWorkerCommitted} from './navalPorts';
+import {reviewRivalGovernment} from './rivalGovernment';
 import {governanceJobMul,governanceDmgMul,advanceGovernance} from './governance';
 import {enableSkillModel,advanceSkillDay,gatherSkillStep,personSkillCard,villageSkillCard} from './skillRuntime';
 import {enableCombatDoctrine,assignFormation,combatMatchup,noteMatchup,tickFormations,formationPace} from './combatDoctrine';
@@ -5578,6 +5579,7 @@ export class Game {
     // The shared rule already checks people, institutions and a food buffer.
     if (tr.age < 5 && this.ageUpIssue(team) === null) this.tryAgeUp(team);
 
+    reviewRivalGovernment(this,team);
     reviewRivalFoodProcessing(this,team);
     reviewRivalToolUpkeep(this,team);
     reviewRivalSocietyActivity(this,team,reserveSeconds(this,team));
