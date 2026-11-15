@@ -121,10 +121,10 @@ export const SEASON_CUE_NAMES=['Spring','Summer','Autumn','Winter'] as const;
 const SEASON_CUE_ADVICE=['sow and mend','tend the fields','bring in the harvest and fill the stores','ration food and keep warm'] as const;
 /** Season phase 0-3 from calendar seconds and the year length. */
 export const seasonPhaseOf=(time:number,yearSeconds:number)=>Math.floor((((time%yearSeconds)+yearSeconds)%yearSeconds)/(yearSeconds/4))%4;
-/** Title for the card. In autumn and winter it adds the real days of food when that is known. */
+/** Title for the card. In autumn and winter it names the season and its work (no food-days figure). */
 export function seasonCueTitle(phase:number,foodDays:number|null){
  const p=((phase%4)+4)%4,base=`${SEASON_CUE_NAMES[p]}: ${SEASON_CUE_ADVICE[p]}`;
- return p>=2&&foodDays!==null&&Number.isFinite(foodDays)?`${base}. Food for ${daysText(foodDays)} days`:base;
+ void foodDays;return base;
 }
 
 /* ---------- screen projection ---------- */

@@ -197,7 +197,7 @@ test('season cue: phase from calendar seconds, advice per season, real food days
  assert.deepEqual([0,99,100,199,200,299,300,399,400,-1].map(t=>seasonPhaseOf(t,Y)),[0,0,1,1,2,2,3,3,0,3]);
  assert.equal(seasonCueTitle(0,5),'Spring: sow and mend');
  assert.equal(seasonCueTitle(1,null),'Summer: tend the fields');
- assert.equal(seasonCueTitle(2,12.7),'Autumn: bring in the harvest and fill the stores. Food for 12 days');
+ assert.equal(seasonCueTitle(2,12.7),'Autumn: bring in the harvest and fill the stores');
  assert.equal(seasonCueTitle(3,null),'Winter: ration food and keep warm');
  assert.equal(seasonCueTitle(3,Infinity),'Winter: ration food and keep warm');
 });
