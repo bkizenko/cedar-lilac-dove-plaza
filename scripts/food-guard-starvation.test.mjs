@@ -49,3 +49,14 @@ test('guard pulls auto-assigned wood and build crews to food but leaves player-d
   assert.equal(locked.job,'wood');assert.equal(locked.jobLock,true);
   assert.ok(auto.some(u=>u.job==='food'||foodJob(u)),'a pulled worker picked up food work');
 });
+
+test('workload meter reports blocked idle hands instead of hiding them behind a percentage',async()=>{
+  const {measureVillageWorkload}=await import('../src/game/villageWorkload.ts');
+  const {g,people}=fixture(5);setReserve(g,100);
+  for(const u of people){u.order='hold';u.workReason='Hunting route blocked — seeking reachable food';}
+  const r=measureVillageWorkload(g);
+  assert.equal(r.idleBlocked.people,5,JSON.stringify(r.idleBlocked));
+  assert.ok(r.idleBlocked.percentOfCapacity>50);
+  assert.ok(r.blockedOrStuckPersonSeconds>=r.idleBlocked.capacityPersonSeconds);
+  assert.ok(r.warnings.some(w=>/idle because their work is blocked/.test(w)));
+});

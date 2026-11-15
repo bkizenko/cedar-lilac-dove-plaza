@@ -10,11 +10,12 @@ export function WorkloadPanel({engine,expanded=false}:{engine:Engine;expanded?:b
  // invalidate immediately even inside the same500ms refresh window.
  const refreshWindow=Math.floor(performance.now()/500);
  const report=useMemo(()=>measureVillageWorkload(g),[g,g.state,g.world,refreshWindow]);
- const percent=report.workloadPercent,label=percent===null?'No available hands':`~${Math.round(percent)}%`,over=percent!==null&&percent>100;
+ const percent=report.workloadPercent,stuck=report.idleBlocked,label=percent===null?'No available hands':`~${Math.round(percent)}%${stuck.people?` · ${stuck.people} stuck`:''}`,over=percent!==null&&percent>100;
  const details=(expanded||open)&&<div className="space-y-3 px-3 pb-3 text-xs text-parchment">
   <p>{workloadTime(report.demandPersonSeconds)} of work / {workloadTime(report.capacityPersonSeconds)} of adult labor in the next {Math.round(report.horizonSeconds/60)} minutes.</p>
   {!!report.plannedConstruction.count&&<p>{report.plannedConstruction.count} planned construction site(s) · {workloadTime(report.plannedConstruction.personSeconds)} of unpaused building labor included, plus any missing-material collection. {report.plannedConstruction.paused} paused plan(s) excluded.</p>}
   <div className="h-1.5 overflow-hidden rounded bg-ink-soft" aria-hidden="true"><div className={over?'h-full bg-blood':'h-full bg-bronze'} style={{width:`${Math.min(100,percent??0)}%`}}/></div>
+  {stuck.people>0&&<p className="text-blood">{stuck.people} of {report.civilianAdults} adults are idle because their work is blocked ({workloadTime(stuck.capacityPersonSeconds)} of labor lost): {stuck.reasons.join('; ')}</p>}
   <p>{report.civilianAdults} civilian adults · {report.effectiveAdults.toFixed(1)} available after expected rest · {report.dependents} growing up · {report.freeNow} awaiting an assignment.</p>
   {report.manual&&<p className="text-parchment-dim">Manual work is on. This view shows needs and queued work; it does not start jobs.</p>}
   {report.warnings.map(w=><p className={over?'text-blood':'text-parchment-dim'} key={w}>{w}</p>)}
