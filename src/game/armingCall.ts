@@ -56,3 +56,15 @@ export function validArmingCall(s:any){
  if(![c.since,c.until].every(Number.isFinite))return false;
  return c.ids.every((id:unknown)=>Number.isInteger(id)&&(id as number)>=0&&(id as number)<s.nextId);
 }
+/** Read-only military stock for barracks, town hall and store panels: weapons in stores, people carrying them, adults still unarmed. */
+export function weaponStockReport(g:Game,team=0){
+ const t=g.tribe(team),armed={spearman:0,archer:0,swordsman:0,other:0};let free=0;
+ for(const u of g.state.units){
+  if(u.team!==team||u.hp<=0||u.prisoner)continue;
+  if(u.militia){if(u.type==='spearman')armed.spearman++;else if(u.type==='archer')armed.archer++;else if(u.type==='swordsman')armed.swordsman++;else armed.other++;}
+  else if(armEligible(g,u,team,false))free++;
+ }
+ const spears=t?.spears||0,bows=t?.bows||0,blades=t?.blades||0;
+ return {spears,bows,blades,stored:spears+bows+blades,armed,armedTotal:armed.spearman+armed.archer+armed.swordsman+armed.other,unarmedAdults:free,waiting:armingCallStatus(g,team).waiting};
+}
+export const weaponStockText=(r:ReturnType<typeof weaponStockReport>)=>`In stores: ${r.spears} spears · ${r.bows} bows · ${r.blades} blades. Under arms: ${r.armedTotal} (${r.armed.spearman} spear · ${r.armed.archer} bow · ${r.armed.swordsman} blade). Unarmed adults: ${r.unarmedAdults}${r.waiting?` · ${r.waiting} on their way to arm`:''}.`;

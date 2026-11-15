@@ -1,3 +1,4 @@
+import {weaponStockReport,weaponStockText} from "../game/armingCall";
 import {BuildingActionItems} from './BuildingActionItems';
 import {NeedsTradeControls} from './NeedsTradeControls';
 import {CommanderControls} from './CommanderControls';
@@ -899,6 +900,8 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
                 })}
                 {engine&&<FarmToolRepairControls engine={engine} workplaceId={sel.buildingId}/>}
                 </div></details>}
+                {sel.completed&&engine&&sel.type==="watchtower"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" title="Up to three armed adults climb the tower and stay; each speeds its fire and extends its reach" onClick={()=>{for(const u of engine.game.selectedUnits().filter(u=>u.team===0&&u.hp>0&&u.militia).slice(0,3))void engine.dispatch({kind:"tower-guard",unitId:u.id,buildingId:sel.buildingId}).then(()=>engine.pushHud());}}>Man this tower with selected armed adults</button>}
+                {sel.completed&&engine&&["townhall","barracks","warehouse"].includes(sel.type||"")&&<p className="weapon-stock text-xs" title="Weapons are shared village stock; arming moves one from the stores to one adult">{weaponStockText(weaponStockReport(engine.game,0))}</p>}
                 {sel.completed&&["townhall","workshop","forge","barracks"].includes(sel.type||"")&&<details className="craft-group" key={`weapons-${sel.buildingId}`} open={sel.type==="barracks"}><summary>Weapons</summary><div className="craft-options">
                 {sel.completed&&Object.entries(WEAPONS).filter(([kind])=>kind==="blade"?sel.type==="forge":["townhall","barracks","workshop"].includes(sel.type||"")).map(([kind,w])=>(
                   <button key={kind} type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40" disabled={!!hud.ended} title={hud.age<w.age?"Needs a later age":hud.wood<w.wood||hud.stone<w.stone||hud.copper<w.copper?"Not enough materials in stores":undefined} onClick={()=>engine?.craftWeapon(kind as keyof typeof WEAPONS,sel.buildingId)}>

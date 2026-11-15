@@ -43,7 +43,7 @@ import {PORT_WORK_IDS,DESIGN_IDS,type PortWork} from './navalClasses';
 import {appointCommander,assignToCommander,releaseFromCommander,promoteCommander,commandersOf} from './commanders';
 import {setRoutesEnabled} from './routeWear';
 import {setWaystationsEnabled,setRaidersTargetStops} from './waystations';
-import {assignGuardDuty,releaseGuardDuty,type GuardDutyKind} from './guardDuty';
+import {assignGuardDuty,assignTowerGuard,releaseGuardDuty,type GuardDutyKind} from './guardDuty';
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
  |HusbandryCommand|PlayerTradeCommand
@@ -84,7 +84,7 @@ export type EngineDispatchCommand=
  |{kind:'production-control';projectId:number;action:'pause'|'resume'|'unload';unitId?:number}
  |{kind:'dairy-clean';projectId:number;unitId?:number}|{kind:'dairy-discard';projectId:number}
  |{kind:'answer-proposal';proposalId:number;accept:boolean}|{kind:'found-wonder';family:string;x?:number;z?:number;look?:WonderLook}|{kind:'pay-blood-price';team:number}|{kind:'marry-houses';team:number}|{kind:'foster-houses';team:number}|{kind:'exchange-hostages';team:number}|{kind:'take-in-refugees';team:number}|{kind:'turn-away-refugees';team:number}
- |{kind:'set-formation';formation:FormationKind}|{kind:'guard-duty';unitId:number;duty:GuardDutyKind}|{kind:'release-guard';unitId:number}
+ |{kind:'set-formation';formation:FormationKind}|{kind:'guard-duty';unitId:number;duty:GuardDutyKind}|{kind:'release-guard';unitId:number}|{kind:'tower-guard';unitId:number;buildingId:number}
  |{kind:'accept-capitulation';frontId:number;outcome:CapitulationOutcome}|{kind:'refuse-capitulation';frontId:number}
  |{kind:'accept-conquest';frontId:number;choice:ConquestChoice;people:ConquestPeople}|{kind:'propose-peace';team:number;term?:PeaceTerm}|{kind:'accept-peace';team:number}|{kind:'decline-peace';team:number}
  |{kind:'commander-order';action:'appoint'|'replace'|'assign'|'release'|'promote';unitId?:number;commanderId?:number;commandKind?:'army'|'fleet';ids?:number[];promotionId?:string;replacesId?:number}
@@ -216,6 +216,7 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
     const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0&&u.hp>0&&!u.prisoner);if(!u)return no('Original owned person unavailable');
     const r=assignGuardDuty(g,u.id,command.duty,u.x,u.z);return r.accepted?{accepted:true,reason:command.duty==='patrol'?'On patrol':'Standing watch'}:no(r.reason);
    }
+   case 'tower-guard':{const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0&&u.hp>0&&!u.prisoner);if(!u)return no('Original owned person unavailable');const r=assignTowerGuard(g,u.id,command.buildingId);return r.accepted?{accepted:true,reason:'Climbing to the watchtower'}:no(r.reason);}
    case 'release-guard':{const u=g.state.units.find(u=>u.id===command.unitId&&u.team===0);if(!u)return no('Original owned person unavailable');return releaseGuardDuty(g,u.id)?{accepted:true,reason:'Back to ordinary work'}:no('That person is not on duty');}
    case 'accept-capitulation':return acceptCapitulation(g,command.frontId,command.outcome,0);
    case 'accept-conquest':return acceptConquest(g,command.frontId,command.choice,command.people);
@@ -302,7 +303,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'set-auto-work':{enabled:bool},'set-route-switches':{routes:v=>v===undefined||bool(v),waystations:v=>v===undefined||bool(v),raiders:v=>v===undefined||bool(v)},'defense-horn':{},recall:{},
   'production-control':{projectId:id,action,unitId:optionalId},'dairy-clean':{projectId:id,unitId:optionalId},'dairy-discard':{projectId:id},
   'answer-proposal':{proposalId:id,accept:bool},'found-wonder':{family:v=>(WONDER_FAMILIES as readonly string[]).includes(v as string),x:v=>v===undefined||typeof v==='number'&&Number.isFinite(v),z:v=>v===undefined||typeof v==='number'&&Number.isFinite(v),look:v=>validLook(v)},
-  'set-formation':{formation:v=>validFormationKind(v)},'guard-duty':{unitId:id,duty:v=>v==='post'||v==='patrol'},'release-guard':{unitId:id},
+  'set-formation':{formation:v=>validFormationKind(v)},'guard-duty':{unitId:id,duty:v=>v==='post'||v==='patrol'},'release-guard':{unitId:id},'tower-guard':{unitId:id,buildingId:id},
   'accept-capitulation':{frontId:id,outcome:v=>['occupy','annex','tribute','puppet','autonomy','loot','captives','raze'].includes(v as string)},'refuse-capitulation':{frontId:id},'accept-conquest':{frontId:id,choice:v=>['annex','puppet','pillage'].includes(v as string),people:v=>['integrate','execute','spare'].includes(v as string)},'propose-peace':{team:id,term:v=>v===undefined||['whitePeace','tribute','forcedLabor','puppet','annexation'].includes(v as string)},'accept-peace':{team:id},'decline-peace':{team:id},'boat-stop':{boatId:id},'free-captives':{team:v=>typeof v==='number'&&Number.isSafeInteger(v)&&v>0},'repatriate-captive':{unitId:id},'escort-captive':{unitId:id},'marry-houses':{team:id},'foster-houses':{team:id},'exchange-hostages':{team:id},'pay-blood-price':{team:id},'take-in-refugees':{team:id},'turn-away-refugees':{team:id},'construction-priority':{buildingId:id,priority:v=>v===0||v===1||v===2},'naval-order':{action:v=>['port-work','resume-port-work','resume-commission','commission','board','attack','resupply'].includes(v as string),dockId:optionalId,work:v=>v===undefined||PORT_WORK_IDS.includes(v as PortWork),design:v=>v===undefined||DESIGN_IDS.includes(v as string),builderId:optionalId,projectId:optionalId,boatId:optionalId,targetBoatId:optionalId,food:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=1000,missileLoads:v=>v===undefined||typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<=100},'commander-order':{action:v=>['appoint','replace','assign','release','promote'].includes(v as string),unitId:optionalId,commanderId:optionalId,commandKind:v=>v===undefined||v==='army'||v==='fleet',ids:v=>v===undefined||Array.isArray(v)&&v.length<=32&&v.every(id)&&new Set(v).size===v.length,promotionId:v=>v===undefined||typeof v==='string'&&v.length<=32,replacesId:optionalId},
   'site-preparation-pause':{buildingId:id,paused:bool},'paused-plan':{buildingId:id,paused:bool},
   'queue-construction':{buildingId:id},'order-construction':{buildingId:id},

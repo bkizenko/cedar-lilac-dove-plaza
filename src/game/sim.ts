@@ -18,7 +18,7 @@ import {IRON_METALLURGY_RULES as IRON,ironOreEnabled} from './ironMetallurgy';
 import {copperOreEnabled} from './copperMetallurgy';
 import{commandIssued,commandOwnerBefore,commandUsefulWork,beginCommandActor,endCommandActor,finishCommandFrame}from'./commandExecution';
 import type {ProductionDelivery} from './productionDelivery';
-import {onGuardDuty,guardDutyAI,tickGuardDuties} from './guardDuty';
+import {onGuardDuty,guardDutyAI,tickGuardDuties,towerCrew,towerRateMultiplier,towerRangeBonus} from './guardDuty';
 import {tickTransit} from './transit';
 import {noteRaidCombat,noteRaidExposed,tickRaidReports} from './raidReports';
 import {tradedTeachingAI,tickTradedTeaching,cancelTradedTeaching} from './tradedTeaching';
@@ -5469,7 +5469,8 @@ export class Game {
       b.cd -= dt;
       if (b.cd > 0) continue;
       let best: Unit | null = null;
-      let bd = towerRangeMeters(b) ** 2;
+      const crew = towerCrew(this, b);
+      let bd = (towerRangeMeters(b) + towerRangeBonus(crew)) ** 2;
       for (const u of this.state.units) {
         if(u.hp<=0||u.shelterId||u.team===b.team||contactYieldingTo(this,u,b.team)||!this.isFoe(b.team,u.team)||isSocietyPeaceMessengerFor(this,u,b.team)||(u.envoy?.kind==='peace'&&u.envoy.team===b.team)||b.team===0&&!this.visibleAt(u.x,u.z))continue;
         const d = (u.x - b.x) ** 2 + (u.z - b.z) ** 2;
@@ -5479,7 +5480,7 @@ export class Game {
         }
       }
       if (best) {
-        b.cd = 1.15;
+        b.cd = 1.15 / towerRateMultiplier(crew);
         this.fireArrow(b, best);
       }
     }

@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {Game} from '../src/game/sim.ts';import {encodeGame,decodeGame} from '../src/game/persistence.ts';import {armingCallStatus} from '../src/game/armingCall.ts';
+import {Game} from '../src/game/sim.ts';import {encodeGame,decodeGame} from '../src/game/persistence.ts';import {armingCallStatus,weaponStockReport,weaponStockText} from '../src/game/armingCall.ts';
 function fixture(){const g=new Game();g.reset(42,10,{size:1040,layout:'pangaea'});g.enterIsland();g.world.heights.fill(4);g.world.rivers=[];g.world.features=[];g.state.campSites=[{team:0,x:0,z:30}];g.state.units=[];g.state.buildings=[g.makeBld('hut',0,40,0)];for(const k of ['trees','stones','copper','iron','forage','fish','wildlife'])g.state[k]=[];g.state.autoWorkEnabled=false;g.state.conflict='quiet';g.state.visitorTimer=900;g.state.weather='clear';g.state.weatherT=10000;Object.assign(g.tribe(0),{spears:2,bows:1,blades:0});g.rebuildWalk();g.vision.fill(2);return g;}
 function resident(g,x,z=30){const u=g.spawnUnit('worker',x,z,0);u.y=4;u.order='hold';u.jobLock=true;return u;}
 function drive(g,seconds,until=()=>false){const end=g.state.time+seconds;let n=0;while(g.state.time<end&&!until()&&n++<20000){g.state.paused=false;g.step(.1);}assert.deepEqual(g.simulationErrors,[]);}
@@ -20,4 +20,9 @@ test('pending call survives save and load, and stock is never created',()=>{
 test('old saves without a call load and an empty store arms nobody',()=>{
  const g=fixture();Object.assign(g.tribe(0),{spears:0,bows:0,blades:0});const u=resident(g,4,30);assert.equal(g.callToArms(),0);assert.equal(armingCallStatus(g).waiting,0);assert.ok(!u.militia);
  assert.ok(decodeGame(encodeGame(g)));
+});
+test('weapon stock report counts stores, armed people and free adults',()=>{
+ const g=fixture(),a=resident(g,4,30),b=resident(g,40,30);resident(g,-40,30).maturesAt=999;g.callToArms();
+ const r=weaponStockReport(g,0);assert.equal(r.stored+r.armedTotal,3,'stock plus armed equals what existed');assert.equal(r.armedTotal,r.armed.spearman+r.armed.archer+r.armed.swordsman);
+ assert.match(weaponStockText(r),/In stores: \d+ spears/);assert.equal(a.militia,true);
 });
