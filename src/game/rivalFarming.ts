@@ -2,9 +2,20 @@ import type {Game} from './sim';
 import type {CropKind} from './types';
 import {calendar,crop,reserveSeconds,YEAR_SECONDS} from './settlement';
 import {fieldTerrain} from './fieldTerrain';
+import {habitatAt,soilQuality} from './ecology';
 import {isRivalTeam} from './factions';
 import {rivalDevelopmentPlan} from './rivalDevelopment';
 
+/** Best of several open candidate spots by the same ground measure fieldTerrain uses (habitat crop factor x soil), so a rival does not sow rock and scree. */
+export function findRivalFarmSpot(g:Game,team:number,x:number,z:number){
+ let best:{x:number;z:number}|null=null,score=-1;
+ for(let i=0;i<10;i++){
+  const s=g.findOpenSpot(x,z,'farm',team);if(!s)continue;
+  const v=habitatAt(g,s.x,s.z).crops*(.65+soilQuality(g,s.x,s.z)*.5);
+  if(v>score){score=v;best=s;}
+ }
+ return best;
+}
 const reviews=new WeakMap<Game,Map<number,number>>();
 /** Learned crops and actual land shape each rival's agricultural choices.
  * No free knowledge, food or labor; standing crops are never converted. */

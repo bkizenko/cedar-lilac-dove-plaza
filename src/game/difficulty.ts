@@ -21,8 +21,8 @@ const profile = (p: {
 }) => p;
 /** All modifiers are explicit. Resource stocks are finite opening endowments;
  * no profile changes pathing, command admission, accuracy or worker obedience. */
-/** Seconds of opening food a rival band is endowed with: spring sowing to the first autumn harvest takes about this long. */
-export const RIVAL_FIRST_HARVEST_SECONDS = 1000;
+/** Seconds of opening food a rival band is endowed with: one full year, so a failed first harvest is survivable. */
+export const RIVAL_FIRST_HARVEST_SECONDS = 1800;
 export const DIFFICULTIES = {
   "super-easy": profile({
     name: "Super easy",

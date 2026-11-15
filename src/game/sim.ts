@@ -126,7 +126,7 @@ import {acceptWorkerCommand,resetCommandDiagnostics} from './commandGateway';
 import {commandRiverboat,riverboatAI,syncRiverboats,riverboatLoadSpeed,recallRiverboat} from './boats';
 import {copperStudyAI,developRivalCopper,pauseCopperStudy,tickCopperStudies} from './materialStudy';
 import {difficulty} from './difficulty';
-import {manageRivalFields} from './rivalFarming';
+import {manageRivalFields,findRivalFarmSpot} from './rivalFarming';
 import {fieldTerrain} from './fieldTerrain';
 import {fieldWorkStep} from './fieldWork';
 import {expansionWork,expansionStatus} from './plotExpansion';
@@ -5683,7 +5683,7 @@ export class Game {
     const foodFields=rivalDevelopmentPlan(this,team).foodFields;
     if (team === 2) {
       if (farms < foodFields && tr.wood >= BUILDINGS.farm.wood && Math.random() < 0.62) {
-        const spot = this.findOpenSpot(hall.x, hall.z, "farm", team);
+        const spot = findRivalFarmSpot(this, team, hall.x, hall.z);
         if (spot && rivalCanInvest(this,team,"farm")) this.placeBuilding("farm", spot.x, spot.z, team);
       }
       if (reserve > 450 && !this.hasBld(team, "grove") && tr.wood >= 30 && Math.random() < 0.45) {
@@ -5700,7 +5700,7 @@ export class Game {
       }
     }
     if (farms < foodFields && tr.wood >= BUILDINGS.farm.wood && Math.random() < (team === 2 ? 0.25 : 0.5)) {
-      const spot = this.findOpenSpot(hall.x, hall.z, "farm", team);
+      const spot = findRivalFarmSpot(this, team, hall.x, hall.z);
       if (spot && rivalCanInvest(this,team,"farm")) this.placeBuilding("farm", spot.x, spot.z, team);
     }
 
