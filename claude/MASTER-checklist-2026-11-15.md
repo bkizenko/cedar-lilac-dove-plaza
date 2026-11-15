@@ -27,3 +27,12 @@ LIVE (code + tests; UI panels typechecked but NOT yet seen rendered, [UNVERIFIED
 - Trade UI: coins (mint/melt), send-expedition panel. Regional goods, captive sale and basket bonus are on main after this build (commit 755e0baf) and ship at the next publish.
 IN PROGRESS: rivals (deeper dominance, conquest tests), building behaviour (heights, work face, steep hills, look tiers), save round-trip (report pending).
 OPEN: longer seasons (plan in claude/PLAN-longer-seasons-2026-11-15.md; needs Boris's 3 decisions), trade map destination picker, willing migrants, vineyard/press buildings. Last: first-person, tutorial, future eras (plan: claude/PLAN-future-2026-11-15.md).
+
+## Update 2: release 2026-11-15T08-41-20-000Z (built from main a8e02192; live on 8086)
+Now live in addition to the 07-28-28 list:
+- Rivals: difficulty-scaled rival economy/aggression/army, Hard+ rivals scout and raid weaker neighbours, rival governments and governors, rival economy fixes (seeds, hold bug, harvest put-down, yield-aware farm sites). NOT proven: rivals reaching Bronze reliably; conquest of a hall (occupation registers, hall hp unchanged); one rival still starves on some seeds.
+- Trade: regional goods (olive oil, wine pressed at storehouse/town hall, Bronze+), captive sale, basket carry bonus, coins, expedition panel. Open: map destination picker, willing migrants, vineyard/press buildings.
+- Building behaviour: door/eave clearance for all carved buildings, workers inside large workshops, work-face for repair/craft flows, steep-ridge detour test, workshop plinth/cornice wealth tiers, build-time tiers.
+- Saves: failing check is now named in the error and console; six over-strict checks relaxed; live-state bug after peace annexation fixed. Boris's exact error NOT reproduced. Oct 13-29 builds' saves (worldgenVersion 10, no worldOptions) cannot be restored and are refused with a reason.
+- Smoke: game loads in browser on 8086 with no console errors (start screen only); new panels not exercised visually.
+Open for Boris: longer-seasons decisions (3 questions in claude/PLAN-longer-seasons-2026-11-15.md); planning docs ready: claude/PLAN-future-2026-11-15.md (first-person, eras to planets, big/Earth/donut maps, loading screen, name candidates, fleshing out ages).
