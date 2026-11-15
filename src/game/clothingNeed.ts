@@ -10,9 +10,9 @@ export type ClothingMaterial='hide'|'wool'|'linen';
 export type ClothingNeed={residents:number;without:number;worn:number;season:ClothingSeason;material:ClothingMaterial;kind:GarmentKind;recipe:string;chain:string[];inStock:number;sewn:boolean;summary:string};
 export const CLOTHING_RULES={/** Degrees above the cold threshold still counted as a cold season. */coldMargin:6,/** Era (tribe age) from which wool is the cold-weather cloth. */woolAge:1,/** Share of normal cold recovery kept by a resident with no serviceable garment in a cold season. */unclothedRecoveryFactor:.4} as const;
 const CHAINS:Record<ClothingMaterial,{kind:GarmentKind;recipe:string;chain:string[]}>={
- hide:{kind:'hideCoat',recipe:'sewHideCoat',chain:['fleshHide','tanHide','sewHideCoat']},
+ hide:{kind:'skinClothes',recipe:'sewHideClothes',chain:['sewHideClothes']},
  wool:{kind:'woolCoat',recipe:'sewWoolCoat',chain:['washWool','spinWool','weaveWool','sewWoolCoat']},
- linen:{kind:'lightClothes',recipe:'sewLightClothes',chain:['spinYarn','weaveCloth','sewLightClothes']},
+ linen:{kind:'lightClothes',recipe:'sewFibreClothes',chain:['sewFibreClothes']},
 };
 export const clothingSeasonAt=(celsius:number):ClothingSeason=>celsius<SURVIVAL_RULES.coldThresholdCelsius+CLOTHING_RULES.coldMargin?'cold':celsius>TEXTILE_RULES.heatThresholdCelsius?'hot':'mild';
 export function clothingMaterialFor(season:ClothingSeason,age:number):ClothingMaterial{return season==='hot'||(season==='mild'&&age>=CLOTHING_RULES.woolAge+1)?'linen':age>=CLOTHING_RULES.woolAge?'wool':'hide';}

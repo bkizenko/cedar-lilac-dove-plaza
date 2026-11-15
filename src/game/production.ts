@@ -14,6 +14,7 @@ import {bindCharcoalLoad} from './carriedLoad';
 import {CHARCOAL_RULES,newCharcoalBatch,advanceCharcoalBatch,charcoalBatchReady,validCharcoalBatch,type CharcoalBatch} from './charcoal';
 import {validGarment} from './garmentRepair';
 import {millIssue,millWorkRate} from './millPower';
+import {hideReserveIssue} from './clothingGuide';
 import {garmentWetWarmthFactor} from './textiles';
 import {BREWING_RULES,newBrewBatch,advanceBrewBatch,validBrewBatch,type BrewBatch} from './brewing';
 import {dropTradeCargoItems,PARCEL_ITEMS} from './stolenCargo';
@@ -101,6 +102,8 @@ export const PRODUCTION_RECIPES={
  extractTannin:recipe({name:'Extract bark tannin',workplace:'butcher',inputs:{},wood:1,water:2,workSeconds:20,outputs:{tannin:2},food:0}),
  drySkin:recipe({name:'Dry a cleaned skin',workplace:'dryrack',inputs:{cleanHide:1},wood:0,water:0,workSeconds:60,outputs:{driedSkin:1},food:0}),
  tanHide:recipe({name:'Tan a hide',workplace:'tanner',inputs:{cleanHide:1,tannin:1},wood:0,water:2,workSeconds:90,outputs:{leather:1},food:0}),
+ sewHideClothes:recipe({name:'Sew simple clothes straight from hides',workplace:'tailor',inputs:{rawHide:2},wood:0,water:0,workSeconds:70,outputs:{skinClothes:1},food:0}),
+ sewFibreClothes:recipe({name:'Sew simple light clothes straight from plant fibre',workplace:'tailor',inputs:{plantFibre:4},wood:0,water:0,workSeconds:80,outputs:{lightClothes:1},food:0}),
  sewSkinClothes:recipe({name:'Sew skin clothing',workplace:'tailor',inputs:{driedSkin:2},wood:0,water:0,workSeconds:45,outputs:{skinClothes:1},food:0}),
  sewLeatherClothes:recipe({name:'Sew leather clothing',workplace:'tailor',inputs:{leather:2},wood:0,water:0,workSeconds:60,outputs:{leatherClothes:1},food:0}),
  sewHideCoat:recipe({name:'Sew a lined hide coat',workplace:'tailor',inputs:{driedSkin:2,leather:1},wood:0,water:0,workSeconds:TEXTILE_RULES.hideCoatSewSeconds,outputs:{hideCoat:1},food:0}),
@@ -236,13 +239,14 @@ export function grainBatchIssue(g:Game,team:number,recipe:ProductionRecipe,workp
 }
 export function productionIssue(g:Game,recipe:ProductionRecipe,workplace:number,unitId?:number,deliveredHere=false,methodRecordWork?:MethodRecordWork){
  const r=PRODUCTION_RECIPES[recipe];if(!Object.hasOwn(PRODUCTION_RECIPES,recipe))return 'Unknown physical recipe';const b=g.state.buildings.find(b=>b.id===workplace&&g.finished(b));if(!b||b.type!==r.workplace)return `Finish a ${BUILDINGS[r.workplace].name.toLowerCase()} for this recipe`;
- if(!productionEnabled(g,b.team)&&!r.grain&&r.foodKind!=='bread'&&!r.preservation&&!r.inputs.clay&&!r.inputs.dryWare&&!r.inputs.plantFibre&&!r.inputs.yarn&&!r.inputs.cloth&&!r.inputs.rawWool&&!r.inputs.cleanWool&&!r.inputs.woolYarn&&!r.inputs.woolCloth&&!r.inputs.felt&&!r.inputs.copperOre&&!r.inputs.ironOre&&!r.inputs.ironBloom&&!isCerealRecipe(recipe))return 'Finish a hearth before starting the food and hide processing chain';
+ if(!productionEnabled(g,b.team)&&!r.grain&&r.foodKind!=='bread'&&!r.preservation&&!r.inputs.clay&&!r.inputs.dryWare&&!r.inputs.plantFibre&&recipe!=='sewHideClothes'&&!r.inputs.yarn&&!r.inputs.cloth&&!r.inputs.rawWool&&!r.inputs.cleanWool&&!r.inputs.woolYarn&&!r.inputs.woolCloth&&!r.inputs.felt&&!r.inputs.copperOre&&!r.inputs.ironOre&&!r.inputs.ironBloom&&!isCerealRecipe(recipe))return 'Finish a hearth before starting the food and hide processing chain';
  if((recipe==='smeltIron'||recipe==='consolidateIron')&&!ironOreEnabled(g,b.team))return 'Adopt iron ore processing in Knowledge first; existing iron stays usable';
  if(recipe==='smeltCopper'&&!copperOreEnabled(g,b.team))return 'Adopt ore smelting in Knowledge first; existing copper stays usable';
  const doubleBatchIssue=grainBatchIssue(g,b.team,recipe,b);if(doubleBatchIssue)return doubleBatchIssue;
  const powerIssue=millIssue(g,b);if(powerIssue)return powerIssue;
  const cerealIssue=cerealWeatherIssue(g,recipe);if(cerealIssue)return cerealIssue;
  const textileIssue=textileRecipeIssue(g,b.team,recipe);if(textileIssue)return textileIssue;
+ const hideIssue=hideReserveIssue(g,b.team,recipe);if(hideIssue)return hideIssue;
  if(g.state.campMove&&!['complete','cancelled'].includes(g.state.campMove.phase)&&b.team===0)return 'Finish the camp move before loading production materials';
  if(r.outputs.basket&&(g.tribe(b.team).basketOrigins?.length||0)>=256&&!g.tribe(b.team).basketOrigins?.some(o=>o.origin.site===b.id))return 'Basket provenance records are full; use an existing weaving site';
  if(r.outputs.pottery&&(g.tribe(b.team).potteryOrigins?.length||0)>=256&&!g.tribe(b.team).potteryOrigins?.some(o=>o.origin.site===b.id))return 'Pottery provenance records are full; use an existing firing site';

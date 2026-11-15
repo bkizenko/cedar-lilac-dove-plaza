@@ -697,6 +697,8 @@ export type GameState = {
   horseVersion?:1;
   /** 1 = valley and mountain herds were seeded at world creation (biomeFauna.ts). */
   faunaVersion?:1;
+  /** 1 = the first villagers were given worn starting clothes at world creation (clothingGuide.ts). */
+  clothingVersion?:1;
   cattleVersion?:1;
   livestock?: Livestock[];
   routes: TradeRoute[];

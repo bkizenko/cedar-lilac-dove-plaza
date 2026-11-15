@@ -83,7 +83,7 @@ export const BUILDINGS: Record<
   butcher: {name:"Butcher and skin yard",w:4,d:4,food:0,wood:6,stone:2,pop:0,hp:180,age:0,hint:"Clean actual animal hides and extract tannin from delivered bark-bearing logs and collected water."},
   dryrack: {name:"Food and skin drying rack",w:4,d:3,food:0,wood:4,stone:0,pop:0,hp:180,age:0,hint:"Two loaded batch slots: skins need tending; meat and fish need loading, drying weather, then physical pickup. Rain rewets food and freezing pauses drying."},
   tanner: {name:"Tanning yard",w:4,d:4,food:0,wood:8,stone:2,pop:0,hp:180,age:0,hint:"Tan cleaned hides using actual bark tannin, collected water and worker time."},
-  tailor: {name:"Skin sewing shelter",w:4,d:4,food:0,wood:8,stone:0,pop:0,hp:180,age:0,hint:"Sew real dried skins or leather. Finished clothes must be delivered and worn."},
+  tailor: {name:"Skin sewing shelter",w:4,d:4,food:0,wood:8,stone:0,pop:0,hp:180,age:0,hint:"Sew simple clothes straight from 2 raw hides or 4 plant fibre (heavy for cold, light for heat), or from dried skins and leather. Finished clothes must be delivered and worn."},
   townhall: {
     name: "Town Hall",
     w: 10,

@@ -240,6 +240,7 @@ function validateGamePayload(raw: unknown) {
   if(s.animalBehaviourVersion!==undefined&&s.animalBehaviourVersion!==1)fail("s.animalBehaviourVersion!==undefined&&s.animalBehaviourVersion!==1");
   if(s.horseVersion!==undefined&&s.horseVersion!==1)fail("s.horseVersion!==undefined&&s.horseVersion!==1");
   if(s.faunaVersion!==undefined&&s.faunaVersion!==1)fail("s.faunaVersion!==undefined&&s.faunaVersion!==1");
+  if(s.clothingVersion!==undefined&&s.clothingVersion!==1)fail("s.clothingVersion!==undefined&&s.clothingVersion!==1");
   if(!validPackPastureOrders(s))fail("validPackPastureOrders");
   if(!validPackJourneySupplies(s))fail("validPackJourneySupplies");
   if(!validDraftCarts(s))fail("validDraftCarts");

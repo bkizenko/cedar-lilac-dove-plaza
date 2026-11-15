@@ -1,5 +1,6 @@
 import type { Game } from "./sim";
 import type { Building, Unit } from "./types";
+import { pregnancyWorkRate } from "./healthRisk";
 export function craftingBenches(b: Building) {
   return b.type === "workshop"
     ? 3
@@ -28,7 +29,7 @@ export function craftingEffort(u: Unit, dt: number,b?:Building) {
   const seconds = Math.max(0, dt),
     rate = 1 + Math.min(0.3, (u.craftingXP || 0) / 1200);
   u.craftingXP = Math.min(36000, (u.craftingXP || 0) + seconds);
-  return seconds * rate * craftingWorkplaceRate(b);
+  return seconds * rate * craftingWorkplaceRate(b) * pregnancyWorkRate(u);
 }
 export type ToolmakingPractice={workSeconds:number;completedTools:number;completedRepairs:number};
 export const TOOLMAKING_PRACTICE_RULES={secondsForMaximumBonus:1200,maximumBonus:.2,maximumWorkSeconds:36000,maximumCompletions:1000000} as const;
