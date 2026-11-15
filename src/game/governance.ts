@@ -8,9 +8,9 @@ import {AGES} from './constants';
 import {entryMastery} from './skills';
 import {recordPractice,skillsEnabled,unitRecord} from './skillRuntime';
 
-export type GovId='bandCouncil'|'chiefdom'|'theocracy'|'monarchy'|'oligarchy'|'republic';
-export type PolicyId='corvee'|'harvestLevy'|'warBand'|'festivals'|'lawCode'|'granaryDole'|'masonGuild';
-export const BRONZE_AGE=AGES.indexOf('Bronze'),IRON_AGE=AGES.indexOf('Iron');
+export type GovId='bandCouncil'|'chiefdom'|'theocracy'|'monarchy'|'oligarchy'|'republic'|'aristocracy'|'feudalKingdom'|'merchantRepublic'|'constitutionalMonarchy'|'parliamentaryRepublic';
+export type PolicyId='corvee'|'harvestLevy'|'warBand'|'festivals'|'lawCode'|'granaryDole'|'masonGuild'|'standingArmy'|'tradeCharter'|'feudalLevy'|'guildCharters'|'parliamentBudget'|'publicSchools';
+export const BRONZE_AGE=AGES.indexOf('Bronze'),IRON_AGE=AGES.indexOf('Iron'),CLASSICAL_AGE=AGES.indexOf('Classical'),MEDIEVAL_AGE=AGES.indexOf('Medieval'),RENAISSANCE_AGE=AGES.indexOf('Renaissance');
 export type JobMul={food:number;wood:number;stone:number};
 /** Time multipliers (below 1 = faster work). legitimacy is points added to the ruling house's standing; tax is unrest tax-burden points. */
 export type Effects={jobTime:JobMul;dmg:number;legitimacy:number;tax:number};
@@ -23,6 +23,11 @@ export const GOVERNMENTS:readonly GovDef[]=[
  {id:'monarchy',label:'Monarchy',minAge:BRONZE_AGE,minPop:45,slots:3,governors:2,cost:{food:120,wood:80,stone:60},note:'One crown, appointed governors; strong levies and war host.',effects:{legitimacy:6,dmg:1.04}},
  {id:'oligarchy',label:'Oligarchy',minAge:IRON_AGE,minPop:60,slots:3,governors:3,cost:{food:150,wood:100,stone:100},note:'A council of wealthy houses; efficient works, resented taxes.',effects:{tax:8,jobTime:{food:1,wood:.97,stone:.97}}},
  {id:'republic',label:'Republic',minAge:IRON_AGE,minPop:90,slots:4,governors:3,cost:{food:200,wood:120,stone:120},note:'Elected officers and law; high standing, costly war.',effects:{legitimacy:12,tax:-4,dmg:.98}},
+ {id:'aristocracy',label:'Aristocracy',minAge:CLASSICAL_AGE,minPop:110,slots:4,governors:4,cost:{food:260,wood:150,stone:150},note:'Landed families hold the offices; strong levies, restless commoners.',effects:{legitimacy:6,dmg:1.05,tax:6}},
+ {id:'feudalKingdom',label:'Feudal kingdom',minAge:MEDIEVAL_AGE,minPop:130,slots:5,governors:5,cost:{food:320,wood:200,stone:200},note:'Lords hold land for service; large war host, heavy obligations.',effects:{legitimacy:8,dmg:1.08,tax:10,jobTime:{food:1,wood:1,stone:1}}},
+ {id:'merchantRepublic',label:'Merchant republic',minAge:MEDIEVAL_AGE,minPop:150,slots:5,governors:4,cost:{food:340,wood:200,stone:220},note:'Guilds and councils; efficient works, citizen standing, weaker levies.',effects:{legitimacy:10,tax:-6,dmg:.97,jobTime:{food:.98,wood:.96,stone:.96}}},
+ {id:'constitutionalMonarchy',label:'Constitutional monarchy',minAge:RENAISSANCE_AGE,minPop:170,slots:6,governors:5,cost:{food:420,wood:260,stone:260},note:'A crown bound by law: high standing, low resentment.',effects:{legitimacy:14,tax:-8,dmg:1.02}},
+ {id:'parliamentaryRepublic',label:'Parliamentary republic',minAge:RENAISSANCE_AGE,minPop:200,slots:6,governors:6,cost:{food:460,wood:280,stone:280},note:'An elected assembly sets the budget: best standing and works, costly war.',effects:{legitimacy:16,tax:-10,dmg:.97,jobTime:{food:.97,wood:.97,stone:.97}}},
 ];
 export const POLICIES:readonly PolicyDef[]=[
  {id:'harvestLevy',label:'Harvest levy',minAge:BRONZE_AGE,minPop:18,needsGov:[],cost:{food:20},note:'Shared harvest labour: food work 7% faster, tax burden up.',effects:{jobTime:{food:.93,wood:1,stone:1},tax:12}},
@@ -31,6 +36,12 @@ export const POLICIES:readonly PolicyDef[]=[
  {id:'warBand',label:'War band',minAge:BRONZE_AGE,minPop:25,needsGov:['chiefdom','monarchy','oligarchy','theocracy'],cost:{food:30,wood:20},note:'Standing warriors: 6% more damage dealt, tax burden up.',effects:{dmg:1.06,tax:8}},
  {id:'granaryDole',label:'Granary dole',minAge:BRONZE_AGE,minPop:30,needsGov:['chiefdom','monarchy','theocracy','republic'],cost:{food:50},note:'A public ration: tax burden down, standing up.',effects:{legitimacy:4,tax:-10}},
  {id:'masonGuild',label:'Mason guild',minAge:BRONZE_AGE,minPop:40,needsGov:['monarchy','oligarchy','republic'],cost:{wood:30,stone:30},note:'Organised quarrying: stone work 10% faster.',effects:{jobTime:{food:1,wood:1,stone:.9}}},
+ {id:'standingArmy',label:'Standing army',minAge:CLASSICAL_AGE,minPop:100,needsGov:['monarchy','oligarchy','republic','aristocracy','feudalKingdom','constitutionalMonarchy'],cost:{food:90,wood:60},note:'Paid regulars: 8% more damage, tax burden up.',effects:{dmg:1.08,tax:14}},
+ {id:'tradeCharter',label:'Trade charter',minAge:CLASSICAL_AGE,minPop:100,needsGov:['oligarchy','republic','aristocracy','merchantRepublic','parliamentaryRepublic','constitutionalMonarchy'],cost:{food:70,wood:50},note:'Market rights: standing up, tax burden down.',effects:{legitimacy:5,tax:-6}},
+ {id:'feudalLevy',label:'Feudal levy',minAge:MEDIEVAL_AGE,minPop:120,needsGov:['feudalKingdom','aristocracy'],cost:{food:80},note:'Lords owe labour days: wood and stone 8% faster, tax burden up.',effects:{jobTime:{food:1,wood:.92,stone:.92},tax:12}},
+ {id:'guildCharters',label:'Guild charters',minAge:MEDIEVAL_AGE,minPop:140,needsGov:['merchantRepublic','feudalKingdom','monarchy','constitutionalMonarchy','parliamentaryRepublic'],cost:{wood:60,stone:60},note:'Chartered crafts: all work 3% faster.',effects:{jobTime:{food:.97,wood:.97,stone:.97}}},
+ {id:'parliamentBudget',label:'Parliamentary budget',minAge:RENAISSANCE_AGE,minPop:170,needsGov:['constitutionalMonarchy','parliamentaryRepublic'],cost:{food:120,stone:80},note:'Voted taxes: tax burden down sharply, standing up.',effects:{legitimacy:6,tax:-14}},
+ {id:'publicSchools',label:'Public schools',minAge:RENAISSANCE_AGE,minPop:180,needsGov:['constitutionalMonarchy','parliamentaryRepublic','merchantRepublic'],cost:{food:100,wood:60,stone:60},note:'Taught crafts: food and wood work 4% faster.',effects:{jobTime:{food:.96,wood:.96,stone:1}}},
  {id:'lawCode',label:'Law code',minAge:IRON_AGE,minPop:50,needsGov:['monarchy','oligarchy','republic'],cost:{food:60,stone:40},note:'Written rules: standing up, tax burden slightly down.',effects:{legitimacy:8,tax:-4}},
 ];
 export const GOVERNANCE_RULES={changeCooldownSeconds:540,governorAdultYears:18,governorMaxLocalBonus:.06,governorLegitimacy:3,governorTax:-6,governorRadius:90,practiceRate:.5,baseQuality:.4} as const;
@@ -38,6 +49,14 @@ export const govDef=(id:string):GovDef|undefined=>GOVERNMENTS.find(g=>g.id===id)
 export const policyDef=(id:string):PolicyDef|undefined=>POLICIES.find(p=>p.id===id);
 /** Government types a society of this age and population may adopt (band council always). Pure: reusable by AI civs. */
 export const governmentsAvailable=(age:number,pop:number):GovDef[]=>GOVERNMENTS.filter(g=>age>=g.minAge&&pop>=g.minPop);
+/** Pure AI hook: the government a rival civ of this age and population should hold. Prefers the highest age gate, then the largest population gate;
+ * `bias` ('martial'|'mercantile'|'sacred'|'default') breaks ties among same-age options. Never returns a government the civ doesn't qualify for. */
+export function aiGovernmentFor(civ:{age:number;pop:number;bias?:'martial'|'mercantile'|'sacred'|'default'}):GovDef{
+ const a=governmentsAvailable(civ.age,civ.pop),top=Math.max(...a.map(g=>g.minAge)),pool=a.filter(g=>g.minAge===top);
+ const want:Record<string,GovId[]>={martial:['feudalKingdom','aristocracy','monarchy'],mercantile:['merchantRepublic','parliamentaryRepublic','republic','oligarchy'],sacred:['theocracy']};
+ const pref=pool.find(g=>want[civ.bias??'default']?.includes(g.id));if(pref)return pref;
+ return pool.reduce((b,g)=>g.minPop>b.minPop?g:b,pool[0]);
+}
 /** The most developed government a society qualifies for (last in the table order by population/age rank). */
 export function governmentFor(age:number,pop:number):GovDef{const a=governmentsAvailable(age,pop);return a.reduce((b,g)=>g.minPop>=b.minPop?g:b,a[0]);}
 export const policiesAvailable=(gov:GovId,age:number,pop:number):PolicyDef[]=>POLICIES.filter(p=>age>=p.minAge&&pop>=p.minPop&&(!p.needsGov.length||p.needsGov.includes(gov)));
