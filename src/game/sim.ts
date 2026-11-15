@@ -176,6 +176,7 @@ import {millSummary} from "./millPower";
 import {planAqueductWorks,executeAqueductWorks,planCanalWorks,executeCanalWorks} from "./waterLineWorks";
 import {waterWorksPlacementIssue,waterWorksLabour,isWaterWorksType} from "./waterWorksBuildings";
 import {planBridge,onBridge,bridgeHeight,bridgeApproach,validBridgeSpan,type BridgeSpan} from './transport';
+import {resourceCaps,isCappedResource,resourceFull,RESOURCE_CAP_RULES} from "./storageCaps";
 import {quarryAvailable,quarryReport,quarryPlacementIssue,digStone} from "./mining";
 import {tickDockStaffing,fishingGrounds,fishingBank,fishingReport,catchDockFish,renewFish,fishRecoveryEstimateSeconds,consumeFishStock} from "./fishing";
 import {combatDefence,beginWeaponWork,weaponWorkAI,raidLootAI,combatPractice,spoilRuinSupplies} from "./warfare";
@@ -4720,6 +4721,11 @@ export class Game {
       }
       const t = this.resKind(node) || u.job || "food";
       const g = GATHER[t];
+      if(isCappedResource(t)&&!(t==="copper"&&copperOreEnabled(this,u.team))&&!(t==="iron"&&ironOreEnabled(this,u.team))&&resourceFull(this,u.team,t)){
+        // Stores are full: the material stays at its source. A loaded worker still delivers; an empty one rests the task.
+        if(u.carry>0&&u.carryType===t){u.order="return";return;}
+        u.blockedTask=node.id;u.retryWorkAt=this.state.time+RESOURCE_CAP_RULES.retrySeconds;u.node=null;u.order="idle";u.workReason="Stores full of "+t+" — build a storehouse";return;
+      }
       const winterForage =
         "kind" in node && node.kind === "forage" && calendar(this).phase === 3 ? 2.2 : 1;
       const winterFishing = calendar(this).phase === 3 && (("type" in node && node.type === "dock") || ("kind" in node && node.kind === "fish")) ? 1.65 : 1;
@@ -6633,6 +6639,7 @@ export class Game {
       prestigeBreakdown: prestigeView,
       prestigeRivals: gamePrestigeRivals(this),
       stockCap: this.stockCap(0),
+      resourceCaps: resourceCaps(this,0),
       port: this.hasBld(0, "dock"),
       night: this.isNight(),
       threat: this.raidThreat(),

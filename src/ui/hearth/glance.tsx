@@ -30,12 +30,12 @@ export function SupplyBar({hud,engine,onOpen}:{hud:HudSnapshot;engine:Engine|nul
  const fd=game?foodDays(game):null,wd=game?waterDays(game):null,winter=game?winterOutlook(game):null;
  const cells:Cell[]=[
   {k:'food',value:food,stock:food,days:fd,fill:supplyFill(fd),cap:hud.stockCap,level:supplyLevel(fd),trackTrend:true,tip:`Food ready to eat.${fd!==null?` About ${daysText(fd)} days at today's appetite.`:''} Raw supplies are in Village, Stores.`},
-  {k:'wood',value:hud.wood,stock:hud.wood,days:null,fill:null,level:'unknown',trackTrend:true,tip:'Logs in stores.'},
-  {k:'stone',value:hud.stone,stock:hud.stone,days:null,fill:null,level:'unknown',trackTrend:true,tip:'Stone in stores.'},
+  {k:'wood',value:hud.wood,stock:hud.wood,days:null,fill:null,cap:hud.resourceCaps?.wood,level:'unknown',trackTrend:true,tip:'Logs in stores.'},
+  {k:'stone',value:hud.stone,stock:hud.stone,days:null,fill:null,cap:hud.resourceCaps?.stone,level:'unknown',trackTrend:true,tip:'Stone in stores.'},
   {k:'water',value:water,stock:water,days:wd,fill:supplyFill(wd),level:wd===null?(water<10?'critical':'unknown'):supplyLevel(wd),trackTrend:true,tip:`${water} litres of collected water.${wd!==null?` About ${daysText(wd)} days at today's use.`:''}`},
   {k:'people',value:`${hud.pop}/${hud.popCap}`,stock:hud.pop,days:null,fill:hud.popCap>0?Math.max(0,Math.min(1,hud.pop/hud.popCap)):null,level:hud.pop>=hud.popCap&&hud.popCap>0?'low':'ok',trackTrend:false,warn:hud.pop>=hud.popCap&&hud.popCap>0,tip:`${hud.pop} people, housing for ${hud.popCap}.${hud.pop>=hud.popCap?' Housing is full.':''}`},
-  ...(hud.age>=1||hud.copper>0?[{k:'copper' as const,value:hud.copper,stock:hud.copper,days:null,fill:null,level:'unknown' as const,trackTrend:true,tip:'Copper in stores.'}]:[]),
-  ...(hud.age>=2||hud.iron>0?[{k:'iron' as const,value:hud.iron,stock:hud.iron,days:null,fill:null,level:'unknown' as const,trackTrend:true,tip:'Iron in stores.'}]:[]),
+  ...(hud.age>=1||hud.copper>0?[{k:'copper' as const,value:hud.copper,stock:hud.copper,days:null,fill:null,cap:hud.resourceCaps?.copper,level:'unknown' as const,trackTrend:true,tip:'Copper in stores.'}]:[]),
+  ...(hud.age>=2||hud.iron>0?[{k:'iron' as const,value:hud.iron,stock:hud.iron,days:null,fill:null,cap:hud.resourceCaps?.iron,level:'unknown' as const,trackTrend:true,tip:'Iron in stores.'}]:[]),
  ];
  for(const c of cells){if(!c.trackTrend)continue;let t=trackers.current.get(c.k);if(!t){t=new TrendTracker(simulationDaySeconds);trackers.current.set(c.k,t);}t.push(hud.time,c.stock,game?.state);}
  const f=useFold('resources');

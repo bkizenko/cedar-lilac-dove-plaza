@@ -852,6 +852,7 @@ export type HudSnapshot = {
   prestigeBreakdown?:import('./prestigeGame').GamePrestigeView;
   prestigeRivals?:import('./prestigeGame').GamePrestigeView[];
   stockCap: number;
+  resourceCaps?: Record<"wood"|"stone"|"copper"|"iron",number>;
   port: boolean;
   night: boolean;
   threat: number;

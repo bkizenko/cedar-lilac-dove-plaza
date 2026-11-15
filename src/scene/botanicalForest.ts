@@ -19,7 +19,8 @@ export type ForestContext={marked?:(id:number)=>boolean;quality:'low'|'med'|'hig
 export type ForestNode={id:number;x:number;y:number;z:number;amount:number;scale:number;regenT:number;planted?:boolean;/** cosmetic filler tree: never a resource, never picked */filler?:true};
 export type ForestOptions={seed:number;/** ecological stands (src/game/forestEcology.ts): species, age class and size come from the stand instead of a per-tree hash; absent = the original per-tree choice */ecology?:StandField;siteAt:(x:number,z:number)=>TreeSite;baseFormAt:(id:number,x:number,z:number)=>{base:BaseForm;kind:string};/** unit wind vector the trees lean along */wind?:[number,number];nearMetres:Record<'low'|'med'|'high',number>;farMetres:number;lowFarMetres:number;stumpHeightScale:number};
 const BARE_FAR=new THREE.Color('#5c5148');
-export const FOREST_LOD={fullFraction:.4,midFraction:1.15} as const;
+/** Near-tier radii as fractions of the graphics tier's treeNear (detailLevel.ts). Full-detail count is still capped nearest-first by DETAIL_RULES.maxFullTrees and hero trees by maxHeroTrees, so a wider radius never raises the triangle budget; trees past the cap fall to the mid tier and the filler cross-fade (fadeMetres) hides the hand-over. */
+export const FOREST_LOD={fullFraction:.5,midFraction:1.45} as const;
 type Rec={sp:number;v:number;/** stand-derived size scale (ecology on); absent = the node's own scale */size?:number;sx:number;sy:number;lean:[number,number];yaw:number;hue:[number,number,number];autumn:number;timing:number};
 type Batch={mesh:THREE.InstancedMesh;state:THREE.InstancedBufferAttribute;ids:number[];capacity:number;n:number;name:string};
 const AUTUMN_CACHE=new Map<string,THREE.Color>();const autumnColor=(hex:string)=>{let c=AUTUMN_CACHE.get(hex);if(!c){c=new THREE.Color(hex);AUTUMN_CACHE.set(hex,c);}return c;};

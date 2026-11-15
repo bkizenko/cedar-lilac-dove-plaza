@@ -16,11 +16,11 @@ export const DETAIL_RULES={
  /** Standard switch distances, metres.
   * buildings: horizontal eye-to-building, [near->mid, mid->far, far->impostor card] (was 30/70/120)
   * people: 3-D eye-to-person, [near->mid, mid->far silhouette] (was 35/70)
-  * trees: base "near" radius per graphics quality; full-detail trees are inside near*FOREST fraction .4, mid inside .. 1.15 (was low 28 / med 75 / high 115)
+  * trees: base "near" radius per graphics quality; full-detail trees are inside near*FOREST_LOD.fullFraction, mid inside .. FOREST_LOD.midFraction (botanicalForest.ts) (was low 28 / med 75 / high 115)
   * items: ground items, [near->mid, mid->far], scaled by graphics quality .5/.7/1 (was 14/40; Medium graphics = 70/154) */
  buildings:[110,190,300] as readonly [number,number,number],
  people:[100,180] as readonly [number,number],
- treeNear:{low:70,med:170,high:230} as Record<'low'|'med'|'high',number>,
+ treeNear:{low:80,med:200,high:270} as Record<'low'|'med'|'high',number>,
  items:[100,220] as readonly [number,number],
  /** the most trees drawn at the full-detail tier (nearest first); the rest of the near ring falls to the mid tier. Protects the M1 triangle budget. */
  /** the most people drawn at the near rig tier (about 770-1,100 triangles each before held items), nearest first; the rest use the mid tier */

@@ -29,7 +29,7 @@ export const TREE_STEPS:readonly TreeStep[]=[1,2,3,4,5];
 export const TREE_CHOICES:readonly TreeChoice[]=['auto',...TREE_STEPS];
 
 /** What one tree-detail step changes. All render-only; none touches the simulation, resource ids, picking or saves.
- *  nearMetres    radius of full + mid botanical species meshes (full-detail inside 40% of it, mid-detail to 115%)  (from DETAIL_RULES.treeNear: graphics Low 70, Medium 170, High 230; the Detail option scales it further)
+ *  nearMetres    radius of full + mid botanical species meshes (full-detail inside 50% of it, mid-detail to 145%)  (from DETAIL_RULES.treeNear: graphics Low 80, Medium 200, High 270; the Detail option scales it further)
  *  farScale      multiplier on the draw-distance band's tree draw distance (individual far crowns of sim trees and filler)
  *  fillerCap     multiplier on the cosmetic filler forest's tree and horizon-crown caps; 0 = no filler forest
  *  fillerDetail  multiplier on the radius out to which filler trees are drawn as individual crowns (beyond it: merged horizon crowns)
