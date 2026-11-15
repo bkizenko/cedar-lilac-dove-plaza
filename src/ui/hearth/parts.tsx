@@ -1,3 +1,4 @@
+import {squadsOf,SQUAD_SIZES} from '../../game/squads';
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {SkillStrip} from './skillsCard';
 import {PeaceActions,ConquestActions,type WarCommand} from './warActions';
@@ -162,6 +163,17 @@ export function GroupChips({groups}:{groups:{id:number;kind:string;members:numbe
  return <div className="hw-row" role="group" aria-label="Fighting groups">{groups.map(g=>{const worst=Math.min(g.cohesion,g.morale),tone=worst>=70?'t-good':worst<40?'t-bad':'';
   return <GameTooltip key={g.id} title={`${g.kind} of ${g.members}`} description={`Cohesion ${g.cohesion}% · Morale ${g.morale}% · ${g.casualties} fallen${g.commander?' · has a commander':' · no commander'}`}><span className={cx('hw-chip',tone)} tabIndex={0} aria-label={`${g.kind} group of ${g.members}, ${word(g.cohesion)} cohesion, ${word(g.morale)} morale`}><Users size={18}/>{g.members} <em>{word(worst)}</em></span></GameTooltip>;})}</div>;
 }
+/** Squads of 5/10/25/50/100 armed adults; selected squads' members take post or patrol where the selection stands. */
+function SquadRow({engine,send}:{engine:Engine;send:(c:Parameters<Engine['dispatch']>[0])=>void}){
+ const g=engine.game,squads=squadsOf(g,0);
+ return <div className="hw-row" role="group" aria-label="Squads">
+  {SQUAD_SIZES.map(n=><IconBtn key={n} label={`Form squads of ${n}`} tip={`Organise free armed adults into squads of ${n}, led by the most experienced fighter`} small onClick={()=>send({kind:'form-squads',size:n})}><span>{n}</span></IconBtn>)}
+  {squads.length>0&&<>
+   <IconBtn label="Squads patrol" tip="All squads patrol here, taking turns on watch and drill" onClick={()=>{const u=g.selectedUnits()[0];const p=u?{x:u.x,z:u.z}:g.campOf(0);squads.forEach((q,i)=>send({kind:'squad-order',squadId:q.id,order:'patrol',x:p.x,z:p.z,rotate:squads.length>1}));}}><Footprints size={24}/></IconBtn>
+   <IconBtn label="Disband squads" tip="Squads end; people keep their weapons" onClick={()=>send({kind:'disband-squads'})}><X size={24}/></IconBtn>
+   <span className="hw-chip">{squads.length} {squads.length===1?'squad':'squads'} · {squads.reduce((n,q)=>n+q.memberIds.length,0)} soldiers</span></>}
+ </div>;
+}
 function MilitaryPanel({hud,engine}:{hud:HudSnapshot;engine:Engine}){
  const Q={kind:'combat-doctrine'} as const;
  const read=useOwnerReadModels(engine,[Q]),c=read(Q).model?.combat;
@@ -183,6 +195,7 @@ function MilitaryPanel({hud,engine}:{hud:HudSnapshot;engine:Engine}){
    <IconBtn label="Stand down" tip={units.some(u=>duty(u.id))?"Back to ordinary work":"Nobody selected is on guard or patrol"} disabled={!units.some(u=>duty(u.id))} onClick={()=>units.forEach(u=>send({kind:'release-guard',unitId:u.id}))}><X size={24}/></IconBtn>
    {units.some(u=>duty(u.id)==='escort')&&<span className="hw-chip">Escort</span>}</div>}
   </div>
+  <SquadRow engine={engine} send={send}/>
   {c?.enabled&&<GroupChips groups={c.groups}/>}
  </div>;
 }

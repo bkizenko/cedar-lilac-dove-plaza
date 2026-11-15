@@ -569,6 +569,7 @@ export type GameState = {
   formations?:import('./combatDoctrine').FormationGroup[];
   guardDuties?:import('./guardDuty').GuardDuty[];
   armingCall?:import('./armingCall').ArmingCall;
+  squads?:import('./squads').SquadsState;
   raidReports?:import('./raidReports').RaidReports;
   transit?:import('./transit').TransitState;
   terrainInfluence?:import('./terrainInfluenceRuntime').TerrainInfluenceState;
