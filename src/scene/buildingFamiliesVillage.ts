@@ -129,8 +129,8 @@ const windmill:Generator=(ctx,r)=>{
   // cap: shingled/thatched dome, ridge and the windshaft bearing
   const capY=H;
   cyl(parts,'woodDark',2*R1+.16,.2,[0,capY,0],2,12);
-  parts.push(part('cone',rm==='slate'?'slate':rm,[2*R1+.5,1.15*k,2*R1+.5],[0,capY+.18,0],2,undefined,12));
-  box(parts,'woodEdge',[.12,.14,2*R1+.4],[0,capY+1.0*k,0],1);
+  parts.push(part('cone',rm==='slate'?'slate':rm,[2*R1+.5,1.9*k,2*R1+.5],[0,capY+.18,0],2,undefined,12));
+  box(parts,'woodEdge',[.12,.14,2*R1+.4],[0,capY+1.6*k,0],1);
   // tail pole to the winch post on the ground behind
   const hubY=capY+.8*k,hubZ=R1+.62*k;
   parts.push(beam('woodDark',[0,capY+.45*k,-R1],[0,.55*k,-(d/2-.35)],.12,1));

@@ -173,3 +173,20 @@ export class AcousticScore {
     this.tracks.clear();
   }
 }
+
+/** Soft chime phrase (Hz, seconds from start) that opens each season; spring bright, winter low and slow. */
+export const SEASON_CUES:Record<string,{notes:{f:number;at:number;dur:number}[];vol:number}>={
+  Spring:{notes:[{f:523,at:0,dur:.5},{f:659,at:.18,dur:.5},{f:784,at:.36,dur:.8}],vol:.03},
+  Summer:{notes:[{f:392,at:0,dur:.6},{f:494,at:.25,dur:.6},{f:587,at:.5,dur:.9}],vol:.03},
+  Autumn:{notes:[{f:440,at:0,dur:.7},{f:392,at:.3,dur:.7},{f:330,at:.6,dur:1}],vol:.028},
+  Winter:{notes:[{f:262,at:0,dur:1},{f:196,at:.5,dur:1.4}],vol:.026},
+};
+/** Occasional nature moment per season. */
+export function natureAmbienceKind(season:string,r:number):"birds"|"wind"|"crickets"{
+  if(season==="Winter")return "wind";
+  if(season==="Autumn")return r<.5?"wind":"birds";
+  if(season==="Summer")return r<.6?"birds":"crickets";
+  return "birds";
+}
+/** Seconds until the next nature moment (45..120), from a 0..1 roll. */
+export function natureAmbienceGap(r:number){return 45+Math.max(0,Math.min(1,r))*75;}

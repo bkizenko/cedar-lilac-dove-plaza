@@ -52,3 +52,10 @@ test('default calm soundtrack still changes for actual attack and defense, then 
 });
 test('Skip changes the actual recording and manual choice survives unchanged world mood',()=>{const f=fixture();try{f.score.unlock();f.score.update('village',6,true);f.score.skip();assert.equal(f.score.stage,'harp');assert.equal(f.tracks[0].paused,true);assert.equal(f.tracks[5].paused,false);f.score.update('village',60,true);assert.equal(f.score.stage,'harp');f.score.update('battle',.2,false);assert.equal(f.score.stage,'battle');assert.equal(f.tracks[2].paused,false);}finally{f.restore();}});
 test('Skip respects mute, background visibility and calm playlist',()=>{const f=fixture();try{f.score.unlock();f.score.setMuted(true);f.score.skip();assert.equal(f.score.stage,'harp');assert.ok(f.tracks.every(t=>t.paused&&t.volume===0));f.score.setMuted(false);globalThis.document.hidden=true;f.events.get('visibilitychange')();f.score.skip();assert.equal(f.score.stage,'folk');assert.ok(f.tracks.every(t=>t.paused));globalThis.document.hidden=false;f.events.get('visibilitychange')();assert.equal(f.tracks[3].paused,false);for(let i=0;i<10;i++){f.score.skip();assert.ok(['village','harp','folk'].includes(f.score.stage));}}finally{f.restore();}});
+
+test('each season has a start cue and nature moments are spaced and seasonal',async()=>{
+  const {SEASON_CUES,natureAmbienceKind,natureAmbienceGap}=await import('../src/game/music.ts');
+  for(const s of ['Spring','Summer','Autumn','Winter'])assert.ok(SEASON_CUES[s].notes.length>=2);
+  assert.equal(natureAmbienceKind('Winter',.1),'wind');assert.equal(natureAmbienceKind('Spring',.9),'birds');
+  assert.ok(natureAmbienceGap(0)>=45&&natureAmbienceGap(1)<=120);
+});

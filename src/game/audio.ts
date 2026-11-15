@@ -1,4 +1,4 @@
-import { peacefulMusic, AcousticScore } from "./music";
+import { peacefulMusic, AcousticScore, SEASON_CUES, natureAmbienceKind, natureAmbienceGap } from "./music";
 import { ProceduralAudio, proceduralMusicOn, type WorldAudio } from "./proceduralAudio";
 import { LEGACY_SFX, BUS_OFF_KEY, busGain, busOff, loadSettings, saveSettings, type AudioSettings, type Bus, type SubBus } from "../scene/audioMix";
 export class GameAudio {
@@ -280,8 +280,28 @@ export class GameAudio {
     if (this.proc.active && proceduralMusicOn()) return;
     const battle = mood !== "peace";
     const stage = battle ? "battle" : peacefulMusic(age,season,this.score.calm);
+    this.seasonAndNature(season, dt);
     const duck = (season === "Winter" ? 0.5 : season === "Autumn" ? 0.62 : 0.7) * (population > 30 || age > 3 ? 0.9 : 1);
     this.score.update(stage, dt, paused, duck);
+  }
+  private lastSeason = "";
+  private natureIn = natureAmbienceGap(.3);
+  /** A short chime when a season begins, and an occasional bird, wind or cricket moment between. */
+  private seasonAndNature(season: string, dt: number) {
+    if (!this.ctx || this.sfxOff) return;
+    if (this.lastSeason && this.lastSeason !== season) {
+      const cue = SEASON_CUES[season];
+      if (cue) for (const n of cue.notes) setTimeout(() => this.tone(n.f, n.dur, "sine", cue.vol), n.at * 1000);
+      this.natureIn = natureAmbienceGap(Math.random());
+    }
+    this.lastSeason = season;
+    this.natureIn -= dt;
+    if (this.natureIn > 0) return;
+    this.natureIn = natureAmbienceGap(Math.random());
+    const kind = natureAmbienceKind(season, Math.random());
+    if (kind === "wind") this.noiseBurst(1.6, 0.012, 380);
+    else if (kind === "crickets") for (let i = 0; i < 5; i++) setTimeout(() => this.tone(4200, 0.05, "sine", 0.004), i * 90);
+    else for (let i = 0; i < 3; i++) setTimeout(() => this.tone(1900 + Math.random() * 900, 0.09, "sine", 0.008), i * 130);
   }
   /** Per-frame world feed for the procedural mix (the caller throttles the probe). */
   updateWorld(dt: number, world: WorldAudio) {
