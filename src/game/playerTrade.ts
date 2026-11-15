@@ -1,8 +1,9 @@
 import type {Game} from './sim';
+import {mintCoins,meltCoins} from './coinage';
 import {TRADE_GOODS,TRADE_SELECTABLE_KINDS,TRADE_NEEDS_RULES,proposePlayerTrade,answerTradeOffer,tradeStock,type GoodKind,type TradeOffer,type TradeOfferPhase} from './tradeNeeds';
-export type PlayerTradeCommand={kind:'propose-needs-trade';team:number;give:GoodKind;get:GoodKind;amount:number}|{kind:'answer-needs-trade';offerId:number;accept:boolean};
+export type PlayerTradeCommand={kind:'propose-needs-trade';team:number;give:GoodKind;get:GoodKind;amount:number}|{kind:'answer-needs-trade';offerId:number;accept:boolean}|{kind:'mint-coins';copper:number}|{kind:'melt-coins';coins:number};
 export const PLAYER_TRADE_RULES={maximumOffers:12,maximumPartners:64} as const;
-export const PLAYER_TRADE_NAMES:Record<GoodKind,string>={food:'Food',wood:'Timber',stone:'Stone',copper:'Copper',iron:'Iron',spears:'Spears',bows:'Bows',blades:'Blades',paddedArmor:'Padded armour',cordage:'Cordage',basket:'Baskets',pottery:'Pottery',cloth:'Cloth',leather:'Leather',skinClothes:'Skin clothing',hideCoat:'Hide coats',woolCloth:'Wool cloth',woolCoat:'Wool coats',goat:'Goats'};
+export const PLAYER_TRADE_NAMES:Record<GoodKind,string>={food:'Food',wood:'Timber',stone:'Stone',copper:'Copper',iron:'Iron',spears:'Spears',bows:'Bows',blades:'Blades',paddedArmor:'Padded armour',cordage:'Cordage',basket:'Baskets',pottery:'Pottery',cloth:'Cloth',leather:'Leather',skinClothes:'Skin clothing',hideCoat:'Hide coats',woolCloth:'Wool cloth',woolCoat:'Wool coats',goat:'Goats',coins:'Coins'};
 export const playerTradeGood=(v:unknown):v is GoodKind=>typeof v==='string'&&TRADE_SELECTABLE_KINDS.includes(v as GoodKind);
 export type PlayerTradeOfferView={id:number;from:number;to:number;partner:number;partnerName:string;give:{kind:GoodKind;amount:number};get:{kind:GoodKind;amount:number};phase:TradeOfferPhase;status:string;canAnswer:boolean;answerIssue:string|null;answerBy:number|null;ownCarriers:number|null;/** seconds of game time left to answer (incoming, still open) */answerLeft?:number|null;};
 export type PlayerTradeModel={kind:'needs-trade';/** game clock when read, so the sheet can age offers without a second source */now?:number;team:number|null;partnerKnown:boolean;partners:{id:number;name:string}[];goods:{kind:GoodKind;label:string;held:number;maxOffer:number}[];offers:PlayerTradeOfferView[]};
@@ -41,6 +42,8 @@ export function playerTradeModel(g:Game,team?:number):PlayerTradeModel{
 }
 export function applyPlayerTradeCommand(g:Game,c:PlayerTradeCommand){
  const no=(reason:string)=>({accepted:false,reason});
+ if(c.kind==='mint-coins')return mintCoins(g,0,c.copper);
+ if(c.kind==='melt-coins')return meltCoins(g,0,c.coins);
  if(c.kind==='propose-needs-trade'){
   if(!Number.isSafeInteger(c.team)||c.team<=0||c.team===3||!g.state.tribes[c.team])return no('Choose another village');
   if(!playerTradeGood(c.give)||!playerTradeGood(c.get)||c.give===c.get||!Number.isSafeInteger(c.amount)||c.amount<1||c.amount>TRADE_GOODS[c.give].maxLot)return no('Choose two supported goods and a valid amount');

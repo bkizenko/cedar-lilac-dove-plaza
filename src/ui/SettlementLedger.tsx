@@ -1,3 +1,4 @@
+import {ExpeditionPanel} from "./ExpeditionPanel";
 import {foodGuardLabel} from '@/game/foodGuard';
 import {SocietyIdentityEditor} from './SocietyIdentityEditor';
 import {SocietyFlag} from './SocietyFlag';
@@ -257,7 +258,8 @@ export function SettlementLedger({ engine, hud }: { engine: Engine | null;hud?:P
         </div>):<p>No projects queued. Choose a building from the bar to plan its site.</p>}
       </section>
       <h3>Campaign orders</h3>
-      <p>Select adults for an expedition. Raiding is an explicit campaign; home food and construction workers keep their priorities.</p>
+      <ExpeditionPanel engine={engine}/>
+      <p>Raiding is an explicit campaign; home food and construction workers keep their priorities.</p>
       <button onClick={()=>{g.raidRival();engine.pushHud();}}>Raid and pillage with selected adults</button>
       <button onClick={()=>{g.soundRecall();engine.pushHud();}}>Sound recall horn · return everyone home</button>
       <h3>Fields and harvest</h3>

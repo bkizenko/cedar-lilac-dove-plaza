@@ -27,6 +27,11 @@ export function NeedsTradeSheet({model,inboxOnly,busy,run}:{model:PlayerTradeMod
    {offered&&<p className="text-parchment-dim">{Math.floor(offered.held)} {PLAYER_TRADE_NAMES[give].toLowerCase()} held · maximum offer {maxAmount}{received?` · ${Math.floor(received.held)} ${PLAYER_TRADE_NAMES[get].toLowerCase()} held`:''}</p>}
    <button type="button" className={button} disabled={busy||invalid} title={busy?'Working on the last order':invalid?'Pick two different goods and a whole quantity you can offer':undefined} onClick={()=>{if(!invalid&&model.team!==null)run({kind:'propose-needs-trade',team:model.team,give,get,amount:quantity});}}>Send offer</button>
   </>}
+  {!inboxOnly&&<div className="flex flex-wrap items-center gap-2 border-t border-bronze/20 pt-2" aria-label="Coinage">
+   <span className="text-parchment-dim">{Math.floor(model.goods.find(g=>g.kind==='coins')?.held||0)} coins in stores</span>
+   <button type="button" className={button} disabled={busy} title="Strike 1 copper into 6 coins at a market or town hall" onClick={()=>run({kind:'mint-coins',copper:1})}>Strike coins from 1 copper</button>
+   <button type="button" className={button} disabled={busy||(model.goods.find(g=>g.kind==='coins')?.held||0)<6} title="Melt 6 coins back into 1 copper" onClick={()=>run({kind:'melt-coins',coins:6})}>Melt 6 coins</button>
+  </div>}
   {offers.map(offer=>{
    const incoming=offer.to===0,pay=incoming?offer.get:offer.give,take=incoming?offer.give:offer.get;
    return <div key={offer.id} className="space-y-1 border-t border-bronze/20 pt-2">
