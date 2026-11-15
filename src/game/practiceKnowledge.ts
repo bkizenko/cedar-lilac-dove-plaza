@@ -27,6 +27,7 @@ const chains:Chain[]=[
  {id:'garments',title:'Make coverings for residents',need:'Delivered coverings become useful only when an actual resident wears and maintains them.',recipes:['sewSkinClothes','sewLeatherClothes','sewLightClothes','sewHideCoat','sewWoolCoat','sewFeltCoat'],sites:['tailor'],use:'garment'},
  {id:'tin',title:'Smelt tin ore into ingots',need:'Tin ore from a distant lode or a trading partner is useless until charcoal and kiln work turn it into ingots; only delivered ingots establish the method.',recipes:['smeltTin'],sites:['kiln']},
  {id:'bronze',title:'Alloy copper and tin into bronze',need:'Usable copper, delivered tin and charcoal meet at a forge; bronze ingots and bronze-edged blades are the proof, and tin is the limit.',recipes:['castBronze','castBronzeBlades'],sites:['forge'],proof:['castBronze']},
+ {id:'masonry',title:'Burn lime and dress stone',need:'Stone buildings last when blocks are cut true and bedded in mortar; stored stone, timber fuel, kiln heat and quarry labour must all meet before the first lime or dressed block exists.',recipes:['burnLime','dressStone'],sites:['kiln','quarry']},
  {id:'pottery',title:'Make and use water vessels',need:'Finite clay, water, weather and fuel can produce vessels that reduce repeated water-carrying journeys.',recipes:['formClayHand','formClay','dryClay','dryClayCovered','fireClayHand','fireClay'],sites:['hearth','dryrack','potter','kiln'],proof:['fireClayHand','fireClay'],use:'vessel'},
 ];
 /** Current stock is observation, saved delivered results are proof, and actual

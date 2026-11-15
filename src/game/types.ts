@@ -346,6 +346,8 @@ export type Unit = import("./communityHandoverTypes").HandoverProvenance&{
 export type QueueItem = { unit: UnitType; t: number; max: number };
 
 export type Building = {
+  /** Stone building hardened once with dressed stone and lime (masonry.ts); absent on old saves. */
+  faced?:boolean;
   fabric?:import('./buildingFabric').BuildingFabric;
   sitePreparation?:import('./sitePreparation').SitePreparation;
   renovation?:import('./housingTypes').HousingRenovation;

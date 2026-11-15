@@ -1,4 +1,5 @@
 import {applySendExpedition,type SendExpeditionCommand} from './expeditionOrder';
+import {faceBuilding} from './masonry';
 import {applyPlayerTradeCommand,playerTradeGood,type PlayerTradeCommand} from './playerTrade';
 import {applyHusbandryCommand,HUSBANDRY_ACTIONS,type HusbandryCommand} from './husbandryCommands';
 import {pauseWildWork,resumeWildWork,WILD_RECIPES} from './wildCraft';
@@ -51,6 +52,7 @@ import {adoptGovernment,setPolicy,appointGovernor,dismissGovernor} from './gover
 export type EngineSelection={selectedUnitIds:readonly number[];selectedBuildingId?:number;selectedBoatId?:number};
 export type EngineDispatchCommand=
  |HusbandryCommand|PlayerTradeCommand|SendExpeditionCommand
+ |{kind:'face-building';buildingId:number}
  |{kind:'wild-work-control';projectId:number;paused:boolean}
  |WildBeginCommand|WildCollectCommand
  |{kind:'method-record-pickup';recordId:number;unitId:number}
@@ -114,6 +116,7 @@ export function applyEngineCommand(g:Game,command:EngineDispatchCommand,selectio
   const no=(reason:string)=>({accepted:false,reason});if(!isEngineDispatchCommand(command)||!isEngineSelection(selection))return no('Unsupported or malformed command payload');
   if('unitId' in command&&command.unitId!==undefined&&!g.state.units.some(u=>u.id===command.unitId&&u.team===0&&u.hp>0))return no('Original owned person unavailable');
   switch(command.kind){
+   case 'face-building':return faceBuilding(g,0,command.buildingId);
    case 'send-expedition':return applySendExpedition(g,command);
    case 'husbandry-order':return applyHusbandryCommand(g,command);
    case 'propose-needs-trade':case 'answer-needs-trade':case 'mint-coins':case 'melt-coins':case 'press-regional':case 'consume-regional':case 'sell-captive':return applyPlayerTradeCommand(g,command);
@@ -289,6 +292,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
   'answer-needs-trade':{offerId:id,accept:bool},
   'send-expedition':{unitIds:v=>Array.isArray(v)&&v.length>=1&&v.length<=12&&v.every(x=>integer(x)),x:v=>typeof v==='number'&&Number.isFinite(v),z:v=>typeof v==='number'&&Number.isFinite(v)},
   'sell-captive':{prisonerId:id,buyerId:id},
+  'face-building':{buildingId:id},
   'press-regional':{good:v=>v==='oliveOil'||v==='wine',batches:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=6},
   'consume-regional':{good:v=>v==='oliveOil'||v==='wine',jars:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=12},
   'mint-coins':{copper:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=24},
