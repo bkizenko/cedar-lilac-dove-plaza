@@ -409,6 +409,9 @@ span[data-mood=bad]{background-image:repeating-linear-gradient(135deg,rgba(0,0,0
 :root:not([data-hw-ui]){
  --hw-fs-s:16px; --hw-fs:18px; --hw-fs-m:20px; --hw-fs-l:26px; --hw-fs-xl:34px;
  --hw-hit:52px;
+ /* Layout contract: floating panels sit right of the rail and below the top bar. rail right edge = --hw-edge + --hw-rail-w. */
+ --hw-edge:12px; --hw-rail-w:64px; --hw-rail-gap:12px; --hw-top-h:84px; --hw-rail-top:92px; --hw-bottom-reserve:96px;
+ --hw-panel-left:calc(var(--hw-edge) + var(--hw-rail-w) + var(--hw-rail-gap));
  --hw-ico:30px; --hw-ico-l:38px; --hw-ico-s:24px;
  /* Tactile, not glossy: a faint horizontal wood grain on a flat colour, a hard bottom edge instead of a soft top highlight. */
  --hw-grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.012 .55' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 .86  0 0 0 0 .62  0 0 0 .07 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
@@ -639,3 +642,9 @@ span[data-mood=bad]{background-image:repeating-linear-gradient(135deg,rgba(0,0,0
 .hw-map{max-height:calc(100dvh - 24px);overflow-y:auto}
 .hw .test-panel,.test-panel{max-height:min(90dvh,880px);overflow-y:auto;overscroll-behavior:contain;border-radius:var(--hw-r-l)}
 .hw-choice .hw-screen-body{overflow-y:auto}
+
+/* Layout contract (desktop): the bottom cluster starts right of the left rail; the selection card never rises into the top bar (internal scroll instead). */
+@media (min-width:761px){
+ .hw-bottom{left:var(--hw-panel-left)}
+ .hw-sel{max-height:max(160px,min(66dvh,620px,calc(100dvh - var(--hw-top-h) - var(--hw-bottom-reserve) - 2*var(--hw-edge))))}
+}
