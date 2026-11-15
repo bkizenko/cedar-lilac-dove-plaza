@@ -29,6 +29,12 @@ export const WONDER_RECIPES={
  stepwell:R('stepwell',['baseTerrace','plinth'],['pagodaTiers','arch','dome','relief'],['relief','statue','brazier','arch'],{water:true,axis:'processional'}),
  beaconTower:R('beaconTower',['plinth','causeway'],['spire','brazier','statue'],['brazier','bannerPair','wall'],{enclosure:'none'}),
  arsenal:R('shipSlips',['causeway','plinth'],['gate','spire','pylonPair'],['bannerPair','brazier','wall','statue'],{axis:'linear',enclosure:'wall'}),
+ cathedral:R('archiveHall',['baseTerrace','plinth'],['spire','dome','pagodaTiers'],['colonnade','statue','relief','brazier'],{enclosure:'colonnade',axis:'processional'}),
+ greatBridge:R('roadSpan',['causeway'],['arch','gate','pylonPair'],['statue','brazier','bannerPair'],{axis:'linear',enclosure:'none',water:true}),
+ guildHall:R('caravanCourt',['plinth','baseTerrace'],['gate','arch','spire'],['bannerPair','statue','brazier','relief'],{enclosure:'wall',axis:'cross'}),
+ university:R('archiveHall',['plinth','baseTerrace'],['dome','tholos','spire'],['colonnade','statue','relief','bannerPair'],{enclosure:'colonnade',axis:'cross'}),
+ canalLocks:R('aqueductSpan',['causeway'],['gate','arch'],['waterFeature','bannerPair','statue'],{axis:'linear',enclosure:'none',water:true}),
+ starFort:R('wallCircuit',['baseTerrace','plinth'],['gate','spire','pylonPair'],['bannerPair','brazier','gate','wall'],{axis:'cross',enclosure:'wall'}),
 } as const satisfies Record<string,WonderRecipe>;
 export type RecipeWonder=keyof typeof WONDER_RECIPES;
 export const RECIPE_WONDERS=Object.keys(WONDER_RECIPES) as RecipeWonder[];

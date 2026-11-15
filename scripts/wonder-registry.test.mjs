@@ -34,9 +34,9 @@ const THREE=['aureline','nilemark','hanrei'];
 
 test('registry: every row is valid, 26 wonders, 20 beyond the original four, honest analogue labels',()=>{
  assert.deepEqual(D.validRegistry(),[]);
- assert.equal(D.WONDER_DEFS.length,26);
+ assert.equal(D.WONDER_DEFS.length,32);
  const original=['observatory','terraceGarden','harbor','millMarket'];
- const fresh=D.foundableDefs().filter(d=>!original.includes(d.id));assert.ok(fresh.length>=16,'at least 16 new foundable families: '+fresh.length);assert.equal(fresh.length,20);
+ const fresh=D.foundableDefs().filter(d=>!original.includes(d.id));assert.ok(fresh.length>=16,'at least 16 new foundable families: '+fresh.length);assert.equal(fresh.length,26);
  for(const d of D.WONDER_DEFS){assert.ok(d.inspiration.verified?!!d.inspiration.source:d.inspiration.name.includes('[UNVERIFIED]'),d.id);}
  assert.deepEqual(D.WONDER_DEFS.filter(d=>d.inspiration.verified).map(d=>d.id).sort(),['caravanserai','granary']);
  // staging adds up exactly to the cost for every good
@@ -48,7 +48,7 @@ test('registry: every row is valid, 26 wonders, 20 beyond the original four, hon
  assert.ok(D.WONDER_DEFS.filter(d=>d.hooks.length).length>=20,'hook lists for what is not wired yet');
 });
 test('kit: every registry wonder draws in 3 civ styles, deterministically, per seed different; stages grow and carry scaffolding',()=>{
- assert.equal(WONDER_KINDS.length,26);for(const f of WONDER_FUNCTIONS)assert.ok(WONDER_KINDS.includes(f));
+ assert.equal(WONDER_KINDS.length,32);for(const f of WONDER_FUNCTIONS)assert.ok(WONDER_KINDS.includes(f));
  for(const d of D.WONDER_DEFS){assert.ok(CORE_OF[d.id],d.id);if(d.kit)assert.deepEqual(d.kit,recipeOf(d.id));}
  const sil=new Set();
  for(const d of D.WONDER_DEFS)for(const civ of THREE){
@@ -107,7 +107,7 @@ test('a stage waits when the stock cannot deliver it, and resumes when the goods
 test('suggest ranking: ordered, deterministic, explained, held wonders drop out, needs move the score',()=>{
  const g1=game(),g2=game();run(g1,15);run(g2,15);prepare(g1,0);prepare(g2,0);
  const a=S.suggestWonders(g1,0,{siteChecks:26}),b=S.suggestWonders(g2,0,{siteChecks:26});
- assert.deepEqual(a,b,'same seed same list');assert.equal(a.length,24);
+ assert.deepEqual(a,b,'same seed same list');assert.equal(a.length,30);
  for(let i=1;i<a.length;i++)assert.ok(a[i].score<=a[i-1].score+1e-9);
  const ok=a.filter(s=>s.feasible);assert.ok(ok.length>=5,'feasible '+ok.length);for(const s of ok){assert.ok(s.reasons.length>=3,s.id+' has reasons');assert.ok(s.score>0&&s.score<=1);}
  for(const s of a.filter(s=>!s.feasible)){assert.equal(s.score,0);assert.ok(s.blocker,s.id+' names a blocker');}
@@ -120,7 +120,7 @@ test('suggest ranking: ordered, deterministic, explained, held wonders drop out,
  const best=a.find(s=>s.ready);assert.ok(best,"a ready wonder exists");g1.tribe(0).food=3000;assert.equal(W.foundWonder(g1,0,best.id,{site:best.site}).ok,true);
  const after=S.suggestWonders(g1,0,{siteChecks:26});assert.equal(after.find(s=>s.id===best.id).feasible,false);assert.ok(after.every(s=>!s.ready),'one project at a time');
  // the panel model carries the same ranking and a site picker
- const m=applyEngineReadQuery(g2,{kind:'wonders'});assert.equal(m.kind,'wonders');assert.ok(m.wonders.rows.length===26&&m.wonders.suggested.length<=3);assert.ok(isEngineReadQuery({kind:'wonders'})&&isEngineReadQuery({kind:'wonders',focus:'granary'})&&!isEngineReadQuery({kind:'wonders',focus:'x y'}));
+ const m=applyEngineReadQuery(g2,{kind:'wonders'});assert.equal(m.kind,'wonders');assert.ok(m.wonders.rows.length===32&&m.wonders.suggested.length<=3);assert.ok(isEngineReadQuery({kind:'wonders'})&&isEngineReadQuery({kind:'wonders',focus:'granary'})&&!isEngineReadQuery({kind:'wonders',focus:'x y'}));
  assert.ok(m.wonders.rows.some(r=>r.sites.length));assert.ok(m.wonders.rows.every(r=>r.cost.labourSeconds>0&&(r.effects.length>0||['cistern','assembly'].includes(r.id))));
 });
 test('rivals found from the same registry and the fame reaches the player as vague rumour',()=>{

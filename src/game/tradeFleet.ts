@@ -15,6 +15,8 @@ export const SHIP_CLASSES:readonly ShipClass[]=Object.freeze([
  {id:'sailboat',name:'Sailing boat',minAge:1,minTier:1,cargo:60,crew:4,speed:1,parts:['hull','sail','oars']},
  {id:'trader',name:'Trading ship',minAge:2,minTier:2,cargo:120,crew:6,speed:1.25,parts:['hull','sail','deck','oars']},
  {id:'merchantman',name:'Merchant ship',minAge:3,minTier:2,cargo:220,crew:9,speed:1.5,parts:['hull','sail','deck','mast2']},
+ {id:'cog',name:'Cog',minAge:4,minTier:2,cargo:340,crew:12,speed:1.6,parts:['hull','sail','deck','mast2']},
+ {id:'galleon',name:'Galleon',minAge:5,minTier:3,cargo:520,crew:18,speed:1.85,parts:['hull','sail','deck','mast2']},
 ]);
 export const shipClassById=(id?:string)=>SHIP_CLASSES.find(c=>c.id===id);
 /** Raft up to merchant ship by age and the best harbour the society has. */
