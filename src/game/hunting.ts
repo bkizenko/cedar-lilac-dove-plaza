@@ -15,7 +15,7 @@ export type Carcass = { meat: number; diedAt: number; hides?:number; bones?:numb
 /** Tunable game work seconds, not a historical time measurement. */
 export const CARCASS_PROCESSING_RULES={gutSeconds:2,skinSeconds:3} as const;
 export type HuntableCritter = Critter & { carcass?: Carcass };
-export const CARCASS_MEAT = { deer: 24, boar: 32, goat: 16, sheep:16, horse:48, cattle:60, bird: 0, wolf: 12 } as const;
+export const CARCASS_MEAT = { deer: 24, boar: 32, goat: 16, sheep:16, horse:48, donkey:36, cattle:60, ox:68, bird: 0, wolf: 12 } as const;
 
 /** Old dead wildlife has no carcass field: loading cannot recreate eaten meat. */
 export function carcassStateValid(value: unknown, species: CritterKind, hp: number, now: number) {
@@ -56,7 +56,7 @@ export function updateCarcass(g: Game, c: HuntableCritter) {
 }
 
 export function wildlifeFleeSpeed(c: Critter) {
-  const base = c.species === "cattle" ? 3.3 : c.species === "horse" ? 4.6 : c.species === "deer" ? 4 : c.species === "boar" ? 2.8 : 2.5;
+  const base = c.species === "cattle" || c.species === "ox" ? 3.3 : c.species === "donkey" ? 4 : c.species === "horse" ? 4.6 : c.species === "deer" ? 4 : c.species === "boar" ? 2.8 : 2.5;
   return base * (0.6 + 0.4 * Math.max(0, Math.min(1, c.hp / Math.max(1, c.maxHp))));
 }
 

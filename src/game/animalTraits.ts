@@ -11,11 +11,13 @@ export const ANIMAL_TRAITS:Record<CritterKind,Traits>={
  goat:{role:'prey',rhythm:'crepuscular',gaits:[.7,1.7,2.4,2.9],turn:4,gallopSeconds:12,fid:11,fidPred:18,vigil:1.8,slope:1.6,forest:.8,group:[6,12],spacing:1.6,home:50,rut:3,wallow:false,dust:true,browse:.7,grazer:true},
  sheep:{role:'prey',rhythm:'diurnal',gaits:[.7,1.7,2.4,2.9],turn:3.4,gallopSeconds:9,fid:9,fidPred:16,vigil:1.6,slope:.6,forest:.6,group:[8,15],spacing:1.4,home:45,rut:3,wallow:false,dust:false,browse:.3,grazer:true},
  horse:{role:'prey',rhythm:'diurnal',gaits:[1.1,2.6,3.8,4.8],turn:2.8,gallopSeconds:28,fid:18,fidPred:30,vigil:2,slope:.55,forest:.35,group:[4,9],spacing:2.8,home:70,rut:0,wallow:false,dust:true,browse:.2,grazer:true},
+ donkey:{role:'prey',rhythm:'diurnal',gaits:[1,2.2,3.2,4],turn:2.6,gallopSeconds:22,fid:16,fidPred:24,vigil:1.8,slope:.7,forest:.3,group:[2,6],spacing:2.6,home:70,rut:0,wallow:false,dust:true,browse:.3,grazer:true},
+ ox:{role:'prey',rhythm:'diurnal',gaits:[.8,1.7,2.5,3.2],turn:2.2,gallopSeconds:9,fid:11,fidPred:15,vigil:1.4,slope:.4,forest:.3,group:[4,10],spacing:3.2,home:60,rut:0,wallow:true,dust:false,browse:.2,grazer:true},
  cattle:{role:'prey',rhythm:'diurnal',gaits:[.8,1.8,2.7,3.5],turn:2.4,gallopSeconds:10,fid:12,fidPred:16,vigil:1.5,slope:.45,forest:.35,group:[10,24],spacing:3,home:60,rut:1,wallow:true,dust:false,browse:.2,grazer:true},
  wolf:{role:'predator',rhythm:'nocturnal',gaits:[1,2.4,3.5,4.2],turn:3.4,gallopSeconds:17,fid:22,fidPred:22,vigil:1.6,slope:.8,forest:1,group:[3,6],spacing:2,home:48,rut:3,wallow:false,dust:false,browse:0,grazer:false},
  bird:{role:'flier',rhythm:'diurnal',gaits:[.6,2.5,4,5.5],turn:1.6,gallopSeconds:1e9,fid:9,fidPred:9,vigil:1.2,slope:9,forest:9,group:[6,12],spacing:2.2,home:60,rut:-1,wallow:false,dust:false,browse:0,grazer:false},
 };
-export const ANIMAL_RULES=Object.freeze({adultScale:{deer:1.15,boar:1.05,goat:.95,sheep:.95,horse:1.2,cattle:1.2,wolf:1,bird:.7} as Record<CritterKind,number>,
+export const ANIMAL_RULES=Object.freeze({adultScale:{deer:1.15,boar:1.05,goat:.95,sheep:.95,horse:1.2,cattle:1.2,donkey:1,ox:1.3,wolf:1,bird:.7} as Record<CritterKind,number>,
  lodNear:45,lodMid:110,intervalNear:0,intervalMid:.2,intervalFar:1,maxStepsPerTick:90,maxStep:2,stalkMetres:12,chaseGiveUp:46,chaseSeconds:26,contact:1.15,feedMeatFraction:.55,
  accel:1.6,decel:3,pivot:1.1,huntFidScale:.42,habMax:.5,wolfPrey:['deer','goat','sheep'] as CritterKind[]});
 

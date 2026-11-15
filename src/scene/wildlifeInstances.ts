@@ -1,8 +1,9 @@
+import {isEquine,isBovine} from '@/game/animalSpecies';
 import * as THREE from 'three';
 import type {Critter} from '../game/types';
 /** Actual animals only: compact visible instances, never ambient substitute prey. */
 export function wildlifeInstanceAnimals(animals:readonly Critter[],species:string,visible:(x:number,z:number)=>boolean,explored:(x:number,z:number)=>boolean,available:(animal:Critter)=>boolean){
- return animals.filter(c=>c.species===species&&(c.hp>0?visible(c.x,c.z):available(c)&&explored(c.x,c.z)));
+ return animals.filter(c=>(c.species===species||species==='horse'&&isEquine(c.species)||species==='cattle'&&isBovine(c.species))&&(c.hp>0?visible(c.x,c.z):available(c)&&explored(c.x,c.z)));
 }
 /** Keep one draw per species, growing only to actual population. Animated
  * instances have no stable bounding sphere; visibility is already simulation-gated. */

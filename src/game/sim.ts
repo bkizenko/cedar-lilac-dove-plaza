@@ -2673,7 +2673,7 @@ export class Game {
         // forever. Nearby people still make them flee; no positions are snapped.
         if(Math.hypot(c.x-c.grazing.x,c.z-c.grazing.z)>32)
           a=Math.atan2(c.grazing.x-c.x,c.grazing.z-c.z);
-        const spd = c.species === "cattle" ? 2.4 : c.species === "horse" ? 3.6 : c.species === "deer" ? 3.4 : c.species === "boar" ? 2.4 : 2.1;
+        const spd = c.species === "cattle" || c.species === "ox" ? 2.4 : c.species === "donkey" ? 3.2 : c.species === "horse" ? 3.6 : c.species === "deer" ? 3.4 : c.species === "boar" ? 2.4 : 2.1;
         c.vx = Math.sin(a) * spd;
         c.vz = Math.cos(a) * spd;
         c.facing = a;

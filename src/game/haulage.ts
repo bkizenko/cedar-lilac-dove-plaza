@@ -1,5 +1,5 @@
 import {draftCartCapacity,recordDraftCartDelivery,DRAFT_CART_RULES} from './draftCart';
-import {herdRules} from './animalSpecies';
+import {herdRules,isBovine} from './animalSpecies';
 import {packCapacityMultiplier} from './packAnimalState';
 import {SAILING_RULES,type SailRigOrder} from './sailingRules';
 import {validSailRigOrder,sailRigPhysicalIssue,finishSailRig} from './boatSailing';
@@ -322,7 +322,7 @@ export function carryingCapacity(u: HaulageUnit, kind: ResKind, maximum=false) {
 export function loadedHaulSpeed(u: HaulageUnit) {
   const capacity=loadCapacityMultiplier(u,u.carryType||'wood');
   const fraction=carriedLoadFraction(u,capacity);
-  const animalPace=u.boat?.phase!=='aboard'&&usesTransport(u)&&u.haulage==='pack'&&(u.packAnimal?.species==='cattle'||u.draftCart)&&u.packAnimal&&u.packAnimal.hp>0?Math.min(1,herdRules(u.packAnimal?.species).speed/Math.max(.1,u.speed||2.7)):1;
+  const animalPace=u.boat?.phase!=='aboard'&&usesTransport(u)&&u.haulage==='pack'&&(isBovine(u.packAnimal?.species)||u.draftCart)&&u.packAnimal&&u.packAnimal.hp>0?Math.min(1,herdRules(u.packAnimal?.species).speed/Math.max(.1,u.speed||2.7)):1;
   return animalPace*burdenPace(fraction)*(usesTransport(u)&&fraction>0&&u.haulage?(u.draftCart?.version===1?DRAFT_CART_RULES.loadedSpeed:HAULAGE[u.haulage].loadedSpeed):1);
 }
 

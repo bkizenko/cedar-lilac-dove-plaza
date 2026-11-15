@@ -1,3 +1,4 @@
+import {isEquine,isBovine} from '@/game/animalSpecies';
 import {MethodRecordLayer} from './methodRecordLayer';
 import {GroundItemLayer} from './groundItemLayer';
 import {TradeVisualLayer} from './tradeVisualLayer';
@@ -1395,7 +1396,7 @@ export class WorldView {
     for(const list of this.wildlifeOwners.values())for(const c of list)rows.push({c,domestic:false,season:cal.phase,within,shore:c.hp>0&&c.species!=='bird'&&shore(c)});
     for(const a of game.state.livestock||[]){
       if(a.hp<=0||(a.team!==0&&!game.visibleAt(a.x,a.z)))continue;
-      if(a.species!=='horse'&&a.species!=='cattle'&&a.species!=='goat'&&a.species!=='sheep')continue;
+      if(!isEquine(a.species)&&!isBovine(a.species)&&a.species!=='goat'&&a.species!=='sheep')continue;
       rows.push({c:a,domestic:true,season:cal.phase,within,shore:shore(a)});
     }
     ad.frame(rows,this.camera.position,game.state.time,performance.now()/1000);
@@ -1812,7 +1813,7 @@ export class WorldView {
     stamp('deer','deer');stamp('boars','boar');stamp('wildGoats','goat');stamp('wildSheep','sheep');stamp('wildHorses','horse');stamp('wildCattle','cattle');stamp('birds','bird');
     this.domesticHorseOwners = [];
     if(this.domesticHorses){
-      const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='horse'&&(a.team===0||game.visibleAt(a.x,a.z)));
+      const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&isEquine(a.species)&&(a.team===0||game.visibleAt(a.x,a.z)));
       const mesh=ensureInstanceCapacity(this.scene,this.domesticHorses,animals.length);this.domesticHorses=mesh;
       for(let i=0;i<animals.length;i++){
         const a=animals[i];
@@ -1823,7 +1824,7 @@ export class WorldView {
     }
     this.domesticCattleOwners=[];
     if(this.domesticCattle){
-      const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&a.species==='cattle'&&(a.team===0||game.visibleAt(a.x,a.z)));
+      const animals=(game.state.livestock||[]).filter(a=>a.hp>0&&isBovine(a.species)&&(a.team===0||game.visibleAt(a.x,a.z)));
       const mesh=ensureInstanceCapacity(this.scene,this.domesticCattle,animals.length);this.domesticCattle=mesh;
       for(let i=0;i<animals.length;i++){
         const a=animals[i];_p.set(a.x,a.y,a.z);_e.set(0,a.facing,0);_q.setFromEuler(_e);_s.setScalar(a.scale);_m.compose(_p,_q,_s);mesh.setMatrixAt(i,_m);
@@ -2278,16 +2279,16 @@ export class WorldView {
     const neededCargo:Record<ResKind,number>={food:0,wood:0,stone:0,copper:0,iron:0},neededVehicles:Record<HaulageKind,number>={sled:0,cart:0,canoe:0,pack:0};
     for(const u of visible){const kind=u.boat||u.haulage==='pack'&&(!u.packAnimal||u.packAnimal.hp<=0)?undefined:u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;if(kind&&!(kind==='pack'&&(u.packAnimal?.species==='horse'||u.packAnimal?.species==='cattle')))neededVehicles[kind]++;const cargo=u.plantingWork?'food':u.carryType;if(cargo&&(u.plantingWork||u.carry>0))neededCargo[cargo]++;}
     for(const b of game.state.buildings||[])if(b.hp<=0&&b.raidLoot&&game.visibleAt(b.x,b.z))for(const kind of Object.keys(CARGO_COLORS)as ResKind[])if((b.raidLoot[kind]||0)>0)neededCargo[kind]++;
-    if(this.packHorses)this.packHorses=ensureInstanceCapacity(this.scene,this.packHorses,visible.filter(u=>!u.boat&&u.haulage==='pack'&&u.packAnimal?.species==='horse'&&u.packAnimal.hp>0&&(u.type==='worker'&&!u.militia||u.caravanArmed)).length);
-    if(this.packCattle)this.packCattle=ensureInstanceCapacity(this.scene,this.packCattle,visible.filter(u=>!u.boat&&u.haulage==='pack'&&u.packAnimal?.species==='cattle'&&u.packAnimal.hp>0&&(u.type==='worker'&&!u.militia||u.caravanArmed)).length);
+    if(this.packHorses)this.packHorses=ensureInstanceCapacity(this.scene,this.packHorses,visible.filter(u=>!u.boat&&u.haulage==='pack'&&isEquine(u.packAnimal?.species)&&u.packAnimal!.hp>0&&(u.type==='worker'&&!u.militia||u.caravanArmed)).length);
+    if(this.packCattle)this.packCattle=ensureInstanceCapacity(this.scene,this.packCattle,visible.filter(u=>!u.boat&&u.haulage==='pack'&&isBovine(u.packAnimal?.species)&&u.packAnimal!.hp>0&&(u.type==='worker'&&!u.militia||u.caravanArmed)).length);
     if(this.woodenArds)this.woodenArds=ensureInstanceCapacity(this.scene,this.woodenArds,visible.filter(u=>!u.boat&&ploughing(u)).length);
     for(const [kind,mesh]of this.cargoMeshes)this.cargoMeshes.set(kind,ensureInstanceCapacity(this.scene,mesh,neededCargo[kind]));
     for(const [kind,mesh]of this.haulageMeshes)this.haulageMeshes.set(kind,ensureInstanceCapacity(this.scene,mesh,neededVehicles[kind]));
     if(this.canoePaddles)this.canoePaddles=ensureInstanceCapacity(this.scene,this.canoePaddles,neededVehicles.canoe);
     for (const u of visible) {
       const kind=u.boat||u.haulage==='pack'&&(!u.packAnimal||u.packAnimal.hp<=0)?undefined:u.haulage==='canoe'?'canoe':(u.type==='worker'&&!u.militia||u.caravanArmed)?u.haulage:undefined;
-      const horse=kind==='pack'&&u.packAnimal?.species==='horse';
-      const bovine=kind==='pack'&&u.packAnimal?.species==='cattle';
+      const horse=kind==='pack'&&isEquine(u.packAnimal?.species);
+      const bovine=kind==='pack'&&isBovine(u.packAnimal?.species);
       const vehicle=horse?this.packHorses:bovine?this.packCattle:kind&&this.haulageMeshes.get(kind);
       const index=horse?horses:bovine?cattle:kind?vehicles[kind]:0;
       const mounted=!!vehicle&&index<instCap(vehicle);

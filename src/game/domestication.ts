@@ -1,9 +1,9 @@
 import type {Game} from './sim';
 import type {GameState,Critter,Unit,Tribe} from './types';
 import {herdRules} from './animalSpecies';
-export type DomesticationSpecies='goat'|'sheep'|'horse'|'cattle';
+export type DomesticationSpecies='goat'|'sheep'|'horse'|'cattle'|'donkey'|'ox';
 /** Tunable game probabilities and seconds, not measured historical rates. */
-export const DOMESTICATION_RULES={baseChance:{goat:.82,sheep:.78,horse:.58,cattle:.48},temperamentSpread:.24,minimumChance:.2,maximumChance:.95,familiarityPerRefusal:.04,maximumFamiliarity:.16,practicePerCompleted:.005,maximumPracticeBonus:.1,cooldownSeconds:30,maximumSearchTrials:2,maximumHistory:16,maximumAnimalHistory:4,maximumCounter:1e6,maximumHandlingSeconds:1e9} as const;
+export const DOMESTICATION_RULES={baseChance:{goat:.82,sheep:.78,horse:.58,cattle:.48,donkey:.66,ox:.44},temperamentSpread:.24,minimumChance:.2,maximumChance:.95,familiarityPerRefusal:.04,maximumFamiliarity:.16,practicePerCompleted:.005,maximumPracticeBonus:.1,cooldownSeconds:30,maximumSearchTrials:2,maximumHistory:16,maximumAnimalHistory:4,maximumCounter:1e6,maximumHandlingSeconds:1e9} as const;
 export type DomesticationMemory={version:1;temperament:number;attempts:number;familiarity:number;cooldownUntil:number;recent:{attempt:number;handlerId:number;at:number;outcome:DomesticationOutcome['outcome']}[]};
 export type DomesticationTrial={version:1;purpose:'pen'|'pack';team:number;paidWood:number;species:DomesticationSpecies;attempt:number;paidFood:number;startedAt:number;chance:number;roll:number;handlingSeconds:number;resolved?:'success'};
 export type DomesticationPractice={version:1;handlingSeconds:number;completed:number;successes:number;refusals:number};

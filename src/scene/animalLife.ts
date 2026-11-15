@@ -18,9 +18,10 @@ export function speciesFor(species:string,id:number,domestic:boolean):SpeciesId|
   case 'goat':return domestic?'goat':'ibex';
   case 'sheep':return domestic?'sheep':'mouflon';
   case 'horse':return domestic?'horse':'wildHorse';
-  case 'cattle':return domestic?'cattle':'aurochs';
+  case 'donkey':return 'donkey';
+  case 'cattle':case 'ox':return domestic?'cattle':'aurochs';
   case 'bird':return h<58?'duck':h<86?'goose':'raptor';
-  case 'wolf':case 'fox':case 'bear':case 'hare':case 'donkey':case 'duck':case 'goose':case 'raptor':return species as SpeciesId;
+  case 'wolf':case 'fox':case 'bear':case 'hare':case 'duck':case 'goose':case 'raptor':return species as SpeciesId;
   default:return null;
  }
 }

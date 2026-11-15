@@ -4,9 +4,9 @@ import {habitatKindAt} from './ecology';
 /** Extra herds per terrain band. Mountains (high ground) carry goat herds; valleys (low ground near water) carry deer, cattle and horses.
  * New worlds only: faunaVersion 1 marks it done and saves never gain animals on load. */
 export const BIOME_FAUNA_RULES={version:1,spawnAttempts:260,
- mountain:{minHeight:9,species:[['goat',14,6]] as [CritterKind,number,number][]},
- valley:{maxHeight:4,waterWithin:40,species:[['deer',8,3],['cattle',4,2],['horse',4,2],['boar',4,2]] as [CritterKind,number,number][]}} as const;
-const BODY:Partial<Record<CritterKind,{hp:number;scale:number}>>={deer:{hp:3,scale:1.15},boar:{hp:4,scale:1.05},goat:{hp:2,scale:.95},horse:{hp:4,scale:1.1},cattle:{hp:6,scale:1.2},wolf:{hp:5,scale:1}};
+ mountain:{minHeight:9,species:[['goat',14,6],['donkey',4,2]] as [CritterKind,number,number][]},
+ valley:{maxHeight:4,waterWithin:40,species:[['deer',8,3],['cattle',4,2],['horse',4,2],['donkey',4,2],['ox',3,3],['boar',4,2]] as [CritterKind,number,number][]}} as const;
+const BODY:Partial<Record<CritterKind,{hp:number;scale:number}>>={deer:{hp:3,scale:1.15},boar:{hp:4,scale:1.05},goat:{hp:2,scale:.95},horse:{hp:4,scale:1.1},cattle:{hp:6,scale:1.2},donkey:{hp:3,scale:1},ox:{hp:7,scale:1.25},wolf:{hp:5,scale:1}};
 export function initializeBiomeFauna(g:Game){
  if(g.state.faunaVersion===1)return;
  g.state.faunaVersion=1;

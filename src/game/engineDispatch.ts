@@ -281,7 +281,7 @@ export function isEngineDispatchCommand(value:unknown):value is EngineDispatchCo
  const schema:Record<string,Record<string,(v:unknown)=>boolean>>={
   'propose-needs-trade':{team:id,give:playerTradeGood,get:playerTradeGood,amount:v=>Number.isSafeInteger(v)&&Number(v)>=1&&Number(v)<=36},
   'answer-needs-trade':{offerId:id,accept:bool},
-  'husbandry-order':{penId:id,action:v=>typeof v==='string'&&(HUSBANDRY_ACTIONS as readonly string[]).includes(v),species:v=>v===undefined||['goat','sheep','horse','cattle'].includes(v as string),unitId:optionalId},
+  'husbandry-order':{penId:id,action:v=>typeof v==='string'&&(HUSBANDRY_ACTIONS as readonly string[]).includes(v),species:v=>v===undefined||['goat','sheep','horse','cattle','donkey','ox'].includes(v as string),unitId:optionalId,group:v=>v===undefined||typeof v==='boolean'},
   'begin-era-upgrade':{buildingId:id,mode:v=>v==='rebuild'||v==='extend',side:v=>v===undefined||['north','south','east','west'].includes(v as string)},
   'era-upgrade-pause':{buildingId:id,paused:bool},
   'cancel-interaction':{},'hold-selected':{unitIds:v=>Array.isArray(v)&&v.length<=128&&Array.from(v).every(id)&&new Set(v).size===v.length},

@@ -117,7 +117,7 @@ export type Region = {
   clusterName: string;
 };
 
-export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "horse" | "cattle" | "bird" | "wolf";
+export type CritterKind = "deer" | "boar" | "goat" | "sheep" | "horse" | "cattle" | "donkey" | "ox" | "bird" | "wolf";
 
 export type Critter = {
   /** Optional activity/herd state; present only in games started with animalBehaviourVersion 1. */

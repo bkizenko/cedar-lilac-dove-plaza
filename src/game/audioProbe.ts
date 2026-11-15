@@ -7,7 +7,7 @@ import {toolFor,footstepFor,type SfxKind} from '../scene/audioMix';
 const FIRE_TYPES=new Set<string>(['hearth','oven','kiln','townhall','smokehouse']);
 const SEASONS=['Spring','Summer','Autumn','Winter'];
 /** Species that make a heard call. Wolves and deer stay silent (stalking); birds are in the ambience beds. */
-export const ANIMAL_SFX:Partial<Record<string,SfxKind>>={sheep:'sheep',goat:'sheep',cattle:'cow',horse:'horse'};
+export const ANIMAL_SFX:Partial<Record<string,SfxKind>>={sheep:'sheep',goat:'sheep',cattle:'cow',ox:'cow',horse:'horse',donkey:'horse'};
 type Cam={x:number;z:number;yaw:number;dist:number};
 export function probeWorld(game:Game,cam:Cam,seed:number,paused:boolean,mood:'peace'|'raid'|'pillage',tradeActive:boolean):WorldAudio{
  const s=game.state,hour=game.dayPhase()*24,sn=game.seasonMix().name,season=SEASONS.includes(sn)?sn:'Spring';

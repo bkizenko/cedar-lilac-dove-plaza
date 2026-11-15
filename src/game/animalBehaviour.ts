@@ -63,7 +63,7 @@ export function spawnWolfPacks(g:Game,count:number){
 type Ctx={g:Game;ob:WildlifeObstacles;t:number;hour:number;sr:number;ss:number;phase:number;wet:boolean;cold:boolean;hot:boolean;night:boolean;
  groups:Map<number,Critter[]>;preds:Critter[];byId:Map<number,Critter>;people:{x:number;z:number;vx:number;vz:number;hunting:boolean}[];tg:Map<string,number>;pg:Map<string,number[]>;carcasses:Critter[]};
 const cell=12;
-const MEAT_MAX:Record<string,number>={deer:24,goat:16,sheep:16,boar:32,horse:48,cattle:60,bird:0,wolf:12};
+const MEAT_MAX:Record<string,number>={deer:24,goat:16,sheep:16,boar:32,horse:48,donkey:36,cattle:60,ox:68,bird:0,wolf:12};
 const treeCache=new WeakMap<object,{at:number;grid:Map<string,number>}>();
 function treeGrid(g:Game,t:number){const c=treeCache.get(g);if(c&&t-c.at<10&&t>=c.at)return c.grid;const grid=new Map<string,number>();for(const tr of g.state.trees){if(!(tr.amount>0))continue;const k=Math.floor(tr.x/cell)+','+Math.floor(tr.z/cell);grid.set(k,(grid.get(k)||0)+1);}treeCache.set(g,{at:t,grid});return grid;}
 /** Tree density 0..1 around a point (about 12 m cells, bilinear-free for speed). */

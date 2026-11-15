@@ -14,7 +14,7 @@ export function validPackHarness(h:unknown,now=Infinity):h is PackHarness|undefi
 }
 /** The same physical follow point used by the working-animal renderer. */
 export function packAnimalPosition(u:Pick<Unit,'x'|'z'|'facing'|'boat'>){const offset=u.boat?.phase==='aboard'?0:PACK_ANIMAL_RULES.followMeters;return{x:u.x-Math.sin(u.facing)*offset,z:u.z-Math.cos(u.facing)*offset};}
-export type PackAnimal={domestication?:import('./domestication').DomesticationMemory;id:number;hp:number;maxHp:number;scale:number;species?:'goat'|'horse'|'cattle';
+export type PackAnimal={domestication?:import('./domestication').DomesticationMemory;id:number;hp:number;maxHp:number;scale:number;species?:'goat'|'horse'|'cattle'|'donkey'|'ox';
  sex?:'female'|'male';born?:number;tamedAt?:number;hunger?:number;thirstSeconds?:number;
  foodConsumed?:number;waterConsumedLiters?:number;
  packHarness?:PackHarness;milk?:number;pregnancy?:number;lactatingUntil?:number;adultScale?:number};
@@ -40,7 +40,7 @@ export function validPackAnimal(a:unknown,now=Infinity):a is PackAnimal {
  if(!validPackHarness(p.packHarness,now))return false;
  const finite=(x:unknown)=>typeof x==='number'&&Number.isFinite(x);
  if(!Number.isSafeInteger(p.id)||p.id<1||!finite(p.hp)||!finite(p.maxHp)||p.hp<=0||p.hp>p.maxHp||p.maxHp>1000||!finite(p.scale)||p.scale<.1||p.scale>5)return false;
- if(p.species!==undefined&&!['goat','horse','cattle'].includes(p.species)||p.sex!==undefined&&!['female','male'].includes(p.sex))return false;
+ if(p.species!==undefined&&!['goat','horse','cattle','donkey','ox'].includes(p.species)||p.sex!==undefined&&!['female','male'].includes(p.sex))return false;
  if(p.milk!==undefined&&(!finite(p.milk)||p.milk<0||p.milk>herdRules(p.species).milkCapacity)||p.pregnancy!==undefined&&(!finite(p.pregnancy)||p.pregnancy<0||p.pregnancy>herdRules(p.species).gestation)||p.lactatingUntil!==undefined&&(!finite(p.lactatingUntil)||p.lactatingUntil<0||p.lactatingUntil>1e12)||p.adultScale!==undefined&&(!finite(p.adultScale)||p.adultScale<.3||p.adultScale>3))return false;
  for(const key of ['born','tamedAt'] as const)if(p[key]!==undefined&&!finite(p[key]))return false;
  for(const key of ['hunger','thirstSeconds','foodConsumed','waterConsumedLiters'] as const)if(p[key]!==undefined&&(!finite(p[key])||p[key]!<0||p[key]!>(key==='hunger'?100:1e12)))return false;

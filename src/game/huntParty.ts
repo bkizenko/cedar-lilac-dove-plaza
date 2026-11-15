@@ -3,7 +3,7 @@ import type {Critter} from './types';
 /** Hunters closing on one animal corner it: each extra hunter within reach of the chase slows the flight, down to a floor.
  * Fast prey (horse, deer) therefore needs several hunters, while slow boar and cattle can be taken by one. */
 export const HUNT_PARTY_RULES={reachMeters:16,perHunter:.14,floor:.55} as const;
-const FLEE_SPEED:Record<string,number>={horse:4.6,deer:4,cattle:3.3,boar:2.8};
+const FLEE_SPEED:Record<string,number>={horse:4.6,deer:4,cattle:3.3,ox:3.3,donkey:4,boar:2.8};
 /** Multiplier 0.55..1 on flee speed from hunters currently ordered onto this animal. */
 export function huntPressure(g:Game,c:Critter){
  let n=0;const R=HUNT_PARTY_RULES.reachMeters;
