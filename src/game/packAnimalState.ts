@@ -1,4 +1,4 @@
-import {herdRules,herdGestationMax} from './animalSpecies';
+import {herdRules,herdGestation} from './animalSpecies';
 import type {Critter,Livestock,Unit} from './types';
 
 export const PACK_ANIMAL_RULES={followMeters:2.1,hungerPerSecond:.055,feedPerSecond:.012,waterPerSecond:.004,
@@ -35,13 +35,13 @@ export function packCapacityMultiplier(u:Pick<Unit,'packAnimal'>){
  const condition=Math.max(0,Math.min(1,a.hp/a.maxHp));
  return PACK_ANIMAL_RULES.minimumCapacityMultiplier+(herdRules(a.species??'goat').packMultiplier-PACK_ANIMAL_RULES.minimumCapacityMultiplier)*Math.min(condition,1-hunger,1-thirst);
 }
-export function validPackAnimal(a:unknown,now=Infinity):a is PackAnimal {
+export function validPackAnimal(a:unknown,now=Infinity,state:{yearLength?:number}={}):a is PackAnimal {
  if(!a||typeof a!=='object'||Array.isArray(a))return false;const p=a as PackAnimal;
  if(!validPackHarness(p.packHarness,now))return false;
  const finite=(x:unknown)=>typeof x==='number'&&Number.isFinite(x);
  if(!Number.isSafeInteger(p.id)||p.id<1||!finite(p.hp)||!finite(p.maxHp)||p.hp<=0||p.hp>p.maxHp||p.maxHp>1000||!finite(p.scale)||p.scale<.1||p.scale>5)return false;
  if(p.species!==undefined&&!['goat','horse','cattle','donkey','ox'].includes(p.species)||p.sex!==undefined&&!['female','male'].includes(p.sex))return false;
- if(p.milk!==undefined&&(!finite(p.milk)||p.milk<0||p.milk>herdRules(p.species).milkCapacity)||p.pregnancy!==undefined&&(!finite(p.pregnancy)||p.pregnancy<0||p.pregnancy>herdGestationMax(p.species))||p.lactatingUntil!==undefined&&(!finite(p.lactatingUntil)||p.lactatingUntil<0||p.lactatingUntil>1e12)||p.adultScale!==undefined&&(!finite(p.adultScale)||p.adultScale<.3||p.adultScale>3))return false;
+ if(p.milk!==undefined&&(!finite(p.milk)||p.milk<0||p.milk>herdRules(p.species).milkCapacity)||p.pregnancy!==undefined&&(!finite(p.pregnancy)||p.pregnancy<0||p.pregnancy>herdGestation(p.species,state))||p.lactatingUntil!==undefined&&(!finite(p.lactatingUntil)||p.lactatingUntil<0||p.lactatingUntil>1e12)||p.adultScale!==undefined&&(!finite(p.adultScale)||p.adultScale<.3||p.adultScale>3))return false;
  for(const key of ['born','tamedAt'] as const)if(p[key]!==undefined&&!finite(p[key]))return false;
  for(const key of ['hunger','thirstSeconds','foodConsumed','waterConsumedLiters'] as const)if(p[key]!==undefined&&(!finite(p[key])||p[key]!<0||p[key]!>(key==='hunger'?100:1e12)))return false;
  return true;
