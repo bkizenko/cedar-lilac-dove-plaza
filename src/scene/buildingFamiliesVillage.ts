@@ -23,7 +23,7 @@ const TAU=Math.PI*2;
 const millHouse:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,k=Math.min(w/6.2,d/5.8);
   const L=3.55*k,D=3.45*k,cx=-w/2+.12*k+L/2,cz=.2*k,h1=1.5*k,h2=1.3*k,eave=h1+h2;
-  const R=1.55*k,cy=R+.1,ww=.8*k,wx=cx+L/2+.45*k+ww/2,east=cx+L/2;
+  const R=1.55*k,cy=R-.3*k,ww=.8*k,wx=cx+L/2+.45*k+ww/2,east=cx+L/2;
   const rm=roofFor(ctx),pitch=Math.max(.5,roofPitch(ctx,r)),upper=ctx.material==='stone'&&ctx.era>=3?'stone':'plaster';
   // --- house: stone mill floor (millstones live here), timber-framed grain loft with a slight jetty
   stoneWall(parts,{x:cx,z:cz,w:L,d:D,h:h1,mat:'stone',faces:['+z','-z','-x'],course:.42});
@@ -64,7 +64,7 @@ const millHouse:Generator=(ctx,r)=>{
   box(parts,'stoneDark',[.24*k,.34*k,e2-e1],[px1,0,(e1+e2)/2],1);
   box(parts,'stone',[.28*k,.1,pz1-pz0+.04],[px1,.9*k,(pz0+pz1)/2],0);
   box(parts,'stone',[.34*k,cy-.32*k,.5*k],[px1-.1*k,0,0],1);
-  box(parts,'water',[px1-px0-.12,.12,pz1-pz0-.1],[(px0+px1)/2-.02,0,(pz0+pz1)/2],1);
+  box(parts,'water',[px1-px0-.12,.4*k,pz1-pz0-.1],[(px0+px1)/2-.02,0,(pz0+pz1)/2],1);
   for(const z of[pz0+.1,pz1-.1])box(parts,'stoneDark',[px1-px0,.3*k,.22*k],[(px0+px1)/2,0,z],0);
   // axle bearing block on the outer cheek
   box(parts,'woodEdge',[.3*k,.24*k,.5*k],[px1-.12*k,cy-.32*k,0],1);

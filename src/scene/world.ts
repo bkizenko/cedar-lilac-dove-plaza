@@ -70,7 +70,7 @@ import {RuinLayer} from './ruinLayer';
 import {ruinViews} from '../game/ruinsWorld';
 /** Banners hang at half-mast this many sim seconds after a succession (two dynastic years). */
 const MOURNING_SECONDS=180;
-import {millPowerKw,MILL_RULES} from '@/game/millPower';
+import {millPowerKw,millIsWorking,MILL_RULES} from '@/game/millPower';
 import {watermillSite} from '@/game/waterWorks';
 import {setCarvedPalette} from './carvedPalette';
 import {ContourFields} from './contourFields';
@@ -2140,6 +2140,7 @@ export class WorldView {
   /** Rotor speed (rad/s) from the live mill power (CURRENT-POWER-HOOK): the wheel turns with the real river current and head,
    * the sails with the measured wind at the site and the weather; below the grinding threshold the machine stands still. */
   private millSpin(game:Game,b:import("@/game/types").Building){
+    if(!millIsWorking(game,b))return 0;
     const kw=millPowerKw(game,b);if(kw<MILL_RULES.minKw)return 0;
     if(b.type==='watermill')return Math.min(2.4,.45+.6*Math.sqrt(kw/MILL_RULES.referenceKw));
     return -Math.min(1.6,.3+.9*kw/MILL_RULES.maxWindKw);

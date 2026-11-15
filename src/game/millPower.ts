@@ -36,6 +36,10 @@ export function millWorkRate(g:Game,b?:B|null):number{
  if(!b||!isMill(b.type))return 1;const kw=millPowerKw(g,b);if(kw<MILL_RULES.minKw)return 0;
  return Math.min(MILL_RULES.maxRate,kw/MILL_RULES.referenceKw);
 }
+/** True while a miller is actually grinding a batch here; rotors stand still otherwise even with plenty of wind or current. */
+export function millIsWorking(g:Game,b:Pick<Building,'id'|'type'>):boolean{
+ if(!isMill(b.type))return false;return (g.state.production?.projects||[]).some(p=>p.workplace===b.id&&p.phase==='working');
+}
 export function millIssue(g:Game,b:B):string|null{
  if(!isMill(b.type))return null;if(millPowerKw(g,b)>=MILL_RULES.minKw)return null;
  return b.type==='watermill'?'The wheel has too little current or fall to grind':'There is too little wind at the sails to grind';
