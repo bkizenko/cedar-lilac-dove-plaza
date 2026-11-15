@@ -151,7 +151,7 @@ export function campTripBudget(g:Game,u:Unit,report:CampReport){
 }
 /** A camp sends an existing body, never a replacement spawn. Paid packs use the
  * same actual food/water consumption and cache-return executor as scouts. */
-export function beginCampTrip(g: Game, u: Unit, report: CampReport) {
+export function beginCampTrip(g: Game, u: Unit, report: CampReport, dryRun = false) {
   const b = u.homeCamp === undefined ? undefined : home(g, u.homeCamp);
   if (
     g.state.finiteRaiderCampVersion !== 1 ||
@@ -169,6 +169,7 @@ export function beginCampTrip(g: Game, u: Unit, report: CampReport) {
     return false;
   if (g.state.units.filter((p) => p.campTrip?.campId === b.id && p.hp > 0).length>=FINITE_CAMP_RULES.maximumOutboundPeople) return false;
   const budget=campTripBudget(g,u,report);if(!budget)return false;
+  if(dryRun)return true;
   const id = g.state.nextId,
     trip: CampTrip = {
       version: 1,

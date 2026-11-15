@@ -1,6 +1,7 @@
 import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {isDependent} from './settlement';
+import {MIN_RAID_PARTY,raidPartyViable} from './raidParty';
 import {queueStandDown} from './demobilization';
 
 function dispatch(u:Unit,b:Building){
@@ -12,6 +13,7 @@ export function massRaid(g:Game,buildingId:number){
  const b=g.state.buildings.find(b=>b.id===buildingId&&b.team!==0&&b.type==='townhall'&&b.hp>0&&!b.plannedCost);
  if(!b||!g.exploredAt(b.x,b.z)){g.banner('Discover a living rival town hall first.',4);return 0;}
  const people=g.state.units.filter(u=>u.team===0&&u.hp>0&&!isDependent(g,u)&&(u.militia||!['worker','leader'].includes(u.type)));
+ if(!raidPartyViable(people.length)){g.banner(`A raid needs at least ${MIN_RAID_PARTY} armed adults. Equip more villagers first.`,6);return 0;}
  for(const u of people){
   g.interruptMission(u);u.huntOnly=false;u.jobLock=false;u.pillage=-1;u.target=null;u.node=null;
   u.massRaidTarget=b.id;

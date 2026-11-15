@@ -16,17 +16,19 @@ import { applyForagePressure,harvestWildPlant,wildPlantsEnabled } from "./ecolog
 import { mulberry32 } from "./rng";
 import { findPath } from "./navigation";
 import {queueStandDown,withdrawingRaider} from './demobilization';
+import {MIN_RAID_PARTY,raidPartyViable} from './raidParty';
 
 /** Population matters even while a large settlement remains in the Stone Age.
  * A small first village still meets scouts; established towns face actual bands. */
 export function seaRaidStrength(population:number,age:number,threat:number,wave:number,roll:number,dangerous=false,capacity=36,loss=0,band=1){
  const ceiling=Math.max(1,Math.min(36,Math.ceil(population*(dangerous?.6:.45)),Math.floor(capacity)));
  if(population<16&&wave<=1)return {count:Math.min(ceiling,roll<.5?1:2),condition:.78,label:"A scouting party from the sea"};
- const base=Math.max(3,Math.min(26,Math.ceil(population*.22)));
+ if(ceiling<MIN_RAID_PARTY)return {count:0,condition:.95,label:"No raid: force too small"};
+ const base=Math.max(MIN_RAID_PARTY,Math.min(26,Math.ceil(population*.22)));
  // History increases pressure in small steps, then plateaus. Losses and current
  // capacity can make the next raid smaller even after many successful years.
  const escalation=Math.min(5,Math.floor(Math.max(0,wave-1)/2));
- const count=Math.max(1,Math.min(ceiling,Math.round((base+Math.min(3,age)+Math.floor(threat*3)+escalation+(roll<.25?-1:roll>.75?1:0))*(dangerous?1.25:1)*Math.max(.25,Math.min(2,band))*(1-Math.min(.5,loss)))));
+ const count=Math.max(MIN_RAID_PARTY,Math.min(ceiling,Math.round((base+Math.min(3,age)+Math.floor(threat*3)+escalation+(roll<.25?-1:roll>.75?1:0))*(dangerous?1.25:1)*Math.max(.25,Math.min(2,band))*(1-Math.min(.5,loss)))));
  return {count,condition:.95,label:count>=8?"A warband from the sea":"Raiders from the sea"};
 }
 export function seaRaidArrivalChance(threat:number,night:boolean){return Math.min(.8,threat*.42*(night?1.25:.9));}
@@ -118,12 +120,18 @@ export function dispatchExistingCampRaid(g:Game){
   if(camp.team!==3||!camp.raiderCamp||!g.finished(camp)||!camp.campEconomy||g.state.time-camp.campEconomy.lastDispatchAt<FINITE_CAMP_RULES.dispatchIntervalSeconds)continue;
   const reports=biasReportsToStops(g,camp.campEconomy.knownSites.filter(r=>r.team===0&&g.state.time-r.observedAt<=FINITE_CAMP_RULES.reportLifetimeSeconds));
   for(const report of reports){
+   // A raid is never a lone raider: dry-run every candidate first, and launch
+   // nobody unless a party of MIN_RAID_PARTY can actually go.
+   const able=g.state.units.filter(u=>u.hp>0&&u.team===3&&u.homeCamp===camp.id&&beginCampTrip(g,u,report,true));
+   if(!raidPartyViable(able.length))continue;
    const sent:Unit[]=[];
-   for(const u of g.state.units){
-    if(u.hp<=0||u.team!==3||u.homeCamp!==camp.id||!beginCampTrip(g,u,report))continue;
-    sent.push(u);
-   }
+   for(const u of able){if(beginCampTrip(g,u,report))sent.push(u);}
    if(!sent.length)continue;
+   if(!raidPartyViable(sent.length)){
+    // Provisioning failed mid-launch: the stragglers turn back instead of raiding short-handed.
+    for(const u of sent){if(u.seaRaid){u.seaRaid.phase='retreat';if(u.seaRaid.plan)u.seaRaid.plan.reason='Withdrawing: party too small to raid';}}
+    continue;
+   }
    for(const u of sent)if(u.seaRaid?.plan){u.seaRaid.plan.initialBand=sent.length;if(sent.length>1)u.seaRaid.plan.objectiveBandId=sent[0].seaRaid!.plan!.bandId;}
    const ready=raidReadiness(g);g.state.raidWave++;
    g.state.raidCampaign={active:true,adults:ready.adults,buildings:ready.buildings,loss:0,

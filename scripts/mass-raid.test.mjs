@@ -12,13 +12,13 @@ function fixture(){
  const g=new Game();g.reset(123456,3);g.enterIsland();g.world.heights.fill(4);
  g.state.units=[];g.state.buildings=[g.makeBld('townhall',0,38,0),g.makeBld('townhall',100,38,1)];
  g.state.conflict='quiet';g.state.weather='clear';g.state.paused=false;g.vision.fill(2);g.rebuildWalk();
- const armed=g.spawnUnit('worker',0,50,0);armed.selected=true;Object.assign(g.tribe(0),{spears:4,bows:0,blades:0});g.callToArms();armed.selected=false;
+ const armed=g.spawnUnit('worker',0,50,0);armed.selected=true;const extra=[1,2].map(i=>{const e=g.spawnUnit('worker',i*3,52,0);e.selected=true;return e;});Object.assign(g.tribe(0),{spears:4,bows:0,blades:0});g.callToArms();armed.selected=false;extra.forEach(e=>e.selected=false);
  const unarmed=g.spawnUnit('worker',8,50,0);unarmed.selected=true;
  return {g,armed,unarmed,hall:g.state.buildings[1]};
 }
 test('town hall mass raid sends armed adults without selection and leaves unarmed workers alone',()=>{
  const {g,armed,unarmed,hall}=fixture();const before={order:unarmed.order,x:unarmed.tx,z:unarmed.tz};
- assert.equal(massRaid(g,hall.id),1);assert.equal(armed.order,'attackmove');assert.equal(armed.pillage,1);
+ assert.equal(massRaid(g,hall.id),3);assert.equal(armed.order,'attackmove');assert.equal(armed.pillage,1);
  assert.equal(armed.returnAfterCombat,true);assert.deepEqual({order:unarmed.order,x:unarmed.tx,z:unarmed.tz},before);
  assert.equal(g.tribe(1).hostile,false,'war starts on arrival, not across the map');
  assert.equal(massRaid(g,g.state.buildings[0].id),0);g.vision.fill(0);assert.equal(massRaid(g,hall.id),0);
