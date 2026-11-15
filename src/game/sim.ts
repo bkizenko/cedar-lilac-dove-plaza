@@ -3744,6 +3744,11 @@ export class Game {
         u.order = "idle";
         if (tr.id === 0) this.addFloater(u.x, u.y + 2.2, u.z, "Born", "#c9e8a0");
         }
+        // Hard and above: settled rivals also draw in migrant families (same physical welcomeSoul path), so ages' population gates are reachable.
+        if (rg > 1 && this.popNow(tr.id) + this.queued(tr.id) < this.popCap(tr.id) && reserveSeconds(this, tr.id) >= 900 && Math.random() < (rg - 1) * 0.5) {
+          const home = this.campOf(tr.id);
+          this.welcomeSoul(tr.id, home.x, home.z);
+        }
       }
     }
 
@@ -5640,7 +5645,7 @@ export class Game {
       cap - pop < 3 &&
       reserve > 450 &&
       tr.wood >= 36 &&
-      Math.random() < tr.expand * expansionDrive(this,team) * (growing ? 1.4 : shrinking ? 0.2 : 0.9)
+      Math.random() < tr.expand * expansionDrive(this,team) * rivalDifficulty(this,team).growth * (growing ? 1.4 : shrinking ? 0.2 : 0.9)
     ) {
       const homeType=preferredRivalHome(this,team);
       const spot = this.findOpenSpot(hall.x, hall.z, homeType, team);

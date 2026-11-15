@@ -14,10 +14,12 @@ const distance=(a:{x:number;z:number},b:{x:number;z:number})=>Math.hypot(a.x-b.x
 const adult=(g:Game,u:Unit)=>u.maturesAt===undefined||u.maturesAt<=g.state.time;
 const armed=(u:Unit)=>u.militia||!['worker','leader'].includes(u.type);
 const strength=(u:Unit)=>Math.max(.2,u.dmg/10)*Math.min(1,u.hp/Math.max(1,u.maxHp));
+/** Hard and above raise armies faster than raw aggression: 1 at Normal and below, 1.64 at Hard, 3.6 at Apocalypse. */
+export const rivalArmyScale=(g:Game,team:number)=>{const a=rivalDifficulty(g,team).aggression;return a<=1?a:1+(a-1)*1.6;};
 export function rivalMilitaryTarget(g:Game,team:number){
  const t=g.tribe(team),pop=g.state.units.filter(u=>u.team===team&&u.hp>0&&adult(g,u)).length;
  // Equipment and training still cost real goods and take an existing adult out of work.
- return Math.min(Math.max(0,pop-4),Math.ceil(Math.max(3+t.age*2,Math.ceil(pop*(.12+.14*t.aggro+.06*t.tension)))*rivalDifficulty(g,team).aggression)+militaryBonus(g,team));
+ return Math.min(Math.max(0,pop-4),Math.ceil(Math.max(3+t.age*2,Math.ceil(pop*(.12+.14*t.aggro+.06*t.tension)))*rivalArmyScale(g,team))+militaryBonus(g,team));
 }
 export const OPERATION_RULES={militaryReadinessHealthRatio:.6,minFoodSeconds:180,guardFraction:.06,raidFraction:.3,localDefenseRadius:55,maxTargets:8,minUtility:1,travelCostPerMeter:.01,defenseWeight:7,nightBonus:.4};
 export type RaidMetrics={reward:number;grievance:number;travelCost:number;defenseCost:number;structureCost:number;nightBonus:number;observedDefenders:number;power:number;guards:number};
@@ -26,7 +28,7 @@ function freeWorker(g:Game,u:Unit){return u.hp>=u.maxHp*OPERATION_RULES.military
 /** Make finite weapons, then equip existing adults; never spawn a soldier. */
 export function prepareRivalDefense(g:Game,team:number,reserve:number){
  const t=g.tribe(team);
- if(reserve<450)return false;
+ if(reserve<450/Math.max(1,rivalDifficulty(g,team).aggression))return false;
  const armedCount=g.state.units.filter(u=>u.team===team&&u.hp>0&&armed(u)&&u.type!=='leader').length;
  if(armedCount>=rivalMilitaryTarget(g,team))return false;
  const stores=g.state.buildings.filter(b=>b.team===team&&g.finished(b)&&['townhall','warehouse','barracks'].includes(b.type));

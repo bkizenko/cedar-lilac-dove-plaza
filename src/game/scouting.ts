@@ -1,3 +1,4 @@
+import {rivalDifficulty,difficulty} from './difficulty';
 import {journeyPermit} from './rulersRuntime';
 import {SCOUT_PROVISION_RULES,loadScoutProvisions,tickScoutProvisions,scoutReturnBudgetLow} from './scoutProvisions';
 import {hasTaskCommitment} from './workCommitments';
@@ -34,6 +35,10 @@ function nextTarget(g: Game, u: Unit) {
   const HALF=g.world.size/2,CELL=g.world.size/GRID;
   let best: { x: number; z: number } | null = null,
     score = Infinity;
+  /** Hard and above: rival scouts lean toward the nearest neighbouring camp, so their own eyes find targets and trade partners sooner. */
+  const neighbour = rivalDifficulty(g, u.team).aggression >= 1.3
+    ? g.world.camps.filter((c) => c.team !== u.team && c.team !== 3).sort((a, b) => Math.hypot(a.x - u.x, a.z - u.z) - Math.hypot(b.x - u.x, b.z - u.z))[0]
+    : undefined;
   for (let i = 0; i < GRID * GRID; i++) {
     if (memory.cells.includes(i)) continue;
     const x = ((i % GRID) + 0.5) * CELL - HALF,
@@ -42,7 +47,8 @@ function nextTarget(g: Game, u: Unit) {
     const distance=Math.hypot(x-u.x,z-u.z);
     // A real paid canoe surveys a nearby water-separated frontier before
     // duplicating another pedestrian's local circuit; no partner/resource coordinates are consulted.
-    const d=distance-(u.haulage==='canoe'&&distance<=SCOUTING_RULES.paidCanoeFrontierRadiusMetres&&!g.workBoard.connected(g,u.x,u.z,x,z)?SCOUTING_RULES.paidCanoeFrontierBonusMetres:0);
+    const lean=neighbour?2*Math.hypot(x-neighbour.x,z-neighbour.z):0;
+    const d=lean+distance-(u.haulage==='canoe'&&distance<=SCOUTING_RULES.paidCanoeFrontierRadiusMetres&&!g.workBoard.connected(g,u.x,u.z,x,z)?SCOUTING_RULES.paidCanoeFrontierBonusMetres:0);
     if (d < score) {
       score = d;
       best = { x, z };
@@ -54,12 +60,12 @@ export function tickScouts(g: Game, dt: number) {
   tickScoutProvisions(g,dt);
   g.state.scoutTimer = (g.state.scoutTimer ?? 120) - dt;
   if (g.state.scoutTimer > 0) return;
-  g.state.scoutTimer = 180;
+  g.state.scoutTimer = 180/Math.max(1,difficulty(g).rivalAggression);
   for (const t of g.state.tribes) {
     if (
       !isRivalTeam(t.id) ||
       !t.alive ||
-      reserveSeconds(g,t.id)<(journeyPermit(g,t.id,'explore')?.reserve??450) || g.popNow(t.id)<5 ||
+      reserveSeconds(g,t.id)<(journeyPermit(g,t.id,'explore')?.reserve??450)/Math.max(1,rivalDifficulty(g,t.id).aggression) || g.popNow(t.id)<5 ||
       g.state.units.some((u) => u.team === t.id && u.hp > 0 && u.scout)
     )
       continue;

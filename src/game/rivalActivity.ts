@@ -1,6 +1,6 @@
 import {rivalDifficulty} from './difficulty';
 import{handedOver,handoverReturn}from'./communityHandoverValidation';
-import {tickStructureKnowledge,knownStructures,rememberedStructure} from './structureKnowledge';
+import {tickStructureKnowledge,knownStructures,rememberedStructure,type StructureReport} from './structureKnowledge';
 import {knownSettlementSite,localSettlementHall,beginSettlementJourney,settlementJourneySite} from './barter';
 import {deliverDiplomaticMessage,tickDiplomaticKnowledge,type DiplomaticMessage} from './diplomaticKnowledge';
 import type {Game} from './sim';
@@ -49,6 +49,23 @@ const refusal=(g:Game,team:number,partner:number,kind:RivalActivityKind,reason:s
 
 /** All pair candidates use this society's own remembered ground/local sight.
  * No remote treasury or global enemy force count contributes to utility. */
+/** Hard and harder only: aggression multiplier at which opportunistic strikes begin, the earliest world time, and the party-over-defence margin. */
+export const OPPORTUNIST_AGGRESSION=1.3,OPPORTUNIST_AFTER=900,OPPORTUNIST_MARGIN=1.2;
+/** Hard and above only: a disclosed difficulty bonus, "rivals know neighbouring structures within INTEL_METERS x aggression". Planning-only, never saved,
+ * never grants goods, units or combat strength; defence is the same measure structureKnowledge records. */
+export const INTEL_METERS=400;
+export function rivalIntel(g:Game,team:number):StructureReport[]{
+ const aggression=rivalDifficulty(g,team).aggression;if(aggression<OPPORTUNIST_AGGRESSION||!isRivalTeam(team))return[];
+ const home=g.campOf(team),range=Math.min(700,INTEL_METERS*aggression),out:StructureReport[]=[];
+ for(const b of g.state.buildings){
+  if(b.team===team||b.team===3||b.hp<=0||!g.finished(b)||distance(home,b)>range||!g.tribe(b.team)?.alive)continue;
+  const defenders=g.state.units.filter(p=>p.team===b.team&&p.hp>0&&!isDependent(g,p)&&distance(p,b)<55);
+  const strength=defenders.reduce((n,p)=>n+Math.max(.2,p.dmg/10)*Math.min(1,p.hp/Math.max(1,p.maxHp))*(p.militia||!['worker','leader'].includes(p.type)?1:.3),0);
+  const forts=g.state.buildings.filter(p=>p.team===b.team&&['watchtower','keep','barracks'].includes(p.type)&&distance(p,b)<35).length;
+  out.push({version:1,observer:team,witnessId:0,observedAt:g.state.time,active:true,site:{id:b.id,type:b.type,team:b.team,x:b.x,y:b.y,z:b.z,w:b.w,d:b.d,hp:b.hp,maxHp:b.maxHp},defenders:defenders.length,defensePower:strength+forts*2} as unknown as StructureReport);
+ }
+ return out;
+}
 export type RivalRaidAssessment={plan:RivalRaidPlan|null;reason:string|null;counts:{adults:number;readyFighters:number;retainedGuards:number;availableFighters:number;knownPartners:number;eligiblePartners:number;knownTargets:number;reachableTargets:number}};
 export function assessRivalPairRaid(g:Game,team:number,reserve:number,partner?:number):RivalRaidAssessment{
  const counts={adults:0,readyFighters:0,retainedGuards:0,availableFighters:0,knownPartners:0,eligiblePartners:0,knownTargets:0,reachableTargets:0};
@@ -61,20 +78,25 @@ export function assessRivalPairRaid(g:Game,team:number,reserve:number,partner?:n
  counts.adults=adults.length;counts.readyFighters=ready.length;
  const guards=Math.max(1,Math.ceil(adults.length*OPERATION_RULES.guardFraction));
  const homeGuards=ready.filter(u=>distance(u,home)<OPERATION_RULES.localDefenseRadius).sort((a,b)=>distance(a,home)-distance(b,home)).slice(0,guards);counts.retainedGuards=homeGuards.length;if(homeGuards.length<guards)return blocked('Not enough ready guards would remain near home');
- const available=ready.filter(u=>!homeGuards.includes(u));const count=Math.min(raidForceCap(g,team)??Infinity,12+t.age*3,Math.max(MIN_RAID_PARTY,Math.floor(adults.length*OPERATION_RULES.raidFraction)),available.length);counts.availableFighters=available.length;if(!raidPartyViable(count))return blocked(`At least ${MIN_RAID_PARTY} available fighters are needed after retaining guards`);
+ const aggression=rivalDifficulty(g,team).aggression;
+ const available=ready.filter(u=>!homeGuards.includes(u));const count=Math.min(raidForceCap(g,team)??Infinity,Math.round((12+t.age*3)*Math.max(1,aggression)),Math.max(MIN_RAID_PARTY,Math.floor(adults.length*Math.min(.6,OPERATION_RULES.raidFraction*Math.max(1,aggression)))),available.length);counts.availableFighters=available.length;if(!raidPartyViable(count))return blocked(`At least ${MIN_RAID_PARTY} available fighters are needed after retaining guards`);
  const strength=(u:Unit)=>Math.max(.2,u.dmg/10)*Math.min(1,u.hp/Math.max(1,u.maxHp));
  const fighters=available.sort((a,b)=>strength(b)-strength(a)||a.id-b.id).slice(0,count),power=fighters.reduce((n,u)=>n+strength(u),0);
- const values:Partial<Record<Building['type'],number>>={warehouse:7,farm:5,lumber:5,quarry:4,market:6,cornerstone:3,hut:2,dock:4};
- const known=knownPartners(g,team);counts.knownPartners=known.length;
+ const conquest=aggression>=OPPORTUNIST_AGGRESSION;
+ const values:Partial<Record<Building['type'],number>>={warehouse:7,farm:5,lumber:5,quarry:4,market:6,cornerstone:3,hut:2,dock:4,...(conquest?{townhall:9}:{})};
+ const intel=rivalIntel(g,team),seen=[...knownStructures(g,team),...intel];
+ const known=[...new Set([...knownPartners(g,team),...intel.map(p=>p.site.team)])];counts.knownPartners=known.length;
+ /** Hard+ societies strike a neighbour whose observed defence is clearly weaker than the party, without waiting for a grievance. */
+ const opportunity=(other:number)=>aggression>=OPPORTUNIST_AGGRESSION&&g.state.time>=OPPORTUNIST_AFTER&&power>=OPPORTUNIST_MARGIN*Math.max(1,...seen.filter(p=>p.site.team===other).map(p=>p.defensePower));
  const partners=known.filter(other=>{
   if(partner!==undefined&&other!==partner)return false;if((other===0&&g.isAlly(team)||g.isAlly(team)&&g.isAlly(other))&&!societiesAreFoes(g,team,other))return false;const relation=societyRelation(g,team,other),reverse=societyRelation(g,other,team);
   if(relation.peaceUntil>g.state.time&&reverse.peaceUntil>g.state.time)return false;
   if(g.state.conflict==='quiet'&&!societiesAreFoes(g,team,other))return false;
   if(g.state.time<(g.state.conflict==='dangerous'?300:600))return false;
-  return societiesAreFoes(g,team,other)||relation.grievance>.52||t.aggro>.65&&relation.trust<.35;
+  return societiesAreFoes(g,team,other)||relation.grievance>.52||t.aggro>.65&&relation.trust<.35||opportunity(other);
  });
  counts.eligiblePartners=partners.length;if(!partners.length)return blocked('No known partner is eligible after treaty, grievance and opening protection checks');
- const facts=knownStructures(g,team);const candidates=facts.filter(p=>partners.includes(p.site.team)&&p.site.type!=='townhall'&&distance(home,p.site)<Math.min(raidReachCap(g,team)??700,Math.max(180,g.world.size*.4))).map(rememberedStructure)
+ const facts=seen;const candidates=facts.filter(p=>partners.includes(p.site.team)&&(conquest||p.site.type!=='townhall')&&distance(home,p.site)<Math.min((raidReachCap(g,team)??700)*Math.max(1,aggression),Math.max(180,g.world.size*.4)*Math.max(1,aggression))).map(rememberedStructure)
   .sort((a,b)=>(values[b.type]??1)-(values[a.type]??1)||distance(home,a)-distance(home,b)).slice(0,OPERATION_RULES.maxTargets);
  counts.knownTargets=candidates.length;if(!candidates.length)return blocked('No exposed known structure offers a raid target');
  let best:RivalRaidPlan|null=null;for(const target of candidates){
