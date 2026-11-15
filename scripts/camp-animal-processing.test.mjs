@@ -60,7 +60,7 @@ test('three hunted hides become two dried skins, one leather and one delivered l
  assert.equal(stock.cleanHide,0);
  assert.equal(stock.driedSkin,0);
  assert.equal(stock.leather,0);
- assert.equal(stock.bone,bones-1);
+ assert.equal(stock.bone,bones);
  assert.equal(stock.hideCoat,1);
  assert.equal(equipClothing(g,u.id,'hideCoat'),true,g.state.banner);
  assert.equal(stock.hideCoat,0);
