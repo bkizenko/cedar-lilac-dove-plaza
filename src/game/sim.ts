@@ -38,6 +38,7 @@ import {noteTraderIncident} from './traderInteraction';
 import {recoverySurfaceHeight,steerHullRecovery,hullLossRecoveryAI} from './hullLossRecovery';
 import {initializeSheep} from './sheep';
 import {initializeHorses} from './horses';
+import {initializeBiomeFauna} from './biomeFauna';
 import {initializeCattle} from './cattle';
 import {reconcileSiegeRams,siegeRamAI,interruptSiegeRam,siegeRamMovementMultiplier} from './siegeRam';
 import {siteBlocksRegrowth,sitePreparationSurvey,reserveSitePreparation,assignSitePreparation,pendingSitePreparation,sitePreparationAI,reviewSitePreparations,cancelSitePreparation,releaseSitePreparationWorker} from './sitePreparation';
@@ -773,6 +774,7 @@ export class Game {
     initializeSheep(this);
     initializeHorses(this);
     initializeCattle(this);
+    initializeBiomeFauna(this);
     this.banner("C selects a gatherer · ] finds resources · R gives an order", 4.5);
   }
 

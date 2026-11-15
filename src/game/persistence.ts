@@ -215,6 +215,7 @@ function validateGamePayload(raw: unknown) {
   if(s.sheepVersion!==undefined&&s.sheepVersion!==1)fail();
   if(s.animalBehaviourVersion!==undefined&&s.animalBehaviourVersion!==1)fail();
   if(s.horseVersion!==undefined&&s.horseVersion!==1)fail();
+  if(s.faunaVersion!==undefined&&s.faunaVersion!==1)fail();
   if(!validPackPastureOrders(s))fail();
   if(!validPackJourneySupplies(s))fail();
   if(!validDraftCarts(s))fail();

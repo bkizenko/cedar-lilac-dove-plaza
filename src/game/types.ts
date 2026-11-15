@@ -689,6 +689,8 @@ export type GameState = {
   /** 1 = activity-based animal behaviour (herds, rhythms, predators, gaits). Absent = legacy random-walk wildlife. */
   animalBehaviourVersion?:1;
   horseVersion?:1;
+  /** 1 = valley and mountain herds were seeded at world creation (biomeFauna.ts). */
+  faunaVersion?:1;
   cattleVersion?:1;
   livestock?: Livestock[];
   routes: TradeRoute[];

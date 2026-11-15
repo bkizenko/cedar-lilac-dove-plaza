@@ -19,7 +19,7 @@ test("new habitats offer cohesive reachable prey without increasing the world's 
       const key=JSON.stringify(c.grazing); groups.set(key,(groups.get(key)||0)+1);
     }
     assert.ok(groups.size<=3 && [...groups.values()].every(n=>n>=2),"animals graze in groups instead of isolated dots");
-    for(const [kind,max] of [["deer",20],["boar",16],["goat",26],["bird",17]])
+    for(const [kind,max] of [["deer",28],["boar",22],["goat",40],["bird",17]])
       assert.ok(g.state.wildlife.filter(c=>c.species===kind).length<=max,"existing finite animal counts stay capped");
   }
 });
