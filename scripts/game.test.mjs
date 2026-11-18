@@ -302,7 +302,11 @@ test("civilians shelter, armed residents defend, and then resume jobs", async ()
   b.maturesAt=g.state.time+100;
   g.tribe(0).spears = 1;
   g.tribe(0).bows = 0;
-  const foe = g.spawnUnit("spearman", home.x+13, home.z, 3);
+  // Arming is physical: a resident takes a spear only at the stores, so the woodcutter stands at the cache approach.
+  const {supplyDrops,supplyApproach}=await import("../src/game/campAnchor.ts");
+  const drop=supplyDrops(g,0).sort((p,q)=>Math.hypot(p.x-home.x,p.z-home.z)-Math.hypot(q.x-home.x,q.z-home.z))[0],spot=supplyApproach(g,a,drop);
+  assert.ok(spot);a.x=spot.x;a.z=spot.z;b.x=spot.x+1;b.z=spot.z;
+  const foe = g.spawnUnit("spearman", spot.x+13, spot.z, 3);
   g.updateVision();
   assert.equal(emergencyResponse(g, a, 1 / 30), true);
   assert.equal(a.type, "spearman");
@@ -316,6 +320,7 @@ test("civilians shelter, armed residents defend, and then resume jobs", async ()
   assert.equal(emergencyResponse(g, a, 1 / 30), false);
   const {demobilizationAI}=await import('../src/game/demobilization.ts');
   demobilizationAI(g,a,1/30);
+  for(let i=0;i<600&&a.militia;i++)g.step(.1); // stand-down is physical: the spear goes back at the stores
   assert.equal(a.type, "worker");
   assert.equal(a.job, "wood");
   assert.equal(a.jobLock, true);
