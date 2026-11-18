@@ -1310,9 +1310,11 @@ test("obsolete worker training queues refund stores instead of creating people",
   assert.equal(hall.queue.length,0);
 });
 
-test("scouting persists beyond five destinations and holds when exploration ends", () => {
+test("scouting persists beyond five destinations and holds when exploration ends", async () => {
   const g = fixture(), u = g.state.units.find(u => u.team === 0 && u.type === "worker");
   u.selected = true;
+  // Scouts pack journey provisions at the stores before setting out, so this one starts at the cache.
+  const {expeditionHome}=await import("../src/game/expeditionProvisions.ts");const home=expeditionHome(g,u);assert.ok(home);u.x=home.spot.x;u.z=home.spot.z;
   g.findExploreTarget = () => ({x: u.x + 20, z: u.z});
   g.issueExplore();
   g.steer = () => true;
