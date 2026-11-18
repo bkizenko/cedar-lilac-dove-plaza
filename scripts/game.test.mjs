@@ -590,6 +590,7 @@ test("storage capacity protects surplus without stopping food work", () => {
 test("a regular caravan spends outbound cargo and credits goods only after the return journey",async()=>{
   const g = fixture(),
     rival = g.tribe(1);
+  await witnessHalls(g);
   rival.stone = 100;
   rival.food = 80; // A willing partner who needs the offered food.
   g.tribe(0).food = 300;
@@ -613,7 +614,8 @@ test("a regular caravan spends outbound cargo and credits goods only after the r
   route.paused = false;
   g.tickRoutes(1);
   const carrier = g.state.units.find((u) => u.id === route.workerId);
-  assert.ok(carrier);
+  assert.ok(carrier, route.status);
+  finishTradeLoading(g, carrier); // the carrier walks to the stores and loads the food there
   assert.equal(carrier.carry, 20);
   assert.equal(g.tribe(0).food, 280);
   assert.equal(g.tribe(0).stone, before);
@@ -634,8 +636,11 @@ test("a regular caravan spends outbound cargo and credits goods only after the r
     if (!carrier.trade && carrier.carry === 0) break;
   }
   assert.ok(exchanged);
-  assert.equal(g.tribe(0).stone, before + 8);
-  assert.equal(rival.stone, 92);
+  // The route's 8 stone is the minimum; terms are negotiated at the meeting, so every stone that arrives came out of the seller's store.
+  const gained=g.tribe(0).stone-before;
+  assert.ok(gained>=8, String(gained));
+  assert.equal(rival.stone, 100-gained);
+  assert.equal(route.getAmt, 8, "the standing route keeps its own terms");
 });
 test("war interrupts a trade without creating or teleporting a refund",async()=>{
   const g = fixture(),
