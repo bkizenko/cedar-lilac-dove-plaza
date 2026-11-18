@@ -13,6 +13,10 @@ const fixture = () => {
 };
 // Trade needs a physically witnessed settlement (map vision alone is not knowledge): a player adult stands at each society hall for one review, then leaves.
 async function witnessHalls(g){const {knownSettlement}=await import("../src/game/barter.ts");for(const hall of g.state.buildings.filter(b=>b.team!==0&&b.team!==3&&b.type==='townhall'&&b.hp>0)){const w=g.spawnUnit('worker',hall.x+14,hall.z,0);w.order='hold';g.state.time+=2.1;knownSettlement(g,hall.team);g.state.units=g.state.units.filter(u=>u!==w);g.state.time-=2.1;for(const m of g.state.observedSettlements||[])m.observedAt=Math.min(m.observedAt,g.state.time);}}
+/** Visiting traders now come only from a society that has met the player and seen the player's hall. */
+async function rivalMetPlayer(g,team){const {recordSocietyContact}=await import("../src/game/societyRelations.ts");const hall=g.state.buildings.find(b=>b.team===0&&b.type==='townhall');
+ const w=g.spawnUnit('worker',hall.x+Math.max(hall.w,hall.d)*.5+1,hall.z,team);
+ (g.state.observedSettlements??=[]).push({version:1,observer:team,owner:0,siteId:hall.id,x:hall.x,z:hall.z,observedAt:g.state.time,witnessId:w.id,active:true});assert.ok(recordSocietyContact(g,w,hall));g.state.units=g.state.units.filter(u=>u!==w);}
 function militaryFixture() {
   const g = fixture(), home = g.campOf(0);
   g.spawnUnit("spearman", home.x + 4, home.z - 5, 0);
@@ -1628,13 +1632,13 @@ test("foreign traders carry real stock, negotiate locally and take payment home"
   const {tickVisitors,visitorAI,tradeWithVisitor,visitorPrice}=await import('../src/game/visitors.ts');const g=fixture();g.vision.fill(2);await witnessHalls(g);
   const t=g.tribe(1);Object.assign(t,{wood:400,food:300,hostile:false,spec:'wood'});g.tribe(2).hostile=true;
   for(const p of g.state.units.filter(u=>u.team===1)){p.carry=0;p.carryType=null;}
-  const source=t.wood;g.state.visitorTimer=0;tickVisitors(g,1);const u=g.state.units.find(u=>u.visit);assert.ok(u);assert.equal(t.wood+u.carry,source);
-  const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall');u.x=home.x+Math.max(home.w,home.d)*0.55+1;u.z=home.z;
+  await rivalMetPlayer(g,1);const source=t.wood;g.state.visitorTimer=0;tickVisitors(g,1);const u=g.state.units.find(u=>u.visit);assert.ok(u);assert.equal(t.wood+u.carry,source);
+  const home=g.state.buildings.find(b=>b.team===0&&b.type==='townhall');{const spot=g.interactionSpot(u,home);u.x=spot.x;u.z=spot.z;} // traders stop at the hall's real door/approach
   const offered=u.carry,before=g.tribe(0).wood;visitorAI(g,u,1);assert.equal(u.visit.phase,'waiting');assert.equal(g.tribe(0).wood,before);
   g.tribe(0).food=300;const price=visitorPrice(g,u,'food');assert.equal(tradeWithVisitor(g,u.id,'food'),true);
   assert.equal(g.tribe(0).wood,before+offered);assert.equal(g.tribe(0).food,300-price);assert.equal(u.carry,price);
   const r=decodeGame(encodeGame(g)),ru=r.state.units.find(p=>p.id===u.id),hall=r.state.buildings.find(b=>b.team===1&&b.type==='townhall'),food=r.tribe(1).food;
-  ru.x=hall.x+Math.max(hall.w,hall.d)*0.55+1;ru.z=hall.z;visitorAI(r,ru,1);assert.equal(r.tribe(1).food,food+price);assert.equal(ru.visit,undefined);
+  {const spot=r.interactionSpot(ru,hall);ru.x=spot.x;ru.z=spot.z;}visitorAI(r,ru,1);assert.equal(r.tribe(1).food,food+price);assert.equal(ru.visit,undefined);
 });
 test("starvation gives every age time to seek food before gradually weakening",()=>{
   const g=fixture(),u=g.state.units.find(u=>u.team===0);g.tribe(0).food=0;u.maturesAt=g.state.time+10000;
