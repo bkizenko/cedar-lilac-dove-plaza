@@ -11,7 +11,7 @@ const fixture = () => {
   return g;
 };
 // Trade needs a physically witnessed settlement (map vision alone is not knowledge): a player adult stands at each society hall for one review, then leaves.
-async function witnessHalls(g){const {knownSettlement}=await import("../src/game/barter.ts");for(const hall of g.state.buildings.filter(b=>b.team!==0&&b.team!==3&&b.type==='townhall'&&b.hp>0)){const w=g.spawnUnit('worker',hall.x+14,hall.z,0);w.order='hold';g.state.time+=2.1;knownSettlement(g,hall.team);g.state.units=g.state.units.filter(u=>u!==w);g.state.time-=2.1;}}
+async function witnessHalls(g){const {knownSettlement}=await import("../src/game/barter.ts");for(const hall of g.state.buildings.filter(b=>b.team!==0&&b.team!==3&&b.type==='townhall'&&b.hp>0)){const w=g.spawnUnit('worker',hall.x+14,hall.z,0);w.order='hold';g.state.time+=2.1;knownSettlement(g,hall.team);g.state.units=g.state.units.filter(u=>u!==w);g.state.time-=2.1;for(const m of g.state.observedSettlements||[])m.observedAt=Math.min(m.observedAt,g.state.time);}}
 function militaryFixture() {
   const g = fixture(), home = g.campOf(0);
   g.spawnUnit("spearman", home.x + 4, home.z - 5, 0);
@@ -574,7 +574,7 @@ test("storage capacity protects surplus without stopping food work", () => {
   assert.ok(food - g.tribe(0).food < exposedLoss);
 });
 
-test("a regular caravan spends outbound cargo and credits goods only after the return journey", () => {
+test("a regular caravan spends outbound cargo and credits goods only after the return journey",async()=>{
   const g = fixture(),
     rival = g.tribe(1);
   rival.stone = 100;
@@ -624,7 +624,7 @@ test("a regular caravan spends outbound cargo and credits goods only after the r
   assert.equal(g.tribe(0).stone, before + 8);
   assert.equal(rival.stone, 92);
 });
-test("war interrupts a trade without creating or teleporting a refund", () => {
+test("war interrupts a trade without creating or teleporting a refund",async()=>{
   const g = fixture(),
     u = g.state.units.find((u) => u.team === 0 && u.type === "worker");
   g.tribe(0).food = 100;
@@ -799,7 +799,7 @@ test("hunters march in a line across the order", () => {
   assert.ok(zSpread > 4);
   assert.ok(zSpread > xSpread);
 });
-test("a grazing compact spends food, is saved, and holds a neighbor to trade", () => {
+test("a grazing compact spends food, is saved, and holds a neighbor to trade",async()=>{
   const g = fixture();
   g.state.time = 800;
   g.state.conflict = "dangerous";
@@ -1476,7 +1476,7 @@ test("direct group wood orders reserve at most two workers per tree", async () =
   const after=new Map();for(const u of g.selectedUnits())if(u.node?.kind==="tree")after.set(u.node.id,(after.get(u.node.id)||0)+1);
   assert.ok([...after.values()].every(n=>n<=2));
 });
-test("continued resource theft in a rival village causes warnings and hostility; visiting does not", () => {
+test("continued resource theft in a rival village causes warnings and hostility; visiting does not",async()=>{
   const g=fixture(),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),w=g.state.units.find(u=>u.team===0);
   const tree=g.state.trees[0];tree.x=hall.x+8;tree.z=hall.z;w.node=tree;w.order="hold";w.job="wood";
   const rival=g.tribe(1);rival.tension=0.1;rival.hostile=false;rival.trust=0.5;
@@ -1520,7 +1520,7 @@ test("raiding causes hostility at the settlement rather than when the command le
   u.x=hall.x+20;u.z=hall.z;g.combatAI(u,0.01);assert.equal(g.tribe(1).hostile,true);
 });
 test("trading terms appear at the meeting and then become stale", async()=>{
-  const {reportedQuote}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);g.clearSelect();Object.assign(g.tribe(0),{food:200});Object.assign(g.tribe(1),{food:80,wood:200,hostile:false,tradeCd:0});
+  const {reportedQuote}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);await witnessHalls(g);g.clearSelect();Object.assign(g.tribe(0),{food:200});Object.assign(g.tribe(1),{food:80,wood:200,hostile:false,tradeCd:0});
   assert.equal(reportedQuote(g,1,"food","wood",20).deal,null);assert.equal(g.sendDelegation(1,"trade"),true);
   const u=g.state.units.find(u=>u.envoy),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),entrance=g.interactionSpot(u,hall);assert.ok(entrance);u.x=entrance.x;u.z=entrance.z;
   g.workerAI(u,21);assert.equal(u.envoy.phase,"return");assert.equal(g.state.tradeReports?.length,1);
@@ -1528,8 +1528,8 @@ test("trading terms appear at the meeting and then become stale", async()=>{
   const quote=reportedQuote(r,1,"food","wood",20).deal;assert.ok(quote);r.tribe(1).wood=0;assert.deepEqual(reportedQuote(r,1,"food","wood",20).deal,quote);
   r.state.time+=901;assert.equal(reportedQuote(r,1,"food","wood",20).deal,null);
 });
-test("peace proposal travels before affecting relations",()=>{
-  const g=fixture();g.vision.fill(2);g.clearSelect();g.tribe(1).hostile=true;assert.equal(g.sendDelegation(1,"peace"),true);
+test("peace proposal travels before affecting relations",async()=>{
+  const g=fixture();g.vision.fill(2);await witnessHalls(g);g.clearSelect();g.tribe(1).hostile=true;assert.equal(g.sendDelegation(1,"peace"),true);
   assert.equal(g.tribe(1).hostile,true);const u=g.state.units.find(u=>u.envoy),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),entrance=g.interactionSpot(u,hall);assert.ok(entrance);u.x=entrance.x;u.z=entrance.z;
   g.workerAI(u,21);assert.equal(g.tribe(1).hostile,false);assert.equal(u.envoy.phase,"return");
 });
@@ -1543,8 +1543,8 @@ test("recall works for children and soldiers and can be cancelled by a new order
   g.workerAI(child,0.01);g.workerAI(soldier,0.01);assert.equal(child.order,"hold");assert.equal(soldier.order,"hold");
   g.soundRecall();g.clearSelect();soldier.selected=true;g.issueMove(soldier.x+20,soldier.z);assert.equal(soldier.recalled,undefined);
 });
-test("gift carrier transports actual food and only improves trust on delivery",()=>{
-  const g=fixture();g.vision.fill(2);g.clearSelect();const food=g.tribe(0).food,other=g.tribe(1).food,trust=g.tribe(1).trust||0;
+test("gift carrier transports actual food and only improves trust on delivery",async()=>{
+  const g=fixture();g.vision.fill(2);await witnessHalls(g);g.clearSelect();const food=g.tribe(0).food,other=g.tribe(1).food,trust=g.tribe(1).trust||0;
   assert.equal(g.sendDelegation(1,"gift"),true);const u=g.state.units.find(u=>u.envoy);assert.equal(u.carry,30);assert.equal(g.tribe(0).food,food-30);
   assert.equal(g.tribe(1).food,other);assert.equal(g.tribe(1).trust||0,trust);
   const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),entrance=g.interactionSpot(u,hall);assert.ok(entrance);u.x=entrance.x;u.z=entrance.z;g.workerAI(u,21);
@@ -1587,7 +1587,7 @@ test("personal predispositions are stable, bounded and survive save identity",as
 });
 
 test("a custom offer needs no remote report and is negotiated only after travel",async()=>{
-  const {sendOffer}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);g.clearSelect();
+  const {sendOffer}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);await witnessHalls(g);g.clearSelect();
   Object.assign(g.tribe(0),{food:200});Object.assign(g.tribe(1),{food:80,wood:200,hostile:false,tradeCd:0});
   const theirWood=g.tribe(1).wood;assert.equal(sendOffer(g,1,"food","wood",20,100),true);
   const u=g.state.units.find(u=>u.customOffer);assert.equal(g.tribe(1).wood,theirWood);assert.equal(u.carry,20);
@@ -1615,7 +1615,7 @@ test("richer new terrain is versioned and old saves keep their exact landscape",
   assert.ok(fresh.state.units.some(u=>u.team===0&&u.hp>0));
 });
 test("foreign traders carry real stock, negotiate locally and take payment home",async()=>{
-  const {tickVisitors,visitorAI,tradeWithVisitor,visitorPrice}=await import('../src/game/visitors.ts');const g=fixture();g.vision.fill(2);
+  const {tickVisitors,visitorAI,tradeWithVisitor,visitorPrice}=await import('../src/game/visitors.ts');const g=fixture();g.vision.fill(2);await witnessHalls(g);
   const t=g.tribe(1);Object.assign(t,{wood:400,food:300,hostile:false,spec:'wood'});g.tribe(2).hostile=true;
   for(const p of g.state.units.filter(u=>u.team===1)){p.carry=0;p.carryType=null;}
   const source=t.wood;g.state.visitorTimer=0;tickVisitors(g,1);const u=g.state.units.find(u=>u.visit);assert.ok(u);assert.equal(t.wood+u.carry,source);
