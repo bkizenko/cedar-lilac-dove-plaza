@@ -16,7 +16,7 @@ export type EraMode='morph'|'fixed';export const ERA_MODES:EraMode[]=['morph','f
 export type CivContext={/** the village's heraldry (villageIdentity.ts): roof finial + rim trim, so same-colour villages differ beyond hue */heraldry?:Heraldry;seed:number;era:number;wealth:number;/** 0 new .. 1 ruined-ish */wear:number;footprint:{w:number;d:number};lit?:boolean;/** a ruler has just died: banners hang at half-mast with a mourning band (original grammar only) */mourning?:boolean;/** a CivSkin's overrides: palette, roof form, granary and banner shape (absent = the civ's own approved bible) */look?:CivLook;eraMode?:EraMode;built?:{era:number;wealth:number};/** later additions, each built with the techniques of its own era */extensions?:{era:number}[]};
 export type CivSpec=BuildingSpec&{civ:CivId;role:CivRole;materials:Record<string,Swatch>;banners:{pos:readonly[number,number,number];size:readonly[number,number,number]}[];imperfection:{scale:number;lean:number;offDoor:number;patches:number};eraMode:EraMode;builtEra:number;extensionEras:number[]};
 type V=[number,number,number];type Slot=keyof CivMaterials;
-type G={civ:CivId;look?:CivLook;r:Rng;w:number;d:number;era:number;wealth:number;wear:number;parts:Part[];
+type G={civ:CivId;look?:CivLook;/** early timber dwelling: walls/roof are repainted by timberWalls(), so the dark door slot must be picked from those tones */timber?:boolean;r:Rng;w:number;d:number;era:number;wealth:number;wear:number;parts:Part[];
  B:(s:Slot,size:V,pos:V,lod?:LodTier,rot?:V)=>void;Cy:(s:Slot,dia:number,h:number,pos:V,lod?:LodTier,sides?:number,top?:number)=>void;Pr:(shape:Part['shape'],s:Slot,size:V,pos:V,lod?:LodTier,rot?:V,sides?:number)=>void;
  post:(s:Slot,x:number,z:number,h:number,t?:number,lod?:LodTier)=>void;banner:(x:number,z:number,h:number)=>void;door:(x:number,z:number,wd?:number,h?:number)=>void;off:number};
 type Out={entry?:{x:number;z:number;width:number}};
@@ -62,7 +62,7 @@ const POOR:Record<CivId,string>={sandrill:'cave',nilemark:'hut',tigrane:'dome',h
 export const POOR_KIND=POOR;
 const lum=(h:string)=>{const n=parseInt(h.slice(1),16);return .2126*(n>>16&255)+.7152*(n>>8&255)+.0722*(n&255);};
 /** The darkest of the civ's own swatches: the doorway opening (civ tables have no black slot, so the opening is its darkest tone). */
-function darkSlot(g:G):Slot{const t=(g.look?.palette??CIVS[g.civ].materials) as CivMaterials,slots:Slot[]=['wall2','accent','trim','roof','cloth'];return slots.reduce((a,b)=>lum(t[b].hex)<lum(t[a].hex)?b:a,slots[0]);}
+function darkSlot(g:G):Slot{const t0=(g.look?.palette??CIVS[g.civ].materials) as CivMaterials,t=g.timber?{...t0,wall2:{...t0.wall2,hex:TIMBER_HEX.wall2},roof:{...t0.roof,hex:TIMBER_HEX.roof}}:t0,slots:Slot[]=['wall2','accent','trim','roof','cloth'];return slots.reduce((a,b)=>lum(t[b].hex)<lum(t[a].hex)?b:a,slots[0]);}
 /** Framed doorway on the +Z face at x, wall plane z: dark opening, light-contrast posts + lintel, a threshold step. */
 /** The plan of the hut being built (door width/height factors and spread), set by poor() just before the base form is drawn. */
 const HUT:{plan:HutPlan}={plan:{kx:1,kz:1,apse:false,doorK:[1,1],doorSpread:1}};
@@ -583,11 +583,11 @@ function liftToPeopleHeight(parts:Part[]):Part[]{
 }
 export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,variantKey=''):CivSpec{
  const look=ctx.eraMode==='fixed'?{era:ctx.built?.era??ctx.era,wealth:ctx.built?.wealth??ctx.wealth}:{era:ctx.era,wealth:ctx.wealth},fp0=ctx.footprint,ext=ctx.extensions??[],c2:CivContext={...ctx,...look,footprint:ext.length?{w:fp0.w*.7,d:fp0.d}:fp0};
- const r=seededRandom(ctx.seed),g=mk(civ,c2,r),sc=jit(r,.06);
+ const r=seededRandom(ctx.seed),g=mk(civ,c2,r),sc=jit(r,.06);g.timber=(role==='granary'||role==='house')&&c2.era<=2;
  // builders read g.w/g.d, so run them on a view scaled by the instance's size jitter (still fitted back into the footprint below)
  // Early dwellings: shrink the MASS (not the doorway) until it fits the footprint, so the later fit never squeezes a door below adult size.
  let poorK=1;
- if((role==='house'||role==='civic')&&c2.era<=1)for(let i=0;i<3;i++){const r0=seededRandom(ctx.seed),g0=mk(civ,c2,r0),s0=jit(r0,.06),v0:G={...g0,w:c2.footprint.w*Math.min(1,s0)*poorK,d:c2.footprint.d*Math.min(1,s0)*poorK};poor(v0);
+ if((role==='house'||role==='civic')&&c2.era<=1)for(let i=0;i<3;i++){const r0=seededRandom(ctx.seed),g0={...mk(civ,c2,r0),timber:role==='house'&&c2.era<=2},s0=jit(r0,.06),v0:G={...g0,w:c2.footprint.w*Math.min(1,s0)*poorK,d:c2.footprint.d*Math.min(1,s0)*poorK};poor(v0);
   const b=specBounds({parts:v0.parts} as BuildingSpec),s=Math.min(1,(c2.footprint.w/2-.1)/Math.max(1e-6,Math.abs(b.minX),Math.abs(b.maxX)),(c2.footprint.d/2-.1)/Math.max(1e-6,Math.abs(b.minZ),Math.abs(b.maxZ)));
   if(s>=.995)break;poorK*=s*.985;}
  const view:G={...g,w:c2.footprint.w*Math.min(1,sc)*poorK,d:c2.footprint.d*Math.min(1,sc)*poorK};
@@ -611,7 +611,8 @@ export function generateCivBuilding(civ:CivId,role:CivRole,ctx:CivContext,varian
 }
 
 /** Buildings raised from timber (every granary, houses before the first masonry era) wear timber walls whatever the civ's stone palette says; era 3+ houses keep the civ's masonry as the upgrade. */
-function timberWalls<T extends Record<string,Swatch>>(t:T,civ:CivId,wood:boolean):T{if(!wood)return t;const out={...t} as Record<string,Swatch>;const w=out[matId(civ,'wall')],w2=out[matId(civ,'wall2')];const rf=out[matId(civ,'roof')];if(w)out[matId(civ,'wall')]={...w,hex:'#8c6b46',course:'plank'};if(w2)out[matId(civ,'wall2')]={...w2,hex:'#6e5236',course:'beam'};if(rf)out[matId(civ,'roof')]={...rf,hex:'#a58a55',course:'thatch'};return out as T;}
+const TIMBER_HEX={wall:'#8c6b46',wall2:'#6e5236',roof:'#a58a55'} as const;
+function timberWalls<T extends Record<string,Swatch>>(t:T,civ:CivId,wood:boolean):T{if(!wood)return t;const out={...t} as Record<string,Swatch>;const w=out[matId(civ,'wall')],w2=out[matId(civ,'wall2')];const rf=out[matId(civ,'roof')];if(w)out[matId(civ,'wall')]={...w,hex:TIMBER_HEX.wall,course:'plank'};if(w2)out[matId(civ,'wall2')]={...w2,hex:TIMBER_HEX.wall2,course:'beam'};if(rf)out[matId(civ,'roof')]={...rf,hex:TIMBER_HEX.roof,course:'thatch'};return out as T;}
 /** Techniques a builder of this era commands (applied once, at build time): era 3 dressed plinth and door frame, era 4 corner quoins, era 5 cornice band. */
 function techniques(g:G,era:number){
  const walls=g.parts.filter(p=>p.shape==='box'&&p.size[1]>1.4&&p.lod===2&&!p.rot);if(!walls.length||era<3)return;
