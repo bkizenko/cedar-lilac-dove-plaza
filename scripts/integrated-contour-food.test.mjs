@@ -156,9 +156,9 @@ function build(g, type, x, z) {
   assert.equal(g.placeBuilding(type, x, z), true, g.state.banner);
   const b = g.state.buildings.find((b) => b.type === type);
   assert.equal(b.build, 0);
-  g.clearSelect();
-  g.selectEntity(g.state.units.find((u) => u.team === 0 && !u.buildOrder));
-  g.orderConstruction(b);
+  // placing may already hand the site to the free builder; order one only if someone is still free
+  const free = g.state.units.find((u) => u.team === 0 && u.hp > 0 && !u.buildOrder);
+  if (free) { g.clearSelect(); g.selectEntity(free); g.orderConstruction(b); }
   drive(g, 180, () => g.finished(b));
   assert.ok(g.finished(b), status(g));
   assert.equal(t.wood, wood - BUILDINGS[type].wood);
