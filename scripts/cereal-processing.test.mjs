@@ -464,7 +464,7 @@ test('a practiced threshing floor processes double loads and preserves the exact
  tribe.items={grainSheaves:40};
  assert.match(productionIssue(g,'threshCerealFloorDouble',floor.id),/0\/3/);
  assert.match(productionIssue(g,'winnowCerealFloorDouble',floor.id),/0\/3/);
- drive(g,300,()=>g.state.production?.projects.some(p=>p.recipe==='winnowCerealFloorDouble'));
+ drive(g,900,()=>g.state.production?.projects.some(p=>p.recipe==='winnowCerealFloorDouble')); // Auto work now grinds and bakes between threshing batches, so the double load starts later
  const job=g.state.production.projects.find(p=>p.recipe==='winnowCerealFloorDouble');
  assert.ok(job);
  assert.equal(g.state.production.metrics.consumed.grainSheaves,40);
