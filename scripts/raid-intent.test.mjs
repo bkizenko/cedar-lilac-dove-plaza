@@ -259,7 +259,8 @@ test("ordinary native scheduled dispatch assigns existing residents a shared ver
   assert.ok(party.length > 0, "A real finite native camp can dispatch");
   assert.ok(party.every((u) => u.seaRaid.plan?.version === 1 && u.seaRaid.plan.intent === "loot"));
   assert.ok(party.every(u=>crew.includes(u)));
-  assert.equal(new Set(party.map((u) => u.seaRaid.plan.bandId)).size, 1);
+  // since af097b3d each person keeps their own plan id; the party shares one objective band
+  assert.equal(new Set(party.map((u) => u.seaRaid.plan.objectiveBandId ?? u.seaRaid.plan.bandId)).size, 1);
   assert.equal(party[0].seaRaid.plan.initialBand, party.length);
   assert.doesNotThrow(() => decodeGame(encodeGame(g)));
 });

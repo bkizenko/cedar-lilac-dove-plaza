@@ -87,7 +87,7 @@ export function noteRaidDefenseCapture(g:Game,guard:Unit,resident:Unit){
  * dies before its own return history is written in this frame. */
 export function noteRaidDefenseResidentDelivered(g:Game,resident:Unit){
  if(resident.prisoner?.originTeam!==0||resident.prisoner.captorTeam!==3)return;
- for(const b of g.state.raidDefense?.bands||[])if(b.settledAt===undefined&&b.capturedResidentIds.includes(resident.id)&&!b.deliveredResidentIds.includes(resident.id))b.deliveredResidentIds.push(resident.id);
+ for(const b of g.state.raidDefense?.bands||[])if(b.settledAt===undefined&&b.capturedResidentIds.includes(resident.id)&&!b.deliveredResidentIds.includes(resident.id)){b.deliveredResidentIds.push(resident.id);b.captivesLost=Math.max(b.captivesLost,b.deliveredResidentIds.length);} // a delivered captive is already lost: keeps unsettled bands saveable
 }
 /** Existing release executor calls only after the same body reaches its own
  * physical cache. A released order/unguarded prisoner alone is not recovery. */

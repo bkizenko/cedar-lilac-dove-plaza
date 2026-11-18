@@ -96,7 +96,7 @@ test('new village civilians defeat a finite camp raider in the real simulation o
   const g=new Game();g.reset(seed,2);g.enterIsland();g.state.conflict='quiet';g.state.paused=false;
   g.state.units=g.state.units.filter(u=>u.team===0);const people=g.state.units.map(u=>u.id);
   prepareFiniteRaid(g);const random=Math.random;try{Math.random=()=>.2;g.spawnRaid();}finally{Math.random=random;}
-  const raiders=g.state.units.filter(u=>u.team===3&&u.seaRaid);assert.equal(raiders.length,1);
+  const raiders=g.state.units.filter(u=>u.team===3&&u.seaRaid);assert.equal(raiders.length,3,'since 3f70afe5 a raid party is never smaller than three');
   for(let i=0;i<4000&&raiders.some(u=>u.hp>0)&&!g.state.paused;i++)g.step(.2);
   assert.equal(g.state.paused,false,`seed ${seed}: no greeting freezes a raid`);
   assert.ok(raiders.every(u=>u.hp<=0),`seed ${seed}: landed raider reaches and is defeated by defenders; `+JSON.stringify(raiders.map(u=>({x:u.x,z:u.z,hp:u.hp,order:u.order,stuck:u.stuckT}))));
