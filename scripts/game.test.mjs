@@ -5,6 +5,7 @@ import { Game } from "../src/game/sim.ts";
 import { encodeGame, decodeGame } from "../src/game/persistence.ts";
 import { finishTradeLoading } from "./helpers/finish-trade-loading.mjs";
 import { neighborIntent, farmWork, crop } from "../src/game/settlement.ts";
+import { foodAttention } from "../src/game/migration.ts";
 const fixture = () => {
   const g = new Game();
   g.reset(123456);
@@ -543,9 +544,12 @@ test("unsolicited settler arrivals stop unless welcomed with adequate reserves",
   assert.equal(g.popNow(0), before);
   g.tribe(0).food = 1000;
   // A rich, welcoming village can now receive five people, still bounded by housing.
-  const arrivalRandom=Math.random;
+  // Group size = 1-5 by policy, plus up to 3 more drawn by a large food surplus (food-driven arrivals), bounded by housing and food.
+  const arrivalRandom=Math.random,cap=g.popCap(0),food=g.tribe(0).food,group=1+Math.floor(.99*(4+Math.floor(foodAttention(g)*3)));
+  assert.ok(group>=5);
   try { Math.random=()=>.99; g.landSeaFolk(); } finally { Math.random=arrivalRandom; }
-  assert.equal(g.popNow(0),Math.min(before+5,g.popCap(0)));
+  assert.equal(g.popNow(0),before+Math.min(group,cap-before,Math.floor(food/8)));
+  assert.ok(g.popNow(0)<=cap);
 });
 test("cropping depletes fertility; a fallow year restores it and is saved", async () => {
   const { crop, farmAvailable } = await import("../src/game/settlement.ts");
@@ -685,9 +689,12 @@ test("people are born or welcomed, and soldiers are armed adults", () => {
   g.tribe(0).food = 5000;
   assert.equal(g.enqueueTrain(hall, "worker"), false);
   // A rich, welcoming village can now receive five people, still bounded by housing.
-  const arrivalRandom=Math.random;
+  // Group size = 1-5 by policy, plus up to 3 more drawn by a large food surplus (food-driven arrivals), bounded by housing and food.
+  const arrivalRandom=Math.random,cap=g.popCap(0),food=g.tribe(0).food,group=1+Math.floor(.99*(4+Math.floor(foodAttention(g)*3)));
+  assert.ok(group>=5);
   try { Math.random=()=>.99; g.landSeaFolk(); } finally { Math.random=arrivalRandom; }
-  assert.equal(g.popNow(0),Math.min(before+5,g.popCap(0)));
+  assert.equal(g.popNow(0),before+Math.min(group,cap-before,Math.floor(food/8)));
+  assert.ok(g.popNow(0)<=cap);
   const barracks = g.makeBld("barracks", hall.x + 16, hall.z, 0);
   g.state.buildings.push(barracks);
   g.tribe(0).food = 500;
