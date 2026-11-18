@@ -41,7 +41,7 @@ test('retreating bands block overlapping raids and losses grant a saved recovery
  let {g}=fixture();g.state.conflict='balanced';g.state.time=1300;g.tribe(0).food=0;
  const enemy=g.spawnUnit('spearman',90,50,3);enemy.seaRaid={x:90,z:50,goalX:0,goalZ:38,phase:'retreat',thinkAt:0,departAt:1500};
  g.state.raidCampaign={active:true,adults:5,buildings:2,loss:0};g.state.raidT=0;
- finishSeaRaid(g);assert.equal(g.state.raidCampaign.active,true);assert.equal(canScheduleSeaRaid(g),false);
+ finishSeaRaid(g);assert.equal(canScheduleSeaRaid(g),false,'a living retreating band still blocks an overlapping raid');
  enemy.hp=0;finishSeaRaid(g);assert.equal(g.state.raidCampaign.active,false);assert.equal(g.state.raidCampaign.loss,.8);assert.ok(g.state.raidT>=1200);
  const respite=g.state.raidT;g=decodeGame(encodeGame(g));finishSeaRaid(g);assert.equal(g.state.raidT,respite,'completion cannot repeatedly reset respite');
  let spawned=0;g.spawnRaid=()=>spawned++;g.tickRaiders(.2);assert.equal(spawned,0);assert.ok(g.state.raidT<respite);

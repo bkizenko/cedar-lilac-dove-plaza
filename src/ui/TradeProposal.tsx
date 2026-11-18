@@ -4,6 +4,7 @@ import {useState} from 'react';
 import type {Engine} from '../game/engine';import type {ResKind} from '../game/types';
 import {reportedQuote,proposeShipment,tradeCarrier,sendOffer,sendProcurement} from '../game/barter';
 import {CaravanPlanner} from './CaravanPlanner';
+import {tradeCargoCapacity} from '../game/tradeCargo';
 const names:Record<ResKind,string>={food:'Food',wood:'Timber',stone:'Stone',copper:'Copper',iron:'Iron'};
 export function TradeProposal({engine,team,expanded=false}:{engine:Engine;team:number;expanded?:boolean}){
  const [give,setGive]=useState<ResKind>('food'),[get,setGet]=useState<ResKind>('wood'),[amount,setAmount]=useState(20),[requested,setRequested]=useState(8);
@@ -11,8 +12,9 @@ export function TradeProposal({engine,team,expanded=false}:{engine:Engine;team:n
  const g=engine.game,quote=reportedQuote(g,team,give,get,amount),carrier=tradeCarrier(g);
  const goods=(Object.keys(names) as ResKind[]).filter(k=>!['copper','iron'].includes(k)||g.tribe(0).age>=(k==='iron'?2:1));
  const run=(fn:()=>unknown,success='Order sent; goods exchange only at arrival.')=>{const result=fn();setReceipt(result===false?'Not sent. Check the available carrier, supplies and route.':success);engine.pushHud();};
- const whyNot=!carrier?'No carrier is free to take the shipment':give===get?'Choose two different goods':g.tribe(0)[give]<amount?'You do not hold that much to give':(amount<1||amount>100||!Number.isSafeInteger(amount))?'Offer between 1 and 100':(requested<1||requested>200||!Number.isSafeInteger(requested))?'Ask for between 1 and 200':undefined;
- const unavailable=!carrier||give===get||g.tribe(0)[give]<amount||amount<1||amount>100||requested<1||requested>200||!Number.isSafeInteger(amount)||!Number.isSafeInteger(requested);
+ const giveCap=carrier?tradeCargoCapacity(carrier,give):0,getCap=carrier?tradeCargoCapacity(carrier,get):0,overLoad=!!carrier&&(amount>giveCap||requested>getCap);
+ const whyNot=!carrier?'No carrier is free to take the shipment':give===get?'Choose two different goods':g.tribe(0)[give]<amount?'You do not hold that much to give':(amount<1||amount>100||!Number.isSafeInteger(amount))?'Offer between 1 and 100':(requested<1||requested>200||!Number.isSafeInteger(requested))?'Ask for between 1 and 200':overLoad?`One carrier can take at most ${giveCap} ${names[give].toLowerCase()} out and ${getCap} ${names[get].toLowerCase()} back; plan a caravan below for more`:undefined;
+ const unavailable=overLoad||!carrier||give===get||g.tribe(0)[give]<amount||amount<1||amount>100||requested<1||requested>200||!Number.isSafeInteger(amount)||!Number.isSafeInteger(requested);
  const travelers=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.tradeTeam===team&&tradeJourney(u));
  const content=<>
  <button onClick={()=>run(()=>g.sendDelegation(team,'trade'),'Trader dispatched to request a report; no purchase made.')}>Send trader for a report</button>

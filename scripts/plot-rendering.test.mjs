@@ -5,7 +5,7 @@ registerHooks({resolve(specifier,context,next){if(specifier.startsWith('@/'))ret
 const {WorldView}=await import('../src/scene/world.ts');
 import {InstanceCameraCull} from '../src/scene/instanceCameraCull.ts';import {DrawDistanceGovernor} from '../src/game/drawDistance.ts';import {initialEffective} from '../src/game/graphicsSettings.ts';
 // Object.create skips class field initialisers; give the bare view the renderer state it now reads (camera cull, carved owners, ground-plan cache, draw governor).
-const bareView=v=>{v.buildingCameraCull??=new InstanceCameraCull();v.carvedOwners??=new Map();v.planCache??=new WeakMap();v.drawGovernor??=new DrawDistanceGovernor(initialEffective().draw);v.camera??=new THREE.PerspectiveCamera();v.ghostFoot??=new THREE.Group();v.renderer??={shadowMap:{enabled:true}};return v;};
+const bareView=v=>{v.buildingCameraCull??=new InstanceCameraCull();v.growthSmooth??=new Map();v.carvedOwners??=new Map();v.planCache??=new WeakMap();v.drawGovernor??=new DrawDistanceGovernor(initialEffective().draw);v.camera??=new THREE.PerspectiveCamera();v.ghostFoot??=new THREE.Group();v.renderer??={shadowMap:{enabled:true}};return v;};
 import {BUILDINGS} from '../src/game/constants.ts';
 function building(type,w=1,d=1){const def=BUILDINGS[type];return {id:1,type,team:0,x:0,y:4,z:0,hp:100,build:1,w:def.w*w,d:def.d*d};}
 test('plot bays cover rectangular area, stay human scaled and cache their layout',()=>{
@@ -81,7 +81,7 @@ test('territory and fog overlay follows every terrain vertex on enlarged maps',(
 });
 test('rigid buildings clear uphill terrain and receive full-depth footings without rewriting saved placement',async()=>{
  const {foundationProfile}=await import('../src/scene/foundations.ts');
- const b=building('townhall'),before=JSON.stringify(b),g={world:{heights:new Float32Array(9)},terrainRevision:()=>0,height:(x,z)=>4+x*.2+z*.1};
+ const b=building('townhall'),before=JSON.stringify(b),g={state:{time:0,seed:345,buildings:[b]},world:{heights:new Float32Array(9)},terrainRevision:()=>0,height:(x,z)=>4+x*.2+z*.1};
  const f=foundationProfile(g,b);assert.ok(f.level>4);assert.ok(f.bottom<4);
  assert.equal(JSON.stringify(b),before);assert.equal(foundationProfile(g,b),f,'cached support calculation');
  const v=bareView(Object.create(WorldView.prototype));v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();v.mats=new Proxy({},{get(t,k){return t[k]??=new THREE.MeshStandardMaterial();}});v.buildBuildings();
@@ -116,12 +116,12 @@ test('expanded foreign grain bays and their footings use the same axis-aligned f
  const {buildingGroundSupports}=await import('../src/scene/buildingGrounding.ts');
  const {buildingGeos}=await import('../src/scene/meshes.ts');
  buildingGeos();
- const foreign={...building('threshingFloor',2,1),team:1};
+ const foreign={...building('oven',2,1),team:1};
  const own={...foreign,team:0};
  const g={state:{},world:{heights:new Float32Array(9)},height:(x,z)=>4+x*.09+z*.07,terrainRevision:()=>0};
  const ownSupports=buildingGroundSupports(g,own);
  assert.ok(ownSupports.length>0);
  assert.deepEqual(buildingGroundSupports(g,foreign),ownSupports);
- assert.notDeepEqual(buildingGroundSupports(g,building('threshingFloor')),
-  buildingGroundSupports(g,{...building('threshingFloor'),team:1}),'ordinary foreign sites retain team styling');
+ assert.notDeepEqual(buildingGroundSupports(g,building('oven')),
+  buildingGroundSupports(g,{...building('oven'),team:1}),'ordinary foreign sites retain team styling');
 });
