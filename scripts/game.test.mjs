@@ -1589,11 +1589,11 @@ test("personal predispositions are stable, bounded and survive save identity",as
 test("a custom offer needs no remote report and is negotiated only after travel",async()=>{
   const {sendOffer}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);await witnessHalls(g);g.clearSelect();
   Object.assign(g.tribe(0),{food:200});Object.assign(g.tribe(1),{food:80,wood:200,hostile:false,tradeCd:0});
-  const theirWood=g.tribe(1).wood;assert.equal(sendOffer(g,1,"food","wood",20,100),true);
+  const theirWood=g.tribe(1).wood;assert.equal(sendOffer(g,1,"food","wood",20,28),true,"a carrier takes up to 28 timber home");
   const u=g.state.units.find(u=>u.customOffer);assert.equal(g.tribe(1).wood,theirWood);assert.equal(u.carry,20);
   const r=decodeGame(encodeGame(g)),ru=r.state.units.find(p=>p.id===u.id),h=r.state.buildings.find(b=>b.team===1&&b.type==="townhall");
   const entrance=r.interactionSpot(ru,h);assert.ok(entrance);ru.x=entrance.x;ru.z=entrance.z;r.tradeAI(ru,1);
-  assert.equal(ru.order,"return");assert.ok(ru.carry>0&&ru.carry<100);assert.equal(ru.carryType,"wood");
+  assert.equal(ru.order,"return");assert.ok(ru.carry>0&&ru.carry<=28);assert.equal(ru.carryType,"wood");
   assert.equal(r.tribe(1).wood+ru.carry,theirWood);
 });
 
