@@ -1516,10 +1516,11 @@ test("direct group wood orders reserve at most two workers per tree", async () =
 });
 test("continued resource theft in a rival village causes warnings and hostility; visiting does not",async()=>{
   const g=fixture(),hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),w=g.state.units.find(u=>u.team===0);
-  const tree=g.state.trees[0];tree.x=hall.x+8;tree.z=hall.z;w.node=tree;w.order="hold";w.job="wood";
+  const tree=g.state.trees[0];tree.x=hall.x+8;tree.z=hall.z;w.x=tree.x+1;w.z=tree.z;w.node=tree; // the woodcutter is physically at the rival's tree, where its people can see himw.order="hold";w.job="wood";
   const rival=g.tribe(1);rival.tension=0.1;rival.hostile=false;rival.trust=0.5;
   g.tickInfluence(5);assert.equal(rival.hostile,false);assert.ok(rival.tension<=0.1);
-  w.order="gather";for(let i=0;i<30;i++)g.tickInfluence(1);
+  w.order="gather";let t=0;for(;t<30;t++)g.tickInfluence(1);assert.ok(rival.tension>0.28,"half a minute of theft is past the warning line");
+  for(;t<600&&!rival.hostile;t++)g.tickInfluence(1); // grievance now builds by difficulty and temper, so war follows sustained theft, not 30 s
   assert.equal(rival.hostile,true);assert.ok(rival.trust<0.5);
   w.order="move";const tension=rival.tension;g.tickInfluence(1);assert.ok(rival.tension<tension);
 });
