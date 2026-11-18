@@ -9,7 +9,7 @@ import {BIRDS} from './animalFlyers';
 import {QUADS,type QuadId} from './animalSpecs';
 import {hashSeed} from './buildingParts';
 import type {Gait} from './animalPose';
-import {advancePhase,turnToward,slopePitch,easeTo,turnLean,angleDiff} from './animalMotion';
+import {advancePhase,turnToward,slopePitch,easeTo,turnLean,angleDiff,shouldSnapPresentation} from './animalMotion';
 
 export type AnimalSet='rig'|'legacy';
 export function readAnimalSet():AnimalSet{
@@ -47,7 +47,7 @@ export class AnimalAdapter{
    let gait:Gait|'fly'|'swim'|'glide'=corpse?'dead':mot.gait==='idle'?mot.idle:mot.gait,phase=mot.phase;
    if(bird&&!corpse){const sp=BIRDS[look.species as 'duck'];gait=flying?(look.species==='raptor'?'glide':'fly'):mot.gait==='idle'?'idle':'walk';phase=(now*sp.hz*(flying?1:.3)+look.seed%10/10)%1000;}
    let sm=this.smooth.get(c.id);seenIds.add(c.id);
-   if(!sm||Math.hypot(c.x-sm.x,c.z-sm.z)>3){sm={x:c.x,y:c.y,z:c.z,f:c.facing,phase:phase,pitch:0,roll:0};this.smooth.set(c.id,sm);}
+   if(!sm||shouldSnapPresentation(Math.hypot(c.x-sm.x,c.z-sm.z),Math.hypot(c.vx??0,c.vz??0))){sm={x:c.x,y:c.y,z:c.z,f:c.facing,phase:phase,pitch:0,roll:0};this.smooth.set(c.id,sm);}
    else{
     const px=sm.x,pz=sm.z;sm.x+=(c.x-sm.x)*kp;sm.z+=(c.z-sm.z)*kp;sm.y+=(c.y-sm.y)*kp;
     const pf=sm.f,py=sm.y;if(Math.hypot(c.vx??0,c.vz??0)>.05||Math.abs(Math.atan2(Math.sin(c.facing-sm.f),Math.cos(c.facing-sm.f)))>1.2)sm.f=turnToward(sm.f,c.facing,dtw,TURN_RATE[mot.gait==='trot'?1:mot.gait==='gallop'?2:0],9);void kf;

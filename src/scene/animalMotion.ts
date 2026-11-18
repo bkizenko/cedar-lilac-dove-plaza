@@ -26,3 +26,8 @@ export function turnLean(turnRate:number,speed:number,max=.12):number{
 }
 /** Per-animal idle phase offset in seconds (0..period) from an integer seed, so herds never animate in lock-step. */
 export const idleOffset=(seed:number,period=17)=>((Math.abs(Math.imul(seed|0,2654435761))>>>0)%1000)/1000*period;
+/** Drawn-position snap rule: only a real relocation (spawn reuse, capture, load) snaps the eased body to the sim position.
+ * A fast animal at 4x game speed legitimately leads the eased body by a few metres every frame; snapping at 3 m made
+ * galloping deer pop/teleport (BUG-BORIS-ANIMAL-GLITCH). `speed` is the sim velocity in m/s. */
+export const SNAP_GAP_METERS=10;
+export const shouldSnapPresentation=(gap:number,speed=0)=>!(gap<=SNAP_GAP_METERS+.6*Math.max(0,Number.isFinite(speed)?speed:0));
