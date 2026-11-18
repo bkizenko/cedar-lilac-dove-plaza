@@ -744,7 +744,8 @@ test("marked trees are felled first, and burning a hall takes stores", async () 
   g.dealDamage(atk, foe);
   assert.equal(foe.team, 0);
   assert.equal(foe.hp,1,"surrender never heals the wounded civilian");
-  assert.equal(foe.enslavedFrom,1);
+  // Surrender now makes a guarded prisoner who is escorted to custody (captivity comes later, on arrival).
+  assert.equal(foe.prisoner?.originTeam,1);assert.equal(foe.prisoner?.captorTeam,0);assert.equal(foe.prisoner?.phase,"escorting");
   assert.equal(g.popNow(0), pop + 1);
   g.tribe(1).food = 100;
   g.tribe(0).food = 10;
