@@ -25,7 +25,7 @@ test('a fed tended breeding pair raises a saved kid; milk is carried before it a
  const {g,pen}=fixture();animal(g,pen,'female');animal(g,pen,'male');assert.equal(assignHusbandry(g,pen.id),true);
  drive(g,270);assert.equal(penAnimals(g,pen.id).length,3);const kid=penAnimals(g,pen.id).find(a=>g.state.time-a.born<HERD.maturity);assert.ok(kid);
  drive(g,100);assert.ok(foodInventory(g.tribe(0)).milk>0);assert.ok(g.state.units.some(u=>u.husbandryWork));
- const copy=decodeGame(encodeGame(g));assert.deepEqual(copy.state.livestock,g.state.livestock);assert.deepEqual(copy.state.buildings.find(b=>b.id===pen.id).pasture,pen.pasture);
+ const copy=decodeGame(encodeGame(g));assert.deepEqual(copy.state.livestock,JSON.parse(JSON.stringify(g.state.livestock)),'saved herd matches (JSON stores -0 velocity as 0)');assert.deepEqual(copy.state.buildings.find(b=>b.id===pen.id).pasture,pen.pasture);
  const raw=encodeGame(g);raw.state.livestock[0].milk=1e8;assert.throws(()=>decodeGame(raw));
 });
 test('winter husbandry fetches finite plant feed physically; fish cannot feed goats and no keeper creates no produce',()=>{
