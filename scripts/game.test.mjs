@@ -948,6 +948,7 @@ function cornerstoneValley() {
 
 test("frontier outposts claim open ground without a two-post cap but retain spacing", () => {
   const {g} = cornerstoneValley();
+  for (const x of [140, 150, 230, 320]) g.stampVision(x, 38, 20, 1); // a site must be explored before it can be claimed
   assert.equal(g.placeBuilding("cornerstone", 20, 38), false);
   assert.equal(g.settlementIssue("cornerstone", 90, 38), null, "open ground can be claimed");
   assert.equal(g.placeBuilding("cornerstone", 140, 38), true);
