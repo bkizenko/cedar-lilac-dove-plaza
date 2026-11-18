@@ -503,6 +503,8 @@ export type Tribe = {
   tech: number;
   lastRaid: number;
   trust?: number;
+  /** Set once a trader from this society has completed a first actual visit at the player's village; quick repeat trades open only after that. */
+  visitorIntroduced?: true;
   recoveryUntil?: number;
   compactUntil?: number;
   intent?: string;

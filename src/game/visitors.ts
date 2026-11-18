@@ -36,6 +36,11 @@ export function tickVisitors(g:Game,dt:number) {
     u.job=null;u.jobLock=false;u.stuckT=0;u.workReason='Carrying goods to meet another community';g.state.visitorTimer=360;break;
   }
 }
+/** A first visit is complete once a waiting trader at the player's village has been
+ * answered (bought from or declined) or has waited out the visit. Interrupted
+ * journeys never count. */
+export function visitorIntroduced(g:Game,team:number){return g.tribe(team)?.visitorIntroduced===true;}
+function completeVisitorVisit(g:Game,u:Unit){if(u.visit?.phase==='waiting'&&u.visit.team===undefined&&g.tribe(u.team))g.tribe(u.team).visitorIntroduced=true;}
 function cancelVisit(u:Unit){
   u.visit=undefined;u.order='return';u.node=null;u.target=null;u.stuckT=0;
   u.recalled=true;u.stationOnArrival=false;
@@ -49,7 +54,7 @@ export function visitorAI(g:Game,u:Unit,dt:number) {
   if(u.stuckT>8){cancelVisit(u);return true;}
   if(m.phase==='waiting') {
     m.wait+=dt;u.vx=0;u.vz=0;
-    if(m.wait>=120){m.phase='return';u.order='move';u.workReason='Returning after the trading visit';}return true;
+    if(m.wait>=120){completeVisitorVisit(g,u);m.phase='return';u.order='move';u.workReason='Returning after the trading visit';}return true;
   }
   const approach=g.interactionSpot(u,home);
   if(!approach){cancelVisit(u);return true;}
@@ -89,7 +94,7 @@ export function visitorPrice(g:Game,u:Unit,give:ResKind){if(!u.visit||u.visit.ph
  * the answer home before their society changes its next offer. */
 export function declineVisitorVisit(g:Game,id:number){
  const u=g.state.units.find(p=>p.id===id&&p.hp>0);if(!u||u.visit?.phase!=='waiting'||u.visit.team!==undefined||!u.carryType||!g.visibleAt(u.x,u.z))return {accepted:false,reason:'This trader is no longer here with an offer'};
- if(!carryVisitorRefusal(g,u,visitorQuoteTerms(g,u.team,u.carryType,u.carry,g.tribe(0).age)))return {accepted:false,reason:'The trader needs to be here with a valid local offer'};u.visit.phase='return';u.order='move';u.node=null;u.target=null;u.workReason='Taking the declined offer and your answer home';const reason='Offer declined. The same trader is taking your answer and unchanged goods home.';g.banner(reason,5);return {accepted:true,reason};
+ if(!carryVisitorRefusal(g,u,visitorQuoteTerms(g,u.team,u.carryType,u.carry,g.tribe(0).age)))return {accepted:false,reason:'The trader needs to be here with a valid local offer'};completeVisitorVisit(g,u);u.visit.phase='return';u.order='move';u.node=null;u.target=null;u.workReason='Taking the declined offer and your answer home';const reason='Offer declined. The same trader is taking your answer and unchanged goods home.';g.banner(reason,5);return {accepted:true,reason};
 }
 /** Quotes and acceptance use the same actual cache frontage, including remote
  * stores and relocated settlements. The original camp circle is not a cache. */
@@ -116,7 +121,7 @@ export function acceptVisitorTrade(g:Game,id:number,give:ResKind){
  g.spend(0,{[give]:price});
  if(purchase.kind==='food')receiveFood(g,0,purchase.amount,purchase.food);else g.tribe(0)[purchase.kind]+=purchase.amount;
  u.carry=price;u.carryType=give;u.carryFood=give==='food'?'provisions':undefined;
- u.visit!.phase='return';u.order='move';g.tribe(u.team).trust=Math.min(1,(g.tribe(u.team).trust||0)+0.1);
+ completeVisitorVisit(g,u); u.visit!.phase='return';u.order='move';g.tribe(u.team).trust=Math.min(1,(g.tribe(u.team).trust||0)+0.1);
  const label=(kind:ResKind)=>kind==='wood'?'logs':kind;
  const reason=`Paid ${price} ${label(give)}; received ${purchase.amount} ${label(purchase.kind)} in village stores. The trader carries your payment home.`;
  lifeEvent(g,0,`Trade: ${reason}`);
