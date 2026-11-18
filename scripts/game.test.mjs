@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { predisposition } from "../src/game/people.ts";
 import { Game } from "../src/game/sim.ts";
 import { encodeGame, decodeGame } from "../src/game/persistence.ts";
+import { finishTradeLoading } from "./helpers/finish-trade-loading.mjs";
 import { neighborIntent, farmWork, crop } from "../src/game/settlement.ts";
 const fixture = () => {
   const g = new Game();
@@ -1072,6 +1073,7 @@ test("negotiated goods travel with a saved carrier instead of arriving instantly
   assert.equal(proposeShipment(g, 1, "food", "wood", 30), true);
   const carrier = g.state.units.find(u => u.team === 0 && u.order === "trade");
   assert.deepEqual(carrier.trade, quote);
+  finishTradeLoading(g, carrier);
   assert.equal(carrier.carry, 30);
   assert.equal(g.tribe(0).food, 170);
   assert.equal(g.tribe(0).wood, wood);
@@ -1419,7 +1421,7 @@ test("market knowledge improves quoted terms without generating bonus cargo", as
   const u=g.state.units.find(u=>u.team===0&&u.type==="worker");
   assert.equal(g.dispatchTrade(u,improved,1),true);
   const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x;u.z=hall.z;
-  const stock=g.tribe(1).wood;g.tradeAI(u,0.1);
+  finishTradeLoading(g,u);u.x=hall.x;u.z=hall.z;const stock=g.tribe(1).wood;g.tradeAI(u,0.1);
   assert.equal(u.carry,improved.getAmt);assert.equal(g.tribe(1).wood,stock,"the goods were already set aside at acceptance");
 });
 test("quick exchange cannot conjure goods without a discovered partner", () => {
@@ -1453,10 +1455,10 @@ test("camp raiders steal and haul real cargo but respect the opening grace and q
 test("a stolen outbound shipment cannot exchange the missing goods", async () => {
   const g=fixture();g.vision.fill(1);await witnessHalls(g);Object.assign(g.tribe(1),{stone:100,food:80,trust:1,hostile:false,tradeCd:0});
   const w=g.state.units.find(u=>u.team===0&&u.type==="worker");
-  assert.equal(g.dispatchTrade(w,{give:"food",giveAmt:20,get:"stone",getAmt:8},1),true);
+  assert.equal(g.dispatchTrade(w,{give:"food",giveAmt:20,get:"stone",getAmt:8},1),true);finishTradeLoading(g,w);
   w.carry-=4;const before=[g.tribe(1).food,g.tribe(1).stone];g.tradeAI(w,0.1);
   assert.equal(w.order,"return");assert.equal(w.carry,16);assert.equal(w.trade,null);
-  assert.deepEqual([g.tribe(1).food,g.tribe(1).stone],[before[0],before[1]+8],"canceled goods return to seller availability, not player stores");
+  assert.deepEqual([g.tribe(1).food,g.tribe(1).stone],before,"the seller set nothing aside, so a cancelled exchange leaves its stock as it was and credits no player stores");
 });
 
 test("territory control cannot create daily stock without harvesting", () => {
@@ -1590,7 +1592,7 @@ test("a custom offer needs no remote report and is negotiated only after travel"
   const {sendOffer}=await import("../src/game/barter.ts");const g=fixture();g.vision.fill(2);await witnessHalls(g);g.clearSelect();
   Object.assign(g.tribe(0),{food:200});Object.assign(g.tribe(1),{food:80,wood:200,hostile:false,tradeCd:0});
   const theirWood=g.tribe(1).wood;assert.equal(sendOffer(g,1,"food","wood",20,28),true,"a carrier takes up to 28 timber home");
-  const u=g.state.units.find(u=>u.customOffer);assert.equal(g.tribe(1).wood,theirWood);assert.equal(u.carry,20);
+  const u=g.state.units.find(u=>u.order==="trade"&&u.tradeTeam===1);assert.ok(u);finishTradeLoading(g,u);assert.equal(g.tribe(1).wood,theirWood);assert.equal(u.carry,20);
   const r=decodeGame(encodeGame(g)),ru=r.state.units.find(p=>p.id===u.id),h=r.state.buildings.find(b=>b.team===1&&b.type==="townhall");
   const entrance=r.interactionSpot(ru,h);assert.ok(entrance);ru.x=entrance.x;ru.z=entrance.z;r.tradeAI(ru,1);
   assert.equal(ru.order,"return");assert.ok(ru.carry>0&&ru.carry<=28);assert.equal(ru.carryType,"wood");
