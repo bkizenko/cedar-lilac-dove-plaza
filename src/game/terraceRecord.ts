@@ -12,7 +12,8 @@ const num=(v:unknown,lo:number,hi:number)=>typeof v==='number'&&Number.isFinite(
 export function validTerraceRecord(r:unknown):r is TerraceRecord{
  const o=r as TerraceRecord|null;if(!o||typeof o!=='object'||Array.isArray(o))return false;
  const keys=['k','n','rise','tread','soil','sun','frost','wet','eros','alt','slope'];if(Object.keys(o).some(k=>!keys.includes(k)))return false;
- return (o.k==='none'||TERRACE_KIND_LIST.includes(o.k))&&Number.isInteger(o.n)&&o.n>=1&&o.n<=40&&num(o.rise,0,8)&&num(o.tread,0,40)&&num(o.soil,0,6)&&num(o.sun,-1,1)&&num(o.frost,0,1)&&num(o.wet,0,1)&&num(o.eros,0,1)&&num(o.alt,-5,400)&&num(o.slope,0,90);
+ // a flat field is one tread as deep as the field: fields drag up to 16 farm depths (131 m), so tread/n bounds follow the largest field (was 40: 8x+ fields made the save unloadable)
+ return (o.k==='none'||TERRACE_KIND_LIST.includes(o.k))&&Number.isInteger(o.n)&&o.n>=1&&o.n<=200&&num(o.rise,0,8)&&num(o.tread,0,200)&&num(o.soil,0,6)&&num(o.sun,-1,1)&&num(o.frost,0,1)&&num(o.wet,0,1)&&num(o.eros,0,1)&&num(o.alt,-5,400)&&num(o.slope,0,90);
 }
 export const NUANCE_TAG_LIST=['Natural shelf','Hollow: damp','Hollow: frost','Ridge: windy','Sun slope','Shade slope','Broken ground','Slip risk','Flood risk','Wet ground'] as const;
 export function validSiteTags(t:unknown):t is string[]{return Array.isArray(t)&&t.length<=4&&t.every(x=>typeof x==='string'&&(NUANCE_TAG_LIST as readonly string[]).includes(x));}

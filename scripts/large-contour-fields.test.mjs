@@ -4,7 +4,7 @@ const {Engine}=await import('../src/game/engine.ts');
 import {Game} from '../src/game/sim.ts';import {BUILDINGS} from '../src/game/constants.ts';
 import {maximumPlotAxisMultiple,dragPlot,validPlot,plotArea,fieldCrewSlots,fieldSeedIssue} from '../src/game/plots.ts';
 import {buildingCost} from '../src/game/construction.ts';import {planExpansion} from '../src/game/plotExpansion.ts';import {farmHarvestEstimate,farmWork} from '../src/game/settlement.ts';
-import {surveyFieldTopography,fieldTopographyIssue} from '../src/game/plotTopography.ts';
+import {surveyFieldTopography,fieldTopographyIssue} from '../src/game/plotTopography.ts';import {fieldTerrain} from '../src/game/fieldTerrain.ts';import {terraceYieldFor} from '../src/game/terraceRuntime.ts';
 import {contourPlantSites,CROP_ART_RULES} from '../src/scene/contourFields.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';import {buildingGeos} from '../src/scene/meshes.ts';import {staffField,fieldWorkStep} from '../src/game/fieldWork.ts';
 const base=BUILDINGS.farm,maximum={w:base.w*16,d:base.d*16};
@@ -17,7 +17,7 @@ test('farm-only dimensions allow one 256-area field; other structures keep their
 });
 test('large fields conserve seeds, area-scaled yield/labor and save dimensions',()=>{
  const g=fixture();assert.equal(buildingCost('farm',g,0,maximum).seeds,1024);assert.ok(g.placeBuilding('farm',0,0,0,maximum));const b=g.state.buildings.at(-1);assert.equal(g.tribe(0).seeds,976);
- const small=g.makeBld('farm',0,0,0);const yieldSmall=farmHarvestEstimate(g,small),yieldLarge=farmHarvestEstimate(g,b);assert.ok(Math.abs(yieldLarge-256*yieldSmall)<256,'only integer estimate rounding may differ');
+ const small=g.makeBld('farm',0,0,0);const yieldSmall=farmHarvestEstimate(g,small),yieldLarge=farmHarvestEstimate(g,b);const soil=fieldTerrain(g,b).grain/fieldTerrain(g,small).grain*terraceYieldFor(g,b,'grain')/terraceYieldFor(g,small,'grain'); /* a large field samples soil across its footprint, and a placed field carries its surveyed terrace record (terrain v2) */assert.ok(Math.abs(yieldLarge-256*yieldSmall*soil)<256*soil+1,'only integer estimate rounding may differ');
  const u=g.spawnUnit('worker',0,0,0);farmWork(g,u,small,1);farmWork(g,u,b,1);assert.ok(Math.abs(b.crop.planted*256-small.crop.planted)<1e-10);
  const loaded=decodeGame(encodeGame(g));const restored=loaded.state.buildings.find(x=>x.id===b.id);assert.equal(restored.w,maximum.w);assert.equal(restored.d,maximum.d);assert.equal(loaded.tribe(0).seeds,976);
 });
@@ -27,7 +27,9 @@ test('keyboard sizing and paid expansion use the same farm-only larger limit',()
 });
 test('full large footprint detects off-centre water/cliffs while retaining a rolling usable slope',()=>{
  const plot={x:0,z:0,...maximum},plane={height:(x,z)=>30+x*.1+z*.06,waterAt:()=>0};const start=performance.now(),s=surveyFieldTopography(plane,plot);console.log(JSON.stringify({largeFieldSurvey:{samples:s.samples,milliseconds:performance.now()-start}}));assert.equal(s.samples,4489);assert.equal(fieldTopographyIssue(plane,plot),null);
- assert.match(fieldTopographyIssue({height:(x,z)=>Math.abs(x-42)<3&&Math.abs(z+38)<3?0:30,waterAt:()=>1},plot),/wet/);
+ // since 2cf9d693 up to 12% wet edge ground is trimmed, not refused: a small wet pit is allowed as wet, a wet half-field is refused
+ assert.doesNotMatch(fieldTopographyIssue({height:(x,z)=>Math.abs(x-42)<3&&Math.abs(z+38)<3?0:30,waterAt:()=>1},plot)||'',/wet/);
+ assert.match(fieldTopographyIssue({height:()=>30,waterAt:(x)=>x>0?31:0},plot),/wet/);
  assert.match(fieldTopographyIssue({height:(x,z)=>30+Math.max(0,3-Math.abs(x-42))*3,waterAt:()=>0},plot),/steep/);
 });
 test('bounded crop samples cover all four quarters and full extents at different contour angles',()=>{
@@ -39,10 +41,10 @@ test('one field can employ more than12 actual farmers without creating workers o
 });
 test('seed preview matches the real action; throttled dragging still refreshes the exact final click',()=>{
  const g=fixture();g.state.placing='farm';g.tribe(0).seeds=0;let ground={x:0,z:0},green=null,calls=0;const original=g.placementIssue.bind(g);g.placementIssue=(...a)=>{calls++;return original(...a);};
- const e=Object.create(Engine.prototype);Object.assign(e,{game:g,pointer:{x:0,y:0},plotStart:null,plotPointerStart:null,plotWidth:2,plotDepth:1,ghostPos:{x:0,z:0},view:{groundAt:()=>ground,setLinePreview(){},setGhost(...a){green=a[4];}},pushHud(){}});
+ const e=Object.create(Engine.prototype);Object.assign(e,{game:g,pointer:{x:0,y:0},plotStart:null,plotPointerStart:null,plotWidth:2,plotDepth:1,ghostPos:{x:0,z:0},view:{groundAt:()=>ground,setLinePreview(){},setFieldSnap(){},setGhost(...a){green=a[4];}},pushHud(){}});
  e.updateGhost(true);assert.equal(green,false);assert.equal(g.state.placeIssue,fieldSeedIssue(0,8));assert.equal(g.placeBuilding('farm',0,0,0,e.plotSize),false);
  const before=calls;for(let i=0;i<40;i++)e.updateGhost();assert.equal(calls,before,'no repeated full-area survey within preview interval');
- g.tribe(0).seeds=100;ground={x:20,z:20};e.leftClick(0,0,false);const b=g.state.buildings.at(-1);assert.ok(b);assert.equal(b.x,20);assert.equal(b.z,20);assert.equal(g.tribe(0).seeds,92);assert.equal(green,true);
+ g.tribe(0).seeds=100;ground={x:20,z:20};e.leftClick(0,0,false);const b=g.state.buildings.at(-1);assert.ok(b);assert.ok(Math.abs(b.x-20)<.5&&Math.abs(b.z-20)<.5,'final click places the field (edge snapping may nudge it, 93bbf13b)');assert.equal(g.tribe(0).seeds,92);assert.equal(green,true);
  g.placementIssue=original;
 });
 
