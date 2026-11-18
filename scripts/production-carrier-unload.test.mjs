@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{nativeDairyVillage}from'./helpers/native-dairy-village.mjs';import{decodeGame}from'../src/game/persistence.ts';import{productionIssue,unloadIdleCarriers,idleLoadedCarrier,itemCapacity,storedItemUnits}from'../src/game/production.ts';
+let opening;const fixture=()=>{opening??=nativeDairyVillage();const g=decodeGame(structuredClone(opening.save)),u=g.state.units.find(u=>u.id===opening.worker);g.tribe(0).items={...g.tribe(0).items,rawMeat:4};u.order='idle';u.node=null;u.itemCargo={bone:2};return{g,u,hearth:opening.hearth};};
+test('a loaded idle adult beside a store with space unloads for real, refilling the craft actor pool',()=>{const{g,u,hearth}=fixture(),before=g.tribe(0).items.bone||0;
+ assert.match(productionIssue(g,'cookMeat',hearth,u.id),/Carriers are loaded/);assert.equal(idleLoadedCarrier(g,u),true);
+ assert.ok(unloadIdleCarriers(g)>=1);assert.equal(u.order,'return');assert.equal(g.tribe(0).items.bone||0,before,'no goods enter stock before the carrier reaches the store');
+ const end=g.state.time+60;while(u.itemCargo&&g.state.time<end){g.state.paused=false;g.step(.2);}assert.deepEqual(g.simulationErrors,[]);
+ assert.equal(u.itemCargo,undefined);assert.equal(g.tribe(0).items.bone,before+2,'exactly the carried bones are delivered');
+ assert.doesNotMatch(productionIssue(g,'cookMeat',hearth,u.id)||'',/empty-handed|Carriers are loaded/);});
+test('a full material store keeps the load and says why instead of reporting a missing adult',()=>{const{g,u,hearth}=fixture();const items=g.tribe(0).items;items.bone=(items.bone||0)+Math.ceil(itemCapacity(g,0)-storedItemUnits(g,0))*4+10;assert.ok(storedItemUnits(g,0)>itemCapacity(g,0));
+ const issue=productionIssue(g,'cookMeat',hearth,u.id);assert.ok(/store is full|storage is full/i.test(issue),issue);assert.equal(unloadIdleCarriers(g),0);assert.equal(u.order,'idle');assert.deepEqual(u.itemCargo,{bone:2});});
