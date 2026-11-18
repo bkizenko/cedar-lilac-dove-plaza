@@ -194,7 +194,7 @@ test("acoustic score crossfades, holds peace, and releases audio", async () => {
   decks[1].listeners.ended();
   score.update("adventure", 10, false);
   assert.equal(decks[1].paused, true, "a piece is followed by quiet time");
-  score.update("adventure", 110, false);
+  score.update("adventure", 205, false); // rest is random 90-210 s (MUSIC_REST_MIN+SPAN); 10 + 205 s covers the longest
   assert.equal(decks[1].paused, false, "music resumes after the rest");
   score.setMuted(true);
   assert.ok(decks.every((a) => a.volume === 0));
