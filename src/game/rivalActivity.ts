@@ -177,10 +177,13 @@ export function cancelSocietyMission(g:Game,u:Unit){if(!u.societyMissionId)retur
 export function resumeSocietyMission(g:Game,id:number){const m=state(g).rivalMissions?.find(m=>m.id===id&&m.phase==='suspended');if(!m||m.actors.some(a=>{const u=g.state.units.find(u=>u.id===a.id&&u.hp>0&&u.team===m.team);return !u||u.emergency||u.prisoner||u.jobLock||u.conflictIntent==='occupy'||u.conflictIntent==='capture'||!['idle','hold'].includes(u.order)||hasTaskCommitment({...u,societyMissionId:undefined} as RivalActivityUnit);}))return false;m.phase='returning';m.blockedReason='Resuming the physical return with remaining provisions';return true;}
 /** Physical packs keep feeding the same person even after an explicit interruption.
  * Call once per tick; ordinary remote-store needs must exclude this actor. */
+/** Who already ate and drank from a mission pack this tick (game time). A mission that completes later in the same
+ * tick must not also charge the village store for that person (AUD-TEST-SOCIETY-LIVE-WATER). */
+const packFedAt=new WeakMap<Unit,number>();
 export function tickSocietyMissionNeeds(g:Game,dt:number){
  if(!Number.isFinite(dt)||dt<=0)return;
  for(const m of state(g).rivalMissions||[]){if(!active(m)||m.kind==='raid')continue;const u=g.state.units.find(u=>u.id===m.actors[0]?.id&&u.hp>0&&u.team===m.team);if(!u)continue;
-  const demand=FOOD_PER_PERSON_SECOND*dt,waterDemand=g.state.survivalVersion===1?RIVAL_ACTIVITY_RULES.waterPerSecond*dt:0,food=Math.min(m.food,demand),water=Math.min(m.waterLiters,waterDemand);m.food-=food;m.waterLiters-=water;
+  const demand=FOOD_PER_PERSON_SECOND*dt,waterDemand=g.state.survivalVersion===1?RIVAL_ACTIVITY_RULES.waterPerSecond*dt:0,food=Math.min(m.food,demand),water=Math.min(m.waterLiters,waterDemand);m.food-=food;m.waterLiters-=water;packFedAt.set(u,g.state.time);
   recordRivalActivity(g,{team:m.team,partner:m.partner,kind:m.kind,stage:'food_used',amount:food,missionId:m.id});recordRivalActivity(g,{team:m.team,partner:m.partner,kind:m.kind,stage:'water_used',amount:water,missionId:m.id});
   const stock=g.tribe(m.team).survival;if(stock)stock.waterConsumedLiters+=water;
   const hunger=u.hunger||0,thirst=u.thirstSeconds||0;u.hunger=Math.max(0,hunger+(food+1e-9<demand?dt:-dt*3));u.thirstSeconds=Math.max(0,thirst+(water+1e-9<waterDemand?dt:-dt*3));
@@ -188,7 +191,7 @@ export function tickSocietyMissionNeeds(g:Game,dt:number){
   if(m.phase!=='suspended'&&(u.hunger>RIVAL_ACTIVITY_RULES.foodGraceSeconds||u.thirstSeconds>RIVAL_ACTIVITY_RULES.waterGraceSeconds))returnMission(g,m,'Travel provisions exhausted; returning with the same messenger');
  }
 }
-export function societyMissionIndependentNeeds(g:Game,u:Unit){const m=actorMission(g,u);return !!m&&m.kind!=='raid'&&active(m);}
+export function societyMissionIndependentNeeds(g:Game,u:Unit){if(packFedAt.get(u)===g.state.time)return true;const m=actorMission(g,u);return !!m&&m.kind!=='raid'&&active(m);}
 /** This adapter must precede ordinary worker AI, with its actors registered in
  * commitments and excluded from remote food/water consumption by the caller. */
 export function societyMissionAI(g:Game,u:Unit,dt:number){
