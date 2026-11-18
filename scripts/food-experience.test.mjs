@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {nativeDairyVillage} from './helpers/native-dairy-village.mjs';
 import {decodeGame,encodeGame} from '../src/game/persistence.ts';
-import {foodInventory,consumeAndSpoilFood,receiveFood} from '../src/game/pantry.ts';
+import {foodInventory,consumeAndSpoilFood,receiveFood,FOOD_NOURISHMENT} from '../src/game/pantry.ts';
 import {FOOD_TASTE,FOOD_EXPERIENCE_RULES,foodExperienceReport} from '../src/game/foodExperience.ts';
 import {villageAppeal} from '../src/game/migration.ts';
 import {PRODUCTION_RECIPES} from '../src/game/production.ts';
@@ -17,7 +17,7 @@ test('actual nourishment eaten earns taste, never delivered stock or spoilage; b
  t.food=100;t.foodLots={bread:100};const before=foodInventory(t).bread;
  assert.equal(consumeAndSpoilFood(g,0,1,1),0);const e=t.foodExperience;
  assert.ok(Math.abs(e.nourishmentEaten-1)<1e-10);assert.ok(Math.abs(e.hedons-FOOD_TASTE.bread)<1e-10);assert.equal(e.rawUnits,0);
- assert.ok(before-foodInventory(t).bread>1/1.2,'spoilage is debited separately, without earning pleasure');
+ assert.ok(before-foodInventory(t).bread>1/FOOD_NOURISHMENT.bread,'spoilage is debited separately (bread nourishment 1.3 since f63c14bf), without earning pleasure');
  const prior=structuredClone(e);consumeAndSpoilFood(g,0,0,10);assert.deepEqual(e,prior,'zero meal requirement/spoilage creates no meal credit');
 });
 test('tunable taste rewards slower bread separately from porridge without changing recipes or emergency nutrition',()=>{
