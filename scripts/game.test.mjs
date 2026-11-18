@@ -647,8 +647,12 @@ test("war interrupts a trade without creating or teleporting a refund",async()=>
     u = g.state.units.find((u) => u.team === 0 && u.type === "worker");
   g.tribe(0).food = 100;
   Object.assign(g.tribe(1),{stone:100,food:80,trust:1,hostile:false}); // A willing, sufficiently supplied partner.
+  await witnessHalls(g);
   assert.equal(g.dispatchTrade(u, { give: "food", giveAmt: 20, get: "stone", getAmt: 8 }, 1),true);
+  finishTradeLoading(g, u); // the carrier first loads the food at the stores
   g.tribe(1).hostile = true;
+  // A carrier on the road only learns of the war when it reaches the hostile hall (news is not instant).
+  const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall"),spot=g.interactionSpot(u,hall);u.x=spot.x;u.z=spot.z;
   g.tradeAI(u, 0.1);
   assert.equal(g.tribe(0).food, 80);
   assert.equal(u.carry, 20);
