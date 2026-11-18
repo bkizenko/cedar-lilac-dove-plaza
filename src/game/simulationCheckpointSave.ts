@@ -1,7 +1,7 @@
 import {SAVE_KEY} from './constants';
 import {saveStorage} from './saveStore';
 import {parseStoredSave,SAVE_CODEC_RULES} from './storageCodec';
-import {validateGameSave} from './persistence';
+import {validateGameSave,validateGameSnapshotForWrite} from './persistence';
 import {commitPreparedAutosave,currentSaveGeneration,invalidateAutosaveWrites,matchingSaveSlots,readSaveSlots,type SaveStorage} from './save';
 import type {AuthoritativeCheckpoint,CheckpointAuthority} from './simulationCheckpoint';
 
@@ -26,7 +26,7 @@ export class SimulationCheckpointSaver{
    const checkpoint=await this.authority.checkpoint();
    if(!current()||checkpoint.sessionEpoch!==epoch)return no('superseded','Village changed before checkpoint completed');
    if(typeof checkpoint.serialized!=='string'||checkpoint.serialized.length>SAVE_CODEC_RULES.maximumDecodedBytes*2)return no('failed','Invalid checkpoint size');
-   const parsed=parseStoredSave(checkpoint.serialized);validateGameSave(parsed);
+   const parsed=parseStoredSave(checkpoint.serialized);validateGameSnapshotForWrite(parsed);
    const raw=parsed as {savedAt?:number;state:{time:number;seed:number}};
    const context=checkpoint.context;
    if(!context.started||context.awaitingStart)return no('failed','The village has not started');

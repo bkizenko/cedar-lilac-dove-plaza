@@ -86,25 +86,18 @@ test(
       "own-QA-original-failure",
     ),
 );
-test("actual current new-world configuration preserves its checkpoint through legacy-full5MiB recovery and refuses real storage failure", () => {
+// Old-save compatibility was dropped (Boris 2026-11-11): the legacy uncompressed ":bak" migration is no longer
+// exercised; a fresh village must still be protected inside a 5 MiB store and a real storage failure must refuse.
+test("actual current new-world configuration protects its checkpoint within 5MiB and refuses real storage failure", async () => {
   const g = fresh(),
     e = engine(g),
-    legacy = " \n" + JSON.stringify({ ...encodeGame(g), savedAt: 123 }) + "\n ",
     storage = new QuotaStorage(5 * 1024 * 1024),
     originalStorage = globalThis.localStorage;
-  storage.setItem(SAVE_KEY + ":bak", legacy);
-  let sawExactMigration = false;
-  const set = storage.setItem.bind(storage);
-  storage.setItem = (key, value) => {
-    set(key, value);
-    if (key === SAVE_KEY + ":bak" && unpackStoredJson(value) === legacy) sawExactMigration = true;
-  };
   globalThis.localStorage = storage;
   try {
     const oldFood = g.tribe(0).food,
       oldSeed = g.state.seed;
-    assert.equal(e.configureNewWorld({ size: 1040, layout: "pangaea", difficulty: "hard" }), true);
-    assert.equal(sawExactMigration, true);
+    assert.equal(await e.configureNewWorld({ size: 1040, layout: "pangaea", difficulty: "hard" }), true);
     assert.equal(e.game.state.difficulty, "hard");
     assert.equal(e.game.tribe(0).food, 102);
     const checkpoint = parseStoredSave(storage.getItem(SAVE_KEY + ":protected"));
@@ -116,7 +109,7 @@ test("actual current new-world configuration preserves its checkpoint through le
     storage.setItem = () => {
       throw new DOMException("blocked", "QuotaExceededError");
     };
-    assert.equal(e.configureNewWorld({ difficulty: "easy" }), false);
+    assert.equal(await e.configureNewWorld({ difficulty: "easy" }), false);
     assert.equal(e.game.state, now);
     assert.deepEqual([...storage.values], held);
   } finally {

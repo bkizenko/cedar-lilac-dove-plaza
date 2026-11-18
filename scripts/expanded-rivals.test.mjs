@@ -15,7 +15,9 @@ test('all four generated societies have people, production, identity and saved k
 });
 test('later faction IDs take part in trade, hostility and conquest checks',()=>{
  const g=new Game();g.reset(4,3);g.enterIsland();g.vision.fill(2);const t=g.tribe(5);Object.assign(t,{hostile:false,trust:1,wood:0,stone:500,tradeCd:0});g.tribe(0).wood=100;
- assert.ok(quoteShipment(g,5,'wood','stone',20).deal);g.makeHostile(5);assert.equal(g.isFoe(0,5),true);
+ // Trade needs a physically witnessed settlement (map vision alone is not knowledge): a player adult stands at the fifth society's hall for one review.
+ {const hall=g.state.buildings.find(b=>b.team===5&&b.type==='townhall');const w=g.spawnUnit('worker',hall.x+14,hall.z,0);w.order='hold';g.state.time+=2.1;}
+ assert.ok(quoteShipment(g,5,'wood','stone',20).deal,JSON.stringify(quoteShipment(g,5,'wood','stone',20)));g.makeHostile(5);assert.equal(g.isFoe(0,5),true);
  for(const team of [1,2,4]){g.tribe(team).alive=false;g.state.units=g.state.units.filter(u=>u.team!==team);}
  g.state.time=200;g.state.conquestAt=200;g.checkVictory();assert.equal(g.state.ended,null,'a living fourth rival prevents conquest');
  g.tribe(5).alive=false;g.state.units=g.state.units.filter(u=>u.team!==5);g.state.conquestAt=undefined;g.checkVictory();assert.equal(g.state.ended,null,'natural collapse never ends the world');g.state.conquestAt=200;g.checkVictory();assert.equal(g.state.ended,'win');

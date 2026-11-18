@@ -503,6 +503,8 @@ test("paid unseen town creation and real offscreen destruction leave a paid lega
  assert.equal(knownSettlementSite(g,1).x,0,'no redirection to the new unseen hall');
  builder=g.state.units.find(u=>u.id===builderId);builder.order='hold';g.clearSelect();g.selectEntity(builder);
  assert.equal(sendOffer(g,1,'food','wood',10,10),true);
+ // Paid trade cargo is loaded physically from a store after dispatch, so step until the carrier holds it.
+ for(let i=0;i<1200&&builder.carry<10;i++)step(g,.1);
  assert.equal(builder.carry,10);assert.deepEqual({x:builder.settlementJourney.x,z:builder.settlementJourney.z},{x:0,z:0});
  const raw=JSON.parse(JSON.stringify(encodeGame(g)));delete raw.state.observedSettlements;
  for(const u of raw.state.units)delete u.settlementJourney;

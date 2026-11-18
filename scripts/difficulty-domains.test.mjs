@@ -235,7 +235,7 @@ test("actual rival strategic review cooldown and witnessed border tension causal
   metrics.push({ strategyAndContact: results });
 });
 
-test("real new-world configuration protects current village, carries selected preset, preserves restart preset and refuses unprotected replacement", () => {
+test("real new-world configuration protects current village, carries selected preset, preserves restart preset and refuses unprotected replacement", async () => {
   const oldStorage = globalThis.localStorage,
     values = new Map();
   globalThis.localStorage = {
@@ -252,17 +252,18 @@ test("real new-world configuration protects current village, carries selected pr
       view: { rebuild() {}, look: { set() {} } },
       audio: { unlock() {} },
       pushHud() {},
+      canvas: { focus() {} },
     });
     const oldSeed = e.game.state.seed;
     assert.equal(
-      e.configureNewWorld({ size: 1040, layout: "continents", difficulty: "hard" }),
+      await e.configureNewWorld({ size: 1040, layout: "continents", difficulty: "hard" }),
       true,
     );
     assert.equal(e.game.state.difficulty, "hard");
     assert.equal(e.game.world.options.layout, "continents");
     assert.equal(parseStoredSave(values.get(SAVE_KEY + ":protected")).state.seed, oldSeed);
     near(e.game.tribe(0).food, 120 * DIFFICULTIES.hard.provisions);
-    e.restart({ size: 1040, layout: "pangaea" });
+    assert.equal(await e.restart({ size: 1040, layout: "pangaea" }), true);
     assert.equal(e.game.state.difficulty, "hard");
     const state = e.game.state;
     globalThis.localStorage = {
@@ -271,7 +272,7 @@ test("real new-world configuration protects current village, carries selected pr
         throw new Error("quota");
       },
     };
-    assert.equal(e.configureNewWorld({ difficulty: "easy" }), false);
+    assert.equal(await e.configureNewWorld({ difficulty: "easy" }), false);
     assert.equal(e.game.state, state);
     assert.match(e.game.state.banner, /Export it/);
   } finally {

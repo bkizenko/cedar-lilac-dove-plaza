@@ -1,6 +1,6 @@
 import {applyEngineReadQuery,isEngineReadQuery} from './engineReadModels';
 import {captureSimulationPresentation} from './simulationRenderProjection';
-import {decodeGame,encodeGame,validateGameSave} from './persistence';
+import {decodeGame,encodeGame,validateGameSave,validateGameSnapshotForWrite} from './persistence';
 import {serializeStoredSave} from './storageCodec';
 import {applyEngineCommand,applyEngineSelection,isEngineDispatchCommand,isEngineSelection} from './engineDispatch';
 import type {Game} from './sim';
@@ -60,7 +60,7 @@ export class SimulationWorkerRuntime {
     this.send({type:'presentation',epoch,requestId,clock:this.clock(),presentation,captureMilliseconds:Math.max(0,this.now()-start),previousDispatch:this.previousPresentationDispatch});return;
    }
    if(message.type==='checkpoint'){
-    const snapshot={...encodeGame(this.game),savedAt:Date.now(),...(this.game.testMode?{testLabRevealMap:this.game.revealMap}:{})};validateGameSave(snapshot);
+    const snapshot={...encodeGame(this.game),savedAt:Date.now(),...(this.game.testMode?{testLabRevealMap:this.game.revealMap}:{})};validateGameSnapshotForWrite(snapshot);
     this.send({type:'checkpoint',epoch,requestId,clock:this.clock(),serialized:serializeStoredSave(snapshot),rng:LEGACY_WORKER_RNG,context:{started:this.game.started,awaitingStart:this.game.awaitingStart,testMode:this.game.testMode,revealMap:this.game.revealMap}});return;
    }
    if(!Number.isSafeInteger(message.ticks)||message.ticks<0||message.ticks>R.maximumTicksPerRequest){this.error(epoch,requestId,'tick-budget','Tick batch exceeds the bounded core request');return;}

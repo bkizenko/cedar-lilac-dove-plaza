@@ -28,7 +28,7 @@ test('unfunded claims create neither regional ownership nor armed influence',()=
 
 test('the building menu exposes outposts and towns and an unfunded outpost can be placed without selecting a hall',()=>{
  const g=fixture();g.state.selBld=null;g.tribe(0).wood=0;
- const options=g.snapshot().buildOptions;assert.equal(options[1].type,'cornerstone');assert.ok(options.some(b=>b.type==='townhall'));
+ const options=g.snapshot().buildOptions;assert.ok(options.some(b=>b.type==='cornerstone'),'outpost is offered (menu order is not part of the rule)');assert.ok(options.some(b=>b.type==='townhall'));
  assert.equal(g.placeBuilding('cornerstone',100,0,0),true);const b=g.state.buildings.find(b=>b.type==='cornerstone');assert.ok(b.plannedCost);assert.equal(g.popCap(0),8);
  assert.equal(g.placeBuilding('cornerstone',110,0,0),false);assert.match(g.state.banner,/room beyond/);
 });

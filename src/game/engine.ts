@@ -41,7 +41,7 @@ import {planBridge,bridgeHeight,type BridgeSpan} from './transport';
 import { soilQuality } from "./ecology";
 import { calendar } from "./settlement";
 import { cultivationIssue } from "./cultivation";
-import { encodeGame, decodeGame,validateGameSave } from "./persistence";
+import { encodeGame, decodeGame,validateGameSave,validateGameSnapshotForWrite } from "./persistence";
 import { KeyboardCommands } from "./keyboard";
 import { saveStorage } from "./saveStore";
 import { BUILD_ORDER, BUILDINGS, TILE, SAVE_KEY } from "./constants";
@@ -207,7 +207,7 @@ export class Engine {
     const sessionEpoch=this.dispatchEpoch;
     if(this.workerHost){const result=await this.workerHost.checkpoint();return{source:'worker',sessionEpoch,serialized:result.serialized,clock:result.clock,rng:result.rng,context:result.context};}
     const g=this.game,context={started:g.started,awaitingStart:g.awaitingStart,testMode:g.testMode,revealMap:g.revealMap};
-    const snapshot={...encodeGame(g),savedAt:Date.now(),...(g.testMode?{testLabRevealMap:g.revealMap}:{})};validateGameSave(snapshot);
+    const snapshot={...encodeGame(g),savedAt:Date.now(),...(g.testMode?{testLabRevealMap:g.revealMap}:{})};validateGameSnapshotForWrite(snapshot);
     return{source:'main',sessionEpoch,serialized:serializeStoredSave(snapshot),clock:{tick:0,time:g.state.time,paused:g.state.paused,speed:g.state.speed,stateRevision:this.dispatchRevision,appliedSequence:this.dispatchSequence},rng:null,context};
   }
   checkpointWorker(){if(!this.workerHost)throw new Error('No authoritative worker');return this.workerHost.checkpoint();}
