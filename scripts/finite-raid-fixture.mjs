@@ -14,7 +14,7 @@ export function prepareFiniteRaid(g,target=g.state.buildings.find(b=>b.team===0&
  assert.ok(spot,'native connected camp foundation');
  const camp=g.makeBld('hut',spot.x,spot.z,3);camp.raiderCamp=true;g.state.buildings.push(camp);g.rebuildWalk();
  const crew=[];
- for(const angle of [0,Math.PI]){
+ for(const angle of [0,Math.PI,Math.PI/2]){ // since 11-14 a raid never launches with fewer than MIN_RAID_PARTY (3)
   const at=g.interactionSpot(walker,camp);assert.ok(at,'real camp frontage');
   const u=g.spawnUnit('spearman',at.x,at.z,3);u.homeCamp=camp.id;u.order='hold';crew.push(u);
  }
