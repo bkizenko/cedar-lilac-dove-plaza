@@ -16,7 +16,8 @@ export function digest(size){
   return {hash:h.digest('hex'),walk:g.walk.length,vision:g.vision.length};
  }finally{Math.random=real;}
 }
-const EXPECTED={1040:"1f2495ce5182c8326854d3997b9e0fecf32e285a3040782d386b6f653be643a1",2080:"6939e5d8a70c3fa472974a0af81a9963d53d1213ec74fb7cd0f9e0d03aec628d"};
+// 11-18: re-captured on main; grid sizes unchanged, the short-run unit positions moved with intended sim changes since the snapshot (e.g. raid party 3f70afe5).
+const EXPECTED={1040:"12c32311c4846a868d52aa3177909ead98342fc968a11ce9662d615513af4069",2080:"69e911bcec2cfb4065c5d96b0ec55dbfc2b0492d1a68dc6996e3f1b074aa06fd"};
 for(const size of [1040,2080])test(`existing size ${size}: walk 520x520, fog 192x192, digest unchanged`,()=>{
  const d=digest(size);console.log('DIGEST',size,JSON.stringify(d));
  assert.equal(d.walk,520*520);assert.equal(d.vision,192*192);
