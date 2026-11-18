@@ -23,6 +23,7 @@ test("expeditions reserve real meals and return leftovers without double upkeep"
     u = worker(g);
   g.tribe(0).food = 200;
   const demand = foodDemand(g);
+  { const h = g.campOf(0); u.x = h.x; u.z = h.z; } // provisions are packed physically at the village cache
   assert.ok(beginExpedition(g, u));
   assert.equal(g.tribe(0).food, 176);
   assert.ok(foodDemand(g) < demand);
@@ -49,12 +50,12 @@ test("night rest preserves assigned work and resumes during daytime", () => {
   u.node = g.state.trees[0];
   const node = u.node;
   u.fatigue=.6;g.state.time=40;
-  g.clockState = () => ({ period: "Night" });
+  g.clockState = () => ({ period: "Night" });g.dayPhase = () => 23/24; // adults rest by the workday, so the clock hour must be off shift too
   assert.ok(routineRest(g, u, 1));
   assert.equal(u.node, node);
   assert.equal(u.order, "gather");
   u.fatigue=0;g.state.time=2;
-  g.clockState = () => ({ period: "Day" });
+  g.clockState = () => ({ period: "Day" });g.dayPhase = () => 10/24;
   assert.equal(routineRest(g, u, 1), false);
   assert.equal(u.node, node);
   assert.equal(u.workReason, undefined);
