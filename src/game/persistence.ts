@@ -200,7 +200,7 @@ const STRICT_NUMBER_FIELDS=["seed","time","nextId"];
 /** Frozen list of blank() keys present in every v17 save. Add NEW state fields to blank() only; they load with their default. */
 /** growthPolicy and laborPolicy are absent from the first (late September) saves; decode defaults them. */
 export const REQUIRED_STATE_FIELDS=["seed", "time", "age", "tribes", "units", "buildings", "trees", "stones", "forage", "fish", "copper", "iron", "projectiles", "floaters", "particles", "selBld", "paused", "speed", "ended", "endReason", "banner", "bannerT", "placing", "placeIssue", "nextId", "walkDirty", "agePicks", "pendingAge", "event", "eventT", "weather", "weatherT", "birthT", "marketT", "deals", "raidT", "wildlife", "routes", "routeOffer", "routeOfferT", "routePopups", "yearOffset", "raidWave", "regions", "richRes", "harvestDay", "yieldT"];
-function validateGamePayload(raw: unknown) {
+function validateGamePayload(raw: unknown, strict=false) {
   if (!obj(raw) || raw.version !== SAVE_VERSION || !obj(raw.state)) fail("!obj(raw) || raw.version !== SAVE_VERSION || !obj(raw.state)");
   if(raw.cargoVersion!==undefined&&raw.cargoVersion!==1)fail("raw.cargoVersion!==undefined&&raw.cargoVersion!==1");
   const d = JSON.parse(JSON.stringify(raw)),
@@ -216,7 +216,7 @@ function validateGamePayload(raw: unknown) {
     }
     // A numeric timer that became NaN/Infinity (serialised as null) is repaired to its default; clock/seed/ids stay strict.
     if (typeof v === "number" && !num(s[name])) {
-      if (STRICT_NUMBER_FIELDS.includes(name)) fail("non-finite state."+name);
+      if (strict||STRICT_NUMBER_FIELDS.includes(name)) fail("non-finite state."+name);
       console.warn("[hearthwild save] repaired non-finite state."+name);s[name]=v;
     }
     if (typeof v === "string" && typeof s[name] !== "string") fail("state."+name+" is not text");
@@ -856,6 +856,9 @@ function validateGamePayload(raw: unknown) {
 /** Full serialized-schema/reference validation without regenerating terrain or
  * navigation. Autosave checks previous snapshots; it must not rebuild a world. */
 export function validateGameSave(raw:unknown):void {validateGamePayload(raw);}
+/** Write-side check: a current snapshot about to be committed must already be clean. Loading may repair a
+ * non-finite timer to its default, but writing one would persist a corrupt village, so nothing is repaired here. */
+export function validateGameSnapshotForWrite(raw:unknown):void {validateGamePayload(raw,true);}
 export function decodeGame(raw:unknown):Game {
   const {d,s}=validateGamePayload(raw),g=new Game();
   migrateCoastalSettlementEndpoints(s);

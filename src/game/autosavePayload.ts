@@ -1,5 +1,5 @@
 import {parseStoredSave,serializeStoredSave} from './storageCodec';
-import {validateGameSave} from './persistence';
+import {validateGameSave,validateGameSnapshotForWrite} from './persistence';
 import type {AutosaveJob,AutosavePreflight,AutosaveResult} from './autosaveProtocol';
 /** Runs on a Worker-owned immutable clone. Validation never creates a Game or
  * reconstructs terrain, and now consumes no gameplay randomness. */
@@ -10,7 +10,7 @@ export function prepareAutosave(job:AutosaveJob,now=()=>performance.now(),preval
  const start=now();let previousPrimaryValid=false,validCandidates=0;
  const valid=(raw:string|null)=>{if(!raw)return null;try{const data=parseStoredSave(raw);validateGameSave(data);validCandidates++;return data as {state:{seed:number;time:number}};}catch{return null;}};
  const primary=prevalidated?(prevalidated.primary?{state:prevalidated.primary}:null):valid(job.expected.primary);if(prevalidated&&primary)validCandidates++;previousPrimaryValid=!!primary;valid(job.expected.backup);valid(job.expected.protected);
- try{validateGameSave(job.snapshot);const snapshot=job.snapshot as {state:{seed:number;time:number}};
+ try{validateGameSnapshotForWrite(job.snapshot);const snapshot=job.snapshot as {state:{seed:number;time:number}};
   // Deliberate restores can be older than their protected checkpoint. Match the
   // existing primary-only stale guard; protected bytes are never overwritten.
   if(primary?.state.seed===snapshot.state.seed&&primary.state.time>snapshot.state.time)return{id:job.id,status:'stale',previousPrimaryValid,validCandidates,workerCpuMs:now()-start};
