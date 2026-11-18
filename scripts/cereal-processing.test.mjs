@@ -577,9 +577,9 @@ test('a harvest beyond covered capacity still passes through threshing, winnowin
  assert.ok(g.state.production.metrics.edibleFoodProduced>0);assert.ok(g.state.production.metrics.grainUsed>=4);assert.ok(t.items.grainSheaves<initial);assert.equal(g.state.autoWorkEnabled,false);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
 
-test('milled flour can use exposed storehouse sacks but ordinary goods cannot overflow and wet flour spoils',()=>{
+test('milled flour is made even at a full store, ordinary goods are untouched and wet flour spoils',()=>{
  const {g,u,v}=fixture();v.jobLock=true;g.state.buildings=g.state.buildings.filter(b=>b.type!=='hearth');const mill=g.makeBld('grindingStone',-12,42,0);g.state.buildings.push(mill);ground(g);const t=g.tribe(0);t.items={plantFibre:1000};t.foodLots={provisions:1000,grain:4};t.food=1004;
- assert.match(productionIssue(g,'grindGrainStation',mill.id,u.id),/storage is full/);
+ assert.equal(productionIssue(g,'grindGrainStation',mill.id,u.id),null,'since 11-14 finished goods are left beside a full store (ground stockpile) instead of stalling');
  const store=g.makeBld('warehouse',20,54,0);g.state.buildings.push(store);ground(g);assert.equal(productionIssue(g,'grindGrainStation',mill.id,u.id),null);assert.equal(beginProduction(g,'grindGrainStation',mill.id,u.id),true);const p=g.state.production.projects.at(-1);drive(g,100,()=>p.phase==='complete');assert.equal(p.phase,'complete');assert.ok(t.items.flour>0);assert.equal(g.state.production.metrics.grainUsed,4);
  const flour=t.items.flour;g.state.weather='rain';tickProduction(g,10);assert.ok(t.items.flour<flour);assert.ok(g.state.production.metrics.spoiled.flour>0);assert.equal(t.items.plantFibre,1000);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
