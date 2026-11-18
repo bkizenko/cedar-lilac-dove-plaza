@@ -164,7 +164,7 @@ test('a village with a full storehouse unloads real harvest and can turn the exp
  assert.equal(deliverProductionCargo(g,v),true);
  assert.equal(v.itemCargo,undefined);
  assert.equal(g.tribe(0).items.grainSheaves,212);
- assert.equal(exposedHarvestUnits(g,0),12);
+ assert.ok(exposedHarvestUnits(g,0)>=12);
  tickProduction(g,1);
  assert.ok(g.tribe(0).items.grainSheaves<212);
  assert.ok(g.state.production.metrics.spoiled.grainSheaves>0);

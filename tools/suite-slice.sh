@@ -4,7 +4,7 @@
 # Refuses to run without installed packages (three, react, typescript), which
 # otherwise turn every renderer/UI file into a bogus "module not found" failure.
 set -euo pipefail
-out=${1:?out.tap}; mins=${2:-10}; from=${3:-}; to=${4:-~}
+out=${1:?out.tap}; mins=${2:-10}; from=${3:-}; to=${4:-zzzz}
 cd "$(dirname "$0")/.."
 if [ ! -e node_modules/three ] || [ ! -e node_modules/typescript ]; then
   for d in /tmp/hw-autopilot /workspace/hw-grok-1118 /tmp/integ; do
