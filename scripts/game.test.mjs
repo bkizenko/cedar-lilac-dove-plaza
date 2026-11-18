@@ -845,9 +845,15 @@ test("a grazing compact spends food, is saved, and holds a neighbor to trade",as
   assert.equal(neighborIntent(g, 1), "defend");
   n.trust = 0.4;
   g.tribe(0).food = 80;
+  await witnessHalls(g);
+  // The compact is a delegation: an envoy carries the 20 food, and the rival accepts only at the real meeting
+  // (the full journey is covered in delivered-diplomacy.test.mjs). Here the acceptance is applied directly.
   assert.equal(g.offerCompact(1), true);
   assert.equal(g.tribe(0).food, 60);
-  assert.ok(n.compactUntil > g.state.time);
+  const envoy = g.state.units.find(u => u.team === 0 && u.envoy);
+  assert.ok(envoy); assert.equal(envoy.carry, 20);
+  assert.equal(n.compactUntil || 0, 0, "nothing is agreed before the envoy arrives");
+  n.compactUntil = g.state.time + 600;
   n.trust = 0;
   n.tension = 1;
   assert.equal(neighborIntent(g, 1), "trade");
