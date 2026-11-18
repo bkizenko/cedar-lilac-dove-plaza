@@ -4,7 +4,7 @@ import {knowledgeReport,runKnowledgeAction} from '../src/game/knowledge.ts';
 import {copperStudyAI,COPPER_STUDY_RULES} from '../src/game/materialStudy.ts';
 import {cropStudyAI,beginCropTrial} from '../src/game/cultivation.ts';
 import {farmToolWorkAI} from '../src/game/farmTools.ts';
-import {haulageWorkAI} from '../src/game/haulage.ts';
+import {haulageWorkAI,WHEEL_PRACTICE} from '../src/game/haulage.ts';
 import {consumeAndSpoilFood} from '../src/game/pantry.ts';
 import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {AGE_COST} from '../src/game/constants.ts';
@@ -48,8 +48,8 @@ test('a five-person camp must pay, walk and test a copper prototype before produ
 test('sled-delivered goods, rather than carried cargo or elapsed time, unlock a real paid handcart project',()=>{
  const g=fixture(),u=g.state.units[0],t=g.tribe(0);u.haulage='sled';g.state.trees=[{id:g.id(),kind:'tree',x:12,z:65,y:4,amount:80,maxAmt:80,regenT:0,scale:1,rich:1}];u.selected=true;g.issueGather(g.state.trees[0]);
  assert.equal(topic(g,'transport').metrics.sledGoodsDelivered,0);assert.equal(runKnowledgeAction(g,'cart').accepted,false);
- for(let i=0;i<7000&&(t.haulagePractice||0)<60;i++){g.state.time+=.1;g.navBudget=20;g.workerAI(u,.1);}
- assert.equal(t.haulagePractice,60);assert.equal(topic(g,'transport').metrics.cartsOwned,0);g.clearSelect();u.selected=true;g.assignJob('auto');
+ for(let i=0;i<7000&&(t.haulagePractice||0)<WHEEL_PRACTICE;i++){g.state.time+=.1;g.navBudget=20;g.workerAI(u,.1);}
+ assert.equal(t.haulagePractice,WHEEL_PRACTICE);assert.equal(topic(g,'transport').metrics.cartsOwned,0);g.clearSelect();u.selected=true;g.assignJob('auto');
  if(u.carry>0)work(g,u,(game,p,dt)=>game.workerAI(p,dt),100);
  assert.equal(runKnowledgeAction(g,'cart').accepted,true);assert.equal(topic(g,'transport').metrics.cartsOwned,0);
  work(g,u,haulageWorkAI,180);assert.equal(topic(g,'transport').metrics.cartsOwned,1);assert.equal(topic(g,'transport').stage,'adoption');
