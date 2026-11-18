@@ -895,6 +895,8 @@ test("the band plants its home hall, then a cornerstone claims distant ground", 
   g.tribe(0).wood = 200;
   assert.equal(g.placeBuilding("townhall", hall.x + 8, hall.z, 0), false);
   let claimed = false;
+  hall.build = 1; // the band's builders finish the planted hall before outposts can be claimed
+  g.stampVision(far.x, far.z, 30, 1); // a scout has explored the distant timber; claims need an explored site
   for (let i = 0; i < 16 && !claimed; i++) {
     const a = (i / 16) * Math.PI * 2;
     claimed = g.placeBuilding("cornerstone", far.x + Math.cos(a) * 12, far.z + Math.sin(a) * 12, 0);
