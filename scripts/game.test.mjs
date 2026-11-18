@@ -339,10 +339,13 @@ test("farms require seasonal labor and uncollected harvest expires", async () =>
   farmWork(g, u, b, 220);
   assert.equal(b.crop.tended, 1);
   g.state.time = 900;
+  const before=crop(g, b).remaining;
   farmWork(g, u, b, 0.8);
-  assert.equal(u.carry, 2);
-  const {soilQuality}=await import("../src/game/ecology.ts");
-  assert.equal(b.crop.remaining, Math.floor(260*1.2*(0.65+soilQuality(g,b.x,b.z)*0.5))-2);
+  // Grain now comes off the field as unthreshed sheaves (threshing/winnowing happen later), not as ready food.
+  const {CEREAL_RULES}=await import("../src/game/cerealRules.ts");
+  assert.equal(u.carry, 0);
+  assert.ok(u.itemCargo?.grainSheaves>0);
+  assert.equal(b.crop.remaining, before-u.itemCargo.grainSheaves/CEREAL_RULES.sheavesPerPotentialGrain);
   g.state.time = 1350;
   crop(g, b);
   assert.equal(b.crop.remaining, 0);
