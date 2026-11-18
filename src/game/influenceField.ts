@@ -240,7 +240,7 @@ function* paintField(g:Game,c:Cache,teams:number[]):Generator<void>{
   for(const team of teams){const f=c.fields.get(team);if(!f)continue;const v=strengthAt(g,c,f,x,z);if(v<=.0001)continue;strength[i]=Math.max(strength[i],v);territory[i]=territory[i]===255?team:territory[i]===team?team:254;}
  }}
  // Rivers and lakes are never claimed: a border stops at the bank on whichever side the owner stands, and never loops out over open water.
- for(let i=0;i<territory.length;i++){if(territory[i]===255)continue;const x=-g.world.size/2+((i%n)+.5)*cell,z=-g.world.size/2+(Math.floor(i/n)+.5)*cell;if(g.waterAt(x,z)>0){territory[i]=255;strength[i]=0;}}
+ for(let i=0;i<territory.length;i++){if(territory[i]===255)continue;const x=-g.world.size/2+((i%n)+.5)*cell,z=-g.world.size/2+(Math.floor(i/n)+.5)*cell;if(g.waterAt(x,z)-g.height(x,z)>.05){territory[i]=255;strength[i]=0;}}
  g.territory.set(territory);g.territoryStrength.set(strength);c.paintedTerritory=g.territory;c.paintedStrength=g.territoryStrength;
 }
 export function paintGeographicTerritory(g:Game){
