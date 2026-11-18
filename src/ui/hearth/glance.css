@@ -123,4 +123,5 @@
 .hw-supply-cell .hw-meter-s.st-amber i{background:var(--hw-warn)}
 .hw-supply-cell .hw-meter-s.st-red i{background:var(--hw-bad)}
 .hw-meter-s.is-full{box-shadow:inset 0 0 0 1px var(--hw-bad)}
-.hw-meter-full{position:absolute;inset:0;display:grid;place-items:center;font:700 8px/1 var(--hw-font,inherit);font-style:normal;text-transform:uppercase;letter-spacing:.04em;color:#fff;pointer-events:none}
+/* 'Full' on an 8px bar cannot meet the 16px text floor: the red rim, bar colour and tooltip show it; the word stays for screen readers. */
+.hw-meter-full{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;font-style:normal;pointer-events:none}
