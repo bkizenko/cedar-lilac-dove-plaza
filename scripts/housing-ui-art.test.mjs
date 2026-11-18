@@ -65,7 +65,7 @@ test("selected-home actual SSR exposes quote/unlock and hides foreign/nonhomes w
   const before = JSON.stringify(g.state),
     html = renderToStaticMarkup(React.createElement(HousingControls, { engine, buildingId: b.id }));
   assert.equal(JSON.stringify(g.state), before);
-  assert.match(html, /Improve home/);
+  assert.match(html, /Upgrade to timber home/);
   assert.match(html, /24 logs/);
   assert.doesNotMatch(html, /fibre/);
   b.team = 1;
