@@ -1091,13 +1091,16 @@ test("negotiated goods travel with a saved carrier instead of arriving instantly
   const carrier = g.state.units.find(u => u.team === 0 && u.order === "trade");
   assert.deepEqual(carrier.trade, quote);
   finishTradeLoading(g, carrier);
-  assert.equal(carrier.carry, 30);
-  assert.equal(g.tribe(0).food, 170);
+  // A report is a fixed lot: offering 30 food for a 16-wood lot sends only the lot's price (the rest stays home).
+  assert.equal(carrier.carry, quote.giveAmt);
+  assert.ok(quote.giveAmt<=30);
+  const left=200-quote.giveAmt;
+  assert.equal(g.tribe(0).food, left);
   assert.equal(g.tribe(0).wood, wood);
   assert.equal(proposeShipment(g, 1, "food", "wood", 30), false);
-  assert.equal(g.tribe(0).food, 170);
+  assert.equal(g.tribe(0).food, left);
   const restored = decodeGame(JSON.parse(JSON.stringify(encodeGame(g))));
-  assert.equal(restored.state.units.find(u => u.id === carrier.id).carry, 30);
+  assert.equal(restored.state.units.find(u => u.id === carrier.id).carry, quote.giveAmt);
 });
 
 test("urgent food gathering outranks community logging marks", () => {
@@ -1439,7 +1442,8 @@ test("market knowledge improves quoted terms without generating bonus cargo", as
   assert.equal(g.dispatchTrade(u,improved,1),true);
   const hall=g.state.buildings.find(b=>b.team===1&&b.type==="townhall");u.x=hall.x;u.z=hall.z;
   finishTradeLoading(g,u);u.x=hall.x;u.z=hall.z;const stock=g.tribe(1).wood;g.tradeAI(u,0.1);
-  assert.equal(u.carry,improved.getAmt);assert.equal(g.tribe(1).wood,stock,"the goods were already set aside at acceptance");
+  // The quote travels as a minimum and is settled at the meeting: every unit carried home leaves the seller's store (no bonus cargo).
+  assert.ok(u.carry>=improved.getAmt);assert.equal(g.tribe(1).wood,stock-u.carry,"cargo comes only out of the seller's real stock");
 });
 test("quick exchange cannot conjure goods without a discovered partner", () => {
   const g=fixture();g.vision.fill(0);const food=g.tribe(0).food,wood=g.tribe(0).wood;
