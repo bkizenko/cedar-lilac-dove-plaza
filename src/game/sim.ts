@@ -1411,6 +1411,13 @@ export class Game {
     return null;
   }
 
+  /** What the player's build ghost should show: the era gate placeBuilding enforces, then the age-agnostic site check. */
+  playerPlacementIssue(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan,quarterTurn=false): string | null {
+    const d=BUILDINGS[type];
+    if(d&&this.tribe(team).age<d.age)return "Requires " + AGES[d.age] + " Age";
+    return this.placementIssue(type, x, z, team,size,undefined,span,quarterTurn);
+  }
+
   placementValid(type: BldType, x: number, z: number, team = 0,size?:PlotSize,span?:BridgeSpan,quarterTurn=false) {
     return this.placementIssue(type, x, z, team,size,undefined,span,quarterTurn) === null;
   }
