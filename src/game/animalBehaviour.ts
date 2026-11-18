@@ -25,6 +25,8 @@ export function newBeh(g:Game,c:Critter):AnimalBeh{
  return{v:1,st:fl?'fly':'graze',until:g.state.time+animalRand(g.state.seed,c.id,0)*6,gx:c.x,gz:c.z,hd:c.facing,sp:0,n:1,grp:c.id,lead:1,en:1,thirst:animalRand(g.state.seed,c.id,901)*.4,hunger:animalRand(g.state.seed,c.id,902)*.4,hab:0,acc:0,alarmUntil:0,ax:0,az:0,h0x:c.grazing?.x??c.x,h0z:c.grazing?.z??c.z,blk:0,...(fl?{alt:c.y-g.height(c.x,c.z)}:{})};
 }
 /** Group wild animals of each species into species-sized herds around spatial seeds (deterministic, id order). */
+/** A new herd only gathers animals standing within this distance of its leader. */
+export const HERD_JOIN_METERS=40;
 export function initAnimalGroups(g:Game,only?:Critter[]){
  g.state.animalBehaviourVersion=1;
  const wild=(only??g.state.wildlife).filter(c=>!c.beh);
@@ -35,7 +37,8 @@ export function initAnimalGroups(g:Game,only?:Critter[]){
   for(const lead of pool){
    if(!free.has(lead))continue;free.delete(lead);
    const size=T.group[0]+Math.floor(animalRand(g.state.seed,lead.id,77)*(T.group[1]-T.group[0]+1));
-   const mates=[...free].sort((a,b)=>Math.hypot(a.x-lead.x,a.z-lead.z)-Math.hypot(b.x-lead.x,b.z-lead.z)||a.id-b.id).slice(0,size-1);
+   // Only animals already near the leader join its herd; the last few of a species no longer form a 'herd' spread across the map.
+   const mates=[...free].filter(m=>Math.hypot(m.x-lead.x,m.z-lead.z)<=HERD_JOIN_METERS).sort((a,b)=>Math.hypot(a.x-lead.x,a.z-lead.z)-Math.hypot(b.x-lead.x,b.z-lead.z)||a.id-b.id).slice(0,size-1);
    lead.beh!.grp=lead.id;lead.beh!.lead=1;
    for(const m of mates){free.delete(m);m.beh!.grp=lead.id;delete m.beh!.lead;m.beh!.h0x=lead.beh!.h0x;m.beh!.h0z=lead.beh!.h0z;}
    // some juveniles follow adult females: they shrink to young scale and mature over time
