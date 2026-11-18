@@ -5,7 +5,7 @@ import {encodeGame,decodeGame} from '../src/game/persistence.ts';
 import {tickCommunities} from '../src/game/communities.ts';
 function camp(){const g=new Game();g.reset(42,10,{size:1040,layout:'continents'});g.enterIsland();g.state.paused=false;g.state.conflict='quiet';return g;}
 test('new societies start as unbuilt camps with finite provisions and no automatic pen',()=>{
- const g=camp();for(const c of g.world.camps){assert.equal(g.state.buildings.filter(b=>b.team===c.team&&b.hp>0).length,0);assert.ok(g.popNow(c.team)>=5);assert.equal(g.tribe(c.team).food,120);assert.equal(g.nearestDrop(c.x,c.z,c.team)?.kind,'camp');}
+ const g=camp();for(const c of g.world.camps){assert.equal(g.state.buildings.filter(b=>b.team===c.team&&b.hp>0).length,0);assert.ok(g.popNow(c.team)>=5);if(c.team===0)assert.equal(g.tribe(0).food,120);else assert.ok(g.tribe(c.team).food>=120,'rivals get at least the player stock plus a first-harvest endowment');assert.ok(Number.isFinite(g.tribe(c.team).food));assert.equal(g.nearestDrop(c.x,c.z,c.team)?.kind,'camp');}
  assert.equal(g.state.buildings.some(b=>b.team===0&&b.type==='pen'),false);
  tickCommunities(g,31);assert.equal(g.state.units.some(u=>u.team===0&&u.foundingJourney),false);
 });

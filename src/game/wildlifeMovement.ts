@@ -13,9 +13,11 @@ export class WildlifeObstacles{
  segmentClear(a:Point,p:Point,r:number){const cell=WILDLIFE_MOVEMENT_RULES.obstacleCellMeters,seen=new Set<Solid>();for(let z=Math.floor((Math.min(a.z,p.z)-r)/cell);z<=Math.floor((Math.max(a.z,p.z)+r)/cell);z++)for(let x=Math.floor((Math.min(a.x,p.x)-r)/cell);x<=Math.floor((Math.max(a.x,p.x)+r)/cell);x++)for(const b of this.cells.get(`${x}/${z}`)||[]){if(seen.has(b))continue;seen.add(b);const old=depth(b,a,r);if(old>0){if(depth(b,p,r)>=old-1e-9)return false;}else if(intersects(b,a,p,r))return false;}return true;}
  clearAt(p:Point,r:number){return this.segmentClear(p,p,r);}
 }
-type Ground={height(x:number,z:number):number;waterAt(x:number,z:number):number;world:{size:number;options?:unknown;islandR?:number}};
+type Ground={height(x:number,z:number):number;waterAt(x:number,z:number):number;walkable?(x:number,z:number):boolean;world:{size:number;options?:unknown;islandR?:number}};
 export function wildlifeBodyRadius(c:Pick<Critter,'scale'>){return Math.max(.18,Math.min(.75,c.scale*WILDLIFE_MOVEMENT_RULES.bodyRadiusMeters));}
-function safeSegment(g:Ground,c:Critter,p:Point,obstacles:WildlifeObstacles){if(!obstacles.segmentClear(c,p,wildlifeBodyRadius(c)))return false;const n=Math.max(1,Math.ceil(Math.hypot(p.x-c.x,p.z-c.z)/WILDLIFE_MOVEMENT_RULES.groundProbeMeters));for(let i=1;i<=n;i++){const x=c.x+(p.x-c.x)*i/n,z=c.z+(p.z-c.z)*i/n;if(g.height(x,z)<=g.waterAt(x,z)+.2||!inBounds(x,z,4,g.world.size)||!g.world.options&&Math.hypot(x,z)>=(g.world.islandR||140)-6)return false;}return true;}
+function safeSegment(g:Ground,c:Critter,p:Point,obstacles:WildlifeObstacles){if(!obstacles.segmentClear(c,p,wildlifeBodyRadius(c)))return false;const n=Math.max(1,Math.ceil(Math.hypot(p.x-c.x,p.z-c.z)/WILDLIFE_MOVEMENT_RULES.groundProbeMeters)),
+  // animals standing on walkable ground never step onto unwalkable ground (rock, cliff, built blockers); one already off it may walk out
+  walk=g.walkable&&g.walkable(c.x,c.z)?g.walkable.bind(g):null;for(let i=1;i<=n;i++){const x=c.x+(p.x-c.x)*i/n,z=c.z+(p.z-c.z)*i/n;if(g.height(x,z)<=g.waterAt(x,z)+.2||walk&&!walk(x,z)||!inBounds(x,z,4,g.world.size)||!g.world.options&&Math.hypot(x,z)>=(g.world.islandR||140)-6)return false;}return true;}
 /** Turns preserve the current step budget. No path teleport, stock adjustment,
  * animal cloning or corpse relocation; blocked animals may physically stop. */
 export function moveGroundWildlife(g:Ground,c:Critter,dt:number,obstacles:WildlifeObstacles){if(dt<=0)return;const dx=c.vx*dt,dz=c.vz*dt,target={x:c.x+dx,z:c.z+dz},direct=safeSegment(g,c,target,obstacles);let chosen:Point|null=direct?target:null;

@@ -950,7 +950,7 @@ export class Engine {
       if(!end)return;
       x=end.x;z=end.z;
       let blocked=false;
-      this.view.setLinePreview(line.map(p=>{blocked=blocked||!this.game.placementValid(type,p.x,p.z,0);return {...p,y:this.game.height(p.x,p.z),ok:!blocked};}));
+      this.view.setLinePreview(line.map(p=>{blocked=blocked||!!this.game.playerPlacementIssue(type,p.x,p.z,0);return {...p,y:this.game.height(p.x,p.z),ok:!blocked};}));
       const unitCost=buildingCost(type,this.game),costs=[unitCost.wood?`${(unitCost.wood||0)*line.length} logs`:'',unitCost.stone?`${(unitCost.stone||0)*line.length} stone`:''].filter(Boolean).join(' · ');
       this.game.banner(`${line.length} sections${costs?' · '+costs:''}${blocked?' · red sections blocked':' · leave a gate'}`,2);
     }
@@ -965,7 +965,7 @@ export class Engine {
       const snap=this.gateFacingExplicit?snapGate(this.game.state.buildings,{x,z},this.gateFacing):suggestGateSnap(this.game.state.buildings,{x,z},this.gateFacing);
       if(snap){x=snap.x;z=snap.z;this.gateFacing=snap.facing;}
     }
-    const geometryIssue = this.game.placementIssue(type, x, z, 0,this.plotSize,undefined,this.bridgeSpan,this.placementTurn());
+    const geometryIssue = this.game.playerPlacementIssue(type, x, z, 0,this.plotSize,this.bridgeSpan,this.placementTurn());
     const issue = geometryIssue ?? (type==='farm'?fieldSeedIssue(this.game.tribe(0).seeds||0,buildingCost(type,this.game,0,this.plotSize).seeds||0):null);
     this.game.state.placeIssue = issue;
     // Graded slope: say what the ground costs (tier word, goods, labour, foundation) once per change, like the field/pen cost line.

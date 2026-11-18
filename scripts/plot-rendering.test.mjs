@@ -3,6 +3,9 @@ import {plotModules} from '../src/scene/plotModules.ts';
 import {registerHooks} from 'node:module';
 registerHooks({resolve(specifier,context,next){if(specifier.startsWith('@/'))return next(new URL(`../src/${specifier.slice(2)}.ts`,import.meta.url).href,context);return next(specifier,context);}});
 const {WorldView}=await import('../src/scene/world.ts');
+import {InstanceCameraCull} from '../src/scene/instanceCameraCull.ts';import {DrawDistanceGovernor} from '../src/game/drawDistance.ts';import {initialEffective} from '../src/game/graphicsSettings.ts';
+// Object.create skips class field initialisers; give the bare view the renderer state it now reads (camera cull, carved owners, ground-plan cache, draw governor).
+const bareView=v=>{v.buildingCameraCull??=new InstanceCameraCull();v.carvedOwners??=new Map();v.planCache??=new WeakMap();v.drawGovernor??=new DrawDistanceGovernor(initialEffective().draw);v.camera??=new THREE.PerspectiveCamera();v.ghostFoot??=new THREE.Group();v.renderer??={shadowMap:{enabled:true}};return v;};
 import {BUILDINGS} from '../src/game/constants.ts';
 function building(type,w=1,d=1){const def=BUILDINGS[type];return {id:1,type,team:0,x:0,y:4,z:0,hp:100,build:1,w:def.w*w,d:def.d*d};}
 test('plot bays cover rectangular area, stay human scaled and cache their layout',()=>{
@@ -11,7 +14,7 @@ test('plot bays cover rectangular area, stay human scaled and cache their layout
  b.w=BUILDINGS.warehouse.w;assert.equal(plotModules(b).length,2);
 });
 test('renderer maps every store bay and crop patch back to one actual building without changing its state',()=>{
- const v=Object.create(WorldView.prototype);v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();
+ const v=bareView(Object.create(WorldView.prototype));v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();
  v.mats=new Proxy({}, {get(t,k){return t[k]??=new THREE.MeshStandardMaterial();}});v.buildBuildings();
  const store=building('warehouse',2,3),farm={...building('farm',3,2),id:2,crop:{planted:1,tended:1,ripened:true,remaining:100}};
  const game={state:{seed:345,buildings:[store,farm]},tribe:()=>({age:0}),exploredAt:()=>false,terrainRevision:()=>0,height:()=>4,world:{biomes:[]}};
@@ -29,7 +32,7 @@ test('renderer maps every store bay and crop patch back to one actual building w
 test('sloped planted fields use terrain displacement for crops and shadows without a roof building', async()=>{
  const {FieldSurface}=await import('../src/scene/fieldSurface.ts');
  const {MAP,SEGS}=await import('../src/game/constants.ts');
- const v=Object.create(WorldView.prototype);v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();
+ const v=bareView(Object.create(WorldView.prototype));v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();
  const heights=new Float32Array((SEGS+1)**2);
  for(let z=0;z<=SEGS;z++)for(let x=0;x<=SEGS;x++)heights[z*(SEGS+1)+x]=4+(x/SEGS*MAP-MAP/2)*.2;
  v.fieldSurface=new FieldSurface(heights);
@@ -55,7 +58,7 @@ test('sloped planted fields use terrain displacement for crops and shadows witho
 });
 
 test('a terrain-conforming field can be selected on its ground footprint without revealing a hidden foreign field',()=>{
- const v=Object.create(WorldView.prototype);v.renderer={domElement:{clientWidth:800,clientHeight:600}};
+ const v=bareView(Object.create(WorldView.prototype));v.renderer={domElement:{clientWidth:800,clientHeight:600}};
  v.camera=new THREE.PerspectiveCamera();v.bldMeshes=new Map();v.unitMeshes=new Map();
  const own=building('farm',3,2),foreign={...building('farm'),id:2,team:1,x:30};let point={x:0,z:0};v.groundAt=()=>point;
  const game={state:{buildings:[own,foreign]},visibleAt:()=>false};
@@ -64,7 +67,7 @@ test('a terrain-conforming field can be selected on its ground footprint without
 });
 
 test('territory and fog overlay follows every terrain vertex on enlarged maps',()=>{
- const v=Object.create(WorldView.prototype);v.mapSize=1040;v.look=new THREE.Vector3();v.scene=new THREE.Scene();v.cameraClearance={invalidate(){}};v.cameraCollision={invalidate(){}};
+ const v=bareView(Object.create(WorldView.prototype));v.mapSize=1040;v.look=new THREE.Vector3();v.scene=new THREE.Scene();v.cameraClearance={invalidate(){}};v.cameraCollision={invalidate(){}};
  v.fowMesh=new THREE.Mesh(new THREE.PlaneGeometry(1040,1040,2,2),new THREE.ShaderMaterial({uniforms:{uHalf:{value:520},uSize:{value:1040}}}));
  for(const name of ['disposeWorld','buildTerrain','buildNature','buildBuildings','buildUnits','buildHearths','buildWildlife','updateCamera'])v[name]=()=>{};
  const height=(x,z)=>Math.abs(x)<1&&Math.abs(z)<1?45:4;
@@ -81,14 +84,14 @@ test('rigid buildings clear uphill terrain and receive full-depth footings witho
  const b=building('townhall'),before=JSON.stringify(b),g={world:{heights:new Float32Array(9)},terrainRevision:()=>0,height:(x,z)=>4+x*.2+z*.1};
  const f=foundationProfile(g,b);assert.ok(f.level>4);assert.ok(f.bottom<4);
  assert.equal(JSON.stringify(b),before);assert.equal(foundationProfile(g,b),f,'cached support calculation');
- const v=Object.create(WorldView.prototype);v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();v.mats=new Proxy({},{get(t,k){return t[k]??=new THREE.MeshStandardMaterial();}});v.buildBuildings();
+ const v=bareView(Object.create(WorldView.prototype));v.scene=new THREE.Scene();v.bldMeshes=new Map();v.buildingInstances=new Map();v.villageStyles=new Map();v.mats=new Proxy({},{get(t,k){return t[k]??=new THREE.MeshStandardMaterial();}});v.buildBuildings();
  const game={...g,state:{seed:345,buildings:[b]},tribe:()=>({age:0}),finished:b=>b.build>=1&&b.hp>0,exploredAt:()=>true};v.syncBuildings(game);
  const matrix=new THREE.Matrix4();v.bldMeshes.get('townhall').timber.getMatrixAt(0,matrix);assert.ok(Math.abs(matrix.elements[13]-f.level)<.00001);assert.ok(v.foundations.mesh.count>1,'wall bearings receive separate support strips');
  assert.equal(v.foundations.metrics.overflow,0);
 });
 
 test('expanded grain bays render at human scale and select the same workshop',()=>{
- const view=Object.create(WorldView.prototype);
+ const view=bareView(Object.create(WorldView.prototype));
  view.scene=new THREE.Scene();
  view.bldMeshes=new Map();
  view.buildingInstances=new Map();

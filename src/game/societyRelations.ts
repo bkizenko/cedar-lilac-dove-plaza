@@ -6,7 +6,7 @@ import type {Building,Unit} from './types';
  * an agreement changes only its two signatories, never every rival at once. */
 export type SocietyRelation={from:number;to:number;known:boolean;trust:number;grievance:number;hostile:boolean;peaceUntil:number;lastContactSeconds:number};
 export type SocietyRelationState={societyRelations?:SocietyRelation[]};
-export const SOCIETY_RELATION_RULES={version:1,maximumPairs:992,attackGrievance:.18,peaceGrievanceRecovery:.3,peaceTrustFloor:.4,peaceSeconds:600,contactRadiusMeters:12} as const;
+export const SOCIETY_RELATION_RULES={version:1,maximumPairs:992,attackGrievance:.18,/** later blows in the same fight (same pair, already hostile, within this window) add only blowGrievance, so one skirmish is one grievance, not one per hit */attackWindowSeconds:30,blowGrievance:.02,peaceGrievanceRecovery:.3,peaceTrustFloor:.4,peaceSeconds:600,contactRadiusMeters:12} as const;
 const state=(g:Game)=>g.state as Game['state']&SocietyRelationState;
 const validPair=(g:Game,a:number,b:number)=>a!==b&&a!==3&&b!==3&&Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&!!g.tribe(a)&&!!g.tribe(b);
 /** Reading a relation does not discover a society or allocate a save entry. */
@@ -56,7 +56,8 @@ export function declareSocietyHostility(g:Game,from:number,to:number){
 /** The victim's own damage is firsthand evidence; no global enemy stock lookup. */
 export function recordSocietyAttack(g:Game,attacker:Unit|Building,victim:Unit|Building,damage:number){
  if(!Number.isFinite(damage)||damage<=0||!validPair(g,attacker.team,victim.team)||!(attacker.kind==='unit'?g.state.units.includes(attacker):g.state.buildings.includes(attacker))||!(victim.kind==='unit'?g.state.units.includes(victim):g.state.buildings.includes(victim)))return false;
- declareSocietyHostility(g,attacker.team,victim.team);edit(g,attacker.team,victim.team).lastContactSeconds=g.state.time;const r=edit(g,victim.team,attacker.team);r.known=true;r.hostile=true;r.lastContactSeconds=g.state.time;r.grievance=Math.min(1,r.grievance+SOCIETY_RELATION_RULES.attackGrievance);r.trust=0;recordDiplomaticAttack(g,attacker,victim);return true;
+ const prior=societyRelation(g,victim.team,attacker.team),sameFight=prior.hostile&&prior.lastContactSeconds>0&&g.state.time-prior.lastContactSeconds<SOCIETY_RELATION_RULES.attackWindowSeconds;
+ declareSocietyHostility(g,attacker.team,victim.team);edit(g,attacker.team,victim.team).lastContactSeconds=g.state.time;const r=edit(g,victim.team,attacker.team);r.known=true;r.hostile=true;r.lastContactSeconds=g.state.time;r.grievance=Math.min(1,r.grievance+(sameFight?SOCIETY_RELATION_RULES.blowGrievance:SOCIETY_RELATION_RULES.attackGrievance));r.trust=0;recordDiplomaticAttack(g,attacker,victim);return true;
 }
 /** Authoritative legal adapter; legacy peace calls can use it without claiming
  * a messenger physically arrived. The contextual acceptance below checks that. */

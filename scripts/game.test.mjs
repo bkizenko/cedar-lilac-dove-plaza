@@ -10,6 +10,8 @@ const fixture = () => {
   g.enterIsland();
   return g;
 };
+// Trade needs a physically witnessed settlement (map vision alone is not knowledge): a player adult stands at each society hall for one review, then leaves.
+async function witnessHalls(g){const {knownSettlement}=await import("../src/game/barter.ts");for(const hall of g.state.buildings.filter(b=>b.team!==0&&b.team!==3&&b.type==='townhall'&&b.hp>0)){const w=g.spawnUnit('worker',hall.x+14,hall.z,0);w.order='hold';g.state.time+=2.1;knownSettlement(g,hall.team);g.state.units=g.state.units.filter(u=>u!==w);g.state.time-=2.1;}}
 function militaryFixture() {
   const g = fixture(), home = g.campOf(0);
   g.spawnUnit("spearman", home.x + 4, home.z - 5, 0);
@@ -194,7 +196,7 @@ test("acoustic score crossfades, holds peace, and releases audio", async () => {
   decks[1].listeners.ended();
   score.update("adventure", 10, false);
   assert.equal(decks[1].paused, true, "a piece is followed by quiet time");
-  score.update("adventure", 110, false);
+  score.update("adventure", 205, false); // rest is random 90-210 s (MUSIC_REST_MIN+SPAN); 10 + 205 s covers the longest
   assert.equal(decks[1].paused, false, "music resumes after the rest");
   score.setMuted(true);
   assert.ok(decks.every((a) => a.volume === 0));
@@ -379,10 +381,10 @@ test("new seasonal, work and emergency state survives saving", async () => {
   assert.equal(r.tribe(1).trust, 0.4);
 });
 
-test("raid marches toward an unseen settlement instead of reacquiring it forever", () => {
+test("raid marches toward an unseen settlement instead of reacquiring it forever", async () => {
   const g = militaryFixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
-  g.vision.fill(1);
+  g.vision.fill(1);await witnessHalls(g);
   g.issuePillage(hall);
   const army = g.state.units.filter((u) => u.team === 0 && u.type !== "worker");
   assert.ok(army.length);
@@ -402,10 +404,10 @@ test("raid marches toward an unseen settlement instead of reacquiring it forever
   }
   assert.ok(Math.hypot(u.x - x, u.z - z) > 0.2, `raid stayed at ${x},${z}`);
 });
-test("truce clears both armies targets and prevents immediate renewed hostility", () => {
+test("truce clears both armies targets and prevents immediate renewed hostility", async () => {
   const g = militaryFixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
-  g.vision.fill(1);
+  g.vision.fill(1);await witnessHalls(g);
   g.issuePillage(hall);
   const enemy = g.state.units.find((u) => u.team === 1 && u.type !== "worker"),
     ours = g.state.units.find((u) => u.team === 0 && u.type !== "worker");
@@ -451,10 +453,10 @@ test("new world has a wider map and distant settlement starts", async () => {
   }
 });
 
-test("raid crosses the wider island and engages defenders", () => {
+test("raid crosses the wider island and engages defenders", async () => {
   const g = militaryFixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
-  g.vision.fill(1);
+  g.vision.fill(1);await witnessHalls(g);
   g.issuePillage(hall);
   const u = g.state.units.find((u) => u.team === 0 && u.type !== "worker");
   const defenders = g.state.units.filter((u) => u.team === 1);
@@ -470,13 +472,13 @@ test("raid crosses the wider island and engages defenders", () => {
   assert.ok(defenders.reduce((s, u) => s + u.hp, 0) < before, "army must damage a defender");
 });
 
-test("raiders attack an undefended settlement instead of stopping beside it", () => {
+test("raiders attack an undefended settlement instead of stopping beside it", async () => {
   const g = militaryFixture(),
     hall = g.state.buildings.find((b) => b.team === 1 && b.type === "townhall");
   g.state.units = g.state.units.filter((u) => u.team !== 1);
   const buildings = g.state.buildings.filter((b) => b.team === 1),
     before = buildings.reduce((s, b) => s + b.hp, 0);
-  g.vision.fill(1);
+  g.vision.fill(1);await witnessHalls(g);
   g.issuePillage(hall);
   const u = g.state.units.find((u) => u.team === 0 && u.type !== "worker");
   for (let i = 0; i < 12000; i++) {
@@ -995,9 +997,9 @@ test("tree marks cannot discover unseen timber or redirect another tribe", () =>
   assert.throws(() => decodeGame(saved));
 });
 
-test("a selected squad raids without recalling the home guard, and can withdraw", () => {
+test("a selected squad raids without recalling the home guard, and can withdraw", async () => {
   const g = fixture();
-  g.clearSelect(); g.vision.fill(1);
+  g.clearSelect(); g.vision.fill(1);await witnessHalls(g);
   const home = g.campOf(0);
   const squad = g.spawnUnit("spearman", home.x, home.z, 0);
   const guard = g.spawnUnit("spearman", home.x + 2, home.z, 0);
@@ -1015,7 +1017,7 @@ test("a selected squad raids without recalling the home guard, and can withdraw"
   assert.equal(squad.order, "move");
 });
 
-test("raid commands and follow-up targets respect unexplored territory", () => {
+test("raid commands and follow-up targets respect unexplored territory", async () => {
   const g = fixture();
   g.vision.fill(0);
   const hall = g.state.buildings.find(b => b.team === 1 && b.type === "townhall");
@@ -1026,7 +1028,7 @@ test("raid commands and follow-up targets respect unexplored territory", () => {
   assert.equal(g.pickRaidRival(), null);
   army[0].pillage = 1;
   assert.equal(g.nextPillage(army[0]), null);
-  g.vision.fill(1);
+  g.vision.fill(1);await witnessHalls(g);
   assert.ok(g.nextPillage(army[0]));
 });
 
@@ -1038,7 +1040,7 @@ test("shipment quotes require contact and respond to trust and scarcity", async 
   Object.assign(g.tribe(1), {food: 80, wood: 200, tradeCd: 0, hostile: false, trust: 0, tension: 0});
   g.vision.fill(0);
   assert.equal(quoteShipment(g, 1, "food", "wood", 30).deal, null);
-  g.vision.fill(1);
+  g.vision.fill(1);await witnessHalls(g);
   const baseline = quoteShipment(g, 1, "food", "wood", 30).deal.getAmt;
   g.tribe(1).trust = 1;
   assert.ok(quoteShipment(g, 1, "food", "wood", 30).deal.getAmt > baseline);
@@ -1048,7 +1050,7 @@ test("shipment quotes require contact and respond to trust and scarcity", async 
 
 test("shipment validation rejects invalid quantities and unavailable goods", async () => {
   const {quoteShipment} = await import("../src/game/barter.ts");
-  const g = fixture(); g.vision.fill(1);
+  const g = fixture(); g.vision.fill(1);await witnessHalls(g);
   Object.assign(g.tribe(0), {food: 30, age: 0});
   Object.assign(g.tribe(1), {wood: 200, tradeCd: 0, hostile: false});
   for (const amount of [NaN, Infinity, -1, 0, 1.5, 101, 31])
@@ -1061,7 +1063,7 @@ test("shipment validation rejects invalid quantities and unavailable goods", asy
 
 test("negotiated goods travel with a saved carrier instead of arriving instantly", async () => {
   const {reportedQuote, proposeShipment} = await import("../src/game/barter.ts");
-  const g = fixture(); g.vision.fill(1); g.clearSelect();
+  const g = fixture(); g.vision.fill(1);await witnessHalls(g); g.clearSelect();
   Object.assign(g.tribe(0), {food: 200});
   Object.assign(g.tribe(1), {food: 80, wood: 200, tradeCd: 0, hostile: false});
   const wood = g.tribe(0).wood;
@@ -1147,7 +1149,7 @@ test("biomes affect harvested crops and winter food demand, including after save
 
 test("selected adult villagers can raid without creating a hunter profession", async () => {
   const {emergencyResponse} = await import("../src/game/settlement.ts");
-  const g = fixture(); g.clearSelect(); g.vision.fill(1);
+  const g = fixture(); g.clearSelect(); g.vision.fill(1);await witnessHalls(g);
   const adults = g.state.units.filter(u => u.team === 0);
   adults[0].selected = true;
   adults[1].selected = true; adults[1].maturesAt = 200;
@@ -1199,13 +1201,13 @@ test("wildlife recovery needs a surviving herd, warm season, unseen dry land", (
 });
 
 
-test("work assignment cannot locate unexplored food or track unseen wildlife", () => {
+test("work assignment cannot locate unexplored food or track unseen wildlife", async () => {
   const {g,w} = cornerstoneValley();
   const berry = {...g.state.trees[0],kind:"forage",x:18,z:38};
   g.state.forage=[berry]; g.vision.fill(0);
   assert.equal(g.findNode(w,"food"),null);
   g.workBoard.assign(g,w); assert.equal(w.node,null);
-  g.vision.fill(1); w.workCheckAt=0; g.workBoard.reset();
+  g.vision.fill(1);await witnessHalls(g); w.workCheckAt=0; g.workBoard.reset();
   g.workBoard.assign(g,w); assert.equal(w.node,berry);
   g.state.wildlife=[{id:g.id(),species:"deer",x:20,z:38,y:4,hp:3,maxHp:3,scale:1,vx:0,vz:0,facing:0,wanderT:10,fly:0}];
   assert.equal(g.findHunt(w),null);
@@ -1322,11 +1324,11 @@ test("discovery points persist once across ages and reject damaged records", asy
   assert.doesNotThrow(() => decodeGame(old));
 });
 
-test("known distant trees need no lumber camp and the camp benefit stays local", () => {
+test("known distant trees need no lumber camp and the camp benefit stays local", async () => {
   const g = fixture(), w = g.state.units.find(u => u.team === 0 && u.type === "worker");
   const home = g.campOf(0);
   const tree = {...g.state.trees[0], id:g.id(), x:home.x+60, z:home.z, amount:100};
-  g.state.trees = [tree]; g.vision.fill(1);
+  g.state.trees = [tree]; g.vision.fill(1);await witnessHalls(g);
   assert.equal(g.findNode(w, "wood"), tree);
   w.x = tree.x; w.z = tree.z;
   const before = g.campBonus(w, "wood");
@@ -1354,7 +1356,7 @@ test("standing stones put finds in carried cargo without remotely increasing vil
 });
 test("legacy traditions require earned points, apply without new stock and persist", async () => {
   const {recordDiscoveries,adoptTradition,unspentLegacy}=await import("../src/game/discovery.ts");
-  const g=fixture();g.vision.fill(1);recordDiscoveries(g);
+  const g=fixture();g.vision.fill(1);await witnessHalls(g);recordDiscoveries(g);
   const before=g.stockCap(0), food=g.tribe(0).food;
   assert.ok(unspentLegacy(g)>=12);
   assert.equal(adoptTradition(g,"winter-stores"),true);
@@ -1397,7 +1399,7 @@ test("favorable random events do not add unexplained goods", () => {
 
 test("partners protect winter food and refuse goods they already have in abundance", async () => {
   const {quoteShipment}=await import("../src/game/barter.ts");
-  const g=fixture();g.vision.fill(1);g.state.time=1350;
+  const g=fixture();g.vision.fill(1);await witnessHalls(g);g.state.time=1350;
   Object.assign(g.tribe(0),{wood:100,food:200});
   Object.assign(g.tribe(1),{food:60,wood:60,stone:100,hostile:false,tradeCd:0,trust:0});
   const winter=quoteShipment(g,1,"wood","food",20);
@@ -1408,7 +1410,7 @@ test("partners protect winter food and refuse goods they already have in abundan
 });
 test("market knowledge improves quoted terms without generating bonus cargo", async () => {
   const {quoteShipment}=await import("../src/game/barter.ts");
-  const g=fixture();g.vision.fill(1);g.state.time=50;
+  const g=fixture();g.vision.fill(1);await witnessHalls(g);g.state.time=50;
   Object.assign(g.tribe(0),{food:300});
   Object.assign(g.tribe(1),{food:80,wood:250,hostile:false,tradeCd:0,trust:1});
   const base=quoteShipment(g,1,"food","wood",20).deal;
@@ -1448,8 +1450,8 @@ test("camp raiders steal and haul real cargo but respect the opening grace and q
   const stock=g.tribe(3).wood;raider.x=c.x+3;raider.z=c.z;g.barbarianAI(raider,0.1);
   assert.equal(g.tribe(3).wood,stock+4);assert.equal(raider.carry,0);
 });
-test("a stolen outbound shipment cannot exchange the missing goods", () => {
-  const g=fixture();g.vision.fill(1);Object.assign(g.tribe(1),{stone:100,food:80,trust:1,hostile:false,tradeCd:0});
+test("a stolen outbound shipment cannot exchange the missing goods", async () => {
+  const g=fixture();g.vision.fill(1);await witnessHalls(g);Object.assign(g.tribe(1),{stone:100,food:80,trust:1,hostile:false,tradeCd:0});
   const w=g.state.units.find(u=>u.team===0&&u.type==="worker");
   assert.equal(g.dispatchTrade(w,{give:"food",giveAmt:20,get:"stone",getAmt:8},1),true);
   w.carry-=4;const before=[g.tribe(1).food,g.tribe(1).stone];g.tradeAI(w,0.1);
@@ -1464,8 +1466,8 @@ test("territory control cannot create daily stock without harvesting", () => {
   assert.deepEqual([g.tribe(0).food,g.tribe(0).wood,g.tribe(0).stone,g.tribe(0).copper,g.tribe(0).iron],before);
 });
 
-test("direct group wood orders reserve at most two workers per tree", () => {
-  const g=fixture();g.vision.fill(1);g.clearSelect();
+test("direct group wood orders reserve at most two workers per tree", async () => {
+  const g=fixture();g.vision.fill(1);await witnessHalls(g);g.clearSelect();
   for(const u of g.state.units.filter(u=>u.team===0)){u.selected=true;u.carry=0;u.node=null;u.order="idle";}
   g.assignJob("wood");
   const counts=new Map();for(const u of g.selectedUnits())if(u.node?.kind==="tree")counts.set(u.node.id,(counts.get(u.node.id)||0)+1);
@@ -1501,10 +1503,10 @@ test("protected checkpoint survives autosaves and both rolling save failures", a
     assert.equal(loadRaw().state.tribes[0].food,123);
   }finally{delete globalThis.localStorage;}
 });
-test("wood orders scout unknown terrain and resume cutting discovered timber",()=>{
+test("wood orders scout unknown terrain and resume cutting discovered timber", async () =>{
   const g=fixture(),u=g.state.units.find(u=>u.team===0);g.clearSelect();u.selected=true;u.carry=0;g.vision.fill(0);
   g.findExploreTarget=()=>({x:u.x+20,z:u.z});g.assignJob("wood");assert.equal(u.order,"explore");assert.equal(u.searchJob,"wood");
-  g.vision.fill(1);g.state.time+=2;g.exploreAI(u,0.01);assert.equal(u.order,"gather");assert.equal(u.node.kind,"tree");assert.equal(u.searchJob,undefined);
+  g.vision.fill(1);await witnessHalls(g);g.state.time+=2;g.exploreAI(u,0.01);assert.equal(u.order,"gather");assert.equal(u.node.kind,"tree");assert.equal(u.searchJob,undefined);
 });
 test("recall cancels raids and delegations but conserves carried supplies",()=>{
   const g=fixture(),u=g.state.units.find(u=>u.team===0);u.carry=7;u.carryType="wood";u.pillage=1;u.order="explore";

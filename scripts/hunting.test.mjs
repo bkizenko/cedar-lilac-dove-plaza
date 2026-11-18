@@ -134,10 +134,11 @@ test("optional carcass saves preserve remaining meat and reject invalid reconstr
   assert.equal(carcassStateValid(prey.carcass, "bird", 0, 40), false);
 });
 
-test('unthreatened animals walk back toward saved grazing grounds rather than drifting away forever',()=>{
- const {g,prey}=fixture();g.state.units=[];Object.assign(prey,{x:80,z:38,grazing:{x:0,z:38},wanderT:0,vx:0,vz:0});
- for(let i=0;i<600;i++)g.tickWildlife(.2);
- assert.ok(Math.hypot(prey.x,prey.z-38)<45);
+test('unthreatened animals walk back toward saved grazing grounds rather than drifting away forever',async()=>{
+ const {g,prey}=fixture();g.state.units=[];Object.assign(prey,{x:80,z:38,grazing:{x:0,z:38},wanderT:0,vx:0,vz:0});delete prey.beh; // behaviour home is seeded from the saved grazing ground
+ for(let i=0;i<600;i++){g.tickWildlife(.2);g.state.time+=.2;} // behaviour timers run on game time
+ const {ANIMAL_TRAITS}=await import('../src/game/animalTraits.ts');
+ assert.ok(Math.hypot(prey.x,prey.z-38)<Math.min(70,ANIMAL_TRAITS.deer.home),`back within its home range: ${Math.hypot(prey.x,prey.z-38).toFixed(1)} m`);
  const restored=decodeGame(encodeGame(g));assert.deepEqual(restored.state.wildlife[0].grazing,{x:0,z:38});
  const invalid=encodeGame(g);invalid.state.wildlife[0].grazing.x=Infinity;assert.throws(()=>decodeGame(invalid),/damaged/);
 });
@@ -150,5 +151,6 @@ test('equipped civilian hunters accept a Hunt order and deliver meat through the
  const stock=g.tribe(0).food;
  for(let i=0;i<1200&&!(g.tribe(0).items?.rawMeat>0);i++)g.step(.1);
  assert.equal(prey.hp,0);assert.ok(g.tribe(0).items?.rawMeat>0,'armed civilian delivers raw meat rather than freezing in combat AI');assert.equal(g.state.simulationEvents?.totals['food_received:0:food']||0,0,'no uncooked edible credit');assert.deepEqual(g.simulationErrors,[]);
- u.carry=0;u.carryType=null;u.x=hall.x;u.z=hall.z-8;g.standDown();assert.equal(u.type,'worker');assert.equal(g.tribe(0).bows,1);assert.equal(u.huntOnly,false);assert.equal(u.jobLock,false);
+ u.carry=0;u.carryType=null;u.x=hall.x;u.z=hall.z-8;g.standDown();for(let i=0;i<600&&u.type!=='worker';i++)g.step(.1); // stand-down is physical: the hunter walks to the stores to hand back the bow
+ assert.equal(u.type,'worker',u.workReason);assert.equal(g.tribe(0).bows,1);assert.equal(u.huntOnly,false);assert.equal(u.jobLock,false);
 });

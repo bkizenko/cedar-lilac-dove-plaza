@@ -63,8 +63,9 @@ test('hut: every civ at every early age is a readable hut - dark framed door at 
   }
 });
 test('hut: the shared door helper gives every family dwelling a dark opening with a frame',async()=>{
-  const {door}=await import('../src/scene/buildingHelpers.ts');const parts=[];door(parts,0,2,.85,1.55);
-  assert.ok(parts.some(p=>p.mat==='recess'&&p.lod>=1&&p.size[1]===1.55));assert.ok(parts.filter(p=>p.mat==='woodDark').length>=3,'posts + lintel');
+  const {door}=await import('../src/scene/buildingHelpers.ts'),{doorHeight}=await import('../src/scene/personScale.ts');const parts=[];door(parts,0,2,.85,1.55);
+  // walk-in doors are raised to a standing adult's height (personScale DOOR_HEIGHT_M), so the opening is doorHeight(1.55), not the authored 1.55
+  assert.ok(parts.some(p=>p.mat==='recess'&&p.lod>=1&&p.size[1]===doorHeight(1.55)));assert.ok(parts.filter(p=>p.mat==='woodDark').length>=3,'posts + lintel');
 });
 test('doors face the plaza: the quarter turn swings local +Z toward the hall; huts and houses only',()=>{
   const at=(x,z)=>({x,z});assert.equal(plazaQuarterTurns(0,0,at(0,20)),0);assert.equal(plazaQuarterTurns(0,0,at(20,0)),1);assert.equal(plazaQuarterTurns(0,0,at(0,-20)),2);assert.equal(plazaQuarterTurns(0,0,at(-20,0)),3);

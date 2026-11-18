@@ -24,7 +24,7 @@ const TAU=Math.PI*2;
 const millHouse:Generator=(ctx,r)=>{
   const parts:Part[]=[],{w,d}=ctx.footprint,k=Math.min(w/6.2,d/5.8);
   const L=3.55*k,D=3.45*k,cx=-w/2+.12*k+L/2,cz=.2*k,h1=eaveHeight(1.5*k),h2=1.3*k,eave=h1+h2;
-  const R=1.55*k,cy=R-.3*k,ww=.8*k,wx=cx+L/2+.45*k+ww/2,east=cx+L/2;
+  const R=1.55*k,cy=R+.12,ww=.8*k,wx=cx+L/2+.45*k+ww/2,east=cx+L/2;
   const rm=roofFor(ctx),pitch=Math.max(.5,roofPitch(ctx,r)),upper=ctx.material==='stone'&&ctx.era>=3?'stone':'plaster';
   // --- house: stone mill floor (millstones live here), timber-framed grain loft with a slight jetty
   stoneWall(parts,{x:cx,z:cz,w:L,d:D,h:h1,mat:'stone',faces:['+z','-z','-x'],course:.56});

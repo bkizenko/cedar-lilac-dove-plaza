@@ -48,12 +48,14 @@ test('pre-armed defenders automatically return to work when the local alarm ends
  const {g,armed}=fixture();const spears=g.tribe(0).spears;const enemy=g.spawnUnit('spearman',armed.x+4,armed.z,3);
  emergencyResponse(g,armed,.1);assert.ok(armed.emergency);enemy.hp=0;g.state.time+=11;
  emergencyResponse(g,armed,.1);demobilizationAI(g,armed,.1);
- assert.equal(armed.type,'worker');assert.equal(g.tribe(0).spears,spears+1);
+ for(let i=0;i<600&&armed.type!=='worker';i++)g.step(.1); // stand-down is physical: the defender walks to the stores to hand back the spear
+ assert.equal(armed.type,'worker',armed.workReason);assert.equal(g.tribe(0).spears,spears+1);
 });
 test('a finished sea raid stands down unused local reserves but preserves an offensive raid',()=>{
  const {g,armed,hall}=fixture();const other=g.spawnUnit('spearman',0,50,0);other.militia=true;other.pillage=1;other.returnAfterCombat=true;
  g.state.raidCampaign={active:true,adults:3,buildings:1,loss:0};finishSeaRaid(g);demobilizationAI(g,armed,.1);
- assert.equal(armed.type,'worker');assert.equal(other.pillage,hall.team);assert.equal(other.demobilizing,undefined);
+ assert.equal(other.pillage,hall.team);assert.equal(other.demobilizing,undefined);assert.ok(armed.demobilizing||armed.type==='worker','unused reserve is standing down');
+ for(let i=0;i<600&&armed.type!=='worker';i++)g.step(.1);assert.equal(armed.type,'worker',armed.workReason);
 });
 test('peace cancels pending loaded mass raids and explicit new orders cancel automatic return',()=>{
  const {g,armed,hall}=fixture();armed.carry=7;armed.carryType='wood';massRaid(g,hall.id);g.agreeTruce(1);
