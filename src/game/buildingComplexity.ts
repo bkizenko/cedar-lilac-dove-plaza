@@ -7,9 +7,9 @@ export const COMPLEXITY_BANDS={1:[8,10],2:[12,14],3:[16,20],4:[22,30],5:[32,48]}
 export type ComplexityTier=keyof typeof COMPLEXITY_BANDS;
 export const BUILDING_COMPLEXITY:Readonly<Record<string,ComplexityTier>>={
  hut:1,hearth:1,dryrack:1,well:1,lumber:1,dock:1,farm:1,
- butcher:2,tailor:2,grindingStone:2,quarry:2,warehouse:2,palisade:2,tanner:2,snare:1,vineyard:2,press:2,potter:2,fibreWorkshop:2,threshingFloor:2,workshop:2,cornerstone:2,
+ butcher:2,tailor:2,grindingStone:2,quarry:2,warehouse:2,palisade:2,tanner:2,snare:1,vineyard:3,press:2,potter:2,fibreWorkshop:2,threshingFloor:2,workshop:2,cornerstone:2,
  pen:3,watchtower:3,oven:3,smokehouse:3,gate:3,trench:3,cairn:3,grove:3,kiln:3,barracks:3,
- market:4,forge:4,stonewall:4,cistern:4,greatCistern:4,canal:4,temple:4,stables:4,moat:4,
+ market:4,forge:4,stonewall:4,cistern:4,greatCistern:5,canal:4,temple:4,stables:4,moat:4,
  university:5,keep:5,windmill:5,bridge:5,watermill:5,aqueduct:5,
 };
 /** Effort rank used to order two buildings: tier first, then exact seconds. */
