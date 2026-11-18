@@ -4,12 +4,15 @@ import {Game} from '../src/game/sim.ts';
 import {searchForWildGoats,visibleGoatsForPen} from '../src/game/animalOrders.ts';
 import {husbandryAI,HERD} from '../src/game/husbandry.ts';
 import {insidePen} from '../src/game/penGeometry.ts';
+import {supplyApproach} from '../src/game/campAnchor.ts';
 function fixture(){
  const g=new Game();g.reset(42);g.enterIsland();g.world.heights.fill(4);g.state.units=[];
  g.state.buildings=[g.makeBld('townhall',0,50,0),g.makeBld('pen',30,30,0)];
  g.state.wildlife=[];g.state.trees=[];g.state.stones=[];g.state.forage=[];g.state.fish=[];
  g.state.autoWorkEnabled=false;g.vision.fill(0);g.rebuildWalk();
  const u=g.spawnUnit('worker',0,30,0);u.selected=true;
+ // since 67f889ff a scout packs provisions at its own cache: start the scout at the hall entrance
+ const door=supplyApproach(g,u,g.state.buildings[0]);if(door){u.x=door.x;u.z=door.z;}
  const a={id:g.id(),species:'goat',x:5,z:30,y:4,hp:2,maxHp:2,facing:0,vx:0,vz:0,wanderT:10000,fly:0,scale:1};g.state.wildlife.push(a);
  return {g,u,a,pen:g.state.buildings[1]};
 }
