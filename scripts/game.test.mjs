@@ -358,24 +358,25 @@ test("farms require seasonal labor and uncollected harvest expires", async () =>
   crop(g, b);
   assert.equal(b.crop.planted, 0);
 });
-test("neighbor decisions respect grace period, trust and quiet frontier", async () => {
+test("neighbor decisions follow recovery, hunger, home defence and alliance", async () => {
+  // Neighbour intent is now the rival operations planner (recover / trade / defend / raid), not a timer on tension.
   const { neighborIntent } = await import("../src/game/settlement.ts");
   const g = fixture(),
-    t = g.tribe(1);
-  t.ally = false;
-  t.hostile = true;
-  t.tension = 1;
-  t.aggro = 1;
-  for (let i = 0; i < 12; i++) g.spawnUnit("spearman", 80, -80, 1);
-  assert.equal(neighborIntent(g, 1), "trade");
-  g.state.time = 700;
-  assert.equal(neighborIntent(g, 1), "raid");
-  t.trust = 0.5;
-  assert.equal(neighborIntent(g, 1), "trade");
-  t.trust = 0;
-  t.hostile = false;
-  g.state.conflict = "quiet";
-  assert.equal(neighborIntent(g, 1), "trade");
+    t = g.tribe(1),
+    home = g.campOf(1);
+  Object.assign(t, { ally: false, hostile: true, tension: 1, aggro: 1, food: 500 });
+  t.recoveryUntil = g.state.time + 100;
+  assert.equal(neighborIntent(g, 1), "recover", "a society recovering from its last raid stays home");
+  t.recoveryUntil = 0;
+  const food = t.food;
+  t.food = 0;
+  assert.equal(neighborIntent(g, 1), "trade", "a hungry society looks for trade, not war");
+  t.food = food;
+  const foe = g.spawnUnit("spearman", home.x + 10, home.z, 0);
+  assert.equal(neighborIntent(g, 1), "defend", "an enemy at the hall is answered first");
+  foe.hp = 0;
+  t.hostile = false; t.ally = true;
+  assert.equal(neighborIntent(g, 1), "trade", "allies trade");
 });
 test("new seasonal, work and emergency state survives saving", async () => {
   const g = fixture(),
