@@ -68,7 +68,10 @@ function fixture(native = false) {
   }
   g.rebuildWalk();
   walkHome(g, u, camp);
-  return { g, u, v, camp, center };
+  // since 3f70afe5 a raid needs MIN_RAID_PARTY (3) and one guard stays home: two crewmates ride with u, v guards the camp
+  const mates = [];
+  for (let i = 0; i < 2; i++) { const p = g.spawnUnit("spearman", center.x + 5, center.z + 1 + i, 3); p.homeCamp = camp.id; p.order = "hold"; walkHome(g, p, camp); mates.push(p); }
+  return { g, u, v, camp, center, mates };
 }
 function walkHome(g, u, b) {
   const p = supplyApproach(g, u, b);
@@ -117,7 +120,7 @@ test('scheduled raid dispatch preserves finite IDs, pays supplies and physically
  const banners=[];g.banner=(...args)=>banners.push(args);let alarms=0;g.defendHome=()=>alarms++;g.callAlliesTo=()=>alarms++;
  g.spawnRaid();
  assert.deepEqual(g.state.units.map(p=>p.id),ids);assert.ok(u.campTrip);assert.equal(v.homeCamp,camp.id);assert.equal(u.seaRaid.x,initial.x);assert.equal(u.seaRaid.z,initial.z);assert.equal(u.x,initial.x);assert.equal(u.z,initial.z);
- assert.ok(g.tribe(3).food<initial.food);assert.ok(g.tribe(3).survival.waterLiters<initial.water);assert.equal(g.tribe(3).food+u.scoutProvisions.food,initial.food);assert.equal(g.tribe(3).survival.waterLiters+u.scoutProvisions.water,initial.water);
+ assert.ok(g.tribe(3).food<initial.food);assert.ok(g.tribe(3).survival.waterLiters<initial.water);const party=g.state.units.filter(p=>p.campTrip);assert.equal(party.length,3);assert.ok(Math.abs(g.tribe(3).food+party.reduce((n,p)=>n+p.scoutProvisions.food,0)-initial.food)<1e-8);assert.ok(Math.abs(g.tribe(3).survival.waterLiters+party.reduce((n,p)=>n+p.scoutProvisions.water,0)-initial.water)<1e-8);
  assert.equal(alarms,0,'no village-wide defense signal from a remote departure');assert.equal(banners.length,0);
  const initialDistance=Math.hypot(u.x-b.x,u.z-b.z);
  for(let i=0;i<450&&Math.hypot(u.x-b.x,u.z-b.z)>8;i++){g.state.time+=.1;g.navBudget=30;seaRaidAI(g,u,.1);}
@@ -155,7 +158,8 @@ test('ordinary world ticks keep a finite campaign active outbound and at work, t
   if(u.seaRaid?.phase==='raid')assert.equal(g.state.raidCampaign.active,true,'the pending raid does not instantly finish or demobilize defenders');
  }
  assert.ok(traveled);assert.ok(worked,'real supply work is reached through the ordinary simulation');assert.ok(u.carry>0,'the same actor physically takes an actual load');
- g.step(.1);assert.equal(g.state.raidCampaign.active,false,'unopposed withdrawal ends the campaign alarm');assert.ok(g.state.units.some(p=>p.id===u.id&&p.hp>0),'campaign completion retains the moving survivor');
+ // the campaign alarm lasts until the whole three-person party (3f70afe5) has withdrawn
+ for(let i=0;i<1600&&g.state.units.some(p=>p.hp>0&&p.seaRaid?.phase==='raid');i++)g.step(.1);g.step(.1);assert.equal(g.state.raidCampaign.active,false,'unopposed withdrawal ends the campaign alarm');assert.ok(g.state.units.some(p=>p.id===u.id&&p.hp>0),'campaign completion retains the moving survivor');
  for(let i=0;i<1600&&u.seaRaid;i++)g.step(.1);
  assert.equal(u.seaRaid,undefined);assert.equal(u.homeCamp,camp.id);assert.ok(g.buildingWorkReached(u,camp));assert.deepEqual(g.state.units.map(p=>p.id),ids);assert.ok(g.state.buildings.includes(b));
 });
@@ -176,11 +180,11 @@ test('raid withdrawal records its first actual injury, local opposition, deadlin
   // independently qualified below. Actor and any carried loot remain real.
   u.campTrip=undefined;
   if(cause==='injury')u.hp=u.maxHp*.2;
-  if(cause==='defenders')for(let i=0;i<6;i++)g.spawnUnit('spearman',u.x+2+i*.2,u.z+2,0);
+  if(cause==='defenders')for(let i=0;i<10;i++)g.spawnUnit('spearman',u.x+2+i*.2,u.z+2,0); // a 3-person party (3f70afe5) needs more than 2x+1 defenders
   if(cause==='deadline')g.state.time=u.seaRaid.departAt+1;
   if(cause==='loot'){g.tribe(0).food-=4;g.tribe(0).foodLots.provisions-=4;u.carry=4;u.carryType='food';}
   seaRaidAI(g,u,0);
-  const patterns={injury:/serious injury/,defenders:/6 nearby defenders overwhelm 2 raiders/,deadline:/deadline reached/,loot:/carried supplies/};
+  const patterns={injury:/serious injury/,defenders:/10 nearby defenders overwhelm \d+ raiders/,deadline:/deadline reached/,loot:/carried supplies/};
   assert.match(plan.reason,patterns[cause]);assert.equal(u.seaRaid.phase,'retreat');assert.equal(plan.metrics.withdrawals,1);
   const first=plan.reason;u.hp=u.maxHp*.1;g.state.time=u.seaRaid.departAt+5;seaRaidAI(g,u,0);
   assert.equal(plan.reason,first,'later true conditions cannot rewrite the original withdrawal decision');assert.equal(plan.metrics.withdrawals,1);
