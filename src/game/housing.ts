@@ -157,22 +157,34 @@ export function planAdvancedHome(g: Game, x: number, z: number, team = 0) {
   g.state.walkDirty = true;
   g.workBoard.reset();
   if (team === 0) {
-    const trained = g.state.units
-      .filter(
-        (u) =>
-          u.team === team &&
-          adult(g, u) &&
-          knowsHousing(u) &&
-          !u.buildOrder &&
-          !hasTaskCommitment(u) &&
-          !u.jobLock &&
-          !u.carry,
-      )
-      .sort((a, c) => Math.hypot(a.x - b.x, a.z - b.z) - Math.hypot(c.x - b.x, c.z - b.z))
-      .slice(0, 1);
-    if (trained.length) queueConstruction(g, b, trained);
+    const trained = freeHomeBuilders(g, b);
+    if (trained.length) queueConstruction(g, b, trained.slice(0, 1));
+    else assignWaitingHome(g, b);
   } else g.assignBuilders(b);
   return true;
+}
+/** Trained adults who can take a new home right now, nearest first. */
+function freeHomeBuilders(g: Game, b: Building) {
+  return g.state.units
+    .filter((u) => u.team === b.team && adult(g, u) && knowsHousing(u) && !u.buildOrder && !hasTaskCommitment(u) && !u.jobLock && !u.carry)
+    .sort((a, c) => Math.hypot(a.x - b.x, a.z - b.z) - Math.hypot(c.x - b.x, c.z - b.z));
+}
+/** A placed player home whose only trained builder was busy at placement used to wait
+ * forever (BUG-BORIS-LONE-HOUSE). Re-offer it to a trained adult once one is free,
+ * and otherwise say plainly who the site is waiting for. */
+function assignWaitingHome(g: Game, b: Building) {
+  const p = b.renovation;
+  if (!p || p.mode !== "new" || b.team !== 0 || b.hp <= 0 || b.planPaused || p.actorId !== null || p.phase === "paused") return false;
+  if (g.state.units.some((u) => u.team === b.team && u.hp > 0 && (u.buildOrder === b.id || u.constructionQueue?.sites.includes(b.id)))) return false;
+  const free = freeHomeBuilders(g, b);
+  if (free.length && queueConstruction(g, b, free.slice(0, 1)).accepted) {
+    if (p.blockedReason?.startsWith("Waiting for") || p.blockedReason?.startsWith("No living resident")) p.blockedReason = undefined;
+    return true;
+  }
+  p.blockedReason = g.state.units.some((u) => u.team === b.team && adult(g, u) && knowsHousing(u))
+    ? "Waiting for a resident who learned the home method to finish their current task"
+    : "No living resident knows the home method; demonstrate a home first";
+  return false;
 }
 export function housingStatus(g: Game, b: Building) {
   const p = b.renovation;
@@ -724,6 +736,7 @@ export function tickHousing(g: Game, dt: number) {
     npc: old?.state === g.state ? old.npc : 0,
   };
   clocks.set(g, now);
+  for (const b of g.state.buildings) if (b.type === "house" && b.renovation) assignWaitingHome(g, b);
   if (g.state.time < now.npc) return;
   now.npc = g.state.time + HOUSING_RULES.npcReviewSeconds;
   for (const t of g.state.tribes) {
