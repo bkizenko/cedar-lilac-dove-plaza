@@ -22,4 +22,9 @@ registerHooks({
       throw e;
     }
   },
+  // Vite bundles stylesheets; under the node test runner a UI module's `import './x.css'` is a no-op.
+  load(url, context, next) {
+    if (url.endsWith(".css")) return { format: "module", source: "export default {};", shortCircuit: true };
+    return next(url, context);
+  },
 });

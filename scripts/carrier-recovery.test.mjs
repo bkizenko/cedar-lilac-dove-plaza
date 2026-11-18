@@ -20,6 +20,8 @@ test('unknown tribe identities never leak through the HUD dots',()=>{const g=fix
 test('a line of loaded carriers unloads through a shared crowded frontage',()=>{const g=fixture();g.state.forage=[];g.state.wildlife=[];g.state.trees=[];g.state.stones=[];const first=g.state.units[0];g.state.units=[];for(let i=0;i<10;i++){const u=i?g.spawnUnit('worker',-20+i*1.1,48,0):first;Object.assign(u,{x:-20+i*1.1,z:48,y:4,order:'return',node:null,carry:8,carryType:'wood'});if(!g.state.units.includes(u))g.state.units.push(u);}const stock=g.tribe(0).wood;for(let i=0;i<900;i++){g.state.time+=.1;g.navBudget=10;for(const u of g.state.units)g.workerAI(u,.1);g.separate(.1);}assert.equal(g.state.units.reduce((n,u)=>n+u.carry,0),0);assert.equal(g.tribe(0).wood,stock+80);});
 test('hunters hit moving prey with actual projectiles and bring finite raw meat home',async()=>{
  const {HUNTING_WEAPONS,HUNTING_FLIGHT_RULES,CARCASS_MEAT}=await import('../src/game/hunting.ts');
+ // Goats gallop at their authored top gait (animalTraits, 2.9 m/s) when startled; hunter flight is capped by wildlifeFleeSpeed (2.5 m/s). Either is real, so the bound is the larger.
+ const {ANIMAL_TRAITS}=await import('../src/game/animalTraits.ts'),topSpeed=Math.max(...ANIMAL_TRAITS.goat.gaits,2.5);
  const g=fixture(),u=g.state.units[0];g.state.forage=[];g.state.fish=[];g.state.trees=[];g.state.stones=[];
  const prey={...g.state.wildlife.find(c=>c.species==='goat'),id:g.id(),species:'goat',x:12,z:38,y:4,hp:2,maxHp:2,vx:0,vz:0,wanderT:10};
  g.state.wildlife=[prey];Object.assign(u,{x:0,z:48,y:4});g.vision.fill(2);u.selected=true;g.tribe(0).food=10;
@@ -38,7 +40,7 @@ test('hunters hit moving prey with actual projectiles and bring finite raw meat 
   // Match Game.step: move wildlife, then sweep fixed-flight projectiles against
   // those actual moving bodies and the same physical obstacle collection.
   const obstacles=g.tickWildlife(1/30);g.updateProjectiles(1/30,true,obstacles);
-  assert.ok(Math.hypot(prey.vx,prey.vz)<=2.51);if(prey.hp>0&&Math.hypot(prey.vx,prey.vz)>.01)moving=true;
+  assert.ok(Math.hypot(prey.vx,prey.vz)<=topSpeed+.01,'prey never exceeds its authored gallop or hunter-flight speed');if(prey.hp>0&&Math.hypot(prey.vx,prey.vz)>.01)moving=true;
   assert.ok(g.state.projectiles.length<=HUNTING_FLIGHT_RULES.maxProjectiles);
  }
  assert.ok(moving,'the hunter must catch prey that actually moved');assert.ok(launched.size>=2,'two finite stone hits are required');assert.equal(prey.hp,0);
