@@ -54,7 +54,7 @@ test('distant food gatherers camp by their work at night, then resume instead of
 
 test('journey foraging that exhausts a plant leaves a real recovery delay',async()=>{
  const {expeditionAI}=await import('../src/game/journeys.ts');
- const g=fixture(),u=g.spawnUnit('worker',80,38,0),n={...patch(g),x:80,z:38,amount:1};g.state.forage=[n];
- u.expedition={food:1,returning:true,forage:0};u.order='move';u.tx=0;u.tz=50;g.steer=()=>false;
+ const g=fixture(),u=g.spawnUnit('worker',80,38,0),n={...patch(g),x:80,z:38,amount:1,cropCandidate:'tubers'};g.state.forage=[n]; /* wild grain is not trail food (it needs threshing), so the party digs a tuber patch */
+ u.expedition={food:1,returning:true,forage:0};const {expeditionHome}=await import('../src/game/expeditionProvisions.ts'),home=expeditionHome(g,u);assert.ok(home);u.order='move';u.tx=home.spot.x;u.tz=home.spot.z;g.steer=()=>false; /* a returning party heads for its real home cache approach */
  expeditionAI(g,u,8);assert.equal(n.amount,0);assert.ok(n.regenT>=240);g.tickRegen(.1);assert.equal(n.amount,0);
 });
