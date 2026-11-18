@@ -67,7 +67,7 @@ export function NeedsTradeControls({engine,team,inboxOnly=false}:{engine:Engine;
    setFeedback({epoch,team,text:reply.reason});engine.pushHud();
   });
  };
- const message=feedback?.epoch===epoch&&feedback.team===team?feedback.text:'';
+ const message=feedback&&feedback.epoch===epoch&&feedback.team===team?feedback.text:'';
  if(inboxOnly&&!read.model?.offers.some(o=>o.to===0&&o.canAnswer)&&!message&&!action.error)return null;
  return <>
   {read.model?<NeedsTradeSheet key={`${epoch}:${team??'all'}`} model={read.model} inboxOnly={inboxOnly} busy={action.busy} run={run}/>:<p className="text-xs text-parchment-dim">{read.issue}</p>}
