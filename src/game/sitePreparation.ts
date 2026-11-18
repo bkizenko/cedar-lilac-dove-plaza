@@ -66,6 +66,8 @@ export function validSitePreparation(value:unknown,b:Building):value is SitePrep
  if(keys.some(k=>(p.quote[k]||0)>0)){
   const quote=buildingCost(original.type,undefined,b.team,{w:original.w,d:original.d});
   if(original.type==='watchtower')Object.assign(quote,towerPlatformSpec(original.towerPlatform).cost);
+  // A graded-slope site adds its levelling goods to the same bill at placement.
+  if(b.site){quote.wood=(quote.wood||0)+(b.site.wood||0);quote.stone=(quote.stone||0)+(b.site.stone||0);}
   if(original.type==='townhall'){const wood=p.quote.wood||0;if(wood!==0&&(wood<40||wood>1120||wood%20!==0))return false;quote.wood=wood;}
   if(keys.some(k=>(p.quote[k]||0)!==(quote[k]||0)))return false;
  }
