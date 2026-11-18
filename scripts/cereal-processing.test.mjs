@@ -514,7 +514,8 @@ test('four-load grain processing needs expanded sites and delivered practice, th
  for(const key of bulkKeys)assert.ok(jobs.some(p=>p.recipe===key&&p.phase==='complete'),key);
  const metrics=g.state.production.metrics;
  assert.equal(metrics.consumed.grainSheaves,jobs.reduce((n,p)=>n+(PRODUCTION_RECIPES[p.recipe].inputs.grainSheaves||0),0));
- assert.equal(metrics.logsUsed,jobs.reduce((n,p)=>n+PRODUCTION_RECIPES[p.recipe].wood,0));
+ // Baking heat can come from threshing straw/chaff (meal residue fuel: 8 chaff or 4 straw = 1 log), so logs plus burned residue equal the recipes' fuel.
+ assert.ok(Math.abs(metrics.logsUsed+(metrics.consumed.chaff||0)/8+(metrics.consumed.straw||0)/4-jobs.reduce((n,p)=>n+PRODUCTION_RECIPES[p.recipe].wood,0))<1e-9,JSON.stringify({logs:metrics.logsUsed,chaff:metrics.consumed.chaff,straw:metrics.consumed.straw}));
  assert.equal(metrics.waterUsedLiters,jobs.reduce((n,p)=>n+PRODUCTION_RECIPES[p.recipe].water,0));
  assert.ok(g.tribe(0).foodLots.bread>0);
  assert.ok(Math.abs(g.state.cerealProcessing.seedsAllocated-g.state.cerealProcessing.cleanedGrain*CEREAL_RULES.seedFraction)<1e-8);
