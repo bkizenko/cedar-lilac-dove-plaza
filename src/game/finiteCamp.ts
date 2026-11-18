@@ -106,6 +106,9 @@ const guards = (g: Game, b: Building) =>
   g.state.units.filter(
     (u) => u.hp > 0 && u.team === 3 && u.homeCamp === b.id && u.type === "spearman" && healthy(u),
   );
+/** Healthy, uncommitted guards standing at the camp: every trip must leave one. */
+export const campGuardsAtHome = (g: Game, b: Building) =>
+  guards(g, b).filter((p) => Math.hypot(p.x - b.x, p.z - b.z) <= 12).length;
 const nearbyGuard = (g: Game, b: Building, actor: Unit) =>
   guards(g, b).some((p) => p !== actor && Math.hypot(p.x - b.x, p.z - b.z) <= 12);
 const moveHome = (g: Game, u: Unit, b: Building, dt: number) => {

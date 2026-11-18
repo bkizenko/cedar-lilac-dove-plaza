@@ -1,5 +1,5 @@
 import {withdrawCarriedFood,setCarriedFood,receiveCarriedFood} from './tradeFood';
-import{finiteCampGuardAI,campTripAI,beginCampTrip,FINITE_CAMP_RULES}from'./finiteCamp';
+import{finiteCampGuardAI,campTripAI,beginCampTrip,campGuardsAtHome,FINITE_CAMP_RULES}from'./finiteCamp';
 import{limitedRaidAI,observeRaidIntent,RAID_INTENT_RULES,raidThreateningDefender}from'./raidIntent';
 import {explicitArmedOrder,hasLocalLootPursuer} from './defense';
 import {beginSeaRaiderReturn,SEA_RAIDER_RETURN_RULES} from './seaRaiderReturn';
@@ -122,7 +122,11 @@ export function dispatchExistingCampRaid(g:Game){
   for(const report of reports){
    // A raid is never a lone raider: dry-run every candidate first, and launch
    // nobody unless a party of MIN_RAID_PARTY can actually go.
-   const able=g.state.units.filter(u=>u.hp>0&&u.team===3&&u.homeCamp===camp.id&&beginCampTrip(g,u,report,true));
+   let able=g.state.units.filter(u=>u.hp>0&&u.team===3&&u.homeCamp===camp.id&&beginCampTrip(g,u,report,true));
+   // Every trip leaves a defender at the camp, so one guard at home always stays:
+   // without this the dry run passes three, only two may actually leave, and the
+   // paid party turns back without ever raiding.
+   able=able.slice(0,Math.max(0,campGuardsAtHome(g,camp)-1));
    if(!raidPartyViable(able.length))continue;
    const sent:Unit[]=[];
    for(const u of able){if(beginCampTrip(g,u,report))sent.push(u);}
