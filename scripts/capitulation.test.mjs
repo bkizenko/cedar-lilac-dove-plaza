@@ -58,7 +58,7 @@ test('annexation transfers the surrendered community intact',()=>{
  assert.equal(g.state.units.find(u=>u.id===residents[3].id).team,0);assert.equal(g.state.buildings.find(b=>b.x===200).team,1,'distant community stays independent');
 });
 test('looting moves exactly the carried goods out of the defender store and keeps their ownership on the road',()=>{
- const {g,hall,party,f}=capitulated();g.tribe(1).wood=50;g.tribe(1).stone=0;const before=g.tribe(1).wood+g.tribe(0).wood;
+ const {g,hall,party,f}=capitulated();g.tribe(1).wood=50;g.tribe(1).stone=0;g.tribe(1).food=0;g.tribe(1).foodLots={}; /* looters take the largest store, food included */const before=g.tribe(1).wood+g.tribe(0).wood;
  const r=acceptCapitulation(g,f.id,'loot');assert.equal(r.accepted,true,r.reason);
  const carried=party.reduce((n,u)=>n+(u.carryType==='wood'?u.carry:0),0);assert.ok(carried>0);
  assert.equal(g.tribe(1).wood+g.tribe(0).wood+carried,before,'conserved');assert.equal(cargoOwner(g,party.find(u=>u.carry>0)),1,'stolen goods remain marked to their owner until delivered');
