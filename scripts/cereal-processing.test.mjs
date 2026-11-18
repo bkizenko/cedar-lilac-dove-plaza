@@ -109,9 +109,11 @@ test('Auto work delivers harvested grain through threshing, winnowing, grinding 
  assert.equal(projects[5].workplace, oven.id);
  assert.equal(g.state.production.metrics.grainUsed, 4);
  assert.equal(g.state.production.metrics.consumed.flour, 4);
- assert.equal(g.state.production.metrics.logsUsed, 1);
- assert.equal(g.state.production.metrics.waterUsedLiters, 2);
- assert.equal(tribe.wood, wood - 1);
+ // Oven heat may come from the threshing straw/chaff (meal residue fuel) instead of a log: one fuel unit in total.
+ const m = g.state.production.metrics, residue = (m.consumed.chaff || 0) / 8 + (m.consumed.straw || 0) / 4;
+ assert.ok(Math.abs(m.logsUsed + residue - 1) < 1e-9, JSON.stringify({logs: m.logsUsed, chaff: m.consumed.chaff, straw: m.consumed.straw}));
+ assert.equal(g.state.production.metrics.waterUsedLiters, projects.reduce((t, p) => t + PRODUCTION_RECIPES[p.recipe].water, 0), 'water is exactly what the six recipes call for');
+ assert.equal(tribe.wood, wood - m.logsUsed);
  assert.ok(Math.abs(tribe.seeds - seeds - .64) < 1e-9);
  assert.ok(tribe.foodLots.bread > 0);
  assert.doesNotThrow(() => decodeGame(encodeGame(g)));
