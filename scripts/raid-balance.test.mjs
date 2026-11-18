@@ -65,7 +65,8 @@ test('standing down keeps weapons during immediate danger, then resumes after th
  const {g,u}=fixture();g.callToArms();const stock=g.tribe(0).spears;
  const enemy=g.spawnUnit('spearman',u.x+4,u.z,3);g.standDown();assert.equal(u.militia,true);assert.equal(g.tribe(0).spears,stock);
  emergencyResponse(g,u,.1);assert.ok(u.emergency);enemy.hp=0;g.state.time+=11;emergencyResponse(g,u,.1);demobilizationAI(g,u,.1);
- assert.equal(u.militia,false);assert.equal(g.tribe(0).spears,stock+1);
+ for(let i=0;i<600&&u.militia;i++)g.step(.1); // stand-down is physical: the resident walks to the stores to hand back the spear
+ assert.equal(u.militia,false,u.workReason);assert.equal(g.tribe(0).spears,stock+1);
 });
 
 test('new orders cancel queued stand-down, and invalid saved campaign state is rejected',()=>{
