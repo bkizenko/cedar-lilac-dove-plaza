@@ -141,7 +141,7 @@ test('horse births need three unreserved pen places and inherit the maternal adu
   const mother={id:2,species:'horse',team:0,pen:1,sex:'female',x:0,y:5,z:0,facing:0,vx:0,vz:0,wanderT:10,hp:4,maxHp:4,fly:0,scale:1.22,adultScale:1.22,born:-400,tamedAt:0,hunger:0,milk:0,pregnancy:600,thirstSeconds:0};
   const father={...mother,id:3,sex:'male',pregnancy:0,scale:1.15,adultScale:1.15};
   const tribe={id:0,survival:{waterHerdWithdrawnLiters:12,waterHerdConsumedLiters:0}};
-  const g={state:{time:200,weather:'clear',survivalVersion:1,buildings:[pen],units:scenario==='incoming'?[{id:4,hp:10,tamingWork:{animal:5,pen:1,progress:20}}]:[],wildlife:scenario==='incoming'?[{id:5,species:'horse'}]:[],livestock:[mother,father]},world:{waterY:0,biomes:[{kind:'plains',x:0,z:0}],rivers:[]},height:()=>5,waterAt:()=>0,terrainRevision:()=>0,finished:()=>true,walkable:()=>true,tribe:()=>tribe,id:()=>nextId++,banner:()=>{}};
+  const g={state:{time:200,weather:'clear',survivalVersion:1,buildings:[pen],units:scenario==='incoming'?[{id:4,hp:10,tamingWork:{animal:5,pen:1,progress:20}}]:[],wildlife:scenario==='incoming'?[{id:5,species:'horse'}]:[],livestock:[mother,father],tribes:[tribe]},world:{waterY:0,biomes:[{kind:'plains',x:0,z:0}],rivers:[]},height:()=>5,waterAt:()=>0,terrainRevision:()=>0,finished:()=>true,walkable:()=>true,tribe:()=>tribe,id:()=>nextId++,banner:()=>{}};
   tickHusbandry(g,.2);
   if(scenario!=='room'){assert.equal(g.state.livestock.length,2,'full places and incoming horse reservations both block a foal');assert.equal(penPlacesOccupied(g,1),6);}
   else{
