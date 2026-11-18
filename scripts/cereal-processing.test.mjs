@@ -587,20 +587,20 @@ test('milled flour is made even at a full store, ordinary goods are untouched an
 
 test('outside loose deliveries preserve old paid parcels without admitting another over-capacity parked batch',()=>{
  const {g,u,v,hearth}=fixture();g.setGrowthPolicy('stable');v.jobLock=true;
- g.tribe(0).items={grainSheaves:16,plantFibre:84};
+ g.tribe(0).items={grainSheaves:16,plantFibre:67};/* packed volume: 16 sheaves = 32 units; 67 fibre leaves room to park exactly one 8-sheaf (16-unit) parcel */
  assert.equal(beginProduction(g,'threshCerealHand',hearth.id,u.id),true);
  const existing=g.state.production.projects.at(-1);
  assert.equal(unloadProductionProject(g,existing.id),true);
  drive(g,30,()=>existing.phase==='stored');assert.equal(existing.phase,'stored');
  v.itemCargo={plantFibre:1};assert.equal(deliverProductionCargo(g,v),true);
- assert.equal(cachedProductionUnits(g,0),8);assert.equal(g.tribe(0).items.plantFibre,84);
+ assert.equal(cachedProductionUnits(g,0),16);assert.equal(g.tribe(0).items.plantFibre,68,'the loose fibre is unloaded (outside) without displacing the parked parcel');
  assert.equal(beginProduction(g,'threshCerealHand',hearth.id,u.id),true);
  const next=g.state.production.projects.at(-1),paid=g.state.production.metrics.consumed.grainSheaves;
  assert.notEqual(next.id,existing.id);assert.equal(paid,16);
  assert.equal(unloadProductionProject(g,next.id),false,'protecting already placed parcels does not grant space for a new parked load');
  assert.match(next.blockedReason,/No room to park/);assert.equal(next.phase,'carrying');
- assert.equal(existing.phase,'stored');assert.equal(existing.actorId,null);assert.equal(cachedProductionUnits(g,0),8);
- const copy=decodeGame(encodeGame(g));assert.equal(cachedProductionUnits(copy,0),8);
+ assert.equal(existing.phase,'stored');assert.equal(existing.actorId,null);assert.equal(cachedProductionUnits(g,0),16);
+ const copy=decodeGame(encodeGame(g));assert.equal(cachedProductionUnits(copy,0),16);
  assert.equal(copy.state.production.projects.find(p=>p.id===next.id).actorId,u.id);
  assert.equal(copy.tribe(0).items.grainSheaves,0);assert.equal(copy.state.production.metrics.consumed.grainSheaves,16);
 });
