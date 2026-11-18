@@ -5,7 +5,9 @@ import {BUILD_TIME} from '../src/game/constants.ts';
 import {wellSite,watermillSite,windmillSite,aqueductRoute,cisternCatchment,nearestFreshWater} from '../src/game/waterWorks.ts';
 import {currentPowerKw} from '../src/game/riverCurrents.ts';
 import {waterWorksLabour,waterWorksPlacementIssue,millPowerKw} from '../src/game/waterWorksBuildings.ts';
-import {costOfBuilding} from '../src/game/constants.ts';
+import {costOfBuilding,BUILDINGS} from '../src/game/constants.ts';
+// placeBuilding adds graded-slope site work (levelling/terrace wood and stone) to the base bill, so expected spend = base + that site's extra
+const billed=(g,t,x,z)=>{const b=costOfBuilding(t),d=BUILDINGS[t],a=g.state.slopeModel==='graded'?g.siteAssessment(t,x,z,d.w,d.d):null,e=a?.ok&&a.tier!=='level'?a:{extraWood:0,extraStone:0};return {...b,wood:(b.wood||0)+e.extraWood,stone:(b.stone||0)+e.extraStone};};
 
 function world(seed=4,layout='pangaea'){
   const g=new Game();g.reset(seed,18,{size:1040,layout});g.enterIsland();g.testMode=true;g.revealMap=true;g.updateVision(0);
@@ -34,7 +36,7 @@ test('historic saves still load; water-works types use site queries, real materi
   const well=findSite(g,'well');
   assert.ok(well,'a valid native well site');
   const site=wellSite(g,well.x,well.z,0);assert.equal(site.issues.length,0);
-  const wood0=g.tribe(0).wood,stone0=g.tribe(0).stone,cost=costOfBuilding('well');
+  const wood0=g.tribe(0).wood,stone0=g.tribe(0).stone,cost=billed(g,'well',well.x,well.z);
   assert.ok(cost.wood>0&&cost.stone>0,'wells spend real materials');
   assert.equal(g.placeBuilding('well',well.x,well.z,0),true);
   const wellB=g.state.buildings.find(b=>b.type==='well'&&b.hp>0);
@@ -53,10 +55,12 @@ test('historic saves still load; water-works types use site queries, real materi
   const cistern=findSite(g,'cistern');assert.ok(cistern,'a valid cistern site');
   const catch0=cisternCatchment(g,cistern.x,cistern.z);assert.ok(catch0.catchmentSquareMetres>0);
   const stone1=g.tribe(0).stone;
-  assert.equal(g.placeBuilding('cistern',cistern.x,cistern.z,0),true);
-  assert.equal(g.tribe(0).stone,stone1-costOfBuilding('cistern').stone);
+  const cisternBill=billed(g,'cistern',cistern.x,cistern.z);assert.equal(g.placeBuilding('cistern',cistern.x,cistern.z,0),true);
+  assert.equal(g.tribe(0).stone,stone1-cisternBill.stone);
 
   // watermill: live current at the wheel
+  // mills and the aqueduct are age-gated (watermill = Classical); reach that age as a player would before placing them
+  g.tribe(0).age=Math.max(g.tribe(0).age,BUILDINGS.watermill.age,BUILDINGS.windmill.age,BUILDINGS.aqueduct.age);
   const mill=findSite(g,'watermill',12);assert.ok(mill,'a valid watermill site');
   const wheel=watermillSite(g,mill.x,mill.z).wheel;
   assert.equal(g.placementIssue('watermill',mill.x,mill.z,0),null);
@@ -88,8 +92,8 @@ test('historic saves still load; water-works types use site queries, real materi
   }
   assert.ok(aq,'a feasible aqueduct delivery point');
   const stone2=g.tribe(0).stone;
-  assert.equal(g.placeBuilding('aqueduct',aq.x,aq.z,0),true);
-  assert.equal(g.tribe(0).stone,stone2-costOfBuilding('aqueduct').stone);
+  const aqBill=billed(g,'aqueduct',aq.x,aq.z);assert.equal(g.placeBuilding('aqueduct',aq.x,aq.z,0),true);
+  assert.equal(g.tribe(0).stone,stone2-aqBill.stone);
   const aqB=g.state.buildings.find(b=>b.type==='aqueduct'&&b.hp>0);
   assert.ok(aqB);assert.ok(waterWorksLabour(g,aqB)>=BUILD_TIME.aqueduct);
 
