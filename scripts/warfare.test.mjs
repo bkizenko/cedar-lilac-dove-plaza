@@ -25,14 +25,14 @@ test('weapon orders reserve the clicked workplace rather than a different nearby
 
 test('a destroyed weapon bench releases labor; a replacement resumes saved paid progress',()=>{
  let {g,u}=fixture();g.tribe(0).wood=50;g.tribe(0).stone=20;
- assert.equal(beginWeaponWork(g,'spear'),true);u.weaponWork.progress=36;
+ assert.equal(beginWeaponWork(g,'spear'),true);/* spear is 16 s base, 2x at the hall (393ff037) */assert.equal(u.weaponWork.duration,32);u.weaponWork.progress=16;
  g.state.buildings[0].hp=0;weaponWorkAI(g,u,.1);
  assert.equal(u.weaponWork.paused,true);assert.equal(u.order,'idle');
  g=decodeGame(encodeGame(g));g.world.heights.fill(4);g.clockState=()=>({period:'Afternoon'});u=g.state.units.find(u=>u.team===0);
  const workshop=g.makeBld('workshop',20,38,0);g.state.buildings.push(workshop);g.rebuildWalk();
  assert.equal(beginWeaponWork(g,'spear',0,workshop.id),true);
- assert.equal(u.weaponWork.progress,12,'half-finished work remains half-finished at a faster bench');
- assert.equal(u.weaponWork.duration,24);assert.equal(g.tribe(0).wood,48);assert.equal(g.tribe(0).stone,19);
+ assert.equal(u.weaponWork.progress,8,'half-finished work remains half-finished at a faster bench');
+ assert.equal(u.weaponWork.duration,16);assert.equal(g.tribe(0).wood,48);assert.equal(g.tribe(0).stone,19);
  const spears=g.tribe(0).spears;work(g,u,70);assert.equal(g.tribe(0).spears,spears+1);assert.equal(u.weaponWork,undefined);
 });
 
