@@ -4539,6 +4539,25 @@ export class Game {
     return false;
   }
 
+  /** A second person sent to a spot someone already stands on stops beside
+   * them once the walk has stalled there, instead of pushing at the occupied
+   * point forever. Only stalled walkers (no progress for the route-stall
+   * time) next to a still body standing on the target count as arrived. */
+  crowdedArrival(u: Unit) {
+    if (u.stuckT < ROUTE_PROGRESS_RULES.stallSeconds) return false;
+    const d = Math.hypot(u.tx - u.x, u.tz - u.z);
+    if (d > 2 || d < 0.05) return false;
+    const taken = this.state.units.some((o) => o !== u && o.hp > 0 && !o.boat && o.order !== "move" &&
+      Math.hypot(o.vx ?? 0, o.vz ?? 0) < 0.3 &&
+      Math.hypot(o.x - u.tx, o.z - u.tz) < o.r + u.r + 0.2 &&
+      Math.hypot(o.x - u.x, o.z - u.z) < o.r + u.r + 0.6);
+    if (!taken) return false;
+    this.paths.delete(u.id);
+    clearRouteProgress(u);
+    u.stuckT = 0;
+    return true;
+  }
+
   separate(dt: number) {
     // Query nearby buckets instead of comparing every pair across the island.
     const us = this.state.units;
@@ -4714,7 +4733,7 @@ export class Game {
     }
     if (u.order === "move") {
       if (this.lootMegaliths(u)) return;
-      if (this.steer(u, dt)) {
+      if (this.steer(u, dt) || this.crowdedArrival(u)) {
         if (this.lootMegaliths(u)) return;
         u.order = u.stationOnArrival ? "hold" : "idle";
         if (u.stationOnArrival) u.workReason = "At your destination — waiting for orders";
@@ -5259,7 +5278,7 @@ export class Game {
       return;
     }
     if (u.order === "move") {
-      if (this.steer(u, dt)) {
+      if (this.steer(u, dt) || this.crowdedArrival(u)) {
         u.order = u.stationOnArrival ? "hold" : "idle";
         if(u.stationOnArrival)u.workReason="At your destination — waiting for orders";
       }
