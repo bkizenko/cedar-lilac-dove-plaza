@@ -68,7 +68,7 @@ export function SeasonReport({game,hidden=false}:{game:Game;hidden?:boolean}) {
  const short:[string,number][]=([['Food',latest.totals.food],['Logs',latest.totals.wood],['Stone',latest.totals.stone]] as [string,number][]).filter(([,n])=>n>0);
  return <aside className="hud-panel w-[18rem] max-w-full rounded-lg p-3 text-xs" aria-label="Village seasonal report">
   <div className="flex items-center justify-between gap-3"><strong>{period(latest.season)} ended</strong>
-   <button type="button" className="min-h-9 px-2 py-1" onClick={()=>setNotice(undefined)}>Dismiss</button></div>
+   <button type="button" className="min-h-11 px-2 py-1" onClick={()=>setNotice(undefined)}>Dismiss</button></div>
   <p className="mt-1">{short.length?short.map(([k,n])=>`${k} ${units(n)}`).join(' · '):'A quiet season.'}</p>
  </aside>;
 }

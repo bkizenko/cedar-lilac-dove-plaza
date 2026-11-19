@@ -873,7 +873,7 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
               const tree=engine.game.selectedResource;
               if(tree?.kind==="tree"){engine.markTrees([tree.id],false);engine.pushHud();}
             }}>Fell tree</button>}
-            {sel.kind==='building'&&typeof sel.team==='number'&&sel.team!==0&&sel.team!==3&&engine&&knownSettlement(engine.game,sel.team)&&<button className="mt-2 min-h-9 rounded-md border border-bronze/40 px-3" onClick={()=>setTradeOpen(sel.team!)}>Offer trade</button>}
+            {sel.kind==='building'&&typeof sel.team==='number'&&sel.team!==0&&sel.team!==3&&engine&&knownSettlement(engine.game,sel.team)&&<button className="mt-2 min-h-11 rounded-md border border-bronze/40 px-3" onClick={()=>setTradeOpen(sel.team!)}>Offer trade</button>}
             {sel.kind === "building" && sel.team === 0 && (
               <div className="building-actions mt-2 flex flex-col gap-2">
                 {sel.type==='trench'&&engine&&sel.buildingId&&<ExcavationReadout engine={engine} buildingId={sel.buildingId}/>}
@@ -895,7 +895,7 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
                 {sel.completed&&sel.type==='dock'&&engine&&<BoatControls engine={engine} dock={sel.buildingId}/>}
                 {sel.completed&&(sel.type==='cistern'||sel.type==='greatCistern')&&engine&&(()=>{const b=engine.game.state.buildings.find(x=>x.id===sel.buildingId);if(!b)return null;const stored=cisternStored(b),inflow=cisternInflow(engine.game,b);return <p className="text-xs" aria-label="Cistern storage">Stored fresh water {Math.round(stored)} / {cisternCapacity(b)} L ({Math.round(stored/cisternCapacity(b)*100)}%){inflow>0?` · rain filling ${inflow.toFixed(1)} L/s`:stored<=0?' · empty; waits for rain or carried water':''}</p>;})()}
                 {sel.completed&&sel.type==="townhall"&&engine&&<button type="button"
-                  className="min-h-10 rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40"
+                  className="min-h-11 rounded-md border border-bronze/40 px-2 py-2 text-left text-xs disabled:opacity-40"
                   disabled={!engine.game.state.units.some(u=>u.team===0&&u.hp>0&&u.militia&&!u.prisoner)}
                   onClick={()=>engine.standDown()}>Stand down militia</button>}
                 {sel.completed&&sel.type==="dock"&&<button type="button" className="rounded-md border border-bronze/40 px-2 py-2 text-left text-xs" onClick={()=>{if(engine&&sel.buildingId){staffDock(engine.game,sel.buildingId);engine.pushHud();}}}>Assign 2 fishers</button>}
@@ -960,8 +960,8 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
               </button>
             ) : null}
             {(sel.kind === "unit" || hud.workerSelected > 0 || hud.militarySelected > 0) && <div className="mt-1.5 flex gap-1">
-              <button className="min-h-8 flex-1" aria-label="Previous villager" title="Previous villager (Shift+,)" onClick={()=>engine?.cycleVillager(-1)}>←</button>
-              <button className="min-h-8 flex-1" aria-label="Next villager" title="Next villager (,)" onClick={()=>engine?.cycleVillager(1)}>→</button>
+              <button className="min-h-11 flex-1" aria-label="Previous villager" title="Previous villager (Shift+,)" onClick={()=>engine?.cycleVillager(-1)}>←</button>
+              <button className="min-h-11 flex-1" aria-label="Next villager" title="Next villager (,)" onClick={()=>engine?.cycleVillager(1)}>→</button>
             </div>}
             {hud.idleWorkers > 0&&sel.kind!=='boat' ? (
               <button
@@ -1249,7 +1249,7 @@ export function JobBtn({
       type="button"
       title={title}
       onClick={onClick}
-      className={`flex min-h-8 flex-col items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-[9px] ${
+      className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-md border px-1 py-1 text-[9px] ${
         active
           ? "border-bronze bg-bronze/20 text-bronze-bright"
           : "border-parchment/15 bg-ink-soft text-parchment hover:border-bronze/40"

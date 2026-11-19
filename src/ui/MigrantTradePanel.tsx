@@ -21,7 +21,7 @@ export function MigrantTradePanel({engine}:{engine:Engine}){
    <select aria-label="Payment" className="rounded border border-bronze/40 bg-ink p-1" value={pay} onChange={e=>setPay(e.target.value as MigrantPayKind)}>{KINDS.map(k=><option key={k} value={k}>{k} ({migrantPrice(k)} each)</option>)}</select>
   </div>
   <ul className="max-h-32 space-y-1 overflow-y-auto">{people.map(p=><li key={p.id}><label className="flex items-center gap-2"><input type="checkbox" checked={picked.includes(p.id)} disabled={!!p.issue||busy} onChange={()=>toggle(p.id)}/><span>{p.name}</span><span className="text-parchment-dim">{p.issue||`willing (${Math.round(p.consent*100)}%)`}</span></label></li>)}</ul>
-  <button type="button" className="min-h-9 rounded border border-bronze/40 px-2 py-1 disabled:opacity-50" disabled={busy||!picked.length} onClick={()=>void go()}>Agree the move</button>
+  <button type="button" className="min-h-11 rounded border border-bronze/40 px-2 py-1 disabled:opacity-50" disabled={busy||!picked.length} onClick={()=>void go()}>Agree the move</button>
   {note&&<p role="status" className="text-parchment-dim">{note}</p>}
  </section>;
 }

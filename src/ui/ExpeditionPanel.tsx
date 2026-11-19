@@ -17,9 +17,9 @@ export function ExpeditionPanel({engine}:{engine:Engine}){
   <div className="flex flex-wrap items-end gap-2">
    <label className="flex flex-col gap-1">Direction<select aria-label="Expedition direction" className="rounded border border-bronze/40 bg-ink p-1" value={bearing} onChange={e=>setBearing(Number(e.target.value))}>{BEARINGS.map(([n,d])=><option key={d} value={d}>{n}</option>)}</select></label>
    <label className="flex flex-col gap-1">Distance (m)<input aria-label="Expedition distance" className="w-20 rounded border border-bronze/40 bg-ink p-1" type="number" min={SEND_EXPEDITION_RULES.minimumMeters} max={SEND_EXPEDITION_RULES.maximumMeters} step={10} value={meters} onChange={e=>setMeters(Number(e.target.value)||SEND_EXPEDITION_RULES.minimumMeters)}/></label>
-   <button type="button" aria-pressed={expeditionPicker.armed} className="min-h-9 rounded border border-bronze/40 px-2 py-1" onClick={()=>expeditionPicker.arm(!expeditionPicker.armed)}>{expeditionPicker.armed?'Click the map…':'Pick on map'}</button>
-   {mapPick&&<button type="button" className="min-h-9 rounded border border-bronze/40 px-2 py-1" onClick={()=>expeditionPicker.clear()}>Clear pick</button>}
-   <button type="button" className="min-h-9 rounded border border-bronze/40 px-2 py-1 disabled:opacity-50" disabled={busy||!ready.length} onClick={()=>void send()}>Send {ready.length||''} {ready.length===1?'person':'people'}</button>
+   <button type="button" aria-pressed={expeditionPicker.armed} className="min-h-11 rounded border border-bronze/40 px-2 py-1" onClick={()=>expeditionPicker.arm(!expeditionPicker.armed)}>{expeditionPicker.armed?'Click the map…':'Pick on map'}</button>
+   {mapPick&&<button type="button" className="min-h-11 rounded border border-bronze/40 px-2 py-1" onClick={()=>expeditionPicker.clear()}>Clear pick</button>}
+   <button type="button" className="min-h-11 rounded border border-bronze/40 px-2 py-1 disabled:opacity-50" disabled={busy||!ready.length} onClick={()=>void send()}>Send {ready.length||''} {ready.length===1?'person':'people'}</button>
   </div>
   <p className={where.ok?'text-parchment-dim':'text-red-300'}>{mapPick?'Map pick':'Chosen'}: {Math.round(where.bearing)}° for {where.meters} m{where.explored?'':' · unexplored ground'}{where.issue?` · ${where.issue}`:''}</p>
   {note&&<p role="status" className="text-parchment-dim">{note}</p>}
