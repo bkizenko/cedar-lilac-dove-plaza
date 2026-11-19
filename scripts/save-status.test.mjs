@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 const {slotInfo,ageText,autosaveLine}=await import('../src/ui/saveStatus.ts');
 test('slot info reads header facts and tolerates junk',()=>{
- assert.deepEqual(slotInfo('latest',{savedAt:5,state:{seed:7,worldgenVersion:21}}),{kind:'latest',label:'Latest',savedAt:5,seed:7,generation:21});
+ assert.deepEqual(slotInfo('latest',{savedAt:5,state:{seed:7,worldgenVersion:21}}),{kind:'latest',label:'Latest',savedAt:5,seed:7,generation:21,year:null,people:null});
  assert.equal(slotInfo('backup',{state:{seed:7}}).generation,1,'old saves without a generator version read as 1');
  assert.equal(slotInfo('backup',null),null);assert.equal(slotInfo('backup',{state:5}),null);
 });
@@ -23,4 +23,14 @@ test('menu view renders slots, health line and the terrain promise',async()=>{
  const {SaveStatusView}=await import('../src/ui/hearth/SaveStatus.tsx');const now=1e12;
  const html=renderToStaticMarkup(h(SaveStatusView,{now,auto:{tone:'warn',text:'Autosave is working, in a slower way',detail:'x'},slots:[{kind:'latest',label:'Latest',savedAt:now-60e3,seed:3,generation:21},{kind:'protected',label:'Protected',savedAt:null,seed:3,generation:1}]}));
  assert.match(html,/Latest.*1 min ago.*Seed 3.*Gen 21/);assert.match(html,/Protected/);assert.match(html,/never changes its terrain/);assert.match(renderToStaticMarkup(h(SaveStatusView,{now,auto:null,slots:[]})),/No saved copy yet/);
+});
+test('save slots show the in-game year and living home residents read from the stored copy',async()=>{
+ const {slotInfo}=await import('../src/ui/saveStatus.ts');
+ const units=[{team:0,hp:5,type:'worker'},{team:0,hp:5,type:'worker'},{team:0,hp:0,type:'worker'},{team:0,hp:5,type:'worker',prisoner:{}},{team:1,hp:5,type:'worker'},{team:0,hp:5,type:'sheep'}];
+ const {yearSecondsOf}=await import('../src/game/calendarPacing.ts'),Y=yearSecondsOf({});
+ const i=slotInfo('latest',{savedAt:1,state:{seed:3,time:Y*2.5,units}});
+ assert.equal(i.year,3);assert.equal(i.people,2,'dead, captive, rival and animals are not counted');
+ assert.equal(slotInfo('backup',{state:{seed:3}}).year,null,'unknown stays unknown');
+ const {SaveStatusView}=await import('../src/ui/hearth/SaveStatus.tsx');
+ {const React=(await import('react')).default,{renderToStaticMarkup}=await import('react-dom/server');const html=renderToStaticMarkup(React.createElement(SaveStatusView,{slots:[i],now:2,auto:null}));assert.match(html,/Year 3/);assert.match(html,/2 people/);assert.match(html,/Restore checkpoint first saves this village/);}
 });

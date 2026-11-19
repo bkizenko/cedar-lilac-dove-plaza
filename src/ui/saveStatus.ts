@@ -1,15 +1,19 @@
 /** Save-trust read model for the Menu: what is stored, how old, and why autosave fell back. Read-only; never decodes or alters a village. */
+import {yearSecondsOf} from '../game/calendarPacing';
 export type SaveSlotKind='latest'|'backup'|'protected';
-export type SaveSlotInfo={kind:SaveSlotKind;label:string;savedAt:number|null;seed:number|null;generation:number|null};
+export type SaveSlotInfo={kind:SaveSlotKind;label:string;savedAt:number|null;seed:number|null;generation:number|null;/** in-game year (1-based) and living home residents, read from the stored state; null when unknown */year:number|null;people:number|null};
 export type AutosaveFailure={reason:string;phase:string}|null;
 const LABELS:Record<SaveSlotKind,string>={latest:'Latest',backup:'Previous',protected:'Protected'};
 /** Reads only header facts from an already-parsed save; anything unexpected yields nulls rather than throwing. */
 export function slotInfo(kind:SaveSlotKind,parsed:unknown):SaveSlotInfo|null{
  if(!parsed||typeof parsed!=='object')return null;
- const d=parsed as {savedAt?:unknown;state?:{seed?:unknown;worldgenVersion?:unknown}};
+ const d=parsed as {savedAt?:unknown;state?:{seed?:unknown;worldgenVersion?:unknown;time?:unknown;yearLength?:unknown;units?:unknown}};
  if(!d.state||typeof d.state!=='object')return null;
  const num=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)?v:null;
- return{kind,label:LABELS[kind],savedAt:num(d.savedAt),seed:num(d.state.seed),generation:num(d.state.worldgenVersion)??1};
+ const time=num(d.state.time),len=num(d.state.yearLength),units=Array.isArray(d.state.units)?d.state.units as {team?:unknown;hp?:unknown;prisoner?:unknown;type?:unknown}[]:null;
+ const year=time===null?null:Math.floor(time/yearSecondsOf({yearLength:len??undefined}))+1;
+ const people=units?units.filter(u=>u&&u.team===0&&typeof u.hp==='number'&&u.hp>0&&!u.prisoner&&u.type==='worker').length:null;
+ return{kind,label:LABELS[kind],savedAt:num(d.savedAt),seed:num(d.state.seed),generation:num(d.state.worldgenVersion)??1,year,people};
 }
 export function ageText(savedAt:number|null,now:number):string{
  if(savedAt===null||savedAt<=0)return 'time unknown';

@@ -24,8 +24,8 @@ export function SaveStatus({engine,refresh=0}:{engine:Engine|null;refresh?:numbe
 export function SaveStatusView({slots,now,auto,storageNote}:{slots:SaveSlotInfo[];now:number;auto:ReturnType<typeof autosaveLine>|null;storageNote?:string}){
  return <div className="hw-save-status" aria-label="Save status">
   {auto&&<p role="status" className={`hw-save-line t-${auto.tone}`}><strong>{auto.text}</strong>{auto.detail&&<span>{auto.detail}</span>}</p>}
-  {slots.length>0?<ul className="hw-save-slots">{slots.map(s=><li key={s.kind}><b>{s.label}</b><span>{ageText(s.savedAt,now)}</span><span>Seed {s.seed??'?'}</span><span>Gen {s.generation??1}</span></li>)}</ul>:<p className="hw-save-empty">No saved copy yet. Press Save to keep this village.</p>}
+  {slots.length>0?<ul className="hw-save-slots">{slots.map(s=><li key={s.kind}><b>{s.label}</b><span>{ageText(s.savedAt,now)}</span>{s.year!==null&&<span data-save-year>Year {s.year}</span>}{s.people!==null&&<span data-save-people>{s.people} {s.people===1?'person':'people'}</span>}<span>Seed {s.seed??'?'}</span><span>Gen {s.generation??1}</span></li>)}</ul>:<p className="hw-save-empty">No saved copy yet. Press Save to keep this village.</p>}
   {storageNote&&<p className="hw-save-note" role="status">{storageNote}</p>}
-  <p className="hw-save-note">Loading an older village never changes its terrain.</p>
+  <p className="hw-save-note">Load opens the newest readable copy below; Restore checkpoint first saves this village, then opens the Protected copy. Loading an older village never changes its terrain.</p>
  </div>;
 }
