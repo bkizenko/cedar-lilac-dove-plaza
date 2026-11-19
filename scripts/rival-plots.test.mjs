@@ -30,7 +30,7 @@ test('rival expansions respect material shortages, obstruction and team ownershi
 });
 test('automatic builders cannot steal a paid copper trial or planting task',()=>{
  const {g,b}=fixture();for(const u of g.state.units.slice(2)){u.jobLock=true;u.order='gather';}const [a,c]=g.state.units;
- a.copperStudy={workplace:999,progress:10,paused:true};c.plantingWork={treeId:999,progress:1};
+ a.copperStudy={workplace:999,progress:10};/* a paused trial releases its worker since d4a34b88 */c.plantingWork={treeId:999,progress:1};
  assert.equal(developRivalPlots(g,1),true);assert.notEqual(a.order,'build');assert.notEqual(c.order,'build');
  assert.equal(a.copperStudy.progress,10);assert.equal(c.plantingWork.progress,1);
 });
