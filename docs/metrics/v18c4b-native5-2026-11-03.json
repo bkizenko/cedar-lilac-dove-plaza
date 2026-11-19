@@ -6,8 +6,26 @@
       "size": 1040,
       "layout": "continents",
       "holdout": false,
-      "passed": true,
-      "issues": [],
+      "passed": false,
+      "issues": [
+        {
+          "name": "known mountainous enclosure regression has actual admitted upland access",
+          "detail": {
+            "passed": false,
+            "reachableWalkAreaSquareMetres": 345840,
+            "maximumReachableDistanceMetres": 794.8295414741452,
+            "reachableElevationRange": {
+              "min": 0.7541526262576783,
+              "max": 91.32420255220849
+            },
+            "admittedUplandQuarryCandidates": 0,
+            "issueCounts": {
+              "Explore the quarry site first": 3090
+            },
+            "attempts": []
+          }
+        }
+      ],
       "generation": {
         "requestedSeed": 10,
         "terrainSeed": 10,
@@ -815,36 +833,18 @@
         ]
       },
       "homeUtility": {
-        "passed": true,
-        "scope": "Original founder navigation component to an actually admitted native quarry above14m, physical half-metre worker-radius probes; no actor/world edits",
+        "passed": false,
         "reachableWalkAreaSquareMetres": 345840,
         "maximumReachableDistanceMetres": 794.8295414741452,
         "reachableElevationRange": {
           "min": 0.7541526262576783,
           "max": 91.32420255220849
         },
-        "admittedUplandQuarryCandidates": 2917,
+        "admittedUplandQuarryCandidates": 0,
         "issueCounts": {
-          "This cliff is too steep for miners — choose an accessible mountain slope": 173
+          "Explore the quarry site first": 3090
         },
-        "route": {
-          "to": {
-            "x": -206,
-            "z": -152,
-            "height": 14.529564989530138,
-            "distance": 56,
-            "index": 95837
-          },
-          "passed": true,
-          "lengthMetres": 53.65685424949239,
-          "maximumHalfMetreProbeRise": 0.2109137901893039,
-          "maximumRouteHeight": 14.987436411930979,
-          "end": {
-            "x": -205,
-            "y": 14.987436411930979,
-            "z": -151
-          }
-        }
+        "attempts": []
       },
       "actualCoastLandmasses": [
         {
@@ -902,7 +902,7 @@
         ]
       },
       "roots": {
-        "trees": 4512,
+        "trees": 4509,
         "failures": [],
         "failureCount": 0
       },
@@ -2418,36 +2418,18 @@
         ]
       },
       "homeUtility": {
-        "passed": true,
-        "scope": "Original founder navigation component to an actually admitted native quarry above14m, physical half-metre worker-radius probes; no actor/world edits",
+        "passed": false,
         "reachableWalkAreaSquareMetres": 691688,
         "maximumReachableDistanceMetres": 1201.922626461454,
         "reachableElevationRange": {
           "min": 0.6096416588012943,
           "max": 75.77054654634917
         },
-        "admittedUplandQuarryCandidates": 3044,
+        "admittedUplandQuarryCandidates": 0,
         "issueCounts": {
-          "This cliff is too steep for miners — choose an accessible mountain slope": 128
+          "Explore the quarry site first": 3172
         },
-        "route": {
-          "to": {
-            "x": -268,
-            "z": -328,
-            "height": 14.884288083589995,
-            "distance": 72.44308110509934,
-            "index": 50046
-          },
-          "passed": true,
-          "lengthMetres": 151.8822509939084,
-          "maximumHalfMetreProbeRise": 0.38816113594255874,
-          "maximumRouteHeight": 15.348458334115836,
-          "end": {
-            "x": -267,
-            "y": 15.348458334115836,
-            "z": -327
-          }
-        }
+        "attempts": []
       },
       "actualCoastLandmasses": [
         {
@@ -4549,36 +4531,18 @@
         ]
       },
       "homeUtility": {
-        "passed": true,
-        "scope": "Original founder navigation component to an actually admitted native quarry above14m, physical half-metre worker-radius probes; no actor/world edits",
+        "passed": false,
         "reachableWalkAreaSquareMetres": 100422,
         "maximumReachableDistanceMetres": 562.263728156103,
         "reachableElevationRange": {
           "min": 0.860610087101276,
           "max": 69.6879207904522
         },
-        "admittedUplandQuarryCandidates": 941,
+        "admittedUplandQuarryCandidates": 0,
         "issueCounts": {
-          "This cliff is too steep for miners — choose an accessible mountain slope": 25
+          "Explore the quarry site first": 966
         },
-        "route": {
-          "to": {
-            "x": -324,
-            "z": 116,
-            "height": 14.368794279832088,
-            "distance": 60.92618484691127,
-            "index": 155112
-          },
-          "passed": true,
-          "lengthMetres": 61.15672124821136,
-          "maximumHalfMetreProbeRise": 0.20783832256610602,
-          "maximumRouteHeight": 15.045722594627971,
-          "end": {
-            "x": -322.5,
-            "y": 15.045722594627971,
-            "z": 115.5
-          }
-        }
+        "attempts": []
       },
       "actualCoastLandmasses": [
         {
@@ -6734,37 +6698,19 @@
         ]
       },
       "homeUtility": {
-        "passed": true,
-        "scope": "Original founder navigation component to an actually admitted native quarry above14m, physical half-metre worker-radius probes; no actor/world edits",
-        "reachableWalkAreaSquareMetres": 163224,
+        "passed": false,
+        "reachableWalkAreaSquareMetres": 163248,
         "maximumReachableDistanceMetres": 442.8205053969385,
         "reachableElevationRange": {
           "min": 0.6750645912610581,
           "max": 28.020936613816485
         },
-        "admittedUplandQuarryCandidates": 520,
+        "admittedUplandQuarryCandidates": 0,
         "issueCounts": {
-          "This cliff is too steep for miners — choose an accessible mountain slope": 30,
+          "Explore the quarry site first": 550,
           "Can't raise that in the water": 1
         },
-        "route": {
-          "to": {
-            "x": -220,
-            "z": -66,
-            "height": 17.400333668635444,
-            "distance": 50.59644256269407,
-            "index": 118190
-          },
-          "passed": true,
-          "lengthMetres": 77.94112549695434,
-          "maximumHalfMetreProbeRise": 0.7621497521033653,
-          "maximumRouteHeight": 21.898662948608397,
-          "end": {
-            "x": -219,
-            "y": 16.919543016873877,
-            "z": -65
-          }
-        }
+        "attempts": []
       },
       "actualCoastLandmasses": [
         {
@@ -6872,7 +6818,7 @@
             "landmassId": 0,
             "actualCoastAreaSquareMetres": 178539.2578125,
             "walkableComponentCount": 20,
-            "largestWalkableComponentAreaSquareMetres": 162632,
+            "largestWalkableComponentAreaSquareMetres": 162656,
             "passed": true,
             "high": {
               "x": -11,
@@ -6897,7 +6843,7 @@
             "landmassId": 1,
             "actualCoastAreaSquareMetres": 128895.5078125,
             "walkableComponentCount": 7,
-            "largestWalkableComponentAreaSquareMetres": 119360,
+            "largestWalkableComponentAreaSquareMetres": 119324,
             "passed": true,
             "high": {
               "x": 325,
@@ -14089,34 +14035,18 @@
         ]
       },
       "homeUtility": {
-        "passed": true,
-        "scope": "Original founder navigation component to an actually admitted native quarry above14m, physical half-metre worker-radius probes; no actor/world edits",
+        "passed": false,
         "reachableWalkAreaSquareMetres": 303952,
         "maximumReachableDistanceMetres": 555.8992714512225,
         "reachableElevationRange": {
           "min": 0.8813377783848758,
           "max": 34.65114652193509
         },
-        "admittedUplandQuarryCandidates": 1633,
-        "issueCounts": {},
-        "route": {
-          "to": {
-            "x": -678,
-            "z": 718,
-            "height": 14.939294785719653,
-            "distance": 50.59644256269407,
-            "index": 228370
-          },
-          "passed": true,
-          "lengthMetres": 128.34061988672323,
-          "maximumHalfMetreProbeRise": 0.35010681152343714,
-          "maximumRouteHeight": 14.939294785719653,
-          "end": {
-            "x": -678,
-            "y": 14.939294785719653,
-            "z": 718
-          }
-        }
+        "admittedUplandQuarryCandidates": 0,
+        "issueCounts": {
+          "Explore the quarry site first": 1633
+        },
+        "attempts": []
       },
       "actualCoastLandmasses": [
         {
