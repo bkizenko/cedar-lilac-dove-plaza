@@ -33,7 +33,7 @@ test('native finite harvested bast becomes paid spun yarn, woven cloth and deliv
  const copy=decodeGame(encodeGame(g));assert.deepEqual(copy.state.units.find(a=>a.id===u.id).garment,u.garment);assert.equal(copy.tribe(0).productionPractice.sewLightClothes.batches,1);
 });
 function goCache(g,u){const h=campAnchor(g,0);g.clearSelect();g.selectEntity(u);g.issueMove(h.x,h.z);drive(g,70,()=>u.order!=='move');}
-function wardrobe(){const {g,u}=fixture();g.tribe(0).items={skinClothes:1,lightClothes:1,leatherClothes:1};goCache(g,u);return{g,u};}
+function wardrobe(){const {g,u}=fixture();for(const p of g.state.units){delete p.garment;delete p.spareGarment;}/* settlers now start dressed */g.tribe(0).items={skinClothes:1,lightClothes:1,leatherClothes:1};goCache(g,u);return{g,u};}
 test('cache-only seasonal swaps conserve the exact two conditions, one paid spare and its real walking/boat burden through save and capture',()=>{
  let{g,u}=wardrobe();assert.equal(equipClothing(g,u.id,'skinClothes'),true);u.garment.condition=.43;u.garment.heatExposureSeconds=12;
  const unladen=loadedHaulSpeed(u);assert.equal(equipClothing(g,u.id,'lightClothes'),true);u.garment.condition=.81;
@@ -51,7 +51,7 @@ test('real displayed hot/cold conditions distinguish light workwear and insulati
  const{g,u}=wardrobe(),heavy=g.state.units.find(a=>a.team===0&&a.id!==u.id);u.garment={item:'lightClothes',condition:1};heavy.garment={item:'leatherClothes',condition:1};u.spareGarment={item:'skinClothes',condition:.6};
  for(const person of[u,heavy]){person.order='gather';person.fatigue=0;person.resting=undefined;person.coldSeconds=0;}
  const clock=g.clockState.bind(g);g.clockState=()=>({...clock(),weather:'Hot · 30°C'});g.tribe(0).wood=0;tickSurvival(g,10);
- assert.ok(heavy.garment.heatExposureSeconds>u.garment.heatExposureSeconds);assert.ok(heavy.fatigue>u.fatigue);assert.equal(u.spareGarment.heatExposureSeconds,undefined);assert.equal(clothingWarmth(u),.75);
+ assert.ok(heavy.garment.heatExposureSeconds>u.garment.heatExposureSeconds);assert.ok(heavy.fatigue>u.fatigue);assert.equal(u.spareGarment.heatExposureSeconds,undefined);/* the worn garment wears a little during the heat run */assert.equal(clothingWarmth(u),clothingWarmth({garment:u.garment}),'a spare adds no warmth');assert.ok(Math.abs(clothingWarmth(u)-.75)<.01,String(clothingWarmth(u)));
  g.clockState=()=>({...clock(),weather:'Cold · 0°C'});tickSurvival(g,10);assert.ok(u.coldSeconds>heavy.coldSeconds);assert.equal(garmentHeatBurden(u,0),0);
  const old=u.fatigue;u.order='hold';tickGarmentHeat(u,30,10);assert.equal(u.fatigue,old);assert.doesNotThrow(()=>decodeGame(encodeGame(g)));
 });
