@@ -20,7 +20,7 @@ export function resumeWeaponWork(g:Game,u:Unit,workplaceId?:number){
  const job=u.weaponWork;
  if(!job)return false;
  const direct=u.team===0;
- if(direct){const why=directedBlocker(g,u,{militia:true});if(why)return directedFail(g,0,why);}
+ if(direct){const why=directedBlocker(g,u,{militia:true})??(u.stuckT>8?'That weapon maker is stuck and cannot reach a workplace; clear the way first':null);if(why)return directedFail(g,0,why);}
  else if(u.hp<=0||u.societyMissionId||u.coastalVoyageId||u.coastalCommissionId||u.prisoner||u.type!=='worker'||u.militia||isDependent(g,u)||u.carry>0||u.stuckT>8||
    u.recalled||u.emergency||u.waterWork||u.buildOrder!==undefined||u.plantingWork||u.tamingWork||u.haulageWork||u.farmToolWork||u.copperStudy||u.studyCrop||
    u.drill!=null||u.expedition||u.envoy||u.scout||u.visit||u.foundingJourney||u.tributeJourney||

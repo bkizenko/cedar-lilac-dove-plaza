@@ -1575,3 +1575,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - 2026-11-18 20:10 ET Grok: shipped AUD-UI-WHILE-AWAY-DIGEST / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/HudHearth.tsx (mount while-away digest)
 - 2026-11-18 20:12 ET Grok: shipped AUD-UI-HAUL-AND-JOB-FEED-LEGIBILITY / shared-file edit: src/ui/WorkloadPanel.tsx (grouped stuck-job list)
 - 2026-11-18 20:15 ET Grok: shipped AUD-UI-VILLAGE-CHRONICLE / shared-file edit: src/ui/hearth/screens.tsx, src/ui/VillageHistory.tsx (merged village chronicle)
+- 2026-11-18 20:18 ET Grok: shipped AUD-TEST-WARFARE-WEAPON-BENCH / shared-file edit: src/game/warfare.ts (resume refuses a stuck weapon maker with a reason)
