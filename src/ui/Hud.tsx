@@ -57,6 +57,7 @@ import {UiThemeToggle,UiThemeBoot} from './uiTheme';
 import {PaidProjects} from './PaidProjects';
 import {NeedsPanel} from './NeedsPanel';
 import {HusbandryControls} from './HusbandryControls';
+import {WildAnimalCapture} from './WildAnimalCapture';
 import {BoatControls} from './BoatControls';
 import {cisternStored,cisternInflow,cisternCapacity} from '../game/cisterns';
 import {CopperStudyControl} from './CopperStudyControl';
@@ -867,6 +868,7 @@ export function SelectionDetails({ hud, engine, selMin, onOffer, hideJobs, hideC
                 People join through birth or migration. Select adults to drill; right-click an enemy to fight.
               </p>
             )}
+            {sel.kind==="resource"&&engine?.game.selectedCritter&&<WildAnimalCapture engine={engine}/>}
             {sel.kind==="resource"&&sel.type==="tree"&&engine&&<button className="mt-2 min-h-11 rounded-md border border-bronze/40 px-3" onClick={()=>{
               const tree=engine.game.selectedResource;
               if(tree?.kind==="tree"){engine.markTrees([tree.id],false);engine.pushHud();}

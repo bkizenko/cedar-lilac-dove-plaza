@@ -2423,7 +2423,7 @@ export class WorldView {
     let feedback=0,toolCount=0;
     for(const u of game.state.units)if(u.hp>0&&!u.shelterId&&(u.team===0||game.visibleAt(u.x,u.z))){if(feedback<MAX_SELECTION_RINGS&&unitFeedbackVisible(u,this.hoveredUnitId,true,this.previewUnitIds))feedback++;if(u.type==='worker'&&!u.militia&&(u as FarmToolUnit).farmTool&&(u as FarmToolUnit).farmTool!=='woodenArd')toolCount++;}
     const selectedBoat=game.state.boats?.find(b=>b.id===game.selectedBoat&&b.hp>0&&b.team===0);
-    this.rings=ensureInstanceCapacity(this.scene,this.rings,feedback+(game.state.selBld&&game.state.selBld.hp>0?1:0)+(selectedBoat?1:0));
+    this.rings=ensureInstanceCapacity(this.scene,this.rings,feedback+(game.state.selBld&&game.state.selBld.hp>0?1:0)+(selectedBoat?1:0)+(game.selectedCritter?1:0));
     if(this.farmToolMesh)this.farmToolMesh=ensureInstanceCapacity(this.scene,this.farmToolMesh,toolCount);
     let ri = 0, tools = 0;
     for (const t of UNIT_TYPES) {
@@ -2521,6 +2521,13 @@ export class WorldView {
     const boat=selectedBoat;
     if(boat&&ri<instCap(this.rings)){
       _p.set(boat.x,game.world.waterY+.08,boat.z);_e.set(-Math.PI/2,0,0);_q.setFromEuler(_e);_s.set(4,4,1);_m.compose(_p,_q,_s);
+      this.rings.setMatrixAt(ri++,_m);
+    }
+    const critter=game.selectedCritter;
+    if(critter&&critter.hp>0&&ri<instCap(this.rings)&&game.visibleAt(critter.x,critter.z)){
+      // Selection circle under a selected wild animal, sized to the beast.
+      const r=critterRingRadius(critter.species,critter.scale);
+      _p.set(critter.x,game.height(critter.x,critter.z)+.06,critter.z);_e.set(-Math.PI/2,0,0);_q.setFromEuler(_e);_s.set(r,r,1);_m.compose(_p,_q,_s);
       this.rings.setMatrixAt(ri++,_m);
     }
     const resource = game.selectedResource;
@@ -3522,3 +3529,6 @@ export class WorldView {
     for (const k of Object.values(this.mats)) k.dispose();
   }
 }
+
+/** Ring scale for a selected wild animal: big grazers get a wider circle than goats and birds. */
+export function critterRingRadius(species:string,scale=1){const base=species==='cattle'||species==='ox'||species==='horse'?1.7:species==='deer'||species==='donkey'||species==='boar'||species==='wolf'?1.25:species==='bird'?.6:1;return base*Math.max(.5,Math.min(2,Number.isFinite(scale)?scale:1));}
