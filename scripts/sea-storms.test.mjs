@@ -66,6 +66,6 @@ test('a hull destroyed by a storm follows the existing hull-loss path: survivors
  let{g}=fixture({hull:true});const id=g.state.boats[0].id,wood=g.tribe(1).wood;reviewSeaExploration(g);let v=voyage(g);drive(g,200,()=>v.phase==='outbound'&&v.metrics.sailMeters>15);assert.equal(v.phase,'outbound');
  const b=g.state.boats[0];b.hp=Math.max(1,b.hp*.01);const s=stormAt(g,b.x,b.z,200,1);drive(g,3);
  assert.ok(s.exposures[0]?.lost,'storm exposure recorded the loss');assert.equal(v.failure,'hull-lost',JSON.stringify(v));
- drive(g,400,()=>['complete','lost','failed'].includes(v.phase));assert.equal(v.phase,'lost');assert.equal(v.reportCommitted,false);assert.ok(!g.state.boats.some(x=>x.id===id&&x.hp>0));assert.equal(g.tribe(1).wood,wood,'no free replacement');
- assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));assert.ok(Math.abs(waterLedger(v))<1e-6);assert.ok(v.metrics.foodWithPeople>0,'survivors keep their actual packs');assert.doesNotThrow(()=>decodeGame(JSON.parse(JSON.stringify(encodeGame(g)))));
+ drive(g,400,()=>['complete','lost','failed'].includes(v.phase));assert.equal(v.phase,'complete',JSON.stringify(v));assert.equal(v.failure,'hull-lost');assert.equal(v.reportCommitted,true,'survivors swam ashore and walked the report home');assert.ok(!g.state.boats.some(x=>x.id===id&&x.hp>0));assert.equal(g.tribe(1).wood,wood,'no free replacement');
+ assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));assert.ok(Math.abs(waterLedger(v))<1e-6);assert.ok(v.metrics.foodReturned>0,'survivors return their actual packs at the cache');assert.doesNotThrow(()=>decodeGame(JSON.parse(JSON.stringify(encodeGame(g)))));
 });

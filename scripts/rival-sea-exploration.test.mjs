@@ -92,7 +92,10 @@ test('the old personal-canoe equipment path stays blocked by the injured owner, 
 test('hull loss in open water: bounded wait, survivors released with their packs, report unconfirmed, no free hull',()=>{
  let {g}=fixture({hull:true});const boatId=g.state.boats[0].id,wood=g.tribe(1).wood;reviewSeaExploration(g);let v=voyage(g);drive(g,200,()=>v.phase==='outbound'&&v.metrics.sailMeters>15);assert.equal(v.phase,'outbound',v.reason);
  g.state.boats.find(b=>b.id===boatId).hp=0;drive(g,1);assert.equal(v.failure,'hull-lost',v.reason);g=reload(g);v=voyage(g);
- drive(g,400,()=>['complete','lost','failed'].includes(v.phase));assert.equal(v.phase,'lost',JSON.stringify(v));assert.equal(v.failure,'hull-lost');assert.equal(v.reportCommitted,false,'nobody physically brought the report home');assert.ok(v.metrics.foodWithPeople>0,'released survivors keep their actual packs');assert.ok(g.state.time-v.landingAt<=SEA_EXPLORATION_RULES.landingSeconds+1);
+ drive(g,400,()=>['complete','lost','failed'].includes(v.phase));// Since 11-11 survivors swim ashore and walk home (hull-loss recovery): the
+ // voyage completes with its hull-lost failure kept, and the report counts
+ // because people physically carried it home.
+ assert.equal(v.phase,'complete',JSON.stringify(v));assert.equal(v.failure,'hull-lost');assert.match(v.reason,/losing the hull/);assert.equal(v.reportCommitted,true,'survivors physically brought the report home');assert.deepEqual([...v.home].sort(),[...v.crew].sort());assert.ok(v.metrics.foodReturned>0,'survivors return their actual packs at the cache');
  assert.ok(!g.state.boats?.some(b=>b.id===boatId&&b.hp>0),'no free replacement hull');assert.equal(g.tribe(1).wood,wood,'nothing repaid or refunded for the lost hull');
  assert.ok(g.state.units.every(u=>u.seaExplorationId===undefined));assert.ok(Math.abs(ledger(v))<1e-6,JSON.stringify(v.metrics));assert.ok(Math.abs(waterLedger(v))<1e-6,JSON.stringify(v.metrics));
  assert.doesNotThrow(()=>decodeGame(JSON.parse(JSON.stringify(encodeGame(g)))));
