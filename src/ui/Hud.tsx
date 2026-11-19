@@ -124,6 +124,7 @@ import {
 import type { Engine } from "@/game/engine";
 import type { HudSnapshot, ResKind, TradeDeal } from "@/game/types";
 import { AGES, BUILDINGS, BUILD_ORDER, UNITS } from "@/game/constants";
+import { buildLockReason } from "./buildLockReason";
 import { yearSecondsOf } from "@/game/calendarPacing";
 
 export const BLD_ICON: Record<string, ReactNode> = {
@@ -624,6 +625,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   <div className="build-tile-cost mt-1 text-xs leading-snug text-parchment tabular">
                     {([['seeds','seeds'],['wood','logs'],['stone','stone'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}{b.type==='house'&&HOUSING_RULES.plantFibre>0?` · ${HOUSING_RULES.plantFibre} fibre`:''}
                   </div>
+                  {(()=>{const lock=buildLockReason(b.cost as Record<string,number|undefined>,{seeds:engine?.game.tribe(0).seeds||0,wood:hud.wood,stone:hud.stone,food:hud.food,copper:hud.copper,iron:hud.iron},homeIssue);return lock?<div className="mt-1 text-base leading-snug text-dawn" data-build-lock>{lock}</div>:null;})()}
                 </button></GameTooltip>
               );
             })}

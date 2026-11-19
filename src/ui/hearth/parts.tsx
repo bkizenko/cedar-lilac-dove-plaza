@@ -27,6 +27,7 @@ import {housingAdoptionIssue,HOUSING_RULES} from '../../game/housing';
 import {buildingHelp} from '../buildingHelp';
 import {shortName,SelectionDetails,resWord} from '../Hud';
 import {CommanderStrip,BoatStrip} from './commandPanels';
+import {buildLockReason} from '../buildLockReason';
 import {RES_ICON,RES_NAME,bldIcon,PLAN_ICON,PLAN_NAME,POSTURE_ICON,POSTURE_NAME,FORMATION_ICON,ago,freshness} from './icons';
 
 import {cx,IconBtn,Stat} from './kit';
@@ -118,10 +119,12 @@ export function BuildTray({hud,engine,tab,setTab,onPick,onClose}:{hud:HudSnapsho
     const lack=COSTS.some(([k])=>(have[k]??0)<(b.cost[k]||0));
     const costText=COSTS.filter(([k])=>b.cost[k]).map(([k,l])=>`${b.cost[k]} ${RES_NAME[l]}`).join(' · ');
     const name=b.type==='farm'?'Field':shortName(b.name);
+    const lock=buildLockReason(b.cost as Record<string,number|undefined>,have,home);
     return <GameTooltip key={b.type} title={b.type==='farm'?'Plant field':b.name} description={`${home||buildingHelp(b.type,b.hint)} ${b.type==='house'?`${HOUSING_RULES.plantFibre>0?`${HOUSING_RULES.plantFibre} plant fibre · `:''}${HOUSING_RULES.workSeconds}s actual work + hauling. `:''}${costText}${lack?' Supplies are not ready yet.':''}`}>
      <button type="button" className={cx('hw-tile',hud.placing===b.type&&'is-on',lack&&'is-short')} disabled={!!hud.ended||!!home} aria-label={b.type==='farm'?'Plant field':b.name} onClick={()=>{engine?.setPlacing(b.type);onPick();}}>
       <span className="hw-tile-icon">{bldIcon(b.type,32)}</span><span className="hw-tile-name">{name}</span>
       <CostChips cost={b.cost as Record<string,number|undefined>} have={have} extra={{fibre:b.type==='house'?HOUSING_RULES.plantFibre:0}}/>
+      {lock&&<span className="hw-tile-lock t-bad" data-build-lock>{lock}</span>}
      </button></GameTooltip>;})}
    {tab==='Defense'&&hud.trainOptions.filter(u=>u.type!=='worker'&&hud.age>=u.age).map(u=><GameTooltip key={u.type} title={u.name} description="Equip an adult. Needs spare food; one fewer gatherer."><button type="button" className="hw-tile" disabled={!!hud.ended} aria-label={`Equip adult as ${u.name}`} onClick={()=>engine?.train(u.type)}><span className="hw-tile-icon"><Sword size={32}/></span><span className="hw-tile-name">{u.name}</span><CostChips cost={u.cost as Record<string,number|undefined>} have={have}/></button></GameTooltip>)}
   </div>
