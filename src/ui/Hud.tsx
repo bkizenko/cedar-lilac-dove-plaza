@@ -16,6 +16,8 @@ import {tradeJourney} from '../game/caravans';
 import {WaterReachPanel} from './WaterReachPanel';
 import { ResidentInventory } from './ResidentInventory';
 import { VillageAlerts } from './VillageAlerts';
+import { PreviouslyCard } from './hearth/PreviouslyCard';
+import { WhileAwayDigest } from './WhileAwayDigest';
 import { RulerEventToast } from './RulerEventToast';
 import { WorkDeliveryCue } from './WorkDeliveryCue';
 import { VillageHistory } from './VillageHistory';
@@ -124,6 +126,7 @@ import {
 import type { Engine } from "@/game/engine";
 import type { HudSnapshot, ResKind, TradeDeal } from "@/game/types";
 import { AGES, BUILDINGS, BUILD_ORDER, UNITS } from "@/game/constants";
+import { buildLockReason } from "./buildLockReason";
 import { yearSecondsOf } from "@/game/calendarPacing";
 
 export const BLD_ICON: Record<string, ReactNode> = {
@@ -443,6 +446,8 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
       <div className="hud-banner">
         {engine && <VillageAlerts engine={engine}/>}
         {engine && <RulerEventToast engine={engine}/>}
+        {engine && !hud.founding && <PreviouslyCard engine={engine} classic/>}
+        {engine && !hud.founding && <WhileAwayDigest engine={engine} classic/>}
         {engine && <WorkDeliveryCue engine={engine}/>}
         {hud.placing ? (
           <div className="hud-toast hud-placement" role="status">
@@ -624,6 +629,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
                   <div className="build-tile-cost mt-1 text-xs leading-snug text-parchment tabular">
                     {([['seeds','seeds'],['wood','logs'],['stone','stone'],['copper','copper'],['iron','iron']] as const).filter(([key])=>b.cost[key]).map(([key,label])=>`${b.cost[key]} ${label}`).join(' · ')}{b.type==='house'&&HOUSING_RULES.plantFibre>0?` · ${HOUSING_RULES.plantFibre} fibre`:''}
                   </div>
+                  {(()=>{const lock=buildLockReason(b.cost as Record<string,number|undefined>,{seeds:engine?.game.tribe(0).seeds||0,wood:hud.wood,stone:hud.stone,food:hud.food,copper:hud.copper,iron:hud.iron},homeIssue);return lock?<div className="mt-1 text-base leading-snug text-dawn" data-build-lock>{lock}</div>:null;})()}
                 </button></GameTooltip>
               );
             })}

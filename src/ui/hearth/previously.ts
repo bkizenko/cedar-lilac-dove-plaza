@@ -6,3 +6,5 @@ export function rememberLines(key:string,log:readonly string[]){try{globalThis.l
 export function previousLines(key:string,log:readonly string[],max=5):string[]{
  const seen=read(key);if(!seen)return [];const known=new Set(seen);return log.filter(l=>!known.has(l)).slice(-max);
 }
+/** True once this viewer has looked at this village before (so a recap means "since last time"). */
+export function seenBefore(key:string){return read(key)!==null;}
