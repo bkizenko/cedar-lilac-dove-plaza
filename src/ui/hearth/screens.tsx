@@ -10,6 +10,7 @@ import {DETAIL_LEVELS,DETAIL_LABELS,type DetailLevel} from '@/game/detailLevel';
 import type {HudSnapshot} from '@/game/types';
 import {AGES,BUILDINGS,BUILD_ORDER} from '@/game/constants';
 import {yearSecondsOf} from '@/game/calendarPacing';
+import {villageChronicle} from '../villageChronicle';
 import {DIFFICULTIES,difficultyEffects} from '@/game/difficulty';
 import {foodExperienceReport} from '@/game/foodExperience';
 import {STAGES} from '@/game/breakaways';
@@ -166,7 +167,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
 export function VillageScreen({hud,engine,onClose,initial,onKnowledge,onOffer}:{hud:HudSnapshot;engine:Engine;onClose:()=>void;initial?:string;onKnowledge:()=>void;onOffer:(t:number)=>void}){
  const [tab,setTab]=useState(initial||'stores');
  const tabs=[{id:'stores',label:'Stores',icon:<Package size={20}/>},{id:'work',label:'Work',icon:<Hammer size={20}/>},{id:'food',label:'Food',icon:<Wheat size={20}/>},{id:'craft',label:'Craft',icon:<Hammer size={20}/>},{id:'camp',label:'Camp',icon:<Home size={20}/>},{id:'trade',label:'Trade',icon:<Handshake size={20}/>},{id:'history',label:'History',icon:<Scroll size={20}/>}];
- const history=(engine.game.state.lifeHistory??[]).filter(e=>e.team===0).slice().reverse();
+ const history=villageChronicle(engine.game.state.lifeHistory,engine.game.state.rulers?.societies?.['0']?.dynasty?.log);
  return <Screen title="Village" icon={<Users size={32}/>} onClose={onClose} tabs={tabs} tab={tab} setTab={setTab} wide>
   <div className="hw-legacy">
    {tab==='stores'&&<><FoodStoreReadout stock={hud} items={engine.game.tribe(0).items} experience={foodExperienceReport(engine.game.tribe(0),engine.game.state.time)}/>{(hud.age>=1||hud.copper>0||hud.iron>0)&&<p>Copper {hud.copper} · Iron {hud.iron}</p>}<NeedsPanel engine={engine} expanded/></>}
@@ -175,7 +176,7 @@ export function VillageScreen({hud,engine,onClose,initial,onKnowledge,onOffer}:{
    {tab==='craft'&&<>{hud.villageSkills&&<VillageSkillsCard card={hud.villageSkills}/>}<CraftingAndBuildings engine={engine}/></>}
    {tab==='camp'&&<><NomadicCampControl engine={engine}/><SocietyIdentityEditor engine={engine}/><PrestigeReadout view={hud.prestigeBreakdown} rivals={hud.prestigeRivals} yearSeconds={yearSecondsOf(hud)}/></>}
    {tab==='trade'&&<><NeedsTradeControls engine={engine} inboxOnly/><TradeBlock hud={hud} engine={engine} onOffer={onOffer}/></>}
-   {tab==='history'&&(history.length===0?<p className="hw-empty">Nothing recorded yet.</p>:<ol className="hw-chron">{history.map((e,i)=><li key={i}><b>Y{Math.floor(e.time/yearSecondsOf(engine.game.state))+1}</b> {e.text.replace(/^\[Contact \d+\] /,'')}</li>)}</ol>)}
+   {tab==='history'&&(history.length===0?<p className="hw-empty">Nothing recorded yet.</p>:<ol className="hw-chron" aria-label="Village chronicle">{history.map((e,i)=><li key={i} data-source={e.source}><b>Y{Math.floor(e.time/yearSecondsOf(engine.game.state))+1}</b> {e.source==='house'?'♛ ':''}{e.text}</li>)}</ol>)}
   </div>
  </Screen>;
 }
