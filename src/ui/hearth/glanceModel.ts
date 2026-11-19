@@ -89,7 +89,7 @@ export function pinSet(alerts:readonly Alert[],max=MAX_PINS){
 /** Timed info cards: shown for `ttl` seconds after they first appear, unless dismissed. Sticky cards stay until their condition clears. */
 export const INFO_RULES=Object.freeze({ttlSeconds:8,fadeSeconds:1,resultTtlSeconds:40,lossTtlSeconds:24,lossFadeSeconds:4});
 /** A named person's death or a famine warning: loss reads as loss — muted card, longer stay, slow fade, ahead of routine news. */
-export const isLossBanner=(text:string)=>/\b(died|dies|has died|was killed|were killed|killed by|perished|starved to death|drowned|slain|was lost|were lost|famine|starving|hunger kills|has passed|passed away|has fallen|mourn\w*)\b/i.test(text);
+export const isLossBanner=(text:string)=>/\b(died|dies|has died|was killed|were killed|killed by|perished|starved to death|drowned|slain|was lost|were lost|famine|starving|hunger kills|has passed|passed away|has fallen|raiders took|mourn\w*)\b/i.test(text);
 /** Loss cards first, then everything else in arrival order; sticky cards keep their place in the budget. */
 export function lossFirst<T extends {tone?:string}>(notes:readonly T[]):T[]{return [...notes.filter(n=>n.tone==='loss'),...notes.filter(n=>n.tone!=='loss')];}
 /** Raid and conflict result banners (what a fight cost, a surrender offer) need reading time; ordinary news does not. */
