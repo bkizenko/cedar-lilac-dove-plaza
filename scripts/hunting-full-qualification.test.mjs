@@ -345,7 +345,8 @@ test(`${method}: finite camp turns a paid owned-weapon hunt into meaningful cook
           if (g.exploredAt(x, z) && !g.placementIssue(type, x, z)) point = { x, z };
         }
       assert.ok(point, `real ${type} footprint`);
-      const cost = buildingCost(type, g);
+      const cost = buildingCost(type, g),
+        before = { wood: g.tribe(0).wood, stone: g.tribe(0).stone };
       assert.equal(
         command("placePaidStation", { type, ...point }, () =>
           g.placeBuilding(type, point.x, point.z),
@@ -353,8 +354,12 @@ test(`${method}: finite camp turns a paid owned-weapon hunt into meaningful cook
         true,
         g.state.banner,
       );
-      stationWood += cost.wood || 0;
-      stationStone += cost.stone || 0;
+      // Build bills are slope-graded at the chosen site: charge what was
+      // actually paid, never less than the flat base bill.
+      const paid = { wood: before.wood - g.tribe(0).wood, stone: before.stone - g.tribe(0).stone };
+      assert.ok(paid.wood >= (cost.wood || 0) && paid.stone >= (cost.stone || 0), "never charged less than the base bill");
+      stationWood += paid.wood;
+      stationStone += paid.stone;
       const b = g.state.buildings.at(-1),
         worker = g.state.units.find((u) => u.team === 0 && u.type === "worker");
       assert.ok(worker);
