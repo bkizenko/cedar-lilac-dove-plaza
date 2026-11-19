@@ -19,3 +19,22 @@ test('strip is mounted on Hearth and Classic at 16px',()=>{
  assert.match(readFileSync(new URL('../src/ui/Hud.tsx',import.meta.url),'utf8'),/<FirstHourGoals engine=\{engine\} classic\/>/);
  assert.match(readFileSync(new URL('../src/ui/hearth/hearth.css',import.meta.url),'utf8'),/\.hw-goals\{[^}]*font-size:max\(16px/);
 });
+test('first-ten-minutes steps add collect and first child from real state, show at most three, and stay done',async()=>{
+ const {firstSteps,FIRST_GOALS_SHOWN}=await import('../src/ui/firstHourGoals.ts');
+ const s=base(),open={gathered:false,child:false};
+ const all=firstHourGoals(s,fin,()=>false,open);assert.equal(all.length,FIRST_GOALS_SHOWN);assert.match(all[0],/^Collect food and wood/);
+ s.buildings.push({type:'hut',team:0,hp:10,build:1},{type:'warehouse',team:0,hp:10,build:1});
+ assert.deepEqual(firstHourGoals(s,fin,t=>t===1,open),['Raise a first child — a sheltered, fed couple at the hearth'],'a finished hut means the village has gathered');
+ assert.deepEqual(firstHourGoals(s,fin,t=>t===1,{gathered:true,child:true}),[]);
+ const state={},units=[{team:0,hp:10,carry:0,order:'move'}];
+ assert.deepEqual(firstSteps(state,units),{gathered:false,child:false});
+ units[0].carry=2;assert.equal(firstSteps(state,units).gathered,true);
+ units[0].carry=0;assert.equal(firstSteps(state,units).gathered,true,'a step done once stays done');
+ units.push({team:1,hp:10,parents:[4,5]});assert.equal(firstSteps(state,units).child,false,'a rival child is not ours');
+ units.push({team:0,hp:10,parents:[4,5]});assert.equal(firstSteps(state,units).child,true);
+});
+test('the guide can be dismissed with a 44px Hide button and never blocks play',()=>{
+ const src=readFileSync(new URL('../src/ui/FirstHourGoals.tsx',import.meta.url),'utf8');
+ assert.match(src,/Hide the first steps guide/);assert.match(src,/localStorage\.setItem\(HIDE_KEY,'1'\)/);
+ assert.match(readFileSync(new URL('../src/ui/hearth/hearth.css',import.meta.url),'utf8'),/\.hw-goals-hide\{[^}]*min-height:44px;min-width:44px/);
+});
