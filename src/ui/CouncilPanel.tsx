@@ -47,7 +47,7 @@ export function CouncilPanel({engine}:{engine:Engine}){
   {!!c.parties?.length&&<PartiesCard parties={c.parties}/>}
   <DiplomacyTimeline council={c} onFocus={t=>focusKnownSettlement(engine,t)}/>
   <DiplomacyLedger council={c} onFocus={t=>focusKnownSettlement(engine,t)}/>
-  <DiplomacySheet neighbours={c.neighbours} onAct={(t,k)=>void marry(t,k)}/>
+  <DiplomacySheet neighbours={c.neighbours} news={c.news??[]} onCentre={t=>focusKnownSettlement(engine,t)} onAct={(t,k)=>void marry(t,k)}/>
   <FeedbackList items={fb.items}/>
  </section>;
 }

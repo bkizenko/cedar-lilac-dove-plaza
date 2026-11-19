@@ -25,6 +25,8 @@ const nice=(s:string)=>{const t=s.replace(/([a-z])([A-Z])/g,"$1 $2").toLowerCase
 import {FACTION_LABEL,lawLabel,loyaltyWord,partyLabel} from '../council/CouncilParts';
 import {SocietyFlag} from '../SocietyFlag';
 import {SocietiesStrip,focusKnownSettlement} from '../council/SocietiesStrip';
+import {KinTreeView} from '../council/KinTreeView';
+import {kinTree} from '../council/kinTree';
 import {AttentionInbox} from '../council/AttentionInboxPanel';
 import {DiplomacyTimeline} from '../council/DiplomacyTimeline';
 import {DiplomacyLedger} from '../council/DiplomacyLedger';
@@ -91,7 +93,7 @@ function StageMeter({stage,label}:{stage:string;label:string}){
  return <GameTooltip title={`${label}: ${STAGE_NAME[stage]}`}><span className={cx('hw-stages','s-'+stage)} role="img" aria-label={`${label}: ${STAGE_NAME[stage]}`}>{STAGES.map((s,k)=><i key={s} className={k<=i?'on':''}/>)}</span></GameTooltip>;
 }
 const CASUS_NAME:Record<string,string>={claim:'a land claim',tribute:'unpaid tribute',holy:'a sacred grievance',reconquest:'lost lands',defence:'a defence wrong',raid:'raid grudge',succession:'a disputed succession',liberation:'kin held captive'};
-function NeighbourCard({n,soc,route,send,act}:{n:any;soc?:any;route?:any;send:(team:number,kind:'marry-houses'|'foster-houses'|'exchange-hostages')=>void;act?:(c:WarCommand)=>void}){
+function NeighbourCard({n,soc,route,send,act,news=[],onCentre}:{n:any;soc?:any;route?:any;news?:{kind:string;with:number;text:string}[];onCentre?:(team:number)=>void;send:(team:number,kind:'marry-houses'|'foster-houses'|'exchange-hostages')=>void;act?:(c:WarCommand)=>void}){
  const mood=n.hostile?['At odds','bad']:n.atPeace?['At peace','good']:n.trust>=60?['Friendly','good']:n.trust>=25?['Cordial','']:['Reserved',''];
  const PI=soc?.plan?PLAN_ICON[soc.plan.kind]:null,PO=soc?.posture?POSTURE_ICON[soc.posture.kind]:null;
  return <li id={`house-${n.team}`} className="hw-card hw-neighbour">
@@ -99,6 +101,7 @@ function NeighbourCard({n,soc,route,send,act}:{n:any;soc?:any;route?:any;send:(t
   {n.voice&&<GameTooltip title={`Manner: ${n.voice.manner}`} description={`If refused: ${n.voice.refusal} If they give: ${n.voice.gift}`}><p className="hw-voice" data-manner={n.voice.manner} tabIndex={0}>{n.voice.greeting}</p></GameTooltip>}
   {n.report&&<p className={cx('hw-court',n.report.stale&&'t-warn')} data-report-age="1" data-stale={n.report.stale?'1':'0'} title={`Received by ${n.report.via}; what we know may have changed.`}>{n.report.stale?'\u25CC ':'\u25CF '}{reportAgeLabel(n.report)}</p>}
   {courtLine(n.court)&&<p className="hw-court" data-court="1">{courtLine(n.court)}</p>}
+  <KinTreeView tree={kinTree(n,news)} onCentre={onCentre?()=>onCentre(n.team):undefined}/>
   <div className="hw-meters"><GameTooltip title="Trust"><span className="hw-meter-row"><Handshake size={20}/>{bar(n.trust,'good')}<b>{n.trust}</b></span></GameTooltip><GameTooltip title="Grudge"><span className="hw-meter-row"><Swords size={20}/>{bar(n.grievance??0,'bad')}<b>{n.grievance??0}</b></span></GameTooltip></div>
   {soc&&<div className="hw-chips" aria-label={`What ${n.name} is doing`}>
    {soc.plan&&PI&&<GameTooltip title={`Plan: ${PLAN_NAME[soc.plan.kind]}${soc.plan.target?` → ${soc.plan.target}`:''}`} description={soc.plan.why.join(' · ')||undefined}><span className={cx('hw-chip',soc.plan.kind==='raid'&&soc.plan.target==='you'&&'t-bad')} tabIndex={0} aria-label={`Plan ${PLAN_NAME[soc.plan.kind]}${soc.plan.target?` against ${soc.plan.target}`:''}, ends in ${ago(soc.plan.endsInSeconds)}`}>{PI({size:20})}{PLAN_NAME[soc.plan.kind]}{soc.plan.target&&<em>→ {soc.plan.target}</em>}<small><Clock size={14}/>{ago(soc.plan.endsInSeconds)}</small></span></GameTooltip>}
@@ -156,7 +159,7 @@ export function CouncilScreen({engine,onClose,initial}:{engine:Engine;onClose:()
    {(s?.own.length||0)>0&&<section className="hw-card"><div className="hw-card-head"><h3>Our outlying halls</h3></div><ul className="hw-chips">{s!.own.map((o,i)=><li key={i} className="hw-chip"><StageMeter stage={o.stage} label="Outlying hall"/>{o.resolution?<em>{o.resolution}</em>:<small>{o.pressure}%</small>}</li>)}</ul></section>}
    {b?.enabled&&b.routes.length>0&&<section className="hw-card"><div className="hw-card-head"><h3>Routes</h3></div><ul className="hw-list">{b.routes.map(r=><li key={r.team}><span className="hw-meter-row"><b className="hw-lbl">{r.name}</b><span className={cx('hw-chip',r.mode==='blocked'&&'t-bad')}>{ROUTE_ICON({size:18})}{r.mode==='open'?'Open':r.mode==='agreement'?'Agreed':r.mode==='escort'?`Escort ×${r.guards||2}`:'Blocked'}</span></span></li>)}</ul></section>}
   </div>}
-  {active==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<><AttentionInbox council={c} onFocus={t=>focusKnownSettlement(engine,t)} onAnswer={(team,kind)=>fb.send({kind,team})}/><DiplomacyTimeline council={c} onFocus={t=>focusKnownSettlement(engine,t)}/><DiplomacyLedger council={c} onFocus={t=>focusKnownSettlement(engine,t)}/><SocietiesStrip neighbours={c.neighbours} onFocus={t=>focusKnownSettlement(engine,t)}/><ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})} act={x=>void fb.send(x)}/>)}</ul></>}<FeedbackList items={fb.items}/></>}
+  {active==='neighbours'&&<>{c.neighbours.length===0?<p className="hw-empty">No neighbours met yet. Explore to find them.</p>:<><AttentionInbox council={c} onFocus={t=>focusKnownSettlement(engine,t)} onAnswer={(team,kind)=>fb.send({kind,team})}/><DiplomacyTimeline council={c} onFocus={t=>focusKnownSettlement(engine,t)}/><DiplomacyLedger council={c} onFocus={t=>focusKnownSettlement(engine,t)}/><SocietiesStrip neighbours={c.neighbours} onFocus={t=>focusKnownSettlement(engine,t)}/><ul className="hw-grid-2 hw-plain">{[...c.neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust).map(n=><NeighbourCard key={n.team} news={c.news??[]} onCentre={t=>focusKnownSettlement(engine,t)} n={n} soc={s?.societies.find(x=>x.team===n.team)} route={b?.routes.find(r=>r.team===n.team)} send={(t,k)=>void fb.send({kind:k,team:t})} act={x=>void fb.send(x)}/>)}</ul></>}<FeedbackList items={fb.items}/></>}
   {active==='society'&&civic&&<CivicPanel civic={civic} onAnswer={(proposalId,accept)=>fb.send({kind:'answer-proposal',proposalId,accept})}/>}
   {active==='chronicle'&&<><FameFeed log={c.log}/><NeighbourNewsFeed news={c.news??[]} nameOf={t=>c.neighbours.find(n=>n.team===t)?.name??'A neighbour'}/></>}
   {active==='terms'&&<><HearthCapitulationTerms engine={engine}/><HearthCaptiveCard engine={engine}/></>}
