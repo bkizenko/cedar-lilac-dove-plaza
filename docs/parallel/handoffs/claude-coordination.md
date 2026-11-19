@@ -1576,3 +1576,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - 2026-11-18 20:12 ET Grok: shipped AUD-UI-HAUL-AND-JOB-FEED-LEGIBILITY / shared-file edit: src/ui/WorkloadPanel.tsx (grouped stuck-job list)
 - 2026-11-18 20:15 ET Grok: shipped AUD-UI-VILLAGE-CHRONICLE / shared-file edit: src/ui/hearth/screens.tsx, src/ui/VillageHistory.tsx (merged village chronicle)
 - 2026-11-18 20:16 ET Grok: shipped AUD-UI-SAVE-LOAD-CLARITY / shared-file edit: src/ui/saveStatus.ts, src/ui/hearth/SaveStatus.tsx (year + people per save copy)
+- 2026-11-18 20:18 ET Grok: shipped AUD-UI-SAVE-LOAD-RECOVERY-CARD / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/HudHearth.tsx, src/ui/saveStatus.ts (loaded-save card)

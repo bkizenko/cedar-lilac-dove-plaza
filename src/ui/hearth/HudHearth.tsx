@@ -19,6 +19,7 @@ import {UiThemeBoot} from '../uiTheme';
 import {StartupHint} from './StartupHint';
 import {PreviouslyCard} from './PreviouslyCard';
 import {WhileAwayDigest} from '../WhileAwayDigest';
+import {LoadedSaveCard} from '../LoadedSaveCard';
 import {OldSaveNoteCard} from './OldSaveNoteCard';
 import {AlertPins,useGlanceAlerts} from './glance';
 import {DisputeChip} from './DisputeChip';
@@ -75,6 +76,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {!founding&&!screen&&engine&&<TutorialCard engine={engine} season={hud.season}/>}
   {!founding&&!screen&&engine&&<PreviouslyCard engine={engine}/>}
   {!founding&&engine&&<div hidden={!!screen}><WhileAwayDigest engine={engine}/></div>}
+  {!founding&&engine&&<div hidden={!!screen}><LoadedSaveCard engine={engine}/></div>}
   {!founding&&!screen&&engine&&<DisputeChip engine={engine} onOpen={tab=>setScreen({k:'council',tab})}/>}
   {!founding&&!screen&&engine&&<WarPopup engine={engine} onNeighbours={()=>setScreen({k:'council',tab:'neighbours'})}/>}
   {!founding&&!screen&&<StartupHint onOpenMenu={()=>setScreen({k:'menu'})} onOpenHelp={()=>setScreen({k:'help'})}/>}

@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 const {slotInfo,ageText,autosaveLine}=await import('../src/ui/saveStatus.ts');
 test('slot info reads header facts and tolerates junk',()=>{
- assert.deepEqual(slotInfo('latest',{savedAt:5,state:{seed:7,worldgenVersion:21}}),{kind:'latest',label:'Latest',savedAt:5,seed:7,generation:21,year:null,people:null});
+ assert.deepEqual(slotInfo('latest',{savedAt:5,state:{seed:7,worldgenVersion:21}}),{kind:'latest',label:'Latest',savedAt:5,seed:7,generation:21,year:null,people:null,time:null});
  assert.equal(slotInfo('backup',{state:{seed:7}}).generation,1,'old saves without a generator version read as 1');
  assert.equal(slotInfo('backup',null),null);assert.equal(slotInfo('backup',{state:5}),null);
 });
