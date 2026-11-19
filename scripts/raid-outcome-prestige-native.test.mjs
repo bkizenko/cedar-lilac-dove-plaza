@@ -34,7 +34,8 @@ function fixture(){
  const dx=(store.x-camp.x)/Math.hypot(store.x-camp.x,store.z-camp.z),dz=(store.z-camp.z)/Math.hypot(store.x-camp.x,store.z-camp.z);
  const retreat=g.nearestWalk(observer,store.x+dx*90,store.z+dz*90);assert.ok(retreat);walk(g,observer,retreat); // actual body away; completed hall supplies ordinary local eyes
  const spawn=g.interactionSpot(observer,camp);assert.ok(spawn);
- const crew=[g.spawnUnit('spearman',spawn.x,spawn.z,3),g.spawnUnit('spearman',spawn.x+1,spawn.z,3)];for(const u of crew){u.homeCamp=camp.id;u.order='hold';}
+ // Raids never launch with fewer than MIN_RAID_PARTY (3) and one guard stays home (3f70afe5), so the camp holds four.
+ const crew=[0,1,2,3].map(i=>g.spawnUnit('spearman',spawn.x+i*.8,spawn.z,3));for(const u of crew){u.homeCamp=camp.id;u.order='hold';}
  // No food in this deliberately scarce opening: the targeted finite load is
  // timber, so ordinary food consumption cannot obscure timber conservation.
  Object.assign(g.tribe(0),{food:0,foodLots:{},wood:80,items:{rawMeat:200}});Object.assign(g.tribe(3),{food:100,foodLots:{provisions:100},wood:0});g.tribe(3).survival.waterLiters=100;
@@ -43,10 +44,13 @@ function fixture(){
 }
 function escapedScenario(){
  let {g,original,store,camp,observer}=fixture();const campId=camp.id,storeId=store.id,observerId=observer.id;
- g.state.conflict='balanced';assert.equal(dispatchExistingCampRaid(g),true);g.state.conflict='quiet';let thief=g.state.units.find(u=>u.campTrip?.campId===campId);assert.ok(thief);const firstId=thief.id,firstBand=thief.seaRaid.plan.bandId;
- drive(g,150,()=>thief.carry>0);const firstTake=thief.carry;assert.equal(thief.carryType,'wood');assert.equal(g.tribe(0).wood,80-firstTake);assert.equal(raidDefensePrestige(g.state).value,0);assert.equal(g.tribe(3).wood,0);assert.ok(g.state.raidDefense?.bands.some(b=>b.bandId===firstBand));
- g=decodeGame(encodeGame(g));thief=g.state.units.find(u=>u.id===firstId);assert.equal(raidDefensePrestige(g.state).value,0);
- drive(g,150,()=>g.state.raidDefense.bands.find(b=>b.bandId===firstBand).outcome==='escaped');assert.ok(g.buildingWorkReached(thief,g.state.buildings.find(b=>b.id===campId)));assert.equal(g.tribe(3).wood,firstTake);assert.equal(g.state.raidDefense.bands.find(b=>b.bandId===firstBand).outcome,'escaped');assert.equal(settledWarPrestige(g.state).value,0);assert.equal(g.tribe(0).wood+g.tribe(3).wood,80);
+ g.state.conflict='balanced';assert.equal(dispatchExistingCampRaid(g),true);g.state.conflict='quiet';
+ // The whole party raids: every member carries its own load and band.
+ let party=g.state.units.filter(u=>u.campTrip?.campId===campId);assert.ok(party.length>=3,'a raid party of three leaves');const ids=party.map(u=>u.id),bands=[...new Set(party.map(u=>u.seaRaid.plan.bandId))];
+ drive(g,200,()=>party.some(u=>u.carry>0));const carried=party.reduce((n,u)=>n+(u.carry||0),0);for(const u of party)if(u.carry>0)assert.equal(u.carryType,'wood');assert.ok(g.tribe(0).wood<=80-carried);assert.equal(raidDefensePrestige(g.state).value,0);assert.equal(g.tribe(3).wood,0);assert.ok(g.state.raidDefense?.bands.some(b=>bands.includes(b.bandId)));
+ g=decodeGame(encodeGame(g));party=ids.map(id=>g.state.units.find(u=>u.id===id)).filter(Boolean);assert.equal(raidDefensePrestige(g.state).value,0);
+ const settled=()=>g.state.raidDefense.bands.filter(b=>bands.includes(b.bandId)).every(b=>b.outcome);
+ drive(g,300,()=>settled());const firstTake=80-g.tribe(0).wood;assert.ok(firstTake>=carried&&firstTake>0,'the carried loads left the owner store');assert.ok(g.state.raidDefense.bands.filter(b=>bands.includes(b.bandId)).some(b=>b.outcome==='escaped'));assert.ok(party.some(u=>g.buildingWorkReached(u,g.state.buildings.find(b=>b.id===campId))),'escape is a physical camp arrival');assert.equal(g.tribe(3).wood,firstTake);assert.equal(settledWarPrestige(g.state).value,0);assert.equal(g.tribe(0).wood+g.tribe(3).wood,80);
  const checkpoint={save:encodeGame(g),original,campId,storeId,observerId,firstTake};writeFileSync(ESCAPE_CHECKPOINT,JSON.stringify(checkpoint));return checkpoint;
 }
 test('native witnessed stolen timber escapes only at physical camp arrival after carried reload',()=>{escapedScenario();});
