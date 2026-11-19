@@ -8,7 +8,10 @@ function fixture(){const g=new Game();g.reset(42,10);g.enterIsland();g.world.hei
 const run=(g,s)=>{const end=g.state.time+s;while(g.state.time<end)g.step(.1);};
 test('raiders keep fighting the raided people after the buildings are gone, and leave only on order',()=>{
  const{g,hall,foes,mine}=fixture();g.issueAttack(hall);
- let hallDownAt=null;for(let i=0;i<600&&!hallDownAt;i++){g.step(.1);if(hall.hp<=0)hallDownAt=g.state.time;}
+ // Villagers now run out to defend their hall and fall before it does; make
+ // both sides sturdy so some villagers are still in reach after the hall is gone.
+ for(const f of foes){f.maxHp=600;f.hp=600;}for(const u of mine){u.maxHp=5000;u.hp=5000;}
+ let hallDownAt=null;for(let i=0;i<1500&&!hallDownAt;i++){g.step(.1);if(hall.hp<=0)hallDownAt=g.state.time;}
  assert.ok(hallDownAt,'hall destroyed');
  // Nobody may stand down while one of the raided people is still visible nearby.
  let checked=0;for(let i=0;i<40;i++){run(g,1);for(const u of mine){if(u.hp<=0||u.pillage<0&&u.order!=='move')continue;}
