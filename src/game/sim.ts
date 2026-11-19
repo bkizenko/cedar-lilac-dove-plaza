@@ -4582,6 +4582,13 @@ export class Game {
             const nx = d > 0.0001 ? dx / d : 1;
             const nz = d > 0.0001 ? dz / d : 0;
             const push = (min - d) * 0.5 * Math.min(1, dt * 8);
+            // A walker meeting a held body head-on was pushed straight back
+            // along its own line forever (dock repair carrier stuck behind a
+            // standing resident). Slide the yielding walker sideways around it.
+            const ya=canYield(a),yb=canYield(b);
+            if(ya!==yb){const m=ya?a:b,s=ya?1:-1,px=nx*s,pz=nz*s,v=Math.hypot(m.vx||0,m.vz||0);
+              if(v>.05&&(m.vx*px+m.vz*pz)/v<-.3){const cross=(m.vx*pz-m.vz*px)/v,side=cross>=0?1:-1,tx=-pz*side,tz=px*side,slide=Math.max(push,(min-d)*.5)*1.5;
+                if(this.canStep(m,m.x+tx*slide,m.z+tz*slide)){m.x+=tx*slide;m.z+=tz*slide;m.y=canoeHeight(this,m,m.x,m.z);}}}
             if (canYield(a) && this.canStep(a, a.x + nx * push, a.z + nz * push)) {
               a.x += nx * push;
               a.z += nz * push;
