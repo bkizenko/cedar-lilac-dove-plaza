@@ -25,7 +25,7 @@ test('building crafting reaches the resident AI, preserves priority, and recall 
  const project=g.state.haulageProjects.find(p=>p.id===work.projectId),paid={wood:g.tribe(0).wood,stone:g.tribe(0).stone};assert.ok(project);
  g.soundRecall();assert.equal(u.haulageWork,undefined,'recall releases the resident while the paid project remains');assert.equal(project.actorId,null);assert.equal(project.work.paused,true);assert.equal(u.recalled,true);
  advanceWorker(g,u,50);assert.equal(u.recalled,undefined);assert.equal(project.work.progress,progress);
- assert.equal(resumeHaulageWork(g,u,shop.id),true);assert.equal(u.haulageWork.progress,progress);assert.deepEqual({wood:g.tribe(0).wood,stone:g.tribe(0).stone},paid,'resuming does not repay materials');advanceWorker(g,u,80);assert.equal(u.haulage,'sled');
+ assert.equal(resumeHaulageWork(g,u,shop.id),true);/* resume rescales progress to the bench time: equal up to float rounding */assert.ok(Math.abs(u.haulageWork.progress-progress)<1e-9,String(u.haulageWork.progress));assert.deepEqual({wood:g.tribe(0).wood,stone:g.tribe(0).stone},paid,'resuming does not repay materials');advanceWorker(g,u,80);assert.equal(u.haulage,'sled');
 });
 
 test('real sled delivery counts cargo once and increases displayed load capacity',()=>{
