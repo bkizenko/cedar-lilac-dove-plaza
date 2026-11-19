@@ -19,6 +19,6 @@ export function LeaderConversation({engine,personId,strangerId}:{engine:Engine;p
    {turns.length?turns.map((turn,index)=><div key={index}><p className="mb-1 text-xs text-parchment-dim">You: {turn.question}</p><p className="text-sm">{view.name}: {turn.reply}</p></div>):<p className="text-sm">{view.name}: {view.issue||view.reply}</p>}
   </div>
   {view.issue&&turns.length>0&&<p className="text-xs text-parchment-dim" role="status">{view.issue}</p>}
-  <div className="grid gap-2 sm:grid-cols-2" aria-label="Reply choices">{view.choices.map(choice=><button key={choice.id} type="button" className="min-h-10 rounded-md border border-bronze/40 px-3 py-2 text-left text-sm" onClick={()=>choose(choice.id,choice.label)}>{choice.label}</button>)}</div>
+  <div className="grid gap-2 sm:grid-cols-2" aria-label="Reply choices">{view.choices.map(choice=><button key={choice.id} type="button" className="min-h-11 rounded-md border border-bronze/40 px-3 py-2 text-left text-sm" onClick={()=>choose(choice.id,choice.label)}>{choice.label}</button>)}</div>
  </section>;
 }

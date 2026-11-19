@@ -17,14 +17,14 @@ export function TradeExpeditions({engine}:{engine:Engine}){
  return <div className="hud-panel pointer-events-auto absolute right-4 bottom-44 z-30 max-w-xs rounded-xl p-3">
   {offers.map(p=>{const o=p.offer!,why=tradeOfferIssue(g,p.id);return <div key={p.id} className="text-sm border-b pb-1 mb-1">
    <p>{g.tribe(p.team).name} traders offer {o.sellAmt} {o.sell} for {o.buyAmt} {o.buy}.</p>
-   <button className="m-1 min-h-8 border rounded px-2" disabled={!!why} title={why||'Your goods ride home with their party'} onClick={()=>{setMsg(acceptTradeOffer(g,p.id).reason);engine.pushHud();}}>Accept</button>
-   <button className="m-1 min-h-8 border rounded px-2" onClick={()=>{declineTradeOffer(g,p.id);engine.pushHud();}}>Decline</button>
+   <button className="m-1 min-h-11 border rounded px-2" disabled={!!why} title={why||'Your goods ride home with their party'} onClick={()=>{setMsg(acceptTradeOffer(g,p.id).reason);engine.pushHud();}}>Accept</button>
+   <button className="m-1 min-h-11 border rounded px-2" onClick={()=>{declineTradeOffer(g,p.id);engine.pushHud();}}>Decline</button>
   </div>;})}
   <p>Trade expedition</p>
   <label>To <select value={target} onChange={e=>setTeam(+e.target.value)}>{known.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
   <label> By <select value={mode} onChange={e=>setMode(e.target.value as 'land'|'sea')}><option value="land">land</option>{(seaOk||mode==='sea')&&<option value="sea">ship</option>}</select></label>
   <label> Carry <input type="number" min={1} max={Math.max(1,plan?.cargoLimit||60)} value={amount} onChange={e=>setAmount(Math.max(1,+e.target.value||1))} className="w-14"/> <select value={give} onChange={e=>setGive(e.target.value as ResKind)}>{GOODS.map(k=><option key={k} value={k}>{k}</option>)}</select></label>
-  <button className="m-1 min-h-8 border rounded px-2" disabled={!!issue} title={issue||'Goods leave stores now; the party returns with payment'} onClick={()=>{const r=dispatchTradeExpedition(g,target,mode,give,amount);setMsg(r.reason);engine.pushHud();}}>Send</button>
+  <button className="m-1 min-h-11 border rounded px-2" disabled={!!issue} title={issue||'Goods leave stores now; the party returns with payment'} onClick={()=>{const r=dispatchTradeExpedition(g,target,mode,give,amount);setMsg(r.reason);engine.pushHud();}}>Send</button>
   {plan&&target>0&&<p className="text-xs">{mode==='sea'?`${plan.shipName||'Ship'} · crew ${plan.crew} · holds ${plan.cargoLimit}${plan.slots!==undefined?` · boat slots ${plan.slotsFree}/${plan.slots} free`:''}`:`Land party · crew ${plan.crew} · carries up to ${plan.cargoLimit} (pack goats and carts add more)`}</p>}
   {target>0&&<p className="text-xs">Trade capacity at {g.tribe(target).name}: {Math.floor(tradeCapacityLeft(g,target))}/{tradeCapacityMax(g,target)}{tradeCapacityLeft(g,target)<tradeCapacityMax(g,target)?` · full again in ~${Math.ceil(tradeCapacityRefillSeconds(g,target)/60)} min`:''}</p>}
   {target>0&&!seaOk&&seaPlan?.issue?.startsWith('No water')&&<p className="text-xs text-parchment-dim">No water route there: no ship can go.</p>}
@@ -32,6 +32,6 @@ export function TradeExpeditions({engine}:{engine:Engine}){
   {issue&&<p className="text-xs text-parchment-dim">{issue}</p>}
   {msg&&<p role="status" className="text-sm">{msg}</p>}
   {mine.map(p=><p key={p.id} className="text-sm">{tradePartyStatus(g,p)}</p>)}
-  <button className="min-h-8 px-2" onClick={()=>setOpen(false)}>Close</button>
+  <button className="min-h-11 px-2" onClick={()=>setOpen(false)}>Close</button>
  </div>;
 }

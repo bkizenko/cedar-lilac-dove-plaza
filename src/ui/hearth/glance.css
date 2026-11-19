@@ -30,6 +30,12 @@
 .hw-chip-btn.t-bad{color:var(--hw-bad)}.hw-chip-btn.t-warn{color:var(--hw-warn)}
 .hw-info{transition:opacity 1s linear}
 .hw-info.is-fading{opacity:0}
+/* Loss reads as loss: muted, desaturated, a grey edge with a cross mark, and a slow fade (no burst, no gold). */
+.hw-note.n-loss{border-left-color:#8d8f96;background:linear-gradient(0deg,rgba(28,28,34,.55),rgba(28,28,34,.55)),var(--hw-panel,#2a241c);filter:saturate(.55)}
+.hw-note.n-loss .hw-note-main b{font-weight:600;letter-spacing:.01em}
+.hw-note.n-loss .hw-medal{opacity:.75}
+.hw-note.n-loss .hw-note-main b::before{content:'\271D\00a0';opacity:.8}
+.hw-info.n-loss{transition:opacity 4s ease-out}
 
 /* ---------- world pins and edge arrows ---------- */
 .hw-pins{position:absolute;inset:0;pointer-events:none;overflow:hidden}
