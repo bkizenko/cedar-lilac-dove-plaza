@@ -19,6 +19,7 @@ import { VillageAlerts } from './VillageAlerts';
 import { PreviouslyCard } from './hearth/PreviouslyCard';
 import { WhileAwayDigest } from './WhileAwayDigest';
 import { LoadedSaveCard } from './LoadedSaveCard';
+import { YearEndReview } from './YearEndReview';
 import { RulerEventToast } from './RulerEventToast';
 import { WorkDeliveryCue } from './WorkDeliveryCue';
 import { VillageHistory } from './VillageHistory';
@@ -450,6 +451,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         {engine && !hud.founding && <PreviouslyCard engine={engine} classic/>}
         {engine && !hud.founding && <WhileAwayDigest engine={engine} classic/>}
         {engine && !hud.founding && <LoadedSaveCard engine={engine} classic/>}
+        {engine && !hud.founding && <YearEndReview engine={engine} classic/>}
         {engine && <WorkDeliveryCue engine={engine}/>}
         {hud.placing ? (
           <div className="hud-toast hud-placement" role="status">

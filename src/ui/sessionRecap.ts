@@ -11,9 +11,9 @@ const GROUPS:[key:string,one:string,many:string,re:RegExp][]=[
  ['raids','raid','raids',/\b(raid(ed|ers|s)?|attack(ed|s)?)\b/i],
  ['treaties','treaty','treaties',/\b(treaty|peace|alliance|weds|tribute)\b/i],
 ];
-export function sessionRecap(history:readonly RecapEvent[]|undefined,since:number,team=0){
+export function sessionRecap(history:readonly RecapEvent[]|undefined,since:number,team=0,until=Infinity){
  const counts:Record<string,number>={},latest:string[]=[];
- for(const e of history??[]){if(e.team!==team||!(e.time>since))continue;const g=GROUPS.find(([,,,re])=>re.test(e.text));if(!g)continue;counts[g[0]]=(counts[g[0]]||0)+1;latest.push(e.text.replace(/^\[Contact \d+\] /,''));}
+ for(const e of history??[]){if(e.team!==team||!(e.time>since)||e.time>until)continue;const g=GROUPS.find(([,,,re])=>re.test(e.text));if(!g)continue;counts[g[0]]=(counts[g[0]]||0)+1;latest.push(e.text.replace(/^\[Contact \d+\] /,''));}
  const summary=GROUPS.filter(([k])=>counts[k]).map(([k,one,many])=>`${counts[k]} ${counts[k]===1?one:many}`).join(' · ');
  return {summary,counts,latest:latest.slice(-3)};
 }
@@ -21,4 +21,8 @@ export function sessionRecap(history:readonly RecapEvent[]|undefined,since:numbe
  * something after the moment they left. Returns null otherwise. */
 export function awayDigest(history:readonly RecapEvent[]|undefined,leftAtGameTime:number,awayMs:number,minAwayMs=5*60_000){
  if(!(awayMs>=minAwayMs))return null;const r=sessionRecap(history,leftAtGameTime);return r.summary?r:null;
+}
+/** Year-end review: counts for the in-game year that just ended (yearIndex is 0-based), from the chronicle only. */
+export function yearReview(history:readonly RecapEvent[]|undefined,yearIndex:number,yearSeconds:number){
+ const r=sessionRecap(history,yearIndex*yearSeconds-1e-9,0,(yearIndex+1)*yearSeconds);return r.summary?{year:yearIndex+1,...r}:null;
 }
