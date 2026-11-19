@@ -22,6 +22,7 @@ import {WhileAwayDigest} from '../WhileAwayDigest';
 import {LoadedSaveCard} from '../LoadedSaveCard';
 import {YearEndReview} from '../YearEndReview';
 import {FirstHourGoals} from '../FirstHourGoals';
+import {QuietSeasonCue} from '../QuietSeasonCue';
 import {OldSaveNoteCard} from './OldSaveNoteCard';
 import {AlertPins,useGlanceAlerts} from './glance';
 import {DisputeChip} from './DisputeChip';
@@ -77,6 +78,7 @@ export function HudHearth({hud,engine}:{hud:HudSnapshot;engine:Engine|null}){
   {!founding&&!screen&&engine&&<OldSaveNoteCard engine={engine}/>}
   {!founding&&!screen&&engine&&<TutorialCard engine={engine} season={hud.season}/>}
   {!founding&&!screen&&engine&&<FirstHourGoals engine={engine}/>}
+  {!founding&&!screen&&engine&&<QuietSeasonCue engine={engine} season={hud.season}/>}
   {!founding&&!screen&&engine&&<PreviouslyCard engine={engine}/>}
   {!founding&&engine&&<div hidden={!!screen}><WhileAwayDigest engine={engine}/></div>}
   {!founding&&engine&&<div hidden={!!screen}><LoadedSaveCard engine={engine}/></div>}

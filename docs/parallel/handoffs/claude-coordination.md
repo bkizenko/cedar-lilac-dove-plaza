@@ -1584,4 +1584,5 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - 2026-11-18 20:25 ET Grok: shipped AUD-UI-DIPLO-SHEET-KIN-TREE / shared-file edit: src/ui/hearth/screens.tsx, src/ui/council/DiplomacySheet.tsx, src/ui/CouncilPanel.tsx (kin tree per neighbour)
 - 2026-11-18 20:26 ET Grok: shipped AUD-FEEL-YEAR-END-REVIEW / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/HudHearth.tsx (year review card mount)
 - 2026-11-18 20:29 ET Grok: shipped AUD-FEEL-FIRST-HOUR-GOALS / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/HudHearth.tsx, src/ui/hearth/hearth.css (first-hour goals strip)
+- 2026-11-18 20:30 ET Grok: shipped AUD-FEEL-SLOW-SEASON-PACING / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/HudHearth.tsx, src/ui/hearth/hearth.css (quiet-season cue)
 - 2026-11-18 20:30 ET Grok: shared-file edit: tools/suite-slice.sh (per-test 120 s timeout so one slow file cannot blank the slice)

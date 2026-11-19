@@ -21,6 +21,7 @@ import { WhileAwayDigest } from './WhileAwayDigest';
 import { LoadedSaveCard } from './LoadedSaveCard';
 import { YearEndReview } from './YearEndReview';
 import { FirstHourGoals } from './FirstHourGoals';
+import { QuietSeasonCue } from './QuietSeasonCue';
 import { RulerEventToast } from './RulerEventToast';
 import { WorkDeliveryCue } from './WorkDeliveryCue';
 import { VillageHistory } from './VillageHistory';
@@ -454,6 +455,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
         {engine && !hud.founding && <LoadedSaveCard engine={engine} classic/>}
         {engine && !hud.founding && <YearEndReview engine={engine} classic/>}
         {engine && !hud.founding && <FirstHourGoals engine={engine} classic/>}
+        {engine && !hud.founding && <QuietSeasonCue engine={engine} season={hud.season} classic/>}
         {engine && <WorkDeliveryCue engine={engine}/>}
         {hud.placing ? (
           <div className="hud-toast hud-placement" role="status">
