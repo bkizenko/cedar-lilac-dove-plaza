@@ -165,9 +165,9 @@ function build(g, type, x, z) {
   assert.equal(g.placeBuilding(type, x, z), true, g.state.banner);
   const b = g.state.buildings.find((b) => b.type === type&&b.x===x&&b.z===z);
   assert.equal(b.build, 0);
-  g.clearSelect();
-  g.selectEntity(g.state.units.find((u) => u.team === 0 && !u.buildOrder&&!u.productionProjectId));
-  g.orderConstruction(b);
+  // placing may already hand the site to a free builder; order one only if someone is still free
+  const free = g.state.units.find((u) => u.team === 0 && u.hp > 0 && !u.buildOrder&&!u.productionProjectId);
+  if (free) { g.clearSelect(); g.selectEntity(free); g.orderConstruction(b); }
   drive(g, 180, () => g.finished(b));
   assert.ok(g.finished(b), status(g));
   assert.ok(Math.abs(t.wood-(wood-BUILDINGS[type].wood-((report.preservationLogs||0)-careBefore)-(t.survival.fuelBurnedWood-fuelBefore)-((g.state.production?.metrics.logsUsed||0)-processingBefore)))<1e-6);report.paidBuildings??={wood:0,stone:0};report.paidBuildings.wood+=BUILDINGS[type].wood;report.paidBuildings.stone+=BUILDINGS[type].stone;
@@ -284,7 +284,7 @@ test("a three-adult grain/pulse holding completes marked cereal harvest, paid pr
   assert.equal(control.crop.tended, 1, status(g));
   untilTime(g, 901);
   const grainYield0=field.crop.remaining,pulseYield0=control.crop.remaining,yield0=grainYield0+pulseYield0;
-  assert.ok(yield0 > 500, { yield0 });
+  assert.ok(yield0 > 500, JSON.stringify({ yield0, grainYield0, pulseYield0 }));
   assert.equal(foodInventory(g.tribe(0)).grain, 0);
   const scene = new THREE.Scene(),
     depth = new THREE.MeshDepthMaterial(),
