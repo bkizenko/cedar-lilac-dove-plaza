@@ -33,3 +33,10 @@ test('the story line is 16px, pointer-free, one line on a 390px phone, and mount
  assert.equal(renderToStaticMarkup(React.createElement(StoryLine,{line:null})),'');
  assert.match(await readFile(new URL('../src/ui/HudRoot.tsx',import.meta.url),'utf8'),/<HearthIdleStory engine=\{engine\} season=\{hud\.season\}\/>/);
 });
+test('barks: a named resident speaks up when a real need starts to bite, before it is an alert',()=>{
+ const g=world();const [a,b]=g.state.units.filter(u=>u.team===0);
+ assert.ok(!hearthStories(g).some(l=>/“/.test(l)),'no needs, no barks');
+ a.hunger=40;b.coldSeconds=100;const lines=hearthStories(g);
+ assert.ok(lines.some(l=>/: “My belly is empty/.test(l)));assert.ok(lines.some(l=>/: “The wind bites/.test(l)));
+ a.hunger=70;assert.ok(!hearthStories(g).some(l=>/belly/.test(l)),'a starving person is an alert, not a bark');
+});
