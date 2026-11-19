@@ -1573,3 +1573,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - 2026-11-18 20:05 ET Grok: shipped BUG-MOVE-OCCUPIED-SPOT / shared-file edit: src/game/sim.ts (move arrival: a stalled walker beside a still body on its target counts as arrived; neighbour set 179/179)
 - 2026-11-18 20:08 ET Grok: shipped AUD-UI-LAST-SESSION-RECAP / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/PreviouslyCard.tsx, src/ui/hearth/previously.ts, src/ui/hearth/hearth.css (recap tally on Previously card, Classic mount)
 - 2026-11-18 20:10 ET Grok: shipped AUD-UI-WHILE-AWAY-DIGEST / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/HudHearth.tsx (mount while-away digest)
+- 2026-11-18 20:12 ET Grok: shipped AUD-UI-HAUL-AND-JOB-FEED-LEGIBILITY / shared-file edit: src/ui/WorkloadPanel.tsx (grouped stuck-job list)
