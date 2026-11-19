@@ -128,9 +128,17 @@ const SEASON_CUE_ADVICE=['sow and mend','tend the fields','bring in the harvest 
 /** Season phase 0-3 from calendar seconds and the year length. */
 export const seasonPhaseOf=(time:number,yearSeconds:number)=>Math.floor((((time%yearSeconds)+yearSeconds)%yearSeconds)/(yearSeconds/4))%4;
 /** Title for the card. In autumn and winter it names the season and its work (no food-days figure). */
-export function seasonCueTitle(phase:number,foodDays:number|null){
+/** Real village facts for the season line: finished fields, harvest still standing in them, idle adults. */
+export type SeasonFacts={fields:number;inFields:number;idle:number};
+export function seasonCueTitle(phase:number,foodDays:number|null,facts?:SeasonFacts){
  const p=((phase%4)+4)%4,base=`${SEASON_CUE_NAMES[p]}: ${SEASON_CUE_ADVICE[p]}`;
- void foodDays;return base;
+ if(!facts)return base;
+ const bits:string[]=[];
+ if((p===0||p===1)&&facts.fields>0)bits.push(`${facts.fields} field${facts.fields===1?'':'s'}`);
+ if(p===2&&facts.inFields>=1)bits.push(`${Math.floor(facts.inFields)} harvest still in the fields`);
+ if(p===3&&foodDays!==null&&Number.isFinite(foodDays))bits.push(`${Math.floor(foodDays)} days of food`);
+ if(facts.idle>0)bits.push(`${facts.idle} idle`);
+ return bits.length?`${base} · ${bits.join(' · ')}`:base;
 }
 
 /* ---------- screen projection ---------- */

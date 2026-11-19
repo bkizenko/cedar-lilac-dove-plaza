@@ -24,3 +24,10 @@ test('alert cards and chips carry a shape as well as a colour (colour-blind swee
  assert.match(css,/\.hw-chip-btn\.t-bad\{border-style:double/);assert.match(css,/\.hw-chip-btn\.t-warn\{border-style:dashed\}/);
  assert.match(css,/\.hw-note\.n-bad \.hw-note-main b::before\{content:'\\25B2/);assert.match(css,/\.hw-note\.n-good \.hw-note-main b::before\{content:'\\2713/);
 });
+test('the season line adds real village facts: fields, harvest still standing, days of food, idle hands',async()=>{
+ const {seasonCueTitle}=await import('../src/ui/hearth/glanceModel.ts');
+ assert.equal(seasonCueTitle(0,5,{fields:3,inFields:0,idle:2}),'Spring: sow and mend · 3 fields · 2 idle');
+ assert.equal(seasonCueTitle(2,9,{fields:3,inFields:14.6,idle:0}),'Autumn: bring in the harvest and fill the stores · 14 harvest still in the fields');
+ assert.equal(seasonCueTitle(3,11.8,{fields:0,inFields:0,idle:0}),'Winter: ration food and keep warm · 11 days of food');
+ assert.equal(seasonCueTitle(1,null,{fields:0,inFields:0,idle:0}),'Summer: tend the fields');
+});
