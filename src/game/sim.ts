@@ -5673,7 +5673,7 @@ export class Game {
     reviewRivalMethodRecords(this,team);
     const pop = this.popNow(team);
     if(reserveSeconds(this,team)>120&&tr.wood>30&&!tr.cropTrial)
-      for(const kind of CROPS)if((tr.cropSamples?.[kind]||0)>=4&&!tr.cultivated?.includes(kind)){beginCropTrial(this,kind,team);break;}
+      for(const kind of CROPS)if((tr.cropSamples?.[kind]||0)>=4&&!tr.cultivated?.includes(kind)){beginCropTrial(this,kind,team,true);break;}
     const cap = this.popCap(team);
     const stage =
       !tr.hostile && this.state.time < 90 && tr.age < 1
