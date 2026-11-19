@@ -65,8 +65,8 @@ test('ready-food history excludes raw grain and fish, records finished meals onc
  receiveFood(g,0,8,'grain');receiveFood(g,0,6,'fish');let row=currentSeasonReport(g);
  assert.equal(row.totals.food,14);assert.deepEqual(row.readyFood,{produced:0,nourishmentProduced:0,received:0,nourishmentReceived:0,stock:0,nourishment:0,partial:false});
  assert.equal(takeFoodLot(g,0,'grain',4),true);receiveFood(g,0,4,'bread');assert.equal(takeFoodLot(g,0,'fish',4),true);receiveFood(g,0,4,'cookedFish');
- row=currentSeasonReport(g);assert.equal(row.totals.food,22,'gross receipts deliberately retain intermediate grain and fish');assert.equal(row.readyFood.received,8);assert.equal(row.readyFood.nourishmentReceived,8.8);assert.equal(row.readyFood.stock,8);assert.equal(row.readyFood.nourishment,8.8);assert.deepEqual(readyFoodStock(t),{units:8,nourishment:8.8});
- assert.equal(takeFoodLot(g,0,'bread',2),true);row=currentSeasonReport(g);assert.equal(row.readyFood.received,8);assert.equal(row.readyFood.stock,6);assert.equal(row.readyFood.nourishment,6.4);
+ row=currentSeasonReport(g);assert.equal(row.totals.food,22,'gross receipts deliberately retain intermediate grain and fish');assert.equal(row.readyFood.received,8);/* bread nourishes 1.3 since f63c14bf */assert.equal(row.readyFood.nourishmentReceived,9.2);assert.equal(row.readyFood.stock,8);assert.equal(row.readyFood.nourishment,9.2);assert.deepEqual(readyFoodStock(t),{units:8,nourishment:9.2});
+ assert.equal(takeFoodLot(g,0,'bread',2),true);row=currentSeasonReport(g);assert.equal(row.readyFood.received,8);assert.equal(row.readyFood.stock,6);assert.equal(row.readyFood.nourishment,6.6);
  g.state.time=900;updateSeasonReports(g);assert.equal(g.state.seasonReports.history[0].readyFood.received,8);assert.equal(g.state.seasonReports.history[0].readyFood.stock,6);assert.equal(currentSeasonReport(g).readyFood.received,0);assert.equal(currentSeasonReport(g).readyFood.stock,6);
  assert.doesNotThrow(()=>decodeGame(encodeGame(g)));const bad=structuredClone(g.state.seasonReports);bad.history[0].readyFood.nourishmentReceived=-1;assert.equal(validSeasonReports(bad,g.state.time),false);
 });
