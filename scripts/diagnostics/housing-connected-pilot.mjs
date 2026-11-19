@@ -73,7 +73,15 @@ assert.equal(
 );
 let fibreSteps = 0;
 while ((g.tribe(0).items?.plantFibre || 0) < 12) {
-  const patch = g.state.fibre.patches.find((p) => !fibreGatherIssue(g, fibreWorker.id, p.id));
+  let patch = g.state.fibre.patches.find((p) => !fibreGatherIssue(g, fibreWorker.id, p.id));
+  // Native woodland near this camp has two bast trees; a nearly spent patch
+  // regrows through the warm season, so the player waits for the next batch.
+  for (let waited = 0; !patch && waited < 600; waited += 0.2) {
+    if (g.state.encounter) answerEncounter(g, "observe");
+    g.step(0.2);
+    assert.deepEqual(g.simulationErrors, []);
+    patch = g.state.fibre.patches.find((p) => !fibreGatherIssue(g, fibreWorker.id, p.id));
+  }
   assert.ok(patch, "actual known finite patch remains available");
   assert.equal(beginFibreGather(g, fibreWorker.id, patch.id), true);
   while (fibreWorker.fibreWork) {
