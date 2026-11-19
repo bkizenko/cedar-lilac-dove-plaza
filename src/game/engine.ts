@@ -1,4 +1,5 @@
 import {enableWildCraft} from './wildCraft';
+import {stockSnapshot,stockSpent,undoPlacement,type PlacementUndo} from '../ui/commandUndo';
 import {draftCartChoices} from './draftCart';
 import {ProductionDeliveryChannel,type ProductionDelivery} from './productionDelivery';
 import {storedVillageCandidates,chooseStoredVillage,type StoredVillageCandidate} from './simulationLifecycle';
@@ -800,7 +801,7 @@ export class Engine {
         this.updateGhost();this.pushHud();return;
       }
       if(this.game.state.placing==='gate')placeFacingGate(this.game,this.ghostPos,this.gateFacing);
-      else{const before=new Set(this.game.state.buildings.map(b=>b.id));if(this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan,this.placementTurn(),this.placementTurns())){const site=this.game.state.buildings.find(b=>!before.has(b.id)&&b.team===0);if(site)queueConstruction(this.game,site,[]);}} // a laid-out site is built: the two nearest free adults are given it, manual or auto
+      else{const before=new Set(this.game.state.buildings.map(b=>b.id)),stock=stockSnapshot(this.game);if(this.game.placeBuilding(this.game.state.placing, this.ghostPos.x, this.ghostPos.z, 0,this.plotSize,this.bridgeSpan,this.placementTurn(),this.placementTurns())){const site=this.game.state.buildings.find(b=>!before.has(b.id)&&b.team===0);if(site){this.lastPlacement={buildingId:site.id,spent:stockSpent(stock,stockSnapshot(this.game)),placedAt:performance.now()};queueConstruction(this.game,site,[]);}}} // a laid-out site is built: the two nearest free adults are given it, manual or auto
       this.updateGhost();
       this.pushHud();
       return;
@@ -1049,6 +1050,9 @@ export class Engine {
     this.pushHud();
   }
 
+  /** The most recent build placement, for the short undo chip. */
+  lastPlacement:PlacementUndo|null=null;
+  undoLastPlacement(){const u=this.lastPlacement;this.lastPlacement=null;if(!u)return{accepted:false,reason:'Nothing to undo'};const r=undoPlacement(this.game,u);this.game.banner(r.reason,3);this.pushHud();return r;}
   recycle() {
     this.game.recycleSelected();
     this.pushHud();
