@@ -4,6 +4,10 @@ import {useState} from 'react';
 import type {Engine} from '../game/engine';import type {ResKind} from '../game/types';
 import {reportedQuote,proposeShipment,tradeCarrier,sendOffer,sendProcurement} from '../game/barter';
 import {CaravanPlanner} from './CaravanPlanner';
+import {ResidentInventory} from './ResidentInventory';
+import {FOOD_NAMES} from '../game/pantry';
+/** Identified food lots as one plain line ("4 bread · 2 fresh fish"); empty lots give ''. */
+export const foodLotLine=(lots:Partial<Record<string,number>>)=>Object.entries(lots).filter(([,n])=>(n||0)>0).map(([k,n])=>`${Number(n!.toFixed(2))} ${FOOD_NAMES[k as keyof typeof FOOD_NAMES]??k}`).join(' · ');
 import {tradeCargoCapacity} from '../game/tradeCargo';
 const names:Record<ResKind,string>={food:'Food',wood:'Timber',stone:'Stone',copper:'Copper',iron:'Iron'};
 export function TradeProposal({engine,team,expanded=false}:{engine:Engine;team:number;expanded?:boolean}){
@@ -35,7 +39,7 @@ export function TradeProposal({engine,team,expanded=false}:{engine:Engine;team:n
  <button disabled={!quote.deal||!carrier} title={!carrier?'No carrier is free to take the shipment':!quote.deal?'No deal is possible at these amounts':undefined} onClick={()=>run(()=>proposeShipment(g,team,give,get,amount))}>Send reported proposal</button>
  <button disabled={unavailable} title={whyNot} onClick={()=>run(()=>sendOffer(g,team,give,get,amount,requested))}>Allow smaller counteroffers</button>
  </details>
- {!!travelers.length&&<details><summary>On the road · {travelers.length}</summary>{travelers.map(u=><div key={u.id}><p>{u.name||'Trader'} · {u.tradeLoading?'Loading offer':u.visit?.phase==='return'||u.order==='return'?'Returning':u.visit?.phase==='waiting'?'Negotiating':'Travelling'} · {g.state.units.filter(p=>p.hp>0&&p.escortId===u.id).length} guards{u.tradeReservation?` · ${u.tradeReservation.amount} ${names[u.tradeReservation.kind]} reserved`:''}</p><button onClick={()=>run(()=>sendTradeEscort(g,u.id))}>Add armed escort</button></div>)}</details>}
+ {!!travelers.length&&<details><summary>On the road · {travelers.length}</summary>{travelers.map(u=><div key={u.id}><p>{u.name||'Trader'} · {u.tradeLoading?'Loading offer':u.visit?.phase==='return'||u.order==='return'?'Returning':u.visit?.phase==='waiting'?'Negotiating':'Travelling'} · {g.state.units.filter(p=>p.hp>0&&p.escortId===u.id).length} guards{u.tradeReservation?` · ${u.tradeReservation.amount} ${names[u.tradeReservation.kind]} reserved`:''}</p>{u.tradeReservation?.foodLots&&foodLotLine(u.tradeReservation.foodLots)&&<p className="text-base" data-reserved-lots>Reserved food · {foodLotLine(u.tradeReservation.foodLots)}</p>}<ResidentInventory residents={[u]}/><button onClick={()=>run(()=>sendTradeEscort(g,u.id))}>Add armed escort</button></div>)}</details>}
  {!carrier&&<p>Need an available adult with empty hands.</p>}
  </>;
  const body=<><NeedsTradeControls engine={engine} team={team}/><details><summary>Individual trader & sea routes</summary>{content}</details></>;
