@@ -8,7 +8,7 @@ import {SocietyFlag} from '../SocietyFlag';
 import {cx,IconBtn} from './kit';
 import {FoldHandle,FoldMin,useFold} from './fold';
 import {RES_ICON,RES_NAME} from './icons';
-import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,budgetNotes,infoVisible,INFO_RULES,isConflictResultBanner,seasonPhaseOf,seasonCueTitle,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
+import {SUPPLY_RULES,TrendTracker,supplyFill,supplyLevel,daysText,rankAlerts,pinSet,isKeyTip,budgetNotes,infoVisible,INFO_RULES,isConflictResultBanner,isLossBanner,lossFirst,seasonPhaseOf,seasonCueTitle,projectToScreen,edgeArrow,avoidPinControls,PIN_LAYOUT_RULES,type PinRect,type Alert,type AlertKind,type Trend,type SupplyLevel} from './glanceModel';
 import {detectAlerts,foodDays,waterDays,workloadOf,winterOutlook} from './glanceReads';
 import {firstNeeds,firstNeedsVisible,type FirstNeed,type FirstNeedKind} from './firstNeeds';
 import {OVERLAY_KEYS,paintOverlays,type OverlayKey} from './overlayModel';
@@ -92,14 +92,14 @@ export function alertAction(a:Alert,engine:Engine|null){
  if(a.kind==='raiders'&&!a.at){engine.game.soundDefenseHorn();engine.pushHud();return;}
  if(a.at){engine.focusMinimap(a.at.x,a.at.z);engine.pushHud();}
 }
-type InfoNote={id:string;sticky:boolean;ttl?:number;icon:ReactNode;title:string;chips?:ReactNode;action?:{label:string;onClick:()=>void};dismiss?:()=>void;tone?:'good'|'bad'};
+type InfoNote={id:string;sticky:boolean;ttl?:number;icon:ReactNode;title:string;chips?:ReactNode;action?:{label:string;onClick:()=>void};dismiss?:()=>void;tone?:'good'|'bad'|'loss';fade?:number};
 /** Remembers when each info card first appeared; ones that are not sticky fade after INFO_RULES.ttlSeconds and stay hidden until they clear and return. */
 function useInfoClock(notes:readonly InfoNote[]){
  const seen=useRef(new Map<string,number>()),[,tick]=useReducer((n:number)=>n+1,0);
  const now=performance.now()/1000,ids=new Set(notes.map(n=>n.id));
  for(const id of [...seen.current.keys()])if(!ids.has(id))seen.current.delete(id);
  for(const n of notes)if(!seen.current.has(n.id))seen.current.set(n.id,now);
- const visible=notes.map(n=>({n,...infoVisible(seen.current.get(n.id)!,now,n.sticky,n.ttl)})).filter(x=>x.show);
+ const visible=notes.map(n=>({n,...infoVisible(seen.current.get(n.id)!,now,n.sticky,n.ttl,n.fade)})).filter(x=>x.show);
  const timed=visible.some(x=>!x.n.sticky);
  useEffect(()=>{if(!timed)return;const t=setInterval(tick,500);return()=>clearInterval(t);},[timed]);
  return visible;
@@ -130,10 +130,15 @@ export function PriorityStack({hud,engine,alerts,onOpen,hidden,extra}:{hud:HudSn
  if(hud.canAge&&hud.nextAge)info.push({id:'age',sticky:false,tone:'good',icon:<BookOpen size={26}/>,title:`${hud.nextAge} ready`,action:{label:'Open',onClick:()=>onOpen('ages')}});
  if(hud.routeOffer&&!hud.pendingAge){const o=hud.routeOffer,G=RES_ICON[o.give as keyof typeof RES_ICON],T=RES_ICON[o.get as keyof typeof RES_ICON];
   info.push({id:'route',sticky:true,icon:<Package size={26}/>,title:o.rival,chips:<><span className="hw-chip" title={`Give ${o.giveAmt}`}><G size={24}/>{o.giveAmt}</span><ChevronRight size={24}/><span className="hw-chip" title={`Get ${o.getAmt}`}><T size={24}/>{o.getAmt}</span></>,action:{label:'Accept',onClick:()=>engine?.acceptRoute()},dismiss:()=>engine?.declineRoute()});}
- if(hud.banner&&!hud.placing&&!isKeyTip(hud.banner))info.push({id:'banner:'+hud.banner,sticky:false,ttl:isConflictResultBanner(hud.banner)?INFO_RULES.resultTtlSeconds:undefined,icon:<Bell size={26}/>,title:hud.banner,dismiss:()=>setGone(g=>[...g,'banner:'+hud.banner])});
+ // A loss banner is held for its full stay even when routine news replaces the banner line, so it is never buried.
+ const heldLoss=useRef(new Map<string,number>());
+ if(hud.banner&&!hud.placing&&isLossBanner(hud.banner)&&!heldLoss.current.has(hud.banner))heldLoss.current.set(hud.banner,nowS);
+ for(const [text,at] of [...heldLoss.current])if(nowS-at>=INFO_RULES.lossTtlSeconds)heldLoss.current.delete(text);
+ for(const text of heldLoss.current.keys())info.push({id:'banner:'+text,sticky:false,tone:'loss',ttl:INFO_RULES.lossTtlSeconds,fade:INFO_RULES.lossFadeSeconds,icon:<Bell size={26}/>,title:text,dismiss:()=>{heldLoss.current.delete(text);setGone(g=>[...g,'banner:'+text]);}});
+ if(hud.banner&&!hud.placing&&!isKeyTip(hud.banner)&&!heldLoss.current.has(hud.banner))info.push({id:'banner:'+hud.banner,sticky:false,ttl:isConflictResultBanner(hud.banner)?INFO_RULES.resultTtlSeconds:undefined,icon:<Bell size={26}/>,title:hud.banner,dismiss:()=>setGone(g=>[...g,'banner:'+hud.banner])});
  const season=useSeasonCue(engine);
  if(season)info.push({id:season.id,sticky:false,icon:<Snowflake size={26}/>,title:season.title});
- const shown=useInfoClock(info.filter(n=>!gone.includes(n.id)));
+ const shown=useInfoClock(lossFirst(info.filter(n=>!gone.includes(n.id))));
  const budget=budgetNotes(shown.map(x=>({...x,id:x.n.id,sticky:x.n.sticky,title:x.n.title})));
  const idle=hud.idleWorkers>0&&hud.selection.kind==='none';
  const fa=useFold('alerts'),fn=useFold('notes');
