@@ -1580,3 +1580,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - 2026-11-18 20:18 ET Grok: shipped AUD-UI-SAVE-LOAD-RECOVERY-CARD / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/HudHearth.tsx, src/ui/saveStatus.ts (loaded-save card)
 - 2026-11-18 20:19 ET Grok: shipped AUD-UI-TRADE-FOOD-LOT-TOOLTIP / shared-file edit: src/ui/TradeProposal.tsx (reserved food lots + carrier cargo on the road)
 - 2026-11-18 20:21 ET Grok: shipped AUD-UI-DOMESTICATION-HISTORY-COMPACT / shared-file edit: src/ui/HusbandryControls.tsx (by-animal handling list, UI only)
+- 2026-11-18 20:23 ET Grok: shipped AUD-UI-COLOURBLIND-STATUS (partial) / shared-file edit: src/ui/uiTheme.tsx, src/ui/hearth/palette.css (red-green safe colour-vision setting)

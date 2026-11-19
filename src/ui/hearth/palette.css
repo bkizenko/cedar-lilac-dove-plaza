@@ -19,3 +19,12 @@
 }
 :root:not([data-hw-ui])[data-hw-pal="dusk"] .hw-res li:nth-child(3) svg{color:#dfe6ef}
 :root:not([data-hw-ui])[data-hw-pal="dusk"] .hw-tile.is-on{background:rgba(240,184,78,.2)}
+/* Colour vision "Red-green safe" (Settings > Interface, data-hw-cvd on <html>): status colours move to a blue / orange /
+ * yellow set that stays apart under deuteranopia and protanopia, on either palette; status chips also gain a shape. */
+:root:not([data-hw-ui])[data-hw-cvd="safe"]{
+ --hw-good:#8cc8ff; --hw-bad:#ffa04d; --hw-warn:#f2e46b;
+ --color-ok:var(--hw-good); --color-blood:var(--hw-bad);
+}
+:root:not([data-hw-ui])[data-hw-cvd="safe"] .hw-chip.t-good::before{content:"✓ "}
+:root:not([data-hw-ui])[data-hw-cvd="safe"] .hw-chip.t-bad::before{content:"▲ "}
+:root:not([data-hw-ui])[data-hw-cvd="safe"] .hw-chip.t-warn::before{content:"◆ "}
