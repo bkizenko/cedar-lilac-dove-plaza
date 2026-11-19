@@ -1578,3 +1578,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - 2026-11-18 20:18 ET Grok: shipped AUD-TEST-WARFARE-WEAPON-BENCH / shared-file edit: src/game/warfare.ts (resume refuses a stuck weapon maker with a reason)
 - 2026-11-18 20:16 ET Grok: shipped AUD-UI-SAVE-LOAD-CLARITY / shared-file edit: src/ui/saveStatus.ts, src/ui/hearth/SaveStatus.tsx (year + people per save copy)
 - 2026-11-18 20:18 ET Grok: shipped AUD-UI-SAVE-LOAD-RECOVERY-CARD / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/HudHearth.tsx, src/ui/saveStatus.ts (loaded-save card)
+- 2026-11-18 20:19 ET Grok: shipped AUD-UI-TRADE-FOOD-LOT-TOOLTIP / shared-file edit: src/ui/TradeProposal.tsx (reserved food lots + carrier cargo on the road)
