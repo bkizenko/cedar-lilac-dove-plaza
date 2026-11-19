@@ -194,7 +194,10 @@ export function prisonerAI(g:Game,person:Unit,dt:number){
   const drop=g.nearestDrop(u.x,u.z,u.team),spot=drop?supplyApproach(g,u,drop):null;
   if(!drop||!spot){u.order='hold';u.workReason='Prisoner escort needs a reachable friendly camp or store';return true;}
   // Homebound custody is a deliberate return journey, including the existing bounded long-route fallback.
-  u.tx=spot.x;u.tz=spot.z;if(!supplyReached(g,u,drop,spot)){u.order='return';g.steer(u,dt);}else u.order='hold';u.workReason='Escorting prisoners to custody';return true;
+  // An arrived escort keeps a walking order (not hold) so the captive it brings
+  // can share the doorstep: held bodies never yield, and the captive was pushed
+  // back off the custody spot forever.
+  u.tx=spot.x;u.tz=spot.z;u.order='return';if(!supplyReached(g,u,drop,spot))g.steer(u,dt);u.workReason='Escorting prisoners to custody';return true;
  }
  const p=u.prisoner;if(u.hp<=0)return true;
  if(p.phase==='released'){

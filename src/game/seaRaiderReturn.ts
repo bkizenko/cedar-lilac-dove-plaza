@@ -5,6 +5,7 @@ import type {Game} from './sim';
 import type {Unit,Building} from './types';
 import {boatCrew,boardRiverboat,commandRiverboat,landRiverboat,riverboatDestination,type Riverboat} from './boats';
 import {receiveFood} from './pantry';
+import {uncrowdedApproach} from './campAnchor';
 import {requestWaterNavigation} from './waterNavigation';
 
 export const SEA_RAIDER_RETURN_RULES=Object.freeze({version:1,boardingMeters:24,landingMeters:9,arrivalMeters:2.5,retrySeconds:10,sharedLandingMeters:3});
@@ -62,7 +63,10 @@ export function seaRaiderReturnAI(g:Game,u:Unit,dt:number){
   if(u.boat)return false;
   const spot=g.interactionSpot(u,home);if(!spot){u.order='hold';u.workReason='Camp return blocked — cargo remains with this survivor';return true;}
   if(g.buildingWorkReached(u,home)){completeReturn(g,u,home);return true;}
-  u.tx=spot.x;u.tz=spot.z;u.order='return';u.node=null;u.target=null;u.workReason='Walking the remaining cargo into the raider camp';g.steer(u,dt);return true;
+  // Camp-mates who already returned (or guard the camp) can stand on the very
+  // frontage spot this raider needs; walk to the nearest free doorstep instead.
+  const target=uncrowdedApproach(g,u,home,spot);
+  u.tx=target.x;u.tz=target.z;u.order='return';u.node=null;u.target=null;u.workReason='Walking the remaining cargo into the raider camp';g.steer(u,dt);return true;
  }
  const boat=(g.state.boats||[]).find(b=>b.id===r.boatId&&b.team===3&&b.hp>0);
  if(!boat){if(u.boat)return false;u.order='hold';u.workReason='Return vessel lost — survivor and cargo remain stranded';return true;}

@@ -33,3 +33,14 @@ export function supplyApproach(g:Game,u:Unit,drop:SupplyDrop){
 export function supplyReached(g:Game,u:Unit,drop:SupplyDrop,spot:{x:number;z:number}){
  return drop.kind==='camp'?Math.hypot(u.x-spot.x,u.z-spot.z)<=1:g.buildingWorkReached(u,drop);
 }
+/** Another body standing on a building's frontage spot blocks it physically
+ * (escort and captive, guards and a returning raider all aim at the same
+ * nearest spot). Near such a crowd, walk to the nearest free frontage instead;
+ * any frontage sample counts as reaching the building. */
+const frontageTaken=(g:Game,u:Unit,p:{x:number;z:number})=>g.state.units.some(o=>o!==u&&o.hp>0&&!o.boat&&Math.hypot(o.x-p.x,o.z-p.z)<=1.2);
+export function uncrowdedApproach(g:Game,u:Unit,b:Building,spot:{x:number;z:number}){
+ if(Math.hypot(u.x-spot.x,u.z-spot.z)>6||!frontageTaken(g,u,spot))return spot;
+ let best:{x:number;z:number}|null=null,score=Infinity;
+ for(let i=0;i<16;i++){const a=i*Math.PI/8,p=g.interactionSpot({...u,x:b.x+Math.sin(a)*40,z:b.z+Math.cos(a)*40},b);if(!p||frontageTaken(g,u,p))continue;const d=Math.hypot(p.x-u.x,p.z-u.z);if(d<score){score=d;best=p;}}
+ return best||spot;
+}
