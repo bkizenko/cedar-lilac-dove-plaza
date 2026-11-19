@@ -16,6 +16,7 @@ import {tradeJourney} from '../game/caravans';
 import {WaterReachPanel} from './WaterReachPanel';
 import { ResidentInventory } from './ResidentInventory';
 import { VillageAlerts } from './VillageAlerts';
+import { PreviouslyCard } from './hearth/PreviouslyCard';
 import { RulerEventToast } from './RulerEventToast';
 import { WorkDeliveryCue } from './WorkDeliveryCue';
 import { VillageHistory } from './VillageHistory';
@@ -444,6 +445,7 @@ export function Hud({ hud, engine }: { hud: HudSnapshot; engine: Engine | null }
       <div className="hud-banner">
         {engine && <VillageAlerts engine={engine}/>}
         {engine && <RulerEventToast engine={engine}/>}
+        {engine && !hud.founding && <PreviouslyCard engine={engine} classic/>}
         {engine && <WorkDeliveryCue engine={engine}/>}
         {hud.placing ? (
           <div className="hud-toast hud-placement" role="status">

@@ -1571,3 +1571,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - 2026-11-18 20:04 ET Grok: shipped AUD-UI-WHY-IDLE-PERSON-CARD / shared-file edit: src/ui/WorkerActivity.tsx (idle-why line on resident card)
 - 2026-11-18 20:05 ET Grok: shipped AUD-UI-BUILD-MENU-REASON-LOCKS / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/parts.tsx, src/ui/hearth/hearth.css (build-menu lock line)
 - 2026-11-18 20:05 ET Grok: shipped BUG-MOVE-OCCUPIED-SPOT / shared-file edit: src/game/sim.ts (move arrival: a stalled walker beside a still body on its target counts as arrived; neighbour set 179/179)
+- 2026-11-18 20:08 ET Grok: shipped AUD-UI-LAST-SESSION-RECAP / shared-file edit: src/ui/Hud.tsx, src/ui/hearth/PreviouslyCard.tsx, src/ui/hearth/previously.ts, src/ui/hearth/hearth.css (recap tally on Previously card, Classic mount)
