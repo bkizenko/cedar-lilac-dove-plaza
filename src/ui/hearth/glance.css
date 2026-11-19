@@ -28,6 +28,10 @@
 .hw-chip-btn{min-height:var(--hw-hit);min-width:var(--hw-hit);justify-content:center;cursor:pointer;color:var(--hw-text);font-weight:750}
 .hw-chip-btn:hover{background:rgba(255,236,190,.18)}
 .hw-chip-btn.t-bad{color:var(--hw-bad)}.hw-chip-btn.t-warn{color:var(--hw-warn)}
+/* Colour-blind safe: severity also reads from shape. Bad chips get a heavy double edge, warnings a dashed one; bad/good news cards a triangle or tick mark. */
+.hw-chip-btn.t-bad{border-style:double;border-width:3px}.hw-chip-btn.t-warn{border-style:dashed}
+.hw-note.n-bad .hw-note-main b::before{content:'\25B2\00a0';font-size:.8em}
+.hw-note.n-good .hw-note-main b::before{content:'\2713\00a0'}
 .hw-info{transition:opacity 1s linear}
 .hw-info.is-fading{opacity:0}
 /* Loss reads as loss: muted, desaturated, a grey edge with a cross mark, and a slow fade (no burst, no gold). */

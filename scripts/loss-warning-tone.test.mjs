@@ -19,3 +19,8 @@ test('the Hearth stack holds loss banners past routine replacements and styles t
  const css=readFileSync(new URL('../src/ui/hearth/glance.css',import.meta.url),'utf8');
  assert.match(css,/\.hw-note\.n-loss\{[^}]*saturate/);assert.match(css,/\.hw-info\.n-loss\{transition:opacity 4s/);assert.match(css,/n-loss .hw-note-main b::before\{content:'\\271D/);
 });
+test('alert cards and chips carry a shape as well as a colour (colour-blind sweep)',()=>{
+ const css=readFileSync(new URL('../src/ui/hearth/glance.css',import.meta.url),'utf8');
+ assert.match(css,/\.hw-chip-btn\.t-bad\{border-style:double/);assert.match(css,/\.hw-chip-btn\.t-warn\{border-style:dashed\}/);
+ assert.match(css,/\.hw-note\.n-bad \.hw-note-main b::before\{content:'\\25B2/);assert.match(css,/\.hw-note\.n-good \.hw-note-main b::before\{content:'\\2713/);
+});
