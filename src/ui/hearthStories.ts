@@ -2,6 +2,7 @@ import type {Game} from '../game/sim';
 import {personName} from '../game/people';
 import {quietSeasonCue} from './quietSeason';
 import {SURVIVAL_RULES} from '../game/survivalNeeds';
+import {recentFinishes} from './buildFinishBeat';
 /** Seconds of game time a life event stays fresh enough to retell. */
 export const STORY_FRESH_SECONDS=600;
 const BORING=/^(idle|waiting|resting|no job open|walking|returning|back home)\b/i;
@@ -16,6 +17,7 @@ export function hearthStories(g:Game):string[]{
  if(hungry)out.push(`${personName(hungry)}: “My belly is empty — is there food in the store?”`);
  if(cold)out.push(`${personName(cold)}: “The wind bites. A fire would help.”`);
  if(thirsty)out.push(`${personName(thirsty)}: “My throat is dry.”`);
+ for(const r of recentFinishes(g.state).slice(-1))out.push(`${r.builder}: “Our new ${r.name.toLowerCase()} stands — good work.”`);
  const people=g.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.prisoner&&typeof u.workReason==='string'&&u.workReason.length>3&&u.workReason.length<=70&&!BORING.test(u.workReason));
  const seen=new Set<string>();
  for(const u of people.sort((a,b)=>a.id-b.id)){const what=u.workReason!.replace(/\.$/,'');if(seen.has(what))continue;seen.add(what);out.push(`${personName(u)} · ${what.charAt(0).toLowerCase()+what.slice(1)}`);if(out.length>=8)break;}

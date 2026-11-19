@@ -65,7 +65,9 @@ function useSeasonCue(engine:Engine|null){
   const prev=last.current;last.current={game,phase};
   if(!game||phase===null||prev.game!==game||prev.phase===null||prev.phase===phase)return;
   const fd=foodDays(game);
-  setCue({id:`season:${Math.floor(game.state.time/yearSecondsOf(game.state))}:${phase}`,title:seasonCueTitle(phase,fd)});
+  const fields=game.state.buildings.filter(b=>b.team===0&&b.type==='farm'&&b.hp>0&&game.finished(b));
+  const facts={fields:fields.length,inFields:fields.reduce((n,b)=>n+(b.crop?.remaining||0),0),idle:game.state.units.filter(u=>u.team===0&&u.hp>0&&u.type==='worker'&&!u.prisoner&&u.order==='idle').length};
+  setCue({id:`season:${Math.floor(game.state.time/yearSecondsOf(game.state))}:${phase}`,title:seasonCueTitle(phase,fd,facts)});
  },[game,phase]);
  return cue;
 }

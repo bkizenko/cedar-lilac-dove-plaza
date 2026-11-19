@@ -23,3 +23,11 @@ test('the beat is mounted and uses the normal news card and a soft sound',()=>{
  const src=readFileSync(new URL('../src/ui/BuildFinishBeat.tsx',import.meta.url),'utf8');assert.match(src,/onSfx\?\.\('hammer'\)/);assert.match(src,/g\.banner\(lines\.join/);
  assert.match(readFileSync(new URL('../src/ui/HudRoot.tsx',import.meta.url),'utf8'),/<BuildFinishBeat engine=\{engine\}\/>/);
 });
+test('a builder speaks with pride at the hearth for a short while after a real finish',async()=>{
+ const {hearthStories}=await import('../src/ui/hearthStories.ts');const {PRIDE_SECONDS}=await import('../src/ui/buildFinishBeat.ts');
+ const {g,a}=world(),w=newBuildWatch();g.state.lifeHistory=[];for(const u of g.state.units)u.workReason=undefined;watchBuildFinishes(g,w);
+ const hut=g.makeBld('hut',a.x+8,a.z,0);hut.build=.5;g.state.buildings.push(hut);a.order='build';a.node=hut;watchBuildFinishes(g,w);
+ hut.build=1;a.order='idle';a.node=null;watchBuildFinishes(g,w);
+ assert.ok(hearthStories(g).some(l=>/: “Our new .+ stands — good work\.”$/.test(l)));
+ g.state.time+=PRIDE_SECONDS+1;assert.ok(!hearthStories(g).some(l=>/stands — good work/.test(l)),'pride fades');
+});

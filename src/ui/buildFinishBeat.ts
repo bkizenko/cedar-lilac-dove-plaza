@@ -3,6 +3,10 @@ import {personName} from '../game/people';
 import {BUILDINGS} from '../game/constants';
 /** More finishes than this in one check is a rush (a load, a big batch): no beat, so the moment stays special. */
 export const BEAT_MAX_AT_ONCE=2;
+/** Recently finished buildings with one real builder, per village, so a builder can speak with pride for a short while. */
+const recent=new WeakMap<object,{name:string;builder:string;time:number}[]>();
+export const PRIDE_SECONDS=120;
+export function recentFinishes(state:object&{time:number}){return (recent.get(state)??[]).filter(r=>state.time-r.time<=PRIDE_SECONDS);}
 export type BuildWatch={ready:boolean;finished:Set<number>;builders:Map<number,Set<number>>;state?:object};
 export const newBuildWatch=():BuildWatch=>({ready:false,finished:new Set(),builders:new Map()});
 /** Real finishes since the last check, each named with the residents who actually worked the site. The first check only learns the village. */
@@ -19,6 +23,7 @@ export function watchBuildFinishes(g:Game,w:BuildWatch):string[]{
  if(wasReady&&fresh.length>0&&fresh.length<=BEAT_MAX_AT_ONCE)for(const id of fresh){
   const b=g.state.buildings.find(x=>x.id===id)!,who=[...(w.builders.get(id)??[])].map(uid=>g.state.units.find(u=>u.id===uid)).filter(u=>!!u&&u.hp>0).map(u=>personName(u!));
   const name=BUILDINGS[b.type]?.name||b.type;
+  if(who.length){const list=recent.get(g.state)??[];list.push({name,builder:who[0],time:g.state.time});recent.set(g.state,list.slice(-4));}
   lines.push(who.length?`${name} finished — built by ${who.length>2?`${who.slice(0,2).join(', ')} and ${who.length-2} more`:who.join(' and ')}`:`${name} finished`);
  }
  for(const id of fresh)w.builders.delete(id);
