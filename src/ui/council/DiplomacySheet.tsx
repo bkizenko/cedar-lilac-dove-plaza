@@ -1,3 +1,5 @@
+import {KinTreeView} from './KinTreeView';
+import {kinTree} from './kinTree';
 import type {CouncilModel} from '../../game/rulersView';
 import {SocietyFlag} from '../SocietyFlag';
 import {Card} from './CouncilParts';
@@ -13,7 +15,7 @@ export function diplomacyInbox(ns:Neighbour[]):string[]{
 export function reportAgeLabel(r?:{ageSec:number;via:string;stale:boolean}):string{if(!r)return '';const a=r.ageSec,t=a<10?'just now':a<90?`${a}s ago`:`${Math.round(a/60)} min ago`;return `Report ${t}${r.stale?' · stale':''}`;}
 const mood=(n:Neighbour)=>n.hostile?{word:'At odds',cls:'text-red-300'}:n.atPeace?{word:'At peace',cls:'text-green-200'}:n.trust>=60?{word:'Friendly',cls:'text-green-200'}:n.trust>=25?{word:'Cordial',cls:'text-parchment'}:{word:'Reserved',cls:'text-parchment-dim'};
 /** One card per known neighbour: flag, mood, a trust bar over a grievance bar, what the bond implies, and the family-diplomacy actions. */
-export function DiplomacySheet({neighbours,onAct,feedback}:{neighbours:Neighbour[];onAct:(team:number,kind:DiplomacyAction)=>void;feedback?:string}){
+export function DiplomacySheet({neighbours,onAct,feedback,news=[],onCentre}:{neighbours:Neighbour[];onAct:(team:number,kind:DiplomacyAction)=>void;feedback?:string;news?:{kind:string;with:number;text:string}[];onCentre?:(team:number)=>void}){
  if(!neighbours.length)return null;
  const sorted=[...neighbours].sort((a,b)=>Number(!!b.hostile)-Number(!!a.hostile)||b.trust-a.trust);
  return <Card label="Neighbours" title="Neighbouring houses">
@@ -24,6 +26,7 @@ export function DiplomacySheet({neighbours,onAct,feedback}:{neighbours:Neighbour
    {n.report&&<div data-report-age="1" data-stale={n.report.stale?'1':'0'} className={'mt-1 text-[12px] '+(n.report.stale?'text-[color:var(--hw-warn,#e0b862)]':'text-parchment-dim')} title={`Received by ${n.report.via}; what we know may have changed.`}>{n.report.stale?'\u25CC ':'\u25CF '}{reportAgeLabel(n.report)}</div>}
    {n.voice&&<blockquote data-manner={n.voice.manner} className="mt-1.5 border-l-2 border-bronze/50 pl-2 text-[12px] italic text-parchment-dim" title={`If refused: ${n.voice.refusal} If they give: ${n.voice.gift}`}>{n.voice.greeting}<span className="ml-1 not-italic uppercase tracking-wide text-[10px]">{n.voice.manner}</span></blockquote>}
    {courtLine(n.court)&&<p className="mt-1.5 text-[12px] text-parchment-dim" data-court="1">{courtLine(n.court)}</p>}
+   <KinTreeView tree={kinTree(n,news)} onCentre={onCentre?()=>onCentre(n.team):undefined}/>
    <div className="mt-1.5 grid grid-cols-[3.5rem_1fr_2rem] items-center gap-x-2 gap-y-1">
     <span className="text-parchment-dim">Trust</span><span role="meter" aria-label={`Trust in ${n.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.max(0,Math.min(100,n.trust))} className="h-1.5 rounded bg-black/40"><span className="block h-1.5 rounded" style={{width:Math.min(100,n.trust)+'%',background:'var(--hw-good,#a9c98a)'}}/></span><span className="text-right tabular-nums">{n.trust}</span>
     <span className="text-parchment-dim">Grudge</span><span role="meter" aria-label={`Grudge held by ${n.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.max(0,Math.min(100,g))} className="h-1.5 rounded bg-black/40"><span className="block h-1.5 rounded" style={{width:Math.min(100,g)+'%',background:'var(--hw-bad,#d88a7a)'}}/></span><span className="text-right tabular-nums">{g}</span>

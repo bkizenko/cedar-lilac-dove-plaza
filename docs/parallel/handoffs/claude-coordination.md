@@ -1581,3 +1581,4 @@ Head: `integration/2026-11-11` **cbffbc8** (`cbffbc8f74f27b2b903622cadc9daa4d0ab
 - 2026-11-18 20:19 ET Grok: shipped AUD-UI-TRADE-FOOD-LOT-TOOLTIP / shared-file edit: src/ui/TradeProposal.tsx (reserved food lots + carrier cargo on the road)
 - 2026-11-18 20:21 ET Grok: shipped AUD-UI-DOMESTICATION-HISTORY-COMPACT / shared-file edit: src/ui/HusbandryControls.tsx (by-animal handling list, UI only)
 - 2026-11-18 20:23 ET Grok: shipped AUD-UI-COLOURBLIND-STATUS (partial) / shared-file edit: src/ui/uiTheme.tsx, src/ui/hearth/palette.css (red-green safe colour-vision setting)
+- 2026-11-18 20:25 ET Grok: shipped AUD-UI-DIPLO-SHEET-KIN-TREE / shared-file edit: src/ui/hearth/screens.tsx, src/ui/council/DiplomacySheet.tsx, src/ui/CouncilPanel.tsx (kin tree per neighbour)
