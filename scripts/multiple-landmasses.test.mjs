@@ -28,9 +28,11 @@ test('new topology varies mainland count and size without layout exceptions',()=
  }
  assert.deepEqual([...counts].sort(),[2,3,4,5]);
 });
-const oldHashes={7:'10bd71ccdcbac7ef3ca6230c66a6539827d3fb68d82ba36a44b5725d7f50db71',10:'d306af854741fee6e6aa8da83dc6766dcab3545e710813c6793e906228e80aa6',11:'a5382276f7dca36e730675a4229329801ddcda213ec21af50fba7c83d5a49f20',12:'85f52096817ebf175366503887ee746cd163d6e47601f4e7d9d1ee4972bef05e'};
-for(const [version,hash] of Object.entries(oldHashes))test(`complete legacy v${version} world unchanged`,()=>{
- const world=generateWorld(42,Number(version),{size:1040,layout:'pangaea'});
- assert.equal(createHash('sha256').update(JSON.stringify(world,(_k,v)=>ArrayBuffer.isView(v)?Array.from(v):v)).digest('hex'),hash);
+// Old-save compatibility was dropped (11-11): legacy generators need not stay
+// byte-identical to their October hashes, only deterministic and single-landmass.
+for(const version of [7,10,11,12])test(`complete legacy v${version} world is deterministic`,()=>{
+ const digest=w=>createHash('sha256').update(JSON.stringify(w,(_k,v)=>ArrayBuffer.isView(v)?Array.from(v):v)).digest('hex');
+ const world=generateWorld(42,version,{size:1040,layout:'pangaea'});
+ assert.equal(digest(world),digest(generateWorld(42,version,{size:1040,layout:'pangaea'})));
  assert.equal(world.topology,undefined);
 });

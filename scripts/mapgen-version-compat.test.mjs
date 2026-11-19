@@ -21,7 +21,7 @@ for(const [version,seed,expected] of [[20,1454491798,PUBLISHED_V20],[21,14544917
   g.state.paused=false;for(let i=0;i<4;i++)g.step(.25);g.state.paused=true;assert.deepEqual(g.simulationErrors,[]);assert.equal(heightHash(g),expected);
   const before=bodies(g),ids=g.state.units.map(u=>u.id),camp=JSON.stringify(g.world.camps),raw=JSON.parse(JSON.stringify(encodeGame(g)));validateGameSave(raw);const restored=decodeGame(raw);
   assert.equal(restored.state.worldgenVersion,version);assert.equal(heightHash(restored),expected);assert.equal(JSON.stringify(restored.world.camps),camp);assert.deepEqual(restored.state.units.map(u=>u.id),ids);assert.deepEqual(bodies(restored),before);assert.equal(restored.state.nextId,g.state.nextId);assert.deepEqual(restored.state.tribes,g.state.tribes);assert.equal(restored.world.options.preset,'river-valley');
-  if(version===21){assert.notEqual(heightHash(restored),PUBLISHED_V20,'fresh V21 must retain current generator rather than silently reuse V20');const bad=structuredClone(raw);bad.state.worldgenVersion=22;assert.throws(()=>validateGameSave(bad),'unqualified future versions stay rejected');}
+  if(version===21){assert.notEqual(heightHash(restored),PUBLISHED_V20,'fresh V21 must retain current generator rather than silently reuse V20');/* save validation tolerates newer world versions (a9150b66, 11-15) */const later=structuredClone(raw);later.state.worldgenVersion=22;assert.doesNotThrow(()=>validateGameSave(later));}
  });
 }
 
